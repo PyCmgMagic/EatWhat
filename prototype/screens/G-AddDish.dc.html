@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 发布 2/2 加菜</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+input::placeholder,textarea::placeholder{color:#8A7E76}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <div style="position: absolute; left: 0; top: 0; width: 390px; height: 332px; overflow: hidden; background: #F3C46E;">
+    <img src="../assets/dishes/yuntun.svg" alt="你上传的照片" style="position: absolute; left: 126px; top: 20px; width: 290px; height: 290px; transform: rotate(-8deg);">
+  </div>
+
+  <header style="position: absolute; left: 8px; right: 20px; top: 46px; height: 44px; display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center;">
+    <a href="G-PickShop.dc.html" aria-label="上一步" style="width: 44px; height: 44px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+      <dc-import name="G-Icon" icon="back" size="24" hint-size="24px,24px"></dc-import>
+    </a>
+    <span style="text-align: center; font-size: 15px; font-weight: 600;">发布一道菜</span>
+    <span style="text-align: right; font-family: 'Bricolage Grotesque', sans-serif; font-size: 15px; font-weight: 800;">2<span style="font-weight: 600; color: #4A3C31;"> / 2</span></span>
+  </header>
+
+  <div style="position: absolute; left: 20px; top: 214px; display: flex; align-items: center; gap: 8px;">
+    <span style="position: relative; width: 56px; height: 56px; border-radius: 16px; overflow: hidden; background: #F8E6C4; box-shadow: 0 0 0 3px #FFFFFF;"><img src="../assets/dishes/yuntun.svg" alt="" style="position: absolute; left: -12px; top: -12px; width: 80px; height: 80px;"></span>
+    <a href="G-Crop.dc.html" aria-label="再加一张照片" style="width: 56px; height: 56px; box-sizing: border-box; border: 1.5px dashed rgba(35,28,24,0.45); border-radius: 16px; background: rgba(255,255,255,0.3); color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+      <dc-import name="G-Icon" icon="add" size="22" hint-size="22px,22px"></dc-import>
+    </a>
+    <span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 14px; font-weight: 800;">1<span style="font-weight: 600;"> / 9</span></span>
+  </div>
+  <span style="position: absolute; right: 20px; top: 262px; height: 28px; padding: 0 10px 0 6px; border-radius: 14px; background: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;"><span style="width: 16px; height: 16px; border-radius: 8px; background: #F3C46E; box-shadow: 0 0 0 2px #FFFFFF;"></span>主色取自照片</span>
+
+  <div style="position: absolute; left: 0; right: 0; top: 304px; bottom: 0; background: #FFFFFF; border-radius: 28px 28px 0 0; padding: 10px 20px 0; display: flex; flex-direction: column; gap: 18px;">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 2px; background: #E6DED8;"></span>
+
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <span style="display: flex; align-items: baseline; gap: 8px;"><span style="font-size: 13px; color: #6E625B;">发布到</span><span style="font-size: 16px; font-weight: 700;">袁记云饺</span></span>
+      <a href="G-PickShop.dc.html" style="height: 36px; font-size: 14px; font-weight: 600; color: #231C18; display: flex; align-items: center; text-decoration: underline; text-underline-offset: 4px; text-decoration-color: #C8BBB1;">换一家</a>
+    </div>
+
+    <div style="display: flex; gap: 16px;">
+      <label style="flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0;">
+        <span style="font-size: 13px; color: #6E625B;">菜名</span>
+        <input type="text" value="鲜虾蟹籽云吞" placeholder="叫什么" style="height: 40px; padding: 0; border: 0; border-bottom: 1.5px solid #E6DED8; outline: none; background: transparent; font: inherit; font-size: 22px; font-weight: 900; color: #231C18;">
+      </label>
+      <label style="flex: 0 0 104px; display: flex; flex-direction: column; gap: 2px;">
+        <span style="font-size: 13px; color: #6E625B;">价格</span>
+        <span style="height: 40px; border-bottom: 1.5px solid #E6DED8; display: flex; align-items: center; gap: 2px;">
+          <span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; font-weight: 800;">¥</span>
+          <input type="text" inputmode="decimal" value="18" aria-label="价格" style="width: 100%; min-width: 0; padding: 0; border: 0; outline: none; background: transparent; font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px; font-weight: 800; color: #231C18;">
+        </span>
+      </label>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      <label for="dish-desc" style="display: flex; justify-content: space-between; font-size: 13px; color: #6E625B;">说两句，选填<span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600;">{{descLen}}</span> / 200</span></label>
+      <input id="dish-desc" type="text" maxlength="200" value="{{desc}}" onChange="{{setDesc}}" placeholder="好吃在哪，怎么点" style="height: 40px; padding: 0; border: 0; border-bottom: 1.5px solid #E6DED8; outline: none; background: transparent; font: inherit; font-size: 16px; color: #231C18;">
+    </div>
+
+    <fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px;">
+      <legend style="padding: 0; margin-bottom: 8px; font-size: 13px; color: #6E625B;">分类</legend>
+      <div role="radiogroup" aria-label="分类" style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <sc-for list="{{cats}}" as="c" hint-placeholder-count="10">
+          <button type="button" role="radio" aria-checked="{{c.on}}" onClick="{{c.pick}}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 18px; background: {{c.bg}}; color: {{c.fg}}; font-size: 14px; font-weight: {{c.w}}; transition: background-color 160ms ease, color 160ms ease;">{{c.label}}</button>
+        </sc-for>
+      </div>
+    </fieldset>
+
+    <fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column;">
+      <legend style="padding: 0; margin-bottom: 8px; font-size: 13px; color: #6E625B;">标签，可以多选</legend>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <sc-for list="{{tags}}" as="t" hint-placeholder-count="3">
+          <button type="button" aria-pressed="{{t.on}}" onClick="{{t.toggle}}" style="height: 36px; padding: 0 14px; border: 1.5px solid {{t.line}}; border-radius: 18px; background: {{t.bg}}; color: {{t.fg}}; font-size: 14px; font-weight: {{t.w}}; display: flex; align-items: center; gap: 4px; transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;">{{t.label}}</button>
+        </sc-for>
+        <button type="button" style="height: 36px; padding: 0 14px; border: 1.5px dashed #B5A79C; border-radius: 18px; background: none; color: #231C18; font-size: 14px;">+ 自己写</button>
+      </div>
+    </fieldset>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 96px; box-sizing: border-box; padding: 12px 20px 32px; background: #FFFFFF; box-shadow: 0 -1px 0 #EFE9E4;">
+    <a href="G-Dish.dc.html" class="btn-solid" style="height: 52px; border-radius: 26px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 6px 14px rgba(35,28,24,0.16);">发布</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { cat: 0, tags: { '平价': true, '鲜虾大只': true }, desc: '' };
+  }
+  renderVals() {
+    const catLabels = ['主食', '小吃', '饮品', '甜品', '汤', '火锅', '烧烤', '凉菜', '配菜', '其他'];
+    const tagLabels = ['平价', '量大', '鲜虾大只'];
+    const cat = this.state.cat;
+    const tags = this.state.tags;
+    return {
+      desc: this.state.desc,
+      descLen: this.state.desc.length,
+      setDesc: (e) => this.setState({ desc: e.target.value.slice(0, 200) }),
+      cats: catLabels.map((label, i) => {
+        const on = i === cat;
+        return {
+          label: label,
+          on: on ? 'true' : 'false',
+          bg: on ? '#231C18' : '#F4EFEB',
+          fg: on ? '#FFFFFF' : '#231C18',
+          w: on ? 600 : 400,
+          pick: () => this.setState({ cat: i })
+        };
+      }),
+      tags: tagLabels.map((label) => {
+        const on = !!tags[label];
+        return {
+          label: label,
+          on: on ? 'true' : 'false',
+          bg: on ? '#FBEFD9' : '#FFFFFF',
+          line: on ? '#231C18' : '#E6DED8',
+          fg: '#231C18',
+          w: on ? 600 : 400,
+          toggle: () => {
+            const next = Object.assign({}, this.state.tags);
+            next[label] = !next[label];
+            this.setState({ tags: next });
+          }
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 发布 · 调整照片</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#FFFFFF}a:hover{color:#FFFFFF}
+input[type=range]{accent-color:#FFFFFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #15110E; color: #FFFFFF; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <header style="position: absolute; left: 12px; right: 12px; top: 46px; height: 44px; display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; align-items: center;">
+    <a href="G-AddDish.dc.html" style="height: 44px; color: #FFFFFF; text-decoration: none; font-size: 16px; display: flex; align-items: center; padding-left: 8px;">取消</a>
+    <span style="text-align: center; font-size: 16px; font-weight: 600;">调整照片</span>
+    <a href="G-AddDish.dc.html" style="height: 44px; color: #FFFFFF; text-decoration: none; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;">完成</a>
+  </header>
+
+  <div role="group" aria-label="照片取景，拖动调整位置" onPointerDown="{{down}}" onPointerMove="{{move}}" onPointerUp="{{up}}" onPointerCancel="{{up}}" style="position: absolute; left: 0; right: 0; top: 100px; height: 400px; overflow: hidden; touch-action: none; cursor: grab;">
+    <img src="../assets/photos/p_luosi.png" alt="你选的照片：柳州螺蛳粉" draggable="false" style="position: absolute; left: 22px; top: -5px; width: 334px; height: 349px; transform-origin: 173px 205px; transform: translate({{ox}}px, {{oy}}px) scale({{zoom}}); user-select: none; pointer-events: none;">
+    <div aria-hidden="true" style="position: absolute; left: 45px; top: 50px; width: 300px; height: 300px; border-radius: 50%; box-shadow: 0 0 0 600px rgba(21,17,14,0.66); outline: 2px solid rgba(255,255,255,0.9); outline-offset: -1px; pointer-events: none;"></div>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 506px; display: flex; flex-direction: column; gap: 8px;">
+    <span style="text-align: center; font-size: 14px; color: rgba(255,255,255,0.8);">拖动、缩放，把主菜放进圈里</span>
+    <label style="display: flex; align-items: center; gap: 12px; height: 32px; font-size: 13px; color: rgba(255,255,255,0.8);">
+      <span aria-hidden="true">缩小</span>
+      <input type="range" min="0.8" max="1.6" step="0.01" value="{{zoom}}" onChange="{{zoomTo}}" aria-label="缩放" style="flex: 1;">
+      <span aria-hidden="true">放大</span>
+    </label>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; top: 590px; bottom: 0; box-sizing: border-box; padding: 18px 20px 28px; background: #221C18; border-radius: 28px 28px 0 0; display: flex; flex-direction: column; gap: 16px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+      <span style="display: flex; flex-direction: column;">
+        <span style="display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600;">自动去掉背景<span style="font-size: 11px; font-weight: 500; padding: 0 6px; border: 1px dashed rgba(255,255,255,0.5); border-radius: 8px;">测试中</span></span>
+        <span style="font-size: 12px; color: rgba(255,255,255,0.7);">只留下碗盘，效果不好就关掉</span>
+      </span>
+      <button type="button" role="switch" aria-checked="{{cutLabel}}" aria-label="自动去掉背景" onClick="{{toggleCut}}" style="flex: none; width: 52px; height: 32px; padding: 3px; box-sizing: border-box; border: 0; border-radius: 16px; background: {{cutTrack}}; display: flex; justify-content: {{cutAlign}}; transition: background-color 200ms ease;">
+        <span style="width: 26px; height: 26px; border-radius: 13px; background: #FFFFFF;"></span>
+      </button>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <span style="flex: none; display: flex; flex-direction: column; font-size: 15px; font-weight: 600;">舞台颜色<span style="font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.7);">从照片里推荐</span></span>
+      <div role="radiogroup" aria-label="舞台颜色" style="flex: 1; display: flex; justify-content: flex-end; gap: 14px;">
+        <sc-for list="{{colors}}" as="c" hint-placeholder-count="3">
+          <button type="button" role="radio" aria-checked="{{c.on}}" aria-label="{{c.name}}" onClick="{{c.pick}}" style="width: 48px; padding: 0; border: 0; background: none; color: #FFFFFF; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px;">
+            <span style="width: 36px; height: 36px; border-radius: 18px; background: {{c.hex}}; box-shadow: 0 0 0 {{c.ring}}px #221C18, 0 0 0 {{c.ring2}}px #FFFFFF;"></span>
+            {{c.name}}
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="position: relative; height: 84px; border-radius: 20px; overflow: hidden; background: {{pick.hex}}; color: {{pick.on}}; transition: background-color 300ms ease;">
+      <span style="position: absolute; left: 16px; top: 14px; display: flex; flex-direction: column;">
+        <span style="font-size: 11px; opacity: 0.85;">首页会是这样</span>
+        <span style="font-size: 22px; line-height: 28px; font-weight: 900;">柳州螺蛳粉</span>
+      </span>
+      <span aria-hidden="true" style="position: absolute; right: -10px; top: -8px; width: 100px; height: 100px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 4px #FFFFFF, 0 8px 16px rgba(0,0,0,0.3);"><img src="../assets/photos/sq_luosi.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { ox: 0, oy: 0, zoom: 1, dragging: false, cut: false, color: 0 };
+    this.start = null;
+  }
+  renderVals() {
+    const palette = [
+      { name: '酱色', hex: '#8F5B24', on: '#FFFFFF' },
+      { name: '红油', hex: '#A8321C', on: '#FFFFFF' },
+      { name: '辣橙', hex: '#D9632B', on: '#231C18' }
+    ];
+    const sel = this.state.color;
+    return {
+      ox: this.state.ox,
+      oy: this.state.oy,
+      zoom: this.state.zoom,
+      zoomTo: (e) => this.setState({ zoom: parseFloat(e.target.value) }),
+      cutLabel: this.state.cut ? 'true' : 'false',
+      cutTrack: this.state.cut ? '#4C9A5E' : 'rgba(255,255,255,0.25)',
+      cutAlign: this.state.cut ? 'flex-end' : 'flex-start',
+      toggleCut: () => this.setState({ cut: !this.state.cut }),
+      pick: palette[sel],
+      colors: palette.map((c, i) => ({
+        name: c.name,
+        hex: c.hex,
+        on: i === sel ? 'true' : 'false',
+        ring: i === sel ? 3 : 0,
+        ring2: i === sel ? 5 : 0,
+        pick: () => this.setState({ color: i })
+      })),
+      down: (e) => {
+        this.start = { x: e.clientX, y: e.clientY, ox: this.state.ox, oy: this.state.oy };
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+        this.setState({ dragging: true });
+      },
+      move: (e) => {
+        if (!this.state.dragging || !this.start) return;
+        this.setState({ ox: this.start.ox + e.clientX - this.start.x, oy: this.start.oy + e.clientY - this.start.y });
+      },
+      up: () => {
+        this.start = null;
+        this.setState({ dragging: false });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

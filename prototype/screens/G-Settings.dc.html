@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 设置</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <header style="position: absolute; left: 8px; right: 16px; top: 46px; height: 44px; display: flex; align-items: center;">
+    <a href="G-Me.dc.html" aria-label="返回" style="width: 44px; height: 44px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+      <dc-import name="G-Icon" icon="back" size="24" hint-size="24px,24px"></dc-import>
+    </a>
+  </header>
+
+  <h1 style="position: absolute; left: 20px; top: 98px; margin: 0; font-size: 34px; line-height: 42px; font-weight: 900;">设置</h1>
+
+  <a href="G-EditProfile.dc.html" style="position: absolute; left: 20px; right: 20px; top: 164px; display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit;">
+    <span aria-hidden="true" style="flex: none; width: 56px; height: 56px; border-radius: 50%; background: #231C18; color: #FFCB45; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900;">天</span>
+    <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+      <span style="font-size: 18px; font-weight: 700;">天凉被破王</span>
+      <span style="display: flex; align-items: center; gap: 4px; font-size: 13px; color: #6E625B;"><dc-import name="G-Icon" icon="verify" size="16" hint-size="16px,16px"></dc-import>已认证</span>
+    </span>
+    <span style="display: flex; color: #6E625B;"><dc-import name="G-Icon" icon="chevronRight" size="20" hint-size="20px,20px"></dc-import></span>
+  </a>
+
+  <nav aria-label="设置" style="position: absolute; left: 0; right: 0; top: 252px; display: flex; flex-direction: column;">
+    <a href="G-SettingsAccount.dc.html" style="height: 56px; padding: 0 20px; display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit;">
+      <dc-import name="G-Icon" icon="shield" size="22" hint-size="22px,22px"></dc-import>
+      <span style="flex: 1; font-size: 16px;">账号与安全</span>
+      <span style="display: flex; color: #6E625B;"><dc-import name="G-Icon" icon="chevronRight" size="20" hint-size="20px,20px"></dc-import></span>
+    </a>
+    <a href="G-SettingsPrivacy.dc.html" style="height: 56px; padding: 0 20px; display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit;">
+      <dc-import name="G-Icon" icon="lock" size="22" hint-size="22px,22px"></dc-import>
+      <span style="flex: 1; font-size: 16px;">隐私</span>
+      <span style="display: flex; color: #6E625B;"><dc-import name="G-Icon" icon="chevronRight" size="20" hint-size="20px,20px"></dc-import></span>
+    </a>
+    <a href="G-SettingsNotify.dc.html" style="height: 56px; padding: 0 20px; display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit;">
+      <dc-import name="G-Icon" icon="bell" size="22" hint-size="22px,22px"></dc-import>
+      <span style="flex: 1; font-size: 16px;">通知</span>
+      <span style="display: flex; color: #6E625B;"><dc-import name="G-Icon" icon="chevronRight" size="20" hint-size="20px,20px"></dc-import></span>
+    </a>
+    <a href="G-SettingsAbout.dc.html" style="height: 56px; padding: 0 20px; display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit;">
+      <dc-import name="G-Icon" icon="info" size="22" hint-size="22px,22px"></dc-import>
+      <span style="flex: 1; font-size: 16px;">关于与反馈</span>
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 14px; font-weight: 600; color: #6E625B;">1.0.0</span>
+      <span style="display: flex; color: #6E625B;"><dc-import name="G-Icon" icon="chevronRight" size="20" hint-size="20px,20px"></dc-import></span>
+    </a>
+  </nav>
+
+  <button type="button" class="btn-light" onClick="{{ask}}" style="position: absolute; left: 20px; right: 20px; bottom: 40px; height: 52px; border: 0; border-radius: 26px; background: linear-gradient(180deg, #FBF8F6, #F4EFEB); color: #231C18; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -2px 0 rgba(35,28,24,0.1), 0 1px 2px rgba(35,28,24,0.12), 0 3px 8px rgba(35,28,24,0.06);"><dc-import name="G-Icon" icon="logout" size="20" hint-size="20px,20px"></dc-import>退出登录</button>
+
+  <sc-if value="{{asking}}" hint-placeholder-val="{{ false }}">
+    <button type="button" aria-label="关闭面板" onClick="{{cancel}}" style="position: absolute; inset: 0; border: 0; padding: 0; background: rgba(35,28,24,0.45); cursor: default;"></button>
+    <section role="alertdialog" aria-label="退出登录" style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 10px 20px 32px; background: #FFFFFF; border-radius: 28px 28px 0 0; display: flex; flex-direction: column; gap: 10px;">
+      <span aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 2px; background: #E6DED8;"></span>
+      <h2 style="margin: 8px 0 0; font-size: 20px; line-height: 28px; font-weight: 900;">退出登录？</h2>
+      <p style="margin: 0 0 8px; font-size: 14px; line-height: 22px; color: #4A3C31;">这台设备上的登录信息和个人数据会清掉，你的账号和内容都还在，用手机号或用户名再登录就行。</p>
+      <a href="G-Login.dc.html" class="btn-solid" style="height: 52px; border-radius: 26px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 6px 14px rgba(35,28,24,0.16);">退出</a>
+      <button type="button" class="btn-light" onClick="{{cancel}}" style="height: 52px; border: 0; border-radius: 26px; background: linear-gradient(180deg, #FBF8F6, #F4EFEB); color: #231C18; font-size: 16px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -2px 0 rgba(35,28,24,0.1), 0 1px 2px rgba(35,28,24,0.12), 0 3px 8px rgba(35,28,24,0.06);">先不退</button>
+    </section>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { asking: false };
+  }
+  renderVals() {
+    return {
+      asking: this.state.asking,
+      ask: () => this.setState({ asking: true }),
+      cancel: () => this.setState({ asking: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

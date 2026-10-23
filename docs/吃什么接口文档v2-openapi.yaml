@@ -1,0 +1,6652 @@
+openapi: 3.1.0
+info:
+  title: EatWhat 业务服务 API
+  version: auth-renewal-20261019
+  description: '业务后端接口，按已发布 JAR 的 Spring 映射、参数注解及模型反射生成，排除中控、内部集群和诊断接口。默认 servers=/api，路径为后端实际映射，不自动去重 /api。当前会话头是
+    satoken: Bearer <tokenValue>，以登录返回的 tokenName 为准。HTTP 200 也可能包含非零业务 code；角色、同意状态和集群可用性仍由服务端检查。时间输出兼容项目自定义毫秒序列化及默认
+    ISO 转换器；当前双机授权有效期实测为 ISO 时间。'
+servers:
+- url: /api
+  description: 业务入口反代前缀；后端根路径前拼接 /api
+- url: http://{host}:{port}/api
+  description: 已配置业务网关（18091），保留 /api；域名 HTTPS 反代由使用方配置
+  variables:
+    host:
+      default: 51.79.204.39
+    port:
+      default: '18091'
+- url: http://127.0.0.1:18090
+  description: 业务主机本地直连：没有网关 /api 前缀；仅供服务器内或 SSH 隧道使用
+paths:
+  /activity/dinners:
+    get:
+      tags:
+      - Activity
+      operationId: ActivityController_listDinners_get
+      summary: 动态：获取聚餐动态列表
+      x-java-handler: you.v50to.eatwhat.controller.ActivityController#listDinners
+      security:
+      - SaToken: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_ActivityDinnerDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '分页获取年夜饭列表
+
+        仅登录用户可访问'
+    post:
+      tags:
+      - Activity
+      operationId: ActivityController_publishDinner_post
+      summary: 动态：发布聚餐动态
+      x-java-handler: you.v50to.eatwhat.controller.ActivityController#publishDinner
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateActivityDinnerDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '发布年夜饭
+
+        仅通过认证（verified）的用户可发布
+
+
+        需要角色：verified。角色以服务端返回为准，不由客户端声明。'
+  /activity/dinners/by-likes:
+    get:
+      tags:
+      - Activity
+      operationId: ActivityController_listDinnersByLikes_get
+      summary: 动态：按点赞排序聚餐动态
+      x-java-handler: you.v50to.eatwhat.controller.ActivityController#listDinnersByLikes
+      security:
+      - SaToken: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_ActivityDinnerDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '按点赞数分页获取年夜饭列表
+
+        仅登录用户可访问'
+  /activity/dinners/{id}:
+    delete:
+      tags:
+      - Activity
+      operationId: ActivityController_deleteDinner_delete
+      summary: 动态：删除聚餐动态
+      x-java-handler: you.v50to.eatwhat.controller.ActivityController#deleteDinner
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+    get:
+      tags:
+      - Activity
+      operationId: ActivityController_getDinnerDetail_get
+      summary: 动态：获取聚餐动态详情
+      x-java-handler: you.v50to.eatwhat.controller.ActivityController#getDinnerDetail
+      security:
+      - SaToken: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_ActivityDinnerDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。
+  /activity/foods:
+    get:
+      tags:
+      - Activity
+      operationId: ActivityController_listFoods_get
+      summary: 动态：获取美食动态列表
+      x-java-handler: you.v50to.eatwhat.controller.ActivityController#listFoods
+      security:
+      - SaToken: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_ActivityFoodDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '分页获取美食列表
+
+        仅登录用户可访问'
+    post:
+      tags:
+      - Activity
+      operationId: ActivityController_publishFood_post
+      summary: 动态：发布美食动态
+      x-java-handler: you.v50to.eatwhat.controller.ActivityController#publishFood
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateActivityFoodDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '发布地域性美食
+
+        仅通过认证（verified）的用户可发布
+
+
+        需要角色：verified。角色以服务端返回为准，不由客户端声明。'
+  /activity/foods/by-likes:
+    get:
+      tags:
+      - Activity
+      operationId: ActivityController_listFoodsByLikes_get
+      summary: 动态：按点赞排序美食动态
+      x-java-handler: you.v50to.eatwhat.controller.ActivityController#listFoodsByLikes
+      security:
+      - SaToken: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_ActivityFoodDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '按点赞数分页获取美食列表
+
+        仅登录用户可访问'
+  /activity/foods/{id}:
+    delete:
+      tags:
+      - Activity
+      operationId: ActivityController_deleteFood_delete
+      summary: 动态：删除菜品或美食动态
+      x-java-handler: you.v50to.eatwhat.controller.ActivityController#deleteFood
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+    get:
+      tags:
+      - Activity
+      operationId: ActivityController_getFoodDetail_get
+      summary: 动态：获取菜品或美食动态详情
+      x-java-handler: you.v50to.eatwhat.controller.ActivityController#getFoodDetail
+      security:
+      - SaToken: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_ActivityFoodDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。
+  /activity/likes:
+    post:
+      tags:
+      - Activity
+      operationId: ActivityController_like_post
+      summary: 动态：点赞动态
+      x-java-handler: you.v50to.eatwhat.controller.ActivityController#like
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityLikeReqDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '点赞（支持 food/dinner）
+
+        仅通过认证（verified）的用户可操作
+
+
+        需要角色：verified。角色以服务端返回为准，不由客户端声明。'
+    delete:
+      tags:
+      - Activity
+      operationId: ActivityController_unlike_delete
+      summary: 动态：取消动态点赞
+      x-java-handler: you.v50to.eatwhat.controller.ActivityController#unlike
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityLikeReqDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '取消点赞（支持 food/dinner）
+
+        仅通过认证（verified）的用户可操作
+
+
+        需要角色：verified。角色以服务端返回为准，不由客户端声明。'
+  /activity/{provinceId}/foods:
+    get:
+      tags:
+      - Activity
+      operationId: ActivityController_getFoodsByProvinceId_get
+      summary: 动态：按省份获取美食动态
+      x-java-handler: you.v50to.eatwhat.controller.ActivityController#getFoodsByProvinceId
+      security:
+      - SaToken: []
+      parameters:
+      - name: provinceId
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_ActivityFoodDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。
+  /admin/food-tags:
+    post:
+      tags:
+      - FoodTagAdmin
+      operationId: FoodTagAdminController_createSystemTag_post
+      summary: 菜品标签管理：创建系统菜品标签
+      x-java-handler: you.v50to.eatwhat.controller.FoodTagAdminController#createSystemTag
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSystemFoodTagDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_FoodTagSummaryVOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+    get:
+      tags:
+      - FoodTagAdmin
+      operationId: FoodTagAdminController_listSystemTags_get
+      summary: 菜品标签管理：获取系统菜品标签
+      x-java-handler: you.v50to.eatwhat.controller.FoodTagAdminController#listSystemTags
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_AdminFoodTagVOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /admin/food-tags/{id}:
+    delete:
+      tags:
+      - FoodTagAdmin
+      operationId: FoodTagAdminController_deleteSystemTag_delete
+      summary: 菜品标签管理：删除系统菜品标签
+      x-java-handler: you.v50to.eatwhat.controller.FoodTagAdminController#deleteSystemTag
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+    put:
+      tags:
+      - FoodTagAdmin
+      operationId: FoodTagAdminController_updateSystemTag_put
+      summary: 菜品标签管理：修改系统菜品标签
+      x-java-handler: you.v50to.eatwhat.controller.FoodTagAdminController#updateSystemTag
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSystemFoodTagDTORequest'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /admin/summary:
+    get:
+      tags:
+      - Admin
+      operationId: AdminController_summary_get
+      summary: 业务管理：获取业务统计
+      x-java-handler: you.v50to.eatwhat.controller.AdminController#summary
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_SummaryVOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /admin/sync/catalog/conflicts:
+    get:
+      tags:
+      - CatalogConflict
+      operationId: CatalogConflictController_listOpenConflicts_get
+      summary: 目录冲突管理：列出未解决的目录冲突
+      x-java-handler: you.v50to.eatwhat.controller.CatalogConflictController#listOpenConflicts
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      x-conditional-properties:
+        name:
+        - app.sync.catalog.enabled
+        havingValue: 'true'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_List_ConflictViewResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '需要角色：admin。角色以服务端返回为准，不由客户端声明。
+
+
+        此路由由配置开关决定是否注册，见 x-conditional-properties。'
+  /admin/sync/catalog/conflicts/objects:
+    get:
+      tags:
+      - CatalogConflict
+      operationId: CatalogConflictController_listOpenObjectHeadConflicts_get
+      summary: 目录冲突管理：列出未解决的对象版本冲突
+      x-java-handler: you.v50to.eatwhat.controller.CatalogConflictController#listOpenObjectHeadConflicts
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      x-conditional-properties:
+        name:
+        - app.sync.catalog.enabled
+        havingValue: 'true'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_List_ObjectHeadConflictViewResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '需要角色：admin。角色以服务端返回为准，不由客户端声明。
+
+
+        此路由由配置开关决定是否注册，见 x-conditional-properties。'
+  /admin/sync/catalog/conflicts/objects/{conflictId}/resolve:
+    post:
+      tags:
+      - CatalogConflict
+      operationId: CatalogConflictController_resolveObjectHeads_post
+      summary: 目录冲突管理：解决对象版本冲突
+      x-java-handler: you.v50to.eatwhat.controller.CatalogConflictController#resolveObjectHeads
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      x-conditional-properties:
+        name:
+        - app.sync.catalog.enabled
+        havingValue: 'true'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveHeadRequestRequest'
+      parameters:
+      - name: conflictId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_ResolutionResultResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '需要角色：admin。角色以服务端返回为准，不由客户端声明。
+
+
+        此路由由配置开关决定是否注册，见 x-conditional-properties。'
+  /admin/sync/catalog/conflicts/{conflictId}/resolve:
+    post:
+      tags:
+      - CatalogConflict
+      operationId: CatalogConflictController_resolve_post
+      summary: 目录冲突管理：解决冲突
+      x-java-handler: you.v50to.eatwhat.controller.CatalogConflictController#resolve
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      x-conditional-properties:
+        name:
+        - app.sync.catalog.enabled
+        havingValue: 'true'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveRequestRequest'
+      parameters:
+      - name: conflictId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_ResolutionResultResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '需要角色：admin。角色以服务端返回为准，不由客户端声明。
+
+
+        此路由由配置开关决定是否注册，见 x-conditional-properties。'
+  /admin/sync/catalog/import/hubs:
+    post:
+      tags:
+      - CatalogImport
+      operationId: CatalogImportController_importHubs_post
+      summary: 目录导入管理：导入商场目录
+      x-java-handler: you.v50to.eatwhat.controller.CatalogImportController#importHubs
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      x-conditional-properties:
+        name:
+        - app.sync.catalog.enabled
+        havingValue: 'true'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogHubImportRequestRequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_CatalogImportResultResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '需要角色：admin。角色以服务端返回为准，不由客户端声明。
+
+
+        此路由由配置开关决定是否注册，见 x-conditional-properties。'
+  /admin/sync/profile-conflicts:
+    get:
+      tags:
+      - ProfileConflict
+      operationId: ProfileConflictController_list_get
+      summary: 资料冲突管理：获取列表
+      x-java-handler: you.v50to.eatwhat.controller.ProfileConflictController#list
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      x-conditional-properties:
+        name:
+        - app.sync.profile.enabled
+        havingValue: 'true'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_List_ConflictResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '需要角色：admin。角色以服务端返回为准，不由客户端声明。
+
+
+        此路由由配置开关决定是否注册，见 x-conditional-properties。'
+  /admin/sync/profile-conflicts/{conflictId}/resolve:
+    post:
+      tags:
+      - ProfileConflict
+      operationId: ProfileConflictController_resolve_post
+      summary: 资料冲突管理：解决冲突
+      x-java-handler: you.v50to.eatwhat.controller.ProfileConflictController#resolve
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      x-conditional-properties:
+        name:
+        - app.sync.profile.enabled
+        havingValue: 'true'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveRequestRequest'
+      parameters:
+      - name: conflictId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '需要角色：admin。角色以服务端返回为准，不由客户端声明。
+
+
+        此路由由配置开关决定是否注册，见 x-conditional-properties。'
+  /api/location/provinces:
+    get:
+      tags:
+      - Location
+      operationId: LocationController_getAllProvinces_get
+      summary: 省市位置：获取省份列表
+      x-java-handler: you.v50to.eatwhat.controller.LocationController#getAllProvinces
+      security:
+      - SaToken: []
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_List_ProvinceDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '获取所有省份
+
+
+        后端原始映射本身包含 /api。在当前会剥离一次 /api/ 的 18091 网关中，完整外部路径为 /api/api/location/provinces；不要擅自去重。'
+  /api/location/provinces/{provinceId}/cities:
+    get:
+      tags:
+      - Location
+      operationId: LocationController_getCitiesByProvinceId_get
+      summary: 省市位置：获取省内城市列表
+      x-java-handler: you.v50to.eatwhat.controller.LocationController#getCitiesByProvinceId
+      security:
+      - SaToken: []
+      parameters:
+      - name: provinceId
+        in: path
+        required: true
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_List_CityDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 后端原始映射本身包含 /api。在当前会剥离一次 /api/ 的 18091 网关中，完整外部路径为 /api/api/location/provinces/{provinceId}/cities；不要擅自去重。
+  /auth/callback:
+    get:
+      tags:
+      - Auth
+      operationId: AuthController_callback_get
+      summary: 登录与认证：处理统一认证回调
+      x-java-handler: you.v50to.eatwhat.controller.AuthController#callback
+      x-spring-any-method: true
+      security:
+      - SaToken: []
+      parameters:
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_HashMap_String_ObjectResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
+    post:
+      tags:
+      - Auth
+      operationId: AuthController_callback_post
+      summary: 登录与认证：处理统一认证回调
+      x-java-handler: you.v50to.eatwhat.controller.AuthController#callback
+      x-spring-any-method: true
+      security:
+      - SaToken: []
+      parameters:
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_HashMap_String_ObjectResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
+  /auth/changePassword:
+    post:
+      tags:
+      - Auth
+      operationId: AuthController_changePassword_post
+      summary: 登录与认证：修改密码
+      x-java-handler: you.v50to.eatwhat.controller.AuthController#changePassword
+      security:
+      - SaToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePwdDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 修改密码
+  /auth/checkUsername:
+    post:
+      tags:
+      - Auth
+      operationId: AuthController_checkUsername_post
+      summary: 登录与认证：检查用户名是否可用
+      x-java-handler: you.v50to.eatwhat.controller.AuthController#checkUsername
+      security: []
+      parameters:
+      - name: username
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。
+  /auth/consent:
+    get:
+      tags:
+      - AccountConsent
+      operationId: AccountConsentController_status_get
+      summary: 跨站同步同意：获取当前跨站同意状态
+      x-java-handler: you.v50to.eatwhat.account.AccountConsentController#status
+      security:
+      - SaToken: []
+      x-conditional-properties:
+        name:
+        - app.account.enabled
+        havingValue: 'true'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentReply'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 此路由由配置开关决定是否注册，见 x-conditional-properties。
+  /auth/consent/grant:
+    post:
+      tags:
+      - AccountConsent
+      operationId: AccountConsentController_grant_post
+      summary: 跨站同步同意：授予跨站同步同意
+      x-java-handler: you.v50to.eatwhat.account.AccountConsentController#grant
+      security: []
+      x-conditional-properties:
+        name:
+        - app.account.enabled
+        havingValue: 'true'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrantRequestRequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentReply'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '此路由由配置开关决定是否注册，见 x-conditional-properties。
+
+
+        提供有效 proof 时可无会话提交；不提供 proof 时须使用已登录校内权威站会话。必须先读取当前政策版本。'
+  /auth/consent/policy:
+    get:
+      tags:
+      - AccountConsent
+      operationId: AccountConsentController_policy_get
+      summary: 跨站同步同意：读取跨站同意政策
+      x-java-handler: you.v50to.eatwhat.account.AccountConsentController#policy
+      security: []
+      x-conditional-properties:
+        name:
+        - app.account.enabled
+        havingValue: 'true'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentPolicyReply'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 此路由由配置开关决定是否注册，见 x-conditional-properties。
+  /auth/consent/withdraw:
+    post:
+      tags:
+      - AccountConsent
+      operationId: AccountConsentController_withdraw_post
+      summary: 跨站同步同意：撤回当前用户跨站同意
+      x-java-handler: you.v50to.eatwhat.account.AccountConsentController#withdraw
+      security:
+      - SaToken: []
+      x-conditional-properties:
+        name:
+        - app.account.enabled
+        havingValue: 'true'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentReply'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 此路由由配置开关决定是否注册，见 x-conditional-properties。
+  /auth/consent/withdraw-with-password:
+    post:
+      tags:
+      - AccountConsent
+      operationId: AccountConsentController_withdrawWithPassword_post
+      summary: 跨站同步同意：使用密码撤回跨站同意
+      x-java-handler: you.v50to.eatwhat.account.AccountConsentController#withdrawWithPassword
+      security: []
+      x-conditional-properties:
+        name:
+        - app.account.enabled
+        havingValue: 'true'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WithdrawalRequestRequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentReply'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 此路由由配置开关决定是否注册，见 x-conditional-properties。
+  /auth/getCode:
+    post:
+      tags:
+      - Auth
+      operationId: AuthController_sendCode_post
+      summary: 登录与认证：发送验证码
+      x-java-handler: you.v50to.eatwhat.controller.AuthController#sendCode
+      security:
+      - SaToken: []
+      parameters:
+      - name: mobile
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '获取短信验证码
+
+
+        mobile 是 Spring 普通请求参数，可放查询串或表单；不是 JSON DTO。'
+  /auth/login:
+    post:
+      tags:
+      - Auth
+      operationId: AuthController_login_post
+      summary: 登录与认证：登录
+      x-java-handler: you.v50to.eatwhat.controller.AuthController#login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthReply'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 成功会话 data 使用 SaTokenInfo；取 data.tokenName 和 data.tokenValue。海外未同意、授权过期或尚未同步时可能返回 20005/20006
+        或临时 consentProof；这些均不等于已登录成功。
+  /auth/logout:
+    post:
+      tags:
+      - Auth
+      operationId: AuthController_logout_post
+      summary: 登录与认证：退出登录
+      x-java-handler: you.v50to.eatwhat.controller.AuthController#logout
+      security:
+      - SaToken: []
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。
+  /auth/register:
+    post:
+      tags:
+      - Auth
+      operationId: AuthController_register_post
+      summary: 登录与认证：注册
+      x-java-handler: you.v50to.eatwhat.controller.AuthController#register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthReply'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '用户名只能包含字母数字下划线，且不能是邮箱，长度3-10
+
+        密码长度6-64
+
+
+        成功会话 data 使用 SaTokenInfo；取 data.tokenName 和 data.tokenValue。海外未同意、授权过期或尚未同步时可能返回 20005/20006 或临时 consentProof；这些均不等于已登录成功。'
+  /auth/sdu:
+    get:
+      tags:
+      - Auth
+      operationId: AuthController_sdu_get
+      summary: 登录与认证：跳转山东大学统一认证
+      x-java-handler: you.v50to.eatwhat.controller.AuthController#sdu
+      x-spring-any-method: true
+      security:
+      - SaToken: []
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '302':
+          description: 认证/验证跳转；以 Location 为准
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri-reference
+      description: '重定向到统一认证登录页面
+
+
+        原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。'
+    post:
+      tags:
+      - Auth
+      operationId: AuthController_sdu_post
+      summary: 登录与认证：跳转山东大学统一认证
+      x-java-handler: you.v50to.eatwhat.controller.AuthController#sdu
+      x-spring-any-method: true
+      security:
+      - SaToken: []
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '302':
+          description: 认证/验证跳转；以 Location 为准
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri-reference
+      description: '重定向到统一认证登录页面
+
+
+        原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。'
+  /auth/sendEmail:
+    get:
+      tags:
+      - Auth
+      operationId: AuthController_sendEmail_get
+      summary: 登录与认证：发送邮箱验证链接
+      x-java-handler: you.v50to.eatwhat.controller.AuthController#sendEmail
+      security:
+      - SaToken: []
+      parameters:
+      - name: email
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '发送验证链接
+
+        发送一个链接 点击绑定'
+  /auth/verify:
+    get:
+      tags:
+      - Auth
+      operationId: AuthController_verify_get
+      summary: 登录与认证：查询已完成认证类型
+      x-java-handler: you.v50to.eatwhat.controller.AuthController#verify
+      security:
+      - SaToken: []
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_List_StringResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 校验三方认证是否完成
+  /auth/verifyEmail:
+    get:
+      tags:
+      - Auth
+      operationId: AuthController_verifyEmail_get
+      summary: 登录与认证：验证邮箱链接
+      x-java-handler: you.v50to.eatwhat.controller.AuthController#verifyEmail
+      security: []
+      parameters:
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '302':
+          description: 认证/验证跳转；以 Location 为准
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri-reference
+      description: 验证邮箱链接
+  /callback:
+    get:
+      tags:
+      - Callback
+      operationId: CallbackController_callback_get
+      summary: Callback：处理统一认证回调
+      x-java-handler: you.v50to.eatwhat.controller.CallbackController#callback
+      x-spring-any-method: true
+      security:
+      - SaToken: []
+      parameters:
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_HashMap_String_ObjectResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
+    post:
+      tags:
+      - Callback
+      operationId: CallbackController_callback_post
+      summary: Callback：处理统一认证回调
+      x-java-handler: you.v50to.eatwhat.controller.CallbackController#callback
+      x-spring-any-method: true
+      security:
+      - SaToken: []
+      parameters:
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_HashMap_String_ObjectResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
+  /foods/delete/{id}:
+    delete:
+      tags:
+      - Food
+      operationId: FoodController_deleteFood_delete
+      summary: 菜品与收藏：删除菜品或美食动态
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#deleteFood
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /foods/detail/{id}:
+    get:
+      tags:
+      - Food
+      operationId: FoodController_getFoodDetail_get
+      summary: 菜品与收藏：获取菜品或美食动态详情
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#getFoodDetail
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_FoodVOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /foods/edit/{id}:
+    put:
+      tags:
+      - Food
+      operationId: FoodController_editFood_put
+      summary: 菜品与收藏：修改菜品
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#editFood
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditFoodDTORequest'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /foods/favorites:
+    get:
+      tags:
+      - Food
+      operationId: FoodController_getMyFavoriteFoods_get
+      summary: 菜品与收藏：获取收藏菜品
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#getMyFavoriteFoods
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_FoodVOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /foods/list:
+    get:
+      tags:
+      - Food
+      operationId: FoodController_listByRestaurant_get
+      summary: 菜品与收藏：按餐厅筛选菜品
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#listByRestaurant
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: restaurantId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      - name: systemTagIds
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int64
+      - name: myCustomTagIds
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: integer
+            format: int64
+      - name: myCustomTagNames
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_FoodVOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '查询某餐厅的菜品列表
+
+
+        需要角色：verified。角色以服务端返回为准，不由客户端声明。'
+  /foods/my:
+    get:
+      tags:
+      - Food
+      operationId: FoodController_getMyFood_get
+      summary: 菜品与收藏：获取我的菜品
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#getMyFood
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_FoodVOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '获取自己上传的菜品
+
+
+        需要角色：verified。角色以服务端返回为准，不由客户端声明。'
+  /foods/recommend:
+    get:
+      tags:
+      - Food
+      operationId: FoodController_recommendFoods_get
+      summary: 菜品与收藏：推荐菜品
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#recommendFoods
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 10
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_List_FoodVOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '推荐食物接口
+
+
+        需要角色：verified。角色以服务端返回为准，不由客户端声明。'
+  /foods/tags/my:
+    get:
+      tags:
+      - Food
+      operationId: FoodController_listMyCustomTags_get
+      summary: 菜品与收藏：获取个人菜品标签
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#listMyCustomTags
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_MyCustomTagVOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /foods/tags/my/{tagId}:
+    delete:
+      tags:
+      - Food
+      operationId: FoodController_deleteMyCustomTag_delete
+      summary: 菜品与收藏：删除个人标签
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#deleteMyCustomTag
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: tagId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+    put:
+      tags:
+      - Food
+      operationId: FoodController_renameMyCustomTag_put
+      summary: 菜品与收藏：重命名个人标签
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#renameMyCustomTag
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameCustomTagDTORequest'
+      parameters:
+      - name: tagId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /foods/tags/system:
+    get:
+      tags:
+      - Food
+      operationId: FoodController_listSystemTags_get
+      summary: 菜品与收藏：获取系统菜品标签
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#listSystemTags
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_List_FoodTagSummaryVOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /foods/upload:
+    post:
+      tags:
+      - Food
+      operationId: FoodController_upload_post
+      summary: 菜品与收藏：发布菜品
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#upload
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFoodDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '上传菜品
+
+
+        需要角色：verified。角色以服务端返回为准，不由客户端声明。'
+  /foods/{id}/favorite:
+    post:
+      tags:
+      - Food
+      operationId: FoodController_favoriteFood_post
+      summary: 菜品与收藏：收藏菜品
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#favoriteFood
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /foods/{id}/like:
+    post:
+      tags:
+      - Food
+      operationId: FoodController_likeFood_post
+      summary: 菜品与收藏：点赞菜品
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#likeFood
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /foods/{id}/tags:
+    get:
+      tags:
+      - Food
+      operationId: FoodController_getFoodTags_get
+      summary: 菜品与收藏：获取菜品标签
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#getFoodTags
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_FoodTagViewVOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /foods/{id}/tags/custom:
+    post:
+      tags:
+      - Food
+      operationId: FoodController_addCustomTags_post
+      summary: 菜品与收藏：添加自定义菜品标签
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#addCustomTags
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCustomFoodTagsDTORequest'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /foods/{id}/tags/system:
+    post:
+      tags:
+      - Food
+      operationId: FoodController_addSystemTags_post
+      summary: 菜品与收藏：添加系统菜品标签
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#addSystemTags
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddSystemFoodTagsDTORequest'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /foods/{id}/tags/{tagId}:
+    delete:
+      tags:
+      - Food
+      operationId: FoodController_deleteTag_delete
+      summary: 菜品与收藏：移除菜品标签
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#deleteTag
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: tagId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /foods/{id}/unfavorite:
+    post:
+      tags:
+      - Food
+      operationId: FoodController_unfavoriteFood_post
+      summary: 菜品与收藏：取消收藏菜品
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#unfavoriteFood
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /foods/{id}/unlike:
+    post:
+      tags:
+      - Food
+      operationId: FoodController_unlikeFood_post
+      summary: 菜品与收藏：取消菜品点赞
+      x-java-handler: you.v50to.eatwhat.controller.FoodController#unlikeFood
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /history/browse:
+    get:
+      tags:
+      - History
+      operationId: HistoryController_getBrowseHistory_get
+      summary: 浏览历史：获取浏览历史
+      x-java-handler: you.v50to.eatwhat.controller.HistoryController#getBrowseHistory
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: targetType
+        in: query
+        required: true
+        schema:
+          type: string
+          minLength: 1
+          pattern: ^(restaurant|food)$
+      - name: page
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_BrowseHistoryItemDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /hub/add:
+    post:
+      tags:
+      - Hub
+      operationId: HubController_addHub_post
+      summary: 商场：新增商场
+      x-java-handler: you.v50to.eatwhat.controller.HubController#addHub
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HubDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /hub/delete/{id}:
+    delete:
+      tags:
+      - Hub
+      operationId: HubController_deleteHub_delete
+      summary: 商场：删除商场
+      x-java-handler: you.v50to.eatwhat.controller.HubController#deleteHub
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /hub/detail/{id}:
+    get:
+      tags:
+      - Hub
+      operationId: HubController_getHubDetail_get
+      summary: 商场：获取商场详情
+      x-java-handler: you.v50to.eatwhat.controller.HubController#getHubDetail
+      security:
+      - SaToken: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_HubResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。
+  /hub/edit/{id}:
+    put:
+      tags:
+      - Hub
+      operationId: HubController_editHub_put
+      summary: 商场：修改商场
+      x-java-handler: you.v50to.eatwhat.controller.HubController#editHub
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HubDTORequest'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /hub/list:
+    get:
+      tags:
+      - Hub
+      operationId: HubController_listHubs_get
+      summary: 商场：获取商场列表
+      x-java-handler: you.v50to.eatwhat.controller.HubController#listHubs
+      security:
+      - SaToken: []
+      parameters:
+      - name: keyword
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_HubResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。
+  /hub/locate:
+    get:
+      tags:
+      - Hub
+      operationId: HubController_locateHub_get
+      summary: 商场：按位置查找商场
+      x-java-handler: you.v50to.eatwhat.controller.HubController#locateHub
+      security:
+      - SaToken: []
+      parameters:
+      - name: gcjLng
+        in: query
+        required: true
+        schema:
+          type: number
+      - name: gcjLat
+        in: query
+        required: true
+        schema:
+          type: number
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_HubResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 判断餐厅所在的hub
+  /hub/rebind-restaurants/{id}:
+    post:
+      tags:
+      - Hub
+      operationId: HubController_rebindRestaurants_post
+      summary: 商场：重新绑定商场内餐厅
+      x-java-handler: you.v50to.eatwhat.controller.HubController#rebindRestaurants
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_IntegerResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /notification/list:
+    get:
+      tags:
+      - Notification
+      operationId: NotificationController_list_get
+      summary: 通知：获取列表
+      x-java-handler: you.v50to.eatwhat.controller.NotificationController#list
+      security:
+      - SaToken: []
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_NotificationDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。
+  /notification/read/all:
+    post:
+      tags:
+      - Notification
+      operationId: NotificationController_readAll_post
+      summary: 通知：标记全部通知已读
+      x-java-handler: you.v50to.eatwhat.controller.NotificationController#readAll
+      security:
+      - SaToken: []
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。
+  /notification/read/{id}:
+    post:
+      tags:
+      - Notification
+      operationId: NotificationController_readOne_post
+      summary: 通知：标记单条通知已读
+      x-java-handler: you.v50to.eatwhat.controller.NotificationController#readOne
+      security:
+      - SaToken: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。
+  /notification/unread/count:
+    get:
+      tags:
+      - Notification
+      operationId: NotificationController_unreadCount_get
+      summary: 通知：获取未读通知数
+      x-java-handler: you.v50to.eatwhat.controller.NotificationController#unreadCount
+      security:
+      - SaToken: []
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_LongResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。
+  /restaurant/add:
+    post:
+      tags:
+      - Restaurant
+      operationId: RestaurantController_addRestaurant_post
+      summary: 餐厅：新增餐厅
+      x-java-handler: you.v50to.eatwhat.controller.RestaurantController#addRestaurant
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestaurantDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /restaurant/delete/{id}:
+    delete:
+      tags:
+      - Restaurant
+      operationId: RestaurantController_deleteRestaurant_delete
+      summary: 餐厅：删除餐厅
+      x-java-handler: you.v50to.eatwhat.controller.RestaurantController#deleteRestaurant
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /restaurant/detail/{id}:
+    get:
+      tags:
+      - Restaurant
+      operationId: RestaurantController_getRestaurantDetail_get
+      summary: 餐厅：获取餐厅详情
+      x-java-handler: you.v50to.eatwhat.controller.RestaurantController#getRestaurantDetail
+      security:
+      - SaToken: []
+      x-required-roles:
+      - verified
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_RestaurantResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：verified。角色以服务端返回为准，不由客户端声明。
+  /restaurant/edit/{id}:
+    put:
+      tags:
+      - Restaurant
+      operationId: RestaurantController_editRestaurant_put
+      summary: 餐厅：修改餐厅
+      x-java-handler: you.v50to.eatwhat.controller.RestaurantController#editRestaurant
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditRestaurantDTORequest'
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /restaurant/list:
+    get:
+      tags:
+      - Restaurant
+      operationId: RestaurantController_listRestaurants_get
+      summary: 餐厅：获取管理用餐厅列表
+      x-java-handler: you.v50to.eatwhat.controller.RestaurantController#listRestaurants
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      parameters:
+      - name: keyword
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: hubId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_RestaurantResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /restaurant/search:
+    get:
+      tags:
+      - Restaurant
+      operationId: RestaurantController_searchRestaurants_get
+      summary: 餐厅：搜索附近餐厅
+      x-java-handler: you.v50to.eatwhat.controller.RestaurantController#searchRestaurants
+      security:
+      - SaToken: []
+      parameters:
+      - name: keyword
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+      - name: hubId
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+      - name: gcjLng
+        in: query
+        required: true
+        schema:
+          type: number
+      - name: gcjLat
+        in: query
+        required: true
+        schema:
+          type: number
+      - name: radius
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: number
+          - type: 'null'
+      - name: page
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_RestaurantResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。
+  /upload/complete:
+    post:
+      tags:
+      - Upload
+      operationId: UploadController_complete_post
+      summary: 文件上传：确认文件上传完成
+      x-java-handler: you.v50to.eatwhat.controller.UploadController#complete
+      security:
+      - SaToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteUploadRequestRequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_CompletedFileResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: avatar 仅需登录；activity/foods/restaurants 还需 verified 角色。预签名后向 putUrl PUT 原始字节，再调用 /upload/complete，最后将
+        key 写入业务资料。
+  /upload/presign:
+    post:
+      tags:
+      - Upload
+      operationId: UploadController_presign_post
+      summary: 文件上传：申请单文件上传签名
+      x-java-handler: you.v50to.eatwhat.controller.UploadController#presign
+      security:
+      - SaToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresignUploadReqDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PresignUploadRespDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '上传预签名接口。
+
+
+        avatar 仅需登录；activity/foods/restaurants 还需 verified 角色。预签名后向 putUrl PUT 原始字节，再调用 /upload/complete，最后将 key
+        写入业务资料。'
+  /upload/presign/batch:
+    post:
+      tags:
+      - Upload
+      operationId: UploadController_presignBatch_post
+      summary: 文件上传：申请批量上传签名
+      x-java-handler: you.v50to.eatwhat.controller.UploadController#presignBatch
+      security:
+      - SaToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresignBatchUploadReqDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PresignBatchUploadRespDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: avatar 仅需登录；activity/foods/restaurants 还需 verified 角色。预签名后向 putUrl PUT 原始字节，再调用 /upload/complete，最后将
+        key 写入业务资料。
+  /user/ban/{userId}:
+    post:
+      tags:
+      - User
+      operationId: UserController_banUser_post
+      summary: 用户与关注：封禁用户
+      x-java-handler: you.v50to.eatwhat.controller.UserController#banUser
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BanUserDTORequest'
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /user/bindMobile:
+    post:
+      tags:
+      - User
+      operationId: UserController_bindMobile_post
+      summary: 用户与关注：绑定手机
+      x-java-handler: you.v50to.eatwhat.controller.UserController#bindMobile
+      security:
+      - SaToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BindMobileReqRequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。
+  /user/changePrivacy:
+    post:
+      tags:
+      - User
+      operationId: UserController_changePrivacy_post
+      summary: 用户与关注：修改隐私设置
+      x-java-handler: you.v50to.eatwhat.controller.UserController#changePrivacy
+      security:
+      - SaToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivacyDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 更改隐私设置
+  /user/follow:
+    post:
+      tags:
+      - User
+      operationId: UserController_follow_post
+      summary: 用户与关注：关注用户
+      x-java-handler: you.v50to.eatwhat.controller.UserController#follow
+      security:
+      - SaToken: []
+      parameters:
+      - name: userId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 关注他人
+  /user/followers:
+    get:
+      tags:
+      - User
+      operationId: UserController_getFollowers_get
+      summary: 用户与关注：获取粉丝列表
+      x-java-handler: you.v50to.eatwhat.controller.UserController#getFollowers
+      security:
+      - SaToken: []
+      parameters:
+      - name: userId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_FansDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 获取粉丝列表
+  /user/followings:
+    get:
+      tags:
+      - User
+      operationId: UserController_getFollowings_get
+      summary: 用户与关注：获取关注列表
+      x-java-handler: you.v50to.eatwhat.controller.UserController#getFollowings
+      security:
+      - SaToken: []
+      parameters:
+      - name: userId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_FansDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 获取关注列表
+  /user/getCode:
+    post:
+      tags:
+      - User
+      operationId: UserController_getCode_post
+      summary: 用户与关注：发送验证码
+      x-java-handler: you.v50to.eatwhat.controller.UserController#getCode
+      security:
+      - SaToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendCodeReqRequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 根据请求参数和客户端 IP 发送验证码
+  /user/info:
+    get:
+      tags:
+      - User
+      operationId: UserController_info_get
+      summary: 用户与关注：获取当前用户资料
+      x-java-handler: you.v50to.eatwhat.controller.UserController#info
+      security:
+      - SaToken: []
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_UserInfoDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 获取用户个人信息
+  /user/list:
+    get:
+      tags:
+      - User
+      operationId: UserController_listUsers_get
+      summary: 用户与关注：获取用户管理列表
+      x-java-handler: you.v50to.eatwhat.controller.UserController#listUsers
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 1
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_PageResult_UserListItemVOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: '获取用户列表
+
+
+        需要角色：admin。角色以服务端返回为准，不由客户端声明。'
+  /user/unban/{userId}:
+    post:
+      tags:
+      - User
+      operationId: UserController_unbanUser_post
+      summary: 用户与关注：解除用户封禁
+      x-java-handler: you.v50to.eatwhat.controller.UserController#unbanUser
+      security:
+      - SaToken: []
+      x-required-roles:
+      - admin
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 需要角色：admin。角色以服务端返回为准，不由客户端声明。
+  /user/unfollow:
+    post:
+      tags:
+      - User
+      operationId: UserController_unfollow_post
+      summary: 用户与关注：取消关注用户
+      x-java-handler: you.v50to.eatwhat.controller.UserController#unfollow
+      security:
+      - SaToken: []
+      parameters:
+      - name: userId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 取消关注
+  /user/updateInfo:
+    put:
+      tags:
+      - User
+      operationId: UserController_updateInfo_put
+      summary: 用户与关注：更新当前用户资料
+      x-java-handler: you.v50to.eatwhat.controller.UserController#updateInfo
+      security:
+      - SaToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserInfoDTORequest'
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_VoidResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 更新用户个人信息
+  /user/userInfo:
+    get:
+      tags:
+      - User
+      operationId: UserController_getUserInfo_get
+      summary: 用户与关注：获取其他用户资料
+      x-java-handler: you.v50to.eatwhat.controller.UserController#getUserInfo
+      security:
+      - SaToken: []
+      parameters:
+      - name: userId
+        in: query
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: 业务响应；code=0 为成功，非零为业务错误。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Result_OtherUserInfoDTOResponse'
+        default:
+          description: 错误响应；HTTP 状态码及 code/msg 需要共同判断。
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      description: 获取其他用户信息
+components:
+  securitySchemes:
+    SaToken:
+      type: apiKey
+      in: header
+      name: satoken
+      description: 输入完整的 Bearer <tokenValue>。当前部署 tokenName=satoken；若部署修改 tokenName，应同步修改本安全方案。
+  schemas:
+    AccountStatusVOResponse:
+      type: object
+      properties:
+        accountStatus:
+          anyOf:
+          - type: string
+          - type: 'null'
+        bannedAt:
+          anyOf:
+          - type: string
+          - type: 'null'
+        banReason:
+          anyOf:
+          - type: string
+          - type: 'null'
+        banExpireAt:
+          anyOf:
+          - type: string
+          - type: 'null'
+    ActivityDinnerDTOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        accountId:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        pictureUrl:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+        likesCount:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        createdAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        updatedAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+    ActivityFoodDTOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        accountId:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        uploaderName:
+          anyOf:
+          - type: string
+          - type: 'null'
+        foodName:
+          anyOf:
+          - type: string
+          - type: 'null'
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+        provinceId:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        cityId:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        pictureUrl:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+        likesCount:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        isLiked:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        createdAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        updatedAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+    ActivityLikeReqDTORequest:
+      type: object
+      properties:
+        targetType:
+          type: string
+          minLength: 1
+          pattern: ^(food|dinner)$
+        activityId:
+          type: integer
+          format: int64
+          minimum: 1
+      required:
+      - targetType
+      - activityId
+    AddCustomFoodTagsDTORequest:
+      type: object
+      properties:
+        names:
+          type: array
+          items:
+            type: string
+          maxItems: 20
+          minItems: 1
+      required:
+      - names
+    AddSystemFoodTagsDTORequest:
+      type: object
+      properties:
+        tagIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          maxItems: 20
+          minItems: 1
+      required:
+      - tagIds
+    AdminFoodTagVOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+        usageCount:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        createdAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        updatedAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+    BanUserDTORequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          maxLength: 255
+          minLength: 1
+      required:
+      - reason
+    BindMobileReqRequest:
+      type: object
+      properties:
+        mobile:
+          type: string
+          minLength: 1
+          pattern: ^1[3-9]\d{9}$
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+      required:
+      - mobile
+      - code
+    BrowseHistoryFoodDTOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+        pictureUrl:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+        likesCount:
+          anyOf:
+          - type: integer
+          - type: 'null'
+    BrowseHistoryItemDTOResponse:
+      type: object
+      properties:
+        targetType:
+          anyOf:
+          - type: string
+          - type: 'null'
+        targetId:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        viewedAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        restaurant:
+          anyOf:
+          - $ref: '#/components/schemas/BrowseHistoryRestaurantDTOResponse'
+          - type: 'null'
+        food:
+          anyOf:
+          - $ref: '#/components/schemas/BrowseHistoryFoodDTOResponse'
+          - type: 'null'
+    BrowseHistoryQueryDTORequest:
+      type: object
+      properties:
+        targetType:
+          type: string
+          minLength: 1
+          pattern: ^(restaurant|food)$
+        page:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        pageSize:
+          anyOf:
+          - type: integer
+          - type: 'null'
+      required:
+      - targetType
+    BrowseHistoryRestaurantDTOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+        pictureUrl:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+    CandidateVersionRequest:
+      type: object
+      properties:
+        gid:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        revision:
+          type: integer
+          format: int64
+        contentHash:
+          anyOf:
+          - type: string
+          - type: 'null'
+      required:
+      - revision
+    CandidateViewResponse:
+      type: object
+      properties:
+        gid:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        numericId:
+          type: integer
+          format: int64
+        sourceSite:
+          anyOf:
+          - type: string
+          - type: 'null'
+        revision:
+          type: integer
+          format: int64
+        contentHash:
+          anyOf:
+          - type: string
+          - type: 'null'
+        summary:
+          anyOf:
+          - type: object
+            additionalProperties: {}
+          - type: 'null'
+      required:
+      - numericId
+      - revision
+    CatalogHubImportRequestRequest:
+      type: object
+      properties:
+        sourceKey:
+          anyOf:
+          - type: string
+          - type: 'null'
+        requestId:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        contentHash:
+          anyOf:
+          - type: string
+          - type: 'null'
+        hubs:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/HubItemRequest'
+          - type: 'null'
+    CatalogImportResultResponse:
+      type: object
+      properties:
+        batchId:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        status:
+          anyOf:
+          - type: string
+            enum:
+            - APPLIED
+            - REPLAYED
+            - CONFLICT
+            - BLOCKED
+          - type: 'null'
+        created:
+          type: integer
+        updated:
+          type: integer
+      required:
+      - created
+      - updated
+    ChangePwdDTORequest:
+      type: object
+      properties:
+        oldPassword:
+          anyOf:
+          - type: string
+            writeOnly: true
+          - type: 'null'
+        newPassword:
+          anyOf:
+          - type: string
+            writeOnly: true
+          - type: 'null'
+    CityDTOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        provinceId:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+    CompleteUploadRequestRequest:
+      type: object
+      properties:
+        key:
+          type: string
+          minLength: 1
+      required:
+      - key
+    CompletedFileResponse:
+      type: object
+      properties:
+        key:
+          anyOf:
+          - type: string
+          - type: 'null'
+        fileId:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        revision:
+          type: integer
+        sha256:
+          anyOf:
+          - type: string
+          - type: 'null'
+        size:
+          type: integer
+          format: int64
+        contentType:
+          anyOf:
+          - type: string
+          - type: 'null'
+      required:
+      - revision
+      - size
+    ConflictResponse:
+      type: object
+      properties:
+        conflictId:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        subjectId:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        fieldGroup:
+          anyOf:
+          - type: string
+          - type: 'null'
+        revision:
+          type: integer
+          format: int64
+        heads:
+          anyOf:
+          - type: array
+            items:
+              type: object
+              additionalProperties: {}
+          - type: 'null'
+      required:
+      - revision
+    ConflictViewResponse:
+      type: object
+      properties:
+        conflictId:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        kind:
+          anyOf:
+          - type: string
+            enum:
+            - HUB
+            - RESTAURANT
+            - FOOD
+            - SYSTEM_TAG
+            - CUSTOM_TAG
+          - type: 'null'
+        naturalKey:
+          anyOf:
+          - type: string
+          - type: 'null'
+        naturalKeyHash:
+          anyOf:
+          - type: string
+          - type: 'null'
+        revision:
+          type: integer
+          format: int64
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+        candidates:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/CandidateViewResponse'
+          - type: 'null'
+      required:
+      - revision
+    ConsentViewResponse:
+      type: object
+      properties:
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+        policyVersion:
+          anyOf:
+          - type: string
+          - type: 'null'
+        epoch:
+          type: integer
+          format: int64
+        revision:
+          type: integer
+          format: int64
+        validUntil:
+          anyOf:
+          - oneOf:
+            - type: string
+              format: date-time
+            - type: integer
+              format: int64
+            description: 默认转换器为 ISO 时间；项目自定义 JacksonConfig 启用时为 Unix 毫秒数。当前双机续期验收实际返回 ISO 时间。
+          - type: 'null'
+        identityReady:
+          type: boolean
+        backfillStatus:
+          anyOf:
+          - type: string
+          - type: 'null'
+        cleanupStatus:
+          anyOf:
+          - type: string
+          - type: 'null'
+        registrationAccepted:
+          type: boolean
+      required:
+      - epoch
+      - revision
+      - identityReady
+      - registrationAccepted
+    CoordinateRequest:
+      type: object
+      properties:
+        lng:
+          type: number
+        lat:
+          type: number
+      required:
+      - lng
+      - lat
+    CreateActivityDinnerDTORequest:
+      type: object
+      properties:
+        description:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+        pictureUrl:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 9
+      required:
+      - pictureUrl
+    CreateActivityFoodDTORequest:
+      type: object
+      properties:
+        foodName:
+          type: string
+          maxLength: 64
+          minLength: 1
+        description:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+        provinceId:
+          anyOf:
+          - type: integer
+            minimum: 1
+          - type: 'null'
+        cityId:
+          anyOf:
+          - type: integer
+            minimum: 1
+          - type: 'null'
+        pictureUrl:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 9
+      required:
+      - foodName
+      - pictureUrl
+    CreateFoodDTORequest:
+      type: object
+      properties:
+        restaurantId:
+          type: integer
+          format: int64
+          minimum: 1
+        name:
+          type: string
+          maxLength: 64
+          minLength: 1
+        description:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+        price:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+        category:
+          anyOf:
+          - type: string
+            enum:
+            - staple
+            - drink
+            - snack
+            - dessert
+            - soup
+            - hot_pot
+            - grill
+            - cold_dish
+            - side_dish
+            - other
+          - type: 'null'
+        pictureUrl:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 9
+      required:
+      - restaurantId
+      - name
+      - pictureUrl
+    CreateSystemFoodTagDTORequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 64
+          minLength: 1
+      required:
+      - name
+    EditFoodDTORequest:
+      type: object
+      properties:
+        restaurantId:
+          anyOf:
+          - type: integer
+            format: int64
+            minimum: 1
+          - type: 'null'
+        name:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+        description:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+        price:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: 'null'
+        category:
+          anyOf:
+          - type: string
+            enum:
+            - staple
+            - drink
+            - snack
+            - dessert
+            - soup
+            - hot_pot
+            - grill
+            - cold_dish
+            - side_dish
+            - other
+          - type: 'null'
+        pictureUrl:
+          anyOf:
+          - type: array
+            items:
+              type: string
+            minItems: 1
+            maxItems: 9
+          - type: 'null'
+    EditRestaurantDTORequest:
+      type: object
+      properties:
+        name:
+          anyOf:
+          - type: string
+            minLength: 1
+          - type: 'null'
+        address:
+          anyOf:
+          - type: string
+          - type: 'null'
+        cityId:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        gcjLng:
+          anyOf:
+          - type: number
+            minimum: 72.004
+            maximum: 137.8347
+          - type: 'null'
+        gcjLat:
+          anyOf:
+          - type: number
+            minimum: 0.8293
+            maximum: 55.8271
+          - type: 'null'
+        hubId:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        POI:
+          anyOf:
+          - type: string
+          - type: 'null'
+        pictureUrl:
+          anyOf:
+          - type: array
+            items:
+              type: string
+            maxItems: 9
+          - type: 'null'
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          oneOf:
+          - type: integer
+          - type: string
+        msg:
+          type: string
+        data: {}
+        timestamp:
+          type: integer
+          format: int64
+      description: 普通业务错误使用 Result；集群/授权拦截可返回字符串错误码，实际字段以响应为准。
+    FansDTOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        userName:
+          anyOf:
+          - type: string
+          - type: 'null'
+        avatar:
+          anyOf:
+          - type: string
+          - type: 'null'
+        createdAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+    FoodSystemTagVOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+        count:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        taggedByMe:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+    FoodTagSummaryVOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+    FoodTagViewVOResponse:
+      type: object
+      properties:
+        systemTags:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/FoodSystemTagVOResponse'
+          - type: 'null'
+        myCustomTags:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/FoodTagSummaryVOResponse'
+          - type: 'null'
+    FoodVOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        accountId:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        uploaderName:
+          anyOf:
+          - type: string
+          - type: 'null'
+        restaurantId:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        restaurantName:
+          anyOf:
+          - type: string
+          - type: 'null'
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+        price:
+          anyOf:
+          - type: number
+          - type: 'null'
+        category:
+          anyOf:
+          - type: string
+            enum:
+            - staple
+            - drink
+            - snack
+            - dessert
+            - soup
+            - hot_pot
+            - grill
+            - cold_dish
+            - side_dish
+            - other
+          - type: 'null'
+        categoryLabel:
+          anyOf:
+          - type: string
+          - type: 'null'
+        pictureUrl:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+        systemTags:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/FoodSystemTagVOResponse'
+          - type: 'null'
+        myCustomTags:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/FoodTagSummaryVOResponse'
+          - type: 'null'
+        isLiked:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        isFavorite:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        likesCount:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        createdAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        updatedAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+    GrantRequestRequest:
+      type: object
+      properties:
+        proof:
+          anyOf:
+          - type: string
+            maxLength: 512
+            writeOnly: true
+          - type: 'null'
+        policyVersion:
+          type: string
+          maxLength: 128
+          minLength: 1
+      required:
+      - policyVersion
+    HeadVersionRequestRequest:
+      type: object
+      properties:
+        operationId:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        revision:
+          type: integer
+          format: int64
+        contentHash:
+          anyOf:
+          - type: string
+          - type: 'null'
+      required:
+      - revision
+    HubDTORequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        gcjLng:
+          type: number
+          minimum: 72.004
+          maximum: 137.8347
+        gcjLat:
+          type: number
+          minimum: 0.8293
+          maximum: 55.8271
+        boundaryGeoJson:
+          anyOf:
+          - type: string
+          - type: 'null'
+      required:
+      - name
+      - gcjLng
+      - gcjLat
+    HubItemRequest:
+      type: object
+      properties:
+        sourceId:
+          anyOf:
+          - type: string
+          - type: 'null'
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+        centerWgs:
+          anyOf:
+          - $ref: '#/components/schemas/CoordinateRequest'
+          - type: 'null'
+        centerGcj:
+          anyOf:
+          - $ref: '#/components/schemas/CoordinateRequest'
+          - type: 'null'
+        boundaryGeoJson:
+          anyOf:
+          - type: string
+          - type: 'null'
+        rebindCoveredRestaurants:
+          type: boolean
+      required:
+      - rebindCoveredRestaurants
+    HubResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+        center:
+          anyOf:
+          - type: object
+            properties:
+              type:
+                type: string
+                const: Point
+              coordinates:
+                type: array
+                items: {}
+              srid:
+                type: integer
+            required:
+            - type
+            - coordinates
+            description: GeometrySerializer 输出的 GeoJSON 型几何对象；srid 在大于 0 时返回。
+          - type: 'null'
+        gcjLng:
+          anyOf:
+          - type: number
+          - type: 'null'
+        gcjLat:
+          anyOf:
+          - type: number
+          - type: 'null'
+        boundary:
+          anyOf:
+          - type: object
+            properties:
+              type:
+                type: string
+                const: MultiPolygon
+              coordinates:
+                type: array
+                items: {}
+              srid:
+                type: integer
+            required:
+            - type
+            - coordinates
+            description: GeometrySerializer 输出的 GeoJSON 型几何对象；srid 在大于 0 时返回。
+          - type: 'null'
+        createdAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        updatedAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+    LoginDTORequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 64
+        password:
+          type: string
+          minLength: 1
+          writeOnly: true
+        device:
+          type: string
+          enum:
+          - WEB
+          - APP
+      required:
+      - username
+      - password
+      - device
+    MyCustomTagVOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+        usageCount:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+    NotificationDTOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        actorId:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        actorName:
+          anyOf:
+          - type: string
+          - type: 'null'
+        actorAvatar:
+          anyOf:
+          - type: string
+          - type: 'null'
+        type:
+          anyOf:
+          - type: string
+          - type: 'null'
+        targetType:
+          anyOf:
+          - type: string
+          - type: 'null'
+        targetId:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        data:
+          anyOf:
+          - type: string
+          - type: 'null'
+        read:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        createdAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+    ObjectHeadConflictViewResponse:
+      type: object
+      properties:
+        conflictId:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        objectGid:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        numericId:
+          type: integer
+          format: int64
+        revision:
+          type: integer
+          format: int64
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+        heads:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/ObjectHeadViewResponse'
+          - type: 'null'
+      required:
+      - numericId
+      - revision
+    ObjectHeadViewResponse:
+      type: object
+      properties:
+        operationId:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        revision:
+          type: integer
+          format: int64
+        contentHash:
+          anyOf:
+          - type: string
+          - type: 'null'
+        sourceSite:
+          anyOf:
+          - type: string
+          - type: 'null'
+      required:
+      - revision
+    OtherUserInfoDTOResponse:
+      type: object
+      properties:
+        userName:
+          anyOf:
+          - type: string
+          - type: 'null'
+        avatar:
+          anyOf:
+          - type: string
+          - type: 'null'
+        earnedLikes:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        fansCount:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        followingsCount:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        fansVisible:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        followingsVisible:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        isFollowingMe:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        isFollowingHim:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        uploadedRestaurantsCount:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        uploadedFoodsCount:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+    PageResult_ActivityDinnerDTOResponse:
+      type: object
+      properties:
+        currentPage:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        items:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/ActivityDinnerDTOResponse'
+          - type: 'null'
+        totalPages:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        totalItems:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        hasNext:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+    PageResult_ActivityFoodDTOResponse:
+      type: object
+      properties:
+        currentPage:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        items:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/ActivityFoodDTOResponse'
+          - type: 'null'
+        totalPages:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        totalItems:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        hasNext:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+    PageResult_AdminFoodTagVOResponse:
+      type: object
+      properties:
+        currentPage:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        items:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/AdminFoodTagVOResponse'
+          - type: 'null'
+        totalPages:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        totalItems:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        hasNext:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+    PageResult_BrowseHistoryItemDTOResponse:
+      type: object
+      properties:
+        currentPage:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        items:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/BrowseHistoryItemDTOResponse'
+          - type: 'null'
+        totalPages:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        totalItems:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        hasNext:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+    PageResult_FansDTOResponse:
+      type: object
+      properties:
+        currentPage:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        items:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/FansDTOResponse'
+          - type: 'null'
+        totalPages:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        totalItems:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        hasNext:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+    PageResult_FoodVOResponse:
+      type: object
+      properties:
+        currentPage:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        items:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/FoodVOResponse'
+          - type: 'null'
+        totalPages:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        totalItems:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        hasNext:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+    PageResult_HubResponse:
+      type: object
+      properties:
+        currentPage:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        items:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/HubResponse'
+          - type: 'null'
+        totalPages:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        totalItems:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        hasNext:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+    PageResult_MyCustomTagVOResponse:
+      type: object
+      properties:
+        currentPage:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        items:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/MyCustomTagVOResponse'
+          - type: 'null'
+        totalPages:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        totalItems:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        hasNext:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+    PageResult_NotificationDTOResponse:
+      type: object
+      properties:
+        currentPage:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        items:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/NotificationDTOResponse'
+          - type: 'null'
+        totalPages:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        totalItems:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        hasNext:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+    PageResult_RestaurantResponse:
+      type: object
+      properties:
+        currentPage:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        items:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/RestaurantResponse'
+          - type: 'null'
+        totalPages:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        totalItems:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        hasNext:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+    PageResult_UserListItemVOResponse:
+      type: object
+      properties:
+        currentPage:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        items:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/UserListItemVOResponse'
+          - type: 'null'
+        totalPages:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        totalItems:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        hasNext:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+    PresignBatchUploadFileDTORequest:
+      type: object
+      properties:
+        fileName:
+          type: string
+          maxLength: 255
+          minLength: 1
+        contentType:
+          type: string
+          maxLength: 128
+          minLength: 1
+        fileSize:
+          type: integer
+          format: int64
+          minimum: 1
+      required:
+      - fileName
+      - contentType
+      - fileSize
+    PresignBatchUploadReqDTORequest:
+      type: object
+      properties:
+        biz:
+          type: string
+          enum:
+          - activity
+          - avatar
+          - foods
+          - restaurants
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/PresignBatchUploadFileDTORequest'
+          minItems: 1
+          maxItems: 9
+      required:
+      - biz
+      - files
+    PresignBatchUploadRespDTOResponse:
+      type: object
+      properties:
+        files:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/PresignUploadRespDTOResponse'
+          - type: 'null'
+    PresignUploadReqDTORequest:
+      type: object
+      properties:
+        fileName:
+          type: string
+          maxLength: 255
+          minLength: 1
+        contentType:
+          type: string
+          maxLength: 128
+          minLength: 1
+        fileSize:
+          type: integer
+          format: int64
+          minimum: 1
+        biz:
+          type: string
+          enum:
+          - activity
+          - avatar
+          - foods
+          - restaurants
+      required:
+      - fileName
+      - contentType
+      - fileSize
+      - biz
+    PresignUploadRespDTOResponse:
+      type: object
+      properties:
+        putUrl:
+          anyOf:
+          - type: string
+          - type: 'null'
+        key:
+          anyOf:
+          - type: string
+          - type: 'null'
+        expireAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+    PrivacyDTORequest:
+      type: object
+      properties:
+        following:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        follower:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+    ProvinceDTOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+    RegisterDTORequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 10
+          pattern: ^(?!.*@)(?!\d{11}$)[a-zA-Z0-9_]{3,10}$
+        password:
+          type: string
+          minLength: 6
+          maxLength: 64
+          writeOnly: true
+        device:
+          type: string
+          enum:
+          - WEB
+          - APP
+        crossBorderConsent:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        consentPolicyVersion:
+          anyOf:
+          - type: string
+            maxLength: 128
+          - type: 'null'
+      required:
+      - username
+      - password
+      - device
+    RenameCustomTagDTORequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 64
+          minLength: 1
+      required:
+      - name
+    ResolutionResultResponse:
+      type: object
+      properties:
+        status:
+          anyOf:
+          - type: string
+            enum:
+            - APPLIED
+            - CONFLICT
+            - BLOCKED
+          - type: 'null'
+        revision:
+          type: integer
+          format: int64
+      required:
+      - revision
+    ResolveHeadRequestRequest:
+      type: object
+      properties:
+        expectedRevision:
+          type: integer
+          format: int64
+        heads:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/HeadVersionRequestRequest'
+          - type: 'null'
+        decision:
+          anyOf:
+          - type: string
+            enum:
+            - KEEP
+            - REJECT
+          - type: 'null'
+        winnerOperationId:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+      required:
+      - expectedRevision
+    ResolveRequestRequest:
+      type: object
+      properties:
+        conflictId:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        expectedRevision:
+          type: integer
+          format: int64
+        candidates:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/CandidateVersionRequest'
+          - type: 'null'
+        decision:
+          anyOf:
+          - type: string
+            enum:
+            - KEEP
+            - REJECT
+          - type: 'null'
+        winnerGid:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+      required:
+      - expectedRevision
+    RestaurantDTORequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        address:
+          type: string
+          minLength: 1
+        cityId:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        gcjLng:
+          type: number
+          minimum: 72.004
+          maximum: 137.8347
+        gcjLat:
+          type: number
+          minimum: 0.8293
+          maximum: 55.8271
+        hubId:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        POI:
+          anyOf:
+          - type: string
+          - type: 'null'
+        pictureUrl:
+          anyOf:
+          - type: array
+            items:
+              type: string
+            maxItems: 9
+          - type: 'null'
+      required:
+      - name
+      - address
+      - gcjLng
+      - gcjLat
+    RestaurantResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        accountId:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+        address:
+          anyOf:
+          - type: string
+          - type: 'null'
+        cityId:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        location:
+          anyOf:
+          - type: object
+            properties:
+              type:
+                type: string
+                const: Point
+              coordinates:
+                type: array
+                items: {}
+              srid:
+                type: integer
+            required:
+            - type
+            - coordinates
+            description: GeometrySerializer 输出的 GeoJSON 型几何对象；srid 在大于 0 时返回。
+          - type: 'null'
+        gcjLng:
+          anyOf:
+          - type: number
+          - type: 'null'
+        gcjLat:
+          anyOf:
+          - type: number
+          - type: 'null'
+        hubId:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        POI:
+          anyOf:
+          - type: string
+          - type: 'null'
+        pictureUrl:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+        createdAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        updatedAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+    Result_ActivityDinnerDTOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/ActivityDinnerDTOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_ActivityFoodDTOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/ActivityFoodDTOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_AnyResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - {}
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_CatalogImportResultResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/CatalogImportResultResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_CompletedFileResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/CompletedFileResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_FoodTagSummaryVOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/FoodTagSummaryVOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_FoodTagViewVOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/FoodTagViewVOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_FoodVOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/FoodVOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_HashMap_String_ObjectResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - type: object
+            additionalProperties: {}
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_HubResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/HubResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_IntegerResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_List_CityDTOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/CityDTOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_List_ConflictResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/ConflictResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_List_ConflictViewResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/ConflictViewResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_List_FoodTagSummaryVOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/FoodTagSummaryVOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_List_FoodVOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/FoodVOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_List_ObjectHeadConflictViewResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/ObjectHeadConflictViewResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_List_ProvinceDTOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - type: array
+            items:
+              $ref: '#/components/schemas/ProvinceDTOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_List_StringResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - type: array
+            items:
+              type: string
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_LongResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_OtherUserInfoDTOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/OtherUserInfoDTOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_PageResult_ActivityDinnerDTOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/PageResult_ActivityDinnerDTOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_PageResult_ActivityFoodDTOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/PageResult_ActivityFoodDTOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_PageResult_AdminFoodTagVOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/PageResult_AdminFoodTagVOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_PageResult_BrowseHistoryItemDTOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/PageResult_BrowseHistoryItemDTOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_PageResult_FansDTOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/PageResult_FansDTOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_PageResult_FoodVOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/PageResult_FoodVOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_PageResult_HubResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/PageResult_HubResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_PageResult_MyCustomTagVOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/PageResult_MyCustomTagVOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_PageResult_NotificationDTOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/PageResult_NotificationDTOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_PageResult_RestaurantResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/PageResult_RestaurantResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_PageResult_UserListItemVOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/PageResult_UserListItemVOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_PresignBatchUploadRespDTOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/PresignBatchUploadRespDTOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_PresignUploadRespDTOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/PresignUploadRespDTOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_ResolutionResultResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/ResolutionResultResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_RestaurantResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/RestaurantResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_SummaryVOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/SummaryVOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_UserInfoDTOResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/UserInfoDTOResponse'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    Result_VoidResponse:
+      type: object
+      properties:
+        code:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        data:
+          anyOf:
+          - type: 'null'
+          - type: 'null'
+        msg:
+          anyOf:
+          - type: string
+          - type: 'null'
+        timestamp:
+          type: integer
+          format: int64
+      required:
+      - timestamp
+    SaTokenInfoResponse:
+      type: object
+      properties:
+        tokenName:
+          anyOf:
+          - type: string
+          - type: 'null'
+        tokenValue:
+          anyOf:
+          - type: string
+          - type: 'null'
+        isLogin:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        loginId:
+          anyOf:
+          - {}
+          - type: 'null'
+        loginType:
+          anyOf:
+          - type: string
+          - type: 'null'
+        tokenTimeout:
+          type: integer
+          format: int64
+        sessionTimeout:
+          type: integer
+          format: int64
+        tokenSessionTimeout:
+          type: integer
+          format: int64
+        tokenActiveTimeout:
+          type: integer
+          format: int64
+        loginDeviceType:
+          anyOf:
+          - type: string
+          - type: 'null'
+        tag:
+          anyOf:
+          - type: string
+          - type: 'null'
+      required:
+      - tokenTimeout
+      - sessionTimeout
+      - tokenSessionTimeout
+      - tokenActiveTimeout
+    SearchRestaurantsDTORequest:
+      type: object
+      properties:
+        keyword:
+          anyOf:
+          - type: string
+          - type: 'null'
+        hubId:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        gcjLng:
+          type: number
+        gcjLat:
+          type: number
+        radius:
+          anyOf:
+          - type: number
+          - type: 'null'
+        page:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        pageSize:
+          anyOf:
+          - type: integer
+          - type: 'null'
+      required:
+      - gcjLng
+      - gcjLat
+    SendCodeReqRequest:
+      type: object
+      properties:
+        mobile:
+          type: string
+          minLength: 1
+          pattern: ^1[3-9]\d{9}$
+        scene:
+          type: string
+          enum:
+          - auth
+          - change
+          - forget
+          - bind
+          - verifybind
+      required:
+      - mobile
+      - scene
+    SummaryVOResponse:
+      type: object
+      properties:
+        totalUsers:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        totalFoods:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        totalRestaurants:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        todayUsers:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        todayFoods:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        todayRestaurants:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        verifiedRate:
+          type: number
+      required:
+      - verifiedRate
+    UpdateSystemFoodTagDTORequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 64
+          minLength: 1
+      required:
+      - name
+    UpdateUserInfoDTORequest:
+      type: object
+      properties:
+        userName:
+          anyOf:
+          - type: string
+            minLength: 3
+            maxLength: 10
+          - type: 'null'
+        avatar:
+          anyOf:
+          - type: string
+            maxLength: 255
+          - type: 'null'
+        gender:
+          anyOf:
+          - type: string
+            pattern: ^(male|female|other)$
+          - type: 'null'
+        birthday:
+          anyOf:
+          - type: string
+            format: date
+          - type: 'null'
+        signature:
+          anyOf:
+          - type: string
+            maxLength: 255
+          - type: 'null'
+        hometownProvinceId:
+          anyOf:
+          - type: integer
+            minimum: 1
+          - type: 'null'
+        hometownCityId:
+          anyOf:
+          - type: integer
+            minimum: 1
+          - type: 'null'
+    UserInfoDTOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        userName:
+          anyOf:
+          - type: string
+          - type: 'null'
+        avatar:
+          anyOf:
+          - type: string
+          - type: 'null'
+        role:
+          anyOf:
+          - type: string
+          - type: 'null'
+        banned:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        banReason:
+          anyOf:
+          - type: string
+          - type: 'null'
+        bannedAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+        verified:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        method:
+          anyOf:
+          - type: string
+          - type: 'null'
+        studentId:
+          anyOf:
+          - type: string
+          - type: 'null'
+        realName:
+          anyOf:
+          - type: string
+          - type: 'null'
+        verifiedEmail:
+          anyOf:
+          - type: string
+          - type: 'null'
+        gender:
+          anyOf:
+          - type: string
+          - type: 'null'
+        birthday:
+          anyOf:
+          - oneOf:
+            - type: string
+              format: date
+            - type: integer
+              format: int64
+            description: 日期。默认转换器为 ISO 日期；项目自定义 JacksonConfig 启用时为服务端时区当天零点的 Unix 毫秒数。请求使用 ISO 日期字符串。
+          - type: 'null'
+        signature:
+          anyOf:
+          - type: string
+          - type: 'null'
+        hometownProvinceId:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        hometownCityId:
+          anyOf:
+          - type: integer
+          - type: 'null'
+        createdAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        updatedAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+    UserListItemVOResponse:
+      type: object
+      properties:
+        id:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        userName:
+          anyOf:
+          - type: string
+          - type: 'null'
+        avatar:
+          anyOf:
+          - type: string
+          - type: 'null'
+        role:
+          anyOf:
+          - type: string
+          - type: 'null'
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+        phone:
+          anyOf:
+          - type: string
+          - type: 'null'
+        verified:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+        method:
+          anyOf:
+          - type: string
+          - type: 'null'
+        studentId:
+          anyOf:
+          - type: string
+          - type: 'null'
+        realName:
+          anyOf:
+          - type: string
+          - type: 'null'
+        verifiedEmail:
+          anyOf:
+          - type: string
+          - type: 'null'
+        createdAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        updatedAt:
+          anyOf:
+          - type: integer
+            format: int64
+          - type: 'null'
+        accountStatus:
+          anyOf:
+          - $ref: '#/components/schemas/AccountStatusVOResponse'
+          - type: 'null'
+    WithdrawalRequestRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 64
+        password:
+          type: string
+          minLength: 1
+          writeOnly: true
+      required:
+      - username
+      - password
+    AuthReply:
+      type: object
+      required:
+      - code
+      - data
+      - msg
+      - timestamp
+      properties:
+        code:
+          type: integer
+          description: 0 为成功；非零为业务错误
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/SaTokenInfoResponse'
+          - $ref: '#/components/schemas/ConsentViewResponse'
+          - type: object
+            properties:
+              consentProof:
+                type: string
+                description: 临时同意凭证；不是登录令牌
+              status:
+                type: string
+              policyVersion:
+                type: string
+          - type: 'null'
+        msg:
+          type: string
+        timestamp:
+          type: integer
+          format: int64
+          description: 响应生成时间，Unix 毫秒
+    ConsentPolicyReply:
+      type: object
+      required:
+      - code
+      - data
+      - msg
+      - timestamp
+      properties:
+        code:
+          type: integer
+          description: 0 为成功；非零为业务错误
+        data:
+          type: object
+          required:
+          - policyVersion
+          - siteMode
+          - temporaryAuthenticationRelay
+          - ordinarySessionRequiresAuthorization
+          properties:
+            policyVersion:
+              type: string
+            siteMode:
+              type: string
+              enum:
+              - CAMPUS
+              - EXTERNAL
+            temporaryAuthenticationRelay:
+              type: boolean
+            ordinarySessionRequiresAuthorization:
+              type: boolean
+        msg:
+          type: string
+        timestamp:
+          type: integer
+          format: int64
+          description: 响应生成时间，Unix 毫秒
+    ConsentReply:
+      type: object
+      required:
+      - code
+      - data
+      - msg
+      - timestamp
+      properties:
+        code:
+          type: integer
+          description: 0 为成功；非零为业务错误
+        data:
+          anyOf:
+          - $ref: '#/components/schemas/ConsentViewResponse'
+          - type: 'null'
+        msg:
+          type: string
+        timestamp:
+          type: integer
+          format: int64
+          description: 响应生成时间，Unix 毫秒
+x-artifact-sha256: 76e9d9b055935cdaaf14d60a3ea458161537acc0c50f150d71cec3d8ff76e84c
+x-generated-date: '2026-10-19'
+x-scope: Declared business surface in exact deployed artifact; conditional routes depend on configuration; not a
+  full endpoint runtime acceptance.
+tags:
+- name: Auth
+  description: 登录与认证
+- name: AccountConsent
+  description: 跨站同步同意
+- name: User
+  description: 用户与关注
+- name: Activity
+  description: 动态
+- name: Food
+  description: 菜品与收藏
+- name: FoodTagAdmin
+  description: 菜品标签管理
+- name: Restaurant
+  description: 餐厅
+- name: Hub
+  description: 商场
+- name: Location
+  description: 省市位置
+- name: History
+  description: 浏览历史
+- name: Notification
+  description: 通知
+- name: Upload
+  description: 文件上传
+- name: Admin
+  description: 业务管理
+- name: CatalogImport
+  description: 目录导入管理
+- name: CatalogConflict
+  description: 目录冲突管理
+- name: ProfileConflict
+  description: 资料冲突管理
+x-validation:
+  frozenBusinessRoutesCovered: true
+  uniqueOperationIds: true
+  allLocalSchemaRefsResolved: true
+  pathParametersMatched: true

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 发现（实拍图版）</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <div style="position: absolute; left: 0; top: 0; width: 390px; height: 520px; overflow: hidden; background: {{s.stage}}; transition: background-color 500ms ease;">
+    <div aria-hidden="true" style="position: absolute; left: -282px; top: 130px; width: 1200px; height: 1200px; border-radius: 50%; background: {{s.table}}; transition: background-color 500ms ease;"></div>
+    <div aria-hidden="true" style="position: absolute; left: -242px; top: 170px; width: 1120px; height: 1120px; box-sizing: border-box; border-radius: 50%; border: 1.5px solid {{s.ring}}; transition: border-color 500ms ease;"></div>
+
+    <div aria-hidden="true">
+      <div style="position: absolute; left: 158px; top: 570px; width: 320px; height: 320px; transform: {{p0.t}}; opacity: {{p0.o}}; transition: {{tr}};">
+        <div style="position: absolute; inset: 14px; border-radius: 50%; overflow: hidden; background: #FFFFFF; box-shadow: 0 0 0 8px #FFFFFF, 0 22px 40px rgba(0,0,0,0.30);"><img src="../assets/photos/sq_luosi.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
+      </div>
+      <div style="position: absolute; left: 158px; top: 570px; width: 320px; height: 320px; transform: {{p1.t}}; opacity: {{p1.o}}; transition: {{tr}};">
+        <div style="position: absolute; inset: 14px; border-radius: 50%; overflow: hidden; background: #FFFFFF; box-shadow: 0 0 0 8px #FFFFFF, 0 22px 40px rgba(0,0,0,0.30);"><img src="../assets/photos/sq_tieguo.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
+      </div>
+      <div style="position: absolute; left: 158px; top: 570px; width: 320px; height: 320px; transform: {{p2.t}}; opacity: {{p2.o}}; transition: {{tr}};">
+        <div style="position: absolute; inset: 14px; border-radius: 50%; overflow: hidden; background: #FFFFFF; box-shadow: 0 0 0 8px #FFFFFF, 0 22px 40px rgba(0,0,0,0.30);"><img src="../assets/photos/sq_niandou.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
+      </div>
+      <div style="position: absolute; left: 158px; top: 570px; width: 320px; height: 320px; transform: {{p3.t}}; opacity: {{p3.o}}; transition: {{tr}};">
+        <div style="position: absolute; inset: 14px; border-radius: 50%; overflow: hidden; background: #FFFFFF; box-shadow: 0 0 0 8px #FFFFFF, 0 22px 40px rgba(0,0,0,0.30);"><img src="../assets/photos/sq_hongshao.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
+      </div>
+      <div style="position: absolute; left: 158px; top: 570px; width: 320px; height: 320px; transform: {{p4.t}}; opacity: {{p4.o}}; transition: {{tr}};">
+        <div style="position: absolute; inset: 14px; border-radius: 50%; overflow: hidden; background: #FFFFFF; box-shadow: 0 0 0 8px #FFFFFF, 0 22px 40px rgba(0,0,0,0.30);"><img src="../assets/photos/sq_paigu.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div role="group" aria-label="转盘，左右滑动换一道菜" onPointerDown="{{down}}" onPointerMove="{{move}}" onPointerUp="{{up}}" onPointerCancel="{{up}}" style="position: absolute; left: 0; right: 0; top: 100px; height: 296px; touch-action: pan-y; cursor: grab"></div>
+
+  <header style="position: absolute; left: 20px; right: 16px; top: 50px; display: flex; align-items: center; justify-content: space-between; color: {{s.on}}; transition: color 500ms ease;">
+    <a href="G-PanelPlace.dc.html" style="height: 44px; color: inherit; text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600;">
+      <dc-import name="G-Icon" icon="nearby" size="16" hint-size="16px,16px"></dc-import>
+      软件园
+      <span style="font-weight: 400; opacity: 0.8;">晚饭</span>
+      <dc-import name="G-Icon" icon="chevronDown" size="14" hint-size="14px,14px"></dc-import>
+    </a>
+    <div style="display: flex; gap: 4px;">
+      <a href="G-Search.dc.html" aria-label="搜索" style="width: 44px; height: 44px; color: inherit; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+        <dc-import name="G-Icon" icon="search" size="22" hint-size="22px,22px"></dc-import>
+      </a>
+      <a href="G-Inbox.dc.html" aria-label="通知，3 条未读" style="position: relative; width: 44px; height: 44px; color: inherit; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+        <dc-import name="G-Icon" icon="bell" size="22" hint-size="22px,22px"></dc-import>
+        <span style="position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; border-radius: 4px; background: currentColor; box-shadow: 0 0 0 2px {{s.stage}};"></span>
+      </a>
+    </div>
+  </header>
+
+  <section aria-label="今天吃什么" aria-live="polite" style="position: absolute; left: 20px; top: 124px; width: 160px; height: 268px; display: flex; flex-direction: column; color: {{s.on}}; pointer-events: none; transition: color 500ms ease;">
+    <h1 style="margin: 0; font-size: 44px; line-height: 48px; font-weight: 900; letter-spacing: -1px;"><span style="display: block;">{{s.l1}}</span><span style="display: block;">{{s.l2}}</span></h1>
+    <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 14px; font-size: 15px;">
+      <span style="font-weight: 600;">{{s.shop}}</span>
+      <span style="opacity: 0.85;">{{s.dist}}</span>
+    </div>
+    <span style="margin-top: auto; font-family: 'Bricolage Grotesque', sans-serif; font-size: 60px; line-height: 60px; font-weight: 800; letter-spacing: -2px;">¥{{s.price}}</span>
+  </section>
+
+  <div aria-hidden="true" style="position: absolute; left: 20px; top: 392px; display: flex; gap: 5px;">
+    <sc-for list="{{dots}}" as="d" hint-placeholder-count="5">
+      <span style="width: {{d.w}}px; height: 5px; border-radius: 3px; background: {{s.on}}; opacity: {{d.o}}; transition: width 300ms ease, opacity 300ms ease, background-color 500ms ease;"></span>
+    </sc-for>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 414px; display: flex; gap: 10px;">
+    <button type="button" class="btn-press" onClick="{{next}}" style="flex: 1; height: 52px; border: 0; border-radius: 26px; background: {{s.ghost}}; color: {{s.on}}; font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -2px 0 rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.1); transition: background-color 500ms ease, color 500ms ease, transform 90ms ease;">
+      <dc-import name="G-Icon" icon="shuffle" size="18" hint-size="18px,18px"></dc-import>
+      换一个
+    </button>
+    <a href="G-Dish.dc.html" class="btn-press" style="flex: 1; height: 52px; border-radius: 26px; background-color: {{s.on}}; background-image: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(35,28,24,0.07)); box-shadow: {{s.solidShadow}}; color: {{s.stage}}; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: background-color 500ms ease, color 500ms ease, box-shadow 500ms ease, transform 90ms ease;">就它了</a>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; top: 488px; bottom: 0; background: #FFFFFF; border-radius: 28px 28px 0 0; padding: 10px 20px 0; display: flex; flex-direction: column; gap: 14px;">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 2px; background: #E6DED8;"></span>
+    <div role="tablist" aria-label="推荐分类" style="display: flex; gap: 20px; align-items: center; height: 32px;">
+      <button type="button" role="tab" aria-selected="true" style="height: 32px; padding: 0; border: 0; background: none; color: #231C18; font-size: 17px; font-weight: 900;">今日推荐</button>
+      <button type="button" role="tab" aria-selected="false" style="height: 32px; padding: 0; border: 0; background: none; color: #6E625B; font-size: 15px;">主食</button>
+      <button type="button" role="tab" aria-selected="false" style="height: 32px; padding: 0; border: 0; background: none; color: #6E625B; font-size: 15px;">小吃</button>
+      <button type="button" role="tab" aria-selected="false" style="height: 32px; padding: 0; border: 0; background: none; color: #6E625B; font-size: 15px;">饮品</button>
+      <button type="button" role="tab" aria-selected="false" style="height: 32px; padding: 0; border: 0; background: none; color: #6E625B; font-size: 15px;">甜品</button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 14px;">
+      <a href="G-Dish.dc.html" style="display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: inherit;">
+        <img src="../assets/photos/p_tieguo.png" alt="铁锅炖" style="width: 100%; height: 150px; border-radius: 22px; object-fit: cover; display: block;">
+        <div style="display: flex; flex-direction: column;"><h3 style="margin: 0; font-size: 15px; font-weight: 600;">铁锅炖大鹅</h3><span style="font-size: 13px; color: #6E625B;">东北饭庄</span></div>
+      </a>
+      <a href="G-Dish.dc.html" style="display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: inherit;">
+        <img src="../assets/photos/p_niandou.png" alt="粘豆包" style="width: 100%; height: 150px; border-radius: 22px; object-fit: cover; display: block;">
+        <div style="display: flex; flex-direction: column;"><h3 style="margin: 0; font-size: 15px; font-weight: 600;">粘豆包</h3><span style="font-size: 13px; color: #6E625B;">老街点心</span></div>
+      </a>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 16px; right: 16px; bottom: 24px; height: 60px;">
+    <dc-import name="G-Nav" active="home" hint-size="100%,60px"></dc-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { n: 0, drag: 0, dragging: false };
+    this.startX = 0;
+  }
+  renderVals() {
+    const ink = '#231C18';
+    const light = { on: ink, ghost: 'rgba(255,255,255,0.42)', table: 'rgba(255,255,255,0.22)', ring: 'rgba(255,255,255,0.55)', solidShadow: 'inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 6px 14px rgba(35,28,24,0.16)' };
+    const dark = { on: '#FFFFFF', ghost: 'rgba(255,255,255,0.18)', table: 'rgba(255,255,255,0.07)', ring: 'rgba(255,255,255,0.22)', solidShadow: 'inset 0 -2px 0 rgba(0,0,0,0.16), 0 2px 4px rgba(0,0,0,0.18), 0 8px 18px rgba(0,0,0,0.16)' };
+    const dishes = [
+      Object.assign({ l1: '柳州', l2: '螺蛳粉', shop: '螺蛳粉研究所', dist: '600 m', price: '16', stage: '#8F5B24' }, dark),
+      Object.assign({ l1: '铁锅炖', l2: '', shop: '东北饭庄', dist: '750 m', price: '58', stage: '#A8321C' }, dark),
+      Object.assign({ l1: '粘豆包', l2: '', shop: '老街点心', dist: '260 m', price: '8', stage: '#F3C46E' }, light),
+      Object.assign({ l1: '红烧肉', l2: '', shop: '家常小馆', dist: '500 m', price: '38', stage: '#8F5B24' }, dark),
+      Object.assign({ l1: '玉米', l2: '排骨汤', shop: '家常小馆', dist: '500 m', price: '26', stage: '#D8B27A' }, light)
+    ];
+    const N = dishes.length;
+    const STEP = 55;
+    const RADIUS = 430;
+    const n = this.state.n;
+    const k = ((n % N) + N) % N;
+    const plate = (i) => {
+      let d = (((i - n) % N) + N) % N;
+      if (d > N / 2) d -= N;
+      const theta = d * STEP + this.state.drag;
+      const a = Math.min(1, Math.abs(theta) / STEP);
+      const scale = 1 - 0.15 * a;
+      return {
+        t: 'rotate(' + theta.toFixed(2) + 'deg) translateY(-' + RADIUS + 'px) rotate(' + (-theta).toFixed(2) + 'deg) scale(' + scale.toFixed(3) + ')',
+        o: Math.abs(d) >= 2 ? 0 : 1
+      };
+    };
+    const dots = dishes.map((_, i) => ({ w: i === k ? 16 : 5, o: i === k ? 1 : 0.4 }));
+    return {
+      s: dishes[k],
+      p0: plate(0), p1: plate(1), p2: plate(2), p3: plate(3), p4: plate(4),
+      dots: dots,
+      tr: this.state.dragging ? 'none' : 'transform 680ms cubic-bezier(0.2, 0.9, 0.25, 1.1), opacity 280ms ease',
+      next: () => this.setState({ n: this.state.n + 1, drag: 0, dragging: false }),
+      down: (e) => {
+        this.startX = e.clientX;
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+        this.setState({ dragging: true, drag: 0 });
+      },
+      move: (e) => {
+        if (!this.state.dragging) return;
+        const deg = (e.clientX - this.startX) / 7.5;
+        this.setState({ drag: Math.max(-STEP * 1.1, Math.min(STEP * 1.1, deg)) });
+      },
+      up: () => {
+        if (!this.state.dragging) return;
+        const drag = this.state.drag;
+        let steps = 0;
+        if (drag < -4) steps = 1;
+        if (drag > 4) steps = -1;
+        this.setState({ n: this.state.n + steps, drag: 0, dragging: false });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

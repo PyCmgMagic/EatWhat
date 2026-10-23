@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 粉丝与关注</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <header style="position: absolute; left: 8px; right: 16px; top: 46px; height: 44px; display: flex; align-items: center;">
+    <a href="{{backTo}}" aria-label="返回" style="width: 44px; height: 44px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+      <dc-import name="G-Icon" icon="back" size="24" hint-size="24px,24px"></dc-import>
+    </a>
+  </header>
+
+  <h1 style="position: absolute; left: 20px; top: 98px; margin: 0; font-size: 34px; line-height: 42px; font-weight: 900;">{{who}}</h1>
+
+  <div role="tablist" aria-label="粉丝和关注" style="position: absolute; left: 20px; right: 20px; top: 148px; display: flex; gap: 22px; align-items: baseline; height: 44px;">
+    <button type="button" role="tab" aria-selected="{{tFans.on}}" onClick="{{tFans.pick}}" style="height: 44px; padding: 0; border: 0; background: none; color: {{tFans.fg}}; font-size: {{tFans.size}}px; font-weight: {{tFans.w}}; display: flex; align-items: baseline; gap: 4px;">粉丝<span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 800;">{{fansN}}</span></button>
+    <button type="button" role="tab" aria-selected="{{tFollow.on}}" onClick="{{tFollow.pick}}" style="height: 44px; padding: 0; border: 0; background: none; color: {{tFollow.fg}}; font-size: {{tFollow.size}}px; font-weight: {{tFollow.w}}; display: flex; align-items: baseline; gap: 4px;">关注<span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 800;">{{followN}}</span></button>
+  </div>
+
+  <sc-if value="{{visible}}" hint-placeholder-val="{{ true }}">
+    <ul style="position: absolute; left: 0; right: 0; top: 204px; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column;">
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="7">
+        <li style="position: relative; display: flex; align-items: center;">
+          <a href="G-UserProfile.dc.html" style="flex: 1; min-width: 0; padding: 10px 0 10px 20px; display: flex; align-items: center; gap: 14px; text-decoration: none; color: inherit;">
+            <span aria-hidden="true" style="flex: none; width: 44px; height: 44px; border-radius: 50%; background: {{r.bg}}; color: {{r.fg}}; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900;">{{r.initial}}</span>
+            <span style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+              <span style="font-size: 16px; font-weight: 700;">{{r.name}}</span>
+              <span style="font-size: 13px; color: #6E625B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{r.sign}}</span>
+            </span>
+          </a>
+          <span style="flex: none; padding: 0 20px 0 12px;">
+            <sc-if value="{{r.solid}}" hint-placeholder-val="{{ false }}">
+              <button type="button" class="btn-solid" onClick="{{r.flip}}" style="height: 36px; min-width: 76px; padding: 0 14px; border: 0; border-radius: 18px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; font-size: 14px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 4px 10px rgba(35,28,24,0.14);">{{r.label}}</button>
+            </sc-if>
+            <sc-if value="{{r.light}}" hint-placeholder-val="{{ true }}">
+              <button type="button" class="btn-light" onClick="{{r.flip}}" style="height: 36px; min-width: 76px; padding: 0 14px; border: 0; border-radius: 18px; background: linear-gradient(180deg, #FBF8F6, #F4EFEB); color: #231C18; font-size: 14px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -2px 0 rgba(35,28,24,0.1), 0 1px 2px rgba(35,28,24,0.12), 0 3px 8px rgba(35,28,24,0.06);">{{r.label}}</button>
+            </sc-if>
+          </span>
+        </li>
+      </sc-for>
+    </ul>
+  </sc-if>
+
+  <sc-if value="{{hidden}}" hint-placeholder-val="{{ false }}">
+    <section style="position: absolute; left: 20px; right: 20px; top: 280px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;">
+      <span aria-hidden="true" style="width: 64px; height: 64px; border-radius: 50%; background: #F4EFEB; color: #6E625B; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="lock" size="28" hint-size="28px,28px"></dc-import></span>
+      <h2 style="margin: 4px 0 0; font-size: 20px; line-height: 28px; font-weight: 900;">对方没有公开</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 22px; color: #6E625B;">阿哲关掉了公开粉丝列表</p>
+    </section>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"owner":{"editor":"enum","options":["自己的","别人没公开"],"default":"自己的"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'fans', mine: { '阿哲': false, 'Momo': false, '同学 4821': false, '小林': true, '安安': true, '一碗面': true, '老街点心粉': true } };
+  }
+  renderVals() {
+    const mineMode = (this.props.owner ?? '自己的') === '自己的';
+    const tab = (key) => {
+      const on = this.state.tab === key;
+      return { on: on, fg: on ? '#231C18' : '#6E625B', size: on ? 17 : 15, w: on ? 900 : 400, pick: () => this.setState({ tab: key }) };
+    };
+    const people = [
+      { name: '阿哲', initial: '哲', sign: '西门小吃街常驻选手', bg: '#9DB8D9', fg: '#231C18', fan: true },
+      { name: '小林', initial: '林', sign: '每天一杯杨枝甘露', bg: '#F3C46E', fg: '#231C18', fan: true },
+      { name: 'Momo', initial: 'M', sign: '只吃辣的', bg: '#C9442B', fg: '#FFFFFF', fan: true },
+      { name: '安安', initial: '安', sign: '', bg: '#8F5B24', fg: '#FFFFFF', fan: true },
+      { name: '同学 4821', initial: '同', sign: '', bg: '#9DBF7A', fg: '#231C18', fan: true },
+      { name: '一碗面', initial: '面', sign: '面食爱好者，求推荐拉面', bg: '#D8B27A', fg: '#231C18', fan: true },
+      { name: '老街点心粉', initial: '老', sign: '粘豆包一周三次', bg: '#FFCB45', fg: '#231C18', fan: false }
+    ];
+    const fansTab = this.state.tab === 'fans';
+    const list = people.filter((p) => fansTab ? p.fan : this.state.mine[p.name]);
+    return {
+      who: mineMode ? '我的粉丝和关注' : '阿哲的粉丝和关注',
+      backTo: mineMode ? 'G-Me.dc.html' : 'G-UserProfile.dc.html',
+      visible: mineMode,
+      hidden: !mineMode,
+      tFans: tab('fans'),
+      tFollow: tab('follow'),
+      fansN: 37,
+      followN: 37,
+      rows: list.map((p) => {
+        const iFollow = !!this.state.mine[p.name];
+        const mutual = iFollow && p.fan;
+        let label = '回关';
+        if (mutual) label = '已互关';
+        else if (iFollow) label = '已关注';
+        else if (!p.fan) label = '关注';
+        const solid = !iFollow;
+        return Object.assign({}, p, {
+          sign: p.sign || '还没写签名',
+          label: label,
+          solid: solid,
+          light: !solid,
+          flip: () => {
+            const next = Object.assign({}, this.state.mine);
+            next[p.name] = !iFollow;
+            this.setState({ mine: next });
+          }
+        });
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

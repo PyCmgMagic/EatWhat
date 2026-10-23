@@ -1,0 +1,504 @@
+.food-discussion {
+  background: #fff;
+  border-radius: 28px;
+  padding: 32px;
+  margin-top: 24px;
+  scroll-margin-top: 114px;
+}
+.pc-detail-secondary > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.food-discussion-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid #efe9e4;
+  padding-bottom: 23px;
+}
+.food-discussion-heading .pc-eyebrow {
+  font-size: 11px;
+  color: #8a7e76;
+}
+.food-discussion-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 25px;
+  letter-spacing: -0.5px;
+  font-weight: 900;
+  margin: 8px 0 0;
+}
+.food-discussion-heading h2 > span {
+  font: 800 23px "Bricolage Grotesque Variable";
+}
+.food-discussion-heading h2 > small {
+  border: 1px solid #e4d8c6;
+  background: #fbf5e8;
+  border-radius: 6px;
+  font-size: 10px;
+  letter-spacing: 0;
+  padding: 3px 6px;
+  font-weight: 500;
+  color: #876a39;
+}
+.food-discussion-heading .pc-tabs {
+  gap: 25px;
+}
+.food-discussion-heading .pc-tabs > button {
+  font-size: 13px;
+  padding: 10px 0;
+}
+.food-discussion-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 36px;
+  align-items: start;
+  padding-top: 28px;
+}
+.food-discussion-list {
+  min-width: 0;
+}
+.food-comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 24px 0;
+  border-bottom: 1px solid #efe9e4;
+}
+.food-comment:first-child {
+  padding-top: 0;
+}
+.food-comment:last-child {
+  border-bottom: 0;
+}
+.food-comment-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #f3c46e;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 800;
+}
+.food-comment:nth-child(2n) .food-comment-avatar {
+  background: #f5ddd3;
+}
+.food-comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.food-comment-body {
+  min-width: 0;
+  flex: 1;
+}
+.food-comment-byline {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 27px;
+}
+.food-comment-byline strong {
+  font-size: 14px;
+  font-weight: 750;
+}
+.food-comment-byline > span {
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  background: #f4efeb;
+}
+.food-comment-byline time {
+  color: #8a7e76;
+  font-size: 11px;
+  margin-left: auto;
+}
+.food-comment-body > p {
+  margin: 6px 0 12px;
+  font-size: 14px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.food-comment-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 15px;
+}
+.food-comment-images > button {
+  width: 88px;
+  height: 88px;
+  padding: 0;
+  border: 0;
+  border-radius: 13px;
+  background: #f4efeb;
+  overflow: hidden;
+}
+.food-comment-images img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 160ms;
+}
+.food-comment-images > button:hover img {
+  transform: scale(1.05);
+}
+.food-comment-images.is-small > button {
+  width: 55px;
+  height: 55px;
+}
+.food-comment-actions {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  margin-top: 12px;
+}
+.food-comment-actions > button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: none;
+  padding: 3px 0;
+  font-size: 11px;
+  color: #8a7e76;
+}
+.pc-app .food-comment-actions > button[aria-pressed="true"] {
+  color: #c9442b;
+}
+.food-comment-actions > button > span {
+  font: 600 12px "Bricolage Grotesque Variable";
+}
+.food-comment-replies {
+  margin-top: 15px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f8f5f2;
+}
+.food-comment-reply > p {
+  margin: 0 0 9px;
+  font-size: 12px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.food-comment-reply strong {
+  margin-right: 9px;
+  font-weight: 700;
+}
+.food-comment-reply > p > span {
+  color: #6e625b;
+}
+.food-comment-expand {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 10px;
+  font-weight: 700;
+}
+.food-comment-composer {
+  padding: 20px;
+  border-radius: 20px;
+  background: #faf7f3;
+  border: 1px solid #efe9e4;
+  position: sticky;
+  top: 114px;
+  min-width: 0;
+}
+.food-comment-dish {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #e9e1d9;
+  margin-bottom: 18px;
+}
+.food-comment-dish > img {
+  width: 54px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: #fff;
+  flex-shrink: 0;
+}
+.food-comment-dish > div {
+  min-width: 0;
+}
+.food-comment-dish small {
+  display: block;
+  font-size: 9px;
+  color: #8a7e76;
+}
+.food-comment-dish strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.7;
+  margin: 1px 0;
+  overflow-wrap: anywhere;
+}
+.food-comment-dish span {
+  display: block;
+  font-size: 10px;
+  color: #8a7e76;
+}
+.food-comment-compose-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 11px;
+}
+.food-comment-compose-heading h3 {
+  font-size: 14px;
+  font-weight: 800;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.food-comment-compose-heading button {
+  border: 0;
+  background: none;
+  padding: 0;
+  display: flex;
+}
+.food-comment-composer textarea {
+  width: 100%;
+  min-height: 130px;
+  max-height: 260px;
+  padding: 12px;
+  border: 1px solid #e4dbd3;
+  border-radius: 12px;
+  background: white;
+  font-size: 13px;
+  line-height: 1.85;
+  resize: vertical;
+  outline: none;
+  color: #231c18;
+}
+.food-comment-composer textarea:focus {
+  border-color: #bc943f;
+  box-shadow: 0 0 0 3px #f3c46e30;
+}
+.food-comment-composer textarea::placeholder {
+  color: #9e9086;
+}
+.food-comment-compose-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #8a7e76;
+  margin: 9px 0 17px;
+  font-size: 10px;
+}
+.food-comment-compose-tools button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 10px;
+}
+.food-comment-compose-tools button > span {
+  font-size: 9px;
+  margin-left: 2px;
+}
+.food-comment-draft-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.food-comment-draft-images > span {
+  width: 55px;
+  height: 55px;
+  position: relative;
+  margin-top: 10px;
+}
+.food-comment-draft-images img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.food-comment-draft-images button {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #231c18;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+.pc-app .food-comment-draft-images button {
+  color: white;
+}
+.food-comment-composer .pc-button {
+  width: 100%;
+  height: 42px;
+  font-size: 12px;
+}
+.food-comment-local-note {
+  font-size: 10px;
+  line-height: 1.85;
+  color: #8a7e76;
+  margin: 13px 0 0;
+}
+.food-comment-error {
+  color: #a6402c;
+  font-size: 11px;
+  line-height: 1.8;
+  margin: 8px 0 13px;
+}
+.food-comment-success {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  color: #4d773d;
+  font-size: 11px;
+  line-height: 1.8;
+  margin: 8px 0 13px;
+}
+.food-comment-success .design-icon {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.food-comment-empty {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 35px 15px;
+  color: #8a7e76;
+}
+.food-comment-empty h3 {
+  color: #231c18;
+  font-size: 17px;
+  margin: 16px 0 8px;
+}
+.food-comment-empty p {
+  font-size: 12px;
+  line-height: 1.9;
+  margin: 0 0 18px;
+}
+.food-comment-empty .pc-small-link {
+  border: 0;
+  background: none;
+  padding: 0;
+}
+.food-comment-empty .pc-button {
+  font-size: 12px;
+  height: 42px;
+  padding: 0 20px;
+}
+.food-comment-photo-dialog {
+  border: 0;
+  background: #fff;
+  padding: 20px;
+  border-radius: 20px;
+  max-width: min(850px, 90vw);
+  max-height: 90dvh;
+}
+.food-comment-photo-dialog::backdrop {
+  background: #231c18b0;
+}
+.food-comment-photo-dialog > button {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  background: #fff;
+  box-shadow: 0 2px 8px #231c1820;
+}
+.food-comment-photo-dialog > img {
+  width: auto;
+  max-width: 100%;
+  max-height: 80dvh;
+  object-fit: contain;
+  margin: 0 auto;
+  border-radius: 10px;
+}
+.food-my-comments > a {
+  display: block;
+  padding: 20px 0;
+  border-bottom: 1px solid #efe9e4;
+}
+.food-my-comment-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.food-my-comment-heading > img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.food-my-comment-heading > span {
+  flex: 1;
+  min-width: 0;
+}
+.food-my-comment-heading strong {
+  display: block;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.food-my-comment-heading small {
+  display: block;
+  font-size: 10px;
+  color: #8a7e76;
+  margin-top: 4px;
+}
+.food-my-comments > a > p {
+  font-size: 13px;
+  line-height: 1.9;
+  margin: 12px 0 7px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.food-my-comments > a > small {
+  font-size: 10px;
+  color: #8a7e76;
+}
+.food-discussion :is(button, textarea):disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.food-discussion :is(button, a):focus-visible {
+  outline: 2px solid #bc943f;
+  outline-offset: 4px;
+}
+@media (max-width: 1250px) {
+  .food-discussion {
+    padding: 26px;
+  }
+  .food-discussion-layout {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 25px;
+  }
+  .food-comment-composer {
+    padding: 17px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .food-discussion * {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G 舞台 · 组件</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 760px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <div style="height: 236px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));">
+    <div style="position: relative; overflow: hidden; background: #F3C46E; color: #231C18; padding: 24px 20px; display: flex; flex-direction: column; gap: 2px;">
+      <span style="font-size: 18px; font-weight: 900;">云吞汤色</span>
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 14px; font-weight: 600;">#F3C46E</span>
+      <img src="../assets/dishes/yuntun.svg" alt="" style="position: absolute; left: 60px; top: 110px; width: 170px; height: 170px; transform: rotate(-12deg);">
+    </div>
+    <div style="position: relative; overflow: hidden; background: #C9442B; color: #FFFFFF; padding: 24px 20px; display: flex; flex-direction: column; gap: 2px;">
+      <span style="font-size: 18px; font-weight: 900;">番茄红</span>
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 14px; font-weight: 600;">#C9442B</span>
+      <img src="../assets/dishes/niunan.svg" alt="" style="position: absolute; left: 60px; top: 110px; width: 170px; height: 170px; transform: rotate(10deg);">
+    </div>
+    <div style="position: relative; overflow: hidden; background: #FFCB45; color: #231C18; padding: 24px 20px; display: flex; flex-direction: column; gap: 2px;">
+      <span style="font-size: 18px; font-weight: 900;">芒果黄</span>
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 14px; font-weight: 600;">#FFCB45</span>
+      <img src="../assets/dishes/yangzhi.svg" alt="" style="position: absolute; left: 60px; top: 110px; width: 170px; height: 170px; transform: rotate(18deg);">
+    </div>
+    <div style="position: relative; overflow: hidden; background: #A8321C; color: #FFFFFF; padding: 24px 20px; display: flex; flex-direction: column; gap: 2px;">
+      <span style="font-size: 18px; font-weight: 900;">红油色</span>
+      <span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 14px; font-weight: 600;">#A8321C</span>
+      <img src="../assets/dishes/luosifen.svg" alt="" style="position: absolute; left: 60px; top: 110px; width: 170px; height: 170px; transform: rotate(-6deg);">
+    </div>
+  </div>
+
+  <div style="position: relative; margin-top: -28px; background: #FFFFFF; border-radius: 28px 28px 0 0; padding: 28px 36px 0; display: grid; grid-template-columns: minmax(0, 1fr) 316px; column-gap: 40px;">
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+      <section style="display: flex; flex-direction: column; gap: 8px;">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 500; color: #6E625B;">舞台色取自当前那道菜，墨色 #231C18 与白色是唯一的固定色</h2>
+        <div style="display: flex; align-items: flex-end; gap: 20px;">
+          <span style="font-size: 46px; line-height: 50px; font-weight: 900; letter-spacing: -1px; width: 200px;">鲜虾蟹籽云吞</span>
+          <span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 60px; line-height: 56px; font-weight: 800; letter-spacing: -2px;">¥18</span>
+        </div>
+        <span style="font-size: 15px;">袁记云饺，距你 320 m</span>
+        <span style="font-size: 13px; color: #6E625B;">黑体 900 做主角，Bricolage Grotesque 只用于数字</span>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 10px;">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 500; color: #6E625B;">舞台上的按钮跟着舞台色变，都带一点厚度</h2>
+        <div style="display: flex; gap: 10px; padding: 16px; border-radius: 24px; background: #A8321C;">
+          <button type="button" class="btn-press" style="flex: 1; height: 52px; border: 0; border-radius: 26px; background: rgba(255,255,255,0.18); color: #FFFFFF; font-size: 16px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -2px 0 rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.1); transition: transform 90ms ease;">换一个</button>
+          <button type="button" class="btn-press" style="flex: 1; height: 52px; border: 0; border-radius: 26px; background: linear-gradient(180deg, #FFFFFF, #EFE8E2); color: #A8321C; font-size: 16px; font-weight: 600; box-shadow: inset 0 -2px 0 rgba(0,0,0,0.16), 0 2px 4px rgba(0,0,0,0.18), 0 8px 18px rgba(0,0,0,0.16); transition: transform 90ms ease;">就它了</button>
+        </div>
+        <div style="display: flex; gap: 10px; padding: 16px; border-radius: 24px; background: #FFCB45;">
+          <button type="button" class="btn-press" style="flex: 1; height: 52px; border: 0; border-radius: 26px; background: rgba(255,255,255,0.42); color: #231C18; font-size: 16px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -2px 0 rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.1); transition: transform 90ms ease;">换一个</button>
+          <button type="button" class="btn-solid" style="flex: 1; height: 52px; border: 0; border-radius: 26px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFCB45; font-size: 16px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 6px 14px rgba(35,28,24,0.16);">就它了</button>
+        </div>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 10px;">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 500; color: #6E625B;">白色抽屉里的按钮</h2>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button type="button" class="btn-press" style="flex: 1; height: 50px; border: 1.5px solid #231C18; border-radius: 25px; background: #FFFFFF; color: #231C18; font-size: 16px; font-weight: 600; box-shadow: inset 0 -3px 0 rgba(35,28,24,0.08), 0 1px 2px rgba(35,28,24,0.12); transition: transform 90ms ease;">导航去店里</button>
+          <button type="button" class="btn-solid" style="flex: 1; height: 50px; border: 0; border-radius: 25px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; font-size: 16px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 6px 14px rgba(35,28,24,0.16);">加一道菜</button>        </div>
+      </section>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+      <section style="display: flex; flex-direction: column; gap: 10px;">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 500; color: #6E625B;">分类：选中项用字重说话</h2>
+        <div role="tablist" aria-label="分类示例" style="display: flex; gap: 20px; align-items: center; height: 32px;">
+          <button type="button" role="tab" aria-selected="true" style="height: 32px; padding: 0; border: 0; background: none; color: #231C18; font-size: 17px; font-weight: 900;">今日推荐</button>
+          <button type="button" role="tab" aria-selected="false" style="height: 32px; padding: 0; border: 0; background: none; color: #6E625B; font-size: 15px;">主食</button>
+          <button type="button" role="tab" aria-selected="false" style="height: 32px; padding: 0; border: 0; background: none; color: #6E625B; font-size: 15px;">小吃</button>
+          <button type="button" role="tab" aria-selected="false" style="height: 32px; padding: 0; border: 0; background: none; color: #6E625B; font-size: 15px;">饮品</button>
+        </div>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 10px;">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 500; color: #6E625B;">菜品方块：图出血，文字在外</h2>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
+          <article style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="height: 130px; border-radius: 22px; background: #F7EDD0; overflow: hidden; position: relative;"><img src="../assets/dishes/niandoubao.svg" alt="" style="position: absolute; left: 24px; top: 16px; width: 140px; height: 140px;"></div>
+            <div style="display: flex; flex-direction: column;"><h3 style="margin: 0; font-size: 15px; font-weight: 600;">粘豆包</h3><span style="font-size: 13px; color: #6E625B;">老街点心</span></div>
+          </article>
+          <article style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="height: 130px; border-radius: 22px; background: #F2E6D6; overflow: hidden; position: relative;"><img src="../assets/dishes/tieguodun.svg" alt="" style="position: absolute; left: -18px; top: 20px; width: 140px; height: 140px;"></div>
+            <div style="display: flex; flex-direction: column;"><h3 style="margin: 0; font-size: 15px; font-weight: 600;">铁锅炖大鹅</h3><span style="font-size: 13px; color: #6E625B;">东北饭庄</span></div>
+          </article>
+        </div>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 6px;">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 500; color: #6E625B;">口味词云：字越大，打这个标签的人越多</h2>
+        <div style="display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 14px;">
+          <button type="button" style="padding: 0; border: 0; background: none; color: #231C18; display: flex; align-items: baseline; gap: 3px; min-height: 44px;"><span style="font-size: 28px; font-weight: 900;">平价</span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 800;">32</span></button>
+          <button type="button" style="padding: 0; border: 0; background: none; color: #231C18; display: flex; align-items: baseline; gap: 3px; min-height: 44px;"><span style="font-size: 20px; font-weight: 700;">量大</span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 800;">18</span></button>
+          <button type="button" style="padding: 0; border: 0; background: none; color: #6E625B; display: flex; align-items: baseline; gap: 3px; min-height: 44px;"><span style="font-size: 16px; font-weight: 500;">微辣</span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 800;">9</span></button>
+        </div>
+      </section>
+
+      <section style="display: flex; flex-direction: column; gap: 6px;">
+        <h2 style="margin: 0; font-size: 13px; font-weight: 500; color: #6E625B;">底部导航：三个标签加发布按钮，悬浮在内容上</h2>
+        <div style="height: 60px;"><dc-import name="G-Nav" active="home" hint-size="100%,60px"></dc-import></div>
+      </section>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":760,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!-- @dsCard group="表单" height=200 subtitle="点一行试试" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>RadioRow</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--paper); font-family: var(--font-sans); color: var(--ink); }
+  .group { display: flex; flex-direction: column; gap: 6px; padding: var(--space-10); max-width: 400px; }
+  button { height: 68px; padding: 0 12px 0 10px; border: 0; border-radius: var(--radius-tile); background: transparent; color: var(--ink); display: flex; align-items: center; gap: var(--space-14); text-align: left; font-family: var(--font-sans); cursor: pointer; transition: background-color 200ms ease; }
+  button[aria-checked="true"] { background: var(--mist); }
+  .thumb { flex: none; width: var(--size-thumb); height: var(--size-thumb); border-radius: var(--radius-thumb); overflow: hidden; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .text { flex: 1; display: flex; flex-direction: column; }
+  .title { font-size: 16px; line-height: 24px; font-weight: 700; }
+  .meta { font-size: 13px; line-height: 20px; color: var(--ink-muted); display: flex; align-items: baseline; gap: var(--space-8); }
+  .dist { font-family: var(--font-numeral); font-size: 14px; font-weight: 600; color: var(--ink); }
+  .radio { flex: none; width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--line-strong); display: flex; align-items: center; justify-content: center; color: var(--paper); transition: background-color 200ms ease, border-color 200ms ease; }
+  .radio svg { opacity: 0; }
+  [aria-checked="true"] .radio { background: var(--ink); border-color: var(--ink); }
+  [aria-checked="true"] .radio svg { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="group" role="radiogroup" aria-label="选择餐厅" id="group">
+  <button type="button" role="radio" aria-checked="true"><span class="thumb"><img src="../../../assets/photos/sq_luosi.png" alt=""></span><span class="text"><span class="title">螺蛳粉研究所</span><span class="meta"><span class="dist">600 m</span>万达金街 B1</span></span><span class="radio" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" d="m3.514 11.83l5.657 5.656L20.485 6.172"/></svg></span></button>
+  <button type="button" role="radio" aria-checked="false"><span class="thumb"><img src="../../../assets/photos/sq_hongshao.png" alt=""></span><span class="text"><span class="title">家常小馆</span><span class="meta"><span class="dist">500 m</span>银座商城 2 层</span></span><span class="radio" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" d="m3.514 11.83l5.657 5.656L20.485 6.172"/></svg></span></button>
+</div>
+<script>
+  document.getElementById('group').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    this.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-checked', x === b ? 'true' : 'false'); });
+  });
+</script>
+</body>
+</html>

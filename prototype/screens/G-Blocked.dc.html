@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 屏蔽的人</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <header style="position: absolute; left: 8px; right: 16px; top: 46px; height: 44px; display: flex; align-items: center;">
+    <a href="G-SettingsPrivacy.dc.html" aria-label="返回" style="width: 44px; height: 44px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+      <dc-import name="G-Icon" icon="back" size="24" hint-size="24px,24px"></dc-import>
+    </a>
+  </header>
+
+  <section style="position: absolute; left: 20px; right: 20px; top: 98px; display: flex; flex-direction: column; gap: 6px;">
+    <h1 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 34px; line-height: 42px; font-weight: 900;">屏蔽的人<span style="font-size: 11px; font-weight: 500; line-height: 18px; padding: 0 6px; border: 1px dashed #9A8B80; border-radius: 9px;">待接入</span></h1>
+    <p style="margin: 0; font-size: 14px; line-height: 22px; color: #6E625B;">屏蔽后，他的评论和回复对你隐藏，他的赞、评论和关注不再通知你，他也不能关注你。他上传的菜不会出现在你的转盘里。</p>
+  </section>
+
+  <sc-if value="{{hasAny}}" hint-placeholder-val="{{ true }}">
+    <ul style="position: absolute; left: 0; right: 0; top: 246px; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column;">
+      <sc-for list="{{people}}" as="p" hint-placeholder-count="2">
+        <li style="min-height: 64px; padding: 0 20px; display: flex; align-items: center; gap: 14px;">
+          <span aria-hidden="true" style="flex: none; width: 44px; height: 44px; border-radius: 50%; background: {{p.bg}}; color: {{p.fg}}; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900;">{{p.initial}}</span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 16px; font-weight: 700;">{{p.name}}</span>
+            <span style="font-size: 13px; color: #6E625B;">{{p.when}}屏蔽</span>
+          </span>
+          <button type="button" class="btn-light" onClick="{{p.unblock}}" style="flex: none; height: 36px; padding: 0 14px; border: 0; border-radius: 18px; background: linear-gradient(180deg, #FBF8F6, #F4EFEB); color: #231C18; font-size: 14px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -2px 0 rgba(35,28,24,0.1), 0 1px 2px rgba(35,28,24,0.12), 0 3px 8px rgba(35,28,24,0.06);">解除屏蔽</button>
+        </li>
+      </sc-for>
+    </ul>
+  </sc-if>
+  <sc-if value="{{none}}" hint-placeholder-val="{{ false }}">
+    <section style="position: absolute; left: 20px; right: 20px; top: 300px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;">
+      <span aria-hidden="true" style="width: 64px; height: 64px; border-radius: 50%; background: #F4EFEB; color: #6E625B; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="block" size="28" hint-size="28px,28px"></dc-import></span>
+      <h2 style="margin: 4px 0 0; font-size: 20px; line-height: 28px; font-weight: 900;">没有屏蔽任何人</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 22px; color: #6E625B;">在别人主页右上角的「更多」里可以屏蔽</p>
+    </section>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      list: [
+        { name: '刷屏小号', initial: '刷', when: '10 月 12 日', bg: '#9DBF7A', fg: '#231C18' },
+        { name: '同学 0917', initial: '同', when: '9 月 30 日', bg: '#D8B27A', fg: '#231C18' }
+      ]
+    };
+  }
+  renderVals() {
+    const list = this.state.list;
+    return {
+      hasAny: list.length > 0,
+      none: list.length === 0,
+      people: list.map((p) => Object.assign({}, p, {
+        unblock: () => this.setState({ list: this.state.list.filter((x) => x.name !== p.name) })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

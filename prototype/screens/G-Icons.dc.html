@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 图标表</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1240px; height: 844px; box-sizing: border-box; padding: 40px 40px 0; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif; display: flex; flex-direction: column; gap: 24px;">
+
+  <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 40px;">
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <h1 style="margin: 0; font-size: 34px; line-height: 42px; font-weight: 900;">图标</h1>
+      <p style="margin: 0; font-size: 14px; line-height: 22px; color: #4A3C31;">MingCute Line，24 网格，2px 描边，圆角端点。默认线性，只有赞过、收藏过用实心。颜色跟着所在文字。</p>
+    </div>
+    <span style="flex: none; font-size: 13px; color: #6E625B;">共 <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; color: #231C18;">{{count}}</span> 个</span>
+  </div>
+
+  <ul style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); row-gap: 4px;">
+    <sc-for list="{{icons}}" as="i" hint-placeholder-count="78">
+      <li style="height: 88px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;">
+        <span style="color: {{i.color}}; display: flex;"><dc-import name="G-Icon" icon="{{i.key}}" size="24" hint-size="24px,24px"></dc-import></span>
+        <span style="font-size: 12px; line-height: 16px; font-weight: 600;">{{i.label}}</span>
+        <span style="font-size: 10px; line-height: 12px; color: #6E625B;">{{i.key}}</span>
+      </li>
+    </sc-for>
+  </ul>
+
+  <div style="display: flex; gap: 56px; padding-top: 18px; box-shadow: inset 0 1px 0 #EFE9E4;">
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 13px; font-weight: 600; color: #6E625B;">尺寸</span>
+      <div style="display: flex; align-items: flex-end; gap: 22px;">
+        <span style="display: flex; flex-direction: column; align-items: center; gap: 4px;"><dc-import name="G-Icon" icon="search" size="16" hint-size="16px,16px"></dc-import><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 11px; font-weight: 600; color: #6E625B;">16</span></span>
+        <span style="display: flex; flex-direction: column; align-items: center; gap: 4px;"><dc-import name="G-Icon" icon="search" size="20" hint-size="20px,20px"></dc-import><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 11px; font-weight: 600; color: #6E625B;">20</span></span>
+        <span style="display: flex; flex-direction: column; align-items: center; gap: 4px;"><dc-import name="G-Icon" icon="search" size="22" hint-size="22px,22px"></dc-import><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 11px; font-weight: 600; color: #6E625B;">22</span></span>
+        <span style="display: flex; flex-direction: column; align-items: center; gap: 4px;"><dc-import name="G-Icon" icon="search" size="24" hint-size="24px,24px"></dc-import><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 11px; font-weight: 600; color: #6E625B;">24</span></span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 13px; font-weight: 600; color: #6E625B;">切换</span>
+      <div style="display: flex; align-items: center; gap: 18px; font-size: 12px;">
+        <span style="display: flex; align-items: center; gap: 6px;"><dc-import name="G-Icon" icon="heart" size="22" hint-size="22px,22px"></dc-import>赞</span>
+        <span style="display: flex; align-items: center; gap: 6px; color: #C9442B;"><dc-import name="G-Icon" icon="heartOn" size="22" hint-size="22px,22px"></dc-import><span style="color: #231C18;">赞过</span></span>
+        <span style="display: flex; align-items: center; gap: 6px;"><dc-import name="G-Icon" icon="bookmark" size="22" hint-size="22px,22px"></dc-import>收藏</span>
+        <span style="display: flex; align-items: center; gap: 6px;"><dc-import name="G-Icon" icon="bookmarkOn" size="22" hint-size="22px,22px"></dc-import>收藏过</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 13px; font-weight: 600; color: #6E625B;">跟着舞台走</span>
+      <div style="display: flex; gap: 8px;">
+        <span style="width: 44px; height: 44px; border-radius: 50%; background: #F3C46E; color: #231C18; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="share" size="22" hint-size="22px,22px"></dc-import></span>
+        <span style="width: 44px; height: 44px; border-radius: 50%; background: #9DB8D9; color: #231C18; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="bookmark" size="22" hint-size="22px,22px"></dc-import></span>
+        <span style="width: 44px; height: 44px; border-radius: 50%; background: #8F5B24; color: #FFFFFF; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="bell" size="22" hint-size="22px,22px"></dc-import></span>
+        <span style="width: 44px; height: 44px; border-radius: 50%; background: #A8321C; color: #FFFFFF; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="search" size="22" hint-size="22px,22px"></dc-import></span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1240,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const list = [
+      ['discover', '发现'], ['nearby', '附近'], ['me', '我的'], ['add', '发布'], ['search', '搜索'], ['bell', '消息'],
+      ['back', '返回'], ['close', '关闭'], ['chevronRight', '进入'], ['chevronDown', '展开'], ['more', '更多'], ['check', '勾选'],
+      ['shuffle', '换一个'], ['share', '分享'], ['navigate', '导航'], ['heart', '赞'], ['heartOn', '赞过'], ['bookmark', '收藏'],
+      ['bookmarkOn', '收藏过'], ['comment', '评论'], ['report', '举报'], ['edit', '编辑'], ['delete', '删除'], ['settings', '设置'],
+      ['filter', '筛选'], ['locate', '我的位置'], ['camera', '拍照'], ['image', '照片'], ['tag', '标签'], ['history', '足迹'],
+      ['verify', '认证'], ['phone', '手机号'], ['mail', '邮箱'], ['mailSend', '邮件已发'], ['lock', '仅自己'], ['key', '密码'],
+      ['eye', '显示'], ['eyeOff', '隐藏'], ['logout', '退出'], ['follow', '关注'], ['followed', '已关注'], ['unfollow', '取消关注'],
+      ['block', '屏蔽'], ['store', '店'], ['bowl', '菜'], ['utensils', '吃饭'], ['time', '饭点'], ['school', '校区'],
+      ['district', '商圈'], ['map', '地图'], ['pin', '选点'], ['link', '复制链接'], ['copy', '复制'], ['sort', '排序'],
+      ['warning', '提示'], ['info', '说明'], ['question', '帮助'], ['calendar', '日期'], ['topic', '专题'], ['hot', '热门'],
+      ['earth', '境外存放'], ['document', '协议'], ['feedback', '反馈'], ['external', '外部页面'], ['addCircle', '添加'], ['closeCircle', '清空'],
+      ['checkCircle', '完成'], ['send', '发送'], ['notifyOff', '不打扰'], ['moon', '夜间'], ['shield', '安全'], ['idcard', '身份'],
+      ['computer', '电脑'], ['announce', '公告'], ['download', '更新'], ['wifiOff', '没网'], ['tool', '维护'], ['pause', '暂停']
+    ];
+    return {
+      count: list.length,
+      icons: list.map((x) => ({ key: x[0], label: x[1], color: x[0] === 'heartOn' ? '#C9442B' : '#231C18' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

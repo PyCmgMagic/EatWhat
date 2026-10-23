@@ -1,0 +1,50 @@
+<!-- @dsCard group="内容" height=320 subtitle="店铺行、菜品行、消息行" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>ListRow</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--paper); font-family: var(--font-sans); color: var(--ink); }
+  .list { display: flex; flex-direction: column; gap: 18px; padding: var(--space-20); max-width: 400px; }
+  .row { position: relative; display: flex; align-items: center; gap: var(--space-14); color: inherit; text-decoration: none; }
+  .thumb { flex: none; border-radius: var(--radius-thumb); overflow: hidden; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .t64 { width: var(--size-thumb-lg); height: var(--size-thumb-lg); border-radius: var(--radius-thumb-lg); }
+  .t56 { width: 56px; height: 56px; }
+  .t48 { width: 48px; height: 48px; }
+  .text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .title { font-size: 16px; line-height: 24px; font-weight: 700; }
+  .meta { font-size: 13px; line-height: 20px; color: var(--ink-muted); display: flex; align-items: baseline; gap: var(--space-8); }
+  .dist { font-family: var(--font-numeral); font-size: 14px; font-weight: 600; color: var(--ink); }
+  .price { font-family: var(--font-numeral); font-size: 18px; font-weight: 800; }
+  .icon { flex: none; width: var(--size-touch); height: var(--size-touch); border: 0; background: none; color: var(--ink); display: flex; align-items: center; justify-content: center; }
+  .avatar { flex: none; width: var(--size-avatar); height: var(--size-avatar); border-radius: 50%; background: var(--stage-broth); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900; }
+  .body { font-size: 15px; line-height: 22px; }
+  .body b { font-weight: 700; }
+  .time { font-size: 12px; line-height: 18px; color: var(--ink-muted); }
+  .dot { position: absolute; left: -13px; top: 50%; width: 7px; height: 7px; margin-top: -3px; border-radius: 4px; background: var(--ink); }
+</style>
+</head>
+<body>
+<div class="list">
+  <a class="row" href="#shop">
+    <span class="thumb t64"><img src="../../../assets/photos/sq_luosi.png" alt=""></span>
+    <span class="text"><span class="title">螺蛳粉研究所</span><span class="meta"><span class="dist">600 m</span>万达金街 B1</span><span class="meta">招牌：柳州螺蛳粉</span></span>
+  </a>
+  <div class="row">
+    <span class="thumb t56"><img src="../../../assets/photos/sq_hongshao.png" alt=""></span>
+    <span class="text"><span class="title" style="font-weight: 500;">红烧肉</span><span class="meta">64 人收藏</span></span>
+    <span class="price">¥38</span>
+    <button type="button" class="icon" aria-label="已收藏" aria-pressed="true"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M5 6a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v14.066c0 1.198-1.335 1.912-2.332 1.248L12 18.202l-4.668 3.112C6.335 21.978 5 21.264 5 20.066z" clip-rule="evenodd"/></svg></button>
+  </div>
+  <a class="row" href="#notice">
+    <span class="dot" aria-label="未读"></span>
+    <span class="avatar" aria-hidden="true">林</span>
+    <span class="text"><span class="body"><b>小林</b> 收藏了你上传的玉米排骨汤</span><span class="time">12 分钟前</span></span>
+    <span class="thumb t48"><img src="../../../assets/photos/sq_paigu.png" alt=""></span>
+  </a>
+</div>
+</body>
+</html>

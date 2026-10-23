@@ -1,0 +1,30 @@
+<!-- @dsCard group="舞台" height=280 subtitle="压在舞台上的白色抽屉" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Sheet</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--paper); font-family: var(--font-sans); color: var(--ink); }
+  .wrap { padding: var(--space-20); }
+  .frame { position: relative; width: 380px; height: 240px; border-radius: var(--radius-tile); overflow: hidden; background: var(--stage-porcelain); }
+  .sheet { position: absolute; left: 0; right: 0; top: 70px; bottom: 0; background: var(--paper); border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; padding: 10px var(--space-20) 0; display: flex; flex-direction: column; gap: var(--space-14); }
+  .handle { align-self: center; width: 36px; height: 4px; border-radius: 2px; background: var(--handle); }
+  h2 { margin: 0; font-size: 20px; line-height: 28px; font-weight: 900; }
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-14); }
+  .tiles img { width: 100%; height: 90px; border-radius: var(--radius-tile); object-fit: cover; display: block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="frame">
+    <div class="sheet">
+      <span class="handle" aria-hidden="true"></span>
+      <h2>今日推荐</h2>
+      <div class="tiles"><img src="../../../assets/photos/p_tieguo.png" alt="铁锅炖"><img src="../../../assets/photos/p_luosi.png" alt="柳州螺蛳粉"></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

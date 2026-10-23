@@ -1,0 +1,903 @@
+.pc-composer {
+  max-width: 1416px;
+  margin: 0 auto;
+}
+.pc-composer-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 0 22px;
+}
+.pc-composer-heading .pc-breadcrumb {
+  margin: 0 0 8px;
+  font-size: 11px;
+}
+.pc-composer-heading h1 {
+  margin: 0 0 7px;
+  font-size: 29px;
+  line-height: 1.4;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+.pc-composer-heading p {
+  margin: 0;
+  color: #8a7e76;
+  font-size: 12px;
+}
+.pc-composer-draft {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #8a7e76;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.pc-composer-draft i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #9dbf7a;
+}
+.pc-composer-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.pc-composer-shops {
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 114px;
+  height: min(660px, calc(100dvh - 238px));
+  min-height: 510px;
+  padding: 20px 16px 16px;
+  background: #fff;
+  border-radius: 24px;
+}
+.pc-composer-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+.pc-composer-section-title h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+.pc-required {
+  color: #a75e24;
+  font-size: 10px;
+  font-weight: 500;
+}
+.pc-composer-area {
+  border: 0;
+  padding: 10px 4px;
+  background: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #6e625b;
+  text-align: left;
+}
+.pc-composer-area .design-icon:last-child {
+  margin-left: auto;
+}
+.pc-composer-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  flex-shrink: 0;
+  padding: 0 11px;
+  background: #f7f4f1;
+  border-radius: 12px;
+  margin: 4px 0 12px;
+  color: #8a7e76;
+}
+.pc-composer-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: #231c18;
+  font-size: 12px;
+}
+.pc-composer-search button {
+  padding: 0;
+  border: 0;
+  background: none;
+  display: flex;
+}
+.pc-composer-shop-list {
+  min-height: 120px;
+  flex: 1;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #d9d0c9 transparent;
+  margin: 0 -5px;
+  padding: 0 5px;
+}
+.pc-composer-shop {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 11px 8px;
+  border: 0;
+  background: transparent;
+  border-radius: 14px;
+  text-align: left;
+  margin-bottom: 4px;
+  transition: background-color 150ms;
+}
+.pc-composer-shop[aria-checked="true"] {
+  background: #f8f0e0;
+}
+.pc-composer-shop:hover {
+  background: #f7f4f1;
+}
+.pc-composer-shop[aria-checked="true"]:hover {
+  background: #f8edda;
+}
+.pc-composer-shop-photo {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  background: #f4efeb;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pc-composer-shop-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.pc-composer-shop > span:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+.pc-composer-shop strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pc-composer-shop small {
+  display: block;
+  font-size: 10px;
+  color: #8a7e76;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pc-composer-radio {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #d9d0c9;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.pc-composer-shop[aria-checked="true"] .pc-composer-radio {
+  background: #231c18;
+  border-color: #231c18;
+  color: white;
+}
+.pc-composer-selected {
+  border-top: 1px solid #efe9e4;
+  margin-top: 10px;
+  padding: 13px 4px 8px;
+}
+.pc-composer-selected > span {
+  font-size: 10px;
+  color: #8a7e76;
+  display: block;
+  margin-bottom: 5px;
+}
+.pc-composer-selected strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+}
+.pc-composer-selected small {
+  display: block;
+  font-size: 10px;
+  color: #a8321c;
+}
+.pc-composer-new-shop {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 7px 4px 0;
+  font-size: 11px;
+  color: #6e625b;
+}
+.pc-composer-list-message {
+  font-size: 12px;
+  line-height: 1.8;
+  padding: 20px 8px;
+  color: #8a7e76;
+}
+.pc-composer-list-message button {
+  display: block;
+  background: none;
+  border: 0;
+  padding: 8px 0;
+  font-size: 12px;
+  text-decoration: underline;
+}
+.pc-composer-shop-pages {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  margin: 12px 0;
+}
+.pc-composer-shop-pages button {
+  border: 0;
+  border-radius: 10px;
+  background: #f4efeb;
+  padding: 7px;
+  font: inherit;
+}
+.pc-composer-editor {
+  background: white;
+  border-radius: 24px;
+  padding: 24px;
+  display: grid;
+  grid-template-columns: minmax(220px, 340px) minmax(0, 1fr);
+  column-gap: 28px;
+  align-items: start;
+}
+.pc-composer-editor fieldset {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.pc-composer-editor legend {
+  padding: 0;
+  width: 100%;
+  margin-bottom: 16px;
+  font-size: 17px;
+  font-weight: 800;
+}
+.pc-composer-editor legend > span {
+  font-size: 10px;
+  font-weight: 400;
+  color: #8a7e76;
+  margin-left: 8px;
+}
+.pc-composer-stage {
+  height: 278px;
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  transition: background-color 180ms;
+}
+.pc-composer-stage.is-dragging {
+  outline: 2px dashed #231c18;
+  outline-offset: -8px;
+}
+.pc-composer-stage.is-dark {
+  color: white;
+}
+.pc-composer-stage.is-dark .pc-composer-empty-photo {
+  color: white;
+  border-color: #ffffff70;
+}
+.pc-composer-stage.is-dark .pc-composer-empty-photo > span:last-child {
+  color: #ffffffb0;
+}
+.pc-app .pc-composer-crop-button {
+  color: #231c18;
+}
+.pc-composer-cover {
+  width: 204px;
+  height: 204px;
+  border-radius: 50%;
+  border: 7px solid white;
+  object-fit: cover;
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 12px 22px #231c1820;
+}
+.pc-composer-empty-photo {
+  border: 1.5px dashed #231c1845;
+  border-radius: 50%;
+  background: #ffffff26;
+  color: #231c18;
+  width: 180px;
+  height: 180px;
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+.pc-composer-empty-photo strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+.pc-composer-empty-photo > span:last-child {
+  font-size: 10px;
+  color: #6e512f;
+}
+.pc-composer-crop-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 16px;
+  background: #ffffffdc;
+  color: #231c18;
+  font-size: 10px;
+}
+.pc-composer-preview-name {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.pc-composer-preview-name > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pc-composer-preview-name > strong {
+  font: 800 23px/1 "Bricolage Grotesque Variable";
+  flex-shrink: 0;
+}
+.pc-composer-thumbnails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+.pc-composer-thumbnails > button {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1.5px solid transparent;
+  border-radius: 11px;
+  position: relative;
+  background: #f7f4f1;
+  overflow: hidden;
+}
+.pc-composer-thumbnails > button[aria-pressed="true"] {
+  border-color: #231c18;
+}
+.pc-composer-thumbnails img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pc-composer-thumbnails > button > span:not(.design-icon) {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  color: #fff;
+  background: #231c18a0;
+  font-size: 9px;
+  line-height: 16px;
+}
+.pc-composer-thumbnails > button.pc-composer-add-photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #c8bbb1;
+  gap: 1px;
+}
+.pc-composer-thumbnails
+  > button.pc-composer-add-photo
+  > span:not(.design-icon) {
+  position: static;
+  color: #8a7e76;
+  background: transparent;
+  font: 500 9px "Bricolage Grotesque Variable";
+}
+.pc-composer-photo-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 9px;
+}
+.pc-composer-photo-actions button {
+  border: 0;
+  background: none;
+  padding: 3px 0;
+  color: #6e625b;
+  font-size: 10px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.pc-composer-photo-help {
+  font-size: 10px;
+  color: #8a7e76;
+  line-height: 1.8;
+  margin: 10px 0 15px;
+}
+.pc-composer-palette {
+  border-top: 1px solid #efe9e4;
+  padding-top: 12px;
+}
+.pc-composer-palette > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+}
+.pc-composer-palette strong {
+  font-size: 12px;
+  font-weight: 600;
+}
+.pc-composer-palette > div:first-child > span {
+  font-size: 10px;
+  color: #8a7e76;
+}
+.pc-composer-palette [role="group"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 3px;
+}
+.pc-composer-palette [role="group"] > button {
+  width: 23px;
+  height: 23px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+.pc-composer-palette [aria-pressed="true"] {
+  outline: 1.5px solid #231c18;
+  outline-offset: 3px;
+}
+.pc-composer-palette > small {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #8a7e76;
+  font-size: 10px;
+  margin-top: 10px;
+}
+.pc-composer-palette > small > button {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+}
+.pc-composer-name-price {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.pc-composer-fields label,
+.pc-composer-kind > span {
+  font-size: 12px;
+  font-weight: 600;
+}
+.pc-composer-fields label > span:not(.pc-required) {
+  font-size: 10px;
+  color: #8a7e76;
+  font-weight: 400;
+  margin-left: 3px;
+}
+.pc-composer-fields input,
+.pc-composer-fields textarea {
+  width: 100%;
+  border: 1px solid #e6ded8;
+  border-radius: 12px;
+  color: #231c18;
+  background: #fff;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  outline: 0;
+  margin-top: 8px;
+  transition: border-color 150ms;
+}
+.pc-composer-fields input:focus,
+.pc-composer-fields textarea:focus {
+  border-color: #9d7c59;
+  box-shadow: 0 0 0 3px #f3c46e24;
+}
+.pc-composer-fields input {
+  height: 43px;
+}
+.pc-composer-price {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  border: 1px solid #e6ded8;
+  border-radius: 12px;
+  padding-left: 11px;
+}
+.pc-composer-price:focus-within {
+  border-color: #9d7c59;
+  box-shadow: 0 0 0 3px #f3c46e24;
+}
+.pc-composer-price > span {
+  font: 600 16px "Bricolage Grotesque Variable";
+  color: #8a7e76;
+}
+.pc-composer-price input {
+  margin: 0;
+  border: 0;
+  padding-left: 6px;
+  height: 41px;
+  box-shadow: none !important;
+}
+.pc-composer-kind {
+  margin-bottom: 18px;
+}
+.pc-composer-kind > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+.pc-composer-kind button {
+  border: 1px solid #efe9e4;
+  border-radius: 10px;
+  background: #faf8f6;
+  padding: 7px 12px;
+  font-size: 11px;
+  min-width: 52px;
+}
+.pc-composer-kind button[aria-checked="true"] {
+  background: #231c18;
+  border-color: #231c18;
+  color: #fff;
+}
+.pc-composer-description {
+  display: block;
+}
+.pc-composer-description textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.8;
+}
+.pc-composer-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 0;
+  margin-top: 5px;
+  color: #8a7e76;
+}
+.pc-composer-tip .design-icon {
+  color: #a99175;
+  margin-top: 1px;
+}
+.pc-composer-tip strong {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6e625b;
+}
+.pc-composer-tip p {
+  margin: 5px 0 0;
+  font-size: 10px;
+  line-height: 1.8;
+}
+.pc-composer-recap {
+  background: #faf7f2;
+  border-radius: 13px;
+  padding: 14px;
+  margin-top: 4px;
+}
+.pc-composer-recap > span {
+  color: #a28c74;
+  font-size: 10px;
+  display: block;
+  margin-bottom: 7px;
+}
+.pc-composer-recap strong {
+  font-size: 13px;
+  display: block;
+  font-weight: 700;
+}
+.pc-composer-recap small {
+  font-size: 11px;
+  color: #8a7e76;
+  display: block;
+  margin-top: 5px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.pc-composer-submit {
+  grid-column: 1/-1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-top: 1px solid #efe9e4;
+  margin-top: 22px;
+  padding: 16px 0 0;
+  position: sticky;
+  bottom: 12px;
+  background: #fff;
+  z-index: 3;
+  box-shadow: 0 -10px 12px #ffffffed;
+}
+.pc-composer-submit > div:last-child {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 14px;
+}
+.pc-composer-submit .pc-button {
+  min-height: 44px;
+  height: 44px;
+  min-width: 145px;
+  font-size: 13px;
+  padding: 0 18px;
+}
+.pc-composer-save {
+  border: 0;
+  background: none;
+  color: #6e625b;
+  font-size: 11px;
+  padding: 9px 0;
+}
+.pc-composer-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 11px;
+}
+.pc-composer-checks > span {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  color: #b5a79c;
+  font-size: 10px;
+}
+.pc-composer-checks > span[data-done="true"] {
+  color: #6c8056;
+}
+.pc-composer-checks small {
+  flex-basis: 100%;
+  color: #8a7e76;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.pc-composer-error {
+  grid-column: 1/-1;
+  margin-top: 16px;
+  border: 1px solid #e4c8bf;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff7f3;
+  font-size: 12px;
+  color: #a8321c;
+  line-height: 1.8;
+}
+.pc-composer-error p {
+  margin: 0;
+}
+.pc-composer-error a {
+  text-decoration: underline;
+  display: block;
+  width: fit-content;
+  margin: 6px 0;
+}
+.pc-composer-error label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  margin-top: 10px;
+}
+.pc-composer-error button {
+  border: 1px solid #e4c8bf;
+  border-radius: 8px;
+  background: white;
+  padding: 6px 9px;
+  font-size: 11px;
+  margin-top: 8px;
+}
+.pc-crop-dialog {
+  border: 0;
+  border-radius: 26px;
+  width: min(820px, calc(100vw - 50px));
+  max-width: none;
+  padding: 24px;
+  background: #fff;
+  color: #231c18;
+  font-family: "Noto Sans SC Variable", sans-serif;
+  box-shadow: 0 24px 80px #231c1833;
+}
+.pc-crop-dialog::backdrop {
+  background: #231c1870;
+  backdrop-filter: blur(3px);
+}
+.pc-crop-dialog > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.pc-crop-dialog h2 {
+  margin: 0 0 7px;
+  font-size: 23px;
+  font-weight: 900;
+}
+.pc-crop-dialog header p {
+  margin: 0;
+  font-size: 12px;
+  color: #8a7e76;
+}
+.pc-crop-body {
+  display: grid;
+  grid-template-columns: minmax(340px, 1.25fr) minmax(0, 1fr);
+  gap: 24px;
+}
+.pc-crop-stage {
+  display: grid;
+  place-items: center;
+  min-height: 350px;
+  border-radius: 18px;
+  background: #f4efeb;
+  overflow: hidden;
+}
+.pc-crop-frame {
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  border: 2px solid white;
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  box-sizing: content-box;
+  box-shadow: 0 4px 28px #231c1812;
+}
+.pc-crop-frame:active {
+  cursor: grabbing;
+}
+.pc-app .pc-crop-frame img {
+  max-width: none;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+  user-select: none;
+}
+.pc-crop-crosshair {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent 49.8%, #ffffff60 50%, transparent 50.2%),
+    linear-gradient(transparent 49.8%, #ffffff60 50%, transparent 50.2%);
+}
+.pc-crop-controls {
+  padding: 16px 5px;
+}
+.pc-crop-controls h3 {
+  margin: 10px 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+.pc-crop-controls p {
+  color: #8a7e76;
+  font-size: 12px;
+  line-height: 1.9;
+  margin: 0 0 25px;
+}
+.pc-crop-controls label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.pc-crop-controls input {
+  width: 100%;
+  accent-color: #231c18;
+  margin: 0 0 14px;
+}
+.pc-crop-controls .pc-small-link {
+  border: 0;
+  background: none;
+  padding: 0;
+}
+.pc-crop-controls small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.8;
+  color: #b5a79c;
+  margin-top: 24px;
+}
+.pc-crop-dialog > footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+.pc-crop-dialog > footer .pc-button {
+  height: 44px;
+  min-width: 110px;
+  font-size: 13px;
+}
+@media (max-width: 1250px) {
+  .pc-composer-layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 16px;
+  }
+  .pc-composer-editor {
+    padding: 20px;
+    column-gap: 20px;
+    grid-template-columns: minmax(210px, 0.85fr) minmax(0, 1.15fr);
+  }
+  .pc-composer-stage {
+    height: 260px;
+  }
+  .pc-composer-cover {
+    width: 190px;
+    height: 190px;
+  }
+  .pc-composer-name-price {
+    grid-template-columns: minmax(0, 1fr) 95px;
+    gap: 10px;
+  }
+  .pc-composer-kind button {
+    padding: 7px 10px;
+    min-width: 48px;
+  }
+  .pc-composer-heading h1 {
+    font-size: 27px;
+  }
+  .pc-composer-draft {
+    font-size: 10px;
+  }
+  .pc-composer-submit > div:last-child {
+    gap: 9px;
+  }
+  .pc-composer-submit .pc-button {
+    min-width: 130px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-composer *,
+  .pc-crop-dialog * {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

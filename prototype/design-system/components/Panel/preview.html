@@ -1,0 +1,58 @@
+<!-- @dsCard group="舞台" height=470 subtitle="压在当前页上的临时选择" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Panel</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--paper); font-family: var(--font-sans); color: var(--ink); }
+  .wrap { padding: var(--space-20); }
+  .frame { position: relative; width: 390px; height: 430px; border-radius: var(--radius-tile); overflow: hidden; background: var(--stage-soy); }
+  .frame img { position: absolute; left: 190px; top: -40px; width: 240px; height: 240px; border-radius: 50%; object-fit: cover; box-shadow: var(--shadow-plate); }
+  .scrim { position: absolute; inset: 0; background: var(--scrim); }
+  .panel { position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 10px var(--space-20) var(--space-24); background: var(--paper); border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; display: flex; flex-direction: column; gap: var(--space-14); }
+  .handle { align-self: center; width: 36px; height: 4px; border-radius: 2px; background: var(--handle); }
+  .head { display: flex; align-items: center; justify-content: space-between; margin-top: -4px; }
+  h2 { margin: 0; font-size: 20px; line-height: 28px; font-weight: 900; }
+  .close { width: var(--size-touch); height: var(--size-touch); margin-right: -10px; border: 0; background: none; color: var(--ink); display: flex; align-items: center; justify-content: center; }
+  .group { display: flex; flex-direction: column; gap: 4px; margin: 0 -10px; }
+  .opt { height: 52px; padding: 0 12px; border: 0; border-radius: 18px; background: transparent; color: var(--ink); display: flex; align-items: center; justify-content: space-between; font: 400 16px/24px var(--font-sans); text-align: left; cursor: pointer; transition: background-color 200ms ease; }
+  .opt[aria-checked="true"] { background: var(--mist); font-weight: 700; }
+  .radio { width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--line-strong); display: flex; align-items: center; justify-content: center; color: var(--paper); }
+  .radio svg { opacity: 0; }
+  [aria-checked="true"] .radio { background: var(--ink); border-color: var(--ink); }
+  [aria-checked="true"] .radio svg { opacity: 1; }
+  .solid { height: var(--size-button); border: 0; border-radius: var(--radius-pill); background: linear-gradient(180deg, var(--ink-top), var(--ink)); color: var(--paper); font: 600 16px/24px var(--font-sans); box-shadow: var(--shadow-button); cursor: pointer; }
+  .solid:active { transform: translateY(1px); box-shadow: var(--shadow-button-pressed); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="frame">
+    <img src="../../../assets/photos/sq_luosi.png" alt="">
+    <div class="scrim" aria-hidden="true"></div>
+    <section class="panel" role="dialog" aria-label="举报这道菜">
+      <span class="handle" aria-hidden="true"></span>
+      <div class="head">
+        <h2>举报这道菜</h2>
+        <button type="button" class="close" aria-label="关闭"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m5.636 5.637l12.728 12.728m-12.728 0L18.364 5.637"/></svg></button>
+      </div>
+      <div class="group" role="radiogroup" aria-label="举报原因" id="group">
+        <button type="button" class="opt" role="radio" aria-checked="true">不是这道菜的实拍<span class="radio" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" d="m3.514 11.83l5.657 5.656L20.485 6.172"/></svg></span></button>
+        <button type="button" class="opt" role="radio" aria-checked="false">广告<span class="radio" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" d="m3.514 11.83l5.657 5.656L20.485 6.172"/></svg></span></button>
+        <button type="button" class="opt" role="radio" aria-checked="false">违法或不友善<span class="radio" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" d="m3.514 11.83l5.657 5.656L20.485 6.172"/></svg></span></button>
+      </div>
+      <button type="button" class="solid">提交</button>
+    </section>
+  </div>
+</div>
+<script>
+  document.getElementById('group').addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) return;
+    this.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-checked', x === b ? 'true' : 'false'); });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!-- @dsCard group="表单" height=210 subtitle="点一下试试" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Switch</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--paper); font-family: var(--font-sans); color: var(--ink); }
+  .list { display: flex; flex-direction: column; padding: var(--space-10) var(--space-20); max-width: 400px; }
+  .row { min-height: 64px; display: flex; align-items: center; gap: var(--space-14); cursor: pointer; }
+  .text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .label { font-size: 16px; line-height: 24px; }
+  .sub { font-size: 13px; line-height: 20px; color: var(--ink-muted); }
+  .switch { flex: none; width: 52px; height: 32px; padding: 3px; border: 0; border-radius: var(--radius-pill); background: var(--handle); box-shadow: inset 0 1px 2px rgba(35, 28, 24, 0.12); display: flex; justify-content: flex-start; cursor: pointer; transition: background-color 180ms ease; }
+  .switch::after { content: ""; width: 26px; height: 26px; border-radius: 50%; background: var(--paper); box-shadow: 0 1px 3px rgba(35, 28, 24, 0.28); }
+  .switch[aria-checked="true"] { background: linear-gradient(180deg, var(--ink-top), var(--ink)); box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.28); justify-content: flex-end; }
+  .switch:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="list">
+  <label class="row"><span class="text"><span class="label" id="sw-1">公开我的关注列表</span><span class="sub">关掉后别人点开，看到的是「对方没有公开」</span></span><button type="button" class="switch" role="switch" aria-checked="true" aria-labelledby="sw-1"></button></label>
+  <label class="row"><span class="text"><span class="label" id="sw-2">赞和收藏</span><span class="sub">同一道菜 1 小时内的合成一条</span></span><button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="sw-2"></button></label>
+</div>
+<script>
+  document.querySelectorAll('.switch').forEach(function (b) {
+    b.addEventListener('click', function () { b.setAttribute('aria-checked', b.getAttribute('aria-checked') === 'true' ? 'false' : 'true'); });
+  });
+</script>
+</body>
+</html>

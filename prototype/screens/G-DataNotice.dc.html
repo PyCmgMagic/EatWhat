@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 数据存放说明</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <header style="position: absolute; left: 8px; right: 16px; top: 46px; height: 44px; display: flex; align-items: center;">
+    <a href="{{backTo}}" aria-label="返回" style="width: 44px; height: 44px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+      <dc-import name="G-Icon" icon="back" size="24" hint-size="24px,24px"></dc-import>
+    </a>
+  </header>
+
+  <article style="position: absolute; left: 20px; right: 20px; top: 104px; display: flex; flex-direction: column; gap: 22px;">
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <h1 style="margin: 0; font-size: 28px; line-height: 36px; font-weight: 900;">数据存放说明</h1>
+      <p style="margin: 0; font-size: 14px; line-height: 22px; color: #4A3C31;">你的账号信息存放在境外服务器。按个人信息保护的要求，这件事要你单独同意。</p>
+    </div>
+
+    <section style="display: flex; flex-direction: column; gap: 8px;">
+      <h2 style="margin: 0; font-size: 17px; line-height: 24px; font-weight: 900;">存哪些信息</h2>
+      <ul style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 4px; column-gap: 12px;">
+        <li style="min-height: 34px; display: flex; align-items: center; gap: 10px; font-size: 14px;"><span style="flex: none; color: #6E625B; display: flex;"><dc-import name="G-Icon" icon="phone" size="20" hint-size="20px,20px"></dc-import></span>手机号</li>
+        <li style="min-height: 34px; display: flex; align-items: center; gap: 10px; font-size: 14px;"><span style="flex: none; color: #6E625B; display: flex;"><dc-import name="G-Icon" icon="idcard" size="20" hint-size="20px,20px"></dc-import></span>认证得到的学号和姓名</li>
+        <li style="min-height: 34px; display: flex; align-items: center; gap: 10px; font-size: 14px;"><span style="flex: none; color: #6E625B; display: flex;"><dc-import name="G-Icon" icon="me" size="20" hint-size="20px,20px"></dc-import></span>昵称、头像、签名</li>
+        <li style="min-height: 34px; display: flex; align-items: center; gap: 10px; font-size: 14px;"><span style="flex: none; color: #6E625B; display: flex;"><dc-import name="G-Icon" icon="image" size="20" hint-size="20px,20px"></dc-import></span>照片、菜和评论</li>
+        <li style="min-height: 34px; display: flex; align-items: center; gap: 10px; font-size: 14px;"><span style="flex: none; color: #6E625B; display: flex;"><dc-import name="G-Icon" icon="nearby" size="20" hint-size="20px,20px"></dc-import></span>用到时的位置</li>
+        <li style="min-height: 34px; display: flex; align-items: center; gap: 10px; font-size: 14px;"><span style="flex: none; color: #6E625B; display: flex;"><dc-import name="G-Icon" icon="shield" size="20" hint-size="20px,20px"></dc-import></span>设备型号和标识</li>
+      </ul>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 6px;">
+      <h2 style="margin: 0; font-size: 17px; line-height: 24px; font-weight: 900;">存在哪里，为什么</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 22px; color: #4A3C31;">存放在 [国家或地区] 的服务器上。[为什么存在那里]</p>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 6px;">
+      <h2 style="margin: 0; font-size: 17px; line-height: 24px; font-weight: 900;">怎么撤回</h2>
+      <p style="margin: 0; font-size: 14px; line-height: 22px; color: #4A3C31;">在设置的账号与安全里点「数据存放」，撤回同意。撤回后没法继续使用，所以撤回就是注销账号：有 7 天冷静期，之后彻底删除。</p>
+    </section>
+  </article>
+
+  <sc-if value="{{inSettings}}" hint-placeholder-val="{{ true }}">
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 14px 20px 32px; background: #FFFFFF; box-shadow: 0 -1px 0 #EFE9E4; display: flex; flex-direction: column; gap: 12px;">
+      <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #6E625B;">
+        <dc-import name="G-Icon" icon="checkCircle" size="18" hint-size="18px,18px"></dc-import>
+        你在 <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600; color: #231C18;">2026 年 10 月 22 日</span> 同意了
+      </span>
+      <a href="G-DeleteAccount.dc.html" class="btn-press" style="height: 52px; box-sizing: border-box; border: 1.5px solid #231C18; border-radius: 26px; background: #FFFFFF; color: #231C18; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 -3px 0 rgba(35,28,24,0.08), 0 1px 2px rgba(35,28,24,0.12); transition: transform 90ms ease;">撤回同意并注销账号</a>
+    </div>
+  </sc-if>
+  <sc-if value="{{inRegister}}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 12px 20px 32px; background: #FFFFFF; box-shadow: 0 -1px 0 #EFE9E4;">
+      <a href="G-RegisterConfirm.dc.html" class="btn-light" style="height: 52px; border-radius: 26px; background: linear-gradient(180deg, #FBF8F6, #F4EFEB); color: #231C18; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -2px 0 rgba(35,28,24,0.1), 0 1px 2px rgba(35,28,24,0.12), 0 3px 8px rgba(35,28,24,0.06);">看完了</a>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"from":{"editor":"enum","options":["设置里","注册时"],"default":"设置里"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const inSettings = (this.props.from ?? '设置里') === '设置里';
+    return {
+      inSettings: inSettings,
+      inRegister: !inSettings,
+      backTo: inSettings ? 'G-SettingsAccount.dc.html' : 'G-RegisterConfirm.dc.html'
+    };
+  }
+}
+</script>
+</body>
+</html>

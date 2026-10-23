@@ -1,0 +1,87 @@
+<!-- @dsCard group="舞台" height=340 subtitle="左右拖动或点「换一个」" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Turntable</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--paper); font-family: var(--font-sans); }
+  .wrap { padding: var(--space-20); }
+  .stage { position: relative; width: 380px; height: 300px; border-radius: var(--radius-tile); overflow: hidden; transition: background-color 500ms ease, color 500ms ease; touch-action: pan-y; cursor: grab; user-select: none; }
+  .table { position: absolute; left: -110px; top: 90px; width: 680px; height: 680px; border-radius: 50%; transition: background-color 500ms ease; }
+  .ring { position: absolute; left: -90px; top: 110px; width: 640px; height: 640px; border-radius: 50%; box-sizing: border-box; border: 1.5px solid; transition: border-color 500ms ease; }
+  .plate { position: absolute; left: 140px; top: 340px; width: 180px; height: 180px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 6px #ffffff, 0 14px 26px rgba(0, 0, 0, 0.28); }
+  .plate img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+  .words { position: absolute; left: 16px; top: 18px; width: 120px; pointer-events: none; }
+  .name { margin: 0; font-size: 30px; line-height: 33px; font-weight: 900; letter-spacing: -0.5px; }
+  .price { margin-top: 6px; font-family: var(--font-numeral); font-size: 34px; line-height: 36px; font-weight: 800; letter-spacing: -1px; }
+  .dots { position: absolute; left: 16px; top: 196px; display: flex; gap: 5px; }
+  .dots i { height: 5px; width: 5px; border-radius: 3px; background: currentColor; opacity: 0.4; transition: width 300ms ease, opacity 300ms ease; }
+  .dots i.on { width: 16px; opacity: 1; }
+  .next { position: absolute; left: 16px; bottom: 16px; height: 40px; padding: 0 18px; border: 0; border-radius: var(--radius-pill); font: 600 14px/20px var(--font-sans); color: inherit; cursor: pointer; box-shadow: var(--shadow-button-ghost); transition: transform 90ms ease, background-color 500ms ease; }
+  .next:active { transform: translateY(1px); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="stage" id="stage" role="group" aria-label="转盘，左右拖动换一道菜">
+    <div class="table" id="table"></div>
+    <div class="ring" id="ring"></div>
+    <div id="plates"></div>
+    <div class="words" aria-live="polite"><p class="name" id="name"></p><div class="price" id="price"></div></div>
+    <div class="dots" id="dots" aria-hidden="true"></div>
+    <button type="button" class="next" id="next">换一个</button>
+  </div>
+</div>
+<script>
+  (function () {
+    var css = getComputedStyle(document.documentElement);
+    var v = function (n) { return css.getPropertyValue(n).trim(); };
+    var dishes = [
+      { name: '柳州<br>螺蛳粉', price: '¥16', img: '../../../assets/photos/sq_luosi.png', stage: '--stage-soy', dark: true },
+      { name: '铁锅炖', price: '¥58', img: '../../../assets/photos/sq_tieguo.png', stage: '--stage-redoil', dark: true },
+      { name: '粘豆包', price: '¥8', img: '../../../assets/photos/sq_niandou.png', stage: '--stage-broth', dark: false },
+      { name: '红烧肉', price: '¥38', img: '../../../assets/photos/sq_hongshao.png', stage: '--stage-soy', dark: true },
+      { name: '玉米<br>排骨汤', price: '¥26', img: '../../../assets/photos/sq_paigu.png', stage: '--stage-bamboo', dark: false }
+    ];
+    var N = dishes.length, STEP = 50, R = 250, n = 0, drag = 0, startX = null;
+    var stage = document.getElementById('stage'), platesEl = document.getElementById('plates');
+    var plates = dishes.map(function (d) {
+      var el = document.createElement('span');
+      el.className = 'plate';
+      el.innerHTML = '<img alt="" src="' + d.img + '">';
+      platesEl.appendChild(el);
+      return el;
+    });
+    var dots = dishes.map(function () { var i = document.createElement('i'); document.getElementById('dots').appendChild(i); return i; });
+    function render(animate) {
+      var k = ((n % N) + N) % N, d = dishes[k];
+      stage.style.background = v(d.stage);
+      stage.style.color = d.dark ? v('--paper') : v('--ink');
+      document.getElementById('table').style.background = v(d.dark ? '--table-dark' : '--table-light');
+      document.getElementById('ring').style.borderColor = v(d.dark ? '--table-ring-dark' : '--table-ring-light');
+      var btn = document.getElementById('next');
+      btn.style.background = v(d.dark ? '--stage-ghost-dark' : '--stage-ghost-light');
+      document.getElementById('name').innerHTML = d.name;
+      document.getElementById('price').textContent = d.price;
+      plates.forEach(function (el, i) {
+        var off = (((i - n) % N) + N) % N; if (off > N / 2) off -= N;
+        var t = off * STEP + drag, s = 1 - 0.15 * Math.min(1, Math.abs(t) / STEP);
+        el.style.transition = animate ? 'transform 680ms cubic-bezier(0.2, 0.9, 0.25, 1.1), opacity 280ms ease' : 'none';
+        el.style.transform = 'rotate(' + t + 'deg) translateY(-' + R + 'px) rotate(' + (-t) + 'deg) scale(' + s + ')';
+        el.style.opacity = Math.abs(off) >= 2 ? 0 : 1;
+      });
+      dots.forEach(function (el, i) { el.className = i === k ? 'on' : ''; });
+    }
+    document.getElementById('next').addEventListener('click', function () { n += 1; render(true); });
+    stage.addEventListener('pointerdown', function (e) { if (e.target.id === 'next') return; startX = e.clientX; stage.setPointerCapture(e.pointerId); });
+    stage.addEventListener('pointermove', function (e) { if (startX === null) return; drag = Math.max(-STEP, Math.min(STEP, (e.clientX - startX) / (Math.PI * R / 180))); render(false); });
+    function end() { if (startX === null) return; startX = null; if (drag < -4) n += 1; if (drag > 4) n -= 1; drag = 0; render(true); }
+    stage.addEventListener('pointerup', end);
+    stage.addEventListener('pointercancel', end);
+    render(false);
+  })();
+</script>
+</body>
+</html>

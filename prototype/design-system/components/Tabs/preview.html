@@ -1,0 +1,35 @@
+<!-- @dsCard group="操作" height=110 subtitle="选中靠字重" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Tabs</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--paper); font-family: var(--font-sans); color: var(--ink); }
+  .col { display: flex; flex-direction: column; gap: var(--space-14); padding: var(--space-20); }
+  .tabs { display: flex; gap: 22px; align-items: baseline; }
+  .tabs button { height: 32px; padding: 0; border: 0; background: none; color: var(--ink-muted); font: 400 15px/24px var(--font-sans); display: flex; align-items: baseline; gap: var(--space-4); cursor: pointer; }
+  .tabs button[aria-selected="true"] { color: var(--ink); font-size: 17px; font-weight: 900; }
+  .n { font-family: var(--font-numeral); font-size: 13px; font-weight: 600; }
+  [aria-selected="true"] .n { font-weight: 800; }
+  .pending { font-size: 11px; line-height: 16px; padding: 0 6px; border: 1px dashed var(--line-strong); border-radius: var(--radius-pill); color: var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="col">
+  <div class="tabs" role="tablist" aria-label="推荐分类">
+    <button type="button" role="tab" aria-selected="true">今日推荐</button>
+    <button type="button" role="tab" aria-selected="false">主食</button>
+    <button type="button" role="tab" aria-selected="false">小吃</button>
+    <button type="button" role="tab" aria-selected="false">饮品</button>
+    <button type="button" role="tab" aria-selected="false">甜品</button>
+  </div>
+  <div class="tabs" role="tablist" aria-label="我的内容">
+    <button type="button" role="tab" aria-selected="true">上传<span class="n">42</span></button>
+    <button type="button" role="tab" aria-selected="false">收藏<span class="n">117</span></button>
+    <button type="button" role="tab" aria-selected="false">评论<span class="pending">待接入</span></button>
+  </div>
+</div>
+</body>
+</html>

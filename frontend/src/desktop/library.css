@@ -1,0 +1,551 @@
+.pc-library {
+  scroll-margin-top: 114px;
+  min-width: 0;
+}
+.pc-library-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+.pc-library-heading .pc-eyebrow {
+  font-size: 11px;
+  color: #8a7e76;
+}
+.pc-library-heading h1 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 29px;
+  line-height: 1.4;
+  font-weight: 900;
+  letter-spacing: -0.8px;
+  margin: 8px 0 10px;
+}
+.pc-library-heading h1 > span {
+  display: grid;
+  place-items: center;
+  min-width: 29px;
+  height: 26px;
+  padding: 0 7px;
+  font: 700 16px "Bricolage Grotesque Variable";
+  background: #f4efeb;
+  border-radius: 8px;
+  letter-spacing: 0;
+}
+.pc-library-heading p {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #8a7e76;
+  line-height: 1.8;
+  margin: 0;
+}
+.pc-library-heading p .design-icon {
+  flex-shrink: 0;
+}
+.pc-library-heading > .pc-button {
+  flex-shrink: 0;
+  height: 40px;
+  font-size: 12px;
+  padding: 0 16px;
+}
+.pc-library-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 19px;
+  border-bottom: 1px solid #efe9e4;
+  margin-bottom: 22px;
+}
+.pc-library-toolbar > span {
+  font-size: 11px;
+  color: #8a7e76;
+}
+.pc-library-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 240px;
+  min-width: 0;
+  background: #f7f4f1;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0 11px;
+  height: 39px;
+  color: #8a7e76;
+}
+.pc-library-search:focus-within {
+  border-color: #bc943f;
+  box-shadow: 0 0 0 3px #f3c46e25;
+}
+.pc-library-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  font-size: 12px;
+  color: #231c18;
+}
+.pc-library-search input::placeholder {
+  color: #9f9288;
+}
+.pc-library-search button {
+  border: 0;
+  background: none;
+  display: flex;
+  padding: 0;
+}
+.pc-tag-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+.pc-tag-card {
+  border: 1px solid #eee6df;
+  border-radius: 20px;
+  padding: 22px 20px 0;
+  min-width: 0;
+}
+.pc-tag-card-top {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding-bottom: 21px;
+}
+.pc-tag-card-top > div {
+  min-width: 0;
+}
+.pc-tag-symbol {
+  width: 49px;
+  height: 49px;
+  border-radius: 15px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.pc-tag-symbol.tone-0 {
+  background: #fae8c3;
+  color: #9b6c26;
+}
+.pc-tag-symbol.tone-1 {
+  background: #f5ddd3;
+  color: #a15f48;
+}
+.pc-tag-symbol.tone-2 {
+  background: #e4ecd8;
+  color: #6a814c;
+}
+.pc-tag-symbol.tone-3 {
+  background: #e2eaf3;
+  color: #6682a6;
+}
+.pc-tag-card h2 {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  margin: 0 0 5px;
+}
+.pc-tag-card-top p {
+  font-size: 11px;
+  color: #8a7e76;
+  margin: 0;
+}
+.pc-tag-card-top b {
+  color: #231c18;
+  font: 700 14px "Bricolage Grotesque Variable";
+}
+.pc-tag-card-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  border-top: 1px solid #efe9e4;
+  padding: 15px 0;
+}
+.pc-tag-card-actions > a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: auto;
+  font-size: 11px;
+  font-weight: 650;
+}
+.pc-tag-card-actions > button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  padding: 0;
+  background: none;
+  font-size: 10px;
+  color: #8a7e76;
+  flex-shrink: 0;
+}
+.pc-tag-rename {
+  border-top: 1px solid #efe9e4;
+  padding: 16px 0 18px;
+}
+.pc-tag-rename > label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 8px;
+  font-weight: 650;
+}
+.pc-tag-rename > label span {
+  color: #8a7e76;
+  font-size: 10px;
+  font-weight: 400;
+}
+.pc-tag-rename > input {
+  width: 100%;
+  height: 41px;
+  background: #fcfaf8;
+  border: 1px solid #e4dbd3;
+  border-radius: 9px;
+  padding: 8px 10px;
+  color: #231c18;
+  font-size: 13px;
+  outline: none;
+}
+.pc-tag-rename > input:focus {
+  border-color: #bc943f;
+  box-shadow: 0 0 0 3px #f3c46e25;
+}
+.pc-tag-rename > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 11px;
+}
+.pc-tag-rename > div > button {
+  font-size: 11px;
+  border: 0;
+  background: none;
+  padding: 0;
+}
+.pc-tag-rename > div > .pc-button {
+  height: 34px;
+  padding: 0 14px;
+}
+.pc-tag-rename > p {
+  color: #a6402c;
+  font-size: 11px;
+  line-height: 1.8;
+  margin: 10px 0 0;
+}
+.pc-library-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 19px;
+  margin-top: 25px;
+  border-radius: 16px;
+  background: #faf7f3;
+}
+.pc-library-note-icon {
+  color: #a88e66;
+  display: flex;
+  flex-shrink: 0;
+}
+.pc-library-note strong {
+  font-size: 12px;
+  font-weight: 750;
+}
+.pc-library-note p {
+  font-size: 10px;
+  color: #8a7e76;
+  line-height: 1.8;
+  margin: 5px 0 0;
+}
+.pc-library-note > a {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.pc-library-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px;
+  font-size: 12px;
+  line-height: 1.9;
+  color: #a6402c;
+  background: #fff2ec;
+  border-radius: 10px;
+  margin: 0 0 20px;
+}
+.pc-library-error button {
+  flex-shrink: 0;
+  border: 0;
+  padding: 0;
+  background: none;
+  font-size: 11px;
+  text-decoration: underline;
+}
+.pc-library-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 270px;
+  text-align: center;
+  color: #8a7e76;
+  padding: 25px 15px;
+}
+.pc-library-empty h2 {
+  color: #231c18;
+  font-size: 18px;
+  margin: 17px 0 10px;
+  font-weight: 800;
+}
+.pc-library-empty p {
+  font-size: 12px;
+  line-height: 1.9;
+  margin: 0 0 20px;
+}
+.pc-library-empty .pc-button {
+  font-size: 12px;
+  padding: 0 19px;
+  height: 42px;
+}
+.pc-library-dialog {
+  border: 0;
+  border-radius: 24px;
+  padding: 27px;
+  width: min(450px, calc(100vw - 40px));
+  color: #231c18;
+  box-shadow: 0 24px 80px #231c1830;
+}
+.pc-library-dialog::backdrop {
+  background: #231c1870;
+}
+.pc-library-dialog h2 {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  margin: 18px 0 10px;
+}
+.pc-library-dialog p {
+  font-size: 12px;
+  line-height: 1.9;
+  color: #8a7e76;
+  margin: 0 0 22px;
+}
+.pc-library-dialog p.pc-library-dialog-error {
+  color: #a6402c;
+}
+.pc-library-dialog > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.pc-library-dialog .pc-button {
+  height: 40px;
+  font-size: 12px;
+  padding: 0 18px;
+}
+.pc-history-toolbar .pc-tabs {
+  gap: 22px;
+}
+.pc-history-toolbar .pc-tabs > button {
+  font-size: 13px;
+  gap: 6px;
+  white-space: nowrap;
+}
+.pc-history-toolbar .pc-library-search {
+  width: 210px;
+}
+.pc-history-content {
+  min-height: 310px;
+}
+.pc-history-loading {
+  color: #8a7e76;
+  font-size: 11px;
+  margin: 0 0 15px;
+}
+.pc-history-group + .pc-history-group {
+  margin-top: 26px;
+}
+.pc-history-group > h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin: 0 0 13px;
+  font-weight: 750;
+}
+.pc-history-group > h2 > i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d8b27a;
+}
+.pc-history-group > h2 > span {
+  font-size: 10px;
+  color: #8a7e76;
+  font-weight: 400;
+  margin-left: 3px;
+}
+.pc-history-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+}
+.pc-history-entry {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid #eee6df;
+  border-radius: 18px;
+  transition:
+    background-color 150ms,
+    border-color 150ms;
+}
+a.pc-history-entry:hover {
+  background: #fcfaf7;
+  border-color: #d8c8b9;
+}
+.pc-library-thumb {
+  width: 86px;
+  height: 86px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: #b3a08c;
+}
+.pc-library-thumb img {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  border: 3px solid white;
+  object-fit: cover;
+}
+.pc-library-thumb.is-restaurant img {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 14px;
+}
+.pc-history-entry-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
+}
+.pc-history-entry-info > small {
+  font-size: 9px;
+  color: #8a7e76;
+}
+.pc-history-entry-info strong {
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.65;
+  margin: 4px 0 7px;
+  overflow-wrap: anywhere;
+}
+.pc-history-entry-info time {
+  font-size: 10px;
+  color: #8a7e76;
+}
+.pc-history-entry > .design-icon {
+  color: #9e9085;
+  flex-shrink: 0;
+}
+.pc-history-unavailable {
+  color: #9f938a;
+  font-size: 9px;
+}
+.pc-history-entry.is-unavailable {
+  background: #faf8f6;
+}
+.pc-library-page-note {
+  color: #9f938a;
+  font-size: 10px;
+  margin: 23px 0 0;
+}
+.pc-library :is(button, a):focus-visible {
+  outline: 2px solid #bc943f;
+  outline-offset: 4px;
+}
+.pc-library button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+@media (max-width: 1250px) {
+  .pc-library-heading {
+    gap: 12px;
+  }
+  .pc-library-heading h1 {
+    font-size: 26px;
+  }
+  .pc-library-heading p {
+    font-size: 10px;
+  }
+  .pc-library-heading > .pc-button {
+    padding: 0 12px;
+    font-size: 11px;
+  }
+  .pc-tag-grid {
+    gap: 13px;
+  }
+  .pc-tag-card {
+    padding: 18px 15px 0;
+  }
+  .pc-tag-card-actions {
+    gap: 9px;
+  }
+  .pc-tag-card-actions > button .design-icon {
+    display: none;
+  }
+  .pc-tag-card h2 {
+    font-size: 16px;
+  }
+  .pc-history-toolbar {
+    flex-wrap: wrap;
+  }
+  .pc-history-toolbar .pc-library-search {
+    width: 180px;
+  }
+  .pc-history-grid {
+    gap: 11px;
+  }
+  .pc-library-thumb {
+    width: 66px;
+    height: 66px;
+  }
+  .pc-library-thumb img {
+    width: 57px;
+    height: 57px;
+  }
+  .pc-history-entry {
+    gap: 10px;
+    padding: 11px;
+  }
+  .pc-history-entry-info strong {
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-library * {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

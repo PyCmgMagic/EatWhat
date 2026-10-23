@@ -1,0 +1,8 @@
+# Playwright CLI consumes a function expression, without a final statement semicolon.
+scripts/browser-*.js
+scripts/prototype-*.js
+scripts/desktop-*.js
+scripts/mock-*.js
+src/mobile/generated/**
+src/api/schema.d.ts
+dist/

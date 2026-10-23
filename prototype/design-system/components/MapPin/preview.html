@@ -1,0 +1,40 @@
+<!-- @dsCard group="内容" height=240 subtitle="普通、选中、我的位置" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>MapPin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--paper); font-family: var(--font-sans); }
+  .map { position: relative; margin: var(--space-20); width: 400px; height: 200px; border-radius: var(--radius-tile); overflow: hidden; background: var(--map-ground); }
+  .block { position: absolute; border-radius: 10px; background: var(--map-block); }
+  .park { background: var(--map-park); }
+  .road { position: absolute; background: #ffffff; }
+  .hub { position: absolute; left: 150px; top: 40px; width: 230px; height: 120px; border-radius: 18px; border: 1.5px dashed var(--ink); background: rgba(143, 91, 36, 0.24); box-sizing: border-box; }
+  .pin { position: absolute; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: #ffffff; box-shadow: var(--shadow-pin); display: flex; align-items: center; justify-content: center; }
+  .pin img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+  .pin.on { width: 72px; height: 72px; box-shadow: 0 0 0 4px var(--stage-soy), 0 10px 22px rgba(35, 28, 24, 0.24); }
+  .pin.on img { width: 64px; height: 64px; }
+  .name { position: absolute; left: 196px; top: 140px; width: 100px; text-align: center; }
+  .name span { display: inline-block; padding: 3px 10px; border-radius: var(--radius-pill); background: var(--ink); color: var(--paper); font-size: 12px; font-weight: 600; }
+  .me { position: absolute; left: 50px; top: 120px; width: 48px; height: 48px; border-radius: 50%; background: rgba(47, 111, 235, 0.16); }
+  .me::after { content: ""; position: absolute; left: 16px; top: 16px; width: 15px; height: 15px; box-sizing: border-box; border-radius: 50%; background: var(--map-me); border: 3px solid #ffffff; }
+</style>
+</head>
+<body>
+<div class="map">
+  <span class="block" style="left: -10px; top: 10px; width: 140px; height: 70px;"></span>
+  <span class="block park" style="left: 160px; top: -10px; width: 120px; height: 40px;"></span>
+  <span class="block" style="left: -10px; top: 110px; width: 140px; height: 100px;"></span>
+  <span class="road" style="left: 0; right: 0; top: 92px; height: 14px;"></span>
+  <span class="road" style="left: 136px; top: 0; bottom: 0; width: 12px;"></span>
+  <span class="hub" aria-hidden="true"></span>
+  <span class="me" aria-label="我的位置"></span>
+  <button type="button" class="pin" style="left: 40px; top: 30px;" aria-label="东北饭庄"><img src="../../../assets/photos/sq_tieguo.png" alt=""></button>
+  <button type="button" class="pin" style="left: 320px; top: 120px;" aria-label="家常小馆"><img src="../../../assets/photos/sq_hongshao.png" alt=""></button>
+  <button type="button" class="pin on" style="left: 210px; top: 56px;" aria-label="螺蛳粉研究所，已选中"><img src="../../../assets/photos/sq_luosi.png" alt=""></button>
+  <span class="name" aria-hidden="true"><span>螺蛳粉研究所</span></span>
+</div>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>实拍图从上传到上舞台</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1240px; height: 844px; box-sizing: border-box; padding: 36px 40px; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif; display: flex; flex-direction: column; gap: 22px;">
+
+  <h2 style="margin: 0; font-size: 22px; font-weight: 900;">一张照片从上传到上舞台</h2>
+
+  <div style="display: grid; grid-template-columns: 200px 40px 200px 40px 200px 40px 200px 40px 200px; align-items: start;">
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="display: flex; align-items: baseline; gap: 8px;"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 24px; font-weight: 800;">1</span><span style="font-size: 16px; font-weight: 700;">原图</span></span>
+      <img src="../assets/photos/p_luosi.png" alt="原始实拍图：斜拍的螺蛳粉，背景里有别的菜" style="width: 200px; height: 200px; border-radius: 16px; object-fit: cover; display: block;">
+      <span style="font-size: 13px; line-height: 20px; color: #6E625B;">斜着拍，背景里还有别的菜，这才是常态</span>
+    </div>
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#B5A79C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-top: 140px;"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="display: flex; align-items: baseline; gap: 8px;"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 24px; font-weight: 800;">2</span><span style="font-size: 16px; font-weight: 700;">放进圆圈</span></span>
+      <div style="position: relative; width: 200px; height: 200px; border-radius: 16px; overflow: hidden; background: #15110E;">
+        <img src="../assets/photos/p_luosi.png" alt="" style="position: absolute; left: -1px; top: -20px; width: 195px; height: 204px;">
+        <div aria-hidden="true" style="position: absolute; left: 15px; top: 15px; width: 170px; height: 170px; border-radius: 50%; box-shadow: 0 0 0 300px rgba(21,17,14,0.66); outline: 2px solid rgba(255,255,255,0.9); outline-offset: -1px;"></div>
+      </div>
+      <span style="font-size: 13px; line-height: 20px; color: #6E625B;">上传时拖动、缩放，把主菜放进圈里。默认居中，多数照片不用动</span>
+    </div>
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#B5A79C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-top: 140px;"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="display: flex; align-items: baseline; gap: 8px;"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 24px; font-weight: 800;">3</span><span style="font-size: 16px; font-weight: 700;">套上盘沿</span></span>
+      <div style="position: relative; width: 200px; height: 200px; border-radius: 16px; background: #F4EFEB; display: flex; align-items: center; justify-content: center;">
+        <span style="width: 160px; height: 160px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 7px #FFFFFF, 0 14px 26px rgba(0,0,0,0.22);"><img src="../assets/photos/sq_luosi.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></span>
+      </div>
+      <span style="font-size: 13px; line-height: 20px; color: #6E625B;">白色细边加投影。中餐大多是圆碗圆盘，圆形裁切几乎等于抠图</span>
+    </div>
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#B5A79C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-top: 140px;"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="display: flex; align-items: baseline; gap: 8px;"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 24px; font-weight: 800;">4</span><span style="font-size: 16px; font-weight: 700;">取色</span></span>
+      <div style="width: 200px; height: 200px; display: flex; flex-direction: column; gap: 6px;">
+        <div style="height: 64px; border-radius: 14px; background: #9F5E1E; color: #FFFFFF; padding: 10px 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;">
+          <span style="font-size: 12px;">直接取平均</span>
+          <span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 14px; font-weight: 600;">#9F5E1E</span>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B5A79C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="align-self: center;"><path d="M12 5v14"/><path d="m18 13-6 6-6-6"/></svg>
+        <div style="flex: 1; border-radius: 14px; background: #8F5B24; color: #FFFFFF; padding: 10px 12px; box-sizing: border-box; display: flex; align-items: flex-end; justify-content: space-between;">
+          <span style="display: flex; flex-direction: column;"><span style="font-size: 12px;">吸附到舞台色</span><span style="font-size: 16px; font-weight: 900;">酱色</span></span>
+          <span style="display: flex; gap: 4px;" aria-label="备选：红油、辣橙"><span style="width: 18px; height: 18px; border-radius: 9px; background: #A8321C; box-shadow: 0 0 0 2px #FFFFFF;"></span><span style="width: 18px; height: 18px; border-radius: 9px; background: #D9632B; box-shadow: 0 0 0 2px #FFFFFF;"></span></span>
+        </div>
+      </div>
+      <span style="font-size: 13px; line-height: 20px; color: #6E625B;">只看圈内，按饱和度加权算色相，再吸附到 9 个设计好的舞台色，另给两个备选</span>
+    </div>
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#B5A79C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-top: 140px;"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <span style="display: flex; align-items: baseline; gap: 8px;"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 24px; font-weight: 800;">5</span><span style="font-size: 16px; font-weight: 700;">上舞台</span></span>
+      <div style="position: relative; width: 200px; height: 200px; border-radius: 16px; overflow: hidden; background: #8F5B24; color: #FFFFFF;">
+        <span style="position: absolute; left: 92px; top: 46px; width: 150px; height: 150px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 6px #FFFFFF, 0 14px 26px rgba(0,0,0,0.3);"><img src="../assets/photos/sq_luosi.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></span>
+        <span style="position: absolute; left: 14px; top: 16px; font-size: 24px; line-height: 27px; font-weight: 900;">柳州<br>螺蛳粉</span>
+        <span style="position: absolute; left: 14px; bottom: 12px; font-family: 'Bricolage Grotesque', sans-serif; font-size: 30px; font-weight: 800;">¥16</span>
+      </div>
+      <span style="font-size: 13px; line-height: 20px; color: #6E625B;">文字按舞台色深浅自动切换黑白，对比度始终够用</span>
+    </div>
+  </div>
+
+  <h2 style="margin: 10px 0 0; font-size: 22px; font-weight: 900;">5 张实拍图的取色结果</h2>
+
+  <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); column-gap: 40px;">
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="position: relative; height: 116px; border-radius: 16px; overflow: hidden; background: #8F5B24;"><span style="position: absolute; right: -12px; top: 12px; width: 110px; height: 110px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 5px #FFFFFF;"><img src="../assets/photos/sq_luosi.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></span></div>
+      <span style="font-size: 15px; font-weight: 700;">柳州螺蛳粉</span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6E625B;"><span style="width: 14px; height: 14px; border-radius: 4px; background: #9F5E1E;"></span>#9F5E1E 吸附为<strong style="color: #231C18;">酱色</strong></span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="position: relative; height: 116px; border-radius: 16px; overflow: hidden; background: #A8321C;"><span style="position: absolute; right: -12px; top: 12px; width: 110px; height: 110px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 5px #FFFFFF;"><img src="../assets/photos/sq_tieguo.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></span></div>
+      <span style="font-size: 15px; font-weight: 700;">铁锅炖</span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6E625B;"><span style="width: 14px; height: 14px; border-radius: 4px; background: #975018;"></span>#975018 吸附为酱色</span>
+      <span style="font-size: 12px; line-height: 18px; color: #6E625B;">和前一道撞色，顺延到第二候选<strong style="color: #231C18;">红油</strong></span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="position: relative; height: 116px; border-radius: 16px; overflow: hidden; background: #F3C46E;"><span style="position: absolute; right: -12px; top: 12px; width: 110px; height: 110px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 5px #FFFFFF;"><img src="../assets/photos/sq_niandou.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></span></div>
+      <span style="font-size: 15px; font-weight: 700;">粘豆包</span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6E625B;"><span style="width: 14px; height: 14px; border-radius: 4px; background: #C7AC71;"></span>#C7AC71 吸附为<strong style="color: #231C18;">汤色</strong></span>
+      <span style="font-size: 12px; line-height: 18px; color: #6E625B;">颜色很淡，靠色相仍能分出黄色系</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="position: relative; height: 116px; border-radius: 16px; overflow: hidden; background: #8F5B24;"><span style="position: absolute; right: -12px; top: 12px; width: 110px; height: 110px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 5px #FFFFFF;"><img src="../assets/photos/sq_hongshao.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></span></div>
+      <span style="font-size: 15px; font-weight: 700;">红烧肉</span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6E625B;"><span style="width: 14px; height: 14px; border-radius: 4px; background: #845234;"></span>#845234 吸附为<strong style="color: #231C18;">酱色</strong></span>
+      <span style="font-size: 12px; line-height: 18px; color: #6E625B;">原图是一整桌年夜饭，只取圈住的那一盘</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="position: relative; height: 116px; border-radius: 16px; overflow: hidden; background: #D8B27A;"><span style="position: absolute; right: -12px; top: 12px; width: 110px; height: 110px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 5px #FFFFFF;"><img src="../assets/photos/sq_paigu.png" alt="" style="width: 100%; height: 100%; object-fit: cover; display: block;"></span></div>
+      <span style="font-size: 15px; font-weight: 700;">玉米排骨汤</span>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6E625B;"><span style="width: 14px; height: 14px; border-radius: 4px; background: #AB915E;"></span>#AB915E 吸附为<strong style="color: #231C18;">竹屉</strong></span>
+    </div>
+  </div>
+
+  <div style="margin-top: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 40px; padding-top: 18px; box-shadow: inset 0 1px 0 #EFE9E4;">
+    <span style="display: flex; flex-direction: column; gap: 2px; font-size: 13px; line-height: 20px; color: #6E625B;"><strong style="font-size: 15px; color: #231C18;">实拍中餐大多是褐色</strong>直接用平均色，首页会一片褐。所以要吸附到设计好的色板，相邻两道撞色就顺延到下一个候选。</span>
+    <span style="display: flex; flex-direction: column; gap: 2px; font-size: 13px; line-height: 20px; color: #6E625B;"><strong style="font-size: 15px; color: #231C18;">照片太灰就用分类色</strong>圈内饱和度太低时取色不可靠，改用菜品分类的默认色：饮品用芒果黄，汤用汤色，以此类推。</span>
+    <span style="display: flex; flex-direction: column; gap: 2px; font-size: 13px; line-height: 20px; color: #6E625B;"><strong style="font-size: 15px; color: #231C18;">上传的人可以改</strong>调整照片那一步给出三个推荐色，默认选第一个；选好的颜色和裁切位置随菜品一起保存。</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1240,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

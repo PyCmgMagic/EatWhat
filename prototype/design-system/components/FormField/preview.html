@@ -1,0 +1,33 @@
+<!-- @dsCard group="表单" height=170 subtitle="菜名、价格，以及出错时" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>FormField</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--paper); font-family: var(--font-sans); color: var(--ink); }
+  .col { display: flex; flex-direction: column; gap: var(--space-20); padding: var(--space-20); max-width: 400px; }
+  .row { display: flex; gap: var(--space-16); }
+  label { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .grow { flex: 1; }
+  .price { flex: 0 0 104px; }
+  .lab { font-size: 13px; line-height: 20px; color: var(--ink-muted); }
+  .line { height: 40px; border-bottom: 1.5px solid var(--handle); display: flex; align-items: center; gap: 2px; }
+  .line:focus-within { border-color: var(--ink); }
+  input { width: 100%; min-width: 0; padding: 0; border: 0; outline: none; background: transparent; color: var(--ink); font: 900 22px/30px var(--font-sans); }
+  .num, .num input { font-family: var(--font-numeral); font-size: 22px; font-weight: 800; }
+  .err .line { border-color: var(--warn); }
+  .hint { font-size: 12px; line-height: 18px; color: var(--warn); }
+</style>
+</head>
+<body>
+<div class="col">
+  <div class="row">
+    <label class="grow"><span class="lab">菜名</span><span class="line"><input id="dish-name" type="text" value="柳州螺蛳粉"></span></label>
+    <label class="price"><span class="lab">价格</span><span class="line num">¥<input id="dish-price" type="text" inputmode="decimal" value="16" aria-label="价格"></span></label>
+  </div>
+  <label class="grow err"><span class="lab">菜名</span><span class="line"><input id="dish-name-err" type="text" value="" placeholder="叫什么" aria-describedby="dish-name-hint"></span><span class="hint" id="dish-name-hint">还没写菜名，写上大家才搜得到</span></label>
+</div>
+</body>
+</html>

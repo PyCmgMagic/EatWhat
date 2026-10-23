@@ -1,0 +1,56 @@
+async (page) => {
+ const base='http://127.0.0.1:5173',calls=[],writes=[],checks=[],unexpected=[],errors=[];
+ const previous=await page.evaluate(()=>sessionStorage.getItem('eatwhat-session'));
+ const me={id:90,userName:'验收食友',verified:true,role:'user',phone:null};
+ let privacy={following:true,follower:true},privacyFail=true,following=false,read=false,passwordFail=true,shopMode='business-error';
+ const isApi=url=>url.origin===base&&url.pathname.startsWith('/api/'),ok=data=>({code:0,msg:'success',data});
+ const onError=e=>errors.push(e.message),onDialog=async d=>{if(d.type()==='beforeunload')await d.accept();else await d.dismiss();};page.on('pageerror',onError);page.on('dialog',onDialog);
+ await page.route(isApi,async route=>{
+  const req=route.request(),url=new URL(req.url()),path=url.pathname.slice(4),p=Number(url.searchParams.get('page')||1),method=req.method();let result=ok(null),status=200;
+  calls.push({path,method,page:p});if(method!=='GET')writes.push({path,body:req.postData(),method});
+  if(path==='/user/info')result=ok(me);
+  else if(path==='/notification/unread/count')result=ok(read?0:2);
+  else if(path==='/notification/list')result=ok({items:[{id:p===1?11:12,actorName:p===1?'第一页食友':'第二页食友',actorId:21,type:'like',targetType:p===1?'food':'restaurant',targetId:71,read,createdAt:p===1?Math.floor(Date.now()/1000):Date.now()}],hasNext:p===1,currentPage:p});
+  else if(path.startsWith('/notification/read/'))read=true;
+  else if(path==='/user/userInfo')result=ok({userName:'验收食友',fansVisible:privacy.follower,followingsVisible:privacy.following,isFollowingHim:following,earnedLikes:4,uploadedFoodsCount:2,uploadedRestaurantsCount:1});
+  else if(path==='/user/changePrivacy'){if(privacyFail){status=400;result={code:900,msg:'验收：隐私暂未保存',data:null};}else privacy=req.postDataJSON();}
+  else if(path==='/auth/changePassword'){if(passwordFail){status=400;result={code:900,msg:'验收：密码暂未更新',data:null};}}
+  else if(path==='/user/follow')following=true;
+  else if(path==='/user/unfollow')following=false;
+  else if(path==='/user/followings'||path==='/user/followers')result=ok({items:[{id:p===1?21:22,userName:p===1?'第一页食友':'第二页食友'}],hasNext:p===1,currentPage:p});
+  else if(path==='/restaurant/add'){if(shopMode==='business-error'){status=400;result={code:900,msg:'验收：店名暂未保存',data:null};}else if(shopMode==='uncertain'){status=503;result={code:503,msg:'验收：提交结果未知',data:null};}}
+  else if(path==='/restaurant/search')result=ok({items:[],hasNext:false});
+  else if(path==='/hub/list')result=ok({items:[],hasNext:false});
+  else if(path==='/user/getCode'||path==='/user/bindMobile'){}
+  else if(path==='/auth/sendEmail'){}
+  else if(path==='/auth/consent/policy')result=ok({policyVersion:'qa-v1',siteMode:'CAMPUS'});
+  else if(path==='/auth/checkUsername'){}
+  else if(path==='/auth/login'||path==='/auth/register')result=ok({isLogin:true,tokenName:'x-secondary-test',tokenValue:'isolated-qa'});
+  else if(path==='/foods/recommend')result=ok([]);
+  else if(path==='/foods/my'||path==='/foods/favorites')result=ok({items:[],hasNext:false});
+  else{unexpected.push(path);status=404;result={code:404,msg:'未配置 '+path,data:null};}
+  await route.fulfill({status,contentType:'application/json',body:JSON.stringify(result)});
+ });
+ try{
+  await page.evaluate(()=>sessionStorage.setItem('eatwhat-session',JSON.stringify({tokenName:'x-secondary-test',tokenValue:'isolated-qa'})));
+  await page.goto(base+'/?demo=0&view=desktop#/settings/privacy');await page.getByRole('switch').first().waitFor();await page.getByRole('switch').first().uncheck();await page.getByRole('button',{name:'保存可见性',exact:true}).dblclick();await page.getByText('验收：隐私暂未保存',{exact:true}).waitFor();
+  if(await page.getByRole('switch').first().isChecked())throw new Error('隐私保存失败丢失选择');if(writes.filter(c=>c.path==='/user/changePrivacy').length!==1)throw new Error('隐私重复保存');
+  privacyFail=false;await page.getByRole('button',{name:'保存可见性',exact:true}).click();await page.waitForFunction(()=>document.querySelector('.pc-secondary-form-footer span')?.textContent==='当前设置已保存');
+  if(privacy.following!==false||privacy.follower!==true)throw new Error('隐私 body 不正确');checks.push('隐私双击防重、保存失败保留选择、重试提交正确公开范围');
+  await page.goto(base+'/?demo=0&view=desktop#/settings/password');await page.locator('input[name=old]').fill('old-password');await page.locator('input[name=password]').fill('new-password');await page.locator('input[name=confirm]').fill('different-password');await page.getByRole('button',{name:'更新密码',exact:true}).click();await page.getByText('两次输入的新密码不一致。',{exact:true}).waitFor();
+  if(writes.some(c=>c.path==='/auth/changePassword'))throw new Error('密码校验未阻止提交');await page.locator('input[name=confirm]').fill('new-password');await page.getByRole('button',{name:'更新密码',exact:true}).click();await page.getByText('验收：密码暂未更新',{exact:true}).waitFor();if(await page.locator('input[name=password]').inputValue()!=='new-password')throw new Error('密码失败丢失输入');passwordFail=false;await page.getByRole('button',{name:'更新密码',exact:true}).click();await page.getByText('密码已更新。',{exact:true}).waitFor();if(await page.locator('input[name=password]').inputValue()!=='')throw new Error('密码成功未清空');checks.push('密码一致性校验、失败保留输入、成功清空密码');
+  await page.goto(base+'/?demo=0&view=desktop#/notifications');await page.getByText('第一页食友',{exact:true}).waitFor();if(await page.getByRole('link',{name:'查看相关内容 →',exact:true}).getAttribute('href')!=='#/foods/71')throw new Error('通知菜品目标错误');await page.getByRole('button',{name:'下一页',exact:true}).click();await page.getByText('第二页食友',{exact:true}).waitFor();if(await page.getByRole('link',{name:'查看相关内容 →',exact:true}).getAttribute('href')!=='#/restaurants/71')throw new Error('通知同 ID 店铺目标错误');await page.getByRole('button',{name:'标为已读',exact:true}).click();await page.waitForFunction(()=>document.querySelectorAll('.pc-secondary-message.unread').length===0);await page.getByRole('tab',{name:'本页未读',exact:true}).click();await page.getByRole('heading',{name:'本页消息都已读完',exact:true}).waitFor();checks.push('通知分页、秒/毫秒时间、准确目标链接、标为已读及本页筛选');
+  await page.goto(base+'/?demo=0&view=desktop#/users/21');await page.getByRole('button',{name:'关注这位食友',exact:true}).click();await page.getByRole('button',{name:'已关注 · 取消关注',exact:true}).waitFor();await page.getByRole('button',{name:'已关注 · 取消关注',exact:true}).click();await page.getByRole('button',{name:'关注这位食友',exact:true}).waitFor();checks.push('他人主页关注与取消关注更新');
+  const prior=calls.filter(c=>c.path==='/user/followings').length;await page.goto(base+'/?demo=0&view=desktop#/follows?tab=follow&userId=21');await page.getByRole('heading',{name:'对方没有公开这个列表',exact:true}).waitFor();if(calls.filter(c=>c.path==='/user/followings').length!==prior)throw new Error('隐藏列表仍发请求');
+  await page.goto(base+'/?demo=0&view=desktop#/follows?tab=follow');await page.getByText('第一页食友',{exact:true}).waitFor();await page.getByRole('button',{name:'下一页',exact:true}).click();await page.getByText('第二页食友',{exact:true}).waitFor();await page.getByRole('tab',{name:'粉丝',exact:true}).click();await page.getByText('第一页食友',{exact:true}).waitFor();if(calls.filter(c=>c.path==='/user/followers').at(-1).page!==1)throw new Error('切换关注列表未重置分页');checks.push('未公开列表不读取、关注列表分页及切换类型重置页码');
+  await page.goto(base+'/?demo=0&view=desktop#/settings/bind-phone');await page.locator('#bind-mobile').fill('13800000000');await page.getByRole('button',{name:'发送验证码',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('button.btn-primary')?.disabled);await page.locator('#bind-code').fill('123456');await page.getByRole('button',{name:'确认绑定手机号',exact:true}).click();await page.getByText('手机号已绑定',{exact:true}).waitFor();checks.push('绑定手机号沿用验证码和绑定操作，测试请求全部拦截');
+  await page.goto(base+'/?demo=0&view=desktop#/restaurants/new/details');await page.locator('input[aria-label="店铺名称"]').fill('桌面验收小店');await page.locator('input[placeholder="街道、门牌或食堂楼层与窗口"]').fill('软件园校区一层');await page.locator('input[placeholder="72.004–137.8347"]').fill('117.12');await page.locator('input[placeholder="0.8293–55.8271"]').fill('36.66');await page.getByRole('button',{name:'提交新店',exact:true}).dblclick();await page.getByText('验收：店名暂未保存',{exact:true}).waitFor();if(writes.filter(c=>c.path==='/restaurant/add').length!==1)throw new Error('新店双击重复提交');if(await page.locator('input[aria-label="店铺名称"]').inputValue()!=='桌面验收小店')throw new Error('新店失败丢失输入');shopMode='success';await page.getByRole('button',{name:'提交新店',exact:true}).click();await page.getByRole('heading',{name:'新店信息已提交',exact:true}).waitFor();const body=JSON.parse(writes.filter(c=>c.path==='/restaurant/add').at(-1).body);if(body.name!=='桌面验收小店'||body.gcjLng!==117.12||body.gcjLat!==36.66)throw new Error('新店 body 不正确');checks.push('新店同页提交、双击防重、业务失败保留输入、Void 成功返回选店');
+  await page.getByRole('button',{name:'回到发布页选店',exact:true}).click();await page.getByRole('link',{name:'没有找到？添加一家新店',exact:true}).click();await page.locator('input[aria-label="店铺名称"]').fill('结果未知的店');await page.locator('input[placeholder="街道、门牌或食堂楼层与窗口"]').fill('待核实地址');await page.locator('input[placeholder="72.004–137.8347"]').fill('117.13');await page.locator('input[placeholder="0.8293–55.8271"]').fill('36.67');shopMode='uncertain';await page.getByRole('button',{name:'提交新店',exact:true}).click();await page.getByText(/提交结果还未确认/).waitFor();await page.getByRole('link',{name:'返回发布页搜索 →',exact:true}).click();await page.getByRole('link',{name:'没有找到？添加一家新店',exact:true}).click();if(await page.getByRole('button',{name:'提交新店',exact:true}).isEnabled())throw new Error('未知提交可跨页面重复创建');checks.push('新店结果未知时跨路由保留内容和暂停状态');
+  await page.evaluate(()=>sessionStorage.removeItem('eatwhat-session'));await page.goto(base+'/?demo=0&view=desktop#/auth/username-register');await page.reload();await page.locator('input[name=username]').fill('qa_user');await page.locator('input[name=password]').fill('qa-password');await page.locator('input[name=confirm]').fill('qa-password');await page.getByRole('button',{name:'注册账号',exact:true}).dblclick();await page.getByRole('heading',{name:'学生认证',exact:true}).waitFor();if(writes.filter(c=>c.path==='/auth/register').length!==1)throw new Error('注册重复提交');
+  await page.evaluate(()=>sessionStorage.removeItem('eatwhat-session'));await page.goto(base+'/?demo=0&view=desktop#/auth/password?next=%2Fsettings%2Faccount');await page.reload();await page.locator('input[name=username]').fill('qa_user');await page.locator('input[name=password]').fill('qa-password');await page.getByRole('button',{name:'登录',exact:true}).click();await page.getByRole('heading',{name:'账号与安全',exact:true}).waitFor();checks.push('用户名注册防重、密码登录与 next 返回路径');
+  if(unexpected.length||errors.length)throw new Error(JSON.stringify({unexpected,errors}));
+  return {checks,interceptedRequests:calls.length,writes:writes.length,realBackendRequests:0,uncontractedRequests:unexpected,pageErrors:errors};
+ }finally{
+  await page.goto(base+'/?demo=1&view=desktop#/settings/account');await page.evaluate(value=>value===null?sessionStorage.removeItem('eatwhat-session'):sessionStorage.setItem('eatwhat-session',value),previous);await page.unroute(isApi);page.off('pageerror',onError);page.off('dialog',onDialog);
+ }
+}

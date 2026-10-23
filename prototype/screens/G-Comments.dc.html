@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 全部评论</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+.btn-press:active{transform:translateY(1px)}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <header style="position: absolute; left: 8px; right: 16px; top: 46px; height: 44px; display: flex; align-items: center;">
+    <a href="G-Dish.dc.html" aria-label="返回" style="width: 44px; height: 44px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+      <dc-import name="G-Icon" icon="back" size="24" hint-size="24px,24px"></dc-import>
+    </a>
+  </header>
+
+  <section style="position: absolute; left: 20px; right: 20px; top: 98px; display: flex; flex-direction: column; gap: 6px;">
+    <h1 style="margin: 0; display: flex; align-items: baseline; gap: 8px; font-size: 28px; line-height: 36px; font-weight: 900;">吃过的人说<span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 800;">23</span><span style="align-self: center; font-size: 11px; font-weight: 500; line-height: 18px; padding: 0 6px; border: 1px dashed #9A8B80; border-radius: 9px;">待接入</span></h1>
+    <a href="G-Dish.dc.html" style="align-self: flex-start; display: flex; align-items: center; gap: 8px; font-size: 14px; color: #4A3C31; text-decoration: none;">
+      <img src="../assets/photos/sq_luosi.png" alt="" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+      柳州螺蛳粉<span style="color: #6E625B;">螺蛳粉研究所</span>
+    </a>
+  </section>
+
+  <div role="tablist" aria-label="评论排序" style="position: absolute; left: 20px; right: 20px; top: 178px; display: flex; gap: 22px; align-items: baseline; height: 44px;">
+    <button type="button" role="tab" aria-selected="{{useful.on}}" onClick="{{useful.pick}}" style="height: 44px; padding: 0; border: 0; background: none; color: {{useful.fg}}; font-size: {{useful.size}}px; font-weight: {{useful.w}};">最有用</button>
+    <button type="button" role="tab" aria-selected="{{latest.on}}" onClick="{{latest.pick}}" style="height: 44px; padding: 0; border: 0; background: none; color: {{latest.fg}}; font-size: {{latest.size}}px; font-weight: {{latest.w}};">最新</button>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; top: 232px; bottom: 88px; overflow: hidden; display: flex; flex-direction: column; gap: 22px;">
+    <article style="padding: 0 20px; display: flex; gap: 12px;">
+      <span aria-hidden="true" style="flex: none; width: 36px; height: 36px; border-radius: 50%; background: #F3C46E; color: #231C18; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900;">林</span>
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; height: 36px;">
+          <span style="display: flex; flex-direction: column;"><span style="font-size: 14px; font-weight: 600;">小林</span><span style="font-size: 12px; color: #6E625B;">2 天前</span></span>
+          <button type="button" aria-label="更多" style="width: 44px; height: 44px; margin-right: -12px; border: 0; background: none; color: #6E625B; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="more" size="20" hint-size="20px,20px"></dc-import></button>
+        </div>
+        <p style="margin: 0; font-size: 15px; line-height: 24px;">汤底够酸够臭，酸笋给得很大方。腐竹炸得脆，泡久了也不软。</p>
+        <div style="display: flex; gap: 8px;">
+          <img src="../assets/photos/p_luosi.png" alt="小林拍的柳州螺蛳粉" style="width: 76px; height: 76px; border-radius: 16px; object-fit: cover;">
+          <img src="../assets/photos/sq_luosi.png" alt="小林拍的柳州螺蛳粉近景" style="width: 76px; height: 76px; border-radius: 16px; object-fit: cover;">
+        </div>
+        <div style="display: flex; align-items: center; gap: 18px; margin-left: -10px;">
+          <button type="button" aria-pressed="{{like1.on}}" onClick="{{like1.flip}}" style="height: 40px; padding: 0 10px; border: 0; background: none; color: {{like1.fg}}; display: flex; align-items: center; gap: 6px;">
+            <sc-if value="{{like1.on}}" hint-placeholder-val="{{ true }}"><dc-import name="G-Icon" icon="heartOn" size="18" hint-size="18px,18px"></dc-import></sc-if>
+            <sc-if value="{{like1.off}}" hint-placeholder-val="{{ false }}"><dc-import name="G-Icon" icon="heart" size="18" hint-size="18px,18px"></dc-import></sc-if>
+            <span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 800; color: #231C18;">{{like1.n}}</span>
+          </button>
+          <a href="G-WriteComment.dc.html" style="height: 40px; color: #231C18; font-size: 13px; font-weight: 600; text-decoration: none; display: flex; align-items: center;">回复</a>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 2px 0 0 14px; box-shadow: inset 2px 0 0 #EFE9E4;">
+          <p style="margin: 0; font-size: 14px; line-height: 22px;"><strong style="font-weight: 600;">阿哲</strong>　同意，加个炸蛋更香</p>
+          <p style="margin: 0; font-size: 14px; line-height: 22px;"><strong style="font-weight: 600;">天凉被破王</strong> <span style="color: #6E625B;">回复 阿哲</span>　炸蛋要早点说，晚了就卖完了</p>
+          <button type="button" style="align-self: flex-start; height: 32px; padding: 0; border: 0; background: none; color: #231C18; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 2px;">展开 <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;">5</span> 条回复<dc-import name="G-Icon" icon="chevronDown" size="16" hint-size="16px,16px"></dc-import></button>
+        </div>
+      </div>
+    </article>
+
+    <article style="padding: 0 20px; display: flex; gap: 12px;">
+      <span aria-hidden="true" style="flex: none; width: 36px; height: 36px; border-radius: 50%; background: #C9442B; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900;">M</span>
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; height: 36px;">
+          <span style="display: flex; flex-direction: column;"><span style="font-size: 14px; font-weight: 600;">Momo</span><span style="font-size: 12px; color: #6E625B;">10 月 18 日</span></span>
+          <button type="button" aria-label="更多" style="width: 44px; height: 44px; margin-right: -12px; border: 0; background: none; color: #6E625B; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="more" size="20" hint-size="20px,20px"></dc-import></button>
+        </div>
+        <p style="margin: 0; font-size: 15px; line-height: 24px;">第一次吃别点特辣，中辣已经很够了。</p>
+        <div style="display: flex; align-items: center; gap: 18px; margin-left: -10px;">
+          <button type="button" aria-pressed="false" style="height: 40px; padding: 0 10px; border: 0; background: none; color: #6E625B; display: flex; align-items: center; gap: 6px;"><dc-import name="G-Icon" icon="heart" size="18" hint-size="18px,18px"></dc-import><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 800; color: #231C18;">23</span></button>
+          <a href="G-WriteComment.dc.html" style="height: 40px; color: #231C18; font-size: 13px; font-weight: 600; text-decoration: none; display: flex; align-items: center;">回复</a>
+        </div>
+      </div>
+    </article>
+
+    <article style="padding: 0 20px; display: flex; gap: 12px;">
+      <span aria-hidden="true" style="flex: none; width: 36px; height: 36px; border-radius: 50%; background: #8F5B24; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900;">安</span>
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; height: 36px;">
+          <span style="display: flex; flex-direction: column;"><span style="font-size: 14px; font-weight: 600;">安安</span><span style="font-size: 12px; color: #6E625B;">10 月 16 日</span></span>
+          <button type="button" aria-label="更多" style="width: 44px; height: 44px; margin-right: -12px; border: 0; background: none; color: #6E625B; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="more" size="20" hint-size="20px,20px"></dc-import></button>
+        </div>
+        <p style="margin: 0; font-size: 15px; line-height: 24px;">饭点要排十分钟左右，下午两点以后基本不用等。</p>
+      </div>
+    </article>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 88px; box-sizing: border-box; padding: 10px 20px 26px; background: #FFFFFF; box-shadow: 0 -1px 0 #EFE9E4; display: flex; align-items: center; gap: 10px;">
+    <a href="G-WriteComment.dc.html" style="flex: 1; height: 48px; padding: 0 16px; border-radius: 24px; background: #F4EFEB; color: #6E625B; font-size: 15px; text-decoration: none; display: flex; align-items: center;">吃过的话，说两句</a>
+    <a href="G-WriteComment.dc.html" aria-label="带照片写一条" style="flex: none; width: 48px; height: 48px; border-radius: 24px; background: #F4EFEB; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="camera" size="22" hint-size="22px,22px"></dc-import></a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'useful', liked: true };
+  }
+  renderVals() {
+    const tab = (key) => {
+      const on = this.state.tab === key;
+      return { on: on, fg: on ? '#231C18' : '#6E625B', size: on ? 17 : 15, w: on ? 900 : 400, pick: () => this.setState({ tab: key }) };
+    };
+    const liked = this.state.liked;
+    return {
+      useful: tab('useful'),
+      latest: tab('latest'),
+      like1: { on: liked, off: !liked, fg: liked ? '#C9442B' : '#6E625B', n: liked ? 46 : 45, flip: () => this.setState({ liked: !liked }) }
+    };
+  }
+}
+</script>
+</body>
+</html>

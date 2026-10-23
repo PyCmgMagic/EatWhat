@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 举报面板</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+textarea::placeholder{color:#B5A79C}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; pointer-events: none;">
+    <dc-import name="G-Dish" hint-size="390px,844px"></dc-import>
+  </div>
+  <a href="G-Dish.dc.html" aria-label="关闭面板" style="position: absolute; inset: 0; background: rgba(35,28,24,0.45);"></a>
+
+  <section role="dialog" aria-label="举报" style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 10px 20px 32px; background: #FFFFFF; border-radius: 28px 28px 0 0; display: flex; flex-direction: column; gap: 16px;">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 2px; background: #E6DED8;"></span>
+
+    <sc-if value="{{editing}}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-top: -6px;">
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <h1 style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 20px; line-height: 28px; font-weight: 900;">举报这道菜<span style="font-size: 11px; font-weight: 500; line-height: 18px; padding: 0 6px; border: 1px dashed #9A8B80; border-radius: 9px;">待接入</span></h1>
+            <span style="font-size: 13px; color: #6E625B;">处理结果会在消息里告诉你</span>
+          </div>
+          <a href="G-Dish.dc.html" aria-label="关闭" style="width: 44px; height: 44px; margin-right: -10px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="close" size="22" hint-size="22px,22px"></dc-import></a>
+        </div>
+
+        <div role="radiogroup" aria-label="举报原因" style="display: flex; flex-direction: column; gap: 4px; margin: 0 -10px;">
+          <sc-for list="{{reasons}}" as="r" hint-placeholder-count="4">
+            <button type="button" role="radio" aria-checked="{{r.on}}" onClick="{{r.pick}}" style="height: 52px; padding: 0 12px; border: 0; border-radius: 18px; background: {{r.bg}}; color: #231C18; display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; font-size: 16px; font-weight: {{r.w}}; transition: background-color 200ms ease;">
+              {{r.name}}
+              <span aria-hidden="true" style="flex: none; width: 24px; height: 24px; box-sizing: border-box; border-radius: 12px; border: 2px solid {{r.ring}}; background: {{r.fill}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; transition: background-color 200ms ease, border-color 200ms ease;"><span style="display: flex; opacity: {{r.check}};"><dc-import name="G-Icon" icon="check" size="14" hint-size="14px,14px"></dc-import></span></span>
+            </button>
+          </sc-for>
+        </div>
+
+        <label style="display: flex; flex-direction: column; gap: 6px;">
+          <span style="display: flex; justify-content: space-between; font-size: 13px; color: #6E625B;">补充说明，选填<span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600;">{{len}}</span> / 200</span></span>
+          <textarea rows="3" maxlength="200" value="{{note}}" onChange="{{setNote}}" placeholder="比如：照片是网上找的" style="box-sizing: border-box; width: 100%; height: 84px; padding: 12px 14px; border: 0; border-radius: 18px; background: #F4EFEB; resize: none; outline: none; font: inherit; font-size: 15px; line-height: 22px; color: #231C18;"></textarea>
+        </label>
+
+        <button type="button" class="btn-solid" onClick="{{submit}}" style="height: 52px; border: 0; border-radius: 26px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; font-size: 16px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 6px 14px rgba(35,28,24,0.16);">提交</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+      <div role="status" style="display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px 0 4px; text-align: center;">
+        <span aria-hidden="true" style="width: 56px; height: 56px; border-radius: 50%; background: #F4EFEB; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="check" size="28" hint-size="28px,28px"></dc-import></span>
+        <h1 style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 900;">收到了，我们会尽快处理</h1>
+        <p style="margin: 0; font-size: 14px; line-height: 22px; color: #6E625B;">处理完在消息里告诉你</p>
+        <a href="G-Dish.dc.html" class="btn-light" style="align-self: stretch; margin-top: 8px; height: 52px; border-radius: 26px; background: linear-gradient(180deg, #FBF8F6, #F4EFEB); color: #231C18; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -2px 0 rgba(35,28,24,0.1), 0 1px 2px rgba(35,28,24,0.12), 0 3px 8px rgba(35,28,24,0.06);">好的</a>
+      </div>
+    </sc-if>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 0, note: '', done: false };
+  }
+  renderVals() {
+    const names = ['不是这道菜的实拍', '广告', '违法或不友善', '其他'];
+    return {
+      reasons: names.map((n, i) => {
+        const on = i === this.state.sel;
+        return {
+          name: n,
+          on: on ? 'true' : 'false',
+          bg: on ? '#F4EFEB' : 'transparent',
+          w: on ? 700 : 400,
+          ring: on ? '#231C18' : '#D9D0C9',
+          fill: on ? '#231C18' : 'transparent',
+          check: on ? 1 : 0,
+          pick: () => this.setState({ sel: i })
+        };
+      }),
+      note: this.state.note,
+      len: this.state.note.length,
+      setNote: (e) => this.setState({ note: e.target.value.slice(0, 200) }),
+      editing: !this.state.done,
+      done: this.state.done,
+      submit: () => this.setState({ done: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

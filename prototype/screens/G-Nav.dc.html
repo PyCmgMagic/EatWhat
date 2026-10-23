@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 底部导航</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 100%; height: 60px; display: flex; gap: 10px; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+  <nav aria-label="主导航" style="flex: 1; min-width: 0; height: 60px; padding: 5px; box-sizing: border-box; border-radius: 30px; background: rgba(255,255,255,0.94); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 0 0 1px rgba(35,28,24,0.06), 0 8px 24px rgba(35,28,24,0.14); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px;">
+    <a href="G2-Home.dc.html" aria-current="{{t.home.cur}}" style="border-radius: 25px; background: {{t.home.bg}}; color: {{t.home.fg}}; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 11px; font-weight: {{t.home.w}};">
+      <dc-import name="G-Icon" icon="discover" size="22" hint-size="22px,22px"></dc-import>
+      发现
+    </a>
+    <a href="G-Nearby.dc.html" aria-current="{{t.nearby.cur}}" style="border-radius: 25px; background: {{t.nearby.bg}}; color: {{t.nearby.fg}}; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 11px; font-weight: {{t.nearby.w}};">
+      <dc-import name="G-Icon" icon="nearby" size="22" hint-size="22px,22px"></dc-import>
+      附近
+    </a>
+    <a href="G-Me.dc.html" aria-current="{{t.me.cur}}" style="border-radius: 25px; background: {{t.me.bg}}; color: {{t.me.fg}}; text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 11px; font-weight: {{t.me.w}};">
+      <dc-import name="G-Icon" icon="me" size="22" hint-size="22px,22px"></dc-import>
+      我的
+    </a>
+  </nav>
+  <a href="G-PickShop.dc.html" class="btn-press" aria-label="发布一道菜" style="flex: none; width: 60px; height: 60px; border-radius: 30px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -3px 0 rgba(0,0,0,0.28), 0 8px 20px rgba(35,28,24,0.3); transition: transform 90ms ease;">
+    <dc-import name="G-Icon" icon="add" size="26" hint-size="26px,26px"></dc-import>
+  </a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"enum","options":["home","nearby","me"],"default":"home"},"$preview":{"width":358,"height":60}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const active = this.props.active ?? 'home';
+    const tab = (key) => {
+      const on = key === active;
+      return {
+        cur: on ? 'page' : 'false',
+        bg: on ? '#F4EFEB' : 'transparent',
+        fg: on ? '#231C18' : '#6E625B',
+        w: on ? 700 : 500
+      };
+    };
+    return { t: { home: tab('home'), nearby: tab('nearby'), me: tab('me') } };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 反馈</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+textarea::placeholder{color:#9A8B80}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <header style="position: absolute; left: 8px; right: 16px; top: 46px; height: 44px; display: flex; align-items: center;">
+    <a href="G-SettingsAbout.dc.html" aria-label="返回" style="width: 44px; height: 44px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+      <dc-import name="G-Icon" icon="back" size="24" hint-size="24px,24px"></dc-import>
+    </a>
+  </header>
+
+  <sc-if value="{{editing}}" hint-placeholder-val="{{ true }}">
+    <section style="position: absolute; left: 20px; right: 20px; top: 98px; display: flex; flex-direction: column; gap: 4px;">
+      <h1 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 32px; line-height: 40px; font-weight: 900;">反馈<span style="font-size: 11px; font-weight: 500; line-height: 18px; padding: 0 6px; border: 1px dashed #9A8B80; border-radius: 9px;">待接入</span></h1>
+      <span style="font-size: 14px; line-height: 22px; color: #6E625B;">出问题、提建议、觉得被误伤了，都可以说</span>
+    </section>
+
+    <sc-if value="{{hasCtx}}" hint-placeholder-val="{{ true }}">
+      <div style="position: absolute; left: 20px; right: 20px; top: 180px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 13px; color: #6E625B;">关于</span>
+        <span style="height: 36px; padding: 0 4px 0 6px; border-radius: 18px; background: #F4EFEB; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600;">
+          <img src="../assets/photos/sq_luosi.png" alt="" style="width: 26px; height: 26px; border-radius: 50%; object-fit: cover;">
+          柳州螺蛳粉
+          <button type="button" aria-label="不带上这道菜" onClick="{{dropCtx}}" style="width: 32px; height: 32px; padding: 0; border: 0; background: none; color: #6E625B; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="close" size="16" hint-size="16px,16px"></dc-import></button>
+        </span>
+      </div>
+    </sc-if>
+
+    <label style="position: absolute; left: 20px; right: 20px; top: {{boxTop}}px; display: flex; flex-direction: column; gap: 6px;">
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);">反馈内容</span>
+      <textarea maxlength="500" value="{{text}}" onChange="{{setText}}" placeholder="说说遇到了什么，在哪个页面" style="box-sizing: border-box; width: 100%; height: 180px; padding: 14px 16px; border: 0; border-radius: 20px; background: #F4EFEB; resize: none; outline: none; font: inherit; font-size: 16px; line-height: 26px; color: #231C18;"></textarea>
+      <span style="align-self: flex-end; font-size: 12px; color: #6E625B;"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600;">{{len}}</span> / 500</span>
+    </label>
+
+    <div style="position: absolute; left: 20px; right: 20px; top: {{shotTop}}px; display: flex; flex-direction: column; gap: 10px;">
+      <span style="font-size: 13px; color: #6E625B;">截图，选填，最多 3 张</span>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" aria-label="加截图" style="width: 80px; height: 80px; box-sizing: border-box; border: 1.5px dashed #9A8B80; border-radius: 18px; background: none; color: #231C18; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 12px;">
+          <dc-import name="G-Icon" icon="image" size="22" hint-size="22px,22px"></dc-import>
+          <span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;">0</span> / 3</span>
+        </button>
+      </div>
+      <span style="font-size: 12px; line-height: 18px; color: #6E625B;">会附上版本 <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600;">1.0.0</span>、补丁 <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600;">3</span> 和设备型号</span>
+    </div>
+
+    <div style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 12px 20px 32px; background: #FFFFFF; box-shadow: 0 -1px 0 #EFE9E4; display: flex; flex-direction: column; gap: 8px;">
+      <sc-if value="{{ready}}" hint-placeholder-val="{{ true }}">
+        <button type="button" class="btn-solid" onClick="{{submit}}" style="height: 52px; border: 0; border-radius: 26px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; font-size: 16px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 6px 14px rgba(35,28,24,0.16);">提交</button>
+      </sc-if>
+      <sc-if value="{{notReady}}" hint-placeholder-val="{{ false }}">
+        <span style="text-align: center; font-size: 13px; color: #A8321C;">写几句再提交</span>
+        <button type="button" disabled style="height: 52px; border: 0; border-radius: 26px; background: #E9E2DC; color: #8A7E76; font-size: 16px; font-weight: 600; cursor: not-allowed;">提交</button>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{done}}" hint-placeholder-val="{{ false }}">
+    <section role="status" style="position: absolute; left: 20px; right: 20px; top: 220px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;">
+      <span aria-hidden="true" style="width: 64px; height: 64px; border-radius: 50%; background: #F4EFEB; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="check" size="30" hint-size="30px,30px"></dc-import></span>
+      <h1 style="margin: 4px 0 0; font-size: 24px; line-height: 32px; font-weight: 900;">收到了</h1>
+      <p style="margin: 0; font-size: 15px; line-height: 24px; color: #4A3C31;">处理完在消息里告诉你</p>
+      <a href="G-SettingsAbout.dc.html" class="btn-light" style="align-self: stretch; margin-top: 18px; height: 52px; border-radius: 26px; background: linear-gradient(180deg, #FBF8F6, #F4EFEB); color: #231C18; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -2px 0 rgba(35,28,24,0.1), 0 1px 2px rgba(35,28,24,0.12), 0 3px 8px rgba(35,28,24,0.06);">好的</a>
+    </section>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { text: '加标签的词表里没有「汤底偏酸」，想加一个。', ctx: true, done: false };
+  }
+  renderVals() {
+    const ready = this.state.text.trim().length > 0;
+    const ctx = this.state.ctx;
+    return {
+      text: this.state.text,
+      len: this.state.text.length,
+      hasCtx: ctx,
+      boxTop: ctx ? 232 : 184,
+      shotTop: ctx ? 466 : 418,
+      ready: ready,
+      notReady: !ready,
+      editing: !this.state.done,
+      done: this.state.done,
+      setText: (e) => this.setState({ text: e.target.value.slice(0, 500) }),
+      dropCtx: () => this.setState({ ctx: false }),
+      submit: () => this.setState({ done: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

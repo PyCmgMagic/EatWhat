@@ -1,0 +1,622 @@
+{
+  "attachments": {},
+  "boards": {
+    "G-AddDish.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "发布 2/2 · 加菜",
+      "w": 390,
+      "x": 1410,
+      "y": 1300
+    },
+    "G-Blocked.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "屏蔽的人",
+      "w": 390,
+      "x": 2350,
+      "y": 10400
+    },
+    "G-ChangePassword.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "修改密码",
+      "w": 390,
+      "x": 4700,
+      "y": 10400
+    },
+    "G-ChangePhone.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "换手机号",
+      "w": 390,
+      "x": 4230,
+      "y": 10400
+    },
+    "G-Comments.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "全部评论",
+      "w": 390,
+      "x": 1410,
+      "y": 7800
+    },
+    "G-Crop.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "发布 · 调整照片（新增一步）",
+      "w": 390,
+      "x": 470,
+      "y": 3900
+    },
+    "G-DataNotice.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "数据存放说明",
+      "w": 390,
+      "x": 1410,
+      "y": 5200
+    },
+    "G-DeleteAccount.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "注销账号",
+      "w": 390,
+      "x": 1410,
+      "y": 10400
+    },
+    "G-Detail.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "餐厅详情",
+      "w": 390,
+      "x": 470,
+      "y": 1300
+    },
+    "G-Devices.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "登录设备",
+      "w": 390,
+      "x": 940,
+      "y": 10400
+    },
+    "G-Dish.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "菜品详情",
+      "w": 390,
+      "x": 0,
+      "y": 1300
+    },
+    "G-EditProfile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "编辑资料",
+      "w": 390,
+      "x": 940,
+      "y": 9100
+    },
+    "G-Feedback.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "反馈",
+      "w": 390,
+      "x": 3760,
+      "y": 10400
+    },
+    "G-Follows.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "粉丝与关注",
+      "w": 390,
+      "x": 470,
+      "y": 9100
+    },
+    "G-ForgotPassword.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "找回密码",
+      "w": 390,
+      "x": 2820,
+      "y": 5200
+    },
+    "G-History.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "足迹",
+      "w": 390,
+      "x": 2350,
+      "y": 9100
+    },
+    "G-HomePhoto.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "发现（实拍图版）",
+      "w": 390,
+      "x": 0,
+      "y": 3900
+    },
+    "G-Icon.dc.html": {
+      "h": 40,
+      "page": "g",
+      "title": "图标组件",
+      "w": 40,
+      "x": 1320,
+      "y": 11700
+    },
+    "G-Icons.dc.html": {
+      "h": 844,
+      "page": "g",
+      "title": "图标表（MingCute Line）",
+      "w": 1240,
+      "x": 0,
+      "y": 11700
+    },
+    "G-Inbox.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "消息",
+      "w": 390,
+      "x": 1410,
+      "y": 0
+    },
+    "G-Kit.dc.html": {
+      "h": 844,
+      "page": "g",
+      "title": "组件",
+      "w": 760,
+      "x": 470,
+      "y": 2600
+    },
+    "G-Login.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "登录",
+      "w": 390,
+      "x": 0,
+      "y": 2600
+    },
+    "G-Me.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "我的",
+      "w": 390,
+      "x": 940,
+      "y": 0
+    },
+    "G-MyTags.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "我的标签",
+      "w": 390,
+      "x": 1410,
+      "y": 9100
+    },
+    "G-Nav.dc.html": {
+      "h": 60,
+      "is_interactive": true,
+      "page": "g",
+      "title": "底部导航（三页共用）",
+      "w": 358,
+      "x": 1310,
+      "y": 2600
+    },
+    "G-Nearby.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "附近",
+      "w": 390,
+      "x": 470,
+      "y": 0
+    },
+    "G-NewShop.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "新建店",
+      "w": 390,
+      "x": 2350,
+      "y": 7800
+    },
+    "G-PanelFilter.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "附近筛选面板",
+      "w": 390,
+      "x": 470,
+      "y": 6500
+    },
+    "G-PanelPlace.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "地点和饭点面板",
+      "w": 390,
+      "x": 0,
+      "y": 6500
+    },
+    "G-PanelReport.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "举报面板",
+      "w": 390,
+      "x": 1410,
+      "y": 6500
+    },
+    "G-PanelTag.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "加标签面板",
+      "w": 390,
+      "x": 940,
+      "y": 6500
+    },
+    "G-PasswordLogin.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "账号密码登录",
+      "w": 390,
+      "x": 940,
+      "y": 5200
+    },
+    "G-PhoneLogin.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "注册",
+      "w": 390,
+      "x": 0,
+      "y": 5200
+    },
+    "G-PhotoPipeline.dc.html": {
+      "h": 844,
+      "page": "g",
+      "title": "实拍图从上传到上舞台",
+      "w": 1240,
+      "x": 940,
+      "y": 3900
+    },
+    "G-PickShop.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "发布 1/2 · 选店",
+      "w": 390,
+      "x": 940,
+      "y": 1300
+    },
+    "G-Reconsent.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "重新同意",
+      "w": 390,
+      "x": 1880,
+      "y": 5200
+    },
+    "G-RegisterConfirm.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "新号码完成注册",
+      "w": 390,
+      "x": 470,
+      "y": 5200
+    },
+    "G-Search.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "搜索",
+      "w": 390,
+      "x": 0,
+      "y": 7800
+    },
+    "G-Settings.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "设置",
+      "w": 390,
+      "x": 0,
+      "y": 10400
+    },
+    "G-SettingsAbout.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "关于",
+      "w": 390,
+      "x": 3290,
+      "y": 10400
+    },
+    "G-SettingsAccount.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "账号与安全",
+      "w": 390,
+      "x": 470,
+      "y": 10400
+    },
+    "G-SettingsNotify.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "通知",
+      "w": 390,
+      "x": 2820,
+      "y": 10400
+    },
+    "G-SettingsPrivacy.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "隐私",
+      "w": 390,
+      "x": 1880,
+      "y": 10400
+    },
+    "G-TagDishes.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "标签下的菜",
+      "w": 390,
+      "x": 1880,
+      "y": 9100
+    },
+    "G-Topic.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "专题",
+      "w": 390,
+      "x": 940,
+      "y": 7800
+    },
+    "G-TopicArchive.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "往期专题",
+      "w": 390,
+      "x": 470,
+      "y": 7800
+    },
+    "G-UserProfile.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "他人主页",
+      "w": 390,
+      "x": 0,
+      "y": 9100
+    },
+    "G-Verify.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "认证",
+      "w": 390,
+      "x": 2350,
+      "y": 5200
+    },
+    "G-WriteComment.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "写评论",
+      "w": 390,
+      "x": 1880,
+      "y": 7800
+    },
+    "G-WrongInfo.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "信息有误",
+      "w": 390,
+      "x": 2820,
+      "y": 7800
+    },
+    "G2-Home.dc.html": {
+      "h": 844,
+      "is_interactive": true,
+      "page": "g",
+      "title": "发现",
+      "w": 390,
+      "x": 0,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-21T09:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "page": "g",
+    "view": "canvas"
+  },
+  "notes": {
+    "g1": {
+      "kind": "title1",
+      "maxW": 1800,
+      "page": "g",
+      "text": "底部三个主页面 + 消息",
+      "w": 240,
+      "x": 0,
+      "y": -280
+    },
+    "g10": {
+      "kind": "title1",
+      "maxW": 1360,
+      "page": "g",
+      "text": "图标",
+      "w": 240,
+      "x": 0,
+      "y": 11420
+    },
+    "g2": {
+      "kind": "title1",
+      "maxW": 1800,
+      "page": "g",
+      "text": "详情与发布流程",
+      "w": 240,
+      "x": 0,
+      "y": 1020
+    },
+    "g3": {
+      "kind": "title1",
+      "maxW": 1800,
+      "page": "g",
+      "text": "登录与组件",
+      "w": 240,
+      "x": 0,
+      "y": 2320
+    },
+    "g4": {
+      "kind": "title1",
+      "maxW": 2180,
+      "page": "g",
+      "text": "实拍图怎么处理",
+      "w": 240,
+      "x": 0,
+      "y": 3620
+    },
+    "g5": {
+      "kind": "title1",
+      "maxW": 3210,
+      "page": "g",
+      "text": "登录、注册与认证",
+      "w": 240,
+      "x": 0,
+      "y": 4920
+    },
+    "g6": {
+      "kind": "title1",
+      "maxW": 1800,
+      "page": "g",
+      "text": "底部面板",
+      "w": 240,
+      "x": 0,
+      "y": 6220
+    },
+    "g7": {
+      "kind": "title1",
+      "maxW": 3210,
+      "page": "g",
+      "text": "搜索、专题、评论与店",
+      "w": 240,
+      "x": 0,
+      "y": 7520
+    },
+    "g8": {
+      "kind": "title1",
+      "maxW": 2740,
+      "page": "g",
+      "text": "他人主页与我的子页",
+      "w": 240,
+      "x": 0,
+      "y": 8820
+    },
+    "g9": {
+      "kind": "title1",
+      "maxW": 5090,
+      "page": "g",
+      "text": "设置",
+      "w": 240,
+      "x": 0,
+      "y": 10120
+    }
+  },
+  "order": [
+    "G2-Home.dc.html",
+    "G-Nearby.dc.html",
+    "G-Me.dc.html",
+    "G-Inbox.dc.html",
+    "G-Dish.dc.html",
+    "G-Detail.dc.html",
+    "G-PickShop.dc.html",
+    "G-AddDish.dc.html",
+    "G-Login.dc.html",
+    "G-Kit.dc.html",
+    "G-Nav.dc.html",
+    "G-HomePhoto.dc.html",
+    "G-Crop.dc.html",
+    "G-PhotoPipeline.dc.html",
+    "G-PhoneLogin.dc.html",
+    "G-RegisterConfirm.dc.html",
+    "G-PasswordLogin.dc.html",
+    "G-ForgotPassword.dc.html",
+    "G-DataNotice.dc.html",
+    "G-Reconsent.dc.html",
+    "G-Verify.dc.html",
+    "G-PanelPlace.dc.html",
+    "G-PanelFilter.dc.html",
+    "G-PanelTag.dc.html",
+    "G-PanelReport.dc.html",
+    "G-Search.dc.html",
+    "G-TopicArchive.dc.html",
+    "G-Topic.dc.html",
+    "G-Comments.dc.html",
+    "G-WriteComment.dc.html",
+    "G-NewShop.dc.html",
+    "G-WrongInfo.dc.html",
+    "G-UserProfile.dc.html",
+    "G-Follows.dc.html",
+    "G-EditProfile.dc.html",
+    "G-MyTags.dc.html",
+    "G-TagDishes.dc.html",
+    "G-History.dc.html",
+    "G-Settings.dc.html",
+    "G-SettingsAccount.dc.html",
+    "G-ChangePhone.dc.html",
+    "G-ChangePassword.dc.html",
+    "G-Devices.dc.html",
+    "G-DeleteAccount.dc.html",
+    "G-SettingsPrivacy.dc.html",
+    "G-Blocked.dc.html",
+    "G-SettingsNotify.dc.html",
+    "G-SettingsAbout.dc.html",
+    "G-Feedback.dc.html",
+    "G-Icons.dc.html",
+    "G-Icon.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "g",
+      "name": "G 定稿"
+    }
+  ],
+  "title": "沙软今天吃什么 · 风格候选",
+  "v": 3
+}

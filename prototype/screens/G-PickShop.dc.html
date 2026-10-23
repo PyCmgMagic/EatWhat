@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 发布 1/2 选店</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <header style="position: absolute; left: 8px; right: 20px; top: 46px; height: 44px; display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center;">
+    <a href="G2-Home.dc.html" aria-label="关闭" style="width: 44px; height: 44px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+      <dc-import name="G-Icon" icon="close" size="22" hint-size="22px,22px"></dc-import>
+    </a>
+    <span style="text-align: center; font-size: 15px; font-weight: 600;">发布一道菜</span>
+    <span style="text-align: right; font-family: 'Bricolage Grotesque', sans-serif; font-size: 15px; font-weight: 800;">1<span style="font-weight: 600; color: #6E625B;"> / 2</span></span>
+  </header>
+
+  <h1 style="position: absolute; left: 20px; top: 104px; margin: 0; font-size: 32px; line-height: 40px; font-weight: 900;">在哪家吃的？</h1>
+
+  <label style="position: absolute; left: 20px; right: 20px; top: 160px; height: 48px; padding: 0 16px; box-sizing: border-box; border-radius: 24px; background: #F4EFEB; display: flex; align-items: center; gap: 10px;">
+    <span style="display: flex; color: #231C18;"><dc-import name="G-Icon" icon="search" size="20" hint-size="20px,20px"></dc-import></span>
+    <input type="search" aria-label="搜店名" placeholder="搜店名" style="flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: 15px; color: #231C18;">
+  </label>
+
+  <span style="position: absolute; left: 20px; top: 222px; display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6E625B;">
+    <dc-import name="G-Icon" icon="nearby" size="14" hint-size="14px,14px"></dc-import>
+    你在万达金街附近，离你近的排在前面
+  </span>
+
+  <div role="radiogroup" aria-label="选择餐厅" style="position: absolute; left: 10px; right: 10px; top: 250px; display: flex; flex-direction: column; gap: 6px;">
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+      <button type="button" role="radio" aria-checked="{{r.on}}" onClick="{{r.pick}}" style="height: 68px; padding: 0 12px 0 10px; border: 0; border-radius: 20px; background: {{r.bg}}; color: #231C18; display: flex; align-items: center; gap: 14px; text-align: left; transition: background-color 200ms ease;">
+        <span style="position: relative; flex: none; width: 52px; height: 52px; border-radius: 16px; overflow: hidden; background: {{r.tint}};"><img src="{{r.img}}" alt="" style="position: absolute; left: -12px; top: -12px; width: 76px; height: 76px;"></span>
+        <span style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+          <span style="font-size: 16px; font-weight: 700;">{{r.name}}</span>
+          <span style="display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: #6E625B;"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 14px; font-weight: 600; color: #231C18;">{{r.dist}}</span>{{r.hub}}</span>
+        </span>
+        <span aria-hidden="true" style="flex: none; width: 24px; height: 24px; box-sizing: border-box; border-radius: 12px; border: 2px solid {{r.ring}}; background: {{r.fill}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; transition: background-color 200ms ease, border-color 200ms ease;">
+          <span style="display: flex; opacity: {{r.check}};"><dc-import name="G-Icon" icon="check" size="14" hint-size="14px,14px"></dc-import></span>
+        </span>
+      </button>
+    </sc-for>
+  </div>
+
+  <a href="G-NewShop.dc.html" style="position: absolute; left: 20px; right: 20px; top: 642px; height: 48px; box-sizing: border-box; border: 1.5px dashed #9A8B80; border-radius: 24px; text-decoration: none; color: #231C18; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">
+    <dc-import name="G-Icon" icon="add" size="18" hint-size="18px,18px"></dc-import>
+    没找到？新建一家店
+  </a>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; height: 96px; box-sizing: border-box; padding: 12px 20px 32px; background: #FFFFFF; box-shadow: 0 -1px 0 #EFE9E4;">
+    <a href="G-AddDish.dc.html" class="btn-solid" style="height: 52px; border-radius: 26px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 6px 14px rgba(35,28,24,0.16);">下一步：给{{chosen}}加菜</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 0 };
+  }
+  renderVals() {
+    const shops = [
+      { name: '袁记云饺', dist: '320 m', hub: '万达金街 1 层', tint: '#F8E6C4', img: '../assets/dishes/yuntun.svg' },
+      { name: '螺蛳粉研究所', dist: '600 m', hub: '万达金街 B1', tint: '#F3D6CF', img: '../assets/dishes/luosifen.svg' },
+      { name: '一点点', dist: '180 m', hub: '万达金街 1 层', tint: '#FBEFC6', img: '../assets/dishes/yangzhi.svg' },
+      { name: '香锅小站', dist: '400 m', hub: '银座商城 3 层', tint: '#F6E0DB', img: '../assets/dishes/xiangguo.svg' },
+      { name: '小碗菜', dist: '450 m', hub: '银座商城 2 层', tint: '#F6DDD3', img: '../assets/dishes/niunan.svg' }
+    ];
+    const sel = this.state.sel;
+    return {
+      chosen: shops[sel].name,
+      rows: shops.map((s, i) => {
+        const on = i === sel;
+        return Object.assign({}, s, {
+          on: on ? 'true' : 'false',
+          bg: on ? '#F8F3EE' : 'transparent',
+          ring: on ? '#231C18' : '#D9D0C9',
+          fill: on ? '#231C18' : 'transparent',
+          check: on ? 1 : 0,
+          pick: () => this.setState({ sel: i })
+        });
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

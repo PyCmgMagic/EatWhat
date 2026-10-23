@@ -1,0 +1,29 @@
+<!-- @dsCard group="舞台" height=250 subtitle="实拍图与插画，大中小三档" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>DishPlate</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--mist); font-family: var(--font-sans); color: var(--ink-muted); }
+  .row { display: flex; align-items: flex-end; gap: 36px; padding: 28px var(--space-20) var(--space-20); }
+  figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; font-size: 12px; line-height: 18px; }
+  .plate { border-radius: var(--radius-plate); overflow: hidden; }
+  .plate img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .lg { width: 160px; height: 160px; box-shadow: 0 0 0 7px #ffffff, 0 16px 30px rgba(0, 0, 0, 0.25); }
+  .md { width: 96px; height: 96px; box-shadow: 0 0 0 4px #ffffff, 0 8px 16px rgba(0, 0, 0, 0.22); }
+  .ill { width: 140px; height: 140px; }
+  .thumb { width: 56px; height: 56px; border-radius: var(--radius-thumb); overflow: hidden; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+</style>
+</head>
+<body>
+<div class="row">
+  <figure><span class="plate lg"><img src="../../../assets/photos/sq_luosi.png" alt="柳州螺蛳粉"></span>实拍 · 舞台主图</figure>
+  <figure><span class="plate md"><img src="../../../assets/photos/sq_hongshao.png" alt="红烧肉"></span>实拍 · 预览</figure>
+  <figure><img class="ill" src="../../../assets/dishes/yuntun.svg" alt="鲜虾蟹籽云吞插画">插画 · 不加盘沿</figure>
+  <figure><span class="thumb"><img src="../../../assets/photos/sq_paigu.png" alt="玉米排骨汤"></span>列表缩略</figure>
+</div>
+</body>
+</html>

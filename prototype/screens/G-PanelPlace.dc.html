@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 地点和饭点面板</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; pointer-events: none;">
+    <dc-import name="G-HomePhoto" hint-size="390px,844px"></dc-import>
+  </div>
+  <a href="G-HomePhoto.dc.html" aria-label="关闭面板" style="position: absolute; inset: 0; background: rgba(35,28,24,0.45);"></a>
+
+  <section role="dialog" aria-label="地点和饭点" style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 10px 20px 32px; background: #FFFFFF; border-radius: 28px 28px 0 0; display: flex; flex-direction: column; gap: 18px;">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 2px; background: #E6DED8;"></span>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: -6px;">
+      <h1 style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 900;">在哪吃，吃哪顿</h1>
+      <a href="G-HomePhoto.dc.html" aria-label="关闭" style="width: 44px; height: 44px; margin-right: -10px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="close" size="22" hint-size="22px,22px"></dc-import></a>
+    </div>
+
+    <fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 10px;">
+      <legend style="padding: 0; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: #6E625B;">地点</legend>
+      <div role="radiogroup" aria-label="校区" style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <button type="button" role="radio" aria-checked="true" style="height: 36px; padding: 0 16px; border: 0; border-radius: 18px; background: #231C18; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+          <dc-import name="G-Icon" icon="school" size="16" hint-size="16px,16px"></dc-import>软件园
+        </button>
+      </div>
+      <span style="font-size: 12px; color: #6E625B;">其他校区开放后会出现在这里</span>
+    </fieldset>
+
+    <fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px;">
+      <legend style="padding: 0; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: #6E625B;">饭点</legend>
+      <button type="button" role="radio" aria-checked="{{auto.on}}" onClick="{{auto.pick}}" style="height: 60px; padding: 0 14px; border: 0; border-radius: 20px; background: {{auto.bg}}; color: #231C18; display: flex; align-items: center; gap: 12px; text-align: left; transition: background-color 200ms ease;">
+        <dc-import name="G-Icon" icon="time" size="22" hint-size="22px,22px"></dc-import>
+        <span style="flex: 1; display: flex; flex-direction: column;">
+          <span style="font-size: 16px; font-weight: {{auto.w}};">按现在的时间</span>
+          <span style="font-size: 12px; color: #6E625B;">现在是晚饭，到点自动换</span>
+        </span>
+        <span aria-hidden="true" style="flex: none; width: 24px; height: 24px; box-sizing: border-box; border-radius: 12px; border: 2px solid {{auto.ring}}; background: {{auto.fill}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; transition: background-color 200ms ease, border-color 200ms ease;"><span style="display: flex; opacity: {{auto.check}};"><dc-import name="G-Icon" icon="check" size="14" hint-size="14px,14px"></dc-import></span></span>
+      </button>
+      <div role="radiogroup" aria-label="手动选饭点" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+        <sc-for list="{{meals}}" as="m" hint-placeholder-count="4">
+          <button type="button" role="radio" aria-checked="{{m.on}}" onClick="{{m.pick}}" style="height: 64px; padding: 0 14px; border: 0; border-radius: 20px; background: {{m.bg}}; color: #231C18; display: flex; align-items: center; gap: 10px; text-align: left; transition: background-color 200ms ease;">
+            <span style="flex: 1; display: flex; flex-direction: column;">
+              <span style="font-size: 16px; font-weight: {{m.w}};">{{m.name}}</span>
+              <span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 600; color: #6E625B;">{{m.time}}</span>
+            </span>
+            <span aria-hidden="true" style="flex: none; width: 24px; height: 24px; box-sizing: border-box; border-radius: 12px; border: 2px solid {{m.ring}}; background: {{m.fill}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; transition: background-color 200ms ease, border-color 200ms ease;"><span style="display: flex; opacity: {{m.check}};"><dc-import name="G-Icon" icon="check" size="14" hint-size="14px,14px"></dc-import></span></span>
+          </button>
+        </sc-for>
+      </div>
+      <span style="font-size: 12px; line-height: 18px; color: #6E625B;">手动选的饭点到这个时间段结束为止，之后回到自动</span>
+    </fieldset>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 'auto' };
+  }
+  renderVals() {
+    const sel = this.state.sel;
+    const look = (on) => ({
+      on: on ? 'true' : 'false',
+      bg: on ? '#F4EFEB' : 'transparent',
+      w: on ? 700 : 500,
+      ring: on ? '#231C18' : '#D9D0C9',
+      fill: on ? '#231C18' : 'transparent',
+      check: on ? 1 : 0
+    });
+    const list = [
+      { key: 'breakfast', name: '早饭', time: '05:00–10:30' },
+      { key: 'lunch', name: '午饭', time: '10:30–14:30' },
+      { key: 'dinner', name: '晚饭', time: '14:30–20:30' },
+      { key: 'night', name: '夜宵', time: '20:30–05:00' }
+    ];
+    return {
+      auto: Object.assign(look(sel === 'auto'), { pick: () => this.setState({ sel: 'auto' }) }),
+      meals: list.map((m) => Object.assign({}, m, look(sel === m.key), { pick: () => this.setState({ sel: m.key }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

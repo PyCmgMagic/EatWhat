@@ -1,0 +1,62 @@
+<!-- @dsCard group="操作" height=330 subtitle="带一点厚度，按住看下沉" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Button</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--paper); font-family: var(--font-sans); color: var(--ink); }
+  .grid { display: flex; flex-direction: column; gap: var(--space-14); padding: var(--space-20); max-width: 560px; }
+  .row { display: flex; gap: var(--space-10); align-items: center; }
+  .cap { width: 64px; flex: none; font-size: 12px; line-height: 18px; color: var(--ink-muted); }
+  button { flex: 1; height: var(--size-button); border: 0; border-radius: var(--radius-pill); font: 600 16px/24px var(--font-sans); display: flex; align-items: center; justify-content: center; gap: var(--space-8); cursor: pointer; transition: transform 90ms ease, box-shadow 90ms ease; }
+  button:active { transform: translateY(1px); }
+  button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .solid { background: linear-gradient(180deg, var(--ink-top), var(--ink)); color: var(--paper); box-shadow: var(--shadow-button); }
+  .solid:active, .solid.is-pressed { box-shadow: var(--shadow-button-pressed); }
+  .solid.is-pressed { transform: translateY(1px); }
+  .outline { background: var(--paper); color: var(--ink); box-shadow: var(--shadow-button-outline); }
+  .outline:active { box-shadow: inset 0 0 0 1.5px var(--ink); }
+  .mist { background: linear-gradient(180deg, var(--mist-top), var(--mist)); color: var(--ink); box-shadow: var(--shadow-button-light); }
+  .mist:active { box-shadow: var(--shadow-button-light-pressed); }
+  .dashed { background: none; color: var(--ink); border: 1.5px dashed var(--line-strong); }
+  .dashed:active { transform: none; }
+  .disabled { background: var(--disabled-bg); color: var(--disabled-fg); cursor: not-allowed; }
+  .disabled:active { transform: none; }
+  .stage { display: flex; gap: var(--space-10); padding: var(--space-14); border-radius: var(--radius-tile); flex: 1; }
+  .stage button { height: 46px; font-size: 15px; }
+  .s-light { background: var(--stage-mango); }
+  .s-light .g { background: var(--stage-ghost-light); color: var(--ink); box-shadow: var(--shadow-button-ghost); }
+  .s-light .p { background: linear-gradient(180deg, var(--ink-top), var(--ink)); color: var(--stage-mango); box-shadow: var(--shadow-button); }
+  .s-light .p:active { box-shadow: var(--shadow-button-pressed); }
+  .s-dark { background: var(--stage-soy); }
+  .s-dark .g { background: var(--stage-ghost-dark); color: var(--paper); box-shadow: var(--shadow-button-ghost); }
+  .s-dark .p { background: linear-gradient(180deg, var(--paper), var(--paper-bottom)); color: var(--stage-soy); box-shadow: var(--shadow-button-on-stage); }
+  .s-dark .p:active { box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.14), 0 1px 2px rgba(0, 0, 0, 0.18); }
+  .g:active { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 0 rgba(0, 0, 0, 0); }
+  svg { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+<div class="grid">
+  <div class="row">
+    <button type="button" class="outline"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="m3.33 9.672l16.777-6.04a.2.2 0 0 1 .256.257l-6.04 16.777a.2.2 0 0 1-.374.005l-2.829-7.229a1 1 0 0 0-.566-.567l-7.229-2.828a.2.2 0 0 1 .005-.375Z"/></svg>导航去店里</button>
+    <button type="button" class="solid">加一道菜</button>
+  </div>
+  <div class="row">
+    <button type="button" class="mist">换一个</button>
+    <button type="button" class="dashed">＋ 新建一家店</button>
+    <button type="button" class="disabled" disabled>账号密码登录</button>
+  </div>
+  <div class="row">
+    <div class="stage s-light"><button type="button" class="g">换一个</button><button type="button" class="p">就它了</button></div>
+    <div class="stage s-dark"><button type="button" class="g">换一个</button><button type="button" class="p">就它了</button></div>
+  </div>
+  <div class="row">
+    <span class="cap">常态</span><button type="button" class="solid">发布</button>
+    <span class="cap">按下</span><button type="button" class="solid is-pressed">发布</button>
+  </div>
+</div>
+</body>
+</html>

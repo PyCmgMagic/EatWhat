@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#24483e">
+  <meta name="description" content="山软今天吃什么：校园美食分享与收藏的 HTML 交互设计稿。">
+  <title>山软今天吃什么 · 好好吃饭，认真生活</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <aside class="sidebar" aria-label="主导航">
+    <a class="brand" href="#discover" aria-label="山软今天吃什么，返回发现">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><path d="M9 24h30c-1 11-7 17-15 17S10 35 9 24Z" fill="currentColor"/><path d="M5 23h38M20 11c-5 5 4 5-1 10m10-15c-6 6 5 8-1 14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M16 40h16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg></span>
+      <span><span class="brand-campus">山软</span><strong>今天吃什么<span class="brand-dot">.</span></strong></span>
+    </a>
+    <div class="nav-caption">把每一顿，吃成小期待</div>
+    <nav id="desktop-nav"></nav>
+    <div class="sidebar-note"><span class="mini-spark">✳</span><p>好的日常，<br>从好好吃饭开始。</p><span>SHANRUAN FOOD CLUB</span></div>
+    <button class="sidebar-user" data-page="profile"><span class="avatar avatar-me">林</span><span><strong id="sidebar-name">小林同学</strong><small id="sidebar-verified">校内已认证</small></span><span class="user-arrow">↗</span></button>
+  </aside>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <a href="#discover" class="mobile-brand" aria-label="山软今天吃什么"><span class="mobile-brand-mark">吃</span><strong>今天吃什么<span>.</span></strong></a>
+      <div class="breadcrumb"><span>校园食友圈</span><span class="breadcrumb-slash">/</span><strong id="breadcrumb-current">发现</strong></div>
+      <form class="search-form" id="search-form" role="search"><span id="search-icon"></span><input id="search-input" aria-label="搜索菜品或餐厅" type="search" placeholder="搜一道想吃的，或一家喜欢的店" autocomplete="off"><kbd>↵</kbd></form>
+      <div class="topbar-actions"><button class="icon-button mobile-search-trigger" data-action="search" aria-label="搜索菜品或餐厅"><span id="mobile-search-icon"></span></button><button class="location-button" data-action="location" aria-label="选择浏览校区"><span id="location-icon"></span><span id="location-name">软件园校区</span><span class="chevron">⌄</span></button><button class="icon-button notification-button" data-action="notifications" aria-label="消息中心"><span id="notification-icon"></span><span class="notification-dot" id="notification-dot"></span></button></div>
+    </header>
+    <main id="main" tabindex="-1"></main>
+    <footer class="app-footer"><span>好好吃饭，认真生活。<span class="footer-flower">✳</span></span><div><span>演示内容与价格，仅供设计预览</span><a href="mobile.html">手机预览 ↗</a><button data-action="design-note">设计说明</button></div></footer>
+  </div>
+  <nav class="bottom-nav" id="mobile-nav" aria-label="移动端主导航"></nav>
+  <dialog class="modal" id="modal" aria-labelledby="modal-title"><div id="modal-content"></div></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

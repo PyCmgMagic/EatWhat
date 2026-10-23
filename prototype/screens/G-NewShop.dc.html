@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 新建店</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+input::placeholder{color:#B5A79C}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <header style="position: absolute; left: 8px; right: 20px; top: 46px; height: 44px; display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center;">
+    <a href="G-PickShop.dc.html" aria-label="返回" style="width: 44px; height: 44px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+      <dc-import name="G-Icon" icon="back" size="24" hint-size="24px,24px"></dc-import>
+    </a>
+    <span style="text-align: center; font-size: 15px; font-weight: 600;">新建一家店</span>
+    <span></span>
+  </header>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 102px; display: flex; flex-direction: column; gap: 18px;">
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      <label for="shop-name" style="display: flex; justify-content: space-between; font-size: 13px; color: #6E625B;">店名<span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600;">{{nameLen}}</span> / 20</span></label>
+      <input id="shop-name" type="text" maxlength="20" value="{{name}}" onChange="{{setName}}" placeholder="招牌上写的名字" style="height: 40px; border: 0; outline: none; background: transparent; box-shadow: inset 0 -1.5px 0 #231C18; font: inherit; font-size: 22px; font-weight: 900; color: #231C18;">
+      <sc-if value="{{dup}}" hint-placeholder-val="{{ true }}">
+        <div role="alert" style="margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
+          <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; line-height: 20px; color: #A8321C;"><dc-import name="G-Icon" icon="warning" size="18" hint-size="18px,18px"></dc-import>附近已经有一家袁记云饺了，<span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600;">80 m</span></span>
+          <div style="display: flex; gap: 8px;">
+            <a href="G-AddDish.dc.html" class="btn-solid" style="height: 36px; padding: 0 14px; border-radius: 18px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; font-size: 14px; font-weight: 600; text-decoration: none; display: flex; align-items: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 4px 10px rgba(35,28,24,0.14);">就选它</a>
+            <button type="button" class="btn-light" onClick="{{keep}}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 18px; background: linear-gradient(180deg, #FBF8F6, #F4EFEB); color: #231C18; font-size: 14px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -2px 0 rgba(35,28,24,0.1), 0 1px 2px rgba(35,28,24,0.12), 0 3px 8px rgba(35,28,24,0.06);">不是同一家，继续建</button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <span style="font-size: 13px; color: #6E625B;">位置，拖动地图让针对准店门口</span>
+      <div style="position: relative; height: 176px; border-radius: 22px; overflow: hidden;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="350" height="176" viewBox="0 0 350 176" aria-hidden="true" style="position: absolute; left: 0; top: 0;">
+          <rect width="350" height="176" fill="#ECE5D8"/>
+          <g fill="#E2D9C8">
+            <rect x="-10" y="-10" width="140" height="70" rx="10"/>
+            <rect x="150" y="-10" width="96" height="70" rx="10"/>
+            <rect x="266" y="-10" width="100" height="70" rx="10"/>
+            <rect x="-10" y="92" width="140" height="96" rx="10"/>
+            <rect x="150" y="92" width="96" height="96" rx="10"/>
+            <rect x="266" y="92" width="100" height="96" rx="10"/>
+          </g>
+          <rect x="150" y="92" width="96" height="96" rx="10" fill="#F3C46E" fill-opacity="0.24" stroke="#231C18" stroke-width="1.5" stroke-dasharray="5 5"/>
+          <g fill="none" stroke="#FFFFFF" stroke-linecap="round">
+            <path d="M-10 76 H360" stroke-width="18"/>
+            <path d="M140 -10 V190" stroke-width="12"/>
+            <path d="M256 -10 V190" stroke-width="10"/>
+          </g>
+          <text x="16" y="80" font-family="Noto Sans SC, sans-serif" font-size="11" fill="#8F8372">经十路</text>
+        </svg>
+        <span aria-hidden="true" style="position: absolute; left: 50%; top: 50%; width: 36px; height: 36px; margin: -36px 0 0 -18px; color: #231C18; display: flex; filter: drop-shadow(0 4px 6px rgba(35,28,24,0.25));"><dc-import name="G-Icon" icon="pin" size="36" hint-size="36px,36px"></dc-import></span>
+        <button type="button" aria-label="回到我的位置" style="position: absolute; right: 10px; bottom: 10px; width: 44px; height: 44px; border: 0; border-radius: 22px; background: #FFFFFF; color: #231C18; box-shadow: 0 0 0 1px rgba(35,28,24,0.06), 0 8px 24px rgba(35,28,24,0.14); display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="locate" size="20" hint-size="20px,20px"></dc-import></button>
+      </div>
+      <span style="display: flex; align-items: center; gap: 6px; font-size: 14px;"><span style="color: #6E625B; display: flex;"><dc-import name="G-Icon" icon="district" size="18" hint-size="18px,18px"></dc-import></span>属于<strong style="font-weight: 700;">万达金街</strong><span style="font-size: 12px; color: #6E625B;">按位置自动判断</span></span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      <label for="shop-desc" style="display: flex; justify-content: space-between; font-size: 13px; color: #6E625B;">地址描述<span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600;">{{descLen}}</span> / 30</span></label>
+      <input id="shop-desc" type="text" maxlength="30" value="{{desc}}" onChange="{{setDesc}}" placeholder="比如 万达金街 1 层" style="height: 40px; border: 0; outline: none; background: transparent; box-shadow: inset 0 -1.5px 0 #E6DED8; font: inherit; font-size: 17px; font-weight: 700; color: #231C18;">
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <button type="button" style="flex: none; width: 72px; height: 72px; box-sizing: border-box; border: 1.5px dashed #9A8B80; border-radius: 18px; background: none; color: #231C18; display: flex; align-items: center; justify-content: center;" aria-label="加门头照片"><dc-import name="G-Icon" icon="camera" size="24" hint-size="24px,24px"></dc-import></button>
+      <span style="display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 15px; font-weight: 600;">门头照片</span><span style="font-size: 13px; color: #6E625B;">选填，拍一张招牌，别人更好找</span></span>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 12px 20px 32px; background: #FFFFFF; box-shadow: 0 -1px 0 #EFE9E4;">
+    <sc-if value="{{ready}}" hint-placeholder-val="{{ false }}">
+      <a href="G-AddDish.dc.html" class="btn-solid" style="height: 52px; border-radius: 26px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 6px 14px rgba(35,28,24,0.16);">建好了，去加菜</a>
+    </sc-if>
+    <sc-if value="{{notReady}}" hint-placeholder-val="{{ true }}">
+      <button type="button" disabled style="width: 100%; height: 52px; border: 0; border-radius: 26px; background: #E9E2DC; color: #8A7E76; font-size: 16px; font-weight: 600; cursor: not-allowed;">建好了，去加菜</button>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { name: '袁记云饺', desc: '', kept: false };
+  }
+  renderVals() {
+    const name = this.state.name.trim();
+    const dup = name === '袁记云饺' && !this.state.kept;
+    const ready = name.length > 0 && this.state.desc.trim().length > 0 && !dup;
+    return {
+      name: this.state.name,
+      nameLen: this.state.name.length,
+      desc: this.state.desc,
+      descLen: this.state.desc.length,
+      dup: dup,
+      ready: ready,
+      notReady: !ready,
+      setName: (e) => this.setState({ name: e.target.value.slice(0, 20), kept: false }),
+      setDesc: (e) => this.setState({ desc: e.target.value.slice(0, 30) }),
+      keep: () => this.setState({ kept: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

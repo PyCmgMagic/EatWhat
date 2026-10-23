@@ -1,0 +1,55 @@
+<!-- @dsCard group="舞台" height=300 subtitle="浅色舞台与深色舞台" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Stage</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--paper); font-family: var(--font-sans); }
+  .row { display: flex; gap: var(--space-20); padding: var(--space-20); }
+  .stage { position: relative; width: 300px; height: 260px; border-radius: var(--radius-tile); overflow: hidden; flex: none; }
+  .stage.light { background: var(--stage-broth); color: var(--ink); --ghost: var(--stage-ghost-light); --on: var(--ink); --st: var(--stage-broth); }
+  .stage.dark { background: var(--stage-redoil); color: var(--paper); --ghost: var(--stage-ghost-dark); --on: var(--paper); --st: var(--stage-redoil); }
+  .plate { position: absolute; left: 150px; top: 36px; width: 180px; height: 180px; border-radius: var(--radius-plate); overflow: hidden; box-shadow: 0 0 0 6px #ffffff, 0 14px 26px rgba(0, 0, 0, 0.28); }
+  .plate img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .plate.ill { box-shadow: none; overflow: visible; }
+  .words { position: absolute; left: 16px; top: 16px; width: 120px; height: 168px; display: flex; flex-direction: column; }
+  .name { margin: 0; font-size: 30px; line-height: 33px; font-weight: 900; letter-spacing: -0.5px; }
+  .meta { margin-top: 8px; font-size: 12px; line-height: 17px; }
+  .meta b { font-weight: 600; display: block; }
+  .light .meta span { color: var(--ink-soft); }
+  .dark .meta span { opacity: 0.85; }
+  .price { margin-top: auto; font-family: var(--font-numeral); font-size: 40px; line-height: 40px; font-weight: 800; letter-spacing: -1.5px; }
+  .btns { position: absolute; left: 16px; right: 16px; bottom: 16px; display: flex; gap: var(--space-10); }
+  .btns button { flex: 1; height: 40px; border: 0; border-radius: var(--radius-pill); font: 600 14px/20px var(--font-sans); cursor: pointer; transition: transform 90ms ease, box-shadow 90ms ease; }
+  .btns button:active { transform: translateY(1px); }
+  .ghost { background: var(--ghost); color: var(--on); box-shadow: var(--shadow-button-ghost); }
+  .light .solid { background: linear-gradient(180deg, var(--ink-top), var(--ink)); color: var(--st); box-shadow: var(--shadow-button); }
+  .light .solid:active { box-shadow: var(--shadow-button-pressed); }
+  .dark .solid { background: linear-gradient(180deg, var(--paper), var(--paper-bottom)); color: var(--st); box-shadow: var(--shadow-button-on-stage); }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="stage light">
+    <span class="plate ill" aria-hidden="true"><img src="../../../assets/dishes/yuntun.svg" alt=""></span>
+    <div class="words">
+      <p class="name">鲜虾蟹籽<br>云吞</p>
+      <div class="meta"><b>袁记云饺</b><span>320 m</span></div>
+      <span class="price">¥18</span>
+    </div>
+    <div class="btns"><button type="button" class="ghost">换一个</button><button type="button" class="solid">就它了</button></div>
+  </div>
+  <div class="stage dark">
+    <span class="plate" aria-hidden="true"><img src="../../../assets/photos/sq_tieguo.png" alt=""></span>
+    <div class="words">
+      <p class="name">铁锅炖</p>
+      <div class="meta"><b>东北饭庄</b><span>750 m</span></div>
+      <span class="price">¥58</span>
+    </div>
+    <div class="btns"><button type="button" class="ghost">换一个</button><button type="button" class="solid">就它了</button></div>
+  </div>
+</div>
+</body>
+</html>

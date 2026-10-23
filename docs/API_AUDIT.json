@@ -1,0 +1,4240 @@
+{
+  "generated_at": "2026-10-21T12:34:15.981942+08:00",
+  "source_file": "吃什么接口文档v2-openapi.yaml",
+  "source_format": "yaml",
+  "source_sha256": "297eded2860610ae6971b7ec9d73dee3ab4f1a4a9ecc07bb351b83bcb4f04854",
+  "source_info": {
+    "title": "EatWhat 业务服务 API",
+    "version": "auth-renewal-20261019",
+    "description": "业务后端接口，按已发布 JAR 的 Spring 映射、参数注解及模型反射生成，排除中控、内部集群和诊断接口。默认 servers=/api，路径为后端实际映射，不自动去重 /api。当前会话头是 satoken: Bearer <tokenValue>，以登录返回的 tokenName 为准。HTTP 200 也可能包含非零业务 code；角色、同意状态和集群可用性仍由服务端检查。时间输出兼容项目自定义毫秒序列化及默认 ISO 转换器；当前双机授权有效期实测为 ISO 时间。"
+  },
+  "source_metadata": {
+    "x-artifact-sha256": "76e9d9b055935cdaaf14d60a3ea458161537acc0c50f150d71cec3d8ff76e84c",
+    "x-generated-date": "2026-10-19",
+    "x-scope": "Declared business surface in exact deployed artifact; conditional routes depend on configuration; not a full endpoint runtime acceptance.",
+    "x-validation": {
+      "frozenBusinessRoutesCovered": true,
+      "uniqueOperationIds": true,
+      "allLocalSchemaRefsResolved": true,
+      "pathParametersMatched": true
+    }
+  },
+  "scope": "Static contract review; no backend requests or implementation verification.",
+  "tools": {
+    "openapi-spec-validator": "0.9.0",
+    "jsonschema": "4.26.0",
+    "referencing": "0.37.0",
+    "PyYAML": "6.0.3"
+  },
+  "counts": {
+    "paths": 90,
+    "operations": 101,
+    "schemas": 124,
+    "operations_by_group": {
+      "activity": 13,
+      "admin": 12,
+      "api": 2,
+      "auth": 18,
+      "callback": 2,
+      "foods": 20,
+      "history": 1,
+      "hub": 7,
+      "notification": 4,
+      "restaurant": 6,
+      "upload": 3,
+      "user": 13
+    },
+    "empty_operation_tags": 0,
+    "missing_operation_id": 0,
+    "duplicate_operation_ids": [],
+    "empty_operation_description": 0,
+    "operations_with_only_200_documented": 0,
+    "request_bodies": 32,
+    "request_bodies_marked_required": 32,
+    "operations_with_default_error_response": 101,
+    "conditional_operations": 12,
+    "operations_by_required_role": {
+      "no_extra_role_declared": 50,
+      "verified": 27,
+      "admin": 24
+    },
+    "operations_by_authentication": {
+      "session": 94,
+      "no_session_declared": 7
+    },
+    "local_refs": 297,
+    "broken_local_refs": 0,
+    "openapi_validator_errors": 0,
+    "examples_checked": 0,
+    "examples_with_errors": 0,
+    "example_validation_issues": 0
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "业务入口反代前缀；后端根路径前拼接 /api"
+    },
+    {
+      "url": "http://{host}:{port}/api",
+      "description": "已配置业务网关（18091），保留 /api；域名 HTTPS 反代由使用方配置",
+      "variables": {
+        "host": {
+          "default": "51.79.204.39"
+        },
+        "port": {
+          "default": "18091"
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:18090",
+      "description": "业务主机本地直连：没有网关 /api 前缀；仅供服务器内或 SSH 隧道使用"
+    }
+  ],
+  "security_schemes": {
+    "SaToken": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "satoken",
+      "description": "输入完整的 Bearer <tokenValue>。当前部署 tokenName=satoken；若部署修改 tokenName，应同步修改本安全方案。"
+    }
+  },
+  "example_validation_scope": "Media-type example and examples.*.value only; zero means no examples to validate, not runtime success.",
+  "business_codes_in_examples": {},
+  "broken_refs": [],
+  "defaults_outside_enum": [],
+  "openapi_validator_errors": [],
+  "example_validation_issues": [],
+  "operations": [
+    {
+      "path": "/activity/dinners",
+      "method": "GET",
+      "summary": "动态：获取聚餐动态列表",
+      "operation_id": "ActivityController_listDinners_get",
+      "tags": [
+        "Activity"
+      ],
+      "description": "分页获取年夜饭列表\n仅登录用户可访问",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.ActivityController#listDinners",
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_ActivityDinnerDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/activity/dinners",
+      "method": "POST",
+      "summary": "动态：发布聚餐动态",
+      "operation_id": "ActivityController_publishDinner_post",
+      "tags": [
+        "Activity"
+      ],
+      "description": "发布年夜饭\n仅通过认证（verified）的用户可发布\n\n需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.ActivityController#publishDinner",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "CreateActivityDinnerDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/activity/dinners/by-likes",
+      "method": "GET",
+      "summary": "动态：按点赞排序聚餐动态",
+      "operation_id": "ActivityController_listDinnersByLikes_get",
+      "tags": [
+        "Activity"
+      ],
+      "description": "按点赞数分页获取年夜饭列表\n仅登录用户可访问",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.ActivityController#listDinnersByLikes",
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_ActivityDinnerDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/activity/dinners/{id}",
+      "method": "DELETE",
+      "summary": "动态：删除聚餐动态",
+      "operation_id": "ActivityController_deleteDinner_delete",
+      "tags": [
+        "Activity"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.ActivityController#deleteDinner",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/activity/dinners/{id}",
+      "method": "GET",
+      "summary": "动态：获取聚餐动态详情",
+      "operation_id": "ActivityController_getDinnerDetail_get",
+      "tags": [
+        "Activity"
+      ],
+      "description": "按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.ActivityController#getDinnerDetail",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_ActivityDinnerDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/activity/foods",
+      "method": "GET",
+      "summary": "动态：获取美食动态列表",
+      "operation_id": "ActivityController_listFoods_get",
+      "tags": [
+        "Activity"
+      ],
+      "description": "分页获取美食列表\n仅登录用户可访问",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.ActivityController#listFoods",
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_ActivityFoodDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/activity/foods",
+      "method": "POST",
+      "summary": "动态：发布美食动态",
+      "operation_id": "ActivityController_publishFood_post",
+      "tags": [
+        "Activity"
+      ],
+      "description": "发布地域性美食\n仅通过认证（verified）的用户可发布\n\n需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.ActivityController#publishFood",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "CreateActivityFoodDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/activity/foods/by-likes",
+      "method": "GET",
+      "summary": "动态：按点赞排序美食动态",
+      "operation_id": "ActivityController_listFoodsByLikes_get",
+      "tags": [
+        "Activity"
+      ],
+      "description": "按点赞数分页获取美食列表\n仅登录用户可访问",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.ActivityController#listFoodsByLikes",
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_ActivityFoodDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/activity/foods/{id}",
+      "method": "DELETE",
+      "summary": "动态：删除菜品或美食动态",
+      "operation_id": "ActivityController_deleteFood_delete",
+      "tags": [
+        "Activity"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.ActivityController#deleteFood",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/activity/foods/{id}",
+      "method": "GET",
+      "summary": "动态：获取菜品或美食动态详情",
+      "operation_id": "ActivityController_getFoodDetail_get",
+      "tags": [
+        "Activity"
+      ],
+      "description": "按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.ActivityController#getFoodDetail",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_ActivityFoodDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/activity/likes",
+      "method": "POST",
+      "summary": "动态：点赞动态",
+      "operation_id": "ActivityController_like_post",
+      "tags": [
+        "Activity"
+      ],
+      "description": "点赞（支持 food/dinner）\n仅通过认证（verified）的用户可操作\n\n需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.ActivityController#like",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "ActivityLikeReqDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/activity/likes",
+      "method": "DELETE",
+      "summary": "动态：取消动态点赞",
+      "operation_id": "ActivityController_unlike_delete",
+      "tags": [
+        "Activity"
+      ],
+      "description": "取消点赞（支持 food/dinner）\n仅通过认证（verified）的用户可操作\n\n需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.ActivityController#unlike",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "ActivityLikeReqDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/activity/{provinceId}/foods",
+      "method": "GET",
+      "summary": "动态：按省份获取美食动态",
+      "operation_id": "ActivityController_getFoodsByProvinceId_get",
+      "tags": [
+        "Activity"
+      ],
+      "description": "按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.ActivityController#getFoodsByProvinceId",
+      "parameters": [
+        {
+          "name": "provinceId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_ActivityFoodDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/admin/food-tags",
+      "method": "POST",
+      "summary": "菜品标签管理：创建系统菜品标签",
+      "operation_id": "FoodTagAdminController_createSystemTag_post",
+      "tags": [
+        "FoodTagAdmin"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodTagAdminController#createSystemTag",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "CreateSystemFoodTagDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_FoodTagSummaryVOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/admin/food-tags",
+      "method": "GET",
+      "summary": "菜品标签管理：获取系统菜品标签",
+      "operation_id": "FoodTagAdminController_listSystemTags_get",
+      "tags": [
+        "FoodTagAdmin"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodTagAdminController#listSystemTags",
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_AdminFoodTagVOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/admin/food-tags/{id}",
+      "method": "DELETE",
+      "summary": "菜品标签管理：删除系统菜品标签",
+      "operation_id": "FoodTagAdminController_deleteSystemTag_delete",
+      "tags": [
+        "FoodTagAdmin"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodTagAdminController#deleteSystemTag",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/admin/food-tags/{id}",
+      "method": "PUT",
+      "summary": "菜品标签管理：修改系统菜品标签",
+      "operation_id": "FoodTagAdminController_updateSystemTag_put",
+      "tags": [
+        "FoodTagAdmin"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodTagAdminController#updateSystemTag",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "UpdateSystemFoodTagDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/admin/summary",
+      "method": "GET",
+      "summary": "业务管理：获取业务统计",
+      "operation_id": "AdminController_summary_get",
+      "tags": [
+        "Admin"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AdminController#summary",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_SummaryVOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/admin/sync/catalog/conflicts",
+      "method": "GET",
+      "summary": "目录冲突管理：列出未解决的目录冲突",
+      "operation_id": "CatalogConflictController_listOpenConflicts_get",
+      "tags": [
+        "CatalogConflict"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。\n\n此路由由配置开关决定是否注册，见 x-conditional-properties。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": {
+        "name": [
+          "app.sync.catalog.enabled"
+        ],
+        "havingValue": "true"
+      },
+      "java_handler": "you.v50to.eatwhat.controller.CatalogConflictController#listOpenConflicts",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_List_ConflictViewResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/admin/sync/catalog/conflicts/objects",
+      "method": "GET",
+      "summary": "目录冲突管理：列出未解决的对象版本冲突",
+      "operation_id": "CatalogConflictController_listOpenObjectHeadConflicts_get",
+      "tags": [
+        "CatalogConflict"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。\n\n此路由由配置开关决定是否注册，见 x-conditional-properties。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": {
+        "name": [
+          "app.sync.catalog.enabled"
+        ],
+        "havingValue": "true"
+      },
+      "java_handler": "you.v50to.eatwhat.controller.CatalogConflictController#listOpenObjectHeadConflicts",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_List_ObjectHeadConflictViewResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/admin/sync/catalog/conflicts/objects/{conflictId}/resolve",
+      "method": "POST",
+      "summary": "目录冲突管理：解决对象版本冲突",
+      "operation_id": "CatalogConflictController_resolveObjectHeads_post",
+      "tags": [
+        "CatalogConflict"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。\n\n此路由由配置开关决定是否注册，见 x-conditional-properties。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": {
+        "name": [
+          "app.sync.catalog.enabled"
+        ],
+        "havingValue": "true"
+      },
+      "java_handler": "you.v50to.eatwhat.controller.CatalogConflictController#resolveObjectHeads",
+      "parameters": [
+        {
+          "name": "conflictId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "ResolveHeadRequestRequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_ResolutionResultResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/admin/sync/catalog/conflicts/{conflictId}/resolve",
+      "method": "POST",
+      "summary": "目录冲突管理：解决冲突",
+      "operation_id": "CatalogConflictController_resolve_post",
+      "tags": [
+        "CatalogConflict"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。\n\n此路由由配置开关决定是否注册，见 x-conditional-properties。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": {
+        "name": [
+          "app.sync.catalog.enabled"
+        ],
+        "havingValue": "true"
+      },
+      "java_handler": "you.v50to.eatwhat.controller.CatalogConflictController#resolve",
+      "parameters": [
+        {
+          "name": "conflictId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "ResolveRequestRequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_ResolutionResultResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/admin/sync/catalog/import/hubs",
+      "method": "POST",
+      "summary": "目录导入管理：导入商场目录",
+      "operation_id": "CatalogImportController_importHubs_post",
+      "tags": [
+        "CatalogImport"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。\n\n此路由由配置开关决定是否注册，见 x-conditional-properties。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": {
+        "name": [
+          "app.sync.catalog.enabled"
+        ],
+        "havingValue": "true"
+      },
+      "java_handler": "you.v50to.eatwhat.controller.CatalogImportController#importHubs",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "CatalogHubImportRequestRequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_CatalogImportResultResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/admin/sync/profile-conflicts",
+      "method": "GET",
+      "summary": "资料冲突管理：获取列表",
+      "operation_id": "ProfileConflictController_list_get",
+      "tags": [
+        "ProfileConflict"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。\n\n此路由由配置开关决定是否注册，见 x-conditional-properties。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": {
+        "name": [
+          "app.sync.profile.enabled"
+        ],
+        "havingValue": "true"
+      },
+      "java_handler": "you.v50to.eatwhat.controller.ProfileConflictController#list",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_List_ConflictResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/admin/sync/profile-conflicts/{conflictId}/resolve",
+      "method": "POST",
+      "summary": "资料冲突管理：解决冲突",
+      "operation_id": "ProfileConflictController_resolve_post",
+      "tags": [
+        "ProfileConflict"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。\n\n此路由由配置开关决定是否注册，见 x-conditional-properties。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": {
+        "name": [
+          "app.sync.profile.enabled"
+        ],
+        "havingValue": "true"
+      },
+      "java_handler": "you.v50to.eatwhat.controller.ProfileConflictController#resolve",
+      "parameters": [
+        {
+          "name": "conflictId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "ResolveRequestRequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/api/location/provinces",
+      "method": "GET",
+      "summary": "省市位置：获取省份列表",
+      "operation_id": "LocationController_getAllProvinces_get",
+      "tags": [
+        "Location"
+      ],
+      "description": "获取所有省份\n\n后端原始映射本身包含 /api。在当前会剥离一次 /api/ 的 18091 网关中，完整外部路径为 /api/api/location/provinces；不要擅自去重。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.LocationController#getAllProvinces",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_List_ProvinceDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/api/location/provinces/{provinceId}/cities",
+      "method": "GET",
+      "summary": "省市位置：获取省内城市列表",
+      "operation_id": "LocationController_getCitiesByProvinceId_get",
+      "tags": [
+        "Location"
+      ],
+      "description": "后端原始映射本身包含 /api。在当前会剥离一次 /api/ 的 18091 网关中，完整外部路径为 /api/api/location/provinces/{provinceId}/cities；不要擅自去重。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.LocationController#getCitiesByProvinceId",
+      "parameters": [
+        {
+          "name": "provinceId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_List_CityDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/callback",
+      "method": "GET",
+      "summary": "登录与认证：处理统一认证回调",
+      "operation_id": "AuthController_callback_get",
+      "tags": [
+        "Auth"
+      ],
+      "description": "原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AuthController#callback",
+      "parameters": [
+        {
+          "name": "token",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_HashMap_String_ObjectResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/callback",
+      "method": "POST",
+      "summary": "登录与认证：处理统一认证回调",
+      "operation_id": "AuthController_callback_post",
+      "tags": [
+        "Auth"
+      ],
+      "description": "原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AuthController#callback",
+      "parameters": [
+        {
+          "name": "token",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_HashMap_String_ObjectResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/changePassword",
+      "method": "POST",
+      "summary": "登录与认证：修改密码",
+      "operation_id": "AuthController_changePassword_post",
+      "tags": [
+        "Auth"
+      ],
+      "description": "修改密码",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AuthController#changePassword",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "ChangePwdDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/checkUsername",
+      "method": "POST",
+      "summary": "登录与认证：检查用户名是否可用",
+      "operation_id": "AuthController_checkUsername_post",
+      "tags": [
+        "Auth"
+      ],
+      "description": "按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。",
+      "security": [],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AuthController#checkUsername",
+      "parameters": [
+        {
+          "name": "username",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/consent",
+      "method": "GET",
+      "summary": "跨站同步同意：获取当前跨站同意状态",
+      "operation_id": "AccountConsentController_status_get",
+      "tags": [
+        "AccountConsent"
+      ],
+      "description": "此路由由配置开关决定是否注册，见 x-conditional-properties。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": {
+        "name": [
+          "app.account.enabled"
+        ],
+        "havingValue": "true"
+      },
+      "java_handler": "you.v50to.eatwhat.account.AccountConsentController#status",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "ConsentReply"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/consent/grant",
+      "method": "POST",
+      "summary": "跨站同步同意：授予跨站同步同意",
+      "operation_id": "AccountConsentController_grant_post",
+      "tags": [
+        "AccountConsent"
+      ],
+      "description": "此路由由配置开关决定是否注册，见 x-conditional-properties。\n\n提供有效 proof 时可无会话提交；不提供 proof 时须使用已登录校内权威站会话。必须先读取当前政策版本。",
+      "security": [],
+      "required_roles": [],
+      "conditional_properties": {
+        "name": [
+          "app.account.enabled"
+        ],
+        "havingValue": "true"
+      },
+      "java_handler": "you.v50to.eatwhat.account.AccountConsentController#grant",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "GrantRequestRequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "ConsentReply"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/consent/policy",
+      "method": "GET",
+      "summary": "跨站同步同意：读取跨站同意政策",
+      "operation_id": "AccountConsentController_policy_get",
+      "tags": [
+        "AccountConsent"
+      ],
+      "description": "此路由由配置开关决定是否注册，见 x-conditional-properties。",
+      "security": [],
+      "required_roles": [],
+      "conditional_properties": {
+        "name": [
+          "app.account.enabled"
+        ],
+        "havingValue": "true"
+      },
+      "java_handler": "you.v50to.eatwhat.account.AccountConsentController#policy",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "ConsentPolicyReply"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/consent/withdraw",
+      "method": "POST",
+      "summary": "跨站同步同意：撤回当前用户跨站同意",
+      "operation_id": "AccountConsentController_withdraw_post",
+      "tags": [
+        "AccountConsent"
+      ],
+      "description": "此路由由配置开关决定是否注册，见 x-conditional-properties。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": {
+        "name": [
+          "app.account.enabled"
+        ],
+        "havingValue": "true"
+      },
+      "java_handler": "you.v50to.eatwhat.account.AccountConsentController#withdraw",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "ConsentReply"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/consent/withdraw-with-password",
+      "method": "POST",
+      "summary": "跨站同步同意：使用密码撤回跨站同意",
+      "operation_id": "AccountConsentController_withdrawWithPassword_post",
+      "tags": [
+        "AccountConsent"
+      ],
+      "description": "此路由由配置开关决定是否注册，见 x-conditional-properties。",
+      "security": [],
+      "required_roles": [],
+      "conditional_properties": {
+        "name": [
+          "app.account.enabled"
+        ],
+        "havingValue": "true"
+      },
+      "java_handler": "you.v50to.eatwhat.account.AccountConsentController#withdrawWithPassword",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "WithdrawalRequestRequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "ConsentReply"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/getCode",
+      "method": "POST",
+      "summary": "登录与认证：发送验证码",
+      "operation_id": "AuthController_sendCode_post",
+      "tags": [
+        "Auth"
+      ],
+      "description": "获取短信验证码\n\nmobile 是 Spring 普通请求参数，可放查询串或表单；不是 JSON DTO。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AuthController#sendCode",
+      "parameters": [
+        {
+          "name": "mobile",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/login",
+      "method": "POST",
+      "summary": "登录与认证：登录",
+      "operation_id": "AuthController_login_post",
+      "tags": [
+        "Auth"
+      ],
+      "description": "成功会话 data 使用 SaTokenInfo；取 data.tokenName 和 data.tokenValue。海外未同意、授权过期或尚未同步时可能返回 20005/20006 或临时 consentProof；这些均不等于已登录成功。",
+      "security": [],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AuthController#login",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "LoginDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "AuthReply"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/logout",
+      "method": "POST",
+      "summary": "登录与认证：退出登录",
+      "operation_id": "AuthController_logout_post",
+      "tags": [
+        "Auth"
+      ],
+      "description": "按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AuthController#logout",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/register",
+      "method": "POST",
+      "summary": "登录与认证：注册",
+      "operation_id": "AuthController_register_post",
+      "tags": [
+        "Auth"
+      ],
+      "description": "用户名只能包含字母数字下划线，且不能是邮箱，长度3-10\n密码长度6-64\n\n成功会话 data 使用 SaTokenInfo；取 data.tokenName 和 data.tokenValue。海外未同意、授权过期或尚未同步时可能返回 20005/20006 或临时 consentProof；这些均不等于已登录成功。",
+      "security": [],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AuthController#register",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "RegisterDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "AuthReply"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/sdu",
+      "method": "GET",
+      "summary": "登录与认证：跳转山东大学统一认证",
+      "operation_id": "AuthController_sdu_get",
+      "tags": [
+        "Auth"
+      ],
+      "description": "重定向到统一认证登录页面\n\n原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AuthController#sdu",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        },
+        "302": {}
+      }
+    },
+    {
+      "path": "/auth/sdu",
+      "method": "POST",
+      "summary": "登录与认证：跳转山东大学统一认证",
+      "operation_id": "AuthController_sdu_post",
+      "tags": [
+        "Auth"
+      ],
+      "description": "重定向到统一认证登录页面\n\n原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AuthController#sdu",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        },
+        "302": {}
+      }
+    },
+    {
+      "path": "/auth/sendEmail",
+      "method": "GET",
+      "summary": "登录与认证：发送邮箱验证链接",
+      "operation_id": "AuthController_sendEmail_get",
+      "tags": [
+        "Auth"
+      ],
+      "description": "发送验证链接\n发送一个链接 点击绑定",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AuthController#sendEmail",
+      "parameters": [
+        {
+          "name": "email",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/verify",
+      "method": "GET",
+      "summary": "登录与认证：查询已完成认证类型",
+      "operation_id": "AuthController_verify_get",
+      "tags": [
+        "Auth"
+      ],
+      "description": "校验三方认证是否完成",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AuthController#verify",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_List_StringResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/auth/verifyEmail",
+      "method": "GET",
+      "summary": "登录与认证：验证邮箱链接",
+      "operation_id": "AuthController_verifyEmail_get",
+      "tags": [
+        "Auth"
+      ],
+      "description": "验证邮箱链接",
+      "security": [],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.AuthController#verifyEmail",
+      "parameters": [
+        {
+          "name": "token",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        },
+        "302": {}
+      }
+    },
+    {
+      "path": "/callback",
+      "method": "GET",
+      "summary": "Callback：处理统一认证回调",
+      "operation_id": "CallbackController_callback_get",
+      "tags": [
+        "Callback"
+      ],
+      "description": "原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.CallbackController#callback",
+      "parameters": [
+        {
+          "name": "token",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_HashMap_String_ObjectResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/callback",
+      "method": "POST",
+      "summary": "Callback：处理统一认证回调",
+      "operation_id": "CallbackController_callback_post",
+      "tags": [
+        "Callback"
+      ],
+      "description": "原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.CallbackController#callback",
+      "parameters": [
+        {
+          "name": "token",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_HashMap_String_ObjectResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/delete/{id}",
+      "method": "DELETE",
+      "summary": "菜品与收藏：删除菜品或美食动态",
+      "operation_id": "FoodController_deleteFood_delete",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#deleteFood",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/detail/{id}",
+      "method": "GET",
+      "summary": "菜品与收藏：获取菜品或美食动态详情",
+      "operation_id": "FoodController_getFoodDetail_get",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#getFoodDetail",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_FoodVOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/edit/{id}",
+      "method": "PUT",
+      "summary": "菜品与收藏：修改菜品",
+      "operation_id": "FoodController_editFood_put",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#editFood",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "EditFoodDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/favorites",
+      "method": "GET",
+      "summary": "菜品与收藏：获取收藏菜品",
+      "operation_id": "FoodController_getMyFavoriteFoods_get",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#getMyFavoriteFoods",
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_FoodVOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/list",
+      "method": "GET",
+      "summary": "菜品与收藏：按餐厅筛选菜品",
+      "operation_id": "FoodController_listByRestaurant_get",
+      "tags": [
+        "Food"
+      ],
+      "description": "查询某餐厅的菜品列表\n\n需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#listByRestaurant",
+      "parameters": [
+        {
+          "name": "restaurantId",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        },
+        {
+          "name": "systemTagIds",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "name": "myCustomTagIds",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        {
+          "name": "myCustomTagNames",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_FoodVOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/my",
+      "method": "GET",
+      "summary": "菜品与收藏：获取我的菜品",
+      "operation_id": "FoodController_getMyFood_get",
+      "tags": [
+        "Food"
+      ],
+      "description": "获取自己上传的菜品\n\n需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#getMyFood",
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_FoodVOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/recommend",
+      "method": "GET",
+      "summary": "菜品与收藏：推荐菜品",
+      "operation_id": "FoodController_recommendFoods_get",
+      "tags": [
+        "Food"
+      ],
+      "description": "推荐食物接口\n\n需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#recommendFoods",
+      "parameters": [
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 10
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_List_FoodVOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/tags/my",
+      "method": "GET",
+      "summary": "菜品与收藏：获取个人菜品标签",
+      "operation_id": "FoodController_listMyCustomTags_get",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#listMyCustomTags",
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_MyCustomTagVOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/tags/my/{tagId}",
+      "method": "DELETE",
+      "summary": "菜品与收藏：删除个人标签",
+      "operation_id": "FoodController_deleteMyCustomTag_delete",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#deleteMyCustomTag",
+      "parameters": [
+        {
+          "name": "tagId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/tags/my/{tagId}",
+      "method": "PUT",
+      "summary": "菜品与收藏：重命名个人标签",
+      "operation_id": "FoodController_renameMyCustomTag_put",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#renameMyCustomTag",
+      "parameters": [
+        {
+          "name": "tagId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "RenameCustomTagDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/tags/system",
+      "method": "GET",
+      "summary": "菜品与收藏：获取系统菜品标签",
+      "operation_id": "FoodController_listSystemTags_get",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#listSystemTags",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_List_FoodTagSummaryVOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/upload",
+      "method": "POST",
+      "summary": "菜品与收藏：发布菜品",
+      "operation_id": "FoodController_upload_post",
+      "tags": [
+        "Food"
+      ],
+      "description": "上传菜品\n\n需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#upload",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "CreateFoodDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/{id}/favorite",
+      "method": "POST",
+      "summary": "菜品与收藏：收藏菜品",
+      "operation_id": "FoodController_favoriteFood_post",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#favoriteFood",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/{id}/like",
+      "method": "POST",
+      "summary": "菜品与收藏：点赞菜品",
+      "operation_id": "FoodController_likeFood_post",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#likeFood",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/{id}/tags",
+      "method": "GET",
+      "summary": "菜品与收藏：获取菜品标签",
+      "operation_id": "FoodController_getFoodTags_get",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#getFoodTags",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_FoodTagViewVOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/{id}/tags/custom",
+      "method": "POST",
+      "summary": "菜品与收藏：添加自定义菜品标签",
+      "operation_id": "FoodController_addCustomTags_post",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#addCustomTags",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "AddCustomFoodTagsDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/{id}/tags/system",
+      "method": "POST",
+      "summary": "菜品与收藏：添加系统菜品标签",
+      "operation_id": "FoodController_addSystemTags_post",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#addSystemTags",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "AddSystemFoodTagsDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/{id}/tags/{tagId}",
+      "method": "DELETE",
+      "summary": "菜品与收藏：移除菜品标签",
+      "operation_id": "FoodController_deleteTag_delete",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#deleteTag",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        {
+          "name": "tagId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/{id}/unfavorite",
+      "method": "POST",
+      "summary": "菜品与收藏：取消收藏菜品",
+      "operation_id": "FoodController_unfavoriteFood_post",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#unfavoriteFood",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/foods/{id}/unlike",
+      "method": "POST",
+      "summary": "菜品与收藏：取消菜品点赞",
+      "operation_id": "FoodController_unlikeFood_post",
+      "tags": [
+        "Food"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.FoodController#unlikeFood",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/history/browse",
+      "method": "GET",
+      "summary": "浏览历史：获取浏览历史",
+      "operation_id": "HistoryController_getBrowseHistory_get",
+      "tags": [
+        "History"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.HistoryController#getBrowseHistory",
+      "parameters": [
+        {
+          "name": "targetType",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(restaurant|food)$"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_BrowseHistoryItemDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/hub/add",
+      "method": "POST",
+      "summary": "商场：新增商场",
+      "operation_id": "HubController_addHub_post",
+      "tags": [
+        "Hub"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.HubController#addHub",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "HubDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/hub/delete/{id}",
+      "method": "DELETE",
+      "summary": "商场：删除商场",
+      "operation_id": "HubController_deleteHub_delete",
+      "tags": [
+        "Hub"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.HubController#deleteHub",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/hub/detail/{id}",
+      "method": "GET",
+      "summary": "商场：获取商场详情",
+      "operation_id": "HubController_getHubDetail_get",
+      "tags": [
+        "Hub"
+      ],
+      "description": "按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.HubController#getHubDetail",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_HubResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/hub/edit/{id}",
+      "method": "PUT",
+      "summary": "商场：修改商场",
+      "operation_id": "HubController_editHub_put",
+      "tags": [
+        "Hub"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.HubController#editHub",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "HubDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/hub/list",
+      "method": "GET",
+      "summary": "商场：获取商场列表",
+      "operation_id": "HubController_listHubs_get",
+      "tags": [
+        "Hub"
+      ],
+      "description": "按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.HubController#listHubs",
+      "parameters": [
+        {
+          "name": "keyword",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_HubResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/hub/locate",
+      "method": "GET",
+      "summary": "商场：按位置查找商场",
+      "operation_id": "HubController_locateHub_get",
+      "tags": [
+        "Hub"
+      ],
+      "description": "判断餐厅所在的hub",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.HubController#locateHub",
+      "parameters": [
+        {
+          "name": "gcjLng",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "gcjLat",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_HubResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/hub/rebind-restaurants/{id}",
+      "method": "POST",
+      "summary": "商场：重新绑定商场内餐厅",
+      "operation_id": "HubController_rebindRestaurants_post",
+      "tags": [
+        "Hub"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.HubController#rebindRestaurants",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_IntegerResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/notification/list",
+      "method": "GET",
+      "summary": "通知：获取列表",
+      "operation_id": "NotificationController_list_get",
+      "tags": [
+        "Notification"
+      ],
+      "description": "按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.NotificationController#list",
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_NotificationDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/notification/read/all",
+      "method": "POST",
+      "summary": "通知：标记全部通知已读",
+      "operation_id": "NotificationController_readAll_post",
+      "tags": [
+        "Notification"
+      ],
+      "description": "按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.NotificationController#readAll",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/notification/read/{id}",
+      "method": "POST",
+      "summary": "通知：标记单条通知已读",
+      "operation_id": "NotificationController_readOne_post",
+      "tags": [
+        "Notification"
+      ],
+      "description": "按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.NotificationController#readOne",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/notification/unread/count",
+      "method": "GET",
+      "summary": "通知：获取未读通知数",
+      "operation_id": "NotificationController_unreadCount_get",
+      "tags": [
+        "Notification"
+      ],
+      "description": "按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.NotificationController#unreadCount",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_LongResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/restaurant/add",
+      "method": "POST",
+      "summary": "餐厅：新增餐厅",
+      "operation_id": "RestaurantController_addRestaurant_post",
+      "tags": [
+        "Restaurant"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.RestaurantController#addRestaurant",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "RestaurantDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/restaurant/delete/{id}",
+      "method": "DELETE",
+      "summary": "餐厅：删除餐厅",
+      "operation_id": "RestaurantController_deleteRestaurant_delete",
+      "tags": [
+        "Restaurant"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.RestaurantController#deleteRestaurant",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/restaurant/detail/{id}",
+      "method": "GET",
+      "summary": "餐厅：获取餐厅详情",
+      "operation_id": "RestaurantController_getRestaurantDetail_get",
+      "tags": [
+        "Restaurant"
+      ],
+      "description": "需要角色：verified。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "verified"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.RestaurantController#getRestaurantDetail",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_RestaurantResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/restaurant/edit/{id}",
+      "method": "PUT",
+      "summary": "餐厅：修改餐厅",
+      "operation_id": "RestaurantController_editRestaurant_put",
+      "tags": [
+        "Restaurant"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.RestaurantController#editRestaurant",
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "EditRestaurantDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/restaurant/list",
+      "method": "GET",
+      "summary": "餐厅：获取管理用餐厅列表",
+      "operation_id": "RestaurantController_listRestaurants_get",
+      "tags": [
+        "Restaurant"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.RestaurantController#listRestaurants",
+      "parameters": [
+        {
+          "name": "keyword",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "hubId",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_RestaurantResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/restaurant/search",
+      "method": "GET",
+      "summary": "餐厅：搜索附近餐厅",
+      "operation_id": "RestaurantController_searchRestaurants_get",
+      "tags": [
+        "Restaurant"
+      ],
+      "description": "按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.RestaurantController#searchRestaurants",
+      "parameters": [
+        {
+          "name": "keyword",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        {
+          "name": "hubId",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "format": "int64"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        {
+          "name": "gcjLng",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "gcjLat",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "number"
+          }
+        },
+        {
+          "name": "radius",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_RestaurantResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/upload/complete",
+      "method": "POST",
+      "summary": "文件上传：确认文件上传完成",
+      "operation_id": "UploadController_complete_post",
+      "tags": [
+        "Upload"
+      ],
+      "description": "avatar 仅需登录；activity/foods/restaurants 还需 verified 角色。预签名后向 putUrl PUT 原始字节，再调用 /upload/complete，最后将 key 写入业务资料。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UploadController#complete",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "CompleteUploadRequestRequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_CompletedFileResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/upload/presign",
+      "method": "POST",
+      "summary": "文件上传：申请单文件上传签名",
+      "operation_id": "UploadController_presign_post",
+      "tags": [
+        "Upload"
+      ],
+      "description": "上传预签名接口。\n\navatar 仅需登录；activity/foods/restaurants 还需 verified 角色。预签名后向 putUrl PUT 原始字节，再调用 /upload/complete，最后将 key 写入业务资料。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UploadController#presign",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "PresignUploadReqDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PresignUploadRespDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/upload/presign/batch",
+      "method": "POST",
+      "summary": "文件上传：申请批量上传签名",
+      "operation_id": "UploadController_presignBatch_post",
+      "tags": [
+        "Upload"
+      ],
+      "description": "avatar 仅需登录；activity/foods/restaurants 还需 verified 角色。预签名后向 putUrl PUT 原始字节，再调用 /upload/complete，最后将 key 写入业务资料。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UploadController#presignBatch",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "PresignBatchUploadReqDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PresignBatchUploadRespDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/user/ban/{userId}",
+      "method": "POST",
+      "summary": "用户与关注：封禁用户",
+      "operation_id": "UserController_banUser_post",
+      "tags": [
+        "User"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UserController#banUser",
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "BanUserDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/user/bindMobile",
+      "method": "POST",
+      "summary": "用户与关注：绑定手机",
+      "operation_id": "UserController_bindMobile_post",
+      "tags": [
+        "User"
+      ],
+      "description": "按声明的业务控制器方法调用；具体条件见请求参数、响应及安全方案。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UserController#bindMobile",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "BindMobileReqRequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/user/changePrivacy",
+      "method": "POST",
+      "summary": "用户与关注：修改隐私设置",
+      "operation_id": "UserController_changePrivacy_post",
+      "tags": [
+        "User"
+      ],
+      "description": "更改隐私设置",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UserController#changePrivacy",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "PrivacyDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/user/follow",
+      "method": "POST",
+      "summary": "用户与关注：关注用户",
+      "operation_id": "UserController_follow_post",
+      "tags": [
+        "User"
+      ],
+      "description": "关注他人",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UserController#follow",
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/user/followers",
+      "method": "GET",
+      "summary": "用户与关注：获取粉丝列表",
+      "operation_id": "UserController_getFollowers_get",
+      "tags": [
+        "User"
+      ],
+      "description": "获取粉丝列表",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UserController#getFollowers",
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_FansDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/user/followings",
+      "method": "GET",
+      "summary": "用户与关注：获取关注列表",
+      "operation_id": "UserController_getFollowings_get",
+      "tags": [
+        "User"
+      ],
+      "description": "获取关注列表",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UserController#getFollowings",
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_FansDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/user/getCode",
+      "method": "POST",
+      "summary": "用户与关注：发送验证码",
+      "operation_id": "UserController_getCode_post",
+      "tags": [
+        "User"
+      ],
+      "description": "根据请求参数和客户端 IP 发送验证码",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UserController#getCode",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "SendCodeReqRequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/user/info",
+      "method": "GET",
+      "summary": "用户与关注：获取当前用户资料",
+      "operation_id": "UserController_info_get",
+      "tags": [
+        "User"
+      ],
+      "description": "获取用户个人信息",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UserController#info",
+      "parameters": [],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_UserInfoDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/user/list",
+      "method": "GET",
+      "summary": "用户与关注：获取用户管理列表",
+      "operation_id": "UserController_listUsers_get",
+      "tags": [
+        "User"
+      ],
+      "description": "获取用户列表\n\n需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UserController#listUsers",
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 1
+          }
+        },
+        {
+          "name": "pageSize",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 20
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_PageResult_UserListItemVOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/user/unban/{userId}",
+      "method": "POST",
+      "summary": "用户与关注：解除用户封禁",
+      "operation_id": "UserController_unbanUser_post",
+      "tags": [
+        "User"
+      ],
+      "description": "需要角色：admin。角色以服务端返回为准，不由客户端声明。",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [
+        "admin"
+      ],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UserController#unbanUser",
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/user/unfollow",
+      "method": "POST",
+      "summary": "用户与关注：取消关注用户",
+      "operation_id": "UserController_unfollow_post",
+      "tags": [
+        "User"
+      ],
+      "description": "取消关注",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UserController#unfollow",
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/user/updateInfo",
+      "method": "PUT",
+      "summary": "用户与关注：更新当前用户资料",
+      "operation_id": "UserController_updateInfo_put",
+      "tags": [
+        "User"
+      ],
+      "description": "更新用户个人信息",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UserController#updateInfo",
+      "parameters": [],
+      "request_body_required": true,
+      "request_schemas": {
+        "application/json": "UpdateUserInfoDTORequest"
+      },
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_VoidResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    },
+    {
+      "path": "/user/userInfo",
+      "method": "GET",
+      "summary": "用户与关注：获取其他用户资料",
+      "operation_id": "UserController_getUserInfo_get",
+      "tags": [
+        "User"
+      ],
+      "description": "获取其他用户信息",
+      "security": [
+        {
+          "SaToken": []
+        }
+      ],
+      "required_roles": [],
+      "conditional_properties": null,
+      "java_handler": "you.v50to.eatwhat.controller.UserController#getUserInfo",
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "query",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      ],
+      "request_body_required": false,
+      "request_schemas": {},
+      "response_schemas": {
+        "200": {
+          "application/json": "Result_OtherUserInfoDTOResponse"
+        },
+        "default": {
+          "application/json": "ErrorResponse"
+        }
+      }
+    }
+  ]
+}

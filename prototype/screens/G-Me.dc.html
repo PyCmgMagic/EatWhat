@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 我的</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <div style="position: absolute; left: 0; top: 0; width: 390px; height: 400px; overflow: hidden; background: #FFCB45;">
+    <img src="../assets/dishes/yangzhi.svg" alt="" style="position: absolute; left: 196px; top: -64px; width: 300px; height: 300px; transform: rotate(14deg);">
+  </div>
+
+  <header style="position: absolute; left: 20px; right: 12px; top: 50px; display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+    <a href="G-EditProfile.dc.html" class="btn-press" style="height: 36px; padding: 0 14px; border-radius: 18px; background: rgba(255,255,255,0.5); color: #231C18; font-size: 14px; font-weight: 600; text-decoration: none; display: flex; align-items: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -2px 0 rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.1); transition: transform 90ms ease;">编辑资料</a>
+    <a href="G-Settings.dc.html" aria-label="设置" style="width: 44px; height: 44px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+      <dc-import name="G-Icon" icon="settings" size="22" hint-size="22px,22px"></dc-import>
+    </a>
+  </header>
+
+  <section style="position: absolute; left: 20px; right: 20px; top: 100px; display: flex; flex-direction: column;">
+    <span aria-hidden="true" style="width: 76px; height: 76px; border-radius: 50%; background: #231C18; color: #FFCB45; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 900;">天</span>
+    <h1 style="margin: 14px 0 0; font-size: 30px; line-height: 38px; font-weight: 900; letter-spacing: -0.5px;">天凉被破王</h1>
+    <p style="margin: 2px 0 0; font-size: 14px; color: #3D3128;">只吃好吃的，也只推荐好吃的</p>
+    <div style="display: flex; gap: 26px; margin-top: 18px;">
+      <span style="display: flex; flex-direction: column;"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 30px; line-height: 32px; font-weight: 800;">187</span><span style="font-size: 12px; font-weight: 600;">获赞</span></span>
+      <span style="display: flex; flex-direction: column;"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 30px; line-height: 32px; font-weight: 800;">42</span><span style="font-size: 12px; font-weight: 600;">上传的菜</span></span>
+      <a href="G-Follows.dc.html" style="color: inherit; text-decoration: none; display: flex; flex-direction: column; align-items: flex-start;"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 30px; line-height: 32px; font-weight: 800;">37</span><span style="font-size: 12px; font-weight: 600;">粉丝</span></a>
+      <a href="G-Follows.dc.html" style="color: inherit; text-decoration: none; display: flex; flex-direction: column; align-items: flex-start;"><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 30px; line-height: 32px; font-weight: 800;">37</span><span style="font-size: 12px; font-weight: 600;">关注</span></a>
+    </div>
+  </section>
+
+  <div style="position: absolute; left: 0; right: 0; top: 372px; bottom: 0; background: #FFFFFF; border-radius: 28px 28px 0 0; padding: 10px 20px 0; display: flex; flex-direction: column; gap: 16px;">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 2px; background: #E6DED8;"></span>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));">
+      <a href="G-MyTags.dc.html" style="height: 56px; color: #231C18; text-decoration: none; display: flex; align-items: center; gap: 12px;">
+        <dc-import name="G-Icon" icon="tag" size="24" hint-size="24px,24px"></dc-import>
+        <span style="display: flex; flex-direction: column;"><span style="font-size: 15px; font-weight: 700;">我的标签</span><span style="font-size: 12px; color: #6E625B;">12 个，用来给菜分类</span></span>
+      </a>
+      <a href="G-History.dc.html" style="height: 56px; padding: 0 0 0 16px; color: #231C18; text-decoration: none; display: flex; align-items: center; gap: 12px; box-shadow: inset 1px 0 0 #EFE9E4;">
+        <dc-import name="G-Icon" icon="history" size="24" hint-size="24px,24px"></dc-import>
+        <span style="display: flex; flex-direction: column;"><span style="font-size: 15px; font-weight: 700;">足迹</span><span style="font-size: 12px; color: #6E625B;">最近看过 26 家</span></span>
+      </a>
+    </div>
+    <div role="tablist" aria-label="我的内容" style="display: flex; gap: 22px; align-items: baseline; height: 32px;">
+      <button type="button" role="tab" aria-selected="true" style="height: 32px; padding: 0; border: 0; background: none; color: #231C18; font-size: 17px; font-weight: 900; display: flex; align-items: baseline; gap: 4px;">上传<span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 800;">42</span></button>
+      <button type="button" role="tab" aria-selected="false" style="height: 32px; padding: 0; border: 0; background: none; color: #6E625B; font-size: 15px; display: flex; align-items: baseline; gap: 4px;">收藏<span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 600;">117</span></button>
+      <button type="button" role="tab" aria-selected="false" style="height: 32px; padding: 0; border: 0; background: none; color: #6E625B; font-size: 15px; display: flex; align-items: baseline; gap: 6px;">评论<span style="font-size: 11px; padding: 0 6px; border: 1px dashed #B5A79C; border-radius: 8px;">待接入</span></button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 14px;">
+      <a href="G-Dish.dc.html" style="display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: inherit;">
+        <div style="height: 150px; border-radius: 22px; background: #F8E6C4; overflow: hidden; position: relative;"><img src="../assets/dishes/yuntun.svg" alt="" style="position: absolute; left: 28px; top: 18px; width: 150px; height: 150px;"></div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline;"><h3 style="margin: 0; font-size: 15px; font-weight: 600;">鲜虾蟹籽云吞</h3><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 600; color: #6E625B; display: flex; align-items: center; gap: 3px;"><dc-import name="G-Icon" icon="heart" size="14" hint-size="14px,14px"></dc-import>143</span></div>
+      </a>
+      <a href="G-Dish.dc.html" style="display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: inherit;">
+        <div style="height: 150px; border-radius: 22px; background: #E2EAF3; overflow: hidden; position: relative;"><img src="../assets/dishes/jiaozi.svg" alt="" style="position: absolute; left: -18px; top: 22px; width: 150px; height: 150px;"></div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline;"><h3 style="margin: 0; font-size: 15px; font-weight: 600;">玉米鲜肉饺子</h3><span style="font-family: 'Bricolage Grotesque', sans-serif; font-size: 13px; font-weight: 600; color: #6E625B; display: flex; align-items: center; gap: 3px;"><dc-import name="G-Icon" icon="heart" size="14" hint-size="14px,14px"></dc-import>127</span></div>
+      </a>
+    </div>
+  </div>
+
+  <div style="position: absolute; left: 16px; right: 16px; bottom: 24px; height: 60px;">
+    <dc-import name="G-Nav" active="me" hint-size="100%,60px"></dc-import>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 加标签面板</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+input::placeholder{color:#B5A79C}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; pointer-events: none;">
+    <dc-import name="G-Dish" hint-size="390px,844px"></dc-import>
+  </div>
+  <a href="G-Dish.dc.html" aria-label="关闭面板" style="position: absolute; inset: 0; background: rgba(35,28,24,0.45);"></a>
+
+  <section role="dialog" aria-label="加标签" style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 10px 20px 32px; background: #FFFFFF; border-radius: 28px 28px 0 0; display: flex; flex-direction: column; gap: 18px;">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 2px; background: #E6DED8;"></span>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: -6px;">
+      <h1 style="margin: 0; font-size: 20px; line-height: 28px; font-weight: 900;">这道菜怎么样</h1>
+      <a href="G-Dish.dc.html" aria-label="关闭" style="width: 44px; height: 44px; margin-right: -10px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="close" size="22" hint-size="22px,22px"></dc-import></a>
+    </div>
+
+    <fieldset style="margin: 0; padding: 0; border: 0;">
+      <legend style="padding: 0; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: #6E625B;">口味标签，大家都看得见，可以多选</legend>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <sc-for list="{{taste}}" as="t" hint-placeholder-count="12">
+          <button type="button" aria-pressed="{{t.on}}" onClick="{{t.pick}}" style="height: 36px; padding: 0 14px; box-sizing: border-box; border: 1.5px solid {{t.line}}; border-radius: 18px; background: {{t.bg}}; color: #231C18; font-size: 14px; font-weight: {{t.w}}; transition: background-color 160ms ease, border-color 160ms ease;">{{t.name}}</button>
+        </sc-for>
+      </div>
+    </fieldset>
+
+    <div style="height: 1px; background: #EFE9E4;"></div>
+
+    <fieldset style="margin: 0; padding: 0; border: 0;">
+      <legend style="padding: 0; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #6E625B;"><dc-import name="G-Icon" icon="lock" size="16" hint-size="16px,16px"></dc-import>我的标签，只有你自己看得见</legend>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <sc-for list="{{mine}}" as="m" hint-placeholder-count="2">
+          <button type="button" aria-pressed="{{m.on}}" onClick="{{m.pick}}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 18px; background: {{m.bg}}; color: {{m.fg}}; font-size: 14px; font-weight: {{m.w}}; transition: background-color 160ms ease;">{{m.name}}</button>
+        </sc-for>
+        <sc-if value="{{notWriting}}" hint-placeholder-val="{{ true }}">
+          <button type="button" onClick="{{write}}" style="height: 36px; padding: 0 14px; border: 1.5px dashed #9A8B80; border-radius: 18px; background: none; color: #231C18; font-size: 14px;">＋ 自己写</button>
+        </sc-if>
+      </div>
+      <sc-if value="{{writing}}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 12px; display: flex; align-items: center; gap: 10px;">
+          <input type="text" maxlength="10" value="{{draft}}" onChange="{{setDraft}}" aria-label="写一个我的标签" placeholder="最多 10 个字" style="flex: 1; min-width: 0; height: 44px; border: 0; outline: none; background: transparent; box-shadow: inset 0 -1.5px 0 #231C18; font: inherit; font-size: 17px; font-weight: 700; color: #231C18;">
+          <button type="button" class="btn-solid" onClick="{{addMine}}" style="flex: none; height: 40px; padding: 0 16px; border: 0; border-radius: 20px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; font-size: 14px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 4px 10px rgba(35,28,24,0.14);">加上</button>
+        </div>
+      </sc-if>
+    </fieldset>
+
+    <a href="G-Dish.dc.html" class="btn-solid" style="height: 52px; border-radius: 26px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 6px 14px rgba(35,28,24,0.16);">好了</a>
+    <p style="margin: -6px 0 0; text-align: center; font-size: 13px; color: #6E625B;">词表里没有想要的？<a href="G-Feedback.dc.html" style="color: #231C18; font-weight: 600; text-decoration: none;">告诉我们</a></p>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      taste: ['鲜虾大只', '平价'],
+      mineAll: ['考试周', '请客'],
+      mineOn: ['考试周'],
+      writing: false,
+      draft: ''
+    };
+  }
+  renderVals() {
+    const words = ['鲜虾大只', '平价', '汤鲜', '皮薄', '量大', '排队久', '出餐快', '偏咸', '好下饭', '适合一个人', '分量小', '辣得过瘾'];
+    const taste = this.state.taste;
+    const mineOn = this.state.mineOn;
+    return {
+      taste: words.map((w) => {
+        const on = taste.indexOf(w) >= 0;
+        return {
+          name: w,
+          on: on ? 'true' : 'false',
+          bg: on ? '#FBEFD9' : '#FFFFFF',
+          line: on ? '#231C18' : '#E6DED8',
+          w: on ? 600 : 400,
+          pick: () => this.setState({ taste: on ? taste.filter((x) => x !== w) : taste.concat([w]) })
+        };
+      }),
+      mine: this.state.mineAll.map((w) => {
+        const on = mineOn.indexOf(w) >= 0;
+        return {
+          name: w,
+          on: on ? 'true' : 'false',
+          bg: on ? '#231C18' : '#F4EFEB',
+          fg: on ? '#FFFFFF' : '#231C18',
+          w: on ? 600 : 400,
+          pick: () => this.setState({ mineOn: on ? mineOn.filter((x) => x !== w) : mineOn.concat([w]) })
+        };
+      }),
+      writing: this.state.writing,
+      notWriting: !this.state.writing,
+      draft: this.state.draft,
+      write: () => this.setState({ writing: true }),
+      setDraft: (e) => this.setState({ draft: e.target.value.slice(0, 10) }),
+      addMine: () => {
+        const d = this.state.draft.trim();
+        if (!d || this.state.mineAll.indexOf(d) >= 0) { this.setState({ writing: false, draft: '' }); return; }
+        this.setState({ mineAll: this.state.mineAll.concat([d]), mineOn: mineOn.concat([d]), writing: false, draft: '' });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

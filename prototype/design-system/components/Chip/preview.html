@@ -1,0 +1,43 @@
+<!-- @dsCard group="操作" height=200 subtitle="单选、多选、补充入口、待接入" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>Chip</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--paper); font-family: var(--font-sans); color: var(--ink); }
+  .col { display: flex; flex-direction: column; gap: var(--space-14); padding: var(--space-20); }
+  .label { font-size: 13px; line-height: 20px; color: var(--ink-muted); }
+  .row { display: flex; flex-wrap: wrap; gap: var(--space-8); align-items: center; }
+  button { height: var(--size-chip); padding: 0 14px; border-radius: var(--radius-pill); font: 400 14px/20px var(--font-sans); cursor: pointer; color: var(--ink); }
+  .cat { border: 0; background: var(--mist); }
+  .cat[aria-checked="true"] { background: var(--ink); color: var(--paper); font-weight: 600; }
+  .tag { border: 1.5px solid var(--handle); background: var(--paper); }
+  .tag[aria-pressed="true"] { border-color: var(--ink); background: var(--tag-selected); font-weight: 600; }
+  .add { border: 1.5px dashed var(--line-strong); background: none; }
+  .pending { font-size: 11px; line-height: 16px; padding: 0 6px; border: 1px dashed var(--line-strong); border-radius: var(--radius-pill); color: var(--ink-muted); }
+  .feature { font-size: 15px; display: flex; align-items: center; gap: var(--space-8); }
+</style>
+</head>
+<body>
+<div class="col">
+  <span class="label">分类，单选</span>
+  <div class="row" role="radiogroup" aria-label="分类">
+    <button type="button" class="cat" role="radio" aria-checked="true">主食</button>
+    <button type="button" class="cat" role="radio" aria-checked="false">小吃</button>
+    <button type="button" class="cat" role="radio" aria-checked="false">饮品</button>
+    <button type="button" class="cat" role="radio" aria-checked="false">甜品</button>
+    <button type="button" class="cat" role="radio" aria-checked="false">火锅</button>
+  </div>
+  <span class="label">标签，可以多选</span>
+  <div class="row">
+    <button type="button" class="tag" aria-pressed="true">平价</button>
+    <button type="button" class="tag" aria-pressed="false">量大</button>
+    <button type="button" class="tag" aria-pressed="true">鲜虾大只</button>
+    <button type="button" class="add">＋ 自己写</button>
+    <span class="feature">评分<span class="pending">待接入</span></span>
+  </div>
+</div>
+</body>
+</html>

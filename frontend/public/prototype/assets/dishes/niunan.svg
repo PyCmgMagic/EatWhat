@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+<circle cx="103" cy="105" r="92" fill="#000000" fill-opacity="0.12"></circle>
+<circle cx="100" cy="100" r="92" fill="#FFFFFF"></circle>
+<circle cx="100" cy="100" r="91" fill="none" stroke="#E3E6E9" stroke-width="2"></circle>
+<circle cx="100" cy="100" r="77" fill="none" stroke="#EDEFF1" stroke-width="2"></circle>
+<path d="M42 98c0-26 18-46 42-48 18-1 28 10 28 26v52c0 16-12 26-30 24-24-2-40-26-40-54z" fill="#FBFAF4"></path>
+<g fill="#E9E6D9"><ellipse cx="62" cy="80" rx="3.2" ry="1.5" transform="rotate(30 62 80)"></ellipse><ellipse cx="74" cy="64" rx="3.2" ry="1.5" transform="rotate(-20 74 64)"></ellipse><ellipse cx="56" cy="104" rx="3.2" ry="1.5" transform="rotate(60 56 104)"></ellipse><ellipse cx="70" cy="122" rx="3.2" ry="1.5" transform="rotate(10 70 122)"></ellipse><ellipse cx="84" cy="140" rx="3.2" ry="1.5" transform="rotate(-40 84 140)"></ellipse><ellipse cx="88" cy="84" rx="3.2" ry="1.5" transform="rotate(80 88 84)"></ellipse><ellipse cx="78" cy="104" rx="3.2" ry="1.5" transform="rotate(-60 78 104)"></ellipse><ellipse cx="64" cy="140" rx="3.2" ry="1.5"></ellipse><ellipse cx="94" cy="62" rx="3.2" ry="1.5" transform="rotate(45 94 62)"></ellipse></g>
+<g fill="#2B2B2B"><ellipse cx="80" cy="56" rx="2.4" ry="1.3" transform="rotate(20 80 56)"></ellipse><ellipse cx="60" cy="92" rx="2.4" ry="1.3"></ellipse><ellipse cx="72" cy="132" rx="2.4" ry="1.3" transform="rotate(-30 72 132)"></ellipse></g>
+<path d="M96 62c22-14 58-6 66 22 8 28-6 58-34 64-22 5-38-6-40-22-2-14 4-22 2-34-2-12-6-22 6-30z" fill="#D9542F"></path>
+<path d="M106 70c18-8 44 0 50 20 6 22-6 42-26 46" fill="none" stroke="#E8704A" stroke-width="5" stroke-linecap="round" opacity="0.7"></path>
+<g fill="#7C3A22"><rect x="112" y="78" width="22" height="17" rx="6" transform="rotate(-12 123 86)"></rect><rect x="134" y="104" width="20" height="16" rx="6" transform="rotate(18 144 112)"></rect><rect x="108" y="116" width="21" height="16" rx="6" transform="rotate(-6 118 124)"></rect></g>
+<g fill="#9B5034"><rect x="116" y="80" width="10" height="5" rx="2.5" transform="rotate(-12 121 82)"></rect><rect x="138" y="106" width="9" height="5" rx="2.5" transform="rotate(18 142 108)"></rect><rect x="111" y="118" width="10" height="5" rx="2.5"></rect></g>
+<g fill="#F0633A"><path d="M140 80c6-4 14 0 13 7-1 6-9 8-13 4-3-3-3-8 0-11z"></path><path d="M100 104c5-4 12-1 12 5 0 6-8 8-12 4-3-3-3-6 0-9z"></path><path d="M130 134c5-3 12 0 11 6-1 5-8 7-12 3-2-3-2-6 1-9z"></path></g>
+<g fill="#4E9A3E"><rect x="128" y="96" width="6" height="4" rx="2" transform="rotate(30 131 98)"></rect><rect x="118" y="100" width="6" height="4" rx="2"></rect><rect x="148" y="126" width="6" height="4" rx="2" transform="rotate(-20 151 128)"></rect><rect x="104" y="90" width="6" height="4" rx="2" transform="rotate(50 107 92)"></rect></g>
+</svg>

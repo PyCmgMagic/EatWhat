@@ -1,0 +1,24 @@
+<!-- @dsCard group="内容" height=250 subtitle="图在上，字在外" -->
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>DishTile</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap">
+<style>
+  body { margin: 0; background: var(--paper); font-family: var(--font-sans); color: var(--ink); }
+  .grid { display: grid; grid-template-columns: repeat(2, 170px); column-gap: var(--space-14); padding: var(--space-20); }
+  a { display: flex; flex-direction: column; gap: var(--space-8); color: inherit; text-decoration: none; }
+  img { width: 100%; height: 150px; border-radius: var(--radius-tile); object-fit: cover; display: block; background: var(--mist); }
+  h3 { margin: 0; font-size: 15px; line-height: 22px; font-weight: 600; }
+  .meta { font-size: 13px; line-height: 20px; color: var(--ink-muted); }
+  .cap { display: flex; flex-direction: column; }
+</style>
+</head>
+<body>
+<div class="grid">
+  <a href="#dish-1"><img src="../../../assets/photos/p_tieguo.png" alt=""><span class="cap"><h3>铁锅炖大鹅</h3><span class="meta">东北饭庄</span></span></a>
+  <a href="#dish-2"><img src="../../../assets/photos/p_luosi.png" alt=""><span class="cap"><h3>柳州螺蛳粉</h3><span class="meta">螺蛳粉研究所</span></span></a>
+</div>
+</body>
+</html>

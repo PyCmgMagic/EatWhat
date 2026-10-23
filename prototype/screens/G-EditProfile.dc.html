@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 编辑资料</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+input::placeholder{color:#B5A79C}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <header style="position: absolute; left: 12px; right: 16px; top: 46px; height: 44px; display: grid; grid-template-columns: 80px minmax(0, 1fr) 80px; align-items: center;">
+    <a href="G-Me.dc.html" style="height: 44px; padding: 0 8px; color: #231C18; font-size: 15px; text-decoration: none; display: flex; align-items: center;">取消</a>
+    <span style="text-align: center; font-size: 16px; font-weight: 700;">编辑资料</span>
+    <span style="display: flex; justify-content: flex-end;">
+      <sc-if value="{{valid}}" hint-placeholder-val="{{ true }}">
+        <a href="G-Me.dc.html" class="btn-solid" style="height: 36px; padding: 0 16px; border-radius: 18px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; font-size: 14px; font-weight: 600; text-decoration: none; display: flex; align-items: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 4px 10px rgba(35,28,24,0.14);">保存</a>
+      </sc-if>
+      <sc-if value="{{invalid}}" hint-placeholder-val="{{ false }}">
+        <button type="button" disabled style="height: 36px; padding: 0 16px; border: 0; border-radius: 18px; background: #E9E2DC; color: #8A7E76; font-size: 14px; font-weight: 600; cursor: not-allowed;">保存</button>
+      </sc-if>
+    </span>
+  </header>
+
+  <div style="position: absolute; left: 0; right: 0; top: 112px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+    <button type="button" onClick="{{toggleSheet}}" aria-label="换头像" style="position: relative; width: 104px; height: 104px; padding: 0; border: 0; border-radius: 50%; background: #231C18; color: #FFCB45; font-size: 44px; font-weight: 900; display: flex; align-items: center; justify-content: center;">
+      天
+      <span aria-hidden="true" style="position: absolute; right: -2px; bottom: -2px; width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(180deg, #FBF8F6, #F4EFEB); color: #231C18; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 3px #FFFFFF, inset 0 -2px 0 rgba(35,28,24,0.1);"><dc-import name="G-Icon" icon="camera" size="18" hint-size="18px,18px"></dc-import></span>
+    </button>
+    <button type="button" onClick="{{toggleSheet}}" style="height: 36px; padding: 0 8px; border: 0; background: none; color: #231C18; font-size: 14px; font-weight: 600;">换头像</button>
+  </div>
+
+  <div style="position: absolute; left: 20px; right: 20px; top: 290px; display: flex; flex-direction: column; gap: 26px;">
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      <label for="nick" style="display: flex; justify-content: space-between; font-size: 13px; color: #6E625B;">昵称<span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600;">{{nickLen}}</span> / 12</span></label>
+      <input id="nick" type="text" maxlength="12" value="{{nick}}" onChange="{{setNick}}" aria-invalid="{{nickBad}}" style="height: 44px; border: 0; outline: none; background: transparent; box-shadow: inset 0 -1.5px 0 {{nickLine}}; font: inherit; font-size: 22px; font-weight: 900; color: #231C18;">
+      <span style="margin-top: 6px; font-size: 12px; line-height: 18px; color: {{nickTipColor}};">{{nickTip}}</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+      <label for="sign" style="display: flex; justify-content: space-between; font-size: 13px; color: #6E625B;">签名，选填<span><span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 600;">{{signLen}}</span> / 30</span></label>
+      <input id="sign" type="text" maxlength="30" value="{{sign}}" onChange="{{setSign}}" placeholder="一句话介绍自己" style="height: 44px; border: 0; outline: none; background: transparent; box-shadow: inset 0 -1.5px 0 #E6DED8; font: inherit; font-size: 17px; font-weight: 600; color: #231C18;">
+    </div>
+  </div>
+
+  <sc-if value="{{sheet}}" hint-placeholder-val="{{ false }}">
+    <button type="button" aria-label="关闭面板" onClick="{{toggleSheet}}" style="position: absolute; inset: 0; border: 0; padding: 0; background: rgba(35,28,24,0.45); cursor: default;"></button>
+    <section role="dialog" aria-label="换头像" style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 10px 20px 32px; background: #FFFFFF; border-radius: 28px 28px 0 0; display: flex; flex-direction: column; gap: 6px;">
+      <span aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 2px; background: #E6DED8; margin-bottom: 8px;"></span>
+      <button type="button" style="height: 56px; padding: 0; border: 0; background: none; color: #231C18; font-size: 16px; display: flex; align-items: center; gap: 14px;"><dc-import name="G-Icon" icon="camera" size="22" hint-size="22px,22px"></dc-import>拍一张</button>
+      <button type="button" style="height: 56px; padding: 0; border: 0; background: none; color: #231C18; font-size: 16px; display: flex; align-items: center; gap: 14px;"><dc-import name="G-Icon" icon="image" size="22" hint-size="22px,22px"></dc-import>从相册选</button>
+      <span style="font-size: 12px; color: #6E625B;">选好后可以拖动、缩放，放进圆圈里</span>
+    </section>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { nick: '天凉被破王', sign: '只吃好吃的，也只推荐好吃的', sheet: false };
+  }
+  renderVals() {
+    const n = this.state.nick.trim().length;
+    const bad = n < 2;
+    return {
+      nick: this.state.nick,
+      nickLen: this.state.nick.length,
+      sign: this.state.sign,
+      signLen: this.state.sign.length,
+      nickBad: bad ? 'true' : 'false',
+      nickLine: bad ? '#A8321C' : '#231C18',
+      nickTip: bad ? '昵称至少 2 个字' : '2–12 个字，可以和别人重名',
+      nickTipColor: bad ? '#A8321C' : '#6E625B',
+      valid: !bad,
+      invalid: bad,
+      sheet: this.state.sheet,
+      setNick: (e) => this.setState({ nick: e.target.value.slice(0, 12) }),
+      setSign: (e) => this.setState({ sign: e.target.value.slice(0, 30) }),
+      toggleSheet: () => this.setState({ sheet: !this.state.sheet })
+    };
+  }
+}
+</script>
+</body>
+</html>

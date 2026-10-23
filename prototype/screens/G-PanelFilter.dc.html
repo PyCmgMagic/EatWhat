@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>G · 附近筛选面板</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&amp;family=Noto+Sans+SC:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+button{font:inherit;cursor:pointer}
+a{color:#231C18}a:hover{color:#000000}
+.btn-press:active{transform:translateY(1px)}
+.btn-solid,.btn-light{transition:transform 90ms ease,box-shadow 90ms ease}
+.btn-solid:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.1),inset 0 -1px 0 rgba(0,0,0,0.24),0 1px 1px rgba(35,28,24,0.2)!important}
+.btn-light:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.7),inset 0 -1px 0 rgba(35,28,24,0.1),0 1px 1px rgba(35,28,24,0.1)!important}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #FFFFFF; color: #231C18; font-family: 'Noto Sans SC', 'PingFang SC', system-ui, sans-serif;">
+
+  <div aria-hidden="true" style="position: absolute; left: 0; top: 0; width: 390px; height: 844px; pointer-events: none;">
+    <dc-import name="G-Nearby" hint-size="390px,844px"></dc-import>
+  </div>
+  <a href="G-Nearby.dc.html" aria-label="关闭面板" style="position: absolute; inset: 0; background: rgba(35,28,24,0.45);"></a>
+
+  <section role="dialog" aria-label="筛选" style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 10px 20px 32px; background: #FFFFFF; border-radius: 28px 28px 0 0; display: flex; flex-direction: column; gap: 18px;">
+    <span aria-hidden="true" style="align-self: center; width: 36px; height: 4px; border-radius: 2px; background: #E6DED8;"></span>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: -6px;">
+      <h1 style="margin: 0; display: flex; align-items: center; gap: 8px; font-size: 20px; line-height: 28px; font-weight: 900;">筛选<span style="font-size: 11px; font-weight: 500; line-height: 18px; padding: 0 6px; border: 1px dashed #9A8B80; border-radius: 9px;">待接入</span></h1>
+      <a href="G-Nearby.dc.html" aria-label="关闭" style="width: 44px; height: 44px; margin-right: -10px; color: #231C18; text-decoration: none; display: flex; align-items: center; justify-content: center;"><dc-import name="G-Icon" icon="close" size="22" hint-size="22px,22px"></dc-import></a>
+    </div>
+
+    <fieldset style="margin: 0; padding: 0; border: 0;">
+      <legend style="padding: 0; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: #6E625B;">店里有这些菜，可以多选</legend>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <sc-for list="{{cats}}" as="c" hint-placeholder-count="10">
+          <button type="button" aria-pressed="{{c.on}}" onClick="{{c.pick}}" style="height: 36px; padding: 0 14px; box-sizing: border-box; border: 1.5px solid {{c.line}}; border-radius: 18px; background: {{c.bg}}; color: #231C18; font-size: 14px; font-weight: {{c.w}}; transition: background-color 160ms ease, border-color 160ms ease;">{{c.name}}</button>
+        </sc-for>
+      </div>
+    </fieldset>
+
+    <fieldset style="margin: 0; padding: 0; border: 0;">
+      <legend style="padding: 0; margin-bottom: 10px; font-size: 13px; font-weight: 600; color: #6E625B;">价位</legend>
+      <div role="radiogroup" aria-label="价位" style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <sc-for list="{{prices}}" as="p" hint-placeholder-count="4">
+          <button type="button" role="radio" aria-checked="{{p.on}}" onClick="{{p.pick}}" style="height: 36px; padding: 0 14px; border: 0; border-radius: 18px; background: {{p.bg}}; color: {{p.fg}}; font-size: 14px; font-weight: {{p.w}}; transition: background-color 160ms ease;">{{p.name}}</button>
+        </sc-for>
+      </div>
+    </fieldset>
+
+    <div style="display: flex; flex-direction: column;">
+      <label style="min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer;">
+        <span style="font-size: 15px;">只看推荐率 <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;">80%</span> 以上</span>
+        <button type="button" role="switch" aria-checked="{{good.on}}" onClick="{{good.flip}}" style="flex: none; width: 52px; height: 32px; padding: 3px; border: 0; border-radius: 16px; background: {{good.track}}; box-shadow: {{good.shadow}}; display: flex; justify-content: {{good.align}}; transition: background-color 180ms ease;">
+          <span aria-hidden="true" style="width: 26px; height: 26px; border-radius: 13px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(35,28,24,0.28);"></span>
+        </button>
+      </label>
+      <label style="min-height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer;">
+        <span style="font-size: 15px;">只看我收藏的店</span>
+        <button type="button" role="switch" aria-checked="{{fav.on}}" onClick="{{fav.flip}}" style="flex: none; width: 52px; height: 32px; padding: 3px; border: 0; border-radius: 16px; background: {{fav.track}}; box-shadow: {{fav.shadow}}; display: flex; justify-content: {{fav.align}}; transition: background-color 180ms ease;">
+          <span aria-hidden="true" style="width: 26px; height: 26px; border-radius: 13px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(35,28,24,0.28);"></span>
+        </button>
+      </label>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <button type="button" class="btn-light" onClick="{{reset}}" style="flex: 0 0 120px; height: 52px; border: 0; border-radius: 26px; background: linear-gradient(180deg, #FBF8F6, #F4EFEB); color: #231C18; font-size: 16px; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -2px 0 rgba(35,28,24,0.1), 0 1px 2px rgba(35,28,24,0.12), 0 3px 8px rgba(35,28,24,0.06);">重置</button>
+      <a href="G-Nearby.dc.html" class="btn-solid" style="flex: 1; height: 52px; border-radius: 26px; background: linear-gradient(180deg, #3B312B, #231C18); color: #FFFFFF; font-size: 16px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -2px 0 rgba(0,0,0,0.28), 0 1px 2px rgba(35,28,24,0.2), 0 6px 14px rgba(35,28,24,0.16);">看 <span style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800;">{{count}}</span> 家</a>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { cats: ['小吃', '汤'], price: '¥15–30', good: true, fav: false };
+  }
+  renderVals() {
+    const names = ['主食', '小吃', '饮品', '甜品', '汤', '火锅', '烧烤', '凉菜', '配菜', '其他'];
+    const picked = this.state.cats;
+    const sw = (on, flip) => ({
+      on: on ? 'true' : 'false',
+      track: on ? 'linear-gradient(180deg, #3B312B, #231C18)' : '#E6DED8',
+      shadow: on ? 'inset 0 -1px 0 rgba(0,0,0,0.28)' : 'inset 0 1px 2px rgba(35,28,24,0.12)',
+      align: on ? 'flex-end' : 'flex-start',
+      flip: flip
+    });
+    let count = 18 - picked.length * 2 - (this.state.price === '不限' ? 0 : 3) - (this.state.good ? 1 : 0) - (this.state.fav ? 6 : 0);
+    if (count < 0) count = 0;
+    return {
+      cats: names.map((n) => {
+        const on = picked.indexOf(n) >= 0;
+        return {
+          name: n,
+          on: on ? 'true' : 'false',
+          bg: on ? '#FBEFD9' : '#FFFFFF',
+          line: on ? '#231C18' : '#E6DED8',
+          w: on ? 600 : 400,
+          pick: () => this.setState({ cats: on ? picked.filter((x) => x !== n) : picked.concat([n]) })
+        };
+      }),
+      prices: ['不限', '¥15 以下', '¥15–30', '¥30 以上'].map((p) => {
+        const on = this.state.price === p;
+        return { name: p, on: on ? 'true' : 'false', bg: on ? '#231C18' : '#F4EFEB', fg: on ? '#FFFFFF' : '#231C18', w: on ? 600 : 400, pick: () => this.setState({ price: p }) };
+      }),
+      good: sw(this.state.good, () => this.setState({ good: !this.state.good })),
+      fav: sw(this.state.fav, () => this.setState({ fav: !this.state.fav })),
+      count: count,
+      reset: () => this.setState({ cats: [], price: '不限', good: false, fav: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

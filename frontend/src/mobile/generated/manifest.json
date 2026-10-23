@@ -1,0 +1,461 @@
+{
+  "G-AddDish": {
+    "source": "prototype/screens/G-AddDish.dc.html",
+    "class": "ScreenGAddDish",
+    "nodes": 52,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Blocked": {
+    "source": "prototype/screens/G-Blocked.dc.html",
+    "class": "ScreenGBlocked",
+    "nodes": 23,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-ChangePassword": {
+    "source": "prototype/screens/G-ChangePassword.dc.html",
+    "class": "ScreenGChangePassword",
+    "nodes": 44,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-ChangePhone": {
+    "source": "prototype/screens/G-ChangePhone.dc.html",
+    "class": "ScreenGChangePhone",
+    "nodes": 50,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Comments": {
+    "source": "prototype/screens/G-Comments.dc.html",
+    "class": "ScreenGComments",
+    "nodes": 74,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Crop": {
+    "source": "prototype/screens/G-Crop.dc.html",
+    "class": "ScreenGCrop",
+    "nodes": 35,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-DataNotice": {
+    "source": "prototype/screens/G-DataNotice.dc.html",
+    "class": "ScreenGDataNotice",
+    "nodes": 44,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-DeleteAccount": {
+    "source": "prototype/screens/G-DeleteAccount.dc.html",
+    "class": "ScreenGDeleteAccount",
+    "nodes": 51,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Detail": {
+    "source": "prototype/screens/G-Detail.dc.html",
+    "class": "ScreenGDetail",
+    "nodes": 63,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Devices": {
+    "source": "prototype/screens/G-Devices.dc.html",
+    "class": "ScreenGDevices",
+    "nodes": 30,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Dish": {
+    "source": "prototype/screens/G-Dish.dc.html",
+    "class": "ScreenGDish",
+    "nodes": 59,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-EditProfile": {
+    "source": "prototype/screens/G-EditProfile.dc.html",
+    "class": "ScreenGEditProfile",
+    "nodes": 35,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Feedback": {
+    "source": "prototype/screens/G-Feedback.dc.html",
+    "class": "ScreenGFeedback",
+    "nodes": 44,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Follows": {
+    "source": "prototype/screens/G-Follows.dc.html",
+    "class": "ScreenGFollows",
+    "nodes": 30,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-ForgotPassword": {
+    "source": "prototype/screens/G-ForgotPassword.dc.html",
+    "class": "ScreenGForgotPassword",
+    "nodes": 48,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-History": {
+    "source": "prototype/screens/G-History.dc.html",
+    "class": "ScreenGHistory",
+    "nodes": 25,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-HomePhoto": {
+    "source": "prototype/screens/G-HomePhoto.dc.html",
+    "class": "ScreenGHomePhoto",
+    "nodes": 68,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Icon": {
+    "source": "prototype/screens/G-Icon.dc.html",
+    "class": "ScreenGIcon",
+    "nodes": 244,
+    "preview": {
+      "width": 40,
+      "height": 40
+    }
+  },
+  "G-Icons": {
+    "source": "prototype/screens/G-Icons.dc.html",
+    "class": "ScreenGIcons",
+    "nodes": 53,
+    "preview": {
+      "width": 1240,
+      "height": 844
+    }
+  },
+  "G-Inbox": {
+    "source": "prototype/screens/G-Inbox.dc.html",
+    "class": "ScreenGInbox",
+    "nodes": 59,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Kit": {
+    "source": "prototype/screens/G-Kit.dc.html",
+    "class": "ScreenGKit",
+    "nodes": 79,
+    "preview": {
+      "width": 760,
+      "height": 844
+    }
+  },
+  "G-Login": {
+    "source": "prototype/screens/G-Login.dc.html",
+    "class": "ScreenGLogin",
+    "nodes": 37,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Me": {
+    "source": "prototype/screens/G-Me.dc.html",
+    "class": "ScreenGMe",
+    "nodes": 61,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-MyTags": {
+    "source": "prototype/screens/G-MyTags.dc.html",
+    "class": "ScreenGMyTags",
+    "nodes": 29,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Nav": {
+    "source": "prototype/screens/G-Nav.dc.html",
+    "class": "ScreenGNav",
+    "nodes": 10,
+    "preview": {
+      "width": 358,
+      "height": 60
+    }
+  },
+  "G-Nearby": {
+    "source": "prototype/screens/G-Nearby.dc.html",
+    "class": "ScreenGNearby",
+    "nodes": 91,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-NewShop": {
+    "source": "prototype/screens/G-NewShop.dc.html",
+    "class": "ScreenGNewShop",
+    "nodes": 63,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-PanelFilter": {
+    "source": "prototype/screens/G-PanelFilter.dc.html",
+    "class": "ScreenGPanelFilter",
+    "nodes": 35,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-PanelPlace": {
+    "source": "prototype/screens/G-PanelPlace.dc.html",
+    "class": "ScreenGPanelPlace",
+    "nodes": 36,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-PanelReport": {
+    "source": "prototype/screens/G-PanelReport.dc.html",
+    "class": "ScreenGPanelReport",
+    "nodes": 34,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-PanelTag": {
+    "source": "prototype/screens/G-PanelTag.dc.html",
+    "class": "ScreenGPanelTag",
+    "nodes": 31,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-PasswordLogin": {
+    "source": "prototype/screens/G-PasswordLogin.dc.html",
+    "class": "ScreenGPasswordLogin",
+    "nodes": 34,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-PhoneLogin": {
+    "source": "prototype/screens/G-PhoneLogin.dc.html",
+    "class": "ScreenGPhoneLogin",
+    "nodes": 45,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-PhotoPipeline": {
+    "source": "prototype/screens/G-PhotoPipeline.dc.html",
+    "class": "ScreenGPhotoPipeline",
+    "nodes": 119,
+    "preview": {
+      "width": 1240,
+      "height": 844
+    }
+  },
+  "G-PickShop": {
+    "source": "prototype/screens/G-PickShop.dc.html",
+    "class": "ScreenGPickShop",
+    "nodes": 30,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Reconsent": {
+    "source": "prototype/screens/G-Reconsent.dc.html",
+    "class": "ScreenGReconsent",
+    "nodes": 24,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-RegisterConfirm": {
+    "source": "prototype/screens/G-RegisterConfirm.dc.html",
+    "class": "ScreenGRegisterConfirm",
+    "nodes": 29,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Search": {
+    "source": "prototype/screens/G-Search.dc.html",
+    "class": "ScreenGSearch",
+    "nodes": 75,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Settings": {
+    "source": "prototype/screens/G-Settings.dc.html",
+    "class": "ScreenGSettings",
+    "nodes": 45,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-SettingsAbout": {
+    "source": "prototype/screens/G-SettingsAbout.dc.html",
+    "class": "ScreenGSettingsAbout",
+    "nodes": 37,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-SettingsAccount": {
+    "source": "prototype/screens/G-SettingsAccount.dc.html",
+    "class": "ScreenGSettingsAccount",
+    "nodes": 54,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-SettingsNotify": {
+    "source": "prototype/screens/G-SettingsNotify.dc.html",
+    "class": "ScreenGSettingsNotify",
+    "nodes": 30,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-SettingsPrivacy": {
+    "source": "prototype/screens/G-SettingsPrivacy.dc.html",
+    "class": "ScreenGSettingsPrivacy",
+    "nodes": 34,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-TagDishes": {
+    "source": "prototype/screens/G-TagDishes.dc.html",
+    "class": "ScreenGTagDishes",
+    "nodes": 42,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Topic": {
+    "source": "prototype/screens/G-Topic.dc.html",
+    "class": "ScreenGTopic",
+    "nodes": 47,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-TopicArchive": {
+    "source": "prototype/screens/G-TopicArchive.dc.html",
+    "class": "ScreenGTopicArchive",
+    "nodes": 19,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-UserProfile": {
+    "source": "prototype/screens/G-UserProfile.dc.html",
+    "class": "ScreenGUserProfile",
+    "nodes": 62,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-Verify": {
+    "source": "prototype/screens/G-Verify.dc.html",
+    "class": "ScreenGVerify",
+    "nodes": 61,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-WriteComment": {
+    "source": "prototype/screens/G-WriteComment.dc.html",
+    "class": "ScreenGWriteComment",
+    "nodes": 35,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G-WrongInfo": {
+    "source": "prototype/screens/G-WrongInfo.dc.html",
+    "class": "ScreenGWrongInfo",
+    "nodes": 32,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "G2-Home": {
+    "source": "prototype/screens/G2-Home.dc.html",
+    "class": "ScreenG2Home",
+    "nodes": 63,
+    "preview": {
+      "width": 390,
+      "height": 844
+    }
+  }
+}
