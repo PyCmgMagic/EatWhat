@@ -110,7 +110,7 @@
   "G-Feedback": {
     "source": "prototype/screens/G-Feedback.dc.html",
     "class": "ScreenGFeedback",
-    "nodes": 44,
+    "nodes": 43,
     "preview": {
       "width": 390,
       "height": 844

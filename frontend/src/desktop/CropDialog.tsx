@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { DesignIcon as Icon, type Draft } from "../mobile/ui";
 import { adjustPhoto } from "../mobile/photos";
 import { errorMessage } from "../api/client";
+import { useSurfaceDismiss } from "../motion/hooks";
 
 export default function CropDialog({
   image,
@@ -18,6 +19,7 @@ export default function CropDialog({
   ) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null),
+    frame = useRef<HTMLDivElement>(null),
     pointer = useRef<{
       id: number;
       x: number;
@@ -27,10 +29,20 @@ export default function CropDialog({
     } | null>(null);
   const [crop, setCrop] = useState(image.framing ?? { x: 0, y: 0, zoom: 1 });
   const [size, setSize] = useState({ width: 300, height: 300 }),
-    [url, setUrl] = useState("");
+    [url, setUrl] = useState(""),
+    [frameSize, setFrameSize] = useState(300);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const source = image.original ?? image.file;
+  const dismiss = useSurfaceDismiss(dialog, onClose);
+  useEffect(() => {
+    if (!frame.current) return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width > 0) setFrameSize(entry.contentRect.width);
+    });
+    observer.observe(frame.current);
+    return () => observer.disconnect();
+  }, []);
   useEffect(() => {
     const src = URL.createObjectURL(source);
     setUrl(src);
@@ -56,7 +68,7 @@ export default function CropDialog({
       aria-labelledby="pc-crop-title"
       onCancel={(event) => {
         event.preventDefault();
-        if (!busy) onClose();
+        if (!busy) dismiss();
       }}
     >
       <header>
@@ -75,7 +87,7 @@ export default function CropDialog({
           className="pc-icon-button"
           aria-label="关闭照片调整"
           disabled={busy}
-          onClick={onClose}
+          onClick={dismiss}
         >
           <Icon name="close" size={21} />
         </button>
@@ -83,6 +95,7 @@ export default function CropDialog({
       <div className="pc-crop-body">
         <div className="pc-crop-stage">
           <div
+            ref={frame}
             className="pc-crop-frame"
             tabIndex={0}
             role="group"
@@ -129,7 +142,7 @@ export default function CropDialog({
               const start = pointer.current;
               if (!start || start.id !== event.pointerId) return;
               const scale =
-                event.currentTarget.getBoundingClientRect().width / 300;
+                (event.currentTarget.getBoundingClientRect().width - 4) / 300;
               setCrop(
                 position(
                   start.ox + (event.clientX - start.x) / scale,
@@ -158,9 +171,9 @@ export default function CropDialog({
                   });
                 }}
                 style={{
-                  width: size.width,
-                  height: size.height,
-                  transform: `translate(-50%,-50%) translate3d(${crop.x}px,${crop.y}px,0) scale(${crop.zoom})`,
+                  width: (size.width * frameSize) / 300,
+                  height: (size.height * frameSize) / 300,
+                  transform: `translate(-50%,-50%) translate3d(${(crop.x * frameSize) / 300}px,${(crop.y * frameSize) / 300}px,0) scale(${crop.zoom})`,
                 }}
               />
             )}
@@ -217,7 +230,7 @@ export default function CropDialog({
           type="button"
           className="pc-button light"
           disabled={busy}
-          onClick={onClose}
+          onClick={dismiss}
         >
           取消
         </button>

@@ -143,7 +143,7 @@ export function addMessage(
   const entry: Reply = {
     id: crypto.randomUUID(),
     userId: user.id,
-    name: user.userName ?? "同学",
+    name: user.displayName ?? "同学",
     avatar: user.avatar,
     text: content,
     images,

@@ -37,12 +37,12 @@ function ProfileContent() {
           {user?.avatar ? (
             <Picture src={user.avatar} alt="我的头像" />
           ) : (
-            <span>{user?.userName?.slice(0, 1) || "食"}</span>
+            <span>{user?.displayName?.slice(0, 1) || "食"}</span>
           )}
         </div>
         <div className="profile-info">
           <h2>
-            {user?.userName || "校园食友"}
+            {user?.displayName || "校园食友"}
             {user?.verified && (
               <span className="verified-badge">
                 <Icon name="shield" />
@@ -256,8 +256,10 @@ function Social() {
         <div className="people-list">
           {q.data.items.map((p) => (
             <Link key={p.id} to={`/users/${p.id}`}>
-              <span className="avatar">{p.userName?.slice(0, 1) || "食"}</span>
-              <strong>{p.userName || "同学"}</strong>
+              <span className="avatar">
+                {p.displayName?.slice(0, 1) || "食"}
+              </span>
+              <strong>{p.displayName || "同学"}</strong>
               <Icon name="arrow" />
             </Link>
           ))}
@@ -309,9 +311,9 @@ function OtherContent({ id }: { id: number }) {
       />
       <div className="public-profile settings-card">
         <span className="avatar public-avatar">
-          {u.userName?.slice(0, 1) || "食"}
+          {u.displayName?.slice(0, 1) || "食"}
         </span>
-        <h2>{u.userName || "校园食友"}</h2>
+        <h2>{u.displayName || "校园食友"}</h2>
         <div className="public-stats">
           <span>
             <strong>{u.earnedLikes ?? "—"}</strong>收到喜欢

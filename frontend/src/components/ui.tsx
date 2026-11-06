@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { ContentSkeleton } from "./LoadingSkeleton";
+import { AccessWelcome } from "./AccessWelcome";
 import {
   LayoutGrid,
   Soup,
@@ -34,9 +36,10 @@ import {
   Trash2,
   UsersRound,
 } from "lucide-react";
-import { errorMessage } from "../api/client";
+import { duplicateFoodId, errorMessage } from "../api/client";
 import { useApp } from "../app/state";
 import { mediaUrl } from "../api/models";
+import { useSurfaceDismiss } from "../motion/hooks";
 const icons = {
   discover: LayoutGrid,
   bowl: Soup,
@@ -120,12 +123,7 @@ export function Empty({
   );
 }
 export function Loading() {
-  return (
-    <div className="loading-state" role="status">
-      <Icon name="loader" className="spin" />
-      正在端上好味道…
-    </div>
-  );
+  return <ContentSkeleton kind="rows" count={3} />;
 }
 export function ErrorState({
   error,
@@ -134,10 +132,16 @@ export function ErrorState({
   error: unknown;
   retry?: () => void;
 }) {
+  const duplicate = duplicateFoodId(error);
   return (
     <div className="error-state" role="alert">
       <Icon name="info" />
       <p>{errorMessage(error)}</p>
+      {duplicate && (
+        <Link className="text-link" to={`/foods/${duplicate}`}>
+          查看已有菜品（输入已保留） →
+        </Link>
+      )}
       {retry && (
         <button className="btn btn-secondary" onClick={retry}>
           重新加载
@@ -149,29 +153,15 @@ export function ErrorState({
 export function Gate({
   children,
   verified = true,
+  recovery = false,
 }: {
   children: ReactNode;
   verified?: boolean;
+  recovery?: boolean;
 }) {
   const { session, user, me } = useApp();
-  const location = useLocation();
-  if (!session)
-    return (
-      <Empty
-        title="和同校的你，一起好好吃饭"
-        action={
-          <Link
-            to={`/auth?next=${encodeURIComponent(location.pathname + location.search)}`}
-            className="btn btn-primary"
-          >
-            登录 / 注册
-            <Icon name="arrow" />
-          </Link>
-        }
-      >
-        登录后发现餐厅与校园美味，整理自己的想吃清单。
-      </Empty>
-    );
+  if (recovery) return children;
+  if (!session) return <AccessWelcome />;
   if (me.isPending) return <Loading />;
   if (me.isError)
     return <ErrorState error={me.error} retry={() => void me.refetch()} />;
@@ -182,19 +172,7 @@ export function Gate({
       </Empty>
     );
   if (verified && user?.verified !== true)
-    return (
-      <Empty
-        title="先认识一下，同校的你"
-        action={
-          <Link className="btn btn-primary" to="/settings">
-            去完成认证
-            <Icon name="shield" />
-          </Link>
-        }
-      >
-        完成身份认证后，即可浏览菜品、收藏和分享。认证状态以服务端确认为准。
-      </Empty>
-    );
+    return <AccessWelcome verification />;
   return children;
 }
 export function Modal({
@@ -202,22 +180,28 @@ export function Modal({
   children,
   onClose,
   className = "",
+  dismissible = true,
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   className?: string;
+  dismissible?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const dismiss = useSurfaceDismiss(ref, onClose);
   useEffect(() => {
     const dialog = ref.current;
+    const previousFocus = document.activeElement as HTMLElement | null;
     dialog?.showModal();
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       dialog?.close();
       document.body.style.overflow = prev;
+      if (previousFocus?.isConnected)
+        previousFocus.focus({ preventScroll: true });
     };
   }, []);
   return (
@@ -225,13 +209,21 @@ export function Modal({
       ref={ref}
       className={`modal ${className}`}
       aria-labelledby={titleId}
-      onCancel={onClose}
+      onCancel={(e) => {
+        e.preventDefault();
+        if (dismissible) dismiss();
+      }}
       onClick={(e) => {
-        if (e.target === ref.current) onClose();
+        if (dismissible && e.target === ref.current) dismiss();
       }}
     >
       <div className="modal-pad">
-        <button className="modal-close" onClick={onClose} aria-label="关闭弹窗">
+        <button
+          className="modal-close"
+          onClick={dismiss}
+          disabled={!dismissible}
+          aria-label="关闭弹窗"
+        >
           <Icon name="close" />
         </button>
         <h2 id={titleId}>{title}</h2>

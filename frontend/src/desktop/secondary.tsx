@@ -1,4 +1,6 @@
-import type { ReactNode } from "react";
+import { useContext, type ReactNode } from "react";
+import { ProfileWorkspaceContext } from "../app/profile-workspace";
+import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { Link, useLocation } from "react-router-dom";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { errorMessage } from "../api/client";
@@ -6,11 +8,15 @@ import { mediaUrl } from "../api/models";
 import "./secondary.css";
 
 export const secondaryTitles: Record<string, string> = {
+  "/me": "个人总览",
+  "/me/shares": "我的分享",
+  "/help": "帮助与反馈",
   "/notifications": "通知中心",
   "/verify": "学生认证",
   "/settings/account": "账号与安全",
   "/settings/password": "修改密码",
   "/settings/privacy": "隐私设置",
+  "/settings/preferences": "口味偏好",
   "/settings/bind-phone": "绑定手机号",
   "/settings/about": "关于我们",
   "/data-notice": "数据存放说明",
@@ -21,13 +27,16 @@ export const secondaryTitles: Record<string, string> = {
   "/auth/password": "密码登录",
   "/auth/username-register": "注册账号",
   "/auth/consent": "授权确认",
-  "/auth/register": "手机验证码注册",
+  "/auth/withdraw-consent": "撤回同步授权",
+  "/auth/register": "手机登录 / 注册",
   "/auth/register/confirm": "注册确认",
   "/auth/forgot": "找回密码",
   "/settings/phone": "换绑手机号",
   "/settings/devices": "登录设备",
   "/settings/delete": "注销账号",
   "/settings/blocked": "屏蔽名单",
+  "/settings/username": "设置登录名",
+  "/auth/password-conflict/reset": "恢复登录密码",
   "/settings/notifications": "通知偏好",
   "/feedback": "意见反馈",
   "/restaurants/correction": "店铺纠错",
@@ -66,6 +75,9 @@ export function PageHead({
 }
 export function SettingsShell({ children }: { children: ReactNode }) {
   const path = useLocation().pathname;
+  const embedded = useContext(ProfileWorkspaceContext);
+  if (embedded)
+    return <section className="pc-secondary-body">{children}</section>;
   const groups = [
     {
       title: "账号",
@@ -80,6 +92,7 @@ export function SettingsShell({ children }: { children: ReactNode }) {
       title: "偏好",
       items: [
         ["/settings/privacy", "隐私设置", "lock"],
+        ["/settings/preferences", "口味偏好", "utensils"],
         ["/settings/notifications", "通知偏好", "bell"],
         ["/settings/blocked", "屏蔽名单", "me"],
       ],
@@ -187,6 +200,7 @@ export function State({
   detail?: string;
   children?: ReactNode;
 }) {
+  if (loading) return <ContentSkeleton kind="rows" count={3} />;
   return (
     <div className="pc-secondary-state" role={error ? "alert" : "status"}>
       <Icon name={error ? "warning" : "bowl"} size={34} />
@@ -269,37 +283,10 @@ export const pendingPages: Record<
     icon: string;
   }
 > = {
-  "/auth/register": {
-    title: "手机验证码注册",
-    detail: "手机注册暂未开放，你可以先用用户名创建账号。",
-    items: [
-      "用户名注册已经开放",
-      "已有账号可用密码登录",
-      "注册后可在设置中完成学生认证",
-    ],
-    link: "/auth/username-register",
-    label: "使用用户名注册",
-    icon: "phone",
-  },
-  "/auth/register/confirm": {
-    title: "注册确认",
-    detail: "手机注册流程暂未开放，当前没有需要确认的手机注册。",
-    items: ["请使用用户名注册", "请勿重复提交注册信息"],
-    link: "/auth/username-register",
-    label: "前往用户名注册",
-    icon: "verify",
-  },
-  "/auth/forgot": {
-    title: "找回密码",
-    detail: "自助找回密码暂未开放。无法登录时，请联系平台管理员协助处理。",
-    items: ["仍记得密码：返回密码登录", "已经登录：可在账号与安全中修改密码"],
-    link: "/auth/password",
-    label: "返回密码登录",
-    icon: "lock",
-  },
   "/settings/phone": {
     title: "换绑手机号",
-    detail: "更换已绑定手机号暂未开放，现有绑定不会在此页发生变化。",
+    detail:
+      "更换手机号功能正在准备中，敬请期待。需要帮助时，可以联系平台管理员。",
     items: ["未绑定手机号可使用绑定入口", "更换已绑定号码请联系平台管理员"],
     link: "/settings/account",
     label: "查看账号状态",
@@ -307,7 +294,8 @@ export const pendingPages: Record<
   },
   "/settings/devices": {
     title: "登录设备",
-    detail: "设备列表和远程下线暂未开放，当前无法查看其他设备的登录情况。",
+    detail:
+      "设备管理功能正在准备中，敬请期待。你可以先在账号与安全中管理登录密码。",
     items: ["离开公用电脑前，请主动退出登录", "如担心账号安全，可先修改密码"],
     link: "/settings/password",
     label: "修改登录密码",
@@ -315,7 +303,8 @@ export const pendingPages: Record<
   },
   "/settings/delete": {
     title: "注销账号",
-    detail: "自助注销暂未开放。需要处理账号或个人数据，请联系平台管理员。",
+    detail:
+      "自助注销功能正在准备中，敬请期待。如需处理账号或个人数据，请联系平台管理员。",
     items: [
       "此页面不会删除你的账号或内容",
       "可以先调整关注、粉丝列表的可见范围",
@@ -326,7 +315,7 @@ export const pendingPages: Record<
   },
   "/settings/blocked": {
     title: "屏蔽名单",
-    detail: "屏蔽用户功能暂未开放，当前无法添加或管理屏蔽名单。",
+    detail: "屏蔽功能正在准备中，敬请期待。你可以先调整个人资料的公开范围。",
     items: ["可以在食友主页管理关注关系", "公开范围可在隐私设置中调整"],
     link: "/settings/privacy",
     label: "调整隐私设置",
@@ -334,7 +323,7 @@ export const pendingPages: Record<
   },
   "/settings/notifications": {
     title: "通知偏好",
-    detail: "通知偏好设置暂未开放，当前沿用平台默认通知方式。",
+    detail: "通知设置正在准备中，敬请期待。互动消息可以在通知中心查看。",
     items: ["互动消息会出现在通知中心", "可以逐条标为已读，也可以全部标为已读"],
     link: "/notifications",
     label: "前往通知中心",
@@ -343,7 +332,7 @@ export const pendingPages: Record<
   "/feedback": {
     title: "意见反馈",
     detail:
-      "在线反馈提交暂未开放。遇到问题时，请联系平台管理员并说明发生问题的页面。",
+      "在线反馈功能正在准备中，敬请期待。遇到问题时，可以联系平台管理员并说明相关页面。",
     items: [
       "描述你当时进行的操作",
       "附上错误提示，便于定位问题",
@@ -355,7 +344,8 @@ export const pendingPages: Record<
   },
   "/restaurants/correction": {
     title: "店铺纠错",
-    detail: "在线纠错提交暂未开放。发现店名或位置有误，请联系平台管理员。",
+    detail:
+      "店铺纠错功能正在准备中，敬请期待。发现店名或位置有误时，可以联系平台管理员。",
     items: ["记录店铺名称和当前地址", "说明正确的信息，便于核实"],
     link: "/nearby",
     label: "返回附近店铺",
@@ -363,7 +353,8 @@ export const pendingPages: Record<
   },
   "/topics": {
     title: "往期专题",
-    detail: "专题目录还在准备中。先去发现页，看看同学们分享的好味道。",
+    detail:
+      "往期专题正在准备中，敬请期待。先去发现页，看看同学们分享的好味道。",
     items: ["在发现页浏览推荐菜品", "将喜欢的菜品收藏并添加个人标签"],
     link: "/",
     label: "去发现好味道",
@@ -371,7 +362,8 @@ export const pendingPages: Record<
   },
   "/topics/current": {
     title: "本期专题",
-    detail: "专题内容暂未开放，精彩的一餐可以从今天的推荐开始。",
+    detail:
+      "本期专题正在准备中，敬请期待。先看看今天的推荐，发现下一餐的好味道。",
     items: ["发现页持续展示推荐菜品", "附近页可以按区域查找店铺"],
     link: "/",
     label: "查看今日推荐",
@@ -384,7 +376,7 @@ export function PendingPage({ path }: { path: string }) {
     <>
       <PageHead
         title={p.title}
-        detail="这项功能还在准备中"
+        detail="这项功能正在准备中，敬请期待。"
         back={path.startsWith("/settings") ? "/settings" : "/"}
         crumb={path.startsWith("/settings") ? "设置" : "发现"}
       />
@@ -392,7 +384,7 @@ export function PendingPage({ path }: { path: string }) {
         <Section title="开放状态">
           <div className="pc-secondary-availability">
             <Icon name={p.icon} size={36} />
-            <span className="pc-secondary-badge">暂未开放</span>
+            <span className="pc-secondary-badge">敬请期待</span>
           </div>
           <h3>{p.title}</h3>
           <p className="pc-secondary-copy">{p.detail}</p>

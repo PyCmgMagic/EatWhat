@@ -1,0 +1,440 @@
+.sync-workbench {
+  color: #231c18;
+  min-width: 0;
+  font-family: "Noto Sans SC Variable", sans-serif;
+}
+.legacy-admin .admin-search > .field {
+  flex: 1 1 170px;
+  width: auto;
+  min-width: 0;
+}
+.sync-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 0 20px;
+  border-top: 1px solid #e9e1da;
+}
+.sync-heading h2 {
+  margin: 8px 0;
+  font-size: 25px !important;
+  letter-spacing: -0.7px;
+}
+.sync-heading p,
+.sync-note {
+  color: #8a7a6f;
+  font-size: 12px;
+  line-height: 1.9;
+  margin: 8px 0;
+}
+.sync-eyebrow {
+  font-size: 11px;
+  color: #87766b;
+  letter-spacing: 1.5px;
+}
+.sync-count {
+  background: #fff0be;
+  padding: 10px 16px;
+  border-radius: 24px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.sync-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #ece4de;
+  padding: 0 0 16px;
+}
+.sync-workbench button {
+  font: inherit;
+  cursor: pointer;
+  color: #231c18;
+  border: 1px solid #e6ded8;
+  border-radius: 20px;
+  background: #fff;
+  padding: 9px 14px;
+  font-size: 12px;
+}
+.sync-tabs button[aria-pressed="true"] {
+  background: #231c18;
+  color: #fff;
+  border-color: #231c18;
+}
+.sync-workbench button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.sync-toolbar {
+  display: flex;
+  gap: 12px;
+  margin: 18px 0;
+}
+.sync-toolbar input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #e6ded8;
+  border-radius: 12px;
+  background: #faf8f5;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 13px;
+}
+.sync-toolbar button {
+  white-space: nowrap;
+}
+.sync-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 20px;
+  align-items: start;
+}
+.sync-records {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.sync-workbench .sync-record {
+  text-align: left;
+  padding: 18px;
+  border-radius: 16px;
+  min-width: 0;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+.sync-record.is-selected {
+  border-color: #d3a542;
+  background: #fffbef;
+}
+.sync-record-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  color: #88786c;
+}
+.sync-record-top em {
+  font-style: normal;
+  flex-shrink: 0;
+}
+.sync-record strong {
+  display: block;
+  margin: 12px 0 8px;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.sync-record small {
+  display: block;
+  color: #8a7a6f;
+  font:
+    10px/1.8 ui-monospace,
+    monospace;
+  overflow-wrap: anywhere;
+}
+.sync-record-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  font-size: 11px;
+}
+.sync-detail {
+  position: sticky;
+  top: 100px;
+  min-width: 0;
+  border: 1px solid #ece4de;
+  background: #faf8f5;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.sync-editor {
+  padding: 22px;
+}
+.sync-editor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sync-editor-heading h3 {
+  margin: 6px 0;
+  font-size: 18px;
+}
+.sync-editor-heading small {
+  font-size: 10px;
+  color: #8a7a6f;
+}
+.sync-editor-heading button {
+  white-space: nowrap;
+}
+.sync-facts {
+  margin: 16px 0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.sync-facts > div {
+  padding: 8px 0;
+  border-bottom: 1px solid #ece4de;
+}
+.sync-facts dt {
+  color: #8a7a6f;
+}
+.sync-facts dd {
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+}
+.sync-snapshot {
+  border-radius: 12px;
+  background: #f1ece6;
+  padding: 12px;
+  margin: 16px 0;
+}
+.sync-snapshot summary {
+  font-size: 12px;
+  cursor: pointer;
+}
+.sync-snapshot pre {
+  margin: 12px 0 0;
+  max-height: 280px;
+  overflow: auto;
+  font:
+    11px/1.8 ui-monospace,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #6e625b;
+}
+.sync-candidates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+  min-width: 0;
+}
+.sync-candidates article {
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #e6ded8;
+  border-radius: 12px;
+  min-width: 0;
+}
+.sync-candidates header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.sync-candidates header span {
+  color: #8a7a6f;
+  font-size: 10px;
+}
+.sync-candidates code {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #8a7a6f;
+  font:
+    10px/1.8 ui-monospace,
+    monospace;
+  margin-top: 8px;
+}
+.sync-candidates p {
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+.sync-candidates p span {
+  display: block;
+  font-size: 10px;
+  color: #8a7a6f;
+}
+.sync-candidates small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.8;
+  color: #8a7a6f;
+  overflow-wrap: anywhere;
+  margin-top: 8px;
+}
+.sync-editor label,
+.sync-import label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 16px 0;
+}
+.sync-editor select,
+.sync-editor textarea,
+.sync-import textarea,
+.sync-import input[type="file"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  margin-top: 8px;
+  border: 1px solid #ded4ca;
+  padding: 12px;
+  border-radius: 12px;
+  color: #231c18;
+  background: #fff;
+  font:
+    12px/1.8 "Noto Sans SC Variable",
+    sans-serif;
+  resize: vertical;
+}
+.sync-editor label small {
+  display: block;
+  margin-top: 6px;
+  color: #8a7a6f;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.sync-workbench .sync-confirm {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-weight: 400;
+  line-height: 1.8;
+}
+.sync-confirm input {
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+  flex: none;
+  margin: 3px 0 0;
+  accent-color: #231c18;
+}
+.sync-workbench .sync-primary {
+  width: 100%;
+  border-color: #231c18;
+  background: #231c18;
+  color: #fff;
+  padding: 12px 16px;
+  font-weight: 600;
+}
+.sync-error {
+  color: #ab3825;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.sync-intro {
+  padding: 45px 30px;
+  text-align: center;
+}
+.sync-intro > span {
+  font-size: 35px;
+  color: #d0a246;
+}
+.sync-intro h3 {
+  font-size: 17px;
+  margin: 18px 0 12px;
+}
+.sync-intro p {
+  font-size: 12px;
+  color: #8a7a6f;
+  line-height: 2;
+}
+.sync-import {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 24px;
+  margin: 24px 0;
+  align-items: start;
+}
+.sync-import > section,
+.sync-import > aside {
+  min-width: 0;
+  border: 1px solid #ece4de;
+  border-radius: 18px;
+  padding: 22px;
+}
+.sync-import > aside {
+  background: #faf8f5;
+}
+.sync-import h3 {
+  font-size: 18px;
+  margin: 0 0 14px;
+}
+.sync-import p {
+  font-size: 12px;
+  line-height: 1.9;
+  color: #8a7a6f;
+}
+.sync-import textarea {
+  font-family: ui-monospace, monospace;
+  overflow-wrap: anywhere;
+}
+.sync-import-preview {
+  max-height: 290px;
+  overflow: auto;
+}
+.sync-import-preview > div {
+  border-bottom: 1px solid #ece4de;
+  padding: 12px 0;
+}
+.sync-import-preview strong,
+.sync-import-preview span,
+.sync-import-preview small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.sync-import-preview strong {
+  font-size: 13px;
+}
+.sync-import-preview span,
+.sync-import-preview small {
+  font-size: 11px;
+  color: #8a7a6f;
+  margin-top: 6px;
+}
+.sync-receipt {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #e9f0df;
+  font-size: 13px;
+}
+.sync-receipt small {
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .sync-columns,
+  .sync-import {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sync-detail {
+    position: static;
+  }
+  .sync-heading {
+    align-items: flex-start;
+  }
+  .sync-heading h2 {
+    font-size: 21px !important;
+  }
+  .sync-heading p {
+    max-width: 220px;
+  }
+  .sync-count {
+    padding: 8px 12px;
+  }
+  .sync-editor,
+  .sync-import > section,
+  .sync-import > aside {
+    padding: 18px;
+  }
+  .sync-tabs button {
+    font-size: 11px;
+    padding: 8px 11px;
+  }
+  .sync-import {
+    gap: 14px;
+  }
+}

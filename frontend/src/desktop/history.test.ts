@@ -35,7 +35,7 @@ it("never links unavailable, unsafe, conflicting or unknown history targets", ()
     ).href,
   ).toBeUndefined();
   expect(
-    historyEntry({ targetType: "unknown", targetId: 1 }, "food").href,
+    historyEntry({ targetType: "unknown" as "food", targetId: 1 }, "food").href,
   ).toBeUndefined();
 });
 it("keeps food and restaurant IDs in their respective routes", () => {

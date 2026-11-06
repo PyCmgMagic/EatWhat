@@ -22,7 +22,30 @@ afterEach(() => {
 });
 
 describe("Mock mode and isolated sessions", () => {
-  it("opens development in Mock without reusing a real session", async () => {
+  it.each(["", "?view=mobile", "?view=desktop"])(
+    "uses the real account by default for %s without loading a stored demo session",
+    async (search) => {
+      vi.stubGlobal("location", { search });
+      values.set("eatwhat-session", JSON.stringify(storedSession));
+      values.set(
+        "eatwhat-demo-session",
+        JSON.stringify({ tokenName: "satoken", tokenValue: "mock" }),
+      );
+      const runtime = await import("./runtime");
+      expect(runtime.isDemo).toBe(false);
+      expect(runtime.readSession()).toEqual(storedSession);
+    },
+  );
+
+  it("keeps a visitor logged out by default instead of creating a demo account", async () => {
+    const runtime = await import("./runtime");
+    expect(runtime.isDemo).toBe(false);
+    expect(runtime.readSession()).toBeNull();
+    expect(values.has("eatwhat-demo-session")).toBe(false);
+  });
+
+  it("opens explicitly requested development Mock without reusing a real session", async () => {
+    vi.stubGlobal("location", { search: "?demo=1&view=mobile" });
     values.set("eatwhat-session", JSON.stringify(storedSession));
     const runtime = await import("./runtime");
     expect(runtime.isDemo).toBe(true);
@@ -32,6 +55,7 @@ describe("Mock mode and isolated sessions", () => {
   });
 
   it("keeps an explicit logout after reload and allows signing in again", async () => {
+    vi.stubGlobal("location", { search: "?demo=1" });
     const runtime = await import("./runtime");
     runtime.writeSession(null);
     expect(runtime.readSession()).toBeNull();
@@ -81,6 +105,7 @@ describe("Mock mode and isolated sessions", () => {
   });
 
   it("still supports Mock login and logout when browser storage is unavailable", async () => {
+    vi.stubGlobal("location", { search: "?demo=1" });
     vi.stubGlobal("sessionStorage", {
       getItem() {
         throw new Error("Storage unavailable");

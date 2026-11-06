@@ -1,0 +1,397 @@
+.profile-help {
+  container: help / inline-size;
+  color: #2e251e;
+  min-width: 0;
+}
+.profile-page-eyebrow {
+  font-size: 12px;
+  color: #827367;
+}
+.profile-help > header h1 {
+  font-size: 32px;
+  margin: 8px 0 10px;
+  letter-spacing: -0.035em;
+}
+.profile-help > header p {
+  font-size: 14px;
+  color: #827367;
+  line-height: 1.7;
+  margin: 0 0 24px;
+}
+.profile-help button,
+.profile-help input {
+  font: inherit;
+}
+.profile-help button {
+  cursor: pointer;
+}
+.profile-help :is(a, button, input, summary):focus-visible {
+  outline: 2px solid #947220;
+  outline-offset: 4px;
+}
+.profile-help-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  min-height: 58px;
+  border: 1px solid #e1d7ca;
+  border-radius: 12px;
+  background: #fff;
+  margin-bottom: 30px;
+  color: #8b7862;
+}
+.profile-help-search:focus-within {
+  border-color: #b58b32;
+  box-shadow: 0 0 0 3px #d6b76519;
+}
+.profile-help-search .design-icon {
+  flex-shrink: 0;
+}
+.profile-help-search-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.profile-help-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 56px;
+  border: 0;
+  outline: 0 !important;
+  background: transparent;
+  color: #2e251e;
+  font-size: 14px;
+}
+.profile-help-search input::placeholder {
+  color: #9a8b7e;
+}
+.profile-help-search input::-webkit-search-cancel-button {
+  display: none;
+}
+.profile-help-search button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: #f4efeb;
+  color: #827367;
+}
+.profile-help-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 264px;
+  align-items: start;
+  gap: 32px;
+}
+.profile-help-questions {
+  min-width: 0;
+}
+.profile-help-question-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.profile-help-question-heading h2 {
+  font-size: 20px;
+  margin: 0;
+}
+.profile-help-question-heading > span {
+  color: #8a7a6c;
+  font-size: 12px;
+}
+.profile-help-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0;
+}
+.profile-help-categories button {
+  min-height: 36px;
+  padding: 7px 13px;
+  border: 1px solid #e3d9cd;
+  border-radius: 8px;
+  background: transparent;
+  color: #827367;
+  font-size: 13px;
+  transition:
+    background 0.16s,
+    color 0.16s;
+}
+.profile-help-categories button[aria-pressed="true"] {
+  background: #2e251e;
+  border-color: #2e251e;
+  color: #fff;
+}
+.profile-help-question-list {
+  border-top: 1px solid #ded5ca;
+}
+.profile-help-questions details {
+  border-bottom: 1px solid #e3dbd1;
+}
+.profile-help-questions summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  min-height: 68px;
+  padding: 20px 0;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.65;
+  list-style: none;
+  cursor: pointer;
+}
+.profile-help-questions summary::-webkit-details-marker {
+  display: none;
+}
+.profile-help-questions summary > .design-icon {
+  flex-shrink: 0;
+  color: #8a7a6c;
+  transition: transform 0.18s;
+}
+.profile-help-questions details[open] summary {
+  padding-bottom: 10px;
+}
+.profile-help-questions details[open] summary > .design-icon {
+  transform: rotate(45deg);
+}
+.profile-help-answer {
+  padding: 0 34px 22px 0;
+}
+.profile-help-answer p {
+  margin: 0 0 14px;
+  color: #827367;
+  font-size: 14px;
+  line-height: 1.9;
+}
+.profile-help-answer a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  color: #71551d;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.profile-help-actions {
+  display: grid;
+  gap: 16px;
+}
+.profile-help-contact {
+  padding: 25px 24px 22px;
+  border: 1px solid #ead9a5;
+  border-radius: 14px;
+  background: #fff4cf;
+}
+.profile-help-contact-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 22px;
+  border: 1px solid #e3cd86;
+  border-radius: 50%;
+  color: #896321;
+}
+.profile-help-contact h2 {
+  margin: 0 0 10px;
+  font-size: 19px;
+}
+.profile-help-contact p {
+  margin: 0 0 24px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #857044;
+}
+.profile-help-contact > a {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  background: #ffce47;
+  color: #332711;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.profile-help-records {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 18px;
+  border: 1px solid #e4dbd0;
+  border-radius: 12px;
+  background: #fff;
+  color: #2e251e;
+  text-decoration: none;
+}
+.profile-help-records > .design-icon {
+  flex-shrink: 0;
+  color: #947b54;
+}
+.profile-help-records > .design-icon:last-child {
+  margin-left: auto;
+  color: #ab9b8a;
+}
+.profile-help-records strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 650;
+}
+.profile-help-records small {
+  display: block;
+  margin-top: 6px;
+  color: #827367;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.profile-help-tip {
+  display: flex;
+  align-items: start;
+  gap: 7px;
+  margin: 0;
+  padding: 0 4px;
+  color: #938374;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.profile-help-tip > .design-icon {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.profile-help-empty {
+  padding: 44px 12px;
+  color: #827367;
+}
+.profile-help-empty > .design-icon {
+  color: #a89780;
+}
+.profile-help-empty h3 {
+  margin: 16px 0 8px;
+  font-size: 16px;
+  color: #2e251e;
+}
+.profile-help-empty p {
+  font-size: 14px;
+  line-height: 1.8;
+}
+.profile-help-empty button {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid #dfd4c3;
+  border-radius: 8px;
+  background: #fff9e8;
+  color: #71551d;
+  font-size: 13px;
+}
+.profile-help-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid #e3dbd1;
+  font-size: 13px;
+}
+.profile-help-links a {
+  color: #8a7a6c;
+  text-decoration: none;
+}
+@container help (max-width: 780px) {
+  .profile-help-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .profile-help-actions {
+    grid-template-columns: 1.2fr 1fr;
+    align-items: start;
+    gap: 14px;
+  }
+  .profile-help-contact {
+    grid-row: 1 / 3;
+  }
+  .profile-help-contact-icon {
+    margin-bottom: 16px;
+  }
+}
+@container help (max-width: 450px) {
+  .profile-help-search {
+    padding: 0 13px;
+    gap: 8px;
+    margin-bottom: 26px;
+  }
+  .profile-help-search input {
+    font-size: 13px;
+  }
+  .profile-help-actions {
+    grid-template-columns: 1fr;
+  }
+  .profile-help-contact {
+    grid-row: auto;
+    padding: 22px;
+  }
+  .profile-help-contact-icon {
+    float: right;
+    margin-left: 14px;
+  }
+  .profile-help-contact p {
+    margin-bottom: 20px;
+  }
+  .profile-help-answer {
+    padding-right: 0;
+  }
+  .profile-help-categories {
+    gap: 7px;
+  }
+  .profile-help-categories button {
+    padding-inline: 10px;
+  }
+  .profile-help-questions summary {
+    gap: 12px;
+  }
+}
+@media (max-width: 599px) {
+  .profile-help > header h1 {
+    font-size: 28px;
+  }
+}
+@media (hover: hover) {
+  .profile-help-categories button:not([aria-pressed="true"]):hover {
+    background: #ece3d8;
+    color: #2e251e;
+  }
+  .profile-help-questions summary:hover {
+    color: #9c7222;
+  }
+  .profile-help-answer a:hover,
+  .profile-help-links a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .profile-help-contact > a:hover {
+    background: #f5c137;
+  }
+  .profile-help-records:hover {
+    border-color: #c6b491;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-help-categories button,
+  .profile-help-questions summary > .design-icon {
+    transition: none;
+  }
+}

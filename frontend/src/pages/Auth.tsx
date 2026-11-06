@@ -1,12 +1,18 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { isDemo } from "../app/runtime";
 import { classifyAuth } from "../api/service";
-import { ErrorState, Icon, Intro, Loading } from "../components/ui";
+import { ErrorState, Icon, Intro } from "../components/ui";
 import { useTask } from "../components/useTask";
+import {
+  PolicyConsent,
+  usePolicyConsent,
+  ConsentRecovery,
+} from "../features/Consent";
+import { setConsentProof, clearConsentProof } from "../app/consent";
 export default function Auth() {
+  const policyConsent = usePolicyConsent();
   const { api, signIn, toast, session } = useApp(),
     navigate = useNavigate(),
     [register, setRegister] = useState(false),
@@ -25,11 +31,18 @@ export default function Auth() {
       username = String(d.get("username") || "").trim(),
       password = String(d.get("password") || "");
     task.run(async () => {
+      const accepted = await policyConsent.requireAcceptance();
       if (register && password !== String(d.get("confirmPassword") || ""))
         throw new Error("两次输入的密码不一致。");
+      clearConsentProof();
       const reply = register
-        ? await api.register({ username, password, device: "WEB" })
-        : await api.login({ username, password, device: "WEB" });
+        ? await api.register({
+            userName: username,
+            password,
+            device: "WEB",
+            ...accepted,
+          })
+        : await api.login({ userName: username, password, device: "WEB" });
       const outcome = classifyAuth(reply);
       if (outcome.kind === "session") {
         await signIn(outcome.session);
@@ -44,6 +57,7 @@ export default function Auth() {
         );
       } else if (outcome.kind === "consent") {
         form.reset();
+        setConsentProof(outcome.proof);
         setConsent(outcome);
       } else throw new Error(outcome.message);
     });
@@ -94,6 +108,7 @@ export default function Auth() {
                   className={register ? "" : "active"}
                   onClick={() => {
                     setRegister(false);
+                    policyConsent.setAgreed(false);
                     task.reset();
                   }}
                 >
@@ -103,6 +118,7 @@ export default function Auth() {
                   className={register ? "active" : ""}
                   onClick={() => {
                     setRegister(true);
+                    policyConsent.setAgreed(false);
                     task.reset();
                   }}
                 >
@@ -186,11 +202,12 @@ export default function Auth() {
                     />
                   </div>
                 )}
+                <PolicyConsent consent={policyConsent} busy={task.isPending} />
                 {task.error && <ErrorState error={task.error} />}
                 {check.error && <ErrorState error={check.error} />}
                 <button
                   className="btn btn-primary full-width"
-                  disabled={task.isPending}
+                  disabled={task.isPending || !policyConsent.canSubmit}
                   type="submit"
                 >
                   {task.isPending
@@ -204,7 +221,7 @@ export default function Auth() {
               <p className="auth-note">
                 {register
                   ? "注册后可在账号设置里完成校内身份认证。"
-                  : "暂未提供自助找回密码，请联系平台管理员。"}
+                  : "找回密码功能正在准备中；如需帮助，请联系平台管理员。"}
               </p>
               {import.meta.env.DEV && !isDemo && (
                 <a className="text-link" href="/?demo=1">
@@ -219,106 +236,10 @@ export default function Auth() {
     </>
   );
 }
-function ConsentStep({
-  proof,
-  message,
-  onBack,
-}: {
+function ConsentStep(_props: {
   proof?: string;
   message: string;
   onBack: () => void;
 }) {
-  const { api } = useApp(),
-    [checked, setChecked] = useState(false),
-    [done, setDone] = useState(false),
-    q = useQuery({
-      queryKey: ["consent-policy"],
-      queryFn: () => api.consentPolicy(),
-    }),
-    task = useTask(undefined, () => setDone(true));
-  const url = import.meta.env.VITE_CONSENT_POLICY_URL;
-  if (done)
-    return (
-      <>
-        <h2>授权请求已提交</h2>
-        <p className="modal-description">
-          授权与身份同步可能需要时间。请重新登录；只有服务端返回正式会话后，才会进入账号。
-        </p>
-        <button className="btn btn-primary" onClick={onBack}>
-          返回登录
-          <Icon name="arrow" />
-        </button>
-      </>
-    );
-  return (
-    <>
-      <h2>跨站同步与身份授权</h2>
-      <p className="modal-description">{message}</p>
-      {q.isPending ? (
-        <Loading />
-      ) : q.isError ? (
-        <ErrorState error={q.error} retry={() => void q.refetch()} />
-      ) : (
-        <>
-          <div className="info-strip">
-            <div>
-              政策版本：{q.data.policyVersion}
-              <br />
-              站点模式：{q.data.siteMode}
-              <br />
-              临时授权凭证不会作为登录会话使用。
-            </div>
-          </div>
-          {url ? (
-            <label className="checkbox-line">
-              <input
-                type="checkbox"
-                checked={checked}
-                onChange={(e) => setChecked(e.target.checked)}
-              />
-              <span>
-                我已阅读并同意
-                <a href={url} target="_blank" rel="noopener noreferrer">
-                  跨站同步授权政策 ↗
-                </a>
-              </span>
-            </label>
-          ) : (
-            <p role="status" className="inline-error">
-              平台尚未配置授权政策全文，请联系管理员完成配置后继续。
-            </p>
-          )}
-          <button
-            className="btn btn-primary"
-            disabled={
-              !checked ||
-              !url ||
-              !proof ||
-              task.isPending ||
-              !q.data.policyVersion
-            }
-            onClick={() =>
-              task.run(() =>
-                api.grantConsent({
-                  proof,
-                  policyVersion: q.data!.policyVersion!,
-                }),
-              )
-            }
-          >
-            确认授权并继续
-          </button>
-          {!proof && (
-            <p className="section-caption">
-              本次响应没有临时授权凭证，请返回校园站点查看账号授权和身份同步状态。
-            </p>
-          )}
-        </>
-      )}
-      {task.error && <ErrorState error={task.error} />}
-      <button className="text-link" onClick={onBack}>
-        返回登录
-      </button>
-    </>
-  );
+  return <ConsentRecovery />;
 }

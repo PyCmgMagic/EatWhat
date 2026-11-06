@@ -1,3 +1,5 @@
+import { boundedText, submissionPath } from "../api/content-rules";
+import { BlockControl, UserFoods } from "../features/ApiV2";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -9,7 +11,14 @@ import { parseId, type Notification } from "../api/models";
 import { useTask } from "../components/useTask";
 import { useMobile, DesignIcon as Icon } from "../mobile/ui";
 import { SlidingTabs } from "./motion";
+import { useContentMotion } from "../motion/hooks";
+import { peopleHref } from "../features/profile-people";
 import { historyTime } from "./history";
+import RestaurantMap from "../features/RestaurantMap";
+import { mapPoint } from "../features/map-geometry";
+import { PageSkeleton } from "../components/LoadingSkeleton";
+import { ProfileSectionNav } from "../features/ProfileSectionNav";
+import "../features/profile-activity.css";
 import {
   Avatar,
   Note,
@@ -45,14 +54,21 @@ export function DesktopNotifications() {
     task = useTask(undefined, undefined, ["notifications"]);
   const rows =
     q.data?.items?.filter((n) => filter !== "unread" || n.read !== true) ?? [];
+  const list = useRef<HTMLDivElement>(null);
+  useContentMotion(
+    list,
+    `${filter}:${page}`,
+    filter === "all" ? 0 : 1,
+    "opacity",
+  );
   return (
     <div
-      className="pc-secondary-notifications"
+      className="pc-secondary-notifications profile-legacy-messages"
       data-pc-secondary="notifications"
     >
       <PageHead
-        title="通知中心"
-        detail="关于你分享的好味道，这里有新消息。"
+        title="消息通知"
+        detail="食友的互动、分享的进展，在这里一起查看。"
         action={
           <button
             className="pc-button light"
@@ -64,8 +80,9 @@ export function DesktopNotifications() {
           </button>
         }
       />
-      <div className="pc-secondary-columns">
-        <Section title="互动消息">
+      <ProfileSectionNav section="messages" />
+      <div className="profile-legacy-message-body">
+        <section className="profile-legacy-message-panel" aria-label="互动消息">
           <div className="pc-secondary-list-toolbar">
             <SlidingTabs label="通知筛选" active={filter}>
               {[
@@ -83,7 +100,13 @@ export function DesktopNotifications() {
                 </button>
               ))}
             </SlidingTabs>
-            <span>{unread.data == null ? "" : `${unread.data} 条未读`}</span>
+            <span className="profile-message-unread-count">
+              {unread.data == null
+                ? ""
+                : unread.data > 0
+                  ? `${unread.data} 条未读`
+                  : "消息都已读完"}
+            </span>
           </div>
           <TaskError error={task.error} />
           {q.isPending || q.isError ? (
@@ -93,7 +116,7 @@ export function DesktopNotifications() {
               retry={() => void q.refetch()}
             />
           ) : rows.length ? (
-            <div className="pc-secondary-message-list">
+            <div className="pc-secondary-message-list" ref={list}>
               {rows.map((n, i) => {
                 const link = notificationLink(n),
                   date = historyTime(n.createdAt),
@@ -110,7 +133,7 @@ export function DesktopNotifications() {
                 return (
                   <article
                     key={n.id ?? i}
-                    className={`pc-secondary-message ${n.read === false ? "unread" : ""}`}
+                    className={`pc-secondary-message profile-message-row ${n.read === false ? "unread" : ""}`}
                   >
                     <Avatar name={n.actorName} src={n.actorAvatar} />
                     <div>
@@ -171,19 +194,22 @@ export function DesktopNotifications() {
             disabled={q.isFetching}
             onPage={setPage}
           />
-        </Section>
-        <Note title="每一份分享，都有回响" icon="bell">
-          <p>点赞、收藏和关注等互动消息会集中展示在这里。</p>
-          <p>“本页未读”只筛选当前这一页。切换分页，可以继续查看更早的消息。</p>
-          <Link to="/settings/notifications">了解通知偏好 →</Link>
-        </Note>
+        </section>
+        <div className="profile-activity-note">
+          <p>“本页未读”筛选当前页的消息，翻页可以继续查看更早的互动。</p>
+          <Link to="/settings/notifications">
+            <Icon name="settings" size={16} />
+            通知偏好
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
 export function DesktopUser() {
   const { api, user } = useApp(),
-    id = parseId(useLocation().pathname.split("/").pop()),
+    loc = useLocation(),
+    id = parseId(loc.pathname.split("/").pop()),
     q = useQuery({
       queryKey: ["user", id],
       queryFn: () => api.otherUser(id!),
@@ -196,7 +222,8 @@ export function DesktopUser() {
         <Link to="/">返回发现</Link>
       </State>
     );
-  if (q.isPending || q.isError)
+  if (q.isPending) return <PageSkeleton kind="profile" />;
+  if (q.isError && !q.data)
     return (
       <State
         loading={q.isPending}
@@ -219,8 +246,8 @@ export function DesktopUser() {
             src="/prototype/assets/dishes/yangzhi.svg"
             alt=""
           />
-          <Avatar large name={u.userName} src={u.avatar} />
-          <h2>{u.userName || "校园食友"}</h2>
+          <Avatar large name={u.displayName} src={u.avatar} />
+          <h2>{u.displayName || "校园食友"}</h2>
           <p>{self ? "这是其他同学眼中的你。" : "山软校园食友"}</p>
           {u.isFollowingMe && (
             <span className="pc-secondary-badge">关注了你</span>
@@ -254,6 +281,7 @@ export function DesktopUser() {
             </button>
           )}
           <TaskError error={task.error} />
+          <BlockControl userId={id} />
         </aside>
         <div>
           <Section title="TA 的校园美食档案">
@@ -273,7 +301,16 @@ export function DesktopUser() {
                 },
               ].map((x) =>
                 self || x.visible === true ? (
-                  <Link key={x.key} to={`/follows?tab=${x.key}&userId=${id}`}>
+                  <Link
+                    key={x.key}
+                    to={peopleHref(
+                      loc.pathname,
+                      loc.search,
+                      x.key as "fans" | "follow",
+                    )}
+                    state={{ profilePeopleFrom: loc.key }}
+                    preventScrollReset
+                  >
                     <Icon name="me" size={22} />
                     <span>
                       <b>{x.count ?? "—"}</b>
@@ -303,187 +340,9 @@ export function DesktopUser() {
             </div>
           </Section>
           <Section title={self ? "我的分享" : "TA 的分享"}>
-            {self ? (
-              <State
-                title="你的分享都在个人中心"
-                detail="在那里继续查看和管理已经上传的菜品。"
-              >
-                <Link className="pc-button light" to="/me">
-                  查看我的分享
-                </Link>
-              </State>
-            ) : (
-              <State
-                title="TA 的分享列表暂未开放"
-                detail="你可以先关注这位同学，或去发现页看看更多好味道。"
-              >
-                <Link className="pc-button light" to="/">
-                  浏览今日推荐
-                </Link>
-              </State>
-            )}
+            <UserFoods key={id} userId={id} />
           </Section>
         </div>
-      </div>
-    </div>
-  );
-}
-export function DesktopFollows() {
-  const loc = useLocation(),
-    params = new URLSearchParams(loc.search),
-    { api, user } = useApp(),
-    nav = useNavigate(),
-    idRaw = params.get("userId"),
-    id = idRaw ? parseId(idRaw) : (user?.id ?? undefined),
-    kind = params.get("tab") === "fans" ? "followers" : "followings",
-    [page, setPage] = useState(1),
-    [search, setSearch] = useState("");
-  const own = id === user?.id,
-    profile = useQuery({
-      queryKey: ["user", id],
-      queryFn: () => api.otherUser(id!),
-      enabled: !!id,
-    }),
-    visible =
-      kind === "followers"
-        ? profile.data?.fansVisible
-        : profile.data?.followingsVisible,
-    allowed = !!id && (own || (profile.isSuccess && visible === true)),
-    q = useQuery({
-      queryKey: ["social", kind, id, page],
-      queryFn: () => api.followers(kind, id, page),
-      enabled: allowed,
-    });
-  useEffect(() => {
-    setPage(1);
-    setSearch("");
-  }, [kind, id]);
-  function switchTab(tab: string) {
-    const p = new URLSearchParams(loc.search);
-    p.set("tab", tab);
-    setPage(1);
-    setSearch("");
-    nav("/follows?" + p.toString());
-  }
-  const rows =
-    q.data?.items?.filter((p) => (p.userName || "").includes(search.trim())) ??
-    [];
-  return (
-    <div className="pc-secondary-follows" data-pc-secondary="follows">
-      <PageHead
-        title={own ? "我的食友" : "TA 的食友"}
-        detail="从一份好味道，认识同校的你。"
-        back={own ? "/me" : id ? `/users/${id}` : "/me"}
-        crumb={own ? "我的" : "食友主页"}
-      />
-      <div className="pc-secondary-columns">
-        <Section title="关注与粉丝">
-          <div className="pc-secondary-list-toolbar">
-            <SlidingTabs active={kind} label="关注与粉丝">
-              <button
-                role="tab"
-                aria-selected={kind === "followings"}
-                tabIndex={kind === "followings" ? 0 : -1}
-                onClick={() => switchTab("follow")}
-              >
-                关注
-              </button>
-              <button
-                role="tab"
-                aria-selected={kind === "followers"}
-                tabIndex={kind === "followers" ? 0 : -1}
-                onClick={() => switchTab("fans")}
-              >
-                粉丝
-              </button>
-            </SlidingTabs>
-            <label className="pc-secondary-search">
-              <Icon name="search" size={17} />
-              <input
-                aria-label="搜索本页食友"
-                placeholder="搜索本页食友"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </label>
-          </div>
-          {!id ? (
-            <State title="食友编号无效" detail="请返回主页后重新进入。" />
-          ) : !own && (profile.isPending || profile.isError) ? (
-            <State
-              loading={profile.isPending}
-              error={profile.error}
-              retry={() => void profile.refetch()}
-            />
-          ) : !allowed ? (
-            <State
-              title={
-                visible === false
-                  ? "对方没有公开这个列表"
-                  : "暂时无法确认公开范围"
-              }
-              detail="食友可以在隐私设置中管理列表的可见范围。"
-            />
-          ) : q.isPending || q.isError ? (
-            <State
-              loading={q.isPending}
-              error={q.error}
-              retry={() => void q.refetch()}
-            />
-          ) : rows.length ? (
-            <div className="pc-secondary-people">
-              {rows.map((p, i) => (
-                <article key={p.id ?? i}>
-                  <Avatar name={p.userName} src={p.avatar} />
-                  <div>
-                    <b>{p.userName || "校园食友"}</b>
-                    <small>山软校园食友</small>
-                  </div>
-                  {parseId(String(p.id ?? "")) ? (
-                    <Link className="pc-button light" to={`/users/${p.id}`}>
-                      查看主页
-                      <Icon name="chevronRight" size={15} />
-                    </Link>
-                  ) : (
-                    <span className="pc-secondary-copy">资料待补充</span>
-                  )}
-                </article>
-              ))}
-            </div>
-          ) : (
-            <State
-              title={
-                search
-                  ? "本页没有找到这位食友"
-                  : kind === "followers"
-                    ? "这里还没有粉丝"
-                    : "这里还没有关注的食友"
-              }
-              detail={
-                search
-                  ? "试试其他名字，或翻页继续查找。"
-                  : "去发现页，认识分享好味道的同学。"
-              }
-            />
-          )}
-          <Pager
-            page={page}
-            hasNext={allowed && q.data?.hasNext}
-            disabled={q.isFetching}
-            onPage={setPage}
-          />
-        </Section>
-        <Note
-          title={own ? "你的校园食友圈" : "尊重彼此的公开范围"}
-          icon="follow"
-        >
-          <p>进入食友主页，可以查看公开资料和管理关注关系。</p>
-          {own ? (
-            <Link to="/settings/privacy">管理列表可见性 →</Link>
-          ) : (
-            <Link to={id ? `/users/${id}` : "/"}>回到食友主页 →</Link>
-          )}
-        </Note>
       </div>
     </div>
   );
@@ -571,11 +430,11 @@ export function DesktopNewShop() {
                 locked.current = true;
                 task.run(async () => {
                   try {
-                    const name = draft.name.trim(),
-                      address = draft.address.trim();
+                    const name = boundedText(draft.name, 20, "店名"),
+                      address = boundedText(draft.address, 30, "地址");
                     if (!name || !address)
                       throw new Error("请填写店名和详细地址。");
-                    await api.createRestaurant({
+                    const created = await api.createRestaurant({
                       name,
                       address,
                       gcjLng: Number(draft.lng),
@@ -583,7 +442,15 @@ export function DesktopNewShop() {
                       hubId: area?.hubId,
                     });
                     update({ done: true });
-                    m.setDraft({ shopName: name });
+                    if (created.revisionId) {
+                      shopDrafts.delete(key);
+                      nav(submissionPath(created, "/publish"));
+                      return;
+                    }
+                    m.setShopId(created.id);
+                    m.setDraft({ shopName: name, restaurantId: created.id });
+                    shopDrafts.delete(key);
+                    nav("/publish/dish");
                   } catch (error) {
                     if (resultUncertain(error)) update({ uncertain: true });
                     throw error;
@@ -619,9 +486,23 @@ export function DesktopNewShop() {
                 <h3>准确位置</h3>
               </div>
               <p className="pc-secondary-copy">
-                地图选点暂未开放，请填写店铺的 GCJ02
-                坐标。区域中心不能代替店铺位置。
+                在地图上点击店铺位置，可拖动标记微调。请确认是店铺所在位置，再提交。
               </p>
+              <div className="restaurant-map-picker">
+                <RestaurantMap
+                  pickedPoint={mapPoint({
+                    gcjLng: Number(draft.lng),
+                    gcjLat: Number(draft.lat),
+                  })}
+                  onPick={(point) =>
+                    update({
+                      lng: point.gcjLng.toFixed(6),
+                      lat: point.gcjLat.toFixed(6),
+                    })
+                  }
+                  disabled={task.isPending || draft.uncertain}
+                />
+              </div>
               <div className="pc-secondary-field-pair">
                 <label className="pc-secondary-field">
                   <span>GCJ02 经度</span>

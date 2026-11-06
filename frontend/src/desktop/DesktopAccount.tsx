@@ -1,18 +1,33 @@
+import { useSendSignal } from "../features/useSendSignal";
+import { PersonalizedRecommendation } from "../features/ApiV2";
 import { useEffect, useState, type ReactNode } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
+import { useAuthBusy, useAuthFlow } from "../app/auth-dialog";
 import { isDemo } from "../app/runtime";
 import { classifyAuth } from "../api/service";
 import { useTask } from "../components/useTask";
 import { DesignIcon as Icon } from "../mobile/ui";
+import { DishCarousel } from "../components/DishCarousel";
+import { setConsentProof, clearConsentProof } from "../app/consent";
 import {
-  getConsentProof,
-  setConsentProof,
-  clearConsentProof,
-} from "../mobile/bridge";
+  PolicyConsent,
+  usePolicyConsent,
+  ConsentRecovery,
+} from "../features/Consent";
 import { MobileBinding } from "../pages/ProfileExtras";
 import { ConsentSettings } from "../pages/Settings";
+import {
+  PasswordConsentWithdrawal,
+  VerificationMethods,
+} from "../features/AccountExtras";
+import {
+  PhoneLoginForm,
+  PasswordByCode,
+  SsoStart,
+  RecoverPassword,
+} from "../features/Account";
 import {
   Avatar,
   Note,
@@ -29,14 +44,19 @@ function Field({
   label,
   children,
   hint,
+  action,
 }: {
   label: string;
   children: ReactNode;
   hint?: string;
+  action?: ReactNode;
 }) {
   return (
     <label className="pc-secondary-field">
-      <span>{label}</span>
+      <span className={action ? "ew-auth-field-heading" : undefined}>
+        {label}
+        {action}
+      </span>
       {children}
       {hint && <small>{hint}</small>}
     </label>
@@ -104,9 +124,9 @@ function Account() {
       <div className="pc-secondary-columns">
         <Section title="你的账号">
           <div className="pc-secondary-identity">
-            <Avatar name={user?.userName} src={user?.avatar} />
+            <Avatar name={user?.displayName} src={user?.avatar} />
             <div>
-              <b>{user?.userName || "同学"}</b>
+              <b>{user?.displayName || "同学"}</b>
               <small>
                 {user?.verified ? "学生身份已认证" : "学生身份待认证"}
               </small>
@@ -134,6 +154,16 @@ function Account() {
             action={user?.phone ? "换绑" : "去绑定"}
           />
           <Row
+            title="登录名"
+            value={
+              user?.hasUsername
+                ? user.userName || "暂不可用"
+                : "设置后可使用登录名登录"
+            }
+            to={user?.hasUsername === false ? "/settings/username" : undefined}
+            action="去设置"
+          />
+          <Row
             title="登录密码"
             value="定期更新密码，保护你的账号"
             to="/settings/password"
@@ -141,13 +171,28 @@ function Account() {
           />
           <Row
             title="登录设备"
-            value="设备管理暂未开放"
+            value="查看有效会话，管理登录设备"
             to="/settings/devices"
-            action="了解"
+            action="管理"
+          />
+          <Row
+            title="通知偏好"
+            value="管理通知栏目与当前设备"
+            to="/settings/notifications"
+          />
+          <Row
+            title="使用统计"
+            value="自主选择是否分享最小使用统计"
+            to="/settings/telemetry"
+          />
+          <Row
+            title="全部功能"
+            value="专题、反馈、收藏餐厅与提交记录"
+            to="/features"
           />
           <Row
             title="注销账号"
-            value="自助注销暂未开放"
+            value="申请注销及查询处理进度"
             to="/settings/delete"
             action="了解"
           />
@@ -170,86 +215,100 @@ function Account() {
   );
 }
 function Password() {
-  const { api } = useApp(),
+  const { api, user } = useApp(),
     task = useTask("密码已更新");
   return (
     <>
       <PageHead
-        title="修改密码"
-        detail="使用一个新的密码，保护你的校园美食档案。"
+        title={user?.hasPassword === false ? "设置密码" : "修改密码"}
+        detail={
+          user?.hasPassword === false
+            ? "完成账号验证后，设置你的登录密码。"
+            : "使用一个新的密码，保护你的校园美食档案。"
+        }
         back="/settings/account"
         crumb="账号与安全"
       />
-      <div className="pc-secondary-columns">
-        <Section title="设置新密码">
-          <form
-            className="pc-secondary-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const form = e.currentTarget,
-                d = new FormData(form);
-              task.run(async () => {
-                const oldPassword = String(d.get("old") || ""),
-                  newPassword = String(d.get("password") || "");
-                if (newPassword !== d.get("confirm"))
-                  throw new Error("两次输入的新密码不一致。");
-                if (oldPassword === newPassword)
-                  throw new Error("新密码需要与当前密码不同。");
-                await api.changePassword({ oldPassword, newPassword });
-                form.reset();
-              });
-            }}
-          >
-            <Field label="当前密码">
-              <input
-                name="old"
-                type="password"
-                autoComplete="current-password"
-                required
-              />
-            </Field>
-            <div className="pc-secondary-field-pair">
-              <Field label="新密码" hint="6–64 个字符">
-                <input
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  minLength={6}
-                  maxLength={64}
-                  required
-                />
-              </Field>
-              <Field label="再次输入新密码">
-                <input
-                  name="confirm"
-                  type="password"
-                  autoComplete="new-password"
-                  minLength={6}
-                  maxLength={64}
-                  required
-                />
-              </Field>
-            </div>
-            <TaskError error={task.error} />
-            <div className="pc-secondary-form-footer">
-              <Link to="/settings/account">返回账号与安全</Link>
-              <button className="pc-button" disabled={task.isPending}>
-                {task.isPending ? "正在更新…" : "更新密码"}
-              </button>
-            </div>
-            {task.isSuccess && (
-              <p className="pc-secondary-success" role="status">
-                密码已更新。
+      {user?.hasPassword === false ? (
+        <PasswordByCode />
+      ) : (
+        <>
+          <div className="pc-secondary-columns">
+            <Section title="设置新密码">
+              <form
+                className="pc-secondary-form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const form = e.currentTarget,
+                    d = new FormData(form);
+                  task.run(async () => {
+                    const oldPassword = String(d.get("old") || ""),
+                      newPassword = String(d.get("password") || "");
+                    if (newPassword !== d.get("confirm"))
+                      throw new Error("两次输入的新密码不一致。");
+                    if (oldPassword === newPassword)
+                      throw new Error("新密码需要与当前密码不同。");
+                    await api.changePassword({ oldPassword, newPassword });
+                    form.reset();
+                  });
+                }}
+              >
+                <Field label="当前密码">
+                  <input
+                    name="old"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                  />
+                </Field>
+                <div className="pc-secondary-field-pair">
+                  <Field label="新密码" hint="6–64 个字符">
+                    <input
+                      name="password"
+                      type="password"
+                      autoComplete="new-password"
+                      minLength={6}
+                      maxLength={64}
+                      required
+                    />
+                  </Field>
+                  <Field label="再次输入新密码">
+                    <input
+                      name="confirm"
+                      type="password"
+                      autoComplete="new-password"
+                      minLength={6}
+                      maxLength={64}
+                      required
+                    />
+                  </Field>
+                </div>
+                <TaskError error={task.error} />
+                <div className="pc-secondary-form-footer">
+                  <Link to="/settings/account">返回账号与安全</Link>
+                  <button className="pc-button" disabled={task.isPending}>
+                    {task.isPending ? "正在更新…" : "更新密码"}
+                  </button>
+                </div>
+                {task.isSuccess && (
+                  <p className="pc-secondary-success" role="status">
+                    密码已更新。
+                  </p>
+                )}
+              </form>
+            </Section>
+            <Note title="记住这个新密码" icon="lock">
+              <p>
+                建议使用与其他网站不同的密码，不要包含学号、生日等容易猜测的信息。
               </p>
-            )}
-          </form>
-        </Section>
-        <Note title="记住这个新密码" icon="lock">
-          <p>
-            建议使用与其他网站不同的密码，不要包含学号、生日等容易猜测的信息。
-          </p>
-        </Note>
-      </div>
+            </Note>
+          </div>
+          <details className="pc-secondary-section">
+            <summary>使用绑定手机验证码设置密码</summary>
+            <PasswordByCode />
+          </details>
+        </>
+      )}
     </>
   );
 }
@@ -268,6 +327,7 @@ function Privacy() {
         back="/settings"
         crumb="设置"
       />
+      <PersonalizedRecommendation />
       {q.isPending || q.isError ? (
         <State
           loading={q.isPending}
@@ -356,7 +416,7 @@ function PrivacyForm({
         <p>
           关闭后，其他同学无法查看对应列表。你依然可以在自己的主页查看和管理关注关系。
         </p>
-        <Link to="/follows">管理关注与粉丝 →</Link>
+        <Link to="/me?people=follow">在我的主页查看关注与粉丝 →</Link>
       </Note>
     </div>
   );
@@ -385,9 +445,9 @@ function Binding() {
   );
 }
 function Verification() {
+  const getSignal = useSendSignal();
   const { api, user, me, refreshMe } = useApp(),
-    send = useTask("验证邮件已发送，请到邮箱完成验证"),
-    url = import.meta.env.VITE_SDU_AUTH_URL;
+    send = useTask("验证邮件已发送，请到邮箱完成验证");
   return (
     <>
       <PageHead
@@ -423,26 +483,7 @@ function Verification() {
             </div>
           ) : (
             <>
-              <div className="pc-secondary-row">
-                <div>
-                  <b>学校统一认证</b>
-                  <p>
-                    {url
-                      ? "在学校认证页面完成身份确认。"
-                      : "学校认证入口还未开放，请使用邮箱认证。"}
-                  </p>
-                </div>
-                {url && (
-                  <a
-                    className="pc-button light"
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    前往认证 ↗
-                  </a>
-                )}
-              </div>
+              <SsoStart />
               <form
                 className="pc-secondary-form"
                 onSubmit={(e) => {
@@ -456,7 +497,7 @@ function Verification() {
                       !email.toLowerCase().endsWith("@" + domain.toLowerCase())
                     )
                       throw new Error(`请使用 @${domain} 邮箱。`);
-                    await api.sendEmail(email);
+                    await api.sendEmail(email, getSignal());
                   });
                 }}
               >
@@ -476,16 +517,22 @@ function Verification() {
                     required
                   />
                 </Field>
+                {send.isSuccess && (
+                  <p role="status">
+                    验证邮件已发送，请到邮箱完成认证后刷新状态。
+                  </p>
+                )}
                 <TaskError error={send.error} />
                 <button
                   className="pc-button"
-                  disabled={isDemo || send.isPending}
+                  disabled={send.isPending || send.isSuccess}
                 >
                   {send.isPending ? "正在发送…" : "发送认证邮件"}
                 </button>
               </form>
             </>
           )}
+          <VerificationMethods />
           <div className="pc-secondary-row">
             <div>
               <b>已经完成认证？</b>
@@ -620,11 +667,17 @@ export function DesktopAuth() {
           <br />
           也分享你的私藏。
         </p>
-        <img src="/prototype/assets/dishes/yuntun.svg" alt="一碗鲜虾云吞" />
+        <DishCarousel />
         <small>好好吃饭，认真生活。</small>
       </aside>
       <section className="pc-secondary-auth-content" key={path}>
-        {pendingPages[path] ? (
+        {path === "/auth/withdraw-consent" ? (
+          <PasswordConsentWithdrawal />
+        ) : path === "/auth/forgot" ? (
+          <RecoverPassword />
+        ) : ["/auth/register", "/auth/register/confirm"].includes(path) ? (
+          <PhoneLoginForm embedded />
+        ) : pendingPages[path] ? (
           <PendingPage path={path} />
         ) : path === "/auth/consent" ? (
           <Consent />
@@ -635,33 +688,41 @@ export function DesktopAuth() {
     </div>
   );
 }
-function AuthForm({ register }: { register: boolean }) {
+export function AuthForm({
+  register,
+  compact = false,
+}: {
+  register: boolean;
+  compact?: boolean;
+}) {
+  const { navigate: nav, location: loc, finish } = useAuthFlow();
   const { api, signIn, session } = useApp(),
-    nav = useNavigate(),
-    loc = useLocation(),
     task = useTask(),
     check = useTask("这个用户名可以使用"),
-    [checked, setChecked] = useState(false);
+    [checked, setChecked] = useState(false),
+    [showPassword, setShowPassword] = useState(false);
+  const consent = usePolicyConsent();
+  useAuthBusy(task.isPending || check.isPending);
   const next = new URLSearchParams(loc.search).get("next"),
     suffix = next ? "?next=" + encodeURIComponent(next) : "";
   async function authenticate(username: string, password: string) {
+    const accepted = await consent.requireAcceptance();
+    clearConsentProof();
+    if (register) await api.checkUsername(username);
     const reply = register
-      ? await api.register({ username, password, device: "WEB" })
-      : await api.login({ username, password, device: "WEB" });
+      ? await api.register({
+          userName: username,
+          password,
+          device: "WEB",
+          ...accepted,
+        })
+      : await api.login({ userName: username, password, device: "WEB" });
     const result = classifyAuth(reply);
     if (result.kind === "session") {
       await signIn(result.session);
-      nav(
-        next?.startsWith("/") &&
-          !next.startsWith("//") &&
-          !next.startsWith("/auth")
-          ? next
-          : register
-            ? "/verify"
-            : "/",
-      );
+      finish(register ? "/verify" : "/");
     } else if (result.kind === "consent") {
-      setConsentProof(result.proof);
+      setConsentProof(result.proof, "/auth/password" + suffix);
       nav("/auth/consent");
     } else throw new Error(result.message);
   }
@@ -682,26 +743,30 @@ function AuthForm({ register }: { register: boolean }) {
     );
   return (
     <>
-      <nav className="pc-secondary-auth-tabs" aria-label="登录与注册">
-        <Link
-          aria-current={!register ? "page" : undefined}
-          to={"/auth/password" + suffix}
-        >
-          欢迎回来
-        </Link>
-        <Link
-          aria-current={register ? "page" : undefined}
-          to={"/auth/username-register" + suffix}
-        >
-          加入食友圈
-        </Link>
-      </nav>
-      <h2>{register ? "创建你的账号" : "登录，开启今日份美味"}</h2>
-      <p className="pc-secondary-copy">
-        {register
-          ? "注册后，完成学生认证就能参与分享。"
-          : "用用户名、邮箱或手机号与密码登录。"}
-      </p>
+      {!compact && (
+        <>
+          <nav className="pc-secondary-auth-tabs" aria-label="登录与注册">
+            <Link
+              aria-current={!register ? "page" : undefined}
+              to={"/auth" + suffix}
+            >
+              欢迎回来
+            </Link>
+            <Link
+              aria-current={register ? "page" : undefined}
+              to={"/auth/username-register" + suffix}
+            >
+              加入食友圈
+            </Link>
+          </nav>
+          <h2>{register ? "创建你的账号" : "登录，开启今日份美味"}</h2>
+          <p className="pc-secondary-copy">
+            {register
+              ? "注册后，完成学生认证就能参与分享。"
+              : "用用户名、邮箱或手机号与密码登录。"}
+          </p>
+        </>
+      )}
       <form
         className="pc-secondary-form"
         onSubmit={(e) => {
@@ -713,7 +778,6 @@ function AuthForm({ register }: { register: boolean }) {
             if (register) {
               if (password !== d.get("confirm"))
                 throw new Error("两次输入的密码不一致。");
-              await api.checkUsername(username);
             }
             await authenticate(username, password);
           });
@@ -726,6 +790,9 @@ function AuthForm({ register }: { register: boolean }) {
           <input
             id="pc-auth-username"
             name="username"
+            defaultValue={
+              (loc.state as { userName?: string } | null)?.userName ?? ""
+            }
             autoComplete="username"
             minLength={register ? 3 : 1}
             maxLength={register ? 10 : 64}
@@ -758,15 +825,41 @@ function AuthForm({ register }: { register: boolean }) {
             {checked ? "用户名可用" : "检查用户名是否可用"}
           </button>
         )}
-        <Field label="密码" hint={register ? "6–64 个字符" : undefined}>
-          <input
-            name="password"
-            type="password"
-            autoComplete={register ? "new-password" : "current-password"}
-            minLength={register ? 6 : 1}
-            maxLength={register ? 64 : undefined}
-            required
-          />
+        <Field
+          label="密码"
+          hint={register ? "6–64 个字符" : undefined}
+          action={
+            compact && !register ? (
+              <Link to={"/auth/forgot" + suffix}>忘记密码？</Link>
+            ) : undefined
+          }
+        >
+          <span className="pc-auth-password">
+            <input
+              name="password"
+              aria-label="密码"
+              type={showPassword ? "text" : "password"}
+              autoComplete={register ? "new-password" : "current-password"}
+              minLength={register ? 6 : 1}
+              maxLength={register ? 64 : undefined}
+              required
+              placeholder={
+                compact
+                  ? register
+                    ? "设置你的密码"
+                    : "输入登录密码"
+                  : undefined
+              }
+            />
+            <button
+              type="button"
+              aria-label={showPassword ? "隐藏密码" : "显示密码"}
+              aria-pressed={showPassword}
+              onClick={() => setShowPassword((visible) => !visible)}
+            >
+              <Icon name={showPassword ? "eye" : "eyeOff"} size={19} />
+            </button>
+          </span>
         </Field>
         {register ? (
           <Field label="再次输入密码">
@@ -780,23 +873,37 @@ function AuthForm({ register }: { register: boolean }) {
             />
           </Field>
         ) : (
-          <Link
-            className="pc-secondary-text-link pc-secondary-auth-forgot"
-            to="/auth/forgot"
-          >
-            忘记密码？
-          </Link>
+          !compact && (
+            <Link
+              className="pc-secondary-text-link pc-secondary-auth-forgot"
+              to={"/auth/forgot" + suffix}
+            >
+              忘记密码？
+            </Link>
+          )
         )}
+        <PolicyConsent
+          consent={consent}
+          busy={task.isPending}
+          showWithdrawalLink={!compact}
+        />
         <TaskError error={task.error || check.error} />
-        <button className="pc-button" disabled={task.isPending}>
+        <button
+          className={compact ? "ew-auth-submit" : "pc-button"}
+          disabled={task.isPending || !consent.canSubmit}
+        >
           {task.isPending ? "正在处理…" : register ? "注册账号" : "登录"}
           <Icon name="chevronRight" size={17} />
         </button>
       </form>
       {isDemo && !register && (
         <button
-          className="pc-button light pc-secondary-demo-login"
-          disabled={task.isPending}
+          className={
+            compact
+              ? "ew-auth-demo-login"
+              : "pc-button light pc-secondary-demo-login"
+          }
+          disabled={task.isPending || !consent.canSubmit}
           onClick={() =>
             task.run(() => authenticate("mock_student", "mock-password"))
           }
@@ -804,121 +911,32 @@ function AuthForm({ register }: { register: boolean }) {
           使用演示账号登录
         </button>
       )}
-      <p className="pc-secondary-auth-footnote">
-        {register ? (
-          <>
-            手机验证码注册暂未开放。
-            <Link to="/auth/password">已有账号，去登录</Link>
-          </>
-        ) : (
-          <>
-            还没有账号？
-            <Link to={"/auth/username-register" + suffix}>注册一个</Link>
-          </>
-        )}
-      </p>
+      {!compact && (
+        <>
+          <Link
+            className="pc-secondary-text-link"
+            to={"/auth/register" + suffix}
+          >
+            使用手机验证码登录 / 注册 →
+          </Link>
+          <p className="pc-secondary-auth-footnote">
+            {register ? (
+              <>
+                手机验证码也可直接登录或注册。
+                <Link to={"/auth" + suffix}>已有账号，去登录</Link>
+              </>
+            ) : (
+              <>
+                还没有账号？
+                <Link to={"/auth/username-register" + suffix}>注册一个</Link>
+              </>
+            )}
+          </p>
+        </>
+      )}
     </>
   );
 }
 function Consent() {
-  const { api } = useApp(),
-    [agreed, setAgreed] = useState(false),
-    [done, setDone] = useState(false),
-    task = useTask(undefined, () => {
-      clearConsentProof();
-      setDone(true);
-    }),
-    q = useQuery({
-      queryKey: ["consent-policy"],
-      queryFn: () => api.consentPolicy(),
-    }),
-    url = import.meta.env.VITE_CONSENT_POLICY_URL;
-  useEffect(() => {
-    setAgreed(false);
-  }, [q.data?.policyVersion]);
-  return (
-    <>
-      <span className="pc-secondary-badge">授权确认</span>
-      <h2>
-        继续之前，
-        <br />
-        再确认一次。
-      </h2>
-      <p className="pc-secondary-copy">
-        了解当前的跨站同步政策，确认后继续完成登录。
-      </p>
-      {q.isPending || q.isError ? (
-        <State
-          loading={q.isPending}
-          error={q.error}
-          retry={() => void q.refetch()}
-        />
-      ) : done ? (
-        <State title="授权请求已提交" detail="请重新登录，查看最新的账号状态。">
-          <Link className="pc-button" to="/auth/password">
-            返回登录
-          </Link>
-        </State>
-      ) : (
-        <>
-          <div className="pc-secondary-policy">
-            <b>当前政策版本</b>
-            <span>{q.data.policyVersion || "暂未提供"}</span>
-          </div>
-          {url ? (
-            <a
-              className="pc-secondary-text-link"
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              阅读完整政策 ↗
-            </a>
-          ) : (
-            <p className="pc-secondary-copy">
-              政策全文暂未开放，当前无法提交同意。
-            </p>
-          )}
-          <label className="pc-secondary-checkbox">
-            <input
-              type="checkbox"
-              checked={agreed}
-              disabled={task.isPending}
-              onChange={(e) => setAgreed(e.target.checked)}
-            />
-            我已阅读并同意当前政策
-          </label>
-          {!getConsentProof() && (
-            <p className="pc-secondary-copy">
-              请先返回登录，获取本次授权确认信息。
-            </p>
-          )}
-          <TaskError error={task.error} />
-          <button
-            className="pc-button"
-            disabled={
-              !agreed ||
-              !url ||
-              !getConsentProof() ||
-              !q.data.policyVersion ||
-              task.isPending
-            }
-            onClick={() =>
-              task.run(() =>
-                api.grantConsent({
-                  proof: getConsentProof(),
-                  policyVersion: q.data!.policyVersion!,
-                }),
-              )
-            }
-          >
-            {task.isPending ? "正在确认…" : "同意并继续"}
-          </button>
-        </>
-      )}
-      <Link className="pc-secondary-text-link" to="/auth/password">
-        返回登录
-      </Link>
-    </>
-  );
+  return <ConsentRecovery />;
 }

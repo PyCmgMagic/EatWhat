@@ -1,6 +1,13 @@
-import { useState } from "react";
+import { Select } from "../components/Select";
+import { lazy, Suspense, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useAdminReturnTo, useAdminState } from "../app/admin-state";
+import {
+  foodEditBody,
+  restaurantEditBody,
+  submissionPath,
+} from "../api/content-rules";
 import { useApp } from "../app/state";
 import type { Api } from "../api/service";
 import {
@@ -22,10 +29,32 @@ import {
   Pagination,
 } from "../components/ui";
 import { useTask } from "../components/useTask";
-type AdminTab = "summary" | "restaurants" | "foods" | "tags" | "users" | "hubs";
+import AdminSync from "./AdminSync";
+const AdminPolicy = lazy(() =>
+  import("./AdminApiV2").then((m) => ({ default: m.AdminPolicy })),
+);
+const AccountReviews = lazy(() =>
+  import("./AdminApiV2").then((m) => ({ default: m.AccountReviews })),
+);
+const AdminPasswordReset = lazy(() =>
+  import("./AdminApiV2").then((m) => ({ default: m.AdminPasswordReset })),
+);
+type AdminTab =
+  | "summary"
+  | "restaurants"
+  | "foods"
+  | "tags"
+  | "users"
+  | "hubs"
+  | "sync"
+  | "policy"
+  | "security";
 export default function Admin() {
   const { user } = useApp(),
-    [tab, setTab] = useState<AdminTab>("summary");
+    [params, setParams] = useSearchParams();
+  const operationsReturnTo = useAdminReturnTo("/admin/v4");
+  const tab = (params.get("tab") ?? "summary") as AdminTab;
+  const setTab = (tab: AdminTab) => setParams({ tab });
   return (
     <>
       <Intro
@@ -35,6 +64,9 @@ export default function Admin() {
       <Gate verified={false}>
         {user?.role === "admin" ? (
           <>
+            <Link className="button" to={operationsReturnTo}>
+              反馈、提交审核与运营管理 →
+            </Link>
             <div className="admin-tabs chips">
               {(
                 [
@@ -44,6 +76,9 @@ export default function Admin() {
                   { id: "tags", name: "公共标签" },
                   { id: "users", name: "用户管理" },
                   { id: "hubs", name: "区域维护" },
+                  { id: "sync", name: "跨站同步" },
+                  { id: "policy", name: "授权政策" },
+                  { id: "security", name: "账号安全复核" },
                 ] as { id: AdminTab; name: string }[]
               ).map((t) => (
                 <button
@@ -65,6 +100,16 @@ export default function Admin() {
               <AdminTags />
             ) : tab === "users" ? (
               <AdminUsers />
+            ) : tab === "policy" ? (
+              <Suspense fallback={<Loading />}>
+                <AdminPolicy />
+              </Suspense>
+            ) : tab === "security" ? (
+              <Suspense fallback={<Loading />}>
+                <AccountReviews />
+              </Suspense>
+            ) : tab === "sync" ? (
+              <AdminSync />
             ) : (
               <AdminHubs />
             )}
@@ -187,9 +232,13 @@ function DeleteDialog({
   );
 }
 function AdminRestaurants() {
+  const [params] = useSearchParams();
   const { api } = useApp(),
-    [page, setPage] = useState(1),
-    [keyword, setKeyword] = useState(""),
+    [page, setPage] = useAdminState("restaurants.page", 1),
+    [keyword, setKeyword] = useAdminState(
+      "restaurants.keyword:" + (params.get("keyword") ?? ""),
+      params.get("keyword") ?? "",
+    ),
     [edit, setEdit] = useState<Restaurant | null>(null),
     [del, setDel] = useState<Restaurant | null>(null);
   const q = useQuery({
@@ -213,6 +262,7 @@ function AdminRestaurants() {
           name="keyword"
           placeholder="查找餐厅名称"
           aria-label="管理员查找餐厅"
+          defaultValue={keyword}
         />
         <button className="btn btn-primary">查找</button>
       </form>
@@ -286,21 +336,27 @@ function RestaurantEditor({
   restaurant: Restaurant;
   onClose: () => void;
 }) {
-  const { api } = useApp(),
-    task = useTask("餐厅资料已更新", onClose, ["admin", "restaurants"]);
+  const { api, toast } = useApp(),
+    nav = useNavigate(),
+    task = useTask(undefined, onClose, ["admin", "restaurants"]);
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
         const d = new FormData(e.currentTarget);
-        task.run(() =>
-          api.editRestaurant(r.id!, {
-            name: String(d.get("name")).trim(),
-            address: String(d.get("address")).trim(),
-            gcjLng: Number(d.get("lng")),
-            gcjLat: Number(d.get("lat")),
-          }),
-        );
+        task.run(async () => {
+          const result = await api.editRestaurant(
+            r.id!,
+            restaurantEditBody(r, {
+              name: String(d.get("name")).trim(),
+              address: String(d.get("address")).trim(),
+              gcjLng: Number(d.get("lng")),
+              gcjLat: Number(d.get("lat")),
+            }),
+          );
+          toast(result?.revisionId ? "修改已提交审核。" : "餐厅资料已更新。");
+          if (result?.revisionId) nav(submissionPath(result, "/admin"));
+        });
       }}
     >
       <label className="form-label" htmlFor="admin-store-name">
@@ -332,89 +388,123 @@ function RestaurantEditor({
   );
 }
 function AdminFoods() {
-  const { api, user } = useApp(),
-    [restaurantId, setRestaurantId] = useState<number>(),
-    [page, setPage] = useState(1),
+  const { api } = useApp(),
+    [filters, setFilters] = useAdminState<{
+      restaurantId?: number;
+      keyword?: string;
+      category?: string;
+      sort?: string;
+    }>("foods.filters", {}),
+    [page, setPage] = useAdminState("foods.page", 1),
     [edit, setEdit] = useState<Food | null>(null),
-    [del, setDel] = useState<Food | null>(null);
-  const q = useQuery({
-    queryKey: ["foods", "admin", restaurantId, page],
-    queryFn: () => api.foods(restaurantId!, page),
-    enabled: !!restaurantId && user?.verified === true,
-  });
-  if (user?.verified !== true)
-    return (
-      <Empty title="此账号尚未获得菜品读取权限">
-        v2 的菜品读取同时要求
-        verified，请先在账号设置完成认证；管理员身份不会自动替代认证。
-      </Empty>
-    );
+    [del, setDel] = useState<Food | null>(null),
+    q = useQuery({
+      queryKey: ["foods", "admin", filters, page],
+      queryFn: () =>
+        api.foods(filters.restaurantId, page, {
+          keyword: filters.keyword,
+          category: filters.category,
+          sort: filters.sort,
+        }),
+    });
   return (
     <>
       <form
         className="inline-form admin-search"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setRestaurantId(Number(new FormData(e.currentTarget).get("id")));
+        onSubmit={(event) => {
+          event.preventDefault();
+          const data = new FormData(event.currentTarget);
+          setFilters({
+            restaurantId: data.get("id") ? Number(data.get("id")) : undefined,
+            keyword: String(data.get("keyword") || "").trim() || undefined,
+            category: String(data.get("category") || "") || undefined,
+            sort: String(data.get("sort") || "NEWEST"),
+          });
           setPage(1);
         }}
       >
+        <input
+          name="keyword"
+          className="field"
+          aria-label="菜品关键词"
+          defaultValue={filters.keyword}
+          placeholder="搜索菜名"
+        />
         <input
           name="id"
           className="field"
           type="number"
           min="1"
           step="1"
-          placeholder="输入准确的餐厅编号"
+          placeholder="餐厅编号（选填）"
           aria-label="餐厅编号"
-          required
+          defaultValue={filters.restaurantId}
         />
-        <button className="btn btn-primary">读取店内菜品</button>
+        <Select
+          name="category"
+          className="field"
+          aria-label="管理菜品分类"
+          defaultValue={filters.category}
+        >
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.label}
+            </option>
+          ))}
+        </Select>
+        <Select
+          name="sort"
+          className="field"
+          aria-label="管理菜品排序"
+          defaultValue={filters.sort}
+        >
+          <option value="NEWEST">最新分享</option>
+          <option value="POPULAR">最多点赞</option>
+          <option value="PRICE_ASC">价格从低到高</option>
+          <option value="PRICE_DESC">价格从高到低</option>
+        </Select>
+        <button className="btn btn-primary">查询菜品</button>
       </form>
       <p className="section-caption">
-        当前契约没有管理员全站菜品列表。请先在餐厅维护中确认餐厅编号，再读取该店菜品。
+        默认查看全站菜品；可按名称、分类或餐厅筛选。内容编辑和删除仅限管理员。
       </p>
-      {restaurantId ? (
-        q.isPending ? (
-          <Loading />
-        ) : q.isError ? (
-          <ErrorState error={q.error} retry={() => void q.refetch()} />
-        ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>菜品</th>
-                  <th>编号</th>
-                  <th>价格</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {q.data.items?.map((f) => (
-                  <tr key={f.id}>
-                    <td>{f.name}</td>
-                    <td>{f.id}</td>
-                    <td>{money(f.price)}</td>
-                    <td>
-                      <div className="table-actions">
-                        <button onClick={() => setEdit(f)}>编辑</button>
-                        <button onClick={() => setDel(f)}>删除</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {!q.data.items?.length && (
-              <p className="table-empty">这家餐厅暂无菜品</p>
-            )}
-          </div>
-        )
+      {q.isPending ? (
+        <Loading />
+      ) : q.isError ? (
+        <ErrorState error={q.error} retry={() => void q.refetch()} />
       ) : (
-        <Empty title="选一家餐厅，开始维护">
-          使用准确的餐厅编号查询该店菜品。
-        </Empty>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>菜品</th>
+                <th>餐厅</th>
+                <th>编号</th>
+                <th>价格</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {q.data.items?.map((food) => (
+                <tr key={food.id}>
+                  <td>{food.name}</td>
+                  <td>{food.restaurantName || "—"}</td>
+                  <td>{food.id}</td>
+                  <td>{money(food.price)}</td>
+                  <td>
+                    <div className="table-actions">
+                      <button onClick={() => setEdit(food)}>编辑</button>
+                      <button onClick={() => setDel(food)}>删除</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!q.data.items?.length && (
+            <p className="table-empty">当前条件下没有菜品</p>
+          )}
+        </div>
       )}
       <Pagination
         page={page}
@@ -430,7 +520,7 @@ function AdminFoods() {
       {del && (
         <DeleteDialog
           title={`删除「${del.name}」？`}
-          description="删除将使公共菜品条目不可用，并可能影响收藏、标签与浏览记录。请确认该内容确实需要删除。"
+          description="删除会影响公共内容、收藏和浏览记录，请确认该条目确实需要删除。"
           run={() => api.deleteFood(del.id!)}
           onClose={() => setDel(null)}
         />
@@ -439,23 +529,29 @@ function AdminFoods() {
   );
 }
 function FoodEditor({ food: f, onClose }: { food: Food; onClose: () => void }) {
-  const { api } = useApp(),
-    task = useTask("菜品资料已更新", onClose, ["foods", "admin"]);
+  const { api, toast } = useApp(),
+    nav = useNavigate(),
+    task = useTask(undefined, onClose, ["foods", "admin"]);
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
         const d = new FormData(e.currentTarget);
-        task.run(() =>
-          api.editFood(f.id!, {
-            name: String(d.get("name")).trim(),
-            description: String(d.get("description") || ""),
-            price: d.get("price") === "" ? undefined : Number(d.get("price")),
-            category: String(
-              d.get("category"),
-            ) as Schema["EditFoodDTORequest"]["category"],
-          }),
-        );
+        task.run(async () => {
+          const result = await api.editFood(
+            f.id!,
+            foodEditBody(f, {
+              name: String(d.get("name")).trim(),
+              description: String(d.get("description") || ""),
+              price: d.get("price") === "" ? undefined : Number(d.get("price")),
+              category: String(
+                d.get("category"),
+              ) as Schema["EditFoodDTORequest"]["category"],
+            }),
+          );
+          toast(result?.revisionId ? "修改已提交审核。" : "菜品资料已更新。");
+          if (result?.revisionId) nav(submissionPath(result, "/admin"));
+        });
       }}
     >
       <label className="form-label" htmlFor="admin-food-name">
@@ -466,7 +562,6 @@ function FoodEditor({ food: f, onClose }: { food: Food; onClose: () => void }) {
         id="admin-food-name"
         name="name"
         defaultValue={f.name || ""}
-        maxLength={64}
         required
       />
       <div className="form-two-cols">
@@ -480,7 +575,7 @@ function FoodEditor({ food: f, onClose }: { food: Food; onClose: () => void }) {
             name="price"
             type="number"
             min="0"
-            step="0.01"
+            step="any"
             defaultValue={f.price ?? ""}
           />
         </div>
@@ -488,7 +583,7 @@ function FoodEditor({ food: f, onClose }: { food: Food; onClose: () => void }) {
           <label className="form-label" htmlFor="admin-food-category">
             基础分类
           </label>
-          <select
+          <Select
             id="admin-food-category"
             className="field"
             name="category"
@@ -501,7 +596,7 @@ function FoodEditor({ food: f, onClose }: { food: Food; onClose: () => void }) {
                   {c.label}
                 </option>
               ))}
-          </select>
+          </Select>
         </div>
       </div>
       <label className="form-label" htmlFor="admin-food-description">
@@ -511,7 +606,6 @@ function FoodEditor({ food: f, onClose }: { food: Food; onClose: () => void }) {
         className="field"
         id="admin-food-description"
         name="description"
-        maxLength={2000}
         defaultValue={f.description || ""}
       />
       {task.error && <ErrorState error={task.error} />}
@@ -523,7 +617,7 @@ function FoodEditor({ food: f, onClose }: { food: Food; onClose: () => void }) {
 }
 function AdminTags() {
   const { api } = useApp(),
-    [page, setPage] = useState(1),
+    [page, setPage] = useAdminState("tags.page", 1),
     [edit, setEdit] = useState<Schema["AdminFoodTagVOResponse"] | null>(null),
     [del, setDel] = useState<Schema["AdminFoodTagVOResponse"] | null>(null),
     q = useQuery({
@@ -660,7 +754,8 @@ function NameEditor({
 }
 function AdminUsers() {
   const { api } = useApp(),
-    [page, setPage] = useState(1),
+    [page, setPage] = useAdminState("users.page", 1),
+    [reset, setReset] = useState<Schema["UserListItemVOResponse"] | null>(null),
     [edit, setEdit] = useState<Schema["UserListItemVOResponse"] | null>(null),
     q = useQuery({
       queryKey: ["admin", "users", page],
@@ -688,7 +783,10 @@ function AdminUsers() {
               {q.data.items?.map((u) => (
                 <tr key={u.id}>
                   <td>
-                    {u.userName}
+                    {u.displayName || "校园食友"}
+                    <small className="cell-secondary">
+                      登录名：{u.userName || "未设置"}
+                    </small>
                     <small className="cell-secondary">#{u.id}</small>
                   </td>
                   <td>{u.role || "—"}</td>
@@ -697,6 +795,13 @@ function AdminUsers() {
                   <td>
                     <button className="text-link" onClick={() => setEdit(u)}>
                       管理状态
+                    </button>
+                    <button
+                      className="text-link"
+                      onClick={() => setReset(u)}
+                      disabled={!u.id}
+                    >
+                      重置密码冲突
                     </button>
                   </td>
                 </tr>
@@ -711,9 +816,20 @@ function AdminUsers() {
         totalPages={q.data?.totalPages}
         onPage={setPage}
       />
+      {reset?.id && (
+        <Modal title="重置账号密码冲突" onClose={() => setReset(null)}>
+          <Suspense fallback={<Loading />}>
+            <AdminPasswordReset
+              userId={reset.id}
+              displayName={reset.displayName || reset.userName || "校园食友"}
+              onDone={() => setReset(null)}
+            />
+          </Suspense>
+        </Modal>
+      )}
       {edit && (
         <Modal
-          title={`管理「${edit.userName}」的账号状态`}
+          title={`管理「${edit.displayName || edit.userName}」的账号状态`}
           onClose={() => setEdit(null)}
         >
           <BanEditor user={edit} onClose={() => setEdit(null)} />
@@ -735,7 +851,7 @@ function BanEditor({
     <>
       <p className="modal-description">
         当前状态：{u.accountStatus?.accountStatus || "待确认"}
-        。封禁为永久封禁，必须填写原因；解除封禁使用单独操作。
+        。可设置截止时间，留空代表永久封禁。
       </p>
       <form
         onSubmit={(e) => {
@@ -743,7 +859,17 @@ function BanEditor({
           const reason = String(
             new FormData(e.currentTarget).get("reason") || "",
           ).trim();
-          if (reason) task.run(() => api.ban(u.id!, reason));
+          const until = String(
+            new FormData(e.currentTarget).get("until") || "",
+          );
+          if (reason)
+            task.run(() =>
+              api.ban(
+                u.id!,
+                reason,
+                until ? new Date(until).toISOString() : undefined,
+              ),
+            );
         }}
       >
         <label className="form-label" htmlFor="ban-reason">
@@ -757,8 +883,17 @@ function BanEditor({
           maxLength={255}
           required
         />
+        <label className="form-label">
+          封禁截止时间（可选）
+          <input
+            className="field"
+            name="until"
+            type="datetime-local"
+            min={new Date().toISOString().slice(0, 16)}
+          />
+        </label>
         <button className="btn btn-primary" disabled={task.isPending || !u.id}>
-          确认永久封禁
+          确认封禁
         </button>
         <button
           className="btn btn-secondary"
@@ -775,7 +910,7 @@ function BanEditor({
 }
 function AdminHubs() {
   const { api } = useApp(),
-    [page, setPage] = useState(1),
+    [page, setPage] = useAdminState("hubs.page", 1),
     [edit, setEdit] = useState<Hub | true | null>(null),
     [action, setAction] = useState<{
       hub: Hub;

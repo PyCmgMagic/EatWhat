@@ -3,6 +3,13 @@ scripts/browser-*.js
 scripts/prototype-*.js
 scripts/desktop-*.js
 scripts/mock-*.js
+scripts/latest-api-*.js
+scripts/api-v2-*.js
+scripts/api-v3-*.js
 src/mobile/generated/**
 src/api/schema.d.ts
 dist/
+scripts/api-v4-*.js
+scripts/baidu-map-lifecycle.js
+scripts/features-redesign*.js
+scripts/settings-*.js

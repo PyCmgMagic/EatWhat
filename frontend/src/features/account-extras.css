@@ -1,0 +1,128 @@
+.ew-withdrawal {
+  color: #231c18;
+  font-family: "Noto Sans SC Variable", sans-serif;
+  max-width: 600px;
+  margin: auto;
+}
+.ew-withdrawal-back {
+  display: block;
+  color: #78685d;
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+.ew-withdrawal h2 {
+  font-size: 26px;
+  line-height: 1.5;
+  margin: 14px 0;
+}
+.ew-withdrawal p {
+  font-size: 14px;
+  color: #6e625b;
+  line-height: 1.9;
+}
+.ew-withdrawal aside {
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: #fff4d4;
+  font-size: 13px;
+  line-height: 1.9;
+  margin: 20px 0;
+}
+.ew-withdrawal label {
+  display: block;
+  font-size: 13px;
+  margin: 20px 0 8px;
+}
+.ew-withdrawal label > input:not([type="checkbox"]) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 13px 14px;
+  border-radius: 12px;
+  border: 1px solid #e6ded8;
+  font: inherit;
+  margin-top: 8px;
+  background: #fff;
+  color: #231c18;
+}
+.ew-withdrawal .ew-withdrawal-ack {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.8;
+}
+.ew-withdrawal-ack input {
+  width: 17px;
+  min-width: 17px;
+  height: 17px;
+  flex: none;
+  margin: 4px 0 0;
+  accent-color: #231c18;
+}
+.ew-withdrawal-submit {
+  width: 100%;
+  padding: 14px;
+  border: 0;
+  border-radius: 24px;
+  background: #231c18;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ew-withdrawal-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.ew-withdrawal dd {
+  margin: 4px 0 18px;
+  color: #6e625b;
+  overflow-wrap: anywhere;
+}
+.ew-verification-methods {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0;
+  border-bottom: 1px solid #efe9e4;
+  font-size: 13px;
+  margin-bottom: 20px;
+}
+.ew-verification-methods > div {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  min-width: 0;
+}
+.ew-verification-methods span {
+  overflow-wrap: anywhere;
+  color: #6e625b;
+}
+.ew-verification-methods .ew-method-badge {
+  padding: 5px 10px;
+  background: #fff1c4;
+  color: #554321;
+  border-radius: 20px;
+}
+.ew-verification-methods button {
+  border: 0;
+  background: none;
+  color: #725139;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font: inherit;
+  cursor: pointer;
+}
+@media (max-width: 600px) {
+  .ew-withdrawal h2 {
+    font-size: 23px;
+  }
+  .ew-withdrawal {
+    padding: 4px;
+  }
+  .ew-verification-methods {
+    align-items: flex-start;
+  }
+}

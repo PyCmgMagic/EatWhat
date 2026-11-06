@@ -6,33 +6,7 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from "react";
-
-export function useMotionInput(enabled: boolean) {
-  useEffect(() => {
-    if (!enabled) return;
-    const root = document.documentElement;
-    const pointer = () => {
-      root.dataset.pcMotionInput = "pointer";
-    };
-    const keyboard = () => {
-      root.dataset.pcMotionInput = "keyboard";
-    };
-    window.addEventListener("pointerdown", pointer, true);
-    window.addEventListener("keydown", keyboard, true);
-    return () => {
-      window.removeEventListener("pointerdown", pointer, true);
-      window.removeEventListener("keydown", keyboard, true);
-      delete root.dataset.pcMotionInput;
-    };
-  }, [enabled]);
-}
-
-function instantMotion() {
-  return (
-    matchMedia("(prefers-reduced-motion: reduce)").matches ||
-    document.documentElement.dataset.pcMotionInput === "keyboard"
-  );
-}
+import { useContentMotion } from "../motion/hooks";
 
 export function SlidingTabs({
   active,
@@ -47,21 +21,38 @@ export function SlidingTabs({
 }) {
   const root = useRef<HTMLElement>(null),
     marker = useRef<HTMLSpanElement>(null);
-  const measure = useCallback(() => {
-    const container = root.current,
-      indicator = marker.current;
-    const selected = container?.querySelector<HTMLElement>(
-      '[aria-current="page"], [aria-selected="true"]',
-    );
-    if (!container || !indicator || !selected) return;
-    indicator.style.transform = `translate3d(${selected.offsetLeft}px,0,0) scaleX(${selected.offsetWidth / 100})`;
-    container.dataset.indicatorReady = "true";
-  }, []);
-  useLayoutEffect(measure, [active, measure]);
+  const measure = useCallback(
+    (animate = true) => {
+      const container = root.current,
+        indicator = marker.current;
+      const selected = container?.querySelector<HTMLElement>(
+        '[aria-current="page"], [aria-selected="true"]',
+      );
+      if (!container || !indicator || !selected) return;
+      // A breakpoint can change both rows and item widths. Snap to the new
+      // geometry on resize; animate only deliberate tab selection changes.
+      if (!animate) indicator.style.transition = "none";
+      indicator.style.top = "0";
+      indicator.style.bottom = "auto";
+      indicator.style.height = navigation
+        ? `${selected.offsetHeight}px`
+        : "3px";
+      const y =
+        selected.offsetTop + (navigation ? 0 : selected.offsetHeight - 3);
+      indicator.style.transform = `translate3d(${selected.offsetLeft}px,${y}px,0) scaleX(${selected.offsetWidth / 100})`;
+      container.dataset.indicatorReady = "true";
+      if (!animate) {
+        indicator.getBoundingClientRect();
+        indicator.style.transition = "";
+      }
+    },
+    [navigation],
+  );
+  useLayoutEffect(() => measure(), [active, measure]);
   useEffect(() => {
     const container = root.current;
     if (!container) return;
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(() => measure(false));
     observer.observe(container);
     container
       .querySelectorAll("a,button")
@@ -125,9 +116,8 @@ export function MotionRegion({
   order?: number;
   reserveSpace?: boolean;
 }) {
-  const root = useRef<HTMLDivElement>(null),
-    animation = useRef<Animation | null>(null);
-  const previous = useRef({ key: changeKey, order });
+  const root = useRef<HTMLDivElement>(null);
+  useContentMotion(root, changeKey, order);
   useLayoutEffect(() => {
     const element = root.current;
     if (!reserveSpace || !element) return;
@@ -139,34 +129,6 @@ export function MotionRegion({
     observer.observe(element);
     return () => observer.disconnect();
   }, [reserveSpace]);
-  useLayoutEffect(() => {
-    if (changeKey === undefined || previous.current.key === changeKey) return;
-    const direction = order < previous.current.order ? -1 : 1;
-    previous.current = { key: changeKey, order };
-    const element = root.current;
-    if (!element) return;
-    const running = animation.current?.playState === "running";
-    const current = running ? getComputedStyle(element) : null;
-    const from = current
-      ? { opacity: current.opacity, transform: current.transform }
-      : { opacity: "0.94", transform: `translate3d(${direction * 10}px,0,0)` };
-    animation.current?.cancel();
-    if (instantMotion()) return;
-    const next = element.animate(
-      [from, { opacity: "1", transform: "translate3d(0,0,0)" }],
-      {
-        duration: 180,
-        easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-      },
-    );
-    animation.current = next;
-    void next.finished
-      .then(() => {
-        if (animation.current === next) animation.current = null;
-      })
-      .catch(() => {});
-  }, [changeKey, order]);
-  useEffect(() => () => animation.current?.cancel(), []);
   return (
     <div ref={root} className={`pc-motion-region ${className}`} {...props}>
       {children}

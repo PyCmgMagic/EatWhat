@@ -22,7 +22,7 @@ const food = {
   pictureUrl: ["foods/new.jpg"],
   restaurantName: "测试店",
 };
-const user = { id: 10, userName: "测试食友" };
+const user = { id: 10, displayName: "测试食友" };
 
 it("isolates comments by food and does not invent reviews for uploads with a demo name", () => {
   const first = addMessage(readDiscussion(food), user, "刚刚吃过", []);
@@ -40,7 +40,7 @@ it("isolates comments by food and does not invent reviews for uploads with a dem
 });
 it("keeps replies on the selected comment and indexes only the current user's messages", () => {
   const source = readDiscussion(food),
-    first = addMessage(source, { id: 21, userName: "小林" }, "不错", []);
+    first = addMessage(source, { id: 21, displayName: "小林" }, "不错", []);
   const replied = addMessage(first, user, "谢谢推荐", [], first.comments[0].id);
   saveDiscussion(replied);
   expect(source.comments).toHaveLength(0);

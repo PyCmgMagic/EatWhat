@@ -2,6 +2,7 @@ import { createContext, useContext, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { Food, Restaurant } from "../api/models";
 import { mediaUrl, money } from "../api/models";
+import { useFoodImageRefresh } from "../features/media";
 
 export type MobileState = {
   foodId: number;
@@ -12,7 +13,11 @@ export type MobileState = {
   openPanel: (name: string) => void;
   closePanel: () => void;
   notice: (message: string) => void;
-  confirm: (message: string, action: () => Promise<unknown>) => void;
+  confirm: (
+    message: string,
+    action: () => Promise<unknown>,
+    label?: string,
+  ) => void;
   go: (screen: string) => void;
   draft: Draft;
   setDraft: (patch: Partial<Draft>) => void;
@@ -35,6 +40,8 @@ export type Draft = {
   }[];
   stage: string;
   tags: string[];
+  systemTagIds?: number[];
+  mealTimes?: string[];
   crop?: { x: number; y: number; zoom: number };
   candidates?: string[];
   shopName?: string;
@@ -126,7 +133,7 @@ export function PrimaryButton({
     </button>
   );
 }
-export function Pending({ name = "待接入" }: { name?: string }) {
+export function Pending({ name = "敬请期待" }: { name?: string }) {
   return <span className="design-pending">{name}</span>;
 }
 export function MobileEmpty({
@@ -158,6 +165,7 @@ export function FoodTile({
 }) {
   const m = useMobile();
   const src = mediaUrl(food.pictureUrl?.[0]);
+  const renew = useFoodImageRefresh();
   return (
     <Link
       className={`design-food-tile design-food-meta-${meta}`}
@@ -171,6 +179,9 @@ export function FoodTile({
         {src ? (
           <img
             src={src}
+            loading="lazy"
+            decoding="async"
+            onError={() => renew(src)}
             alt={food.name ?? "菜品"}
             className={visual?.asset ? "is-food-illustration" : "is-food-photo"}
             style={
@@ -233,7 +244,12 @@ export function ShopRow({
       <>
         <span className="design-shop-image">
           {mediaUrl(shop.pictureUrl?.[0]) ? (
-            <img src={mediaUrl(shop.pictureUrl?.[0])} alt="" />
+            <img
+              src={mediaUrl(shop.pictureUrl?.[0])}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
           ) : (
             <DesignIcon name="store" size={24} />
           )}

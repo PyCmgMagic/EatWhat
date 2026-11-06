@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { Select } from "../components/Select";
+import { useSendSignal } from "../features/useSendSignal";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { isDemo } from "../app/runtime";
@@ -32,14 +35,27 @@ export function ProfileExtras() {
         onSubmit={(e) => {
           e.preventDefault();
           const d = new FormData(e.currentTarget);
-          task.run(() =>
-            api.updateProfile({
-              gender: String(d.get("gender") || "") || undefined,
-              birthday: String(d.get("birthday") || "") || undefined,
+          task.run(async () => {
+            const gender = String(d.get("gender") || ""),
+              birthday = String(d.get("birthday") || "");
+            if (
+              (user?.gender && !gender) ||
+              (typeof user?.birthday === "string" &&
+                user.birthday &&
+                !birthday) ||
+              (user?.hometownProvinceId && !province) ||
+              (user?.hometownCityId && !city)
+            )
+              throw new Error(
+                "暂不支持清空已填写的资料，请填写内容或取消本次修改。",
+              );
+            await api.updateProfile({
+              gender: gender || undefined,
+              birthday: birthday || undefined,
               hometownProvinceId: province,
               hometownCityId: city,
-            }),
-          );
+            });
+          });
         }}
       >
         <div className="form-two-cols">
@@ -47,7 +63,7 @@ export function ProfileExtras() {
             <label className="form-label" htmlFor="profile-gender">
               性别 <span className="optional">选填</span>
             </label>
-            <select
+            <Select
               className="field"
               id="profile-gender"
               name="gender"
@@ -57,7 +73,7 @@ export function ProfileExtras() {
               <option value="male">男</option>
               <option value="female">女</option>
               <option value="other">其他</option>
-            </select>
+            </Select>
           </div>
           <div>
             <label className="form-label" htmlFor="profile-birthday">
@@ -84,7 +100,7 @@ export function ProfileExtras() {
           家乡
         </label>
         <div className="form-two-cols">
-          <select
+          <Select
             id="home-province"
             className="field"
             value={province ?? ""}
@@ -100,8 +116,8 @@ export function ProfileExtras() {
                 {p.name}
               </option>
             ))}
-          </select>
-          <select
+          </Select>
+          <Select
             aria-label="家乡城市"
             className="field"
             value={city ?? ""}
@@ -114,7 +130,7 @@ export function ProfileExtras() {
                 {c.name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
         {provinces.error && (
           <ErrorState
@@ -137,10 +153,20 @@ export function ProfileExtras() {
   );
 }
 export function MobileBinding() {
+  const getSignal = useSendSignal();
   const { api, user, refreshMe } = useApp(),
     [mobile, setMobile] = useState(""),
     [sentTo, setSentTo] = useState(""),
-    [until, setUntil] = useState(0);
+    [until, setUntil] = useState(0),
+    [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const tick = () =>
+      setSeconds(Math.max(0, Math.ceil((until - Date.now()) / 1000)));
+    tick();
+    if (until <= Date.now()) return;
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [until]);
   const send = useTask("验证码已发送"),
     bind = useTask("手机号已绑定", refreshMe);
   return (
@@ -184,7 +210,7 @@ export function MobileBinding() {
           type="button"
           className="text-link"
           disabled={
-            isDemo ||
+            !user?.verified ||
             send.isPending ||
             (until > Date.now() && sentTo === mobile)
           }
@@ -194,14 +220,17 @@ export function MobileBinding() {
             ) as HTMLInputElement;
             if (input.reportValidity())
               send.run(async () => {
-                await api.sendMobileCode(mobile);
+                await api.sendMobileCode(mobile, getSignal());
                 setSentTo(mobile);
                 setUntil(Date.now() + 60000);
-                setTimeout(() => setUntil(0), 60000);
               });
           }}
         >
-          发送验证码
+          {seconds && sentTo === mobile
+            ? `${seconds}s 后重发`
+            : send.isPending
+              ? "正在验证并发送…"
+              : "发送验证码"}
         </button>
         <label className="form-label" htmlFor="bind-code">
           6 位验证码
@@ -219,13 +248,18 @@ export function MobileBinding() {
         {bind.error && <ErrorState error={bind.error} />}
         <button
           className="btn btn-primary"
-          disabled={isDemo || bind.isPending || !sentTo}
+          disabled={bind.isPending || !sentTo}
         >
           确认绑定手机号
         </button>
         {isDemo && (
           <p className="section-caption">
-            演示模式不发送验证码，也不绑定真实手机号。
+            本地模拟验证，验证码为 123456，绑定只保存在演示数据中。
+          </p>
+        )}
+        {!user?.verified && (
+          <p className="section-caption">
+            <Link to="/verify">先完成学生认证，再获取绑定验证码 →</Link>
           </p>
         )}
       </form>

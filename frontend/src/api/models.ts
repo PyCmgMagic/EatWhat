@@ -1,11 +1,37 @@
 import type { components } from "./schema";
+import { demoEnabled } from "../app/mode";
 // Readers tolerate nullable historical data; write DTOs follow the current contract.
-type ReadModel<T> = T extends (infer U)[] ? ReadModel<U>[] : T extends object ? { [K in keyof T]: ReadModel<T[K]> | null } : T;
-export type Schema = { [K in keyof components["schemas"]]: K extends `${string}Response` ? ReadModel<components["schemas"][K]> : components["schemas"][K] };
-export type Food = Schema["FoodVOResponse"];
+type ReadModel<T> = T extends (infer U)[]
+  ? ReadModel<U>[]
+  : T extends object
+    ? { [K in keyof T]?: ReadModel<T[K]> | null }
+    : T;
+export type Schema = {
+  [K in keyof components["schemas"]]: K extends `${string}Response`
+    ? ReadModel<components["schemas"][K]>
+    : components["schemas"][K];
+};
+export type Food = Omit<
+  Schema["FoodVOResponse"],
+  | "restaurantAddress"
+  | "restaurantGcjLng"
+  | "restaurantGcjLat"
+  | "hubId"
+  | "hubName"
+> &
+  Pick<
+    Schema["FoodRecommendationVOResponse"],
+    | "restaurantAddress"
+    | "restaurantGcjLng"
+    | "restaurantGcjLat"
+    | "hubId"
+    | "hubName"
+  >;
 export type Restaurant = Schema["RestaurantResponse"];
 export type Hub = Schema["HubResponse"];
-export type User = Omit<Schema["UserInfoDTOResponse"], "birthday"> & {birthday?:string|number|null};
+export type User = Omit<Schema["UserInfoDTOResponse"], "birthday"> & {
+  birthday?: string | number | null;
+};
 export type CustomTag = Schema["MyCustomTagVOResponse"];
 export type Notification = Schema["NotificationDTOResponse"];
 export type Page<T> = {
@@ -46,15 +72,32 @@ export function money(value: number | null | undefined) {
 }
 export function mediaUrl(key: string | null | undefined): string | undefined {
   if (!key) return undefined;
+  if (
+    demoEnabled(
+      location.search,
+      import.meta.env.DEV,
+      import.meta.env.VITE_ENABLE_DEMO === "true",
+    ) &&
+    /^(foods|restaurants|avatar|feedback|comments|activity)\//.test(key)
+  ) {
+    try {
+      const saved = localStorage.getItem(`eatwhat-demo-media-v4:${key}`);
+      if (saved && /^data:image\/(jpeg|png|webp);base64,/.test(saved))
+        return saved;
+    } catch {
+      /* optional demo media */
+    }
+  }
   if (/^https?:\/\//i.test(key)) return key;
   if (key.startsWith("/assets/")) return key;
   if (key.startsWith("/prototype/assets/")) return key;
   // data URLs are generated only by the isolated demo image uploader.
   if (
-    (import.meta.env.DEV
-      ? new URLSearchParams(location.search).get("demo") !== "0"
-      : import.meta.env.VITE_ENABLE_DEMO === "true" &&
-        new URLSearchParams(location.search).get("demo") === "1") &&
+    demoEnabled(
+      location.search,
+      import.meta.env.DEV,
+      import.meta.env.VITE_ENABLE_DEMO === "true",
+    ) &&
     /^data:image\/(jpeg|png|webp);base64,/.test(key)
   )
     return key;

@@ -1,4 +1,6 @@
+import { ClearHistory } from "../features/ApiV2";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { Link } from "react-router-dom";
 import {
   keepPreviousData,
@@ -12,6 +14,7 @@ import { mediaUrl, type CustomTag } from "../api/models";
 import { DesignIcon as Icon, useMobile } from "../mobile/ui";
 import { visualFor } from "../mobile/catalog";
 import { MotionRegion, SlidingTabs } from "./motion";
+import { useSurfaceDismiss } from "../motion/hooks";
 import {
   historyEntry,
   historyGroups,
@@ -19,11 +22,23 @@ import {
   type HistoryKind,
 } from "./history";
 import "./library.css";
+import "./history-page.css";
+import { ProfileSectionNav } from "../features/ProfileSectionNav";
 
-function Empty({ title, children }: { title: string; children: ReactNode }) {
+function Empty({
+  title,
+  children,
+  icon = "bowl",
+}: {
+  title: string;
+  children: ReactNode;
+  icon?: string;
+}) {
   return (
     <div className="pc-library-empty">
-      <Icon name="bowl" size={35} />
+      <span className="pc-library-empty-symbol">
+        <Icon name={icon} size={35} />
+      </span>
       <h2>{title}</h2>
       {children}
     </div>
@@ -99,6 +114,10 @@ export function DesktopTags() {
   const lock = useRef(false),
     dialog = useRef<HTMLDialogElement>(null),
     renameInput = useRef<HTMLInputElement>(null);
+  const dismissDelete = useSurfaceDismiss(dialog, () => {
+    setDeleting(null);
+    setError("");
+  });
   const items = tags.data?.items ?? [],
     shown = items.filter((t) =>
       (t.name ?? "")
@@ -118,8 +137,11 @@ export function DesktopTags() {
     if (lock.current) return;
     const id = remove ? deleting?.id : editing;
     if (!Number.isSafeInteger(id) || (id ?? 0) < 1) return;
-    if (!remove && (!name.trim() || name.trim().length > 64)) {
-      setError("标签名称需要 1–64 个字。");
+    if (
+      !remove &&
+      (!name.trim() || [...name.trim().replace(/\s+/gu, " ")].length > 10)
+    ) {
+      setError("标签名称需要 1–10 个字。");
       renameInput.current?.focus();
       return;
     }
@@ -150,21 +172,18 @@ export function DesktopTags() {
     <section className="pc-profile-content pc-library">
       <header className="pc-library-heading">
         <div>
-          <span className="pc-eyebrow">把喜欢的味道，分门别类</span>
-          <h1>
-            我的标签<span>{tags.data?.totalItems ?? "—"}</span>
-          </h1>
+          <h1>我的收藏</h1>
           <p>
             <Icon name="lock" size={14} />
             只有你自己看得见，删除标签不会删除菜品或收藏。
           </p>
         </div>
-        <Link to="/favorites" className="pc-button light">
-          <Icon name="bookmark" size={16} />
-          我的收藏
-        </Link>
       </header>
+      <ProfileSectionNav section="collections" />
       <div className="pc-library-toolbar">
+        <span className="pc-small-note">
+          共 {tags.data?.totalItems ?? "—"} 个标签
+        </span>
         <label className="pc-library-search">
           <Icon name="search" size={17} />
           <input
@@ -189,9 +208,7 @@ export function DesktopTags() {
         <Failure error={tags.error} retry={() => void tags.refetch()} />
       )}
       {tags.isPending ? (
-        <Empty title="正在整理你的标签">
-          <p>稍等一下，好味道正在归位。</p>
-        </Empty>
+        <ContentSkeleton kind="rows" count={4} />
       ) : !items.length ? (
         <Empty title="还没有自己的标签">
           <p>在菜品详情点击「加标签」，创建你的口味分类。</p>
@@ -232,12 +249,12 @@ export function DesktopTags() {
                   }}
                 >
                   <label htmlFor="pc-tag-rename">
-                    标签名称<span>{name.length}/64</span>
+                    标签名称<span>{[...name.trim()].length}/10</span>
                   </label>
                   <input
                     ref={renameInput}
                     id="pc-tag-rename"
-                    maxLength={64}
+                    maxLength={20}
                     value={name}
                     disabled={busy}
                     onChange={(event) => {
@@ -278,10 +295,10 @@ export function DesktopTags() {
               ) : (
                 <div className="pc-tag-card-actions">
                   <Link
-                    to="/favorites"
+                    to={`/me/tags/${tag.id}/foods`}
                     onClick={() => mobile.setTagId(tag.id ?? undefined)}
                   >
-                    在收藏中查看
+                    查看标签下的菜品
                     <Icon name="chevronRight" size={14} />
                   </Link>
                   <button
@@ -333,7 +350,7 @@ export function DesktopTags() {
         </span>
         <div>
           <strong>新标签，从一道菜开始</strong>
-          <p>在菜品详情添加标签。查看收藏时，标签筛选仅作用于当前页。</p>
+          <p>在菜品详情添加标签，也可以用标签查询全部收藏。</p>
         </div>
         <Link to="/">
           去发现
@@ -346,11 +363,8 @@ export function DesktopTags() {
           className="pc-library-dialog"
           aria-labelledby="pc-delete-tag-title"
           onCancel={(event) => {
-            if (busy) event.preventDefault();
-            else {
-              setDeleting(null);
-              setError("");
-            }
+            event.preventDefault();
+            if (!busy) dismissDelete();
           }}
         >
           <span className="pc-tag-symbol tone-1">
@@ -370,11 +384,7 @@ export function DesktopTags() {
               type="button"
               className="pc-button light"
               disabled={busy}
-              onClick={() => {
-                dialog.current?.close();
-                setDeleting(null);
-                setError("");
-              }}
+              onClick={dismissDelete}
             >
               保留标签
             </button>
@@ -402,6 +412,7 @@ export function DesktopHistory() {
     queryKey: ["history", "desktop", kind, page],
     queryFn: async () => ({ ...(await api.history(kind, page)), kind }),
     placeholderData: keepPreviousData,
+    refetchOnMount: "always",
   });
   const items = query.data?.items ?? [],
     visible = items.filter((item) =>
@@ -416,27 +427,17 @@ export function DesktopHistory() {
     setSearch("");
   }
   return (
-    <section className="pc-profile-content pc-library">
+    <section className="pc-profile-content pc-library pc-history-page">
       <header className="pc-library-heading">
         <div>
-          <span className="pc-eyebrow">路过的好味道，还记得</span>
-          <h1>
-            足迹
-            <span>
-              {query.isPlaceholderData ? "…" : (query.data?.totalItems ?? "—")}
-            </span>
-          </h1>
+          <h1>浏览足迹</h1>
           <p>
             <Icon name="lock" size={14} />
-            浏览记录仅自己可见，暂不支持手动清空。
+            找回看过的菜品和店铺，浏览记录仅自己可见。
           </p>
         </div>
-        <Link to="/" className="pc-button light">
-          <Icon name="discover" size={17} />
-          继续发现
-        </Link>
       </header>
-      <div className="pc-library-toolbar pc-history-toolbar">
+      <div className="pc-history-tabs">
         <SlidingTabs label="足迹类型" active={kind}>
           {[
             { id: "food", name: "浏览的菜品", icon: "bowl" },
@@ -454,26 +455,45 @@ export function DesktopHistory() {
             </button>
           ))}
         </SlidingTabs>
-        <label className="pc-library-search">
-          <Icon name="search" size={16} />
-          <input
-            aria-label="筛选本页足迹"
-            placeholder="筛选本页记录"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          {search && (
-            <button
-              type="button"
-              aria-label="清除足迹筛选"
-              onClick={() => setSearch("")}
-            >
-              <Icon name="close" size={15} />
-            </button>
-          )}
-        </label>
       </div>
-      {query.error && (
+      {items.length > 0 && (
+        <div className="pc-library-toolbar pc-history-toolbar">
+          <span className="pc-history-count">
+            {query.isPlaceholderData
+              ? "正在切换…"
+              : `共 ${query.data?.totalItems ?? items.length} 条记录`}
+          </span>
+          <div className="pc-history-tools">
+            <label className="pc-library-search">
+              <Icon name="search" size={16} />
+              <input
+                aria-label="筛选本页足迹"
+                placeholder="筛选本页记录"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+              {search && (
+                <button
+                  type="button"
+                  aria-label="清除足迹筛选"
+                  onClick={() => setSearch("")}
+                >
+                  <Icon name="close" size={15} />
+                </button>
+              )}
+            </label>
+            <ClearHistory
+              kind={kind}
+              disabled={query.isFetching}
+              onClear={() => {
+                setPage(1);
+                setSearch("");
+              }}
+            />
+          </div>
+        </div>
+      )}
+      {query.error && query.data && (
         <Failure error={query.error} retry={() => void query.refetch()} />
       )}
       {query.isPlaceholderData && (
@@ -490,23 +510,49 @@ export function DesktopHistory() {
         order={kind === "food" ? 0 : 1}
         className="pc-history-content"
         aria-busy={query.isPlaceholderData}
-        reserveSpace
       >
         {query.isPending ? (
-          <Empty title="正在找回你的足迹">
-            <p>稍等一下，最近浏览过的好味道正在归位。</p>
-          </Empty>
+          <ContentSkeleton kind="rows" count={4} />
+        ) : query.isError && !query.data ? (
+          <div className="pc-history-failure" role="alert">
+            <span className="pc-library-empty-symbol">
+              <Icon name="history" size={32} />
+            </span>
+            <h2>暂时没能加载浏览记录</h2>
+            <p>{errorMessage(query.error)}</p>
+            <button
+              type="button"
+              className="pc-button light"
+              onClick={() => void query.refetch()}
+            >
+              重新加载
+            </button>
+          </div>
         ) : !items.length ? (
           <Empty
+            icon="history"
             title={
-              kind === "food" ? "还没有浏览过的菜品" : "还没有浏览过的店铺"
+              page > 1
+                ? "这一页没有浏览记录"
+                : kind === "food"
+                  ? "还没有浏览过的菜品"
+                  : "还没有浏览过的店铺"
             }
           >
-            <p>去发现一道喜欢的菜，或看看附近的店。</p>
-            <Link className="pc-button" to={kind === "food" ? "/" : "/nearby"}>
-              {kind === "food" ? "发现好吃的" : "找一家店"}
-              <Icon name="chevronRight" size={17} />
-            </Link>
+            <p>
+              {page > 1
+                ? "可以返回上一页，继续查找之前的足迹。"
+                : `看过的${kind === "food" ? "菜品" : "店铺"}会出现在这里，下次想吃时不用重新找。`}
+            </p>
+            {page === 1 && (
+              <Link
+                className="pc-button light"
+                to={kind === "food" ? "/" : "/nearby"}
+              >
+                {kind === "food" ? "发现好吃的" : "找一家店"}
+                <Icon name="chevronRight" size={17} />
+              </Link>
+            )}
           </Empty>
         ) : !visible.length ? (
           <Empty title="这页没有找到匹配的足迹">
@@ -609,9 +655,11 @@ export function DesktopHistory() {
           jumpToLibrary();
         }}
       />
-      <p className="pc-library-page-note">
-        按浏览日期整理；关键词仅筛选当前页记录。
-      </p>
+      {items.length > 0 && (
+        <p className="pc-library-page-note">
+          按浏览日期整理；关键词仅筛选当前页记录。
+        </p>
+      )}
     </section>
   );
 }

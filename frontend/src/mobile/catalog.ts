@@ -1,5 +1,5 @@
 import type { Food } from "../api/models";
-import {stagePalette} from "../api/food-display";
+import { stagePalette } from "../api/food-display";
 export const demoDishes = [
   {
     name: "鲜虾蟹籽云吞",
@@ -155,6 +155,7 @@ export function visualFor(food: Food, demo = false) {
       )
     : undefined;
   const color =
+    (food.stageColor ? stagePalette[food.stageColor] : undefined) ??
     v?.stage ??
     savedStage(food.pictureUrl) ??
     categoryStage[food.category ?? "other"] ??

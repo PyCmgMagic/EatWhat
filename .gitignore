@@ -5,3 +5,9 @@ frontend/.env.local
 frontend/.env.*.local
 *.tsbuildinfo
 .playwright-cli/
+
+# Local validation artifacts, browser profiles, logs, and release archives.
+# Keep the output directory available for validation/report scripts on a fresh clone.
+/output/*
+!/output/.gitkeep
+/frontend/output/

@@ -1,0 +1,832 @@
+import { Select } from "../components/Select";
+import { isDemo } from "../app/runtime";
+import { authNext } from "../app/navigation";
+import { historyEntry, historyTime } from "../desktop/history";
+import { emptyHistoryCache, historyCacheFilters } from "./history-cache";
+import { useSendSignal } from "./useSendSignal";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { useApp } from "../app/state";
+import { LoginLink } from "../app/auth-dialog";
+import { useTask } from "../components/useTask";
+import { errorMessage, unavailable } from "../api/client";
+import { categories, mediaUrl, parseId } from "../api/models";
+import { DesignIcon as Icon, useMobile } from "../mobile/ui";
+import { peopleHref } from "./profile-people";
+import { CatalogCard, FeaturePage, FeatureState } from "./Catalog";
+import "./api-v2.css";
+
+function RequestError({ error }: { error: unknown }) {
+  return error ? (
+    <p role="alert" className="ew-error">
+      {unavailable(error)
+        ? "这项功能正在准备中，敬请期待。"
+        : errorMessage(error)}
+    </p>
+  ) : null;
+}
+function Pages({
+  page,
+  next,
+  busy,
+  change,
+}: {
+  page: number;
+  next: boolean;
+  busy: boolean;
+  change: (page: number) => void;
+}) {
+  return (
+    <div className="ew-v2-pages">
+      <button disabled={busy || page <= 1} onClick={() => change(page - 1)}>
+        上一页
+      </button>
+      <span>第 {page} 页</span>
+      <button disabled={busy || !next} onClick={() => change(page + 1)}>
+        下一页
+      </button>
+    </div>
+  );
+}
+export function UserFoods({ userId }: { userId: number }) {
+  const { api, session } = useApp();
+  const [page, setPage] = useState(1),
+    [filters, setFilters] = useState({
+      keyword: "",
+      category: "",
+      sort: "NEWEST",
+    });
+  const q = useQuery({
+    queryKey: ["foods", "by-user", userId, filters, page],
+    queryFn: () => api.userFoods(userId, page, filters),
+    enabled: !!session,
+    placeholderData: keepPreviousData,
+  });
+  if (!session)
+    return <LoginLink to="/auth/password">登录后查看分享 →</LoginLink>;
+  return (
+    <div className="ew-feature ew-v2-foods">
+      <form
+        className="ew-v2-filter"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const data = new FormData(e.currentTarget);
+          setFilters({
+            keyword: String(data.get("keyword") || "").trim(),
+            category: String(data.get("category") || ""),
+            sort: String(data.get("sort")),
+          });
+          setPage(1);
+        }}
+      >
+        <input
+          name="keyword"
+          aria-label="搜索食友分享"
+          placeholder="在分享中搜一道菜"
+          maxLength={64}
+        />
+        <Select name="category" aria-label="分享分类">
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.label}
+            </option>
+          ))}
+        </Select>
+        <Select name="sort" aria-label="分享排序">
+          <option value="NEWEST">最新分享</option>
+          <option value="POPULAR">最多获赞</option>
+          <option value="PRICE_ASC">价格从低到高</option>
+          <option value="PRICE_DESC">价格从高到低</option>
+        </Select>
+        <button className="ew-button">筛选</button>
+      </form>
+      {q.isPending || (q.isError && !q.data) ? (
+        <FeatureState
+          loading={q.isPending}
+          error={q.error}
+          kind="cards"
+          retry={() => void q.refetch()}
+        />
+      ) : (
+        <>
+          <RequestError error={q.error} />
+          <p className="ew-note" role="status">
+            {q.isFetching
+              ? "正在加载分享…"
+              : `共 ${q.data?.totalItems ?? 0} 道菜`}
+          </p>
+          {!q.data?.items?.length ? (
+            <FeatureState empty="还没有符合条件的分享" />
+          ) : (
+            <div
+              className="ew-results ew-v2-food-grid"
+              aria-busy={q.isFetching}
+            >
+              {q.data.items.map((f) => (
+                <CatalogCard key={f.id} food={f} />
+              ))}
+            </div>
+          )}
+          <Pages
+            page={page}
+            next={!!q.data?.hasNext || page < (q.data?.totalPages ?? 0)}
+            busy={q.isFetching}
+            change={setPage}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+export function BlockControl({ userId }: { userId: number }) {
+  const { api, user, session } = useApp(),
+    m = useMobile(),
+    cache = useQueryClient();
+  const q = useQuery({
+    queryKey: ["blocks", "status", userId],
+    queryFn: () => api.blockStatus(userId),
+    enabled: !!session && userId !== user?.id,
+    retry: false,
+  });
+  if (!session || userId === user?.id) return null;
+  return (
+    <div className="ew-v2-block-control">
+      <button
+        type="button"
+        className="ew-button light"
+        disabled={
+          q.isPending || q.isError || typeof q.data?.blocked !== "boolean"
+        }
+        onClick={() =>
+          m.confirm(
+            q.data?.blocked
+              ? "解除屏蔽这位食友？"
+              : "屏蔽后，推荐中将不再出现这位食友的分享。",
+            async () => {
+              const result = await api.setBlock(userId, !q.data?.blocked);
+              cache.setQueryData(["blocks", "status", userId], result);
+              await cache.invalidateQueries({ queryKey: ["blocks"] });
+              await cache.invalidateQueries({ queryKey: ["foods"] });
+            },
+            q.data?.blocked ? "解除屏蔽" : "屏蔽食友",
+          )
+        }
+      >
+        {q.isPending
+          ? "正在读取…"
+          : q.data?.blocked
+            ? "已屏蔽 · 解除"
+            : "屏蔽这位食友"}
+      </button>
+      <RequestError error={q.error} />
+      {q.isError && (
+        <button type="button" onClick={() => void q.refetch()}>
+          重试读取
+        </button>
+      )}
+    </div>
+  );
+}
+export function BlockedUsers() {
+  const { api } = useApp(),
+    cache = useQueryClient(),
+    [page, setPage] = useState(1);
+  const q = useQuery({
+    queryKey: ["blocks", "list", page],
+    queryFn: () => api.blocks(page),
+    retry: false,
+  });
+  const task = useTask("已解除屏蔽", undefined, ["blocks", "foods"]);
+  return (
+    <FeaturePage title="屏蔽名单" back="/settings/privacy">
+      <div className="ew-v2-card">
+        <p className="ew-note">
+          仅自己可见。屏蔽会影响推荐，不会删除历史与收藏。
+        </p>
+        {q.isPending ? (
+          <FeatureState loading kind="rows" />
+        ) : q.isError ? (
+          <>
+            <RequestError error={q.error} />
+            <button
+              className="ew-button light"
+              onClick={() => void q.refetch()}
+            >
+              重新加载
+            </button>
+          </>
+        ) : !q.data.items?.length ? (
+          <FeatureState empty="目前没有屏蔽的食友" />
+        ) : (
+          q.data.items.map((u) => (
+            <div className="ew-v2-row" key={u.userId}>
+              <Link to={`/users/${u.userId}`}>
+                {u.displayName || `食友 #${u.userId}`}
+              </Link>
+              <button
+                className="ew-button light"
+                disabled={task.isPending || !u.userId}
+                onClick={() =>
+                  task.run(async () => {
+                    await api.setBlock(u.userId!, false);
+                    if (q.data.items?.length === 1 && page > 1) {
+                      cache.removeQueries({
+                        queryKey: ["blocks", "list", page],
+                      });
+                      setPage(page - 1);
+                    }
+                  })
+                }
+              >
+                解除屏蔽
+              </button>
+            </div>
+          ))
+        )}
+        <RequestError error={task.error} />
+        <Pages
+          page={page}
+          next={!!q.data?.hasNext || page < (q.data?.totalPages ?? 0)}
+          busy={q.isFetching || task.isPending}
+          change={setPage}
+        />
+      </div>
+    </FeaturePage>
+  );
+}
+export function PersonalizedRecommendation() {
+  const { api } = useApp(),
+    cache = useQueryClient();
+  const q = useQuery({
+    queryKey: ["recommendation-settings"],
+    queryFn: () => api.recommendationSettings(),
+  });
+  const task = useTask("推荐设置已更新");
+  const [pending, setPending] = useState<boolean | null>(null);
+  return (
+    <div className="ew-feature ew-v2-card">
+      <div className="ew-v2-row">
+        <div>
+          <h3>个性化推荐</h3>
+          <p className="ew-note">
+            根据你的口味和近期浏览推荐。关闭后仍保留历史及手动口味，屏蔽设置继续生效。
+          </p>
+        </div>
+        {typeof q.data?.personalized !== "boolean" ? (
+          <span
+            className="ew-v2-switch-placeholder"
+            aria-label="推荐设置尚未读取"
+          />
+        ) : (
+          <input
+            className="ew-v2-switch"
+            type="checkbox"
+            role="switch"
+            aria-label="个性化推荐"
+            checked={pending ?? q.data?.personalized === true}
+            disabled={
+              q.isPending ||
+              q.isError ||
+              task.isPending ||
+              typeof q.data?.personalized !== "boolean"
+            }
+            onChange={(e) => {
+              const value = e.target.checked;
+              setPending(value);
+              task.run(async () => {
+                try {
+                  const saved = await api.saveRecommendationSettings(value);
+                  cache.setQueryData(["recommendation-settings"], saved);
+                  await cache.invalidateQueries({ queryKey: ["foods"] });
+                } finally {
+                  setPending(null);
+                }
+              });
+            }}
+          />
+        )}
+      </div>
+      {q.isPending && <p role="status">正在读取推荐设置…</p>}
+      <RequestError error={q.error || task.error} />
+      {q.isError && (
+        <button onClick={() => void q.refetch()}>重试推荐设置</button>
+      )}
+      <Link to="/settings/blocked">管理屏蔽名单 →</Link>
+    </div>
+  );
+}
+export function ClearHistory({
+  kind,
+  onClear,
+  disabled = false,
+}: {
+  kind: "food" | "restaurant";
+  onClear: () => void;
+  disabled?: boolean;
+}) {
+  const { api, toast } = useApp(),
+    cache = useQueryClient(),
+    m = useMobile();
+  const [scope, setScope] = useState("current");
+  return (
+    <div className="ew-v2-clear">
+      <Select
+        aria-label="清空足迹范围"
+        disabled={disabled}
+        value={scope}
+        onChange={(e) => setScope(e.target.value)}
+      >
+        <option value="current">当前分类</option>
+        <option value="all">全部足迹</option>
+      </Select>
+      <button
+        type="button"
+        className="history-clear-button"
+        disabled={disabled}
+        onClick={() =>
+          m.confirm(
+            scope === "all"
+              ? "清空所有菜品和店铺足迹？此操作无法恢复。"
+              : "清空当前分类的浏览足迹？此操作无法恢复。",
+            async () => {
+              await api.clearHistory(scope === "all" ? undefined : kind);
+              const filters = historyCacheFilters(
+                scope === "all" ? undefined : kind,
+              );
+              await cache.cancelQueries(filters);
+              cache.setQueriesData(filters, emptyHistoryCache);
+              cache.removeQueries({ ...filters, type: "inactive" });
+              onClear();
+              await cache.invalidateQueries(filters);
+              toast("足迹已清空");
+            },
+            "确认清空",
+          )
+        }
+      >
+        <Icon name="delete" size={16} />
+        清空足迹
+      </button>
+    </div>
+  );
+}
+export function UsernameSetup() {
+  const { api, user, clearLocalSession } = useApp(),
+    nav = useNavigate(),
+    first = new URLSearchParams(useLocation().search).has("first"),
+    getSignal = useSendSignal();
+  const send = useTask("验证码已发送"),
+    save = useTask();
+  const [until, setUntil] = useState(0),
+    [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const tick = () =>
+      setSeconds(Math.max(0, Math.ceil((until - Date.now()) / 1000)));
+    tick();
+    if (!until) return;
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [until]);
+  return (
+    <FeaturePage title="设置登录名" back="/settings/account">
+      <div className="ew-v2-card ew-v2-account">
+        <h2>给账号设置一个登录名</h2>
+        <p className="ew-note">
+          登录名与展示昵称分开。设置后需重新登录，可使用手机验证码或新的登录名。
+        </p>
+        {user?.hasUsername !== false ? (
+          <p>当前登录名：{user?.userName || "正在读取账号信息…"}</p>
+        ) : !user.phone ? (
+          <Link to="/settings/bind-phone">先绑定手机号 →</Link>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const form = e.currentTarget,
+                d = new FormData(form);
+              save.run(async () => {
+                const newPassword = String(d.get("newPassword") || "");
+                if (
+                  (newPassword || d.get("confirm")) &&
+                  (!newPassword.trim() || newPassword !== d.get("confirm"))
+                )
+                  throw new Error("请确认两次密码一致，且不是空白字符。");
+                const result = await api.setUsername({
+                  userName: String(d.get("userName")).trim(),
+                  code: String(d.get("code")),
+                  ...(!user.hasPassword && newPassword ? { newPassword } : {}),
+                });
+                form.reset();
+                await clearLocalSession();
+                nav("/auth/password", {
+                  replace: true,
+                  state: { userName: result.userName, reauthentication: true },
+                });
+              });
+            }}
+          >
+            <label>
+              登录名
+              <input
+                name="userName"
+                autoComplete="username"
+                pattern="[A-Za-z0-9_]{3,10}"
+                minLength={3}
+                maxLength={10}
+                required
+              />
+              <small>
+                3–10 位字母、数字或下划线，区分大小写，不能是纯手机号。
+              </small>
+            </label>
+            <label>
+              手机验证码
+              <div className="ew-code-row">
+                <input
+                  name="code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  required
+                />
+                <button
+                  type="button"
+                  disabled={send.isPending || save.isPending || seconds > 0}
+                  onClick={() =>
+                    send.run(async () => {
+                      await api.passwordCode(getSignal());
+                      setUntil(Date.now() + 60000);
+                    })
+                  }
+                >
+                  {seconds ? `${seconds}s 后重发` : "获取验证码"}
+                </button>
+              </div>
+            </label>
+            {user.hasPassword === false && (
+              <>
+                <label>
+                  初始密码（选填）
+                  <input
+                    name="newPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={6}
+                    maxLength={64}
+                  />
+                </label>
+                <label>
+                  确认初始密码
+                  <input
+                    name="confirm"
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={6}
+                    maxLength={64}
+                  />
+                </label>
+              </>
+            )}
+            <RequestError error={send.error || save.error} />
+            <button
+              className="ew-button"
+              disabled={save.isPending || send.isPending}
+            >
+              {save.isPending ? "正在保存…" : "保存并重新登录"}
+            </button>
+          </form>
+        )}
+        <Link to={first ? "/verify" : "/settings/account"}>稍后设置</Link>
+      </div>
+    </FeaturePage>
+  );
+}
+export function PasswordConflictRequest() {
+  const suffix = authNext(useLocation().search);
+  const { api } = useApp(),
+    getSignal = useSendSignal(),
+    task = useTask();
+  const [sent, setSent] = useState(false);
+  return (
+    <div className="ew-form-panel ew-v2-card">
+      <h2>密码冲突恢复</h2>
+      <p>
+        如果账号因跨站密码冲突无法登录，可以申请恢复邮件。此功能需由当前站点开启。
+      </p>
+      {sent ? (
+        <p role="status">
+          请求已受理。若账号符合条件，请检查绑定邮箱，并在链接有效期内设置新密码。
+        </p>
+      ) : (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const value = String(
+              new FormData(e.currentTarget).get("identifier"),
+            ).trim();
+            task.run(async () => {
+              await api.passwordConflictChallenge(value, getSignal());
+              setSent(true);
+            });
+          }}
+        >
+          <label>
+            账号标识
+            <input
+              name="identifier"
+              maxLength={64}
+              required
+              placeholder="输入账号标识"
+            />
+          </label>
+          <RequestError error={task.error} />
+          <button className="ew-button" disabled={task.isPending}>
+            {task.isPending ? "正在验证并发送…" : "发送恢复邮件"}
+          </button>
+        </form>
+      )}
+      {isDemo && sent && (
+        <p className="ew-note">
+          本地演示恢复令牌：demo-recovery-token（不发送邮件）
+        </p>
+      )}
+      <Link to={"/auth/password-conflict/reset" + suffix}>
+        已有恢复令牌？设置新密码 →
+      </Link>
+    </div>
+  );
+}
+export function PasswordConflictReset() {
+  const { api } = useApp(),
+    loc = useLocation(),
+    nav = useNavigate();
+  const [token, setToken] = useState(
+    () =>
+      new URLSearchParams(loc.search).get("token") ||
+      new URLSearchParams(window.location.search).get("token") ||
+      "",
+  );
+  const [done, setDone] = useState(false),
+    task = useTask();
+  useEffect(() => {
+    // Capture once, then remove the recovery token from both URL query locations.
+    const outer = new URL(window.location.href);
+    outer.searchParams.delete("token");
+    const hash = outer.hash.split("?");
+    const params = new URLSearchParams(hash[1]);
+    params.delete("token");
+    outer.hash = hash[0] + (params.size ? "?" + params : "");
+    history.replaceState(history.state, "", outer.href);
+    if (new URLSearchParams(loc.search).has("token")) {
+      const p = new URLSearchParams(loc.search);
+      p.delete("token");
+      nav({ pathname: loc.pathname, search: p.toString() }, { replace: true });
+    }
+  }, []); // Token stays only in this mounted form.
+  return (
+    <FeaturePage
+      title="恢复登录密码"
+      back={"/auth/forgot" + authNext(loc.search)}
+    >
+      <div className="ew-v2-card ew-v2-account">
+        {done ? (
+          <>
+            <h2>密码已重置</h2>
+            <p>请使用新密码重新登录。</p>
+            <Link
+              className="ew-button"
+              to={"/auth/password" + authNext(loc.search)}
+            >
+              返回登录
+            </Link>
+          </>
+        ) : (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const form = e.currentTarget,
+                d = new FormData(form);
+              task.run(async () => {
+                if (d.get("password") !== d.get("confirm"))
+                  throw new Error("两次密码不一致。");
+                await api.passwordConflictReset({
+                  token: token.trim(),
+                  newPassword: String(d.get("password")),
+                });
+                form.reset();
+                setToken("");
+                setDone(true);
+              });
+            }}
+          >
+            <h2>设置一个新密码</h2>
+            <p className="ew-note">
+              恢复令牌由邮件提供，通常 30 分钟有效，只能使用一次。
+            </p>
+            <label>
+              恢复令牌
+              <input
+                aria-label="恢复令牌"
+                type="password"
+                autoComplete="off"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                maxLength={256}
+                required
+              />
+            </label>
+            <label>
+              新密码
+              <input
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={128}
+                required
+              />
+            </label>
+            <label>
+              确认新密码
+              <input
+                name="confirm"
+                type="password"
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={128}
+                required
+              />
+            </label>
+            <RequestError error={task.error} />
+            <button className="ew-button" disabled={task.isPending}>
+              {task.isPending ? "正在重置…" : "重置密码"}
+            </button>
+          </form>
+        )}
+      </div>
+    </FeaturePage>
+  );
+}
+export function MobileUserProfile() {
+  const { api, user } = useApp(),
+    loc = useLocation(),
+    id = parseId(loc.pathname.split("/").pop());
+  const q = useQuery({
+    queryKey: ["user", id],
+    queryFn: () => api.otherUser(id!),
+    enabled: !!id,
+  });
+  const follow = useTask("关注状态已更新", undefined, ["user", "social"]);
+  return (
+    <FeaturePage title="食友主页">
+      {q.isPending || q.isError ? (
+        <FeatureState
+          loading={q.isPending}
+          error={q.error}
+          retry={() => void q.refetch()}
+        />
+      ) : (
+        <>
+          <div className="ew-v2-card ew-v2-profile">
+            <div className="ew-v2-profile-avatar">
+              {mediaUrl(q.data.avatar) ? (
+                <img src={mediaUrl(q.data.avatar)} alt="食友头像" />
+              ) : (
+                (q.data.displayName || "食").slice(0, 1)
+              )}
+            </div>
+            <h2>{q.data.displayName || "校园食友"}</h2>
+            <p className="ew-note">
+              {q.data.uploadedFoodsCount ?? "—"} 道分享 ·{" "}
+              {q.data.earnedLikes ?? "—"} 次获赞
+            </p>
+            <div className="ew-inline">
+              {(
+                [
+                  ["fans", "粉丝", q.data.fansVisible, q.data.fansCount],
+                  [
+                    "follow",
+                    "关注",
+                    q.data.followingsVisible,
+                    q.data.followingsCount,
+                  ],
+                ] as const
+              ).map(([tab, label, visible, count]) =>
+                user?.id === id || visible ? (
+                  <Link
+                    key={tab}
+                    to={peopleHref(loc.pathname, loc.search, tab)}
+                  >
+                    {label} {count ?? "—"}
+                  </Link>
+                ) : (
+                  <span key={tab}>{label}未公开</span>
+                ),
+              )}
+            </div>
+            {user?.id !== id && (
+              <button
+                className="ew-button"
+                disabled={follow.isPending || q.data.isFollowingHim == null}
+                onClick={() =>
+                  follow.run(() =>
+                    api.follow(id!, q.data.isFollowingHim === true),
+                  )
+                }
+              >
+                {q.data.isFollowingHim ? "已关注 · 取消" : "关注食友"}
+              </button>
+            )}
+            <RequestError error={follow.error} />
+            {id && <BlockControl userId={id} />}
+          </div>
+          <h2>TA 的分享</h2>
+          {id && <UserFoods userId={id} />}
+        </>
+      )}
+    </FeaturePage>
+  );
+}
+export function MobileHistory() {
+  const { api } = useApp(),
+    [kind, setKind] = useState<"food" | "restaurant">("food"),
+    [page, setPage] = useState(1);
+  const q = useQuery({
+    queryKey: ["history", "mobile-v2", kind, page],
+    queryFn: () => api.history(kind, page),
+    refetchOnMount: "always",
+  });
+  return (
+    <FeaturePage title="浏览足迹">
+      <div className="ew-v2-card">
+        <p className="ew-note">浏览记录仅自己可见。</p>
+        <div className="ew-v2-row">
+          <div className="ew-inline">
+            {(["food", "restaurant"] as const).map((k) => (
+              <button
+                className="ew-button light"
+                key={k}
+                aria-pressed={kind === k}
+                onClick={() => {
+                  setKind(k);
+                  setPage(1);
+                }}
+              >
+                {k === "food" ? "菜品" : "店铺"}
+              </button>
+            ))}
+          </div>
+          {!!q.data?.items?.length && (
+            <ClearHistory
+              kind={kind}
+              disabled={q.isFetching}
+              onClear={() => setPage(1)}
+            />
+          )}
+        </div>
+        {q.isPending || q.isError ? (
+          <FeatureState
+            loading={q.isPending}
+            error={q.error}
+            kind="rows"
+            retry={() => void q.refetch()}
+          />
+        ) : !q.data.items?.length ? (
+          <FeatureState empty="还没有浏览足迹" />
+        ) : (
+          q.data.items.map((item, i) => {
+            const entry = historyEntry(item, kind),
+              date = historyTime(item.viewedAt);
+            const body = (
+              <>
+                <b>{entry.content?.name || "内容暂不可用"}</b>
+                <small>{date?.toLocaleDateString("zh-CN") || ""}</small>
+              </>
+            );
+            return entry.href ? (
+              <Link className="ew-v2-row" key={i} to={entry.href}>
+                {body}
+              </Link>
+            ) : (
+              <div className="ew-v2-row" key={i}>
+                {body}
+              </div>
+            );
+          })
+        )}
+        <Pages
+          page={page}
+          next={!!q.data?.hasNext || page < (q.data?.totalPages ?? 0)}
+          busy={q.isFetching}
+          change={setPage}
+        />
+      </div>
+    </FeaturePage>
+  );
+}

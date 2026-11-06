@@ -1,0 +1,340 @@
+/* A shared rhythm for desktop, prototype adapters and native feature pages. */
+:root {
+  --motion-fast: 140ms;
+  --motion-content: 180ms;
+  --motion-surface: 240ms;
+  --motion-exit: 160ms;
+  --ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-move: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+}
+html:has(body.desktop-mode) {
+  scrollbar-gutter: stable;
+}
+
+/* Controls react immediately on press and settle when released. */
+:is(
+    .pc-app,
+    .design-screen,
+    .ew-feature,
+    .legacy-admin,
+    .mobile-page-native,
+    dialog,
+    .design-notice
+  )
+  button,
+:is(
+  .pc-button,
+  .pc-publish-button,
+  .pc-hero-actions a,
+  .design-button,
+  .design-fab,
+  .btn
+) {
+  touch-action: manipulation;
+  transition:
+    scale var(--motion-fast) var(--ease-enter),
+    transform var(--motion-fast) var(--ease-enter),
+    background-color var(--motion-fast) ease-out,
+    border-color var(--motion-fast) ease-out,
+    color var(--motion-fast) ease-out,
+    box-shadow var(--motion-fast) ease-out;
+}
+:is(
+    .pc-app,
+    .design-screen,
+    .ew-feature,
+    .legacy-admin,
+    .mobile-page-native,
+    dialog,
+    .design-notice
+  )
+  button:active:not(:disabled),
+:is(
+    .pc-button,
+    .pc-publish-button,
+    .pc-hero-actions a,
+    .design-button,
+    .design-fab,
+    .btn
+  ):active:not(:disabled) {
+  scale: 0.975;
+  transition-duration: 0s;
+}
+/* Indicators and drag handles keep their geometry during a press. */
+:is(.pc-motion-tabs, .pc-hero-dots) > :is(button, a):active,
+.pc-hero-food:active,
+button.pc-map-pin:active {
+  scale: 1;
+}
+
+/* Hover moves the artwork inside the stable card hit area. */
+.pc-app .pc-food-card {
+  transform: none;
+}
+.pc-food-card-image > .pc-plate,
+.design-tile-image > img,
+.food-comment-images img {
+  transition: transform var(--motion-content) var(--ease-enter);
+}
+@media (hover: hover) and (pointer: fine) {
+  .pc-food-card:hover .pc-plate {
+    transform: translateY(-3px) rotate(-3deg) scale(1.02);
+  }
+  .design-food-tile:hover .design-tile-image > img {
+    transform: scale(1.02);
+  }
+  .food-comment-images > button:hover img {
+    transform: scale(1.025);
+  }
+  :is(.pc-button, .pc-publish-button, .design-button, .design-fab, .btn):not(
+      :disabled
+    ):hover {
+    filter: brightness(1.06);
+  }
+}
+@media (hover: none), (pointer: coarse) {
+  .pc-app .pc-food-card:hover .pc-plate,
+  .food-comment-images > button:hover img {
+    transform: none;
+  }
+  .pc-hero-actions :is(button, a):hover {
+    transform: none;
+  }
+}
+button[aria-pressed] > .design-icon,
+button[aria-expanded] > .design-icon {
+  transition: transform var(--motion-content) var(--ease-enter);
+}
+button[aria-pressed="true"] > .design-icon {
+  transform: scale(1.12);
+}
+.pc-composer-stage {
+  transition:
+    background-color var(--motion-surface) ease-out,
+    border-color var(--motion-fast) ease-out;
+}
+.pc-composer-radio,
+.pc-composer-checks span,
+.design-navigation nav a {
+  transition:
+    background-color var(--motion-fast) ease-out,
+    color var(--motion-fast) ease-out,
+    border-color var(--motion-fast) ease-out;
+}
+:is(
+    .pc-app,
+    .ew-feature,
+    .legacy-admin,
+    .mobile-page-native,
+    .design-screen,
+    dialog
+  )
+  :is(input:not([type="range"]), textarea, select) {
+  transition:
+    border-color var(--motion-fast) ease-out,
+    background-color var(--motion-fast) ease-out,
+    box-shadow var(--motion-fast) ease-out;
+}
+
+/* Stable slots avoid moving every carousel dot when selection changes. */
+.pc-hero-dots button {
+  width: 18px;
+  height: 6px;
+  background: transparent;
+  opacity: 1;
+  transition: none;
+}
+.pc-hero-dots button[aria-pressed="true"] {
+  width: 18px;
+}
+.pc-hero-dots button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background: var(--stage-on);
+  opacity: 0.3;
+  transform: scaleX(0.3333);
+  transition:
+    transform var(--motion-content) var(--ease-enter),
+    opacity var(--motion-content) ease-out;
+}
+.pc-hero-dots button[aria-pressed="true"]::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+.pc-hero-food[data-dragging="true"] > .pc-plate {
+  transition: none;
+}
+html[data-motion-input="keyboard"] .pc-hero-food > .pc-plate {
+  transition: none;
+}
+
+/* Native dialogs keep their top layer during close in supporting browsers. */
+dialog {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0) scale(0.98);
+  transition:
+    opacity var(--motion-exit) ease-out,
+    transform var(--motion-exit) var(--ease-move),
+    display var(--motion-exit) allow-discrete,
+    overlay var(--motion-exit) allow-discrete;
+}
+dialog[open] {
+  opacity: 1;
+  transform: none;
+  transition-duration: var(--motion-surface);
+}
+dialog::backdrop {
+  opacity: 0;
+  transition:
+    opacity var(--motion-exit) ease-out,
+    display var(--motion-exit) allow-discrete,
+    overlay var(--motion-exit) allow-discrete;
+}
+dialog[open]::backdrop {
+  opacity: 1;
+}
+dialog[data-dismissing="true"]::backdrop {
+  opacity: 0;
+}
+dialog[data-dismissing="true"] {
+  pointer-events: none;
+}
+@starting-style {
+  dialog[open] {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0) scale(0.98);
+  }
+  dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* Retained surfaces reverse these transitions if reopened during dismissal. */
+.mobile-panel-layer,
+.design-notice-backdrop {
+  opacity: 1;
+  transition: opacity var(--motion-exit) ease-out;
+}
+.mobile-panel-layer [role="dialog"],
+.design-notice {
+  animation: none;
+  transform: none;
+  opacity: 1;
+  transition:
+    transform var(--motion-surface) var(--ease-sheet),
+    opacity var(--motion-exit) ease-out;
+}
+.desktop-mode .mobile-panel-layer [role="dialog"] {
+  transform-origin: center;
+}
+.desktop-mode .mobile-panel-layer[data-exiting="true"] [role="dialog"] {
+  transform: translateY(8px) scale(0.98);
+}
+@starting-style {
+  .desktop-mode .mobile-panel-layer [role="dialog"] {
+    transform: translateY(10px) scale(0.98);
+  }
+}
+:is(.mobile-panel-layer, .design-notice-backdrop)[data-exiting="true"] {
+  opacity: 0;
+}
+.mobile-panel-layer[data-exiting="true"] [role="dialog"],
+.design-notice-backdrop[data-exiting="true"] .design-notice {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+  transition-duration: var(--motion-exit);
+}
+@starting-style {
+  .mobile-panel-layer,
+  .design-notice-backdrop {
+    opacity: 0;
+  }
+  .mobile-panel-layer [role="dialog"],
+  .design-notice {
+    opacity: 0;
+    transform: translate3d(0, 32px, 0);
+  }
+}
+@media (min-width: 1024px) {
+  .design-notice-backdrop .design-notice {
+    transform-origin: center;
+  }
+  .design-notice-backdrop[data-exiting="true"] .design-notice {
+    transform: translateY(8px) scale(0.98);
+  }
+  @starting-style {
+    .design-notice-backdrop .design-notice {
+      transform: translateY(10px) scale(0.98);
+    }
+  }
+}
+
+/* Both states share the transition, including when the toast times out. */
+.toast,
+.toast.visible {
+  transition:
+    opacity var(--motion-content) ease-out,
+    transform var(--motion-content) var(--ease-enter);
+}
+.toast:not(.visible) {
+  transition-duration: var(--motion-exit);
+}
+.toast:empty {
+  visibility: hidden;
+}
+
+/* Brief opacity reveals for local feedback, never the entire page plus children. */
+.pc-secondary-error,
+.pc-secondary-success,
+.ew-error,
+.ew-withdrawal > [role="status"],
+.food-comment-replies,
+.pc-composer-error,
+.mobile-error-banner {
+  animation: feedback-in var(--motion-content) var(--ease-enter);
+}
+@keyframes feedback-in {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+html[data-motion-input="keyboard"] dialog::backdrop,
+html[data-motion-input="keyboard"]
+  :is(
+    dialog,
+    .mobile-panel-layer,
+    .mobile-panel-layer [role="dialog"],
+    .design-notice-backdrop,
+    .design-notice,
+    .pc-tab-indicator
+  ) {
+  transition-duration: 0s;
+}
+html[data-motion-input="keyboard"]
+  :is(
+    .pc-secondary-error,
+    .pc-secondary-success,
+    .ew-error,
+    .ew-withdrawal > [role="status"],
+    .food-comment-replies,
+    .pc-composer-error,
+    .mobile-error-banner
+  ) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

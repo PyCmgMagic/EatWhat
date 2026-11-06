@@ -1,17 +1,33 @@
+import ProfileRail from "./ProfileRail";
+import ProfileOverview from "../features/ProfileOverview";
+import ProfileHelp from "../features/ProfileHelp";
+import { ProfileSectionNav } from "../features/ProfileSectionNav";
+import { unreadCount } from "../api/notifications";
 import {
   useEffect,
   useRef,
   useState,
+  lazy,
+  Suspense,
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  Navigate,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
+import { NotFound, useReturnTo } from "../app/navigation";
 import {
   keepPreviousData,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { useApp } from "../app/state";
+import { LoginLink } from "../app/auth-dialog";
+import { useDebouncedSearch } from "../app/search";
 import { useArea } from "../app/area";
 import { isDemo } from "../app/runtime";
 import { errorMessage } from "../api/client";
@@ -26,19 +42,90 @@ import {
 import { DesignIcon as Icon, Pending, useMobile } from "../mobile/ui";
 import { visualFor } from "../mobile/catalog";
 import "./desktop.css";
-import { MotionRegion, SlidingTabs, useMotionInput } from "./motion";
-import DesktopPublish from "./DesktopPublish";
-import DesktopProfile from "./DesktopProfile";
-import FoodDiscussion, { MyFoodComments } from "./FoodDiscussion";
-import { myCommentEntries } from "../demo/comments";
-import { DesktopTags, DesktopHistory } from "./DesktopLibrary";
-import { DesktopAuth, DesktopSettingsPage } from "./DesktopAccount";
+import "./profile-workspace.css";
+import "./profile-shell.css";
 import {
-  DesktopNotifications,
-  DesktopUser,
-  DesktopFollows,
-  DesktopNewShop,
-} from "./DesktopCommunity";
+  ProfileWorkspaceContext,
+  ProfileNavigationGuardContext,
+  type ProfileNavigationGuard,
+  profileSection,
+  profileSections,
+  type ProfileSection,
+} from "../app/profile-workspace";
+import { MotionRegion, SlidingTabs } from "./motion";
+import { useContentMotion } from "../motion/hooks";
+import { instantMotion } from "../motion/runtime";
+import {
+  dragHeroOrbit,
+  heroOrbitSlots,
+  heroOrbitStep,
+  heroPlateTransform,
+  nearestHeroPosition,
+} from "./hero-orbit";
+import { isV4Path } from "../features/v4-paths";
+import {
+  FeatureAvailability,
+  useRemoteConfig,
+  recommendationBatchSize,
+} from "../features/v4/Remote";
+const V4Routes = lazy(() => import("../features/v4/Routes"));
+const ApiV2Routes = lazy(() => import("../features/ApiV2Routes"));
+const DesktopPublish = lazy(() => import("./DesktopPublish"));
+const DesktopProfile = lazy(() => import("./DesktopProfile"));
+const RestaurantActions = lazy(() =>
+  import("../features/v4/Community").then((m) => ({
+    default: m.RestaurantActions,
+  })),
+);
+const FoodExtras = lazy(() =>
+  import("../features/v4/DetailExtras").then((m) => ({
+    default: m.FoodExtras,
+  })),
+);
+const FoodDiscussion = lazy(() => import("./FoodDiscussion"));
+const MyFoodComments = lazy(() =>
+  import("./FoodDiscussion").then((m) => ({ default: m.MyFoodComments })),
+);
+const DesktopTags = lazy(() =>
+  import("./DesktopLibrary").then((m) => ({ default: m.DesktopTags })),
+);
+const DesktopHistory = lazy(() =>
+  import("./DesktopLibrary").then((m) => ({ default: m.DesktopHistory })),
+);
+import { Catalog, FoodManage } from "../features/Catalog";
+import { RecommendationControls, Preferences } from "../features/Account";
+import { EditFood } from "../features/EditFood";
+import { useActionAccess } from "../features/access";
+import { guestDeviceId, mealCode } from "../api/food-display";
+import { useFoodImageRefresh } from "../features/media";
+import RestaurantMap from "../features/RestaurantMap";
+import { baiduMarkerUrl } from "../features/map-geometry";
+const DesktopAuth = lazy(() =>
+  import("./DesktopAccount").then((m) => ({ default: m.DesktopAuth })),
+);
+const DesktopSettingsPage = lazy(() =>
+  import("./DesktopAccount").then((m) => ({ default: m.DesktopSettingsPage })),
+);
+const SettingsHome = lazy(() => import("../features/SettingsHome"));
+const DesktopNotifications = lazy(() =>
+  import("./DesktopCommunity").then((m) => ({
+    default: m.DesktopNotifications,
+  })),
+);
+const DesktopUser = lazy(() =>
+  import("./DesktopCommunity").then((m) => ({ default: m.DesktopUser })),
+);
+const DesktopNewShop = lazy(() =>
+  import("./DesktopCommunity").then((m) => ({ default: m.DesktopNewShop })),
+);
+import { peopleHref } from "../features/profile-people";
+import { AccessWelcome } from "../components/AccessWelcome";
+import {
+  ContentSkeleton,
+  PageSkeleton,
+  Skeleton,
+  type PageSkeletonKind,
+} from "../components/LoadingSkeleton";
 import {
   PendingPage,
   pendingPages,
@@ -65,15 +152,7 @@ const categories = [
   { key: "drink", name: "饮品" },
   { key: "dessert", name: "甜品" },
 ];
-const protectedScreens = new Set([
-  "G2-Home",
-  "G-HomePhoto",
-  "G-Dish",
-  "G-Detail",
-  "G-TagDishes",
-  "G-MyTags",
-  "G-History",
-]);
+const protectedScreens = new Set(["G-MyTags"]);
 function useTask() {
   const cache = useQueryClient(),
     [busy, setBusy] = useState(false),
@@ -109,17 +188,16 @@ export default function DesktopExperience({
   enabled,
   screen,
   overlay,
-  fitScale = 1,
   children,
 }: {
   enabled: boolean;
   screen: string;
   overlay: boolean;
-  fitScale?: number;
   children: ReactNode;
 }) {
   const location = useLocation();
-  useMotionInput(enabled);
+  const { session } = useApp();
+  const workspace = !!session && profileSection(location.pathname) !== null;
   useEffect(() => {
     const label =
       secondaryTitle(location.pathname) ??
@@ -135,43 +213,35 @@ export default function DesktopExperience({
           "G-Search": "搜索",
           "G-Settings": "设置",
           "G-MyTags": "我的标签",
-          "G-History": "足迹",
+          "G-History": "浏览足迹",
         } as Record<string, string>
       )[screen];
+    if (isV4Path(location.pathname)) return;
     if (enabled && label) document.title = label + " · 山软今天吃什么";
   }, [enabled, screen, location.pathname]);
   if (!enabled) return children;
   return (
-    <div
-      className={`pc-app ${fitScale < 1 ? "pc-design-preview" : ""}`}
-      style={
-        fitScale < 1
-          ? ({
-              width: 1280,
-              zoom: fitScale,
-              "--preview-scale": fitScale,
-            } as CSSProperties)
-          : undefined
-      }
-      inert={overlay || undefined}
-    >
+    <div className="pc-app" inert={overlay || undefined}>
       <DesktopHeader />
       <main className="pc-main">
         <MotionRegion
+          // Reapply inheritance after a modal closes; lazy subtrees can retain
+          // Chromium's computed inert state even after the attribute is removed.
+          style={
+            { interactivity: overlay ? undefined : "inherit" } as CSSProperties
+          }
           changeKey={
-            location.pathname.startsWith("/publish")
-              ? "/publish"
-              : location.pathname
+            workspace
+              ? "profile-workspace"
+              : location.pathname.startsWith("/publish")
+                ? "/publish"
+                : location.pathname
           }
-          order={
-            location.pathname === "/nearby"
-              ? 1
-              : location.pathname === "/me"
-                ? 2
-                : 0
-          }
+          order={location.pathname === "/nearby" ? 1 : workspace ? 2 : 0}
         >
-          <DesktopRoute screen={screen}>{children}</DesktopRoute>
+          <Suspense fallback={<ContentSkeleton kind="form" count={3} />}>
+            <DesktopRoute screen={screen}>{children}</DesktopRoute>
+          </Suspense>
         </MotionRegion>
       </main>
       <DesktopFooter />
@@ -185,18 +255,27 @@ function DesktopHeader() {
     [search, setSearch] = useState("");
   const unread = useQuery({
     queryKey: ["notifications", "unread"],
-    queryFn: () => api.unread(),
+    queryFn: () => unreadCount(api),
     enabled: !!session,
     refetchInterval: 60_000,
   });
   const active =
-    location.pathname === "/nearby" || location.pathname === "/restaurants"
+    location.pathname === "/nearby" ||
+    location.pathname === "/restaurants" ||
+    location.pathname === "/restaurants/directory"
       ? "nearby"
-      : location.pathname.startsWith("/me") ||
+      : profileSection(location.pathname) !== null ||
+          location.pathname.startsWith("/me") ||
           location.pathname.startsWith("/settings") ||
           location.pathname === "/favorites" ||
           location.pathname === "/history" ||
           location.pathname === "/notifications" ||
+          location.pathname === "/features" ||
+          location.pathname === "/submissions" ||
+          location.pathname.startsWith("/submissions/") ||
+          location.pathname === "/feedback/mine" ||
+          location.pathname.startsWith("/feedback/mine/") ||
+          location.pathname === "/restaurants/favorites" ||
           location.pathname === "/verify" ||
           location.pathname === "/follows"
         ? "me"
@@ -242,8 +321,8 @@ function DesktopHeader() {
           >
             <Icon name="search" size={18} />
             <input
-              aria-label="搜索店名"
-              placeholder="找一家好吃的店"
+              aria-label="搜索菜品或店名"
+              placeholder="搜菜品或店名"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -252,6 +331,13 @@ function DesktopHeader() {
             </button>
           </form>
           <Link
+            className="pc-compact-search pc-icon-button"
+            to="/search"
+            aria-label="搜索菜品或店名"
+          >
+            <Icon name="search" size={21} />
+          </Link>
+          <Link
             className="pc-icon-button"
             to="/notifications"
             aria-label={`通知${unread.data ? `，${unread.data} 条未读` : ""}`}
@@ -259,11 +345,15 @@ function DesktopHeader() {
             <Icon name="bell" size={23} />
             {!!unread.data && <i />}
           </Link>
-          <Link className="pc-button pc-publish-button" to="/publish">
-            <Icon name="add" size={20} />
-            发布一道菜
-          </Link>
           <Link
+            className="pc-button pc-publish-button"
+            to="/publish"
+            aria-label="发布一道菜"
+          >
+            <Icon name="add" size={20} />
+            <span>发布一道菜</span>
+          </Link>
+          <LoginLink
             to={session ? "/me" : "/auth"}
             className="pc-user-avatar"
             aria-label={session ? "我的主页" : "登录"}
@@ -271,9 +361,9 @@ function DesktopHeader() {
             {user?.avatar && mediaUrl(user.avatar) ? (
               <img src={mediaUrl(user.avatar)} alt="" />
             ) : (
-              (user?.userName?.slice(0, 1) ?? <Icon name="me" size={20} />)
+              (user?.displayName?.slice(0, 1) ?? <Icon name="me" size={20} />)
             )}
-          </Link>
+          </LoginLink>
         </div>
       </div>
     </header>
@@ -307,9 +397,109 @@ function DesktopRoute({
   screen: string;
   children: ReactNode;
 }) {
+  const { session } = useApp();
+  const location = useLocation();
+  const section = profileSection(location.pathname);
+  const page = <DesktopPage screen={screen}>{children}</DesktopPage>;
+  return session && section ? (
+    <ProfileWorkspace section={section}>{page}</ProfileWorkspace>
+  ) : (
+    page
+  );
+}
+
+function ProfileWorkspace({
+  section,
+  children,
+}: {
+  section: ProfileSection;
+  children: ReactNode;
+}) {
+  const location = useLocation();
+  const content = useRef<HTMLDivElement>(null);
+  const navigationGuard = useRef<ProfileNavigationGuard | null>(null);
+  return (
+    <ProfileWorkspaceContext.Provider value>
+      <ProfileNavigationGuardContext.Provider value={navigationGuard}>
+        <div className="pc-profile-layout pc-profile-workspace">
+          <ProfileRail
+            activeSection={section}
+            allowNavigate={(destination) =>
+              destination === location.pathname + location.search ||
+              (navigationGuard.current?.(destination) ?? true)
+            }
+          />
+          <div
+            ref={content}
+            id="profile-workspace-panel"
+            className="pc-profile-workspace-content"
+            role="region"
+            aria-label="个人中心内容"
+            tabIndex={-1}
+          >
+            <MotionRegion
+              changeKey={location.pathname}
+              order={profileSections.findIndex((item) => item.to === section)}
+            >
+              <Suspense fallback={<ContentSkeleton kind="form" count={3} />}>
+                {children}
+              </Suspense>
+            </MotionRegion>
+          </div>
+        </div>
+      </ProfileNavigationGuardContext.Provider>
+    </ProfileWorkspaceContext.Provider>
+  );
+}
+
+function DesktopPage({
+  screen,
+  children,
+}: {
+  screen: string;
+  children: ReactNode;
+}) {
   const loc = useLocation();
+  if (loc.pathname === "/me/shares")
+    return (
+      <DesktopGate verified={false}>
+        <DesktopShares />
+      </DesktopGate>
+    );
+  if (loc.pathname === "/help") return <ProfileHelp />;
+  if (isV4Path(loc.pathname)) return <V4Routes key={loc.pathname} />;
+  if (/^\/foods\/\d+\/edit$/.test(loc.pathname)) return <EditFood />;
+  if (
+    [
+      "/settings/username",
+      "/settings/blocked",
+      "/auth/password-conflict/reset",
+    ].includes(loc.pathname)
+  )
+    return <ApiV2Routes key={loc.pathname} />;
+  if (loc.pathname === "/settings/preferences") return <Preferences />;
+  if (loc.pathname === "/search") return <Catalog />;
+  if (loc.pathname === "/favorites")
+    return (
+      <DesktopGate verified={false}>
+        <Catalog favorites />
+      </DesktopGate>
+    );
   if (loc.pathname === "/auth" || loc.pathname.startsWith("/auth/"))
-    return <DesktopAuth key={loc.pathname} />;
+    return [
+      "/auth",
+      "/auth/password",
+      "/auth/register",
+      "/auth/register/confirm",
+      "/auth/username-register",
+      "/auth/forgot",
+      "/auth/consent",
+      "/auth/withdraw-consent",
+    ].includes(loc.pathname) ? (
+      <DesktopAuth key={loc.pathname} />
+    ) : (
+      <NotFound />
+    );
   if (loc.pathname === "/notifications")
     return (
       <DesktopGate verified={false}>
@@ -322,19 +512,16 @@ function DesktopRoute({
         <DesktopUser key={loc.pathname} />
       </DesktopGate>
     );
-  if (loc.pathname === "/follows")
-    return (
-      <DesktopGate verified={false}>
-        <DesktopFollows key={loc.search} />
-      </DesktopGate>
-    );
+  if (loc.pathname === "/follows") return null;
   if (
     loc.pathname === "/restaurants/new" ||
     loc.pathname === "/restaurants/new/details"
   )
     return (
       <DesktopGate verified>
-        <DesktopNewShop />
+        <FeatureAvailability name="newShop">
+          <DesktopNewShop />
+        </FeatureAvailability>
       </DesktopGate>
     );
   if (
@@ -372,7 +559,9 @@ function DesktopRoute({
   if (["G-PickShop", "G-AddDish", "G-Crop"].includes(screen))
     return (
       <DesktopGate verified>
-        <DesktopPublish />
+        <FeatureAvailability name="publish">
+          <DesktopPublish />
+        </FeatureAvailability>
       </DesktopGate>
     );
   if (loc.pathname === "/admin")
@@ -382,23 +571,19 @@ function DesktopRoute({
       </DesktopSource>
     );
   let content: ReactNode;
+  if (screen === "G-NotFound") return <NotFound />;
   if (screen === "G2-Home" || screen === "G-HomePhoto")
     content = <DesktopHome />;
   else if (screen === "G-Nearby") content = <DesktopNearby />;
   else if (screen === "G-Search") content = <DesktopSearch />;
-  else if (screen === "G-Me") content = <DesktopMe />;
+  else if (screen === "G-Me") content = <ProfileOverview />;
   else if (screen === "G-Dish") content = <DesktopDish />;
   else if (screen === "G-Detail") content = <DesktopRestaurant />;
-  else if (screen === "G-TagDishes") content = <DesktopFavorites />;
+  else if (screen === "G-TagDishes") content = <Catalog favorites />;
   else if (screen === "G-MyTags" || screen === "G-History")
-    content = (
-      <div className="pc-profile-layout">
-        <ProfileRail />
-        {screen === "G-MyTags" ? <DesktopTags /> : <DesktopHistory />}
-      </div>
-    );
+    content = screen === "G-MyTags" ? <DesktopTags /> : <DesktopHistory />;
   else if (screen === "G-Settings" && loc.pathname === "/settings")
-    content = <DesktopSettings />;
+    content = <SettingsHome embedded />;
   else {
     const auth = [
       "G-Login",
@@ -414,22 +599,36 @@ function DesktopRoute({
       </DesktopSource>
     );
   }
-  return (
+  return [
+    "G2-Home",
+    "G-HomePhoto",
+    "G-Dish",
+    "G-Detail",
+    "G-Nearby",
+    "G-Search",
+  ].includes(screen) ? (
+    content
+  ) : (
     <DesktopGate verified={protectedScreens.has(screen)}>{content}</DesktopGate>
   );
 }
 function DiscussionRedirect() {
   const loc = useLocation(),
-    m = useMobile();
+    m = useMobile(),
+    nav = useNavigate();
   const id =
     parseId(new URLSearchParams(loc.search).get("foodId") ?? undefined) ??
     m.foodId;
-  return (
-    <Navigate
-      replace
-      to={`/foods/${id}?section=comments${loc.pathname.endsWith("/write") ? "&compose=1" : ""}`}
-    />
-  );
+  useEffect(() => {
+    // A resize may render the old phone route as a new hash arrives.
+    // Do not let that route's deferred redirect replace a newer navigation.
+    if (window.location.hash.slice(1).split("?")[0] !== loc.pathname) return;
+    nav(
+      `/foods/${id}?section=comments${loc.pathname.endsWith("/write") ? "&compose=1" : ""}`,
+      { replace: true },
+    );
+  }, [id, loc.pathname, nav]);
+  return <ContentSkeleton kind="rows" count={3} />;
 }
 function DesktopSource({
   screen,
@@ -472,28 +671,9 @@ function DesktopGate({
   verified?: boolean;
   children: ReactNode;
 }) {
-  const { session, user, me } = useApp(),
-    loc = useLocation();
-  if (!session)
-    return (
-      <Status
-        icon="bowl"
-        title="同校的你，一起好好吃饭"
-        detail="登录后，发现喜欢的菜，整理自己的想吃清单。"
-      >
-        <Link
-          className="pc-button"
-          to={
-            "/auth/password?next=" +
-            encodeURIComponent(loc.pathname + loc.search)
-          }
-        >
-          登录 / 注册
-          <Icon name="chevronRight" size={18} />
-        </Link>
-      </Status>
-    );
-  if (me.isPending) return <Status title="正在端上这一份好味道" />;
+  const { session, user, me } = useApp();
+  if (!session) return <AccessWelcome />;
+  if (me.isPending) return <PageSkeleton kind="profile" />;
   if (me.error)
     return (
       <Status title="暂时没能读取账号" detail={errorMessage(me.error)}>
@@ -510,18 +690,7 @@ function DesktopGate({
       />
     );
   if (verified && user?.verified !== true)
-    return (
-      <Status
-        icon="verify"
-        title="先认识一下，同校的你"
-        detail="完成学生认证后，就可以浏览菜品、收藏和发布。"
-      >
-        <Link className="pc-button" to="/verify">
-          去认证
-          <Icon name="chevronRight" size={18} />
-        </Link>
-      </Status>
-    );
+    return <AccessWelcome verification />;
   return children;
 }
 function Status({
@@ -550,13 +719,27 @@ function QueryStatus({
   query,
   empty,
   children,
+  skeleton,
+  rows = false,
 }: {
-  query: { isPending: boolean; error: unknown; refetch: () => unknown };
+  query: {
+    isPending: boolean;
+    error: unknown;
+    data?: unknown;
+    refetch: () => unknown;
+  };
   empty?: boolean;
   children: ReactNode;
+  skeleton?: PageSkeletonKind;
+  rows?: boolean;
 }) {
-  if (query.isPending) return <Status title="正在找这一份好味道" />;
-  if (query.error)
+  if (query.isPending)
+    return skeleton ? (
+      <PageSkeleton kind={skeleton} />
+    ) : (
+      <ContentSkeleton kind={rows ? "rows" : "cards"} />
+    );
+  if (query.error && !query.data)
     return (
       <Status title="这一份内容暂时没端上来" detail={errorMessage(query.error)}>
         <button className="pc-button" onClick={() => void query.refetch()}>
@@ -582,22 +765,37 @@ function Plate({
   className = "",
   style,
   hidden = false,
+  lazy = false,
+  priority = false,
+  orbitOffset,
 }: {
   food: Food;
   className?: string;
   style?: CSSProperties;
   hidden?: boolean;
+  lazy?: boolean;
+  priority?: boolean;
+  orbitOffset?: number;
 }) {
   const visual = visualFor(food, isDemo),
     src = mediaUrl(food.pictureUrl?.[0]);
+  const renew = useFoodImageRefresh();
   return (
     <div
       className={`pc-plate ${visual.asset ? "is-illustration" : "is-photo"} ${className}`}
       style={style}
       aria-hidden={hidden || undefined}
+      data-orbit-offset={orbitOffset}
     >
       {src ? (
-        <img src={src} alt={food.name ?? "菜品"} />
+        <img
+          src={src}
+          alt={food.name ?? "菜品"}
+          onError={() => renew(src)}
+          loading={lazy ? "lazy" : "eager"}
+          decoding="async"
+          fetchPriority={priority ? "high" : "auto"}
+        />
       ) : (
         <Icon name="bowl" size={80} />
       )}
@@ -605,22 +803,51 @@ function Plate({
   );
 }
 function DesktopHome() {
+  const remote = useRemoteConfig(),
+    batchSize = recommendationBatchSize(remote.data);
   const { api } = useApp(),
     m = useMobile(),
-    { area } = useArea(),
+    { area, campusId } = useArea(),
     [n, setN] = useState(0),
     [category, setCategory] = useState(""),
-    pointer = useRef<number | null>(null);
+    pointer = useRef<{ id: number; x: number; radius: number } | null>(null),
+    copy = useRef<HTMLDivElement>(null);
   const query = useQuery({
-      queryKey: ["foods", "mobile-recommend"],
-      queryFn: () => api.recommend(8),
+      queryKey: ["foods", "mobile-recommend", campusId, m.meal, "", batchSize],
+      queryFn: () =>
+        api.recommend(batchSize, {
+          campusId,
+          mealTime: mealCode(m.meal),
+          deviceId: guestDeviceId(),
+        }),
+      placeholderData: keepPreviousData,
     }),
     list = query.data ?? [],
     index = list.length ? ((n % list.length) + list.length) % list.length : 0,
     food = list[index],
     visual = food ? visualFor(food, isDemo) : null;
+  const categoryQuery = useQuery({
+    queryKey: [
+      "foods",
+      "mobile-recommend",
+      campusId,
+      m.meal,
+      category,
+      batchSize,
+    ],
+    queryFn: () =>
+      api.recommend(batchSize, {
+        campusId,
+        mealTime: mealCode(m.meal),
+        category,
+        deviceId: guestDeviceId(),
+      }),
+    enabled: !!category,
+    placeholderData: keepPreviousData,
+  });
+  useContentMotion(copy, food?.id ?? undefined, n, "y");
   const selection = category
-    ? list.filter((f) => f.category === category)
+    ? (categoryQuery.data ?? []).filter((f) => f.category === category)
     : isDemo
       ? [
           list[4],
@@ -635,12 +862,20 @@ function DesktopHome() {
   }, []);
   if (!food || !visual)
     return (
-      <QueryStatus query={query} empty={!query.isPending && !query.error}>
-        <span />
-      </QueryStatus>
+      <div className="pc-home">
+        <RecommendationControls />
+        <QueryStatus
+          query={query}
+          skeleton="home"
+          empty={!query.isPending && !query.error}
+        >
+          <span />
+        </QueryStatus>
+      </div>
     );
   return (
     <div className="pc-home">
+      <RecommendationControls />
       <section
         className="pc-hero"
         style={
@@ -666,7 +901,7 @@ function DesktopHome() {
           <span>{String(index + 1).padStart(2, "0")}</span>
           <span>/ {String(list.length).padStart(2, "0")}</span>
         </div>
-        <div className="pc-hero-copy">
+        <div className="pc-hero-copy" ref={copy}>
           <span className="pc-eyebrow">今天这顿，就从这里开始</span>
           <h1 title={food.name ?? undefined}>
             {visual.l1}
@@ -697,35 +932,87 @@ function DesktopHome() {
             }
           }}
           onPointerDown={(e) => {
-            pointer.current = e.clientX;
+            if (
+              !e.isPrimary ||
+              e.button !== 0 ||
+              pointer.current ||
+              list.length < 2
+            )
+              return;
+            const plate =
+              e.currentTarget.querySelector<HTMLElement>(".pc-current-plate");
+            pointer.current = {
+              id: e.pointerId,
+              x: e.clientX,
+              radius: (plate?.offsetWidth ?? 430) * 1.03,
+            };
             e.currentTarget.setPointerCapture(e.pointerId);
+          }}
+          onPointerMove={(e) => {
+            const start = pointer.current;
+            if (start?.id !== e.pointerId || instantMotion()) return;
+            e.currentTarget.dataset.dragging = "true";
+            const angle =
+              heroOrbitStep *
+              Math.tanh(
+                (e.clientX - start.x) /
+                  ((start.radius * heroOrbitStep * Math.PI) / 180),
+              );
+            dragHeroOrbit(e.currentTarget, angle);
           }}
           onPointerUp={(e) => {
             const start = pointer.current;
+            if (start?.id !== e.pointerId) return;
             pointer.current = null;
-            if (start !== null && Math.abs(e.clientX - start) > 30) {
-              const direction = e.clientX < start ? 1 : -1;
+            delete e.currentTarget.dataset.dragging;
+            dragHeroOrbit(e.currentTarget);
+            if (
+              start?.id === e.pointerId &&
+              Math.abs(e.clientX - start.x) > 30
+            ) {
+              const direction = e.clientX < start.x ? 1 : -1;
               setN((i) => i + direction);
             }
           }}
-          onPointerCancel={() => (pointer.current = null)}
+          onLostPointerCapture={(e) => {
+            if (pointer.current?.id !== e.pointerId) return;
+            pointer.current = null;
+            delete e.currentTarget.dataset.dragging;
+            dragHeroOrbit(e.currentTarget);
+          }}
+          onPointerCancel={(e) => {
+            if (pointer.current?.id !== e.pointerId) return;
+            pointer.current = null;
+            delete e.currentTarget.dataset.dragging;
+            dragHeroOrbit(e.currentTarget);
+          }}
         >
-          {list.map((item, i) => (
-            <Plate
-              key={item.id}
-              food={item}
-              hidden={i !== index}
-              className={
-                i === index
-                  ? "pc-current-plate"
-                  : i === (index + 1) % list.length
-                    ? "pc-next-plate"
-                    : i === (index - 1 + list.length) % list.length
-                      ? "pc-previous-plate"
-                      : "pc-waiting-plate"
-              }
-            />
-          ))}
+          {heroOrbitSlots(n, list.length).map((slot) => {
+            const item =
+              list[((slot % list.length) + list.length) % list.length];
+            const offset = slot - n;
+            return (
+              <Plate
+                key={`${slot}:${item.id}`}
+                food={item}
+                hidden={offset !== 0}
+                priority={offset === 0}
+                orbitOffset={offset}
+                style={{
+                  transform: heroPlateTransform(offset * heroOrbitStep),
+                }}
+                className={
+                  offset === 0
+                    ? "pc-current-plate"
+                    : offset === 1
+                      ? "pc-next-plate"
+                      : offset === -1
+                        ? "pc-previous-plate"
+                        : "pc-waiting-plate"
+                }
+              />
+            );
+          })}
         </div>
         <div className="pc-hero-actions">
           <button
@@ -753,7 +1040,11 @@ function DesktopHome() {
               key={f.id}
               aria-label={`看第 ${i + 1} 道菜`}
               aria-pressed={i === index}
-              onClick={() => setN(i)}
+              onClick={() =>
+                setN((position) =>
+                  nearestHeroPosition(position, i, list.length),
+                )
+              }
             />
           ))}
         </div>
@@ -784,14 +1075,41 @@ function DesktopHome() {
           changeKey={category}
           order={categories.findIndex((c) => c.key === category)}
           className="pc-category-content"
+          aria-busy={!!category && categoryQuery.isFetching}
           reserveSpace
         >
+          {category && categoryQuery.isFetching && !selection.length && (
+            <ContentSkeleton count={4} />
+          )}
           <div className="pc-food-grid">
             {selection.map((f) => (
               <FoodCard key={f.id} food={f} />
             ))}
           </div>
-          {!selection.length && <Status title="这一组里，还没有这个口味" />}
+          {category && categoryQuery.isError ? (
+            <Status
+              title="这一组暂时没端上来"
+              detail={errorMessage(categoryQuery.error)}
+            >
+              <button
+                className="pc-button light"
+                onClick={() => void categoryQuery.refetch()}
+              >
+                重新加载
+              </button>
+            </Status>
+          ) : (
+            !selection.length &&
+            !categoryQuery.isFetching && (
+              <Status
+                title={
+                  category && categoryQuery.isFetching
+                    ? "正在端上这一组好味道"
+                    : "这一组里，还没有这个口味"
+                }
+              />
+            )
+          )}
         </MotionRegion>
       </section>
     </div>
@@ -807,7 +1125,7 @@ function FoodCard({ food }: { food: Food }) {
       onClick={() => m.setFoodId(food.id!)}
     >
       <div className="pc-food-card-image" style={{ background: v.tile }}>
-        <Plate food={food} />
+        <Plate food={food} lazy />
         <span className="pc-card-category">
           {categoryNames[food.category ?? "other"]}
         </span>
@@ -876,24 +1194,59 @@ function NextPage({
 }
 
 function DesktopNearby() {
+  const [params, setParams] = useSearchParams();
+  const update = (patch: Record<string, string | undefined>) =>
+    setParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        for (const [key, value] of Object.entries(patch))
+          value ? next.set(key, value) : next.delete(key);
+        return next;
+      },
+      { replace: true },
+    );
+  const page = Math.max(1, Number(params.get("page")) || 1);
+  const setPage = (change: number | ((value: number) => number)) =>
+    update({
+      page: String(typeof change === "function" ? change(page) : change),
+    });
+  const selected = parseId(params.get("selected") ?? undefined);
+  const setSelected = (id: number) => update({ selected: String(id) });
+  const q = params.get("q") ?? "";
+  const setQ = (value: string) =>
+    update({ q: value || undefined, page: undefined });
   const { api } = useApp(),
     { area } = useArea(),
-    m = useMobile(),
-    [q, setQ] = useState(""),
-    [page, setPage] = useState(1),
-    [selected, setSelected] = useState<number>();
+    m = useMobile();
+  const areaKey = JSON.stringify(area);
+  const previousArea = useRef(areaKey);
+  const areaChanged = previousArea.current !== areaKey;
+  useEffect(() => {
+    if (previousArea.current !== areaKey) {
+      previousArea.current = areaKey;
+      update({ page: undefined, selected: undefined });
+    }
+  }, [areaKey]);
+  const keyword = useDebouncedSearch(q);
   const query = useQuery({
-      queryKey: ["restaurants", "desktop-nearby", area, q, page],
+      queryKey: ["restaurants", "desktop-nearby", area, keyword, page],
       queryFn: () =>
-        api.restaurantSearch({
-          gcjLng: area!.gcjLng,
-          gcjLat: area!.gcjLat,
-          hubId: area?.hubId,
-          keyword: q || undefined,
-          page,
-          pageSize: 10,
-        }),
-      enabled: !!area,
+        area
+          ? api.restaurantSearch({
+              gcjLng: area!.gcjLng,
+              gcjLat: area!.gcjLat,
+              hubId: area?.hubId,
+              keyword: keyword || undefined,
+              page,
+              pageSize: 10,
+            })
+          : api.browseRestaurants({
+              keyword: keyword || undefined,
+              page,
+              pageSize: 10,
+            }),
+      placeholderData: keepPreviousData,
+      enabled: !areaChanged,
     }),
     shops = query.data?.items ?? [],
     current = shops.find((s) => s.id === selected) ?? shops[0];
@@ -912,6 +1265,7 @@ function DesktopNearby() {
       <div className="pc-nearby-layout">
         <section className="pc-nearby-list">
           <div className="pc-nearby-list-header">
+            <Link to="/restaurants/directory">更多筛选 →</Link>
             <h2>
               附近的店 <span>{query.data?.totalItems ?? "—"}</span>
             </h2>
@@ -923,7 +1277,6 @@ function DesktopNearby() {
                 value={q}
                 onChange={(e) => {
                   setQ(e.target.value);
-                  setPage(1);
                 }}
               />
               {q && (
@@ -932,20 +1285,18 @@ function DesktopNearby() {
                 </button>
               )}
             </div>
-            <span className="pc-small-note">按所选区域查询</span>
+            <span className="pc-small-note" role="status">
+              {(query.isFetching && !query.isPending) || q !== keyword
+                ? "正在更新附近的店…"
+                : "按所选区域查询"}
+            </span>
           </div>
-          <div className="pc-nearby-list-scroll">
-            {!area ? (
-              <Status title="先选一个区域">
-                <button
-                  className="pc-button"
-                  onClick={() => m.openPanel("G-PanelPlace")}
-                >
-                  选择地点
-                </button>
-              </Status>
-            ) : (
-              <QueryStatus query={query} empty={!shops.length}>
+          <div
+            className="pc-nearby-list-scroll"
+            aria-busy={query.isFetching || q !== keyword}
+          >
+            {
+              <QueryStatus query={query} rows empty={!shops.length}>
                 {shops.map((shop) => (
                   <button
                     key={shop.id}
@@ -955,7 +1306,12 @@ function DesktopNearby() {
                   >
                     <div className="pc-shop-thumbnail">
                       {mediaUrl(shop.pictureUrl?.[0]) ? (
-                        <img src={mediaUrl(shop.pictureUrl?.[0])} alt="" />
+                        <img
+                          src={mediaUrl(shop.pictureUrl?.[0])}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                        />
                       ) : (
                         <Icon name="store" size={28} />
                       )}
@@ -974,34 +1330,22 @@ function DesktopNearby() {
                   onPrevious={() => setPage((p) => Math.max(1, p - 1))}
                 />
               </QueryStatus>
-            )}
+            }
           </div>
         </section>
-        <section className="pc-map" aria-label="附近餐厅示意图">
-          <MapDrawing />
-          {shops.slice(0, 7).map((shop, i) => (
-            <button
-              key={shop.id}
-              className={`pc-map-pin ${shop.id === current?.id ? "selected" : ""}`}
-              style={{
-                left: [32, 69, 57, 23, 80, 44, 74][i] + "%",
-                top: [36, 25, 58, 69, 75, 17, 48][i] + "%",
-              }}
-              aria-label={`在示意图选择${shop.name}`}
-              onClick={() => setSelected(shop.id!)}
-            >
-              {mediaUrl(shop.pictureUrl?.[0]) ? (
-                <img src={mediaUrl(shop.pictureUrl?.[0])} alt="" />
-              ) : (
-                <Icon name="store" size={26} />
-              )}
-              <span>{shop.name}</span>
-            </button>
-          ))}
-          <span className="pc-map-legend">
-            <Icon name="map" size={16} />
-            示意地图 <Pending name="真实地图待接入" />
-          </span>
+        <section className="pc-map" aria-label="附近餐厅地图">
+          <div className="pc-map-surface">
+            <RestaurantMap
+              restaurants={shops}
+              selectedId={current?.id ?? undefined}
+              onSelect={(shop) => setSelected(shop.id!)}
+            />
+          </div>
+          {query.isPending && (
+            <div className="pc-map-selected">
+              <ContentSkeleton kind="rows" count={1} />
+            </div>
+          )}
           {current && (
             <div className="pc-map-selected">
               <div>
@@ -1024,178 +1368,22 @@ function DesktopNearby() {
     </>
   );
 }
-function MapDrawing() {
-  return (
-    <svg
-      className="pc-map-drawing"
-      viewBox="0 0 900 760"
-      preserveAspectRatio="xMidYMid slice"
-      aria-hidden="true"
-    >
-      <rect width="900" height="760" fill="#ECE5D8" />
-      {Array.from({ length: 5 }, (_, row) =>
-        Array.from({ length: 5 }, (_, col) => (
-          <rect
-            key={row + "-" + col}
-            x={col * 194 - 70}
-            y={row * 172 - 50}
-            width="172"
-            height="148"
-            rx="12"
-            fill={(row + col) % 5 === 0 ? "#D6E1BB" : "#E2D9C8"}
-          />
-        )),
-      )}
-      <g stroke="#fff" strokeWidth="17">
-        <path d="M0 112H900M0 285H900M0 458H900M0 630H900M110 0V760M305 0V760M500 0V760M695 0V760M890 0V760" />
-      </g>
-      <g stroke="#F3C46E" strokeWidth="1.5" strokeDasharray="10 8">
-        <path d="M0 285H900M500 0V760" />
-      </g>
-      <g fill="#9A8B80" fontSize="15" fontFamily="Noto Sans SC Variable">
-        <text x="350" y="277">
-          华中路
-        </text>
-        <text x="701" y="409" transform="rotate(-90 701 409)">
-          学府路
-        </text>
-        <text x="130" y="90">
-          街心公园
-        </text>
-        <text x="535" y="652">
-          校园生活区
-        </text>
-      </g>
-      <circle cx="170" cy="350" r="28" fill="#9DB8D955" />
-      <circle
-        cx="170"
-        cy="350"
-        r="8"
-        fill="#4F7CDD"
-        stroke="#fff"
-        strokeWidth="3"
-      />
-    </svg>
-  );
-}
 function DesktopSearch() {
-  const { api } = useApp(),
-    { area } = useArea(),
-    m = useMobile(),
-    loc = useLocation(),
-    [q, setQ] = useState(new URLSearchParams(loc.search).get("q") ?? ""),
-    [page, setPage] = useState(1);
-  useEffect(() => {
-    setQ(new URLSearchParams(loc.search).get("q") ?? "");
-    setPage(1);
-  }, [loc.search]);
-  const query = useQuery({
-    queryKey: ["restaurants", "desktop-search", area, q, page],
-    queryFn: () =>
-      api.restaurantSearch({
-        gcjLng: area!.gcjLng,
-        gcjLat: area!.gcjLat,
-        hubId: area?.hubId,
-        keyword: q || undefined,
-        page,
-        pageSize: 12,
-      }),
-    enabled: !!area,
-  });
-  return (
-    <>
-      <PageHeading title="找一家好吃的店" kicker="想吃的，也许就在下一个转角" />
-      <div className="pc-search-panel">
-        <div className="pc-search-field large">
-          <Icon name="search" size={23} />
-          <input
-            aria-label="搜索餐厅"
-            placeholder="输入店名"
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setPage(1);
-            }}
-          />
-          {q && (
-            <button aria-label="清空搜索" onClick={() => setQ("")}>
-              <Icon name="close" size={20} />
-            </button>
-          )}
-        </div>
-        <button
-          className="pc-location light"
-          onClick={() => m.openPanel("G-PanelPlace")}
-        >
-          <Icon name="nearby" size={17} />
-          {area?.name ?? "选择区域"}
-          <Icon name="chevronDown" size={15} />
-        </button>
-      </div>
-      <div className="pc-result-heading">
-        <h2>
-          店 <span>{query.data?.totalItems ?? "—"}</span>
-        </h2>
-        <span>
-          菜品全站搜索 <Pending />
-        </span>
-      </div>
-      {!area ? (
-        <Status title="先选一个区域">
-          <button
-            className="pc-button"
-            onClick={() => m.openPanel("G-PanelPlace")}
-          >
-            选择地点
-          </button>
-        </Status>
-      ) : (
-        <QueryStatus query={query} empty={!query.data?.items?.length}>
-          <div className="pc-restaurant-grid">
-            {query.data?.items?.map((shop) => (
-              <Link
-                key={shop.id}
-                className="pc-restaurant-card"
-                to={`/restaurants/${shop.id}`}
-              >
-                <div className="pc-restaurant-card-photo">
-                  {mediaUrl(shop.pictureUrl?.[0]) ? (
-                    <img src={mediaUrl(shop.pictureUrl?.[0])} alt="" />
-                  ) : (
-                    <Icon name="store" size={48} />
-                  )}
-                </div>
-                <div>
-                  <h2>{shop.name}</h2>
-                  <p>{shop.address ?? "地址待补充"}</p>
-                  <span>
-                    去这家店 <Icon name="chevronRight" size={17} />
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <NextPage
-            page={page}
-            hasNext={query.data?.hasNext}
-            onNext={() => setPage((p) => p + 1)}
-            onPrevious={() => setPage((p) => Math.max(1, p - 1))}
-          />
-        </QueryStatus>
-      )}
-    </>
-  );
+  return <Catalog />;
 }
-
 function DesktopDish() {
-  const { api } = useApp(),
+  const returnTo = useReturnTo("/");
+  const { api, session, user } = useApp(),
     m = useMobile(),
     loc = useLocation(),
     id = parseId(loc.pathname.split("/").pop()) ?? m.foodId,
-    task = useTask();
+    task = useTask(),
+    access = useActionAccess();
   const query = useQuery({
       queryKey: ["foods", "detail", id],
       queryFn: () => api.food(id),
+      // A detail visit also records history; a cached page must not skip it.
+      staleTime: 0,
     }),
     food = query.data,
     v = food ? visualFor(food, isDemo) : null;
@@ -1204,15 +1392,20 @@ function DesktopDish() {
     queryFn: () => api.restaurant(food!.restaurantId!),
     enabled: !!food?.restaurantId,
   });
-  const [image, setImage] = useState(0);
+  const [image, setImage] = useState(0),
+    photo = useRef<HTMLDivElement>(null);
+  useContentMotion(photo, image, image, "opacity");
   useEffect(() => setImage(0), [id]);
   useEffect(() => m.setFoodId(id), [id]);
   return (
-    <QueryStatus query={query}>
+    <QueryStatus query={query} skeleton="dish">
       {food && v && (
         <>
           <div className="pc-breadcrumb">
-            <Link to="/">发现</Link>
+            <Link to={returnTo}>
+              <Icon name="back" size={14} />
+              返回
+            </Link>
             <Icon name="chevronRight" size={14} />
             <Link to={`/restaurants/${food.restaurantId}`}>
               {food.restaurantName}
@@ -1228,8 +1421,9 @@ function DesktopDish() {
               }
             >
               <div className="pc-dish-stage-table" />
-              <div className="pc-dish-plate">
+              <div className="pc-dish-plate" ref={photo}>
                 <Plate
+                  priority
                   food={{
                     ...food,
                     pictureUrl: food.pictureUrl?.[image]
@@ -1264,9 +1458,12 @@ function DesktopDish() {
                   className="pc-icon-button"
                   aria-label={food.isFavorite ? "取消收藏" : "收藏"}
                   aria-pressed={food.isFavorite === true}
-                  disabled={task.busy || food.isFavorite == null}
+                  disabled={task.busy || (!!session && food.isFavorite == null)}
                   onClick={() =>
-                    void task.run(() => api.favorite(id, food.isFavorite!))
+                    access() &&
+                    void task.run(() =>
+                      api.favorite(id, food.isFavorite === true),
+                    )
                   }
                 >
                   <Icon
@@ -1287,7 +1484,13 @@ function DesktopDish() {
                 </span>
                 <span>
                   <b>{food.restaurantName}</b>
-                  <small>{shop.data?.address ?? "地址待补充"}</small>
+                  <small>
+                    {shop.isPending && !shop.data ? (
+                      <Skeleton width="85%" height={14} />
+                    ) : (
+                      (shop.data?.address ?? "地址待补充")
+                    )}
+                  </small>
                 </span>
                 <Icon name="chevronRight" size={21} />
               </Link>
@@ -1295,9 +1498,15 @@ function DesktopDish() {
                 <button
                   className="pc-button light"
                   aria-pressed={food.isLiked === true}
-                  disabled={task.busy || food.isLiked == null}
+                  disabled={
+                    task.busy ||
+                    (!!session &&
+                      user?.verified === true &&
+                      food.isLiked == null)
+                  }
                   onClick={() =>
-                    void task.run(() => api.like(id, food.isLiked!))
+                    access(true) &&
+                    void task.run(() => api.like(id, food.isLiked === true))
                   }
                 >
                   <Icon name={food.isLiked ? "heartOn" : "heart"} size={21} />
@@ -1322,6 +1531,7 @@ function DesktopDish() {
                         fontWeight: i === 0 ? 900 : 600,
                       }}
                       onClick={() => {
+                        if (!access(true)) return;
                         m.setFoodId(id);
                         m.openPanel("G-PanelTag");
                       }}
@@ -1333,6 +1543,7 @@ function DesktopDish() {
                   <button
                     className="pc-dashed-button"
                     onClick={() => {
+                      if (!access(true)) return;
                       m.setFoodId(id);
                       m.openPanel("G-PanelTag");
                     }}
@@ -1342,24 +1553,27 @@ function DesktopDish() {
                 </div>
               </div>
               <div className="pc-contributor">
-                <Link to={`/users/${food.accountId}`}>
-                  <span className="pc-user-avatar">
-                    {food.uploaderName?.slice(0, 1) ?? "食"}
-                  </span>
-                  <b>{food.uploaderName ?? "同学"}</b>
-                </Link>
+                {parseId(String(food.accountId)) ? (
+                  <Link to={`/users/${food.accountId}`}>
+                    <span className="pc-user-avatar">
+                      {food.uploaderName?.slice(0, 1) ?? "食"}
+                    </span>
+                    <b>{food.uploaderName ?? "同学"}</b>
+                  </Link>
+                ) : (
+                  <b>{food.uploaderName ?? "校园食友"}</b>
+                )}
                 <span>分享了这道菜</span>
               </div>
               <p className="pc-dish-description">
                 {food.description ?? "分享者还没有留下描述。"}
               </p>
+              <FoodManage food={food} />
               <div className="pc-detail-secondary">
                 <Link to={`/foods/${id}?section=comments`}>
                   <Icon name="comment" size={15} /> 食友讨论
                 </Link>
-                <button onClick={() => m.openPanel("G-PanelReport")}>
-                  举报 <Pending />
-                </button>
+                <Link to={`/reports/new?type=FOOD&id=${id}`}>举报</Link>
               </div>
               {task.error && (
                 <p className="pc-error" role="alert">
@@ -1368,13 +1582,17 @@ function DesktopDish() {
               )}
             </section>
           </div>
-          <FoodDiscussion key={id} food={{ ...food, id }} />
+          <Suspense fallback={<ContentSkeleton kind="rows" count={3} />}>
+            <FoodDiscussion key={id} food={{ ...food, id }} />
+            <FoodExtras id={id} />
+          </Suspense>
         </>
       )}
     </QueryStatus>
   );
 }
 function DesktopRestaurant() {
+  const returnTo = useReturnTo("/nearby");
   const { api } = useApp(),
     m = useMobile(),
     loc = useLocation(),
@@ -1383,18 +1601,23 @@ function DesktopRestaurant() {
   const query = useQuery({
       queryKey: ["restaurants", "detail", id],
       queryFn: () => api.restaurant(id),
+      staleTime: 0,
     }),
     foods = useQuery({
       queryKey: ["foods", "restaurant", id, page],
       queryFn: () => api.foods(id, page),
+      placeholderData: keepPreviousData,
     }),
     shop = query.data;
   return (
-    <QueryStatus query={query}>
+    <QueryStatus query={query} skeleton="restaurant">
       {shop && (
         <>
           <div className="pc-breadcrumb">
-            <Link to="/nearby">附近</Link>
+            <Link to={returnTo}>
+              <Icon name="back" size={14} />
+              返回
+            </Link>
             <Icon name="chevronRight" size={14} />
             <span>{shop.name}</span>
           </div>
@@ -1410,7 +1633,11 @@ function DesktopRestaurant() {
                 <strong>{foods.data?.totalItems ?? "—"}</strong>
                 <span>道菜</span>
                 <span>
-                  评分 <Pending />
+                  {shop.ratingSummaryState === "SYNC_PENDING"
+                    ? "评分同步中"
+                    : shop.recommendationRate == null
+                      ? "评分人数不足"
+                      : `推荐率 ${shop.recommendationRate}%`}
                 </span>
               </div>
               <div className="pc-restaurant-actions">
@@ -1429,7 +1656,7 @@ function DesktopRestaurant() {
                   onClick={() =>
                     hasCoordinates(shop)
                       ? window.open(
-                          `https://uri.amap.com/marker?position=${shop.gcjLng},${shop.gcjLat}&name=${encodeURIComponent(shop.name ?? "餐厅")}&coordinate=gaode`,
+                          baiduMarkerUrl(shop),
                           "_blank",
                           "noopener,noreferrer",
                         )
@@ -1442,7 +1669,21 @@ function DesktopRestaurant() {
               </div>
             </div>
             <div className="pc-restaurant-hero-plate">
-              {foods.data?.items?.[0] ? (
+              {foods.isPending ? (
+                <div
+                  className="ew-skeleton-stage"
+                  style={{ width: "100%", height: "100%" }}
+                >
+                  <span
+                    className="ew-skeleton"
+                    style={{
+                      width: "80%",
+                      aspectRatio: 1,
+                      borderRadius: "50%",
+                    }}
+                  />
+                </div>
+              ) : foods.data?.items?.[0] ? (
                 <Plate food={foods.data.items[0]} />
               ) : mediaUrl(shop.pictureUrl?.[0]) ? (
                 <img src={mediaUrl(shop.pictureUrl?.[0])} alt="" />
@@ -1451,15 +1692,18 @@ function DesktopRestaurant() {
               )}
             </div>
           </section>
+          <Suspense fallback={<ContentSkeleton kind="rows" count={1} />}>
+            <RestaurantActions id={id} />
+          </Suspense>
           <section className="pc-content-sheet">
             <div className="pc-sheet-handle" />
             <div className="pc-section-toolbar">
               <h2>这家店的好味道</h2>
               <Link
-                to="/restaurants/correction"
+                to={`/restaurants/correction?id=${id}`}
                 onClick={() => m.setShopId(id)}
               >
-                信息有误 <Pending />
+                信息有误
               </Link>
             </div>
             <QueryStatus query={foods} empty={!foods.data?.items?.length}>
@@ -1482,378 +1726,119 @@ function DesktopRestaurant() {
   );
 }
 
-function ProfileRail() {
-  const loc = useLocation();
-  const { user, api } = useApp(),
-    stats = useQuery({
-      queryKey: ["user", user?.id],
-      queryFn: () => api.otherUser(user!.id!),
-      enabled: !!user?.id,
+export function DesktopShares() {
+  const [params, setParams] = useSearchParams();
+  const tab = params.get("tab") === "comments" ? "comments" : "uploads";
+  const page = Math.max(1, Number(params.get("page")) || 1);
+
+  const setPage = (change: number | ((value: number) => number)) =>
+    setParams((previous) => {
+      const next = new URLSearchParams(previous);
+      next.set(
+        "page",
+        String(typeof change === "function" ? change(page) : change),
+      );
+      return next;
     });
-  return (
-    <aside className="pc-profile-rail">
-      <div className="pc-profile-card">
-        <img
-          className="pc-profile-decoration"
-          src="/prototype/assets/dishes/yangzhi.svg"
-          alt=""
-        />
-        <div className="pc-profile-avatar">
-          {user?.avatar && mediaUrl(user.avatar) ? (
-            <img src={mediaUrl(user.avatar)} alt="" />
-          ) : (
-            (user?.userName?.slice(0, 1) ?? "食")
-          )}
-        </div>
-        <h1>{user?.userName ?? "同学"}</h1>
-        <p>{user?.signature ?? "认真吃饭，认真生活。"}</p>
-        <div className="pc-profile-stats">
-          <span>
-            <b>{stats.data?.earnedLikes ?? "—"}</b>获赞
-          </span>
-          <span>
-            <b>{stats.data?.uploadedFoodsCount ?? "—"}</b>上传的菜
-          </span>
-          <Link to="/follows?tab=fans">
-            <b>{stats.data?.fansCount ?? "—"}</b>粉丝
-          </Link>
-          <Link to="/follows?tab=follow">
-            <b>{stats.data?.followingsCount ?? "—"}</b>关注
-          </Link>
-        </div>
-        <Link className="pc-button" to="/me/edit">
-          <Icon name="edit" size={17} />
-          编辑资料
-        </Link>
-      </div>
-      <nav className="pc-profile-menu" aria-label="个人中心">
-        {[
-          { to: "/me", name: "我的分享", icon: "bowl" },
-          { to: "/favorites", name: "我的收藏", icon: "bookmark" },
-          { to: "/me/tags", name: "我的标签", icon: "tag" },
-          { to: "/history", name: "足迹", icon: "history" },
-          { to: "/settings", name: "设置", icon: "settings" },
-        ].map((n) => (
-          <Link
-            key={n.to}
-            to={n.to}
-            aria-current={loc.pathname === n.to ? "page" : undefined}
-          >
-            <Icon name={n.icon} size={20} />
-            {n.name}
-            <Icon name="chevronRight" size={17} />
-          </Link>
-        ))}
-      </nav>
-    </aside>
-  );
-}
-function DesktopMe() {
   const { api, user } = useApp(),
-    cache = useQueryClient(),
-    loc = useLocation(),
-    [tab, setTab] = useState(() => {
-      const tab = new URLSearchParams(loc.search).get("tab");
-      return tab === "comments" || tab === "favorites" ? tab : "uploads";
-    }),
-    [page, setPage] = useState(1),
     myComments = useQuery({
       queryKey: ["demo-my-comments", user?.id],
-      queryFn: () => myCommentEntries(user!.id!),
+      queryFn: async () =>
+        (await import("../demo/comments")).myCommentEntries(user!.id!),
       enabled: isDemo && !!user?.id,
     }),
     query = useQuery({
-      queryKey: ["foods", tab === "uploads" ? "mine" : "favorites", page],
-      queryFn: () =>
-        tab === "uploads" ? api.myFoods(page) : api.favorites(page),
-      enabled: user?.verified === true && tab !== "comments",
+      queryKey: ["foods", "mine", page],
+      queryFn: () => api.myFoods(page),
+      enabled: !!user && tab !== "comments",
       placeholderData: keepPreviousData,
     });
   useEffect(() => {
-    const selected = new URLSearchParams(loc.search).get("tab");
-    if (
-      selected === "comments" ||
-      selected === "favorites" ||
-      selected === "uploads"
-    )
-      setTab(selected);
-  }, [loc.search]);
+    document.title = "我的分享 · 山软今天吃什么";
+  }, []);
   return (
-    <div className="pc-profile-layout">
-      <ProfileRail />
-      <section className="pc-profile-content">
-        <div className="pc-section-toolbar">
-          <SlidingTabs label="我的内容" active={tab}>
-            <button
-              role="tab"
-              aria-selected={tab === "uploads"}
-              tabIndex={tab === "uploads" ? 0 : -1}
-              onClick={() => {
-                setTab("uploads");
-                setPage(1);
-              }}
-            >
-              上传{" "}
-              <span className="pc-tab-count">
-                {(tab === "uploads" && !query.isPlaceholderData
-                  ? query.data?.totalItems
-                  : cache.getQueryData<{ totalItems?: number }>([
-                      "foods",
-                      "mine",
-                      1,
-                    ])?.totalItems) ?? "—"}
-              </span>
-            </button>
-            <button
-              role="tab"
-              aria-selected={tab === "favorites"}
-              tabIndex={tab === "favorites" ? 0 : -1}
-              onClick={() => {
-                setTab("favorites");
-                setPage(1);
-              }}
-            >
-              收藏{" "}
-              <span className="pc-tab-count">
-                {(tab === "favorites" && !query.isPlaceholderData
-                  ? query.data?.totalItems
-                  : cache.getQueryData<{ totalItems?: number }>([
-                      "foods",
-                      "favorites",
-                      1,
-                    ])?.totalItems) ?? "—"}
-              </span>
-            </button>
-            <button
-              role="tab"
-              aria-selected={tab === "comments"}
-              tabIndex={tab === "comments" ? 0 : -1}
-              onClick={() => {
-                setTab("comments");
-                setPage(1);
-              }}
-            >
-              评论{" "}
-              <span className="pc-tab-count">
-                {isDemo ? (myComments.data?.length ?? 0) : "—"}
-              </span>
-            </button>
-          </SlidingTabs>
-          <Link to="/publish" className="pc-small-link">
-            <Icon name="add" size={17} />
-            分享一道菜
-          </Link>
+    <section className="pc-profile-content profile-shares">
+      <header className="pc-library-heading">
+        <div>
+          <h1>我的分享</h1>
+          <p>记录吃过的好味道，也分享给下一位食友。</p>
         </div>
-        {tab !== "comments" && query.isPlaceholderData && (
-          <p className="pc-tab-loading" role="status">
-            正在切换内容…
-          </p>
-        )}
-        <MotionRegion
-          changeKey={
-            tab === "comments"
-              ? `comments:${myComments.dataUpdatedAt}`
-              : query.isPlaceholderData
-                ? undefined
-                : `${tab}:${page}:${query.dataUpdatedAt}`
-          }
-          order={tab === "uploads" ? 0 : tab === "favorites" ? 1 : 2}
-          aria-busy={tab !== "comments" && query.isPlaceholderData}
-          className="pc-profile-tab-content"
-          reserveSpace
-        >
-          {user?.verified !== true ? (
-            <Status
-              title="认证后，收集你的好味道"
-              detail="完成学生认证，就可以浏览、收藏和分享菜品。"
-            >
-              <Link className="pc-button" to="/verify">
-                去认证
-              </Link>
-            </Status>
-          ) : tab === "comments" ? (
+        <Link to="/publish" className="profile-shares-publish">
+          <Icon name="add" size={19} />
+          分享一道菜
+        </Link>
+      </header>
+      <div className="pc-section-toolbar">
+        <ProfileSectionNav section="shares" />
+      </div>
+      {tab !== "comments" && query.isPlaceholderData && (
+        <p className="pc-tab-loading" role="status">
+          正在切换内容…
+        </p>
+      )}
+      <MotionRegion
+        changeKey={
+          tab === "comments"
+            ? `comments:${myComments.dataUpdatedAt}`
+            : query.isPlaceholderData
+              ? undefined
+              : `${tab}:${page}:${query.dataUpdatedAt}`
+        }
+        order={tab === "uploads" ? 0 : 1}
+        aria-busy={tab !== "comments" && query.isPlaceholderData}
+        className="pc-profile-tab-content"
+      >
+        {tab === "comments" && !isDemo ? (
+          <div className="profile-comments-unavailable" role="status">
+            <Icon name="comment" size={28} />
+            <h2>评论记录暂未开放</h2>
+            <p>你可以在对应菜品的详情页查看评论。</p>
+            <Link to="/me/shares" replace>
+              查看已发布的菜品
+            </Link>
+          </div>
+        ) : tab === "comments" ? (
+          <Suspense fallback={<ContentSkeleton kind="rows" count={3} />}>
             <MyFoodComments entries={myComments.data ?? []} />
-          ) : (
-            <QueryStatus query={query} empty={!query.data?.items?.length}>
-              <div className="pc-food-grid three">
-                {query.data?.items?.map((f) => (
-                  <FoodCard key={f.id} food={f} />
-                ))}
-              </div>
+          </Suspense>
+        ) : (
+          <>
+            <QueryStatus query={query}>
+              {query.data?.items?.length ? (
+                <div className="profile-shares-grid">
+                  {query.data.items.map((f) => (
+                    <article className="profile-share-card" key={f.id}>
+                      <FoodCard food={f} />
+                      <FoodManage food={f} />
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="profile-comments-unavailable">
+                  <Icon name="bowl" size={28} />
+                  <h2>
+                    {page > 1 ? "这一页没有更多分享了" : "分享你的第一道好菜"}
+                  </h2>
+                  <p>
+                    {page > 1
+                      ? "返回前一页，继续查看已发布的菜品。"
+                      : "记下喜欢的味道，也给食友一份参考。"}
+                  </p>
+                  {page === 1 && <Link to="/publish">分享一道菜</Link>}
+                </div>
+              )}
+            </QueryStatus>
+            {query.isSuccess && (
               <NextPage
                 page={page}
                 hasNext={query.data?.hasNext}
                 onNext={() => setPage((p) => p + 1)}
                 onPrevious={() => setPage((p) => Math.max(1, p - 1))}
               />
-            </QueryStatus>
-          )}
-        </MotionRegion>
-      </section>
-    </div>
-  );
-}
-function DesktopFavorites() {
-  const { api } = useApp(),
-    m = useMobile(),
-    [page, setPage] = useState(1),
-    query = useQuery({
-      queryKey: ["foods", "favorites", page],
-      queryFn: () => api.favorites(page),
-    }),
-    tags = useQuery({ queryKey: ["my-tags", 1], queryFn: () => api.myTags(1) }),
-    items = (query.data?.items ?? []).filter(
-      (f) => !m.tagId || f.myCustomTags?.some((t) => t.id === m.tagId),
-    );
-  return (
-    <div className="pc-profile-layout">
-      <ProfileRail />
-      <section className="pc-profile-content">
-        <PageHeading title="喜欢的，慢慢吃" kicker="我的收藏" />
-        <div className="pc-category-pills">
-          <button aria-pressed={!m.tagId} onClick={() => m.setTagId(undefined)}>
-            全部收藏
-          </button>
-          {tags.data?.items?.map((t) => (
-            <button
-              key={t.id}
-              aria-pressed={m.tagId === t.id}
-              onClick={() => m.setTagId(t.id!)}
-            >
-              {t.name}
-            </button>
-          ))}
-          <Link to="/me/tags">
-            <Icon name="edit" size={16} />
-            管理标签
-          </Link>
-        </div>
-        <p className="pc-small-note">
-          分类筛选当前页收藏 <Pending name="全量分类待接入" />
-        </p>
-        <QueryStatus query={query} empty={!items.length}>
-          <div className="pc-food-grid three">
-            {items.map((f) => (
-              <FoodCard key={f.id} food={f} />
-            ))}
-          </div>
-          <NextPage
-            page={page}
-            hasNext={query.data?.hasNext}
-            onNext={() => setPage((p) => p + 1)}
-            onPrevious={() => setPage((p) => Math.max(1, p - 1))}
-          />
-        </QueryStatus>
-      </section>
-    </div>
-  );
-}
-function DesktopSettings() {
-  const { user, signOut } = useApp(),
-    nav = useNavigate(),
-    dialog = useRef<HTMLDialogElement>(null),
-    task = useTask();
-  const groups = [
-    {
-      title: "账号与安全",
-      icon: "shield",
-      items: [
-        ["账号与安全", "登录方式、认证与密码", "/settings/account"],
-        ["修改密码", "用新的密码保护账号", "/settings/password"],
-        [
-          "学生认证",
-          user?.verified ? "已经是认证同学" : "完成认证，发现更多好味道",
-          "/verify",
-        ],
-      ],
-    },
-    {
-      title: "偏好与隐私",
-      icon: "lock",
-      items: [
-        ["隐私", "决定别人能看到什么", "/settings/privacy"],
-        ["通知", "管理互动提醒", "/settings/notifications"],
-        ["屏蔽的人", "屏蔽管理待接入", "/settings/blocked"],
-      ],
-    },
-    {
-      title: "关于这个小天地",
-      icon: "bowl",
-      items: [
-        ["关于", "认识山软今天吃什么", "/settings/about"],
-        ["意见反馈", "说说你的想法", "/feedback"],
-        ["数据存放说明", "了解账号与数据", "/data-notice"],
-      ],
-    },
-  ];
-  return (
-    <>
-      <PageHeading title="按你的习惯，慢慢来" kicker="设置">
-        <Link className="pc-button light" to="/me">
-          <Icon name="back" size={18} />
-          回到我的
-        </Link>
-      </PageHeading>
-      <div className="pc-settings-grid">
-        {groups.map((g) => (
-          <section key={g.title} className="pc-settings-group">
-            <div className="pc-settings-group-title">
-              <Icon name={g.icon} size={24} />
-              <h2>{g.title}</h2>
-            </div>
-            {g.items.map(([title, detail, path]) => (
-              <Link key={path} to={path}>
-                <span>
-                  <b>{title}</b>
-                  <small>{detail}</small>
-                </span>
-                <Icon name="chevronRight" size={19} />
-              </Link>
-            ))}
-          </section>
-        ))}
-      </div>
-      <div className="pc-settings-bottom">
-        <span>吃饱了，也可以随时回来。</span>
-        <button
-          className="pc-button light"
-          onClick={() => dialog.current?.showModal()}
-        >
-          <Icon name="logout" size={18} />
-          退出登录
-        </button>
-      </div>
-      <dialog
-        ref={dialog}
-        className="pc-confirm-dialog"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) dialog.current?.close();
-        }}
-      >
-        <h2>这次先吃到这里？</h2>
-        <p>退出后，重新登录就能找回你的收藏和分享。</p>
-        {task.error && <p className="pc-error">{task.error}</p>}
-        <div>
-          <button
-            className="pc-button light"
-            onClick={() => dialog.current?.close()}
-          >
-            再待一会儿
-          </button>
-          <button
-            className="pc-button"
-            disabled={task.busy}
-            onClick={() =>
-              void task.run(async () => {
-                await signOut();
-                nav("/auth");
-              })
-            }
-          >
-            退出登录
-          </button>
-        </div>
-      </dialog>
-    </>
+            )}
+          </>
+        )}
+      </MotionRegion>
+    </section>
   );
 }

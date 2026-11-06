@@ -40,7 +40,7 @@ export default function Layout() {
     navigate(`/restaurants?keyword=${encodeURIComponent(search.trim())}`);
     setSearchOpen(false);
   }
-  const name = user?.userName || "来吃饭的同学",
+  const name = user?.displayName || "来吃饭的同学",
     current =
       pages.find((p) => p.path === location.pathname)?.label ??
       (location.pathname.startsWith("/restaurants")

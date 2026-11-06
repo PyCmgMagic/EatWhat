@@ -4,7 +4,66 @@
  */
 
 export interface paths {
-    "/activity/likes": {
+    "/activity/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【可选登录】活动：获取列表
+         * @description **权限：公开（可选登录：带 token 时返回个人状态）**
+         *
+         *     获取已上线的活动列表
+         *     游客可访问
+         *
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
+         */
+        get: operations["ActivityController_list_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/activity/posts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【可选登录】活动：获取活动内容详情
+         * @description **权限：公开（可选登录：带 token 时返回个人状态）**
+         *
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
+         */
+        get: operations["ActivityController_postDetail_get"];
+        put?: never;
+        post?: never;
+        /**
+         * 【需verified】活动：删除自己的活动内容
+         * @description **权限：需登录 + 角色：已认证用户 verified**
+         *
+         *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
+         */
+        delete: operations["ActivityController_deletePost_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/activity/posts/{id}/like": {
         parameters: {
             query?: never;
             header?: never;
@@ -14,23 +73,21 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 【需verified】动态：点赞动态
+         * 【需verified】活动：点赞
          * @description **权限：需登录 + 角色：已认证用户 verified**
          *
-         *     点赞（支持 food/dinner）
-         *     仅通过认证（verified）的用户可操作
-         *
          *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
          */
         post: operations["ActivityController_like_post"];
         /**
-         * 【需verified】动态：取消动态点赞
+         * 【需verified】活动：取消点赞
          * @description **权限：需登录 + 角色：已认证用户 verified**
          *
-         *     取消点赞（支持 food/dinner）
-         *     仅通过认证（verified）的用户可操作
-         *
          *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
          */
         delete: operations["ActivityController_unlike_delete"];
         options?: never;
@@ -38,7 +95,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/activity/dinners": {
+    "/activity/{code}": {
         parameters: {
             query?: never;
             header?: never;
@@ -46,49 +103,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 【可选登录】年夜饭活动：获取列表
+         * 【可选登录】活动：获取详情
          * @description **权限：公开（可选登录：带 token 时返回个人状态）**
          *
-         *     分页获取列表（按创建时间倒序）
-         *     游客可访问；登录后返回个人点赞状态
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
          */
-        get: operations["ActivityDinnerController_list_get"];
-        put?: never;
-        /**
-         * 【需verified】年夜饭活动：发布
-         * @description **权限：需登录 + 角色：已认证用户 verified**
-         *
-         *     发布活动内容
-         *     仅通过认证（verified）的用户可发布
-         *
-         *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
-         */
-        post: operations["ActivityDinnerController_publish_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/activity/dinners/by-likes": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 【可选登录】年夜饭活动：按点赞排序获取列表
-         * @description **权限：公开（可选登录：带 token 时返回个人状态）**
-         *
-         *     按点赞数分页获取列表
-         *     游客可访问；登录后返回个人点赞状态
-         *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
-         */
-        get: operations["ActivityDinnerController_listByLikes_get"];
+        get: operations["ActivityController_detail_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -97,7 +119,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/activity/dinners/{id}": {
+    "/activity/{code}/posts": {
         parameters: {
             query?: never;
             header?: never;
@@ -105,61 +127,31 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 【可选登录】年夜饭活动：获取详情
+         * 【可选登录】活动：获取活动内容列表
          * @description **权限：公开（可选登录：带 token 时返回个人状态）**
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
          */
-        get: operations["ActivityDinnerController_detail_get"];
+        get: operations["ActivityController_listPosts_get"];
         put?: never;
-        post?: never;
         /**
-         * 【需verified】年夜饭活动：删除
+         * 【需verified】活动：发布
          * @description **权限：需登录 + 角色：已认证用户 verified**
          *
          *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
          */
-        delete: operations["ActivityDinnerController_delete_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/activity/foods": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 【可选登录】地域美食活动：获取列表
-         * @description **权限：公开（可选登录：带 token 时返回个人状态）**
-         *
-         *     分页获取列表（按创建时间倒序）
-         *     游客可访问；登录后返回个人点赞状态
-         *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
-         */
-        get: operations["ActivityFoodController_list_get"];
-        put?: never;
-        /**
-         * 【需verified】地域美食活动：发布
-         * @description **权限：需登录 + 角色：已认证用户 verified**
-         *
-         *     发布活动内容
-         *     仅通过认证（verified）的用户可发布
-         *
-         *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
-         */
-        post: operations["ActivityFoodController_publish_post"];
+        post: operations["ActivityController_publish_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/activity/foods/by-likes": {
+    "/admin/activities": {
         parameters: {
             query?: never;
             header?: never;
@@ -167,15 +159,158 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 【可选登录】地域美食活动：按点赞排序获取列表
-         * @description **权限：公开（可选登录：带 token 时返回个人状态）**
+         * 【需admin】活动管理：获取列表
+         * @description **权限：需登录 + 角色：管理员 admin**
          *
-         *     按点赞数分页获取列表
-         *     游客可访问；登录后返回个人点赞状态
+         *     获取全部活动（含草稿和已下线）
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
          */
-        get: operations["ActivityFoodController_listByLikes_get"];
+        get: operations["ActivityAdminController_list_get"];
+        put?: never;
+        /**
+         * 【需admin】活动管理：新建
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     新建活动（草稿）
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
+         */
+        post: operations["ActivityAdminController_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/activities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需admin】活动管理：获取详情
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
+         */
+        get: operations["ActivityAdminController_detail_get"];
+        /**
+         * 【需admin】活动管理：修改
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
+         */
+        put: operations["ActivityAdminController_update_put"];
+        post?: never;
+        /**
+         * 【需admin】活动管理：删除
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
+         */
+        delete: operations["ActivityAdminController_delete_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/activities/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需admin】活动管理：修改活动状态
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署通用活动读取、发布及管理路由，V75 已成功补执行，activities/activity_posts 表存在；旧地域美食、年夜饭及点赞专用处理器已替换，历史表及数据保留。
+         */
+        post: operations["ActivityAdminController_changeStatus_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/consent/policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需admin】跨站政策管理：读取政策配置及用于防止覆盖修改的修订号
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     读取政策配置及用于防止覆盖修改的修订号
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.account.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署管理员政策读取及编辑路由，V76 已成功补执行，政策配置及历史表存在。管理员编辑权限、并发修订和跨站同步已通过隔离集成测试；生产仅检查匿名权限门槛，未修改现行政策。
+         */
+        get: operations["ConsentPolicyAdminController_get_get"];
+        /**
+         * 【需admin】跨站政策管理：修改并持久化政策版本和 URL，自动同步到所有参与站点；仅权威站可写
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     修改并持久化政策版本和 URL，自动同步到所有参与站点；仅权威站可写
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.account.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站已部署管理员政策读取及编辑路由，V76 已成功补执行，政策配置及历史表存在。管理员编辑权限、并发修订和跨站同步已通过隔离集成测试；生产仅检查匿名权限门槛，未修改现行政策。
+         */
+        put: operations["ConsentPolicyAdminController_save_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/feedback/cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需admin】反馈举报处理：获取反馈举报处理队列
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     分页读取处理队列，status 默认 OPEN，可按 kind 筛选；待处理的最早提交在前，已处理的最近处理在前。列表项的 actions 为空数组，处理记录见详情。
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["FeedbackAdminController_queue_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -184,7 +319,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/activity/foods/{id}": {
+    "/admin/feedback/cases/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -192,21 +327,49 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 【可选登录】地域美食活动：获取详情
-         * @description **权限：公开（可选登录：带 token 时返回个人状态）**
+         * 【需admin】反馈举报处理：获取反馈举报案件详情
+         * @description **权限：需登录 + 角色：管理员 admin**
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     读取案件详情，包含处理记录。
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
          */
-        get: operations["ActivityFoodController_detail_get"];
+        get: operations["FeedbackAdminController_detail_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/feedback/cases/{id}/resolution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
         /**
-         * 【需verified】地域美食活动：删除
-         * @description **权限：需登录 + 角色：已认证用户 verified**
+         * 【需admin】反馈举报处理：提交案件处理结论
+         * @description **权限：需登录 + 角色：管理员；写入处理结论时服务层还要求当前为正常会话，否则 NO_PERMISSION**
          *
-         *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
+         *     提交处理结论：outcome 为 ACCEPTED、REJECTED 或 RESOLVED（RESOLVED 仅意见反馈），reply 最多 200 字且对提交人可见，internalNote 最多 500 字且仅管理端可见。Idempotency-Key 即处理决定 ID：同一 key 与同一内容重放原结果，已处理的案件再用其他 key 提交被拒绝。处理结论只记录，不会自动修改店铺或菜品目录。
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
          */
-        delete: operations["ActivityFoodController_delete_delete"];
+        post: operations["FeedbackAdminController_resolve_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -268,6 +431,280 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/moderation/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需admin】审核管理：获取待审核提交队列
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.sync.catalog.enabled, app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["ModerationAdminController_queue_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/moderation/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需admin】审核管理：提交审核结论
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.sync.catalog.enabled, app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["ModerationAdminController_review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/moderation/revisions/{revisionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需admin】审核管理：获取待审核提交详情
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.sync.catalog.enabled, app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["ModerationAdminController_detail_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/moderation/revisions/{revisionId}/images/{slot}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需admin】审核管理：获取提交图片临时地址
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.sync.catalog.enabled, app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["ModerationAdminController_image_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/remote-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需admin】远程配置管理：读取远程配置管理视图
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     读取当前站点的功能开关、运营参数、维护状态和各平台版本线，以及各自的 revision
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["RemoteConfigAdminController_get_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/remote-config/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需admin】远程配置管理：获取公告列表
+         * @description **权限：需登录 + 角色：管理员；新建（POST）时服务层在事务内复核库中角色仍为 admin 且账号未封禁，否则 NO_PERMISSION；读取（GET）只看角色**
+         *
+         *     公告列表（含未开始、已过期、已停用的，不含已删除的），新的在前
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["RemoteConfigAdminController_announcements_get"];
+        put?: never;
+        /**
+         * 【需admin】远程配置管理：新建公告
+         * @description **权限：需登录 + 角色：管理员；新建（POST）时服务层在事务内复核库中角色仍为 admin 且账号未封禁，否则 NO_PERMISSION；读取（GET）只看角色**
+         *
+         *     新建公告；不带 expectedRevision
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["RemoteConfigAdminController_createAnnouncement_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/remote-config/announcements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 【需admin】远程配置管理：整体修改公告
+         * @description **权限：需登录 + 角色：管理员；修改和删除时服务层在事务内复核库中角色仍为 admin 且账号未封禁，否则 NO_PERMISSION**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        put: operations["RemoteConfigAdminController_updateAnnouncement_put"];
+        post?: never;
+        /**
+         * 【需admin】远程配置管理：删除公告
+         * @description **权限：需登录 + 角色：管理员；修改和删除时服务层在事务内复核库中角色仍为 admin 且账号未封禁，否则 NO_PERMISSION**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        delete: operations["RemoteConfigAdminController_deleteAnnouncement_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/remote-config/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需admin】远程配置管理：获取配置审计日志
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     审计日志：谁、何时、改了什么（修改前后的完整值），新的在前
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["RemoteConfigAdminController_audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/remote-config/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 【需admin】远程配置管理：整体替换功能开关、运营参数和维护状态
+         * @description **权限：需登录 + 角色：管理员；写入时服务层在事务内复核库中角色仍为 admin 且账号未封禁，否则 NO_PERMISSION**
+         *
+         *     整体替换功能开关、运营参数和维护状态
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        put: operations["RemoteConfigAdminController_saveSettings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/remote-config/versions/{platform}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 【需admin】远程配置管理：修改平台版本线
+         * @description **权限：需登录 + 角色：管理员；写入时服务层在事务内复核库中角色仍为 admin 且账号未封禁，否则 NO_PERMISSION**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        put: operations["RemoteConfigAdminController_saveVersionLine_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/summary": {
         parameters: {
             query?: never;
@@ -303,11 +740,83 @@ export interface paths {
          *
          *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
          *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
+         *     此路由仅在配置 app.sync.catalog.enabled=true 时注册。
          */
         get: operations["CatalogConflictController_listOpenConflicts_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/sync/catalog/conflicts/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需admin】目录冲突管理：listDecisions
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.sync.catalog.enabled=true 时注册。
+         */
+        get: operations["CatalogConflictController_listDecisions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/sync/catalog/conflicts/decisions/{conflictId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需admin】目录冲突管理：decisionSnapshot
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.sync.catalog.enabled=true 时注册。
+         */
+        get: operations["CatalogConflictController_decisionSnapshot_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/sync/catalog/conflicts/decisions/{conflictId}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需admin】目录冲突管理：resolveDecision
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.sync.catalog.enabled=true 时注册。
+         */
+        post: operations["CatalogConflictController_resolveDecision_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -327,7 +836,7 @@ export interface paths {
          *
          *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
          *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
+         *     此路由仅在配置 app.sync.catalog.enabled=true 时注册。
          */
         get: operations["CatalogConflictController_listOpenObjectHeadConflicts_get"];
         put?: never;
@@ -353,7 +862,7 @@ export interface paths {
          *
          *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
          *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
+         *     此路由仅在配置 app.sync.catalog.enabled=true 时注册。
          */
         post: operations["CatalogConflictController_resolveObjectHeads_post"];
         delete?: never;
@@ -362,7 +871,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/sync/catalog/conflicts/decisions": {
+    "/admin/sync/catalog/conflicts/reviews": {
         parameters: {
             query?: never;
             header?: never;
@@ -370,38 +879,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 【需admin】目录冲突管理：listDecisions
+         * 【需admin】目录冲突管理：listAuthorizationReviews
          * @description **权限：需登录 + 角色：管理员 admin**
          *
          *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
          *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
+         *     此路由仅在配置 app.sync.catalog.enabled=true 时注册。
          */
-        get: operations["CatalogConflictController_listDecisions_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/sync/catalog/conflicts/decisions/{conflictId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 【需admin】目录冲突管理：decisionSnapshot
-         * @description **权限：需登录 + 角色：管理员 admin**
-         *
-         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         */
-        get: operations["CatalogConflictController_decisionSnapshot_get"];
+        get: operations["CatalogConflictController_listAuthorizationReviews_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -425,57 +910,9 @@ export interface paths {
          *
          *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
          *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
+         *     此路由仅在配置 app.sync.catalog.enabled=true 时注册。
          */
         post: operations["CatalogConflictController_resolve_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/sync/catalog/conflicts/decisions/{conflictId}/resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 【需admin】目录冲突管理：resolveDecision
-         * @description **权限：需登录 + 角色：管理员 admin**
-         *
-         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         */
-        post: operations["CatalogConflictController_resolveDecision_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/sync/catalog/conflicts/reviews": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 【需admin】目录冲突管理：listAuthorizationReviews
-         * @description **权限：需登录 + 角色：管理员 admin**
-         *
-         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         */
-        get: operations["CatalogConflictController_listAuthorizationReviews_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -497,7 +934,7 @@ export interface paths {
          *
          *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
          *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
+         *     此路由仅在配置 app.sync.catalog.enabled=true 时注册。
          */
         post: operations["CatalogImportController_importHubs_post"];
         delete?: never;
@@ -519,35 +956,11 @@ export interface paths {
          *
          *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
          *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
+         *     此路由仅在配置 app.sync.profile.enabled=true 时注册。
          */
         get: operations["ProfileConflictController_list_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/sync/profile-conflicts/{conflictId}/resolve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 【需admin】资料冲突管理：解决冲突
-         * @description **权限：需登录 + 角色：管理员 admin**
-         *
-         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         */
-        post: operations["ProfileConflictController_resolve_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -567,7 +980,7 @@ export interface paths {
          *
          *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
          *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
+         *     此路由仅在配置 app.sync.profile.enabled=true 时注册。
          */
         get: operations["ProfileConflictController_authorizationReviews_get"];
         put?: never;
@@ -593,9 +1006,57 @@ export interface paths {
          *
          *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
          *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
+         *     此路由仅在配置 app.sync.profile.enabled=true 时注册。
          */
         post: operations["ProfileConflictController_resolveAuthorizationReview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/sync/profile-conflicts/{conflictId}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需admin】资料冲突管理：解决冲突
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.sync.profile.enabled=true 时注册。
+         */
+        post: operations["ProfileConflictController_resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/topics/commands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需admin】专题管理：提交专题管理命令（保存、发布、撤回）
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["TopicAdminController_command_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -615,9 +1076,11 @@ export interface paths {
          *
          *     获取所有省份
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
          *
          *     后端原始映射本身包含 /api。在当前会剥离一次 /api/ 的业务网关中，完整外部路径为 /api/api/location/provinces；不要擅自去重。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
          */
         get: operations["LocationController_getAllProvinces_get"];
         put?: never;
@@ -639,9 +1102,11 @@ export interface paths {
          * 【可选登录】省市位置：获取省内城市列表
          * @description **权限：公开（可选登录：带 token 时返回个人状态）**
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
          *
          *     后端原始映射本身包含 /api。在当前会剥离一次 /api/ 的业务网关中，完整外部路径为 /api/api/location/provinces/{provinceId}/cities；不要擅自去重。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
          */
         get: operations["LocationController_getCitiesByProvinceId_get"];
         put?: never;
@@ -652,7 +1117,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/callback": {
+    "/auth/callback/{state}": {
         parameters: {
             query?: never;
             header?: never;
@@ -660,24 +1125,54 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 【公开】登录与认证：旧统一认证回跳（已停用）
-         * @description **权限：公开（无需登录）**
-         *
-         *     旧的回跳地址，没有 state，一律返回 30012，提示回到 App 重新发起。
+         * 【公开】登录与认证：统一认证回跳（凭一次性 state）
+         * @description **权限：公开（凭一次性 state，不看当前会话）**
          *
          *     原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
+         *
+         *     凭一次性 state 认证发起账号，不使用浏览器当前会话。state 五分钟后失效或已消费时仍可凭24小时来源提示选择固定失败目标；提示只含 app/web，不能认证。来源缺失或 state 畸形时固定回 App 目标，code=30012。兼容有效旧记录的数字账号ID（web）与 app:<账号ID>。
+         *
+         *     30012=认证链接无效/过期/重复，30013=学号已用于其他账号，50003=学校 token 无效；20005/20006及其他业务异常保留既有码，数据库/Redis/系统故障分别为90002/90003/90001。事务回滚或提交失败不能发送success或刷新成功权限缓存。客户端只用结果参数展示提示，认证状态须带原会话查询 /user/info 或 /auth/verify。
          */
-        get: operations["AuthController_callback_get"];
+        get: operations["AuthController_callbackWithState_get"];
         put?: never;
         /**
-         * 【公开】登录与认证：旧统一认证回跳（已停用）
-         * @description **权限：公开（无需登录）**
-         *
-         *     旧的回跳地址，没有 state，一律返回 30012，提示回到 App 重新发起。
+         * 【公开】登录与认证：统一认证回跳（凭一次性 state）
+         * @description **权限：公开（凭一次性 state，不看当前会话）**
          *
          *     原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
+         *
+         *     凭一次性 state 认证发起账号，不使用浏览器当前会话。state 五分钟后失效或已消费时仍可凭24小时来源提示选择固定失败目标；提示只含 app/web，不能认证。来源缺失或 state 畸形时固定回 App 目标，code=30012。兼容有效旧记录的数字账号ID（web）与 app:<账号ID>。
+         *
+         *     30012=认证链接无效/过期/重复，30013=学号已用于其他账号，50003=学校 token 无效；20005/20006及其他业务异常保留既有码，数据库/Redis/系统故障分别为90002/90003/90001。事务回滚或提交失败不能发送success或刷新成功权限缓存。客户端只用结果参数展示提示，认证状态须带原会话查询 /user/info 或 /auth/verify。
          */
-        post: operations["AuthController_callback_post"];
+        post: operations["AuthController_callbackWithState_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/captcha/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【公开】登录与认证：获取本次腾讯人机验证初始化参数（禁止缓存）
+         * @description **权限：公开（无需登录）**
+         *
+         *     腾讯云国际站 CAPTCHA 初始化。支持控制台同时开启 CaptchaAppId 强制校验和一次一密。每次调用均用服务端 AppSecretKey 和新的安全随机 IV 生成 aidEncrypted，默认有效 120 秒，以 expiresAt（Unix 秒）为准。密钥不足 32 字节时循环补齐到 32 字节；AES-256-CBC / PKCS7，明文为 appId&签发Unix秒&有效秒数，输出 Base64(IV + 密文)。
+         *
+         *     每次新建 TencentCaptcha 实例前重新获取配置，将 aidEncrypted、aidEncryptedType 传给 SDK options。请求使用 cache:no-store；客户端、CDN、反代及 Service Worker 不得缓存。取消、初始化错误、过期、发送失败和再次验证均获取新参数并创建新实例，不能用旧实例的 reload/show 开始下一次验证。一次一密的 IV 消费检查由腾讯验证侧执行。
+         *
+         *     此接口不发送短信或邮件，不调用腾讯云票据 API，不返回 AppSecretKey、SecretId、SecretKey 或 session token。配置缺失或加密失败返回 50004。隔离测试显式关闭时 enabled=false，其余初始化字段为 null。完成前端验证后，仍需通过发送接口提交 ticket 和 randstr，只有后端核查通过才发送。本功能已部署到校内和新加坡，两站均启用人机验证。初始化参数查询与缺票据拦截已通过公网复测；真人挑战成功后的短信/邮件投递尚未完成端到端验收。完整示例见 docs/architecture/tencent-captcha.md。
+         */
+        get: operations["AuthController_captchaConfig_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -720,8 +1215,160 @@ export interface paths {
         /**
          * 【公开】登录与认证：检查用户名是否可用
          * @description **权限：公开（无需登录）**
+         *
+         *     无需登录，不受用户名注册开关限制；可用返回0，占用返回30003，格式错误返回10001。
+         *
+         *     公开的唯一登录用户名查重，不受 app.auth.username-registration-enabled 影响。3–10位字母、数字或下划线，区分大小写；可用返回0，占用（含冲突中的别名）返回30003，格式错误返回10001。昵称无需查重。结果不预留用户名，最终以设置接口提交为准。
          */
         post: operations["AuthController_checkUsername_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】跨站同步同意：获取当前跨站同意状态
+         * @description **权限：需登录**
+         *
+         *     此路由仅在配置 app.account.enabled=true 时注册。
+         *
+         *     当前源码的成功 data 仅含 status、identityReady、policyVersion，三者均必返且非 null。无同意记录时为 NOT_GRANTED、false、当前政策版本；已有记录返回其政策版本。两站共用同一查询实现，不返回 backfillStatus、cleanupStatus、registrationAccepted 或 consentProof。此三字段精简已于 2026-10-26 双站发布，见 deploy/USER_BLOCKS_CONSENT_RELEASE_20261026.md；源码与线上规范分别从对应 JAR 生成。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 2026-10-26 已双站发布：GET /auth/consent 的成功 data 仅 status、identityReady、policyVersion，三者均必返且非 null；校内和新加坡共用。授权/撤回及登录进度保留六字段。精确运行包序列化/接口测试、两站字节摘要和匿名登录门槛均通过，生产未创建测试账号或改真实用户授权。
+         */
+        get: operations["AccountConsentController_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/consent/grant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【公开】跨站同步同意：授予跨站同步同意
+         * @description **权限：公开：凭有效 proof 无需登录；不带 proof 时需登录**
+         *
+         *     此路由仅在配置 app.account.enabled=true 时注册。
+         *
+         *     提供有效 proof 时可无会话提交；不提供 proof 时须使用有效登录会话；启用双站写入后两站均可提交，旧模式保留校内限制。必须先读取当前政策版本。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 2026-10-26 已双站发布：同意进度仅保留六个业务字段，凭证分支保留 consentProof，内部 epoch/revision/validUntil 不向客户端返回；用户资料查询真实 role/banned，仅封禁时读取详情。实际候选包隔离测试、运行包摘要及匿名公网门槛已验证，生产未创建账号或执行真实用户登录。
+         */
+        post: operations["AccountConsentController_grant_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/consent/offer-with-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【公开】跨站同步同意：使用密码重新验证并获取同意进度
+         * @description **权限：公开：不需要会话，凭用户名/邮箱/手机号和密码重新验证身份，仅返回同意进度与临时凭证，不签发登录令牌**
+         *
+         *     此路由仅在配置 app.account.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["AccountConsentController_offerWithPassword_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/consent/policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【公开】跨站同步同意：读取跨站同意政策
+         * @description **权限：公开（无需登录）**
+         *
+         *     此路由仅在配置 app.account.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 两站公开政策仍只返回 version、url；V76 管理编辑模块同时已上线，当前政策值未因发布而改变。
+         */
+        get: operations["AccountConsentController_policy_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/consent/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】跨站同步同意：撤回当前用户跨站同意
+         * @description **权限：需登录**
+         *
+         *     此路由仅在配置 app.account.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 2026-10-26 已双站发布：同意进度仅保留六个业务字段，凭证分支保留 consentProof，内部 epoch/revision/validUntil 不向客户端返回；用户资料查询真实 role/banned，仅封禁时读取详情。实际候选包隔离测试、运行包摘要及匿名公网门槛已验证，生产未创建账号或执行真实用户登录。
+         */
+        post: operations["AccountConsentController_withdraw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/consent/withdraw-with-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【公开】跨站同步同意：使用密码撤回跨站同意
+         * @description **权限：公开（无需登录）**
+         *
+         *     此路由仅在配置 app.account.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 2026-10-26 已双站发布：同意进度仅保留六个业务字段，凭证分支保留 consentProof，内部 epoch/revision/validUntil 不向客户端返回；用户资料查询真实 role/banned，仅封禁时读取详情。实际候选包隔离测试、运行包摘要及匿名公网门槛已验证，生产未创建账号或执行真实用户登录。
+         */
+        post: operations["AccountConsentController_withdrawWithPassword_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -744,6 +1391,10 @@ export interface paths {
          *     获取短信验证码
          *
          *     mobile 是 Spring 普通请求参数，可放查询串或表单；不是 JSON DTO。
+         *
+         *     需登录且具备 verified 角色；验证码绑定当前账号与认证用途，不能用于匿名手机号登录。短信验证码有效期为 5 分钟；同一手机号的 60 秒发送间隔跨站共享。错误次数跨站累计，最多 5 次；成功消费后两站均不能再次使用。验证码绑定手机号及业务用途，需登录的验证码还绑定当前账号；不能跨用途或跨账号使用。校内与新加坡支持双向跨站校验，客户端无需返回签发站；后端自动选择验证码归属站点并通过认证通道转发。归属站点或站间通道不可用时返回 50001（服务暂不可用），不在本站另建状态或绕过校验。
+         *
+         *     **腾讯人机验证（双站已部署，默认开启）：**先 GET /auth/captcha/config 获取本次新的 aidEncrypted，初始化腾讯 SDK，完成验证后以 X-Captcha-Ticket 和 X-Captcha-Randstr 请求头提交同一次回调的票据。后端使用请求来源 IP 和服务端配置向 captcha.intl.tencentcloudapi.com 核查，仅 CaptchaCode=1 且未标记恶意时进入原发送逻辑；前端 ret=0 或 HTTP 200 不能代替后端校验。缺少票据/随机串返回30015，无效/过期/重放/风险拒绝返回30016，配置或上游故障返回50004，均不发送。请求结束后即丢弃本次票据及初始化参数，重试时重新验证；原有登录、角色、用途和发送限流继续执行。
          */
         post: operations["AuthController_sendCode_post"];
         delete?: never;
@@ -796,6 +1447,165 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/password-conflict/challenge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【公开】密码冲突恢复：challenge
+         * @description **权限：公开（无需登录）**
+         *
+         *     此路由仅在配置 app.account.multiwriter.enabled=true 时注册。
+         *
+         *     向冲突账号既有的已认证邮箱发送恢复链接；跨站不改变恢复资格或邮箱归属要求。邮箱令牌有效期为 30 分钟，发送间隔与一次性消费状态跨站共享。令牌绑定账号、邮箱和用途；邮箱验证/绑定令牌不能用作密码冲突恢复令牌，反向也不允许。校内与新加坡支持双向跨站校验，客户端无需返回签发站；后端自动选择验证码归属站点并通过认证通道转发。归属站点或站间通道不可用时返回 50001（服务暂不可用），不在本站另建状态或绕过校验。
+         *
+         *     **腾讯人机验证（双站已部署，默认开启）：**先 GET /auth/captcha/config 获取本次新的 aidEncrypted，初始化腾讯 SDK，完成验证后以 X-Captcha-Ticket 和 X-Captcha-Randstr 请求头提交同一次回调的票据。后端使用请求来源 IP 和服务端配置向 captcha.intl.tencentcloudapi.com 核查，仅 CaptchaCode=1 且未标记恶意时进入原发送逻辑；前端 ret=0 或 HTTP 200 不能代替后端校验。缺少票据/随机串返回30015，无效/过期/重放/风险拒绝返回30016，配置或上游故障返回50004，均不发送。请求结束后即丢弃本次票据及初始化参数，重试时重新验证；原有登录、角色、用途和发送限流继续执行。
+         */
+        post: operations["AccountPasswordRecoveryController_challenge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/password-conflict/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【公开】密码冲突恢复：reset
+         * @description **权限：公开（无需登录）**
+         *
+         *     此路由仅在配置 app.account.multiwriter.enabled=true 时注册。
+         *
+         *     使用 RECOVERY 用途令牌；允许另一站校验，仍需匹配原账号、已认证邮箱和待恢复冲突状态。邮箱令牌有效期为 30 分钟，发送间隔与一次性消费状态跨站共享。令牌绑定账号、邮箱和用途；邮箱验证/绑定令牌不能用作密码冲突恢复令牌，反向也不允许。校内与新加坡支持双向跨站校验，客户端无需返回签发站；后端自动选择验证码归属站点并通过认证通道转发。归属站点或站间通道不可用时返回 50001（服务暂不可用），不在本站另建状态或绕过校验。
+         */
+        post: operations["AccountPasswordRecoveryController_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/password/code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】登录与认证：发送设置密码验证码
+         * @description **权限：需登录**
+         *
+         *     给当前账号绑定的手机发验证码，用于首次设置登录用户名（可同时设置初始密码）或设置、修改密码
+         *
+         *     给当前账号绑定的手机发验证码，用于首次设置登录用户名（可同时设置初始密码）或设置/修改密码；需要登录，且账号须已绑定手机号（否则返回 30011 MOBILE_NOT_BOUND）。同一验证码只能用于一次提交。
+         *
+         *     需登录，向当前账号绑定的手机发送验证码，供 /auth/username/set 或 /auth/password/reset 使用。短信验证码有效期为 5 分钟；同一手机号的 60 秒发送间隔跨站共享。错误次数跨站累计，最多 5 次；成功消费后两站均不能再次使用。验证码绑定手机号及业务用途，需登录的验证码还绑定当前账号；不能跨用途或跨账号使用。校内与新加坡支持双向跨站校验，客户端无需返回签发站；后端自动选择验证码归属站点并通过认证通道转发。归属站点或站间通道不可用时返回 50001（服务暂不可用），不在本站另建状态或绕过校验。
+         *
+         *     **腾讯人机验证（双站已部署，默认开启）：**先 GET /auth/captcha/config 获取本次新的 aidEncrypted，初始化腾讯 SDK，完成验证后以 X-Captcha-Ticket 和 X-Captcha-Randstr 请求头提交同一次回调的票据。后端使用请求来源 IP 和服务端配置向 captcha.intl.tencentcloudapi.com 核查，仅 CaptchaCode=1 且未标记恶意时进入原发送逻辑；前端 ret=0 或 HTTP 200 不能代替后端校验。缺少票据/随机串返回30015，无效/过期/重放/风险拒绝返回30016，配置或上游故障返回50004，均不发送。请求结束后即丢弃本次票据及初始化参数，重试时重新验证；原有登录、角色、用途和发送限流继续执行。
+         */
+        post: operations["AuthController_sendPasswordCode_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/password/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】登录与认证：用验证码设置或修改密码
+         * @description **权限：需登录**
+         *
+         *     用绑定手机的验证码设置或修改密码，不需要旧密码。成功后其他设备要重新登录。
+         *
+         *     用绑定手机的验证码设置或修改密码，不需要旧密码；需要登录。账号须已绑定手机号（否则返回 30011 MOBILE_NOT_BOUND）。成功后其他设备要重新登录。
+         *
+         *     需登录，使用 /auth/password/code 的验证码；可以切站，但须保持同一账号身份。短信验证码有效期为 5 分钟；同一手机号的 60 秒发送间隔跨站共享。错误次数跨站累计，最多 5 次；成功消费后两站均不能再次使用。验证码绑定手机号及业务用途，需登录的验证码还绑定当前账号；不能跨用途或跨账号使用。校内与新加坡支持双向跨站校验，客户端无需返回签发站；后端自动选择验证码归属站点并通过认证通道转发。归属站点或站间通道不可用时返回 50001（服务暂不可用），不在本站另建状态或绕过校验。
+         */
+        post: operations["AuthController_resetPasswordByCode_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【公开】登录与认证：发送手机登录验证码
+         * @description **权限：公开（无需登录）**
+         *
+         *     发送手机号登录验证码，不需要登录。
+         *     同一手机号 60 秒一次，5 分钟内有效，连续输错 5 次要重新获取。
+         *
+         *     发送手机号登录验证码，不需要登录。同一手机号 60 秒一次，5 分钟内有效，连续输错 5 次要重新获取。
+         *
+         *     无需登录，发送用于手机号登录或注册的验证码。短信验证码有效期为 5 分钟；同一手机号的 60 秒发送间隔跨站共享。错误次数跨站累计，最多 5 次；成功消费后两站均不能再次使用。验证码绑定手机号及业务用途，需登录的验证码还绑定当前账号；不能跨用途或跨账号使用。校内与新加坡支持双向跨站校验，客户端无需返回签发站；后端自动选择验证码归属站点并通过认证通道转发。归属站点或站间通道不可用时返回 50001（服务暂不可用），不在本站另建状态或绕过校验。
+         *
+         *     **腾讯人机验证（双站已部署，默认开启）：**先 GET /auth/captcha/config 获取本次新的 aidEncrypted，初始化腾讯 SDK，完成验证后以 X-Captcha-Ticket 和 X-Captcha-Randstr 请求头提交同一次回调的票据。后端使用请求来源 IP 和服务端配置向 captcha.intl.tencentcloudapi.com 核查，仅 CaptchaCode=1 且未标记恶意时进入原发送逻辑；前端 ret=0 或 HTTP 200 不能代替后端校验。缺少票据/随机串返回30015，无效/过期/重放/风险拒绝返回30016，配置或上游故障返回50004，均不发送。请求结束后即丢弃本次票据及初始化参数，重试时重新验证；原有登录、角色、用途和发送限流继续执行。
+         */
+        post: operations["AuthController_sendLoginCode_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【公开】登录与认证：手机验证码登录
+         * @description **权限：公开（无需登录）**
+         *
+         *     手机号验证码登录：注册过的号码直接登录，新号码自动注册后登录。
+         *
+         *     手机号验证码登录：注册过的号码直接登录，新号码自动注册后登录。data.newUser 表示本次是否新注册，取 data.tokenName 和 data.tokenValue 建立会话。跨站同号冲突返回 ACCOUNT_SECURITY_CONFLICT，不会自动合并身份或新建第三个账号。
+         *
+         *     使用 /auth/phone/code 获取的登录验证码，可在另一站提交；已有账号登录，新号码按现有注册及跨站授权规则处理。跨站校验不绕过账号冲突、授权或封禁检查。短信验证码有效期为 5 分钟；同一手机号的 60 秒发送间隔跨站共享。错误次数跨站累计，最多 5 次；成功消费后两站均不能再次使用。验证码绑定手机号及业务用途，需登录的验证码还绑定当前账号；不能跨用途或跨账号使用。校内与新加坡支持双向跨站校验，客户端无需返回签发站；后端自动选择验证码归属站点并通过认证通道转发。归属站点或站间通道不可用时返回 50001（服务暂不可用），不在本站另建状态或绕过校验。
+         */
+        post: operations["AuthController_phoneLogin_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/register": {
         parameters: {
             query?: never;
@@ -807,12 +1617,16 @@ export interface paths {
         put?: never;
         /**
          * 【公开】登录与认证：注册
+         * @deprecated
          * @description **权限：公开（无需登录）**
          *
          *     用户名只能包含字母数字下划线，且不能是邮箱，长度3-10
          *     密码长度6-64
+         *     默认关闭（app.auth.username-registration-enabled=false），关闭时返回 30014，新用户用 /auth/phone/login 注册。
          *
          *     成功会话 data 使用 SaTokenInfo；取 data.tokenName 和 data.tokenValue。海外未同意或账号尚未同步时可能返回 20005/20006 或临时 consentProof；这些均不等于已登录成功。双站写入启用后不以旧远端授权租约到期阻断本地登录；封禁、撤回及安全冲突仍阻断登录。切换到新会话协议时旧令牌需要重新登录。
+         *
+         *     已关闭：默认返回 30014 USERNAME_REGISTRATION_CLOSED（请使用手机号验证码注册），不建号。新用户用 /auth/phone/code + /auth/phone/login 注册；已有用户名账号照常用 /auth/login 登录。服务端配置 app.auth.username-registration-enabled=true 可临时打开，仅供测试和应急。
          */
         post: operations["AuthController_register_post"];
         delete?: never;
@@ -834,6 +1648,10 @@ export interface paths {
          *
          *     发起统一认证：返回带一次性 state 的统一认证地址（5 分钟内有效，只能用一次），客户端在浏览器里打开。
          *     认证完成后统一认证跳回 /api/callback/{state}，不需要登录态。
+         *     client=app 时成功或失败都跳到预设 App 地址，带 result=success|failure、code；App 再查询 /user/info 确认。
+         *     省略 client 或 client=web 时使用预设网页地址。只接受 app/web，不接受客户端指定回跳地址。
+         *
+         *     此发起接口仍返回 JSON data.url/expiresIn=300；浏览器打开该 URL 后的学校回调才重定向。认证 state 五分钟有效、单次使用；另有只存 app/web 来源的24小时回跳提示，不延长认证有效期。新结果回跳属于本地实现，部署状态见独立发布记录。
          *
          *     原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
          */
@@ -845,6 +1663,10 @@ export interface paths {
          *
          *     发起统一认证：返回带一次性 state 的统一认证地址（5 分钟内有效，只能用一次），客户端在浏览器里打开。
          *     认证完成后统一认证跳回 /api/callback/{state}，不需要登录态。
+         *     client=app 时成功或失败都跳到预设 App 地址，带 result=success|failure、code；App 再查询 /user/info 确认。
+         *     省略 client 或 client=web 时使用预设网页地址。只接受 app/web，不接受客户端指定回跳地址。
+         *
+         *     此发起接口仍返回 JSON data.url/expiresIn=300；浏览器打开该 URL 后的学校回调才重定向。认证 state 五分钟有效、单次使用；另有只存 app/web 来源的24小时回跳提示，不延长认证有效期。新结果回跳属于本地实现，部署状态见独立发布记录。
          *
          *     原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
          */
@@ -855,7 +1677,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/callback/{state}": {
+    "/auth/security/account-reviews": {
         parameters: {
             query?: never;
             header?: never;
@@ -863,20 +1685,64 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 【公开】登录与认证：统一认证回跳（凭一次性 state）
-         * @description **权限：公开（无需登录）**
+         * 【需admin】账号安全复核：获取列表
+         * @description **权限：需登录 + 角色：管理员 admin**
          *
-         *     原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.account.multiwriter.enabled=true 时注册。
          */
-        get: operations["AuthController_callbackWithState_get"];
+        get: operations["AccountSecurityReviewController_list_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/security/account-reviews/password-conflicts/{userId}/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
         put?: never;
         /**
-         * 【公开】登录与认证：统一认证回跳（凭一次性 state）
-         * @description **权限：公开（无需登录）**
+         * 【需admin】账号安全复核：reset
+         * @description **权限：需登录 + 角色：管理员 admin**
          *
-         *     原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.account.multiwriter.enabled=true 时注册。
          */
-        post: operations["AuthController_callbackWithState_post"];
+        post: operations["AccountSecurityReviewController_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/security/account-reviews/{eventId}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需admin】账号安全复核：decide
+         * @description **权限：需登录 + 角色：管理员 admin**
+         *
+         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     此路由仅在配置 app.account.multiwriter.enabled=true 时注册。
+         */
+        post: operations["AccountSecurityReviewController_decide_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -896,6 +1762,10 @@ export interface paths {
          *
          *     发送验证链接
          *     发送一个链接 点击绑定
+         *
+         *     需登录，为当前账号发送邮箱验证链接；链接中的令牌可以由任一站校验。邮箱令牌有效期为 30 分钟，发送间隔与一次性消费状态跨站共享。令牌绑定账号、邮箱和用途；邮箱验证/绑定令牌不能用作密码冲突恢复令牌，反向也不允许。校内与新加坡支持双向跨站校验，客户端无需返回签发站；后端自动选择验证码归属站点并通过认证通道转发。归属站点或站间通道不可用时返回 50001（服务暂不可用），不在本站另建状态或绕过校验。
+         *
+         *     **腾讯人机验证（双站已部署，默认开启）：**先 GET /auth/captcha/config 获取本次新的 aidEncrypted，初始化腾讯 SDK，完成验证后以 X-Captcha-Ticket 和 X-Captcha-Randstr 请求头提交同一次回调的票据。后端使用请求来源 IP 和服务端配置向 captcha.intl.tencentcloudapi.com 核查，仅 CaptchaCode=1 且未标记恶意时进入原发送逻辑；前端 ret=0 或 HTTP 200 不能代替后端校验。缺少票据/随机串返回30015，无效/过期/重放/风险拒绝返回30016，配置或上游故障返回50004，均不发送。请求结束后即丢弃本次票据及初始化参数，重试时重新验证；原有登录、角色、用途和发送限流继续执行。
          */
         get: operations["AuthController_sendEmail_get"];
         put?: never;
@@ -906,7 +1776,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/password/code": {
+    "/auth/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】登录设备管理：获取登录设备列表
+         * @description **权限：需登录**
+         *
+         *     此路由仅在配置 enabled, multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["DeviceSessionsController_list_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/sessions/revoke-others": {
         parameters: {
             query?: never;
             header?: never;
@@ -916,14 +1810,114 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 【需登录】登录与认证：发送设置密码验证码
+         * 【需登录】登录设备管理：下线其他设备
          * @description **权限：需登录**
          *
-         *     给当前账号绑定的手机发验证码，用于设置或修改密码
+         *     此路由仅在配置 enabled, multiwriter.enabled=true 时注册。
          *
-         *     给当前账号绑定的手机发验证码，用于设置或修改密码；需要登录，且账号须已绑定手机号（否则返回 30011 MOBILE_NOT_BOUND）。
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
          */
-        post: operations["AuthController_sendPasswordCode_post"];
+        post: operations["DeviceSessionsController_revokeOthers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/sessions/{commandId}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需专用恢复凭据】登录设备管理：凭恢复凭据换发当前设备会话
+         * @description **权限：需匹配精确命令或生命周期请求的专用恢复凭据；不授予普通登录权限**
+         *
+         *     此路由仅在配置 enabled, multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["DeviceSessionsController_resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/sessions/{commandId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需专用恢复凭据】登录设备管理：查询当前设备恢复状态
+         * @description **权限：需匹配精确命令或生命周期请求的专用恢复凭据；不授予普通登录权限**
+         *
+         *     此路由仅在配置 enabled, multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["DeviceSessionsController_status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/sessions/{sessionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * 【需登录】登录设备管理：下线单个设备
+         * @description **权限：需登录**
+         *
+         *     此路由仅在配置 enabled, multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        delete: operations["DeviceSessionsController_revokeOne_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/username/set": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】首次设置登录用户名（可同时设置初始密码）
+         * @description **权限：需登录**
+         *
+         *     手机号账号首次设置唯一登录用户名，可同时设置初始密码，不修改展示昵称。
+         *     需登录并使用 /auth/password/code 获取的绑定手机验证码；已有自选用户名不能通过此接口改名。
+         *     成功后当前设备及其他设备均须重新登录。首次手机号登录后可跳过，稍后在账号与安全中设置。
+         *
+         *     仅手机号注册且仍使用系统随机登录名的账号可调用，支持跳过首次引导、稍后设置。userName 为3–10位字母、数字或下划线，区分大小写，与不唯一的显示名称 displayName 分开。code 来自 /auth/password/code，绑定当前账号手机。newPassword 可省略（保留原密码状态），传入时仅允许设置初始密码（6–64位，不能全空白）。用户名和初始密码在同一事务内提交；已占用返回30003，已有自选用户名或试图覆盖既有密码返回40002，未绑定手机返回30011，错误验证码返回30005。成功后 data.reauthenticationRequired=true，当前设备和其他设备都需要重新登录。查重仅表示本站当前同步状态，不预留用户名；双站离线同时占用仍按既有别名冲突机制处理。
+         *
+         *     需登录，使用 /auth/password/code 的验证码；可在另一站为同一账号首次设置 userName，已有自选用户名不能通过此接口改名。短信验证码有效期为 5 分钟；同一手机号的 60 秒发送间隔跨站共享。错误次数跨站累计，最多 5 次；成功消费后两站均不能再次使用。验证码绑定手机号及业务用途，需登录的验证码还绑定当前账号；不能跨用途或跨账号使用。校内与新加坡支持双向跨站校验，客户端无需返回签发站；后端自动选择验证码归属站点并通过认证通道转发。归属站点或站间通道不可用时返回 50001（服务暂不可用），不在本站另建状态或绕过校验。
+         */
+        post: operations["AuthController_setLoginUsername_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -954,30 +1948,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/password/reset": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 【需登录】登录与认证：用验证码设置或修改密码
-         * @description **权限：需登录**
-         *
-         *     用绑定手机的验证码设置或修改密码，不需要旧密码。成功后其他设备要重新登录。
-         *
-         *     用绑定手机的验证码设置或修改密码，不需要旧密码；需要登录。账号须已绑定手机号（否则返回 30011 MOBILE_NOT_BOUND）。成功后其他设备要重新登录。
-         */
-        post: operations["AuthController_resetPasswordByCode_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/auth/verifyEmail": {
         parameters: {
             query?: never;
@@ -990,207 +1960,12 @@ export interface paths {
          * @description **权限：公开（无需登录）**
          *
          *     验证邮箱链接
+         *
+         *     使用邮箱验证/绑定用途令牌，任一站均可受理；服务端仍检查对应账号状态。邮箱令牌有效期为 30 分钟，发送间隔与一次性消费状态跨站共享。令牌绑定账号、邮箱和用途；邮箱验证/绑定令牌不能用作密码冲突恢复令牌，反向也不允许。校内与新加坡支持双向跨站校验，客户端无需返回签发站；后端自动选择验证码归属站点并通过认证通道转发。归属站点或站间通道不可用时返回 50001（服务暂不可用），不在本站另建状态或绕过校验。
          */
         get: operations["AuthController_verifyEmail_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/phone/code": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 【公开】登录与认证：发送手机登录验证码
-         * @description **权限：公开（无需登录）**
-         *
-         *     发送手机号登录验证码，不需要登录。
-         *     同一手机号 60 秒一次，5 分钟内有效，连续输错 5 次要重新获取。
-         *
-         *     发送手机号登录验证码，不需要登录。同一手机号 60 秒一次，5 分钟内有效，连续输错 5 次要重新获取。
-         */
-        post: operations["AuthController_sendLoginCode_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/phone/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 【公开】登录与认证：手机验证码登录
-         * @description **权限：公开（无需登录）**
-         *
-         *     手机号验证码登录：注册过的号码直接登录，新号码自动注册后登录。
-         *
-         *     手机号验证码登录：注册过的号码直接登录，新号码自动注册后登录。data.newUser 表示本次是否新注册，取 data.tokenName 和 data.tokenValue 建立会话。跨站同号冲突返回 ACCOUNT_SECURITY_CONFLICT，不会自动合并身份或新建第三个账号。验证码须回到签发站使用。
-         */
-        post: operations["AuthController_phoneLogin_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/consent": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 【需登录】跨站同步同意：获取当前跨站同意状态
-         * @description **权限：需登录**
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         */
-        get: operations["AccountConsentController_status_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/consent/grant": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 【公开】跨站同步同意：授予跨站同步同意
-         * @description **权限：公开：凭有效 proof 无需登录；不带 proof 时需登录**
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         *
-         *     提供有效 proof 时可无会话提交；不提供 proof 时须使用有效登录会话；启用双站写入后两站均可提交，旧模式保留校内限制。必须先读取当前政策版本。
-         */
-        post: operations["AccountConsentController_grant_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/consent/policy": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 【公开】跨站同步同意：读取跨站同意政策
-         * @description **权限：公开（无需登录）**
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         */
-        get: operations["AccountConsentController_policy_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/consent/withdraw": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 【需登录】跨站同步同意：撤回当前用户跨站同意
-         * @description **权限：需登录**
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         */
-        post: operations["AccountConsentController_withdraw_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/consent/withdraw-with-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 【公开】跨站同步同意：使用密码撤回跨站同意
-         * @description **权限：公开（无需登录）**
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         */
-        post: operations["AccountConsentController_withdrawWithPassword_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 【公开】Callback：旧统一认证回跳（已停用）
-         * @description **权限：公开（凭统一认证回跳参数）**
-         *
-         *     旧的回跳地址，没有 state，一律返回 30012，提示回到 App 重新发起。
-         *
-         *     原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
-         *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
-         */
-        get: operations["CallbackController_callback_get"];
-        put?: never;
-        /**
-         * 【公开】Callback：旧统一认证回跳（已停用）
-         * @description **权限：公开（凭统一认证回跳参数）**
-         *
-         *     旧的回跳地址，没有 state，一律返回 30012，提示回到 App 重新发起。
-         *
-         *     原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
-         *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
-         */
-        post: operations["CallbackController_callback_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1210,7 +1985,11 @@ export interface paths {
          *
          *     原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     凭一次性 state 认证发起账号，不使用浏览器当前会话。state 五分钟后失效或已消费时仍可凭24小时来源提示选择固定失败目标；提示只含 app/web，不能认证。来源缺失或 state 畸形时固定回 App 目标，code=30012。兼容有效旧记录的数字账号ID（web）与 app:<账号ID>。
+         *
+         *     30012=认证链接无效/过期/重复，30013=学号已用于其他账号，50003=学校 token 无效；20005/20006及其他业务异常保留既有码，数据库/Redis/系统故障分别为90002/90003/90001。事务回滚或提交失败不能发送success或刷新成功权限缓存。客户端只用结果参数展示提示，认证状态须带原会话查询 /user/info 或 /auth/verify。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
          */
         get: operations["CallbackController_callbackWithState_get"];
         put?: never;
@@ -1220,9 +1999,189 @@ export interface paths {
          *
          *     原 Spring 方法未限制 HTTP 方法；此文档展开 GET/POST 两种调用，其他方法并未由文档新增。
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     凭一次性 state 认证发起账号，不使用浏览器当前会话。state 五分钟后失效或已消费时仍可凭24小时来源提示选择固定失败目标；提示只含 app/web，不能认证。来源缺失或 state 畸形时固定回 App 目标，code=30012。兼容有效旧记录的数字账号ID（web）与 app:<账号ID>。
+         *
+         *     30012=认证链接无效/过期/重复，30013=学号已用于其他账号，50003=学校 token 无效；20005/20006及其他业务异常保留既有码，数据库/Redis/系统故障分别为90002/90003/90001。事务回滚或提交失败不能发送success或刷新成功权限缓存。客户端只用结果参数展示提示，认证状态须带原会话查询 /user/info 或 /auth/verify。
          */
         post: operations["CallbackController_callbackWithState_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campus/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【可选登录】校区：获取列表
+         * @description **权限：公开（可选登录：带 token 时返回个人状态）**
+         *
+         *     已开放的校区，游客可访问。客户端按定位选最近的，没有定位选 isDefault 的那个。
+         *
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
+         */
+        get: operations["CampusController_list_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/catalog-errors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】意见反馈与举报：提交店铺信息有误
+         * @description **权限：需登录；仅正常会话可提交，受限会话和不可执行个人操作的账号被服务层拒绝（NO_PERMISSION）**
+         *
+         *     提交店铺信息有误：restaurantId 与 errorType（WRONG_NAME、WRONG_LOCATION、CLOSED、DUPLICATE、OTHER）必填，note 最多 200 字。同一账号对同一店已有未处理的该类案件时不新建，返回已有案件（duplicate=true）。
+         *
+         *     此路由仅在配置 app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["FeedbackController_catalogError_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】意见反馈与举报：提交意见反馈
+         * @description **权限：需登录；仅正常会话可提交，受限会话和不可执行个人操作的账号被服务层拒绝（NO_PERMISSION）**
+         *
+         *     提交意见反馈：text 必填，最多 500 字；screenshotKeys 最多 3 张，须先用 biz=feedback 上传并取得 key；context 可选，只能关联菜（FOOD）或店（RESTAURANT）。同一 Idempotency-Key 与同一内容重放原结果，内容不同返回重复提交错误。每个账号每小时最多 10 条、每天最多 30 条，超限返回限流错误。
+         *
+         *     此路由仅在配置 app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["FeedbackController_submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】意见反馈与举报：获取我的反馈举报记录
+         * @description **权限：需登录；仅正常会话可读取，只返回本人提交，受限会话被服务层拒绝（NO_PERMISSION）**
+         *
+         *     分页读取本人提交的案件，新的在前；kind 可筛选 FEEDBACK、CATALOG_ERROR、REPORT。每页最多 100 条。
+         *
+         *     此路由仅在配置 app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["FeedbackController_mine_get_feedback_mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/mine/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】意见反馈与举报：获取我的反馈举报详情
+         * @description **权限：需登录；仅正常会话可读取，只能读取本人提交，受限会话被服务层拒绝（NO_PERMISSION）**
+         *
+         *     读取本人提交的一个案件；案件不存在或不属于本人时返回参数无效。
+         *
+         *     此路由仅在配置 app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["FeedbackController_mine_get_feedback_mine_id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/feedback/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】意见反馈与举报：提交举报
+         * @description **权限：需登录；仅正常会话可提交，受限会话和不可执行个人操作的账号被服务层拒绝（NO_PERMISSION）**
+         *
+         *     提交举报：targetType（FOOD、RESTAURANT、COMMENT、USER）、targetId、reason（NOT_REAL_PHOTO、ADVERTISING、ILLEGAL_OR_UNFRIENDLY、OTHER）必填，note 最多 200 字；NOT_REAL_PHOTO 只适用于菜或评论，不能举报自己。同一账号对同一对象已有未处理的举报时返回已有案件（duplicate=true）。
+         *
+         *     此路由仅在配置 app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["FeedbackController_report_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/foods/by-user/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】菜品与收藏：获取指定用户上传的菜品
+         * @description **权限：需登录**
+         *
+         *     需登录；他人主页的公开上传列表。路径 userId 固定作者，可分页及按现有 FoodQueryDTO 条件筛选；未知用户返回空列表。只返回可见菜品及可见餐厅，排序默认 NEWEST。isLiked/isFavorite/myCustomTags 按访问者计算，不返回作者的私人状态。
+         */
+        get: operations["FoodController_getUserFoods_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1262,7 +2221,11 @@ export interface paths {
          * 【可选登录】菜品与收藏：获取菜品或美食动态详情
          * @description **权限：公开（可选登录：带 token 时返回个人状态）**
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** mealTimes、stageColor、stageAlternates、coverCrop、removeBackground 已随 V72 在两站部署；removeBackground 只保存开关，自动图像去背景尚未实现。本次列表为空，字段部署依据为运行包模型及数据库结构。
          */
         get: operations["FoodController_getFoodDetail_get"];
         put?: never;
@@ -1286,6 +2249,12 @@ export interface paths {
          * @description **权限：需登录 + 角色：管理员 admin**
          *
          *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     管理员编辑同样检查同店菜名重复；重复返回 40016 和 data.id，整笔编辑回滚。
+         *
+         *     启用原生审核时，成功（code=0）的 data 为 id、moderationStatus、revisionId 的修订受理结果；未启用时 data 为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** mealTimes、stageColor、stageAlternates、coverCrop、removeBackground 已随 V72 在两站部署；removeBackground 只保存开关，自动图像去背景尚未实现。本次列表为空，字段部署依据为运行包模型及数据库结构。
          */
         put: operations["FoodController_editFood_put"];
         post?: never;
@@ -1307,6 +2276,8 @@ export interface paths {
          * @description **权限：需登录**
          *
          *     仅当前会话账号的收藏。筛选语义与 /foods/list 相同；默认 FAVORITED_AT，按收藏时间及收藏ID倒序；也支持 NEWEST/PRICE_ASC/PRICE_DESC/POPULAR。分页前执行全部筛选。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** mealTimes、stageColor、stageAlternates、coverCrop、removeBackground 已随 V72 在两站部署；removeBackground 只保存开关，自动图像去背景尚未实现。本次列表为空，字段部署依据为运行包模型及数据库结构。
          */
         get: operations["FoodController_getMyFavoriteFoods_get"];
         put?: never;
@@ -1330,9 +2301,13 @@ export interface paths {
          *
          *     游客可访问；登录后返回个人点赞、收藏和自定义标签状态。
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
          *
-         *     restaurantId 可省略以跨餐厅查询。keyword 按菜名进行不区分大小写的字面子串匹配；category 接受大小写。全部筛选条件 AND，标签列表内所有不同标签均须匹配，重复ID去重。仅查询当前用户的个人标签。先筛选再分页，统计条件一致；默认 NEWEST，其他排序 PRICE_ASC/PRICE_DESC/POPULAR；FAVORITED_AT 仅收藏列表可用。未知价格不满足预算筛选，价格排序时置后。page>=1，pageSize=1..100，默认1/20。
+         *     restaurantId 可省略以跨餐厅查询；uploaderId 可按上传者筛选（指定时需登录）。keyword 按菜名进行不区分大小写的字面子串匹配；category 接受大小写。全部筛选条件 AND，标签列表内所有不同标签均须匹配，重复ID去重。仅查询当前用户的个人标签。先筛选再分页，统计条件一致；默认 NEWEST，其他排序 PRICE_ASC/PRICE_DESC/POPULAR；FAVORITED_AT 仅收藏列表可用。未知价格不满足预算筛选，价格排序时置后。page>=1，pageSize=1..100，默认1/20。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** mealTimes、stageColor、stageAlternates、coverCrop、removeBackground 已随 V72 在两站部署；removeBackground 只保存开关，自动图像去背景尚未实现。本次列表为空，字段部署依据为运行包模型及数据库结构。
          */
         get: operations["FoodController_listByRestaurant_get"];
         put?: never;
@@ -1365,6 +2340,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/foods/my/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 【需verified】菜品与收藏：editMyFood
+         * @description **权限：需登录 + 角色：已认证用户 verified**
+         *
+         *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
+         *
+         *     仅作者本人，服务端验证归属；管理员使用既有 /foods/edit/{id}。启用双站写入后两站均可独立操作；未启用时保留校内限制。多版本冲突须先裁决。省略/null字段保持原值，description空串清空；pictureUrl传存储key数组，不传签名URL。
+         *
+         *     启用原生审核时，成功（code=0）的 data 为 id、moderationStatus、revisionId 的修订受理结果；未启用时 data 为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** mealTimes、stageColor、stageAlternates、coverCrop、removeBackground 已随 V72 在两站部署；removeBackground 只保存开关，自动图像去背景尚未实现。本次列表为空，字段部署依据为运行包模型及数据库结构。
+         */
+        put: operations["FoodController_editMyFood_put"];
+        post?: never;
+        /**
+         * 【需verified】菜品与收藏：deleteMyFood
+         * @description **权限：需登录 + 角色：已认证用户 verified**
+         *
+         *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
+         *
+         *     仅作者本人，服务端验证归属；管理员使用既有 /foods/delete/{id}。启用双站写入后两站均可独立删除并同步墓碑；保留审计及并发复核所需事实，物理文件回收等待全参与者安全证明。未启用时保留校内限制。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** mealTimes、stageColor、stageAlternates、coverCrop、removeBackground 已随 V72 在两站部署；removeBackground 只保存开关，自动图像去背景尚未实现。本次列表为空，字段部署依据为运行包模型及数据库结构。
+         */
+        delete: operations["FoodController_deleteMyFood_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/foods/recommend": {
         parameters: {
             query?: never;
@@ -1380,7 +2393,11 @@ export interface paths {
          *     都推荐过一遍后从头再来。已认证用户参考打标、点赞、收藏和浏览记录，每批至少一半是大家公认的好菜；
          *     游客和未认证账号不带个人因素。游客传 deviceId 才能去重。
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** mealTimes、stageColor、stageAlternates、coverCrop、removeBackground 已随 V72 在两站部署；removeBackground 只保存开关，自动图像去背景尚未实现。本次列表为空，字段部署依据为运行包模型及数据库结构。
          */
         get: operations["FoodController_recommendFoods_get"];
         put?: never;
@@ -1441,6 +2458,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/foods/tags/my/{tagId}/foods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需verified】菜品与收藏：按个人标签列出菜品
+         * @description **权限：需登录 + 角色：已认证用户 verified**
+         *
+         *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["FoodController_listFoodsByMyCustomTag_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/foods/tags/system": {
         parameters: {
             query?: never;
@@ -1452,7 +2493,9 @@ export interface paths {
          * 【可选登录】菜品与收藏：获取系统菜品标签
          * @description **权限：公开（可选登录：带 token 时返回个人状态）**
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
          */
         get: operations["FoodController_listSystemTags_get"];
         put?: never;
@@ -1480,7 +2523,9 @@ export interface paths {
          *
          *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
          *
-         *     成功返回 data.id。可传 systemTagIds、myCustomTagNames（各最多20项）；菜品、初始标签和文件引用同事务提交，任一失败均回滚。ID保持数值形式。
+         *     同一家店菜名忽略空格查重；重复返回 40016，data.id 为已有菜品，可跳转详情。成功返回 data.id。可传 systemTagIds、myCustomTagNames（各最多20项）；菜品、初始标签和文件引用同事务提交，任一失败均回滚。ID保持数值形式。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** mealTimes、stageColor、stageAlternates、coverCrop、removeBackground 已随 V72 在两站部署；removeBackground 只保存开关，自动图像去背景尚未实现。本次列表为空，字段部署依据为运行包模型及数据库结构。
          */
         post: operations["FoodController_upload_post"];
         delete?: never;
@@ -1499,8 +2544,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 【需登录】菜品与收藏：收藏菜品
-         * @description **权限：需登录**
+         * 【需verified】菜品与收藏：收藏菜品
+         * @description **权限：需登录 + 角色：已认证用户 verified**
+         *
+         *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
          */
         post: operations["FoodController_favoriteFood_post"];
         delete?: never;
@@ -1542,7 +2589,9 @@ export interface paths {
          * 【可选登录】菜品与收藏：获取菜品标签
          * @description **权限：公开（可选登录：带 token 时返回个人状态）**
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
          */
         get: operations["FoodController_getFoodTags_get"];
         put?: never;
@@ -1661,38 +2710,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/foods/my/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * 【需verified】菜品与收藏：editMyFood
-         * @description **权限：需登录 + 角色：已认证用户 verified**
-         *
-         *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
-         *
-         *     仅作者本人，服务端验证归属；管理员使用既有 /foods/edit/{id}。启用双站写入后两站均可独立操作；未启用时保留校内限制。多版本冲突须先裁决。省略/null字段保持原值，description空串清空；pictureUrl传存储key数组，不传签名URL。
-         */
-        put: operations["FoodController_editMyFood_put"];
-        post?: never;
-        /**
-         * 【需verified】菜品与收藏：deleteMyFood
-         * @description **权限：需登录 + 角色：已认证用户 verified**
-         *
-         *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
-         *
-         *     仅作者本人，服务端验证归属；管理员使用既有 /foods/delete/{id}。启用双站写入后两站均可独立删除并同步墓碑；保留审计及并发复核所需事实，物理文件回收等待全参与者安全证明。未启用时保留校内限制。
-         */
-        delete: operations["FoodController_deleteMyFood_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/history/browse": {
         parameters: {
             query?: never;
@@ -1707,7 +2724,15 @@ export interface paths {
         get: operations["HistoryController_getBrowseHistory_get"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * 【需登录】浏览历史：清空自己的足迹
+         * @description **权限：需登录**
+         *
+         *     清空自己的足迹；targetType 不传时清空菜和店，否则只清空对应分栏。
+         *
+         *     只清空当前登录账号的足迹，不接受替其他账号清空。可选 targetType=food|restaurant；省略时清空两栏。不要求 verified。双站采用因果清空标记：旧事件及未观察到清空的并发浏览不会恢复已清空足迹；观察到清空后的新浏览保留。清空与 Outbox 同事务；跨站传输仍受授权约束，两站均需支持 browse.observation schema 2。
+         */
+        delete: operations["HistoryController_clearBrowseHistory_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1768,7 +2793,9 @@ export interface paths {
          * 【可选登录】商场：获取商场详情
          * @description **权限：公开（可选登录：带 token 时返回个人状态）**
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
          */
         get: operations["HubController_getHubDetail_get"];
         put?: never;
@@ -1812,7 +2839,9 @@ export interface paths {
          * 【可选登录】商场：获取商场列表
          * @description **权限：公开（可选登录：带 token 时返回个人状态）**
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
          */
         get: operations["HubController_listHubs_get"];
         put?: never;
@@ -1836,7 +2865,9 @@ export interface paths {
          *
          *     判断餐厅所在的hub
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
          */
         get: operations["HubController_locateHub_get"];
         put?: never;
@@ -1863,6 +2894,144 @@ export interface paths {
          *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
          */
         post: operations["HubController_rebindRestaurants_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/moderation/submissions/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】我的提交审核：获取我的提交
+         * @description **权限：需登录；仅正常会话且账号未封禁、已授权私有操作，只返回本人提交（服务层校验，不满足返回 NO_PERMISSION）**
+         *
+         *     此路由仅在配置 app.sync.catalog.enabled, app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["ModerationSubmissionsController_mine_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/moderation/submissions/{revisionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】我的提交审核：获取我的提交详情
+         * @description **权限：需登录；仅正常会话且账号未封禁、已授权私有操作，只能读取本人提交（服务层校验，不满足返回 NO_PERMISSION）**
+         *
+         *     此路由仅在配置 app.sync.catalog.enabled, app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["ModerationSubmissionsController_detail_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/moderation/submissions/{revisionId}/images/{slot}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】我的提交审核：获取我的提交图片临时地址
+         * @description **权限：需登录；仅正常会话且账号未封禁、已授权私有操作，只能读取本人提交的图片（服务层校验，不满足返回 NO_PERMISSION）**
+         *
+         *     此路由仅在配置 app.sync.catalog.enabled, app.account.enabled, app.account.multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["ModerationSubmissionsController_image_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notification/cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】通知卡片：获取通知卡片列表
+         * @description **权限：需登录**
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["NotificationCardsController_listCards_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notification/cards/unread/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】通知卡片：获取未读通知卡片数
+         * @description **权限：需登录**
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["NotificationCardsController_unreadCards_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notification/cards/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】通知卡片：标记通知卡片已读
+         * @description **权限：需登录**
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["NotificationCardsController_readCard_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1949,6 +3118,223 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/push/bindings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】推送：登记推送设备
+         * @description **权限：需登录；仅正常会话可登记设备，受限会话被服务层拒绝**
+         *
+         *     请求体为 application/json（至多 8192 字节，未知字段被拒绝），由服务端直接读取原始请求体，因此反射规范不含请求体模型。字段：commandId（UUID，命令幂等标识）、operation（CREATE/REFRESH/ENABLE/DISABLE/UNBIND/TRANSFER/SETTINGS，须与路径对应）、bindingId（UUID，REFRESH/UNBIND/TRANSFER 必填且须与路径 id 一致，CREATE 不得携带）、capability（32 字节 base64url，CREATE 必填）、deviceToken（至多 4096 字符，仅 CREATE/REFRESH/TRANSFER 可带）、expectedGeneration、expectedTokenGeneration、expectedPreferenceRevision（均为不小于 0 的整数）、category（COMMENTS/LIKES_AND_FAVORITES/FOLLOWS/SYSTEM，ENABLE/DISABLE 必填）、observedCloseFrontier（UUID，开启时回传最近一次关闭前沿）。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["PushController_create_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/bindings/{id}/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】推送：刷新推送设备令牌
+         * @description **权限：需登录；仅正常会话可刷新设备令牌，受限会话被服务层拒绝**
+         *
+         *     请求体为 application/json（至多 8192 字节，未知字段被拒绝），由服务端直接读取原始请求体，因此反射规范不含请求体模型。字段：commandId（UUID，命令幂等标识）、operation（CREATE/REFRESH/ENABLE/DISABLE/UNBIND/TRANSFER/SETTINGS，须与路径对应）、bindingId（UUID，REFRESH/UNBIND/TRANSFER 必填且须与路径 id 一致，CREATE 不得携带）、capability（32 字节 base64url，CREATE 必填）、deviceToken（至多 4096 字符，仅 CREATE/REFRESH/TRANSFER 可带）、expectedGeneration、expectedTokenGeneration、expectedPreferenceRevision（均为不小于 0 的整数）、category（COMMENTS/LIKES_AND_FAVORITES/FOLLOWS/SYSTEM，ENABLE/DISABLE 必填）、observedCloseFrontier（UUID，开启时回传最近一次关闭前沿）。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["PushController_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/bindings/{id}/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】推送：转移推送绑定
+         * @description **权限：需登录；仅正常会话可转移绑定，受限会话被服务层拒绝**
+         *
+         *     请求体为 application/json（至多 8192 字节，未知字段被拒绝），由服务端直接读取原始请求体，因此反射规范不含请求体模型。字段：commandId（UUID，命令幂等标识）、operation（CREATE/REFRESH/ENABLE/DISABLE/UNBIND/TRANSFER/SETTINGS，须与路径对应）、bindingId（UUID，REFRESH/UNBIND/TRANSFER 必填且须与路径 id 一致，CREATE 不得携带）、capability（32 字节 base64url，CREATE 必填）、deviceToken（至多 4096 字符，仅 CREATE/REFRESH/TRANSFER 可带）、expectedGeneration、expectedTokenGeneration、expectedPreferenceRevision（均为不小于 0 的整数）、category（COMMENTS/LIKES_AND_FAVORITES/FOLLOWS/SYSTEM，ENABLE/DISABLE 必填）、observedCloseFrontier（UUID，开启时回传最近一次关闭前沿）。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["PushController_transfer_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/bindings/{id}/unbind": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】推送：解绑推送设备
+         * @description **权限：需登录；受限会话也可解绑设备**
+         *
+         *     请求体为 application/json（至多 8192 字节，未知字段被拒绝），由服务端直接读取原始请求体，因此反射规范不含请求体模型。字段：commandId（UUID，命令幂等标识）、operation（CREATE/REFRESH/ENABLE/DISABLE/UNBIND/TRANSFER/SETTINGS，须与路径对应）、bindingId（UUID，REFRESH/UNBIND/TRANSFER 必填且须与路径 id 一致，CREATE 不得携带）、capability（32 字节 base64url，CREATE 必填）、deviceToken（至多 4096 字符，仅 CREATE/REFRESH/TRANSFER 可带）、expectedGeneration、expectedTokenGeneration、expectedPreferenceRevision（均为不小于 0 的整数）、category（COMMENTS/LIKES_AND_FAVORITES/FOLLOWS/SYSTEM，ENABLE/DISABLE 必填）、observedCloseFrontier（UUID，开启时回传最近一次关闭前沿）。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["PushController_unbind_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/commands/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】推送：查询推送命令状态
+         * @description **权限：需登录**
+         *
+         *     请求体为 application/json（至多 8192 字节，未知字段被拒绝），由服务端直接读取原始请求体，因此反射规范不含请求体模型。字段：commandId（UUID，命令幂等标识）、operation（CREATE/REFRESH/ENABLE/DISABLE/UNBIND/TRANSFER/SETTINGS，须与路径对应）、bindingId（UUID，REFRESH/UNBIND/TRANSFER 必填且须与路径 id 一致，CREATE 不得携带）、capability（32 字节 base64url，CREATE 必填）、deviceToken（至多 4096 字符，仅 CREATE/REFRESH/TRANSFER 可带）、expectedGeneration、expectedTokenGeneration、expectedPreferenceRevision（均为不小于 0 的整数）、category（COMMENTS/LIKES_AND_FAVORITES/FOLLOWS/SYSTEM，ENABLE/DISABLE 必填）、observedCloseFrontier（UUID，开启时回传最近一次关闭前沿）。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["PushController_status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】推送：获取推送栏目开关
+         * @description **权限：需登录**
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["PushController_settings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/settings/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】推送：关闭推送栏目
+         * @description **权限：需登录；受限会话也可关闭推送栏目**
+         *
+         *     请求体为 application/json（至多 8192 字节，未知字段被拒绝），由服务端直接读取原始请求体，因此反射规范不含请求体模型。字段：commandId（UUID，命令幂等标识）、operation（CREATE/REFRESH/ENABLE/DISABLE/UNBIND/TRANSFER/SETTINGS，须与路径对应）、bindingId（UUID，REFRESH/UNBIND/TRANSFER 必填且须与路径 id 一致，CREATE 不得携带）、capability（32 字节 base64url，CREATE 必填）、deviceToken（至多 4096 字符，仅 CREATE/REFRESH/TRANSFER 可带）、expectedGeneration、expectedTokenGeneration、expectedPreferenceRevision（均为不小于 0 的整数）、category（COMMENTS/LIKES_AND_FAVORITES/FOLLOWS/SYSTEM，ENABLE/DISABLE 必填）、observedCloseFrontier（UUID，开启时回传最近一次关闭前沿）。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["PushController_disable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/settings/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】推送：开启推送栏目
+         * @description **权限：需登录；仅正常会话可开启推送栏目，受限会话被服务层拒绝**
+         *
+         *     请求体为 application/json（至多 8192 字节，未知字段被拒绝），由服务端直接读取原始请求体，因此反射规范不含请求体模型。字段：commandId（UUID，命令幂等标识）、operation（CREATE/REFRESH/ENABLE/DISABLE/UNBIND/TRANSFER/SETTINGS，须与路径对应）、bindingId（UUID，REFRESH/UNBIND/TRANSFER 必填且须与路径 id 一致，CREATE 不得携带）、capability（32 字节 base64url，CREATE 必填）、deviceToken（至多 4096 字符，仅 CREATE/REFRESH/TRANSFER 可带）、expectedGeneration、expectedTokenGeneration、expectedPreferenceRevision（均为不小于 0 的整数）、category（COMMENTS/LIKES_AND_FAVORITES/FOLLOWS/SYSTEM，ENABLE/DISABLE 必填）、observedCloseFrontier（UUID，开启时回传最近一次关闭前沿）。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["PushController_enable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/remote-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【可选登录】客户端远程配置：读取客户端远程配置
+         * @description **权限：公开（可选登录：带 token 时返回个人状态）**
+         *
+         *     读取远程配置。platform 为 android/ios/web，build 为客户端构建号，campusId 为当前校区；三者都用于筛选公告，
+         *     platform 与 build 同时提供时返回 update 判定（NONE/SUGGEST/FORCE）。支持 If-None-Match，未变化时返回 304。
+         *
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["RemoteConfigController_get_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/restaurant/add": {
         parameters: {
             query?: never;
@@ -1967,6 +3353,34 @@ export interface paths {
          *     成功返回 data.id，可直接用于创建菜品。ID保持数值形式。
          */
         post: operations["RestaurantController_addRestaurant_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/restaurant/browse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【可选登录】餐厅：无需设备定位的餐厅目录，读取权限与餐厅详情一致（游客可访问）。
+         * @description **权限：公开（可选登录：带 token 时返回个人状态）**
+         *
+         *     无需设备定位的餐厅目录，读取权限与餐厅详情一致（游客可访问）。
+         *
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     无需经纬度的普通用户目录；游客可访问，与详情一致。支持 keyword/hubId/page/pageSize，按 createdAt、id 倒序。与管理员 /restaurant/list 分开。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
+         */
+        get: operations["RestaurantController_browseRestaurants_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2006,7 +3420,9 @@ export interface paths {
          * 【可选登录】餐厅：获取餐厅详情
          * @description **权限：公开（可选登录：带 token 时返回个人状态）**
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
          */
         get: operations["RestaurantController_getRestaurantDetail_get"];
         put?: never;
@@ -2030,8 +3446,32 @@ export interface paths {
          * @description **权限：需登录 + 角色：管理员 admin**
          *
          *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
+         *
+         *     启用原生审核且修改了名称、地址、城市、POI、图片或坐标时，成功（code=0）的 data 为 id、moderationStatus、revisionId 的修订受理结果；仅修改营业状态等其他字段时 data 为 null。
          */
         put: operations["RestaurantController_editRestaurant_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/restaurant/favorites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】餐厅：获取收藏餐厅
+         * @description **权限：需登录**
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["RestaurantController_getMyFavoriteRestaurants_get"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -2072,7 +3512,9 @@ export interface paths {
          * 【可选登录】餐厅：搜索附近餐厅
          * @description **权限：公开（可选登录：带 token 时返回个人状态）**
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 菜品、餐厅、商圈等现有浏览接口已在两站开放游客访问；收藏等个人接口仍需登录。通用活动另见 V75 状态。
          */
         get: operations["RestaurantController_searchRestaurants_get"];
         put?: never;
@@ -2083,7 +3525,67 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/restaurant/browse": {
+    "/restaurant/{id}/favorite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 【需verified】餐厅：收藏餐厅
+         * @description **权限：需登录 + 角色：已认证用户 verified**
+         *
+         *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        put: operations["RestaurantController_favoriteRestaurant_put"];
+        post?: never;
+        /**
+         * 【需登录】餐厅：取消收藏餐厅
+         * @description **权限：需登录**
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        delete: operations["RestaurantController_unfavoriteRestaurant_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/restaurant/{id}/rating": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 【需verified】餐厅：评价餐厅
+         * @description **权限：需登录 + 角色：已认证用户 verified**
+         *
+         *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        put: operations["RestaurantController_rateRestaurant_put"];
+        post?: never;
+        /**
+         * 【需登录】餐厅：撤销餐厅评价
+         * @description **权限：需登录**
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        delete: operations["RestaurantController_removeRestaurantRating_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/telemetry/consent": {
         parameters: {
             query?: never;
             header?: never;
@@ -2091,16 +3593,148 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 【可选登录】餐厅：无需设备定位的餐厅目录，读取权限与餐厅详情一致（游客可访问）。
+         * 【需登录】使用统计：获取使用统计同意状态
+         * @description **权限：需登录**
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["TelemetryController_status_get"];
+        /**
+         * 【需登录】使用统计：更新使用统计同意
+         * @description **权限：需登录**
+         *
+         *     请求体为 application/json（至多 32768 字节，未知字段被拒绝），由服务端直接读取原始请求体，反射规范不含请求体模型。字段：enabled（boolean）、policyVersion（须为当前政策版本）、expectedRevision（整数，须等于 GET 返回的 revision）。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        put: operations["TelemetryController_change_put"];
+        post?: never;
+        /**
+         * 【需登录】使用统计：关闭使用统计
+         * @description **权限：需登录**
+         *
+         *     请求体为 application/json（至多 32768 字节，未知字段被拒绝），由服务端直接读取原始请求体，反射规范不含请求体模型。字段：policyVersion、expectedRevision；效果等同 enabled=false。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        delete: operations["TelemetryController_disable_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/telemetry/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】使用统计：上报使用统计事件
+         * @description **权限：需登录**
+         *
+         *     请求体为 application/json（至多 32768 字节，每批至多 50 条，未知字段被拒绝），由服务端直接读取原始请求体，反射规范不含请求体模型。字段：consentRevision（须等于当前同意修订且已开启）、events（数组，每项含 eventId（UUID）和 properties；properties.event 取 app_open、page_view、dish_shuffle、dish_decide、navigate_shop、publish_success、comment_success、verify_success、share、load_failed 之一，其余字段随事件固定，不含自由文本、网址或用户标识）。每分钟至多 120 条。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["TelemetryController_events_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/topics/by-food/{foodId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【可选登录】校园专题：获取收录某道菜的专题
          * @description **权限：公开（可选登录：带 token 时返回个人状态）**
          *
-         *     无需设备定位的餐厅目录，读取权限与餐厅详情一致（游客可访问）。
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
          *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
-         *
-         *     无需经纬度的普通用户目录；游客可访问，与详情一致。支持 keyword/hubId/page/pageSize，按 createdAt、id 倒序。与管理员 /restaurant/list 分开。
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
          */
-        get: operations["RestaurantController_browseRestaurants_get"];
+        get: operations["TopicController_forFood_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/topics/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【可选登录】校园专题：获取当前专题
+         * @description **权限：公开（可选登录：带 token 时返回个人状态）**
+         *
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["TopicController_current_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/topics/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【可选登录】校园专题：获取历史专题
+         * @description **权限：公开（可选登录：带 token 时返回个人状态）**
+         *
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["TopicController_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/topics/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【可选登录】校园专题：获取专题详情
+         * @description **权限：公开（可选登录：带 token 时返回个人状态）**
+         *
+         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态；模型含 accountId 时该键始终返回，游客时值为 null。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["TopicController_detail_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2122,7 +3756,7 @@ export interface paths {
          * 【需登录】文件上传：确认文件上传完成
          * @description **权限：需登录**
          *
-         *     avatar 仅需登录；activity/foods/restaurants 还需 verified 角色。预签名后向 putUrl PUT 原始字节，再调用 /upload/complete，最后将 key 写入业务资料。
+         *     avatar、feedback 仅需登录；activity/foods/restaurants/comments 还需 verified 角色（comments、feedback 仅当前源码支持，feedback 用于反馈截图）。预签名后向 putUrl PUT 原始字节，再调用 /upload/complete，最后将 key 写入业务资料。
          */
         post: operations["UploadController_complete_post"];
         delete?: never;
@@ -2142,11 +3776,11 @@ export interface paths {
         put?: never;
         /**
          * 【需登录】文件上传：申请单文件上传签名
-         * @description **权限：需登录；biz=activity/foods/restaurants 还需已认证用户 verified**
+         * @description **权限：需登录；biz=activity/foods/restaurants/comments 还需已认证用户 verified（avatar、feedback 仅需登录）**
          *
          *     上传预签名接口。
          *
-         *     avatar 仅需登录；activity/foods/restaurants 还需 verified 角色。预签名后向 putUrl PUT 原始字节，再调用 /upload/complete，最后将 key 写入业务资料。
+         *     avatar、feedback 仅需登录；activity/foods/restaurants/comments 还需 verified 角色（comments、feedback 仅当前源码支持，feedback 用于反馈截图）。预签名后向 putUrl PUT 原始字节，再调用 /upload/complete，最后将 key 写入业务资料。
          */
         post: operations["UploadController_presign_post"];
         delete?: never;
@@ -2166,9 +3800,9 @@ export interface paths {
         put?: never;
         /**
          * 【需登录】文件上传：申请批量上传签名
-         * @description **权限：需登录；biz=activity/foods/restaurants 还需已认证用户 verified**
+         * @description **权限：需登录；biz=activity/foods/restaurants/comments 还需已认证用户 verified（avatar、feedback 仅需登录）**
          *
-         *     avatar 仅需登录；activity/foods/restaurants 还需 verified 角色。预签名后向 putUrl PUT 原始字节，再调用 /upload/complete，最后将 key 写入业务资料。
+         *     avatar、feedback 仅需登录；activity/foods/restaurants/comments 还需 verified 角色（comments、feedback 仅当前源码支持，feedback 用于反馈截图）。预签名后向 putUrl PUT 原始字节，再调用 /upload/complete，最后将 key 写入业务资料。
          */
         post: operations["UploadController_presignBatch_post"];
         delete?: never;
@@ -2211,8 +3845,218 @@ export interface paths {
         /**
          * 【需登录】用户与关注：绑定手机
          * @description **权限：需登录**
+         *
+         *     需登录，使用同一账号申请的手机绑定验证码；允许在另一站提交，不能复用登录或密码验证码。短信验证码有效期为 5 分钟；同一手机号的 60 秒发送间隔跨站共享。错误次数跨站累计，最多 5 次；成功消费后两站均不能再次使用。验证码绑定手机号及业务用途，需登录的验证码还绑定当前账号；不能跨用途或跨账号使用。校内与新加坡支持双向跨站校验，客户端无需返回签发站；后端自动选择验证码归属站点并通过认证通道转发。归属站点或站间通道不可用时返回 50001（服务暂不可用），不在本站另建状态或绕过校验。
          */
         post: operations["UserController_bindMobile_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】个人屏蔽：读取本人屏蔽列表
+         * @description **权限：需登录**
+         *
+         *     仅管理当前登录账号的私人屏蔽选择。PUT 屏蔽、DELETE 解除，data 只返回 blocked；GET 列表使用分页，失效账号的 displayName 可为 null，仍可解除。屏蔽者获准后跨站可靠同步，不复制或通知目标账号；并发屏蔽优先，观察到屏蔽后显式解除可恢复。推荐候选在截断前排除该上传者，关闭个性化或未认证时仍生效，游客不受他人屏蔽影响。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 2026-10-26 已双站发布并启用 V80、user.block schema 1。私人屏蔽/解除/本人列表与状态查询；推荐在候选截断前过滤被屏蔽者上传的菜，关闭个性化时仍生效。可靠补送、并发屏蔽优先、显式解除及授权/撤回门控由精确发布包隔离双站测试验证；生产检查字节、V80、数据库权限、同步能力及匿名门槛，没有改真实用户屏蔽选择。
+         */
+        get: operations["UserBlockController_list_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/blocks/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】个人屏蔽：查询本人对该用户的屏蔽状态
+         * @description **权限：需登录**
+         *
+         *     仅管理当前登录账号的私人屏蔽选择。PUT 屏蔽、DELETE 解除，data 只返回 blocked；GET 列表使用分页，失效账号的 displayName 可为 null，仍可解除。屏蔽者获准后跨站可靠同步，不复制或通知目标账号；并发屏蔽优先，观察到屏蔽后显式解除可恢复。推荐候选在截断前排除该上传者，关闭个性化或未认证时仍生效，游客不受他人屏蔽影响。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 2026-10-26 已双站发布并启用 V80、user.block schema 1。私人屏蔽/解除/本人列表与状态查询；推荐在候选截断前过滤被屏蔽者上传的菜，关闭个性化时仍生效。可靠补送、并发屏蔽优先、显式解除及授权/撤回门控由精确发布包隔离双站测试验证；生产检查字节、V80、数据库权限、同步能力及匿名门槛，没有改真实用户屏蔽选择。
+         */
+        get: operations["UserBlockController_get_get"];
+        /**
+         * 【需登录】个人屏蔽：屏蔽该用户
+         * @description **权限：需登录**
+         *
+         *     仅管理当前登录账号的私人屏蔽选择。PUT 屏蔽、DELETE 解除，data 只返回 blocked；GET 列表使用分页，失效账号的 displayName 可为 null，仍可解除。屏蔽者获准后跨站可靠同步，不复制或通知目标账号；并发屏蔽优先，观察到屏蔽后显式解除可恢复。推荐候选在截断前排除该上传者，关闭个性化或未认证时仍生效，游客不受他人屏蔽影响。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 2026-10-26 已双站发布并启用 V80、user.block schema 1。私人屏蔽/解除/本人列表与状态查询；推荐在候选截断前过滤被屏蔽者上传的菜，关闭个性化时仍生效。可靠补送、并发屏蔽优先、显式解除及授权/撤回门控由精确发布包隔离双站测试验证；生产检查字节、V80、数据库权限、同步能力及匿名门槛，没有改真实用户屏蔽选择。
+         */
+        put: operations["UserBlockController_block_put"];
+        post?: never;
+        /**
+         * 【需登录】个人屏蔽：解除屏蔽
+         * @description **权限：需登录**
+         *
+         *     仅管理当前登录账号的私人屏蔽选择。PUT 屏蔽、DELETE 解除，data 只返回 blocked；GET 列表使用分页，失效账号的 displayName 可为 null，仍可解除。屏蔽者获准后跨站可靠同步，不复制或通知目标账号；并发屏蔽优先，观察到屏蔽后显式解除可恢复。推荐候选在截断前排除该上传者，关闭个性化或未认证时仍生效，游客不受他人屏蔽影响。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 2026-10-26 已双站发布并启用 V80、user.block schema 1。私人屏蔽/解除/本人列表与状态查询；推荐在候选截断前过滤被屏蔽者上传的菜，关闭个性化时仍生效。可靠补送、并发屏蔽优先、显式解除及授权/撤回门控由精确发布包隔离双站测试验证；生产检查字节、V80、数据库权限、同步能力及匿名门槛，没有改真实用户屏蔽选择。
+         */
+        delete: operations["UserBlockController_unblock_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/cancellation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】账号注销：申请注销账号
+         * @description **权限：需登录**
+         *
+         *     此路由仅在配置 enabled, multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["LifecycleCancellationController_request_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/cancellation/recover/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【公开】账号注销：注销期间用密码恢复登录
+         * @description **权限：公开：不使用会话，凭 recoveryCapability、请求 ID 与操作 ID 校验（服务层仅允许该恢复入口，不授予普通登录权限）**
+         *
+         *     此路由仅在配置 enabled, multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["LifecycleCancellationController_recoverPassword_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/cancellation/recover/phone/challenge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【公开】账号注销：注销期间发送手机验证码
+         * @description **权限：公开：不使用会话，凭 recoveryCapability、请求 ID 与操作 ID 校验（服务层仅允许该恢复入口，不授予普通登录权限）**
+         *
+         *     此路由仅在配置 enabled, multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["LifecycleCancellationController_phoneChallenge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/cancellation/recover/phone/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【公开】账号注销：注销期间用手机验证码恢复登录
+         * @description **权限：公开：不使用会话，凭 recoveryCapability、请求 ID 与操作 ID 校验（服务层仅允许该恢复入口，不授予普通登录权限）**
+         *
+         *     此路由仅在配置 enabled, multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["LifecycleCancellationController_recoverPhone_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/cancellation/{subjectId}/{requestId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需专用恢复凭据】账号注销：撤销注销
+         * @description **权限：需匹配精确命令或生命周期请求的专用恢复凭据；不授予普通登录权限**
+         *
+         *     此路由仅在配置 enabled, multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["LifecycleCancellationController_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/cancellation/{subjectId}/{requestId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需专用恢复凭据】账号注销：查询注销状态
+         * @description **权限：需匹配精确命令或生命周期请求的专用恢复凭据；不授予普通登录权限**
+         *
+         *     此路由仅在配置 enabled, multiwriter.enabled=true 时注册。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["LifecycleCancellationController_status_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2251,10 +4095,14 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 【需登录】用户与关注：关注用户
-         * @description **权限：需登录**
+         * 【需verified】用户与关注：关注用户
+         * @description **权限：需登录 + 角色：已认证用户 verified**
          *
          *     关注他人
+         *
+         *     需要角色：verified。角色以服务端返回为准，不由客户端声明。
+         *
+         *     需 verified 角色；关注关系继续使用现有关系同步。取消关注仍只需登录。
          */
         post: operations["UserController_follow_post"];
         delete?: never;
@@ -2321,6 +4169,10 @@ export interface paths {
          * @description **权限：需登录 + 已认证用户 verified（服务层校验，未认证返回 STATE_NOT_ALLOWED）**
          *
          *     根据请求参数和客户端 IP 发送验证码
+         *
+         *     需登录且具备 verified 角色；验证码绑定当前账号与请求的业务用途，不能用于匿名手机号登录。短信验证码有效期为 5 分钟；同一手机号的 60 秒发送间隔跨站共享。错误次数跨站累计，最多 5 次；成功消费后两站均不能再次使用。验证码绑定手机号及业务用途，需登录的验证码还绑定当前账号；不能跨用途或跨账号使用。校内与新加坡支持双向跨站校验，客户端无需返回签发站；后端自动选择验证码归属站点并通过认证通道转发。归属站点或站间通道不可用时返回 50001（服务暂不可用），不在本站另建状态或绕过校验。
+         *
+         *     **腾讯人机验证（双站已部署，默认开启）：**先 GET /auth/captcha/config 获取本次新的 aidEncrypted，初始化腾讯 SDK，完成验证后以 X-Captcha-Ticket 和 X-Captcha-Randstr 请求头提交同一次回调的票据。后端使用请求来源 IP 和服务端配置向 captcha.intl.tencentcloudapi.com 核查，仅 CaptchaCode=1 且未标记恶意时进入原发送逻辑；前端 ret=0 或 HTTP 200 不能代替后端校验。缺少票据/随机串返回30015，无效/过期/重放/风险拒绝返回30016，配置或上游故障返回50004，均不发送。请求结束后即丢弃本次票据及初始化参数，重试时重新验证；原有登录、角色、用途和发送限流继续执行。
          */
         post: operations["UserController_getCode_post"];
         delete?: never;
@@ -2341,6 +4193,8 @@ export interface paths {
          * @description **权限：需登录**
          *
          *     获取用户个人信息
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 2026-10-26 已双站发布：同意进度仅保留六个业务字段，凭证分支保留 consentProof，内部 epoch/revision/validUntil 不向客户端返回；用户资料查询真实 role/banned，仅封禁时读取详情。实际候选包隔离测试、运行包摘要及匿名公网门槛已验证，生产未创建账号或执行真实用户登录。
          */
         get: operations["UserController_info_get"];
         put?: never;
@@ -2368,6 +4222,200 @@ export interface paths {
          */
         get: operations["UserController_listUsers_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/mobile/commands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】更换手机号：发起更换手机号
+         * @description **权限：需登录；首次绑定手机号还需已有验证记录（已认证），否则 NO_PERMISSION（服务层校验）**
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["CredentialMobileController_prepare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/mobile/commands/{commandId}/recovery-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需专用恢复凭据】更换手机号恢复：查询换绑恢复状态
+         * @description **权限：需匹配精确命令或生命周期请求的专用恢复凭据；不授予普通登录权限**
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["CredentialMobileRecoveryController_status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/mobile/commands/{commandId}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需专用恢复凭据】更换手机号恢复：凭恢复凭据换发会话
+         * @description **权限：需匹配精确命令或生命周期请求的专用恢复凭据；不授予普通登录权限**
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["CredentialMobileRecoveryController_resume_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/mobile/commands/{command}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】更换手机号：查询换绑状态
+         * @description **权限：需登录**
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        get: operations["CredentialMobileController_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/mobile/commands/{command}/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】更换手机号：发送换绑验证码
+         * @description **权限：需登录；首次绑定手机号还需已有验证记录（已认证），否则 NO_PERMISSION（服务层校验）**
+         *
+         *     **腾讯人机验证（机制双站已部署、默认开启；本接口来自当前源码，上线状态见部署状态）：**先 GET /auth/captcha/config 获取本次新的 aidEncrypted，初始化腾讯 SDK，完成验证后以 X-Captcha-Ticket 和 X-Captcha-Randstr 请求头提交同一次回调的票据。后端使用请求来源 IP 和服务端配置向 captcha.intl.tencentcloudapi.com 核查，仅 CaptchaCode=1 且未标记恶意时进入原发送逻辑；前端 ret=0 或 HTTP 200 不能代替后端校验。缺少票据/随机串返回30015，无效/过期/重放/风险拒绝返回30016，配置或上游故障返回50004，均不发送。请求结束后即丢弃本次票据及初始化参数，重试时重新验证；原有登录、角色、用途和发送限流继续执行。
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["CredentialMobileController_send_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/mobile/commands/{command}/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 【需登录】更换手机号：提交换绑
+         * @description **权限：需登录；首次绑定手机号还需已有验证记录（已认证），否则 NO_PERMISSION（服务层校验）**
+         *
+         *     **部署状态（2026-10-30）：两站均未上线。** 此接口来自当前源码，不在该日核对的两站运行包注册路由内；部署前不可调用，上线时间以后续发布记录为准。
+         */
+        post: operations["CredentialMobileController_commit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/recommendation-profile/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】RecommendationProfile：preferences
+         * @description **权限：需登录**
+         */
+        get: operations["RecommendationProfileController_preferences_get"];
+        /**
+         * 【需登录】RecommendationProfile：preferences
+         * @description **权限：需登录**
+         */
+        put: operations["RecommendationProfileController_preferences_put"];
+        post?: never;
+        /**
+         * 【需登录】RecommendationProfile：clear
+         * @description **权限：需登录**
+         */
+        delete: operations["RecommendationProfileController_clear_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/recommendation-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】推荐设置：读取本人个性化推荐开关
+         * @description **权限：需登录**
+         *
+         *     仅操作当前登录用户。personalized 默认 true；设为 false 后不使用个人口味和历史信号参与推荐过滤或排序。主动筛选、互动展示和当日批次去重保持。已保存口味及历史不删除；同意跨站同步后按因果版本同步，并发关闭优先，收到关闭后显式重新开启可恢复。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 2026-10-26 两站已发布 V79 及 recommendation.setting schema 1，并启用同步。默认开启，关闭后使用通用推荐；保留历史和手动口味，显式重新开启可恢复，断网后可靠补送、并发关闭优先。精确候选包隔离两站写入/收敛测试通过；生产检查运行字节、同步能力和匿名权限门槛，未修改真实用户设置。
+         */
+        get: operations["RecommendationSettingsController_get_get"];
+        /**
+         * 【需登录】推荐设置：设置本人个性化推荐开关
+         * @description **权限：需登录**
+         *
+         *     仅操作当前登录用户。personalized 默认 true；设为 false 后不使用个人口味和历史信号参与推荐过滤或排序。主动筛选、互动展示和当日批次去重保持。已保存口味及历史不删除；同意跨站同步后按因果版本同步，并发关闭优先，收到关闭后显式重新开启可恢复。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 2026-10-26 两站已发布 V79 及 recommendation.setting schema 1，并启用同步。默认开启，关闭后使用通用推荐；保留历史和手动口味，显式重新开启可恢复，断网后可靠补送、并发关闭优先。精确候选包隔离两站写入/收敛测试通过；生产检查运行字节、同步能力和匿名权限门槛，未修改真实用户设置。
+         */
+        put: operations["RecommendationSettingsController_put_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2463,219 +4511,212 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/password-conflict/challenge": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 【公开】密码冲突恢复：challenge
-         * @description **权限：公开（无需登录）**
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         */
-        post: operations["AccountPasswordRecoveryController_challenge_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/password-conflict/reset": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 【公开】密码冲突恢复：reset
-         * @description **权限：公开（无需登录）**
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         */
-        post: operations["AccountPasswordRecoveryController_reset_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/security/account-reviews": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 【需admin】账号安全复核：获取列表
-         * @description **权限：需登录 + 角色：管理员 admin**
-         *
-         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         */
-        get: operations["AccountSecurityReviewController_list_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/security/account-reviews/password-conflicts/{userId}/reset": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 【需admin】账号安全复核：reset
-         * @description **权限：需登录 + 角色：管理员 admin**
-         *
-         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         */
-        post: operations["AccountSecurityReviewController_reset_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/security/account-reviews/{eventId}/decision": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * 【需admin】账号安全复核：decide
-         * @description **权限：需登录 + 角色：管理员 admin**
-         *
-         *     需要角色：admin。角色以服务端返回为准，不由客户端声明。
-         *
-         *     此路由由配置开关决定是否注册，见 x-conditional-properties。
-         */
-        post: operations["AccountSecurityReviewController_decide_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campus/list": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 【可选登录】校区：获取列表
-         * @description **权限：公开（可选登录：带 token 时返回个人状态）**
-         *
-         *     已开放的校区，游客可访问。客户端按定位选最近的，没有定位选 isDefault 的那个。
-         *
-         *     游客可访问；携带有效 token 时会返回 isLiked、isFavorite、myCustomTags 等个人状态，游客响应不含 accountId。
-         */
-        get: operations["CampusController_list_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/user/recommendation-profile/preferences": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 【需登录】RecommendationProfile：preferences
-         * @description **权限：需登录**
-         */
-        get: operations["RecommendationProfileController_preferences_get"];
-        /**
-         * 【需登录】RecommendationProfile：preferences
-         * @description **权限：需登录**
-         */
-        put: operations["RecommendationProfileController_preferences_put"];
-        post?: never;
-        /**
-         * 【需登录】RecommendationProfile：clear
-         * @description **权限：需登录**
-         */
-        delete: operations["RecommendationProfileController_clear_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AcceptedResponse: {
+            /** @description 本批新接收的事件数量。 字段必返，值非 null。 */
+            accepted: number;
+            /** @description 本批中已存在而被忽略的重复事件数量。 字段必返，值非 null。 */
+            duplicates: number;
+        };
         AccountStatusVOResponse: {
-            accountStatus?: string;
-            bannedAt?: string;
-            banReason?: string;
-            banExpireAt?: string;
+            /** @description 账号状态：NORMAL 正常、BANNED 已封禁。 字段必返，值非 null。 */
+            accountStatus: string;
+            /** @description 封禁时间，ISO 8601 字符串；未封禁时为 null。 字段必返，值可为 null。 */
+            bannedAt: string | null;
+            /** @description 封禁原因；未封禁时可为 null。 字段必返，值可为 null。 */
+            banReason: string | null;
+            /** @description 封禁到期时间，ISO 8601 字符串；永久封禁时为 null。 字段必返，当前响应值固定为 null。 */
+            banExpireAt: null;
         };
-        ActivityDinnerDTOResponse: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int64 */
-            accountId?: number;
-            pictureUrl?: string[];
-            description?: string;
-            likesCount?: number;
-            /** Format: int64 */
-            createdAt?: number;
-            /** Format: int64 */
-            updatedAt?: number;
+        ActionResponse: {
+            /**
+             * Format: uuid
+             * @description 处理决定 UUID，即管理员提交处理时的 Idempotency-Key。 字段必返，值非 null。
+             */
+            decisionId: string;
+            /**
+             * Format: int64
+             * @description 处理的管理员数值 ID；该管理员账号已被清理时为 null。 字段必返，值可为 null。
+             */
+            adminId: number | null;
+            /** @description 处理动作，当前固定为 RESOLVE。 字段必返，值非 null。 */
+            action: string;
+            /**
+             * @description 处理结论：ACCEPTED、REJECTED 或 RESOLVED。 字段必返，值非 null。
+             * @enum {string}
+             */
+            outcome: "ACCEPTED" | "REJECTED" | "RESOLVED";
+            /** @description 给提交人的公开回复；没有回复时为空字符串。 字段必返，值非 null。 */
+            reply: string;
+            /** @description 内部备注，仅管理端可见；没有时为空字符串。 字段必返，值非 null。 */
+            internalNote: string;
+            /**
+             * Format: int64
+             * @description 处理时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            createdAt: number;
         };
-        ActivityFoodDTOResponse: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int64 */
-            accountId?: number;
-            uploaderName?: string;
-            foodName?: string;
-            description?: string;
-            provinceId?: number;
-            cityId?: number;
-            pictureUrl?: string[];
-            likesCount?: number;
-            isLiked?: boolean;
-            /** Format: int64 */
-            createdAt?: number;
-            /** Format: int64 */
-            updatedAt?: number;
-        };
-        ActivityLikeReqDTORequest: {
-            targetType: string;
-            /** Format: int64 */
+        ActivityPostVOResponse: {
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * Format: int64
+             * @description 所属活动的数值业务 ID。 字段必返，值非 null。
+             */
             activityId: number;
+            /** @description 所属活动的唯一业务代码。 字段必返，值非 null。 */
+            activityCode: string;
+            /**
+             * Format: int64
+             * @description 发布者的数值账号 ID；游客访问时不披露，可能为 null。 字段必返，值可为 null。
+             */
+            accountId: number | null;
+            /** @description 发布者的展示昵称。 字段必返，值非 null。 */
+            uploaderName: string;
+            /** @description 活动内容标题。 字段必返，值可为 null。 */
+            title: string | null;
+            /** @description 文字介绍。 字段必返，值可为 null。 */
+            description: string | null;
+            /** @description 省份 ID，对应省份字典接口。 字段必返，值可为 null。 */
+            provinceId: number | null;
+            /** @description 城市 ID，对应城市字典接口。 字段必返，值可为 null。 */
+            cityId: number | null;
+            /** @description 图片读取 URL 列表，可直接展示；可能含临时签名，失效后重新请求列表或详情获取。 字段必返，值非 null。 */
+            pictureUrl: string[];
+            /** @description 用户填写的活动扩展字段值；键对应所属活动 fieldSchema 的 key，值类型由 type 决定。 字段必返，值非 null。 */
+            extra: {
+                [key: string]: unknown;
+            };
+            /** @description 该内容收到的点赞总数。 字段必返，值非 null。 */
+            likesCount: number;
+            /** @description 当前登录用户是否已点赞；游客为 false。 字段必返，值非 null。 */
+            isLiked: boolean;
+            /**
+             * Format: int64
+             * @description 创建时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            createdAt: number;
+            /**
+             * Format: int64
+             * @description 最后更新时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            updatedAt: number;
+        };
+        ActivityStatusDTORequest: {
+            status: string;
+        };
+        ActivityVOResponse: {
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 活动的唯一业务代码，用于 /activity/{code} 等路径。 字段必返，值非 null。 */
+            code: string;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+            /** @description 文字介绍。 字段必返，值可为 null。 */
+            description: string | null;
+            /** @description 活动封面图片引用或地址。 字段必返，值可为 null。 */
+            coverUrl: string | null;
+            /** @description 活动状态：DRAFT 草稿、ONLINE 已上线、OFFLINE 已下线；草稿仅管理员可见。 字段必返，值非 null。 */
+            status: string;
+            /**
+             * Format: int64
+             * @description 允许发布内容的开始时间，Unix 毫秒，包含该时刻；null 表示无开始限制。 字段必返，值可为 null。
+             */
+            startsAt: number | null;
+            /**
+             * Format: int64
+             * @description 允许发布内容的结束时间，Unix 毫秒，不包含该时刻；null 表示无结束限制。 字段必返，值可为 null。
+             */
+            endsAt: number | null;
+            /** @description 当前是否处于可发布状态：活动 ONLINE，且当前时间在开始（含）到结束（不含）的窗口内；发布还需满足接口权限。 字段必返，值非 null。 */
+            postingOpen: boolean;
+            /** @description 活动展示排序值，值越小越靠前。 字段必返，值非 null。 */
+            sort: number;
+            /** @description 发布此活动的内容时是否必须填写省份和城市。 字段必返，值非 null。 */
+            requireLocation: boolean;
+            /** @description 每条活动内容允许上传的最大图片数量。 字段必返，值非 null。 */
+            maxPictures: number;
+            /** @description 活动扩展字段定义，最多 10 项。每项 key 为 extra 中的键、label 为显示名称、type 为 TEXT/NUMBER/BOOLEAN/SELECT、required 表示是否必填；TEXT 的 maxLength 为最大字符数，NUMBER 的 min/max 为数值边界（null 表示不限制），SELECT 的 options 为可选字符串列表。 字段必返，值非 null。 */
+            fieldSchema: ({
+                /** @description extra 对象中的字段键。 */
+                key: string;
+                /** @description 字段显示名称。 */
+                label: string;
+                /**
+                 * @description 字段类型。
+                 * @enum {string}
+                 */
+                type: "TEXT" | "NUMBER" | "BOOLEAN" | "SELECT";
+                /** @description 发布内容时此扩展值是否必填。 */
+                required: boolean;
+                /** @description 仅 TEXT 类型必返，文本最大字符数。 */
+                maxLength?: number;
+                /** @description 仅 NUMBER 类型必返，null 表示不限制下界。 */
+                min?: number | null;
+                /** @description 仅 NUMBER 类型必返，null 表示不限制上界。 */
+                max?: number | null;
+                /** @description 仅 SELECT 类型必返，可选字符串列表。 */
+                options?: string[];
+            } & ({
+                /**
+                 * @description 活动扩展字段的类型分支。
+                 * @constant
+                 */
+                type?: "TEXT";
+            } | {
+                /**
+                 * @description 活动扩展字段的类型分支。
+                 * @constant
+                 */
+                type?: "NUMBER";
+            } | {
+                /**
+                 * @description 活动扩展字段的类型分支。
+                 * @constant
+                 */
+                type?: "BOOLEAN";
+            } | {
+                /**
+                 * @description 活动扩展字段的类型分支。
+                 * @constant
+                 */
+                type?: "SELECT";
+            }))[];
+            /**
+             * Format: int64
+             * @description 创建时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            createdAt: number;
+            /**
+             * Format: int64
+             * @description 最后更新时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            updatedAt: number;
+        };
+        ActorResponse: {
+            /**
+             * Format: int64
+             * @description 触发通知的用户数值 ID。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * Format: uuid
+             * @description 触发通知的用户全局 UUID。 字段必返，值非 null。
+             */
+            gid: string;
+            /** @description 触发者的展示昵称。 字段必返，值可为 null。 */
+            name: string | null;
+            /** @description 触发者头像读取地址（临时签名地址）；没有头像时为 null。 字段必返，值可为 null。 */
+            avatar: string | null;
         };
         AddCustomFoodTagsDTORequest: {
             names: string[];
@@ -2683,75 +4724,350 @@ export interface components {
         AddSystemFoodTagsDTORequest: {
             tagIds: number[];
         };
+        AdminAnnouncementResponse: {
+            /**
+             * Format: int64
+             * @description 公告数值 ID；删除后不复用。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * @description 公告级别：NORMAL 普通、IMPORTANT 重要。 字段必返，值非 null。
+             * @enum {string}
+             */
+            level: "NORMAL" | "IMPORTANT";
+            /** @description 公告标题；未填写时为 null。 字段必返，值可为 null。 */
+            title: string | null;
+            /** @description 公告正文。 字段必返，值非 null。 */
+            content: string;
+            /** @description 公告链接；未填写时为 null。 字段必返，值可为 null。 */
+            linkUrl: string | null;
+            /** @description 目标平台列表（android、ios、web）；空数组表示所有平台。 字段必返，值非 null。 */
+            platforms: string[];
+            /** @description 目标校区 ID 列表；空数组表示所有校区。 字段必返，值非 null。 */
+            campusIds: number[];
+            /** @description 最低构建号；0 表示不限。 字段必返，值非 null。 */
+            minBuild: number;
+            /** @description 最高构建号；0 表示不限。 字段必返，值非 null。 */
+            maxBuild: number;
+            /**
+             * Format: date-time
+             * @description 开始展示时间（ISO 8601）；不限时为 null。 字段必返，值可为 null。
+             */
+            startsAt: string | null;
+            /**
+             * Format: date-time
+             * @description 结束展示时间（ISO 8601）；不限时为 null。 字段必返，值可为 null。
+             */
+            endsAt: string | null;
+            /** @description 是否启用。 字段必返，值非 null。 */
+            enabled: boolean;
+            /**
+             * Format: int64
+             * @description 公告修订号；修改和删除时作为 expectedRevision 提交。 字段必返，值非 null。
+             */
+            revision: number;
+            /**
+             * Format: date-time
+             * @description 创建时间（ISO 8601）。 字段必返，值非 null。
+             */
+            createdAt: string;
+            /**
+             * Format: int64
+             * @description 创建公告的管理员数值 ID；该管理员账号已被清理时为 0。 字段必返，值非 null。
+             */
+            createdBy: number;
+            /**
+             * Format: date-time
+             * @description 最后修改时间（ISO 8601）。 字段必返，值非 null。
+             */
+            updatedAt: string;
+            /**
+             * Format: int64
+             * @description 最后修改公告的管理员数值 ID；该管理员账号已被清理时为 0。 字段必返，值非 null。
+             */
+            updatedBy: number;
+        };
+        AdminCaseViewResponse: {
+            /** @description 案件内容，与提交人看到的一致。 字段必返，值非 null。 */
+            view: components["schemas"]["CaseViewResponse"];
+            /**
+             * Format: int64
+             * @description 提交人数值账号 ID。 字段必返，值非 null。
+             */
+            submitterId: number;
+            /** @description 关联菜或店的名称；关联评论、用户或未关联对象时为 null。 字段必返，值可为 null。 */
+            targetName: string | null;
+            /** @description 关联的菜或店当前是否已不可见；其他对象类型恒为 false。 字段必返，值非 null。 */
+            targetUnavailable: boolean;
+            /** @description 是否需要管理员通过现有目录编辑或审核流程修改目录：仅已采纳的店铺信息有误为 true；处理结论只记录，不会自动改动目录。 字段必返，值非 null。 */
+            catalogChangeRequired: boolean;
+            /** @description 处理记录；仅详情接口返回，队列列表中为空数组。 字段必返，值非 null。 */
+            actions: components["schemas"]["ActionResponse"][];
+        };
+        AdminConfigResponse: {
+            /** @description 当前站点的运行模式；远程配置按站点各自管理，不跨站同步。 字段必返，值非 null。 */
+            siteMode: string;
+            /**
+             * Format: int64
+             * @description 配置总版本号，任意远程配置修改都会递增。 字段必返，值非 null。
+             */
+            configVersion: number;
+            /** @description 功能开关、运营参数和维护状态。 字段必返，值非 null。 */
+            settings: components["schemas"]["SettingsResponse"];
+            /** @description 各平台版本线，顺序为 android、ios、web。 字段必返，值非 null。 */
+            versions: components["schemas"]["AdminVersionLineResponse"][];
+        };
         AdminFoodTagVOResponse: {
-            /** Format: int64 */
-            id?: number;
-            name?: string;
-            /** Format: int64 */
-            usageCount?: number;
-            /** Format: int64 */
-            createdAt?: number;
-            /** Format: int64 */
-            updatedAt?: number;
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+            /**
+             * Format: int64
+             * @description 此系统标签的标记记录总数；不同用户给同一菜品标记会分别计数，不是去重后的菜品数。 字段必返，值非 null。
+             */
+            usageCount: number;
+            /**
+             * Format: int64
+             * @description 创建时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            createdAt: number;
+            /**
+             * Format: int64
+             * @description 最后更新时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            updatedAt: number;
+        };
+        AdminVersionLineResponse: {
+            /** @description 平台：android、ios 或 web。 字段必返，值非 null。 */
+            platform: string;
+            /** @description 最低可用构建号；低于它的客户端必须更新。0 表示未设置。 字段必返，值非 null。 */
+            minBuild: number;
+            /** @description 最新构建号；低于它的客户端建议更新。0 表示未设置。 字段必返，值非 null。 */
+            latestBuild: number;
+            /** @description 最新版本名，仅用于展示；未填写时为 null。 字段必返，值可为 null。 */
+            latestVersionName: string | null;
+            /** @description 下载或应用商店地址；未填写时为 null。 字段必返，值可为 null。 */
+            storeUrl: string | null;
+            /** @description 更新说明；未填写时为 null。 字段必返，值可为 null。 */
+            releaseNotes: string | null;
+            /**
+             * Format: int64
+             * @description 此平台版本线的修订号；保存时作为 expectedRevision 提交。 字段必返，值非 null。
+             */
+            revision: number;
+            /**
+             * Format: date-time
+             * @description 最后修改时间（ISO 8601）。 字段必返，值非 null。
+             */
+            updatedAt: string;
+            /**
+             * Format: int64
+             * @description 最后修改的管理员数值 ID；从未修改或该管理员账号已被清理时为 null。 字段必返，值可为 null。
+             */
+            updatedBy: number | null;
+        };
+        AuditEntryResponse: {
+            /**
+             * Format: int64
+             * @description 审计记录数值 ID。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * Format: date-time
+             * @description 修改发生时间（ISO 8601）。 字段必返，值非 null。
+             */
+            occurredAt: string;
+            /**
+             * Format: int64
+             * @description 执行修改的管理员数值 ID；该管理员账号已被清理时为 0。 字段必返，值非 null。
+             */
+            adminId: number;
+            /** @description 修改对象类型：SETTINGS 开关与参数、VERSION_LINE 版本线、ANNOUNCEMENT 公告。 字段必返，值非 null。 */
+            target: string;
+            /** @description 修改对象标识：settings、平台名或公告 ID。 字段必返，值非 null。 */
+            targetKey: string;
+            /** @description 操作：CREATE、UPDATE 或 DELETE。 字段必返，值非 null。 */
+            action: string;
+            /**
+             * Format: int64
+             * @description 修改前的修订号；新建时为 null。 字段必返，值可为 null。
+             */
+            revisionBefore: number | null;
+            /**
+             * Format: int64
+             * @description 修改后的修订号。 字段必返，值非 null。
+             */
+            revisionAfter: number;
+            /**
+             * Format: int64
+             * @description 此次修改后的配置总版本号。 字段必返，值非 null。
+             */
+            configVersion: number;
+            /** @description 修改前的完整值；新建时为 null。快照不含管理员 ID。 字段必返，值可为 null。 */
+            before: Record<string, never> | null;
+            /** @description 修改后的完整值；删除时为 id、deleted、revision 摘要。快照不含管理员 ID。 字段必返，值非 null。 */
+            after: Record<string, never>;
+        };
+        AuthorizationReviewResponse: {
+            /**
+             * Format: uuid
+             * @description 需要复核的同步事件 UUID。 字段必返，值非 null。
+             */
+            eventId: string;
+            /**
+             * Format: uuid
+             * @description 被复核操作的执行者全局 UUID；与普通业务数值账号 ID 不同。 字段必返，值非 null。
+             */
+            actorId: string;
+            /** @description 进入人工复核的原因。 字段必返，值非 null。 */
+            reason: string;
+            /** @description 本次授权复核关联的资料冲突详情。 字段必返，值非 null。 */
+            conflict: components["schemas"]["ConflictResponse"];
+        };
+        AuthorizationReviewViewResponse: {
+            /**
+             * Format: uuid
+             * @description 需要复核的同步事件 UUID。 字段必返，值非 null。
+             */
+            eventId: string;
+            /**
+             * Format: uuid
+             * @description 冲突记录 UUID，用于查询或提交冲突裁决。 字段必返，值非 null。
+             */
+            conflictId: string;
+            /**
+             * @description 目录对象类型，取值见 enum，例如 HUB（商圈）、RESTAURANT（餐厅）、FOOD（菜品）。 字段必返，值非 null。
+             * @enum {string}
+             */
+            kind: "HUB" | "RESTAURANT" | "FOOD" | "SYSTEM_TAG" | "CUSTOM_TAG" | "ACTIVITY";
+            /**
+             * Format: uuid
+             * @description 目录对象的跨站全局 UUID，与 numericId 数值业务 ID 不同。 字段必返，值非 null。
+             */
+            objectGid: string;
+            /** @description 进入人工复核的原因。 字段必返，值非 null。 */
+            reason: string;
+            /** @description 目录授权复核或裁决状态；AUTH_REVIEW 表示仍需人工复核授权。 字段必返，值非 null。 */
+            status: string;
         };
         BanUserDTORequest: {
             reason: string;
-        };
-        AuthorizationReviewResponse: {
-            /** Format: uuid */
-            eventId?: string;
-            /** Format: uuid */
-            actorId?: string;
-            reason?: string;
-            conflict?: components["schemas"]["ConflictResponse"];
+            /** Format: date-time */
+            banUntil?: string;
         };
         BindMobileReqRequest: {
             mobile: string;
             code: string;
         };
-        AuthorizationReviewViewResponse: {
-            /** Format: uuid */
-            eventId?: string;
-            /** Format: uuid */
-            conflictId?: string;
-            /** @enum {string} */
-            kind?: "HUB" | "RESTAURANT" | "FOOD" | "SYSTEM_TAG" | "CUSTOM_TAG";
-            /** Format: uuid */
-            objectGid?: string;
-            reason?: string;
-            status?: string;
+        BlockStatusResponse: {
+            /** @description 当前登录账号是否已屏蔽该用户；仅用于本人设置和推荐过滤，不是管理员封禁状态。 字段必返，值非 null。 */
+            blocked: boolean;
+        };
+        BlockedUserResponse: {
+            /**
+             * Format: int64
+             * @description 被本人屏蔽用户的数值账号 ID；账号在本站不可见时仍保留此标识，便于解除。 字段必返，值非 null。
+             */
+            userId: number;
+            /** @description 被屏蔽用户当前可读取的显示名称；账号已删除或尚未投影到本站时为 null。 字段必返，值可为 null。 */
+            displayName: string | null;
         };
         BrowseHistoryFoodDTOResponse: {
-            /** Format: int64 */
-            id?: number;
-            name?: string;
-            pictureUrl?: string[];
-            likesCount?: number;
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+            /** @description 图片读取 URL 列表，可直接展示；可能含临时签名，失效后重新请求列表或详情获取。 字段必返，值非 null。 */
+            pictureUrl: string[];
+            /** @description 该内容收到的点赞总数。 字段必返，值非 null。 */
+            likesCount: number;
         };
         BrowseHistoryItemDTOResponse: {
-            targetType?: string;
-            /** Format: int64 */
-            targetId?: number;
-            /** Format: int64 */
-            viewedAt?: number;
+            /**
+             * @description 浏览对象类型：restaurant 餐厅、food 菜品。 字段必返，值非 null。
+             * @enum {string}
+             */
+            targetType: "restaurant" | "food";
+            /**
+             * Format: int64
+             * @description 浏览对象的数值 ID；根据 targetType 调用餐厅或菜品详情接口。 字段必返，值非 null。
+             */
+            targetId: number;
+            /**
+             * Format: int64
+             * @description 最近浏览该对象的时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            viewedAt: number;
+            /** @description 餐厅摘要；仅 targetType=restaurant 时有值。 字段必返，值可为 null。 */
+            restaurant: components["schemas"]["BrowseHistoryRestaurantDTOResponse"] | null;
+            /** @description 菜品摘要；仅 targetType=food 时有值。 字段必返，值可为 null。 */
+            food: components["schemas"]["BrowseHistoryFoodDTOResponse"] | null;
+        } & ({
+            /**
+             * @description 浏览对象类型分支。
+             * @constant
+             */
+            targetType?: "restaurant";
+            /** @description 此类型的对象摘要，非 null。 */
             restaurant?: components["schemas"]["BrowseHistoryRestaurantDTOResponse"];
+            /** @description 另一类型的摘要键保留，值为 null。 */
+            food?: null;
+        } | {
+            /**
+             * @description 浏览对象类型分支。
+             * @constant
+             */
+            targetType?: "food";
+            /** @description 此类型的对象摘要，非 null。 */
             food?: components["schemas"]["BrowseHistoryFoodDTOResponse"];
+            /** @description 另一类型的摘要键保留，值为 null。 */
+            restaurant?: null;
+        });
+        BrowseHistoryQueryDTORequest: {
+            targetType: string;
+            page?: number;
+            pageSize?: number;
         };
         BrowseHistoryRestaurantDTOResponse: {
-            /** Format: int64 */
-            id?: number;
-            name?: string;
-            pictureUrl?: string[];
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+            /** @description 图片读取 URL 列表，可直接展示；可能含临时签名，失效后重新请求列表或详情获取。 字段必返，值非 null。 */
+            pictureUrl: string[];
         };
         CampusResponse: {
-            /** Format: int64 */
-            id?: number;
-            name?: string;
-            gcjLng?: number;
-            gcjLat?: number;
-            isDefault?: boolean;
-            open?: boolean;
-            sort?: number;
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+            /** @description GCJ-02（火星坐标系）经度，单位为度；地图展示使用此坐标系。 字段必返，值非 null。 */
+            gcjLng: number;
+            /** @description GCJ-02（火星坐标系）纬度，单位为度；地图展示使用此坐标系。 字段必返，值非 null。 */
+            gcjLat: number;
+            /** @description 是否为默认校区；无定位时选它，无校区归属的商圈和无商圈归属的餐厅也归入它。 字段必返，值非 null。 */
+            isDefault: boolean;
+            /** @description 校区是否已开放；/campus/list 只返回已开放校区。 字段必返，值非 null。 */
+            open: boolean;
+            /** @description 校区展示排序值，值越小越靠前；相同时按 ID 排序。 字段必返，值非 null。 */
+            sort: number;
+        };
+        CancellationRequest: {
+            /** Format: uuid */
+            credentialOperation?: string;
         };
         CandidateVersionRequest: {
             /** Format: uuid */
@@ -2761,17 +5077,156 @@ export interface components {
             contentHash?: string;
         };
         CandidateViewResponse: {
-            /** Format: uuid */
-            gid?: string;
-            /** Format: int64 */
+            /**
+             * Format: uuid
+             * @description 候选对象的跨站全局 UUID；选择保留此对象时用作 winnerGid。 字段必返，值非 null。
+             */
+            gid: string;
+            /**
+             * Format: int64
+             * @description 对象的数值业务 ID，用于普通业务接口；与全局 UUID 分开。 字段必返，值非 null。
+             */
             numericId: number;
-            sourceSite?: string;
-            /** Format: int64 */
+            /** @description 产生此候选版本的站点标识。 字段必返，值非 null。 */
+            sourceSite: string;
+            /**
+             * Format: int64
+             * @description 候选对象版本号；裁决时连同 gid、contentHash 原样提交。 字段必返，值非 null。
+             */
             revision: number;
-            contentHash?: string;
-            summary?: {
-                [key: string]: unknown;
+            /** @description 候选版本内容的摘要；裁决时与 revision 一起原样提交，用于检测候选版本变化。 字段必返，值非 null。 */
+            contentHash: string;
+            /** @description 候选对象的展示摘要；当前包含 name（名称），用于人工区分候选，不是完整业务对象。 字段必返，值非 null。 */
+            summary: {
+                /** @description 候选对象名称；历史记录没有名称时为 null。 */
+                name: string | null;
             };
+        };
+        CardResponse: {
+            /**
+             * Format: uuid
+             * @description 通知卡片 UUID，标记已读时作为路径参数。 字段必返，值非 null。
+             */
+            id: string;
+            /**
+             * @description 卡片所属栏目：ALL、COMMENTS、LIKES_AND_FAVORITES、FOLLOWS、SYSTEM；INTERACTION 只用于查询筛选。 字段必返，值非 null。
+             * @enum {string}
+             */
+            column: "ALL" | "COMMENTS" | "LIKES_AND_FAVORITES" | "FOLLOWS" | "SYSTEM" | "INTERACTION";
+            /** @description 卡片类型，如 like、favorite、follow、tag、topic_included、moderation_result。 字段必返，值非 null。 */
+            kind: string;
+            /** @description 卡片聚合的对象。 字段必返，值非 null。 */
+            target: components["schemas"]["TargetResponse"];
+            /**
+             * Format: date
+             * @description 卡片所属日期（东八区自然日）。 字段必返，值非 null。
+             */
+            day: string;
+            /**
+             * Format: int64
+             * @description 卡片内聚合的通知条数。 字段必返，值非 null。
+             */
+            memberCount: number;
+            /**
+             * Format: int64
+             * @description 卡片内未读通知条数。 字段必返，值非 null。
+             */
+            unreadMemberCount: number;
+            /**
+             * Format: int64
+             * @description 卡片内最近一条通知的时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            latestAt: number;
+            /** @description 最近的至多 3 位触发者预览，系统通知为空列表。 字段必返，值非 null。 */
+            actors: components["schemas"]["ActorResponse"][];
+            /** @description 卡片的展示数据，随 kind 带不同的类型化详情。 字段必返，值非 null。 */
+            data: components["schemas"]["DataResponse"];
+        };
+        CaseDetailResponse: {
+            /**
+             * Format: int64
+             * @description 处理案件数值 ID，可用于 GET /feedback/mine/{id}。 字段必返，值非 null。
+             */
+            caseId: number;
+            /** @description 处理结论：ACCEPTED 采纳或已核实、REJECTED 驳回或未发现问题、RESOLVED 已处理（仅意见反馈）。 字段必返，值非 null。 */
+            outcome: string;
+            /** @description 案件提交时选择的原因码：店铺信息有误为 WRONG_NAME、WRONG_LOCATION、CLOSED、DUPLICATE、OTHER，举报为 NOT_REAL_PHOTO、ADVERTISING、ILLEGAL_OR_UNFRIENDLY、OTHER；意见反馈没有原因码，为 null。 字段必返，值可为 null。 */
+            reasonCode: string | null;
+            /** @description 案件类型：FEEDBACK 意见反馈、CATALOG_ERROR 店铺信息有误、REPORT 举报。 字段必返，值非 null。 */
+            kind: string;
+            /** @description 运营给提交人的公开回复；没有回复时为空字符串。 字段必返，值非 null。 */
+            reply: string;
+            /**
+             * @description 详情类型，固定为 case_result。 字段必返，值非 null。 (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            type: "case_result";
+        };
+        CaseTargetResponse: {
+            /**
+             * @description 关联对象类型：FOOD 菜、RESTAURANT 店、COMMENT 评论、USER 用户。 字段必返，值非 null。
+             * @enum {string}
+             */
+            type: "FOOD" | "RESTAURANT" | "COMMENT" | "USER";
+            /**
+             * Format: int64
+             * @description 关联对象数值 ID。 字段必返，值非 null。
+             */
+            id: number;
+        };
+        CaseViewResponse: {
+            /**
+             * Format: int64
+             * @description 案件数值 ID。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * Format: uuid
+             * @description 案件全局 UUID。 字段必返，值非 null。
+             */
+            gid: string;
+            /**
+             * @description 案件类型：FEEDBACK 意见反馈、CATALOG_ERROR 店铺信息有误、REPORT 举报。 字段必返，值非 null。
+             * @enum {string}
+             */
+            kind: "FEEDBACK" | "CATALOG_ERROR" | "REPORT";
+            /**
+             * @description 案件状态：OPEN 待处理、CLOSED 已处理。 字段必返，值非 null。
+             * @enum {string}
+             */
+            status: "OPEN" | "CLOSED";
+            /** @description 关联对象；意见反馈未关联菜或店时为 null。 字段必返，值可为 null。 */
+            target: components["schemas"]["CaseTargetResponse"] | null;
+            /** @description 提交时选择的原因码：店铺信息有误为 WRONG_NAME、WRONG_LOCATION、CLOSED、DUPLICATE、OTHER，举报为 NOT_REAL_PHOTO、ADVERTISING、ILLEGAL_OR_UNFRIENDLY、OTHER；意见反馈为 null。 字段必返，值可为 null。 */
+            reason: string | null;
+            /** @description 提交的文字内容：意见反馈为反馈正文，其他类型为补充说明，没有补充时为空字符串。 字段必返，值非 null。 */
+            text: string;
+            /** @description 附带的截图，仅意见反馈可能有，最多 3 张；没有时为空数组。 字段必返，值非 null。 */
+            screenshots: components["schemas"]["ScreenshotResponse"][];
+            /**
+             * @description 处理结论：ACCEPTED 采纳或已核实、REJECTED 驳回或未发现问题、RESOLVED 已处理（仅意见反馈）；未处理时为 null。 字段必返，值可为 null。
+             * @enum {string|null}
+             */
+            outcome: "ACCEPTED" | "REJECTED" | "RESOLVED" | null;
+            /** @description 运营给提交人的公开回复；未处理或没有回复时为空字符串。 字段必返，值非 null。 */
+            reply: string;
+            /**
+             * Format: int64
+             * @description 提交时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            createdAt: number;
+            /**
+             * Format: int64
+             * @description 处理时间，Unix 毫秒时间戳；未处理时为 null。 字段必返，值可为 null。
+             */
+            closedAt: number | null;
+        };
+        CatalogErrorInputRequest: {
+            /** Format: int64 */
+            restaurantId?: number;
+            /** @enum {string} */
+            errorType?: "WRONG_NAME" | "WRONG_LOCATION" | "CLOSED" | "DUPLICATE" | "OTHER";
+            note?: string;
         };
         CatalogHubImportRequestRequest: {
             sourceKey?: string;
@@ -2781,78 +5236,299 @@ export interface components {
             hubs?: components["schemas"]["HubItemRequest"][];
         };
         CatalogImportResultResponse: {
-            /** Format: uuid */
-            batchId?: string;
-            /** @enum {string} */
-            status?: "APPLIED" | "REPLAYED" | "CONFLICT" | "BLOCKED";
+            /**
+             * Format: uuid
+             * @description 目录导入批次 UUID。 字段必返，值非 null。
+             */
+            batchId: string;
+            /**
+             * @description 导入结果：APPLIED 已应用、REPLAYED 同一请求的幂等重放、CONFLICT 有冲突、BLOCKED 当前条件不允许。 字段必返，值非 null。
+             * @enum {string}
+             */
+            status: "APPLIED" | "REPLAYED" | "CONFLICT" | "BLOCKED";
+            /** @description 本批次新建的目录对象数量。 字段必返，值非 null。 */
             created: number;
+            /** @description 本批次更新的目录对象数量。 字段必返，值非 null。 */
             updated: number;
         };
-        CompleteUploadRequestRequest: {
-            key: string;
+        ChallengeResponse: {
+            /**
+             * Format: uuid
+             * @description 验证码挑战 UUID。 字段必返，值非 null。
+             */
+            challengeId: string;
+            /**
+             * Format: date-time
+             * @description 验证码过期时间（ISO 8601）。 字段必返，值非 null。
+             */
+            expiresAt: string;
+            /** @description 是否已发出验证码；重复请求返回已有挑战时不会重新发送。 字段必返，值非 null。 */
+            attempted: boolean;
         };
         ChangePwdDTORequest: {
             oldPassword: string;
             newPassword: string;
         };
         CityDTOResponse: {
-            id?: number;
-            provinceId?: number;
-            name?: string;
+            /** @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。 */
+            id: number;
+            /** @description 省份 ID，对应省份字典接口。 字段必返，值非 null。 */
+            provinceId: number;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+        };
+        ClearBrowseHistoryDTORequest: {
+            targetType?: string;
+        };
+        ClientAnnouncementResponse: {
+            /**
+             * Format: int64
+             * @description 公告数值 ID，客户端可据此记录已关闭的公告；删除后 ID 不复用。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * @description 公告级别：NORMAL 普通、IMPORTANT 重要。 字段必返，值非 null。
+             * @enum {string}
+             */
+            level: "NORMAL" | "IMPORTANT";
+            /** @description 公告标题；未填写时为 null。 字段必返，值可为 null。 */
+            title: string | null;
+            /** @description 公告正文。 字段必返，值非 null。 */
+            content: string;
+            /** @description 公告链接，HTTPS 地址或站内绝对路径；未填写时为 null。 字段必返，值可为 null。 */
+            linkUrl: string | null;
+            /**
+             * Format: date-time
+             * @description 开始展示时间（ISO 8601）；不限开始时间时为 null。 字段必返，值可为 null。
+             */
+            startsAt: string | null;
+            /**
+             * Format: date-time
+             * @description 结束展示时间（ISO 8601）；不限结束时间时为 null。 字段必返，值可为 null。
+             */
+            endsAt: string | null;
+        };
+        ClientConfigResponse: {
+            /**
+             * Format: int64
+             * @description 配置总版本号，任意远程配置修改都会递增；可用于判断本地缓存是否过期。 字段必返，值非 null。
+             */
+            configVersion: number;
+            /** @description 功能开关，键为 publish、newShop、comment、push、topic，始终全部返回；未配置的开关默认开启。 字段必返，值非 null。 */
+            flags: {
+                [key: string]: components["schemas"]["FlagResponse"];
+            };
+            /** @description 运营参数对象，只包含已配置的已知键：mealWindows 饭点窗口、batchSize、shopRateMinVotes、backgroundPollIntervalMinutes、backgroundPollDurationMinutes、distanceHideKm、categoryOrder；未配置的键不返回，客户端使用内置默认值。 字段必返，值非 null。 */
+            params: Record<string, never>;
+            /** @description 当前生效且匹配请求 platform、build、campusId 的公告，重要公告在前、新的在前，最多 20 条。 字段必返，值非 null。 */
+            announcements: components["schemas"]["ClientAnnouncementResponse"][];
+            /** @description 维护状态。 字段必返，值非 null。 */
+            maintenance: components["schemas"]["MaintenanceResponse"];
+            /** @description 各平台版本线，键为 android、ios、web，始终全部返回。 字段必返，值非 null。 */
+            versions: {
+                [key: string]: components["schemas"]["VersionLineResponse"];
+            };
+            /** @description 更新判定；仅请求同时带 platform 与 build 时返回，否则为 null。 字段必返，值可为 null。 */
+            update: components["schemas"]["UpdateCheckResponse"] | null;
+        };
+        CommandRequest: {
+            /** Format: uuid */
+            commandId: string;
+            /** @enum {string} */
+            operation: "SAVE" | "PUBLISH" | "WITHDRAW";
+            edit: components["schemas"]["EditRequest"];
+        };
+        CommentDetailResponse: {
+            /**
+             * Format: int64
+             * @description 被评论的菜品数值 ID。 字段必返，值可为 null。
+             */
+            foodId: number | null;
+            /**
+             * Format: int64
+             * @description 评论数值 ID。 字段必返，值可为 null。
+             */
+            commentId: number | null;
+            /**
+             * Format: int64
+             * @description 回复数值 ID；评论本身触发的通知为 null。 字段必返，值可为 null。
+             */
+            replyId: number | null;
+            /** @description 评论或菜品是否已不可见。 字段必返，值非 null。 */
+            unavailable: boolean;
+            /**
+             * @description 详情类型，固定为 comment。 字段必返，值非 null。 (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            type: "comment";
+        };
+        CommitRequest: {
+            oldCode?: string;
+            password?: string;
+            newCode: string;
+            recoveryCapability: string;
+        };
+        CommittedResponse: {
+            /**
+             * Format: uuid
+             * @description 换绑手机号命令 UUID。 字段必返，值非 null。
+             */
+            commandId: string;
+            /** @description 凭据变更状态：APPLIED 已生效、PENDING 等待跨站同步。 字段必返，值非 null。 */
+            credentialPropagation: string;
+            /** @description 当前设备会话状态：READY 已换发新会话、PENDING 换发中、REAUTHENTICATION_REQUIRED 需要重新登录。 字段必返，值非 null。 */
+            currentDevice: string;
+            /** @description 换发的新会话；仅提交请求同步换发成功时返回，其余情况为 null，需调用恢复接口。 字段必返，值可为 null。 */
+            replacement: components["schemas"]["OutcomeResponse"] | null;
+        };
+        CompleteUploadRequestRequest: {
+            key: string;
         };
         CompletedFileResponse: {
-            key?: string;
-            /** Format: uuid */
-            fileId?: string;
+            /** @description 已确认上传完成的持久化文件引用，用于写入头像或业务图片字段。 字段必返，值非 null。 */
+            key: string;
+            /**
+             * Format: uuid
+             * @description 文件对象的全局 UUID；与业务图片字段使用的 key 不同。 字段必返，值非 null。
+             */
+            fileId: string;
+            /** @description 该文件对象的不可变内容版本号。 字段必返，值非 null。 */
             revision: number;
-            sha256?: string;
-            /** Format: int64 */
+            /** @description 文件内容的 SHA-256 摘要，用于完整性校验。 字段必返，值非 null。 */
+            sha256: string;
+            /**
+             * Format: int64
+             * @description 文件大小，单位字节。 字段必返，值非 null。
+             */
             size: number;
-            contentType?: string;
+            /** @description 文件的 MIME 类型，如 image/jpeg。 字段必返，值非 null。 */
+            contentType: string;
         };
         ConflictResponse: {
-            /** Format: uuid */
-            conflictId?: string;
-            /** Format: uuid */
-            subjectId?: string;
-            fieldGroup?: string;
-            /** Format: int64 */
+            /**
+             * Format: uuid
+             * @description 冲突记录 UUID，用于查询或提交冲突裁决。 字段必返，值非 null。
+             */
+            conflictId: string;
+            /**
+             * Format: uuid
+             * @description 账号主体的跨站全局 UUID，与数值账号 ID 不同。 字段必返，值非 null。
+             */
+            subjectId: string;
+            /** @description 发生冲突的用户资料字段组；heads 中的 value 是该组的候选值。 字段必返，值非 null。 */
+            fieldGroup: string;
+            /**
+             * Format: int64
+             * @description 资料冲突记录修订号；裁决时作为 expectedRevision 原样提交。 字段必返，值非 null。
+             */
             revision: number;
-            heads?: {
-                [key: string]: unknown;
+            /** @description 并发资料候选列表：每项 id 是候选 UUID（裁决时的 selectedHeadId），value 是候选字段值，vector 是站点标识到逻辑计数的版本向量，用于判断因果先后。 字段必返，值非 null。 */
+            heads: {
+                /**
+                 * Format: uuid
+                 * @description 候选版本 UUID，裁决时作为 selectedHeadId。
+                 */
+                id: string;
+                /** @description 该 fieldGroup 的候选 JSON 值，可为 null；结构随资料字段组变化。 */
+                value: unknown;
+                /** @description 站点标识到逻辑计数的版本向量。 */
+                vector: {
+                    [key: string]: number;
+                };
             }[];
+        };
+        ConflictViewResponse: {
+            /**
+             * Format: uuid
+             * @description 冲突记录 UUID，用于查询或提交冲突裁决。 字段必返，值非 null。
+             */
+            conflictId: string;
+            /**
+             * @description 目录对象类型，取值见 enum，例如 HUB（商圈）、RESTAURANT（餐厅）、FOOD（菜品）。 字段必返，值非 null。
+             * @enum {string}
+             */
+            kind: "HUB" | "RESTAURANT" | "FOOD" | "SYSTEM_TAG" | "CUSTOM_TAG" | "ACTIVITY";
+            /** @description 规范化的业务自然键，用于识别可能重复的目录对象；不是数值 ID。 字段必返，值非 null。 */
+            naturalKey: string;
+            /** @description 业务自然键的摘要，用于标识同一组自然键冲突。 字段必返，值非 null。 */
+            naturalKeyHash: string;
+            /**
+             * Format: int64
+             * @description 冲突记录修订号；裁决时作为 expectedRevision 原样提交，版本变化后需重新读取。 字段必返，值非 null。
+             */
+            revision: number;
+            /** @description 自然键冲突处理状态，如 OPEN（待处理）、RESOLVED（已解决）、REJECTED（已拒绝）。 字段必返，值非 null。 */
+            status: string;
+            /** @description 发生同一自然键冲突的候选对象列表。 字段必返，值非 null。 */
+            candidates: components["schemas"]["CandidateViewResponse"][];
+        };
+        ConsentPolicySettingsVOResponse: {
+            /** @description 当前生效的授权政策版本号；更改版本后，旧同意不会自动升级。 字段必返，值非 null。 */
+            version: string;
+            /**
+             * Format: uri-reference
+             * @description 完整授权说明的 HTTPS URL 或站内绝对路径；未配置过文档的初始旧政策可为 null。 字段必返，值可为 null。
+             */
+            url: string | null;
+            /**
+             * Format: int64
+             * @description 配置修订号；修改时原样填入 expectedRevision，防止覆盖其他管理员的更新。 字段必返，值非 null。
+             */
+            revision: number;
+        };
+        ConsentPolicyVOResponse: {
+            /** @description 当前跨站同步授权政策的版本号；提交同意时写入请求的 policyVersion 或 consentPolicyVersion。 字段必返，值非 null。 */
+            version: string;
+            /**
+             * Format: uri-reference
+             * @description 管理员配置的完整授权说明地址，可为 HTTPS URL 或相对于当前站点域名的绝对路径；初始旧政策未提供文档时为 null。 字段必返，值可为 null。
+             */
+            url: string | null;
+        };
+        ConsentResponse: {
+            /** @description 当前账号是否开启本地使用统计；与跨站同步同意相互独立。 字段必返，值非 null。 */
+            enabled: boolean;
+            /** @description 统计政策版本；当前固定为 analytics-minimal-20261030。 字段必返，值非 null。 */
+            policyVersion: string;
+            /**
+             * Format: int64
+             * @description 同意记录的修订号，未设置过时为 0；更新和关闭时作为 expectedRevision 提交。 字段必返，值非 null。
+             */
+            revision: number;
+            /** @description 统计事件的保留天数。 字段必返，值非 null。 */
+            retentionDays: number;
+        };
+        /**
+         * @description GET /auth/consent 的三字段状态查询，校内与新加坡共用；identityReady/GRANTED 不代表已取得 token。2026-10-26 已双站发布。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** 2026-10-26 已双站发布：GET /auth/consent 的成功 data 仅 status、identityReady、policyVersion，三者均必返且非 null；校内和新加坡共用。授权/撤回及登录进度保留六字段。精确运行包序列化/接口测试、两站字节摘要和匿名登录门槛均通过，生产未创建测试账号或改真实用户授权。
+         */
+        ConsentStatusViewResponse: {
+            /** @description 跨站同意状态：NOT_GRANTED 未同意、PROVISIONAL 临时受理待协调、GRANTED 已同意、WITHDRAWN 已撤回、CONFLICT 身份或授权存在冲突；GRANTED 本身不代表已取得登录令牌。 字段必返，值非 null。 */
+            status: string;
+            /** @description 当前站点的账号身份投影是否就绪；true 不代表所有业务数据已同步或已登录。 字段必返，值非 null。 */
+            identityReady: boolean;
+            /** @description 当前同意记录对应的政策版本；没有同意记录时返回当前生效的政策版本。 字段必返，值非 null。 */
+            policyVersion: string;
+        };
+        /** @description 授权进度，不是登录会话。identityReady/registrationAccepted/GRANTED均不代表已取得token。参见 frontend-contract.md 状态表。 */
+        ConsentViewResponse: {
+            /** @description 跨站同意状态：NOT_GRANTED 未同意、PROVISIONAL 临时受理待协调、GRANTED 已同意、WITHDRAWN 已撤回、CONFLICT 身份或授权存在冲突；GRANTED 本身不代表已取得登录令牌。 字段必返，值非 null。 */
+            status: string;
+            /** @description 跨站同步同意政策的版本号；提交同意时须使用当前政策版本。 字段必返，值非 null。 */
+            policyVersion: string;
+            /** @description 当前站点的账号身份投影是否就绪；true 不代表所有业务数据已同步或已登录。 字段必返，值非 null。 */
+            identityReady: boolean;
+            /** @description 历史数据补同步进度，如 NOT_STARTED 未开始、ACCOUNT_PENDING 账号待同步、ACCOUNT_COMPLETE_DOMAINS_PENDING 账号完成但业务域待同步、CONFLICT 有冲突。 字段必返，值非 null。 */
+            backfillStatus: string;
+            /** @description 撤回后的清理进度，如 NOT_REQUIRED 无需清理、ACCOUNT_CLEARED_EFFECTS_PENDING 账号已清理但后续处理待完成；不等同于所有副本已物理删除。 字段必返，值非 null。 */
+            cleanupStatus: string;
+            /** @description 本次注册请求是否已受理；true 不代表已登录或同步完成。 字段必返，值非 null。 */
+            registrationAccepted: boolean;
         };
         CoordinateRequest: {
             lng: number;
             lat: number;
-        };
-        ConflictViewResponse: {
-            /** Format: uuid */
-            conflictId?: string;
-            /** @enum {string} */
-            kind?: "HUB" | "RESTAURANT" | "FOOD" | "SYSTEM_TAG" | "CUSTOM_TAG";
-            naturalKey?: string;
-            naturalKeyHash?: string;
-            /** Format: int64 */
-            revision: number;
-            status?: string;
-            candidates?: components["schemas"]["CandidateViewResponse"][];
-        };
-        /** @description 授权进度，不是登录会话。identityReady/registrationAccepted/GRANTED均不代表已取得token。参见 frontend-contract.md 状态表。 */
-        ConsentViewResponse: {
-            status?: string;
-            policyVersion?: string;
-            /** Format: int64 */
-            epoch: number;
-            /** Format: int64 */
-            revision: number;
-            identityReady: boolean;
-            backfillStatus?: string;
-            cleanupStatus?: string;
-            registrationAccepted: boolean;
-        };
-        CreateSystemFoodTagDTORequest: {
-            name: string;
         };
         CoverCropDTORequest: {
             centerX: number;
@@ -2860,26 +5536,36 @@ export interface components {
             diameter: number;
         };
         CoverCropDTOResponse: {
+            /** @description 裁切圆心横坐标，占原图宽度的比例，范围 0–1，0 为左边、1 为右边。 字段必返，值非 null。 */
             centerX: number;
+            /** @description 裁切圆心纵坐标，占原图高度的比例，范围 0–1，0 为上边、1 为下边。 字段必返，值非 null。 */
             centerY: number;
+            /** @description 裁切圆直径，占原图短边的比例，范围 (0,1]；不是像素值。 字段必返，值非 null。 */
             diameter: number;
         };
-        CreateActivityDinnerDTORequest: {
-            description?: string;
-            pictureUrl: string[];
-        };
-        CreateActivityFoodDTORequest: {
-            foodName: string;
+        CreateActivityPostDTORequest: {
+            title?: string;
             description?: string;
             provinceId?: number;
             cityId?: number;
             pictureUrl: string[];
+            extra?: {
+                [key: string]: unknown;
+            };
         };
+        /**
+         * @description 新发布使用当前产品限制：价格/分类、至少一个饭点、舞台色/两个备色/裁切必填；舞台色与两个备色互不相同。文字长度按各字段描述的 Unicode code point 和空白规范规则计算。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** mealTimes、stageColor、stageAlternates、coverCrop、removeBackground 已随 V72 在两站部署；removeBackground 只保存开关，自动图像去背景尚未实现。本次列表为空，字段部署依据为运行包模型及数据库结构。
+         */
         CreateFoodDTORequest: {
             /** Format: int64 */
             restaurantId: number;
+            /** @description 按 Unicode code point 计数，先 strip 首尾空白，有效长度 1–12；不按 UTF-16 code unit 或字节计数 */
             name: string;
+            /** @description 按 Unicode code point 计数，有效长度 0–300；不按 UTF-16 code unit 或字节计数 */
             description?: string;
+            /** @description 价格 0–999，数值最多一位有效小数；1.00 等数值等价形式可接受 */
             price?: number;
             /** @enum {string} */
             category?: "staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other";
@@ -2891,135 +5577,461 @@ export interface components {
             stageColor?: "broth" | "chili" | "mango" | "porcelain" | "bamboo" | "redoil" | "soy" | "matcha" | "tomato";
             stageAlternates?: ("broth" | "chili" | "mango" | "porcelain" | "bamboo" | "redoil" | "soy" | "matcha" | "tomato")[];
             coverCrop?: components["schemas"]["CoverCropDTORequest"];
-            removeBackground?: boolean;
+        };
+        CreateSystemFoodTagDTORequest: {
+            name: string;
         };
         CreatedResourceVOResponse: {
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
             id: number;
+            /** @description 提交后的审核状态；仅走原生审核提交的菜品、餐厅返回（如 PENDING 待审核），其他创建路径为 null。 字段必返，值可为 null。 */
+            moderationStatus: string | null;
+            /**
+             * Format: uuid
+             * @description 本次提交的私有修订 UUID，可用于查询本人提交详情；仅原生审核提交返回，其他创建路径为 null。 字段必返，值可为 null。
+             */
+            revisionId: string | null;
+        };
+        DataResponse: {
+            /** @description 展示数据结构的版本号，当前为 1。 字段必返，值非 null。 */
+            schema: number;
+            /** @description 卡片类型，与外层 kind 一致。 字段必返，值非 null。 */
+            kind: string;
+            /** @description 卡片聚合的对象，与外层 target 一致。 字段必返，值非 null。 */
+            target: components["schemas"]["TargetResponse"];
+            /**
+             * Format: date
+             * @description 卡片所属日期，与外层 day 一致。 字段必返，值非 null。
+             */
+            day: string;
+            /**
+             * Format: int64
+             * @description 卡片内聚合的通知条数，与外层 memberCount 一致。 字段必返，值非 null。
+             */
+            memberCount: number;
+            /** @description 按 type 区分的类型化详情；没有对应详情来源的卡片为 null。 字段必返，值可为 null。 */
+            detail: (components["schemas"]["TopicIncludedDetailResponse"] | components["schemas"]["ModerationDetailResponse"] | components["schemas"]["CommentDetailResponse"] | components["schemas"]["CaseDetailResponse"]) | null;
         };
         DecisionRequest: {
             approved: boolean;
         };
         DecisionViewResponse: {
-            /** Format: uuid */
-            conflictId?: string;
-            /** @enum {string} */
-            kind?: "HUB" | "RESTAURANT" | "FOOD" | "SYSTEM_TAG" | "CUSTOM_TAG";
-            /** Format: uuid */
-            objectGid?: string;
-            status?: string;
-            decisionHeads?: string[];
-            candidateOperations?: string[];
-            /** Format: uuid */
-            winnerOperationId?: string;
+            /**
+             * Format: uuid
+             * @description 冲突记录 UUID，用于查询或提交冲突裁决。 字段必返，值非 null。
+             */
+            conflictId: string;
+            /**
+             * @description 目录对象类型，取值见 enum，例如 HUB（商圈）、RESTAURANT（餐厅）、FOOD（菜品）。 字段必返，值非 null。
+             * @enum {string}
+             */
+            kind: "HUB" | "RESTAURANT" | "FOOD" | "SYSTEM_TAG" | "CUSTOM_TAG" | "ACTIVITY";
+            /**
+             * Format: uuid
+             * @description 单对象版本冲突对应的全局 UUID；自然键冲突时可为 null。 字段必返，值可为 null。
+             */
+            objectGid: string | null;
+            /** @description 裁决状态：OPEN 待处理、RESOLVED 已解决、REJECTED 已拒绝、CONFLICT 裁决本身有并发冲突、AUTH_REVIEW 需授权复核。 字段必返，值非 null。 */
+            status: string;
+            /** @description 当前并发裁决操作的 UUID 列表；提交下一次裁决时原样携带，防止覆盖未观察到的裁决。 字段必返，值非 null。 */
+            decisionHeads: string[];
+            /** @description 当前参与裁决的候选对象操作 UUID 列表；提交裁决时原样携带。 字段必返，值非 null。 */
+            candidateOperations: string[];
+            /**
+             * Format: uuid
+             * @description 最终保留的候选操作 UUID；尚未确定保留版本时可为 null。 字段必返，值可为 null。
+             */
+            winnerOperationId: string | null;
         };
+        DetailResponse: {
+            /** @description 专题摘要，visibleFoodCount 与 foods 的长度一致。 字段必返，值非 null。 */
+            topic: components["schemas"]["SummaryResponse"];
+            /** @description 专题内的可见菜品卡片，按专题排序。 字段必返，值非 null。 */
+            foods: components["schemas"]["FoodResponse"][];
+        };
+        DeviceSessionPageResponse: {
+            /** @description 当前账号的有效设备会话，按创建时间倒序。 字段必返，值非 null。 */
+            devices: components["schemas"]["DeviceSessionResponse"][];
+            /**
+             * Format: uuid
+             * @description 下一页游标（最后一项的 sessionId）；没有更多时为 null。 字段必返，值可为 null。
+             */
+            nextCursor: string | null;
+        };
+        DeviceSessionRecoveryStatusResponse: {
+            /**
+             * Format: uuid
+             * @description 批量下线命令 UUID。 字段必返，值非 null。
+             */
+            commandId: string;
+            /**
+             * @description 当前设备恢复状态：PENDING、READY、EXPIRED、REAUTHENTICATION_REQUIRED。 字段必返，值非 null。
+             * @enum {string}
+             */
+            currentDevice: "PENDING" | "READY" | "EXPIRED" | "REAUTHENTICATION_REQUIRED";
+            /** @description 其他设备下线的传播状态；当前固定为 PENDING。 字段必返，值非 null。 */
+            propagation: string;
+        };
+        DeviceSessionResponse: {
+            /**
+             * Format: uuid
+             * @description 设备会话 UUID，用于下线单个设备。 字段必返，值非 null。
+             */
+            sessionId: string;
+            /** @description 设备类型：WEB、IOS、ANDROID、UNKNOWN。 字段必返，值非 null。 */
+            device: string;
+            /**
+             * Format: date-time
+             * @description 会话签发时间（ISO 8601）；缺少活动记录时为 null。 字段必返，值可为 null。
+             */
+            issuedAt: string | null;
+            /**
+             * Format: date-time
+             * @description 最近使用时间（ISO 8601）；尚未记录时为 null。 字段必返，值可为 null。
+             */
+            lastSeenAt: string | null;
+            /**
+             * Format: date-time
+             * @description 会话过期时间（ISO 8601）。 字段必返，值非 null。
+             */
+            expiresAt: string;
+            /** @description 是否为发起本次请求的当前设备。 字段必返，值非 null。 */
+            current: boolean;
+        };
+        /**
+         * @description 局部更新：省略/null 保持原值；变化字段按以下产品约束验证，相同历史值回显不强制清洗。不能把这些条件规则当无条件 maxLength/maximum。
+         *
+         *     **部署状态（2026-10-30）：两站已部署。** mealTimes、stageColor、stageAlternates、coverCrop、removeBackground 已随 V72 在两站部署；removeBackground 只保存开关，自动图像去背景尚未实现。本次列表为空，字段部署依据为运行包模型及数据库结构。
+         */
         EditFoodDTORequest: {
             /** Format: int64 */
             restaurantId?: number;
+            /** @description 变化后的菜名先 strip，再按 Unicode code point 校验 1–12；相同历史名称原样/strip 后相同回显可保留 */
             name?: string;
+            /** @description 变化后的说明最多 300 个 Unicode code point；相同历史超长值回显可保留，空串可清空 */
             description?: string;
+            /** @description 变化价格必须 0–999、最多一位有效小数；与历史价格数值相同（compareTo=0）的回显可保留，不对历史 echo 施加新价格上限 */
             price?: number;
             /** @enum {string} */
             category?: "staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other";
+            /** @description 变化图片需 1–9 张；相同历史引用数组回显可保留；旧非 foods/ 引用应省略字段保留，替换须有效 foods key */
             pictureUrl?: string[];
+            /** @description 变化饭点需 1–4 个；相同历史空数组回显可保留 */
             mealTimes?: ("breakfast" | "lunch" | "dinner" | "night")[];
-            /** @enum {string} */
+            /**
+             * @description 舞台色或备色变化时两者完整提交、备色恰好两个且三者不同；相同历史调色板回显可保留
+             * @enum {string}
+             */
             stageColor?: "broth" | "chili" | "mango" | "porcelain" | "bamboo" | "redoil" | "soy" | "matcha" | "tomato";
+            /** @description 舞台色或备色变化时两者完整提交、备色恰好两个且三者不同；相同历史调色板回显可保留 */
             stageAlternates?: ("broth" | "chili" | "mango" | "porcelain" | "bamboo" | "redoil" | "soy" | "matcha" | "tomato")[];
             coverCrop?: components["schemas"]["CoverCropDTORequest"];
-            removeBackground?: boolean;
         };
+        EditRequest: {
+            /** Format: uuid */
+            topicId: string;
+            /** Format: int64 */
+            expectedRevision: number;
+            /** Format: int64 */
+            campusId: number;
+            name: string;
+            introduction: string;
+            /** Format: date-time */
+            startsAt: string;
+            /** Format: date-time */
+            endsAt: string;
+            foodIds: number[];
+            /** Format: int64 */
+            coverFoodId?: number;
+        };
+        /** @description 局部更新：省略/null 保持原值；变化字段按以下产品约束验证，相同历史值回显不强制清洗。不能把这些条件规则当无条件 maxLength/maximum。 */
         EditRestaurantDTORequest: {
+            /** @description 变化店名先 strip，再按 Unicode code point 校验 1–20；相同历史值回显可保留 */
             name?: string;
+            /** @description 变化地址先 strip，再按 Unicode code point 校验 1–30；相同历史值回显可保留 */
             address?: string;
+            permanentlyClosed?: boolean;
             cityId?: number;
             gcjLng?: number;
             gcjLat?: number;
             /** Format: int64 */
             hubId?: number;
             POI?: string;
+            /** @description 变化门头图最多 1 张；相同历史多图数组回显可保留，不自动删图；替换须有效 restaurants key */
             pictureUrl?: string[];
         };
         /** @description 集群/授权拦截返回的非 200 响应；普通业务错误为 HTTP 200 + Result，见 200 响应。 */
         ErrorResponse: {
-            /** @description 字符串错误码，如 SITE_ENROLLMENT_REQUIRED */
+            /** @description 字符串错误码，如 SITE_ENROLLMENT_REQUIRED 字段必返，值非 null。 */
             code: string;
         };
+        EvidenceUrlResponse: {
+            /** @description 图片序号。 字段必返，值非 null。 */
+            slot: number;
+            /** @description 图片的临时读取地址，仅限本次审核查看，不得持久化。 字段必返，值非 null。 */
+            url: string;
+            /**
+             * Format: int64
+             * @description 读取地址的剩余有效秒数。 字段必返，值非 null。
+             */
+            expiresInSeconds: number;
+        };
         FansDTOResponse: {
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 用户的显示名称，可以中文、可以重复；不影响登录。 字段必返，值非 null。 */
+            displayName: string;
+            /** @description 头像读取地址，用于展示。 字段必返，值可为 null。 */
+            avatar: string | null;
+            /**
+             * Format: int64
+             * @description 关注关系建立时间，Unix 毫秒；不是用户注册时间。 字段必返，值非 null。
+             */
+            createdAt: number;
+        };
+        FeedbackAcceptedResponse: {
+            /**
+             * Format: int64
+             * @description 案件数值 ID。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * Format: uuid
+             * @description 案件全局 UUID。 字段必返，值非 null。
+             */
+            gid: string;
+            /**
+             * @description 案件类型：FEEDBACK 意见反馈、CATALOG_ERROR 店铺信息有误、REPORT 举报。 字段必返，值非 null。
+             * @enum {string}
+             */
+            kind: "FEEDBACK" | "CATALOG_ERROR" | "REPORT";
+            /**
+             * @description 案件状态：OPEN 待处理、CLOSED 已处理。 字段必返，值非 null。
+             * @enum {string}
+             */
+            status: "OPEN" | "CLOSED";
+            /** @description 是否为重复提交：同一 Idempotency-Key 的重放，或同一对象已有本人未处理的同类案件时为 true，此时返回已有案件。 字段必返，值非 null。 */
+            duplicate: boolean;
+            /**
+             * Format: int64
+             * @description 案件创建时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            createdAt: number;
+        };
+        FeedbackInputRequest: {
+            text?: string;
+            screenshotKeys?: string[];
+            context?: components["schemas"]["FeedbackTargetRequest"];
+        };
+        FeedbackTargetRequest: {
+            /** @enum {string} */
+            type?: "FOOD" | "RESTAURANT" | "COMMENT" | "USER";
             /** Format: int64 */
             id?: number;
-            userName?: string;
-            avatar?: string;
-            /** Format: int64 */
-            createdAt?: number;
+        };
+        FlagInputRequest: {
+            on: boolean;
+            reason?: string;
+        };
+        FlagResponse: {
+            /** @description 功能是否开启。 字段必返，值非 null。 */
+            on: boolean;
+            /** @description 关闭原因，供客户端展示；开启时或未填写原因时为 null。 字段必返，值可为 null。 */
+            reason: string | null;
         };
         FoodPreferencesDTORequest: {
             likedTags: string[];
             dislikedTags: string[];
         };
-        LoginDTORequest: {
-            username: string;
-            password: string;
-            /** @enum {string} */
-            device: "WEB" | "APP";
-        };
-        FoodSystemTagVOResponse: {
-            /** Format: int64 */
-            id?: number;
-            name?: string;
-            /** Format: int64 */
-            count?: number;
-            taggedByMe?: boolean;
-        };
-        FoodTagSummaryVOResponse: {
-            /** Format: int64 */
-            id?: number;
-            name?: string;
-        };
-        FoodTagViewVOResponse: {
-            systemTags?: components["schemas"]["FoodSystemTagVOResponse"][];
-            myCustomTags?: components["schemas"]["FoodTagSummaryVOResponse"][];
-        };
-        FoodVOResponse: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int64 */
-            accountId?: number;
-            uploaderName?: string;
+        FoodQueryDTORequest: {
+            gcjLng?: number;
+            gcjLat?: number;
             /** Format: int64 */
             restaurantId?: number;
-            restaurantName?: string;
-            restaurantAddress?: string;
-            restaurantGcjLng?: number;
-            restaurantGcjLat?: number;
+            /** Format: int64 */
+            uploaderId?: number;
             /** Format: int64 */
             hubId?: number;
-            hubName?: string;
-            name?: string;
-            description?: string;
-            price?: number;
+            keyword?: string;
             /** @enum {string} */
             category?: "staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other";
-            categoryLabel?: string;
-            /** @description 可直接显示的读取URL；可能为公开CDN或临时签名地址。失效后重新请求所属列表/详情获取新地址；不可作为写入key。 */
-            pictureUrl?: string[];
-            /** @description 持久化图片引用，用于编辑保留已有图片；pictureUrl只用于展示。历史非foods/引用应原样保留（不提交图片字段），或重新上传迁移。 */
-            pictureKeys?: string[];
-            systemTags?: components["schemas"]["FoodSystemTagVOResponse"][];
-            myCustomTags?: components["schemas"]["FoodTagSummaryVOResponse"][];
-            isLiked?: boolean;
-            isFavorite?: boolean;
-            likesCount?: number;
-            mealTimes?: ("breakfast" | "lunch" | "dinner" | "night")[];
+            minPrice?: number;
+            maxPrice?: number;
             /** @enum {string} */
-            stageColor?: "broth" | "chili" | "mango" | "porcelain" | "bamboo" | "redoil" | "soy" | "matcha" | "tomato";
-            stageAlternates?: ("broth" | "chili" | "mango" | "porcelain" | "bamboo" | "redoil" | "soy" | "matcha" | "tomato")[];
-            coverCrop?: components["schemas"]["CoverCropDTOResponse"];
-            removeBackground?: boolean;
-            /** Format: int64 */
-            createdAt?: number;
-            /** Format: int64 */
-            updatedAt?: number;
+            sort?: "NEWEST" | "PRICE_ASC" | "PRICE_DESC" | "POPULAR" | "FAVORITED_AT" | "DISTANCE";
+            page?: number;
+            pageSize?: number;
+            systemTagIds?: number[];
+            myCustomTagIds?: number[];
+            myCustomTagNames?: string[];
+        };
+        FoodResponse: {
+            /**
+             * Format: int64
+             * @description 菜品数值 ID。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * Format: uuid
+             * @description 菜品全局 UUID。 字段必返，值非 null。
+             */
+            gid: string;
+            /** @description 菜品名称。 字段必返，值非 null。 */
+            name: string;
+            /** @description 菜品介绍；未填写时为 null。 字段必返，值可为 null。 */
+            description: string | null;
+            /**
+             * Format: int64
+             * @description 所属餐厅数值 ID。 字段必返，值非 null。
+             */
+            restaurantId: number;
+            /** @description 所属餐厅名称。 字段必返，值非 null。 */
+            restaurantName: string;
+            /** @description 上传者展示昵称，匿名时为“匿名用户”。 字段必返，值非 null。 */
+            uploaderName: string;
+            /** @description 价格，单位元；未填写时为 null。 字段必返，值可为 null。 */
+            price: number | null;
+            /** @description 分类取值；未设置时为 null。 字段必返，值可为 null。 */
+            category: string | null;
+            /** @description 分类的中文名称；未设置分类时为 null。 字段必返，值可为 null。 */
+            categoryLabel: string | null;
+            /** @description 图片读取地址列表（临时签名地址），没有图片时为空列表。 字段必返，值非 null。 */
+            pictureUrl: string[];
+            /** @description 获赞数量。 字段必返，值非 null。 */
+            likesCount: number;
+            /** @description 适合的饭点列表，没有时为空列表。 字段必返，值非 null。 */
+            mealTimes: string[];
+            /** @description 舞台色，对应设计令牌 stage-<值>；未设置时为 null。 字段必返，值可为 null。 */
+            stageColor: string | null;
+            /** @description 两个备选舞台色；未设置时为空列表。 字段必返，值非 null。 */
+            stageAlternates: string[];
+            /** @description 封面圆形裁切中心 x，0 至 1；未设置时为 null。 字段必返，值可为 null。 */
+            coverCenterX: number | null;
+            /** @description 封面圆形裁切中心 y，0 至 1；未设置时为 null。 字段必返，值可为 null。 */
+            coverCenterY: number | null;
+            /** @description 封面圆形裁切直径，相对图片短边；未设置时为 null。 字段必返，值可为 null。 */
+            coverDiameter: number | null;
+            /** @description 菜品在专题中的排序位置。 字段必返，值非 null。 */
+            position: number;
+        };
+        FoodSystemTagVOResponse: {
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+            /**
+             * Format: int64
+             * @description 该系统标签在当前菜品上的标记人数，不是菜品数量。 字段必返，值非 null。
+             */
+            count: number;
+            /** @description 当前登录用户是否已给此菜品标记该系统标签；游客为 false。 字段必返，值非 null。 */
+            taggedByMe: boolean;
+        };
+        FoodTagSummaryVOResponse: {
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+        };
+        FoodTagViewVOResponse: {
+            /** @description 菜品的公共系统标签，包含标记人数和当前用户的标记状态。 字段必返，值非 null。 */
+            systemTags: components["schemas"]["FoodSystemTagVOResponse"][];
+            /** @description 仅当前登录用户可见的个人菜品标签；游客为空列表。 字段必返，值非 null。 */
+            myCustomTags: components["schemas"]["FoodTagSummaryVOResponse"][];
+        };
+        /** @description **部署状态（2026-10-30）：两站已部署。** mealTimes、stageColor、stageAlternates、coverCrop、removeBackground 已随 V72 在两站部署；removeBackground 只保存开关，自动图像去背景尚未实现。本次列表为空，字段部署依据为运行包模型及数据库结构。 */
+        FoodVOResponse: {
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * Format: int64
+             * @description 发布者的数值账号 ID；游客访问时不披露，可能为 null。 字段必返，值可为 null。
+             */
+            accountId: number | null;
+            /** @description 发布者的展示昵称。 字段必返，值可为 null。 */
+            uploaderName: string | null;
+            /**
+             * Format: int64
+             * @description 所属餐厅的数值业务 ID。 字段必返，值非 null。
+             */
+            restaurantId: number;
+            /** @description 所属餐厅名称。 字段必返，值可为 null。 */
+            restaurantName: string | null;
+            /** @description 用户到餐厅的直线距离，单位米；仅请求带位置的查询填充，其余为 null。 字段必返，值可为 null。 */
+            distanceMeters: number | null;
+            /** @description 餐厅文字地址，仅推荐接口填充。 字段必返，当前响应值固定为 null。 */
+            restaurantAddress: null;
+            /** @description 餐厅 GCJ-02 经度，单位为度，仅推荐接口填充。 字段必返，当前响应值固定为 null。 */
+            restaurantGcjLng: null;
+            /** @description 餐厅 GCJ-02 纬度，单位为度，仅推荐接口填充。 字段必返，当前响应值固定为 null。 */
+            restaurantGcjLat: null;
+            /** @description 餐厅所属商圈 ID，仅推荐接口填充；无归属时可为 null。 字段必返，当前响应值固定为 null。 */
+            hubId: null;
+            /** @description 餐厅所属商圈名称，仅推荐接口填充；无归属时可为 null。 字段必返，当前响应值固定为 null。 */
+            hubName: null;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+            /** @description 文字介绍。 字段必返，值可为 null。 */
+            description: string | null;
+            /** @description 菜品价格，单位元；未知价格时可为 null。 字段必返，值可为 null。 */
+            price: number | null;
+            /**
+             * @description 菜品分类代码：staple 主食、drink 饮品、snack 小吃、dessert 甜品、soup 汤类、hot_pot 火锅、grill 烧烤、cold_dish 凉菜、side_dish 配菜、other 其他。 字段必返，值可为 null。
+             * @enum {string|null}
+             */
+            category: "staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other" | null;
+            /** @description 菜品分类的中文显示名称，对应 category。 字段必返，值可为 null。 */
+            categoryLabel: string | null;
+            /** @description 图片读取 URL 列表，可直接展示；可能含临时签名，失效后重新请求列表或详情获取。 字段必返，值非 null。 */
+            pictureUrl: string[];
+            /** @description 持久化图片引用，用于编辑保留已有图片；pictureUrl只用于展示。历史非foods/引用应原样保留（不提交图片字段），或重新上传迁移。 字段必返，值非 null。 */
+            pictureKeys: string[];
+            /** @description 菜品的公共系统标签，包含标记人数和当前用户的标记状态。 字段必返，值非 null。 */
+            systemTags: components["schemas"]["FoodSystemTagVOResponse"][];
+            /** @description 仅当前登录用户可见的个人菜品标签；游客为空列表。 字段必返，值非 null。 */
+            myCustomTags: components["schemas"]["FoodTagSummaryVOResponse"][];
+            /** @description 当前登录用户是否已点赞；游客为 false。 字段必返，值非 null。 */
+            isLiked: boolean;
+            /** @description 当前登录用户是否已收藏此菜品；游客为 false。 字段必返，值非 null。 */
+            isFavorite: boolean;
+            /** @description 该内容收到的点赞总数。 字段必返，值非 null。 */
+            likesCount: number;
+            /** @description 适合的饭点：breakfast 早饭、lunch 午饭、dinner 晚饭、night 夜宵；空列表表示不限饭点。 字段必返，值非 null。 */
+            mealTimes: ("breakfast" | "lunch" | "dinner" | "night")[];
+            /**
+             * @description 菜品展示背景的舞台色，对应设计令牌 stage-<值>；null 时客户端按分类使用默认色。 字段必返，值可为 null。
+             * @enum {string|null}
+             */
+            stageColor: "broth" | "chili" | "mango" | "porcelain" | "bamboo" | "redoil" | "soy" | "matcha" | "tomato" | null;
+            /** @description 舞台背景的两个备选色，与 stageColor 使用相同色值体系；设置时三色互不相同。 字段必返，值可为 null。 */
+            stageAlternates: ("broth" | "chili" | "mango" | "porcelain" | "bamboo" | "redoil" | "soy" | "matcha" | "tomato")[] | null;
+            /** @description 封面圆形裁切参数；null 时按居中内切圆显示，即 centerX=0.5、centerY=0.5、diameter=1。 字段必返，值可为 null。 */
+            coverCrop: components["schemas"]["CoverCropDTOResponse"] | null;
+            /**
+             * Format: int64
+             * @description 创建时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            createdAt: number;
+            /**
+             * Format: int64
+             * @description 最后更新时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            updatedAt: number;
         };
         GrantRequestRequest: {
             proof?: string;
@@ -3049,216 +6061,669 @@ export interface components {
             rebindCoveredRestaurants: boolean;
         };
         HubResponse: {
-            /** Format: int64 */
-            id?: number;
-            name?: string;
-            /** @description GeometrySerializer 输出的 GeoJSON 型几何对象；srid 在大于 0 时返回。 */
-            center?: {
-                /** @constant */
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+            /** @description 商圈中心点的 WGS84 几何坐标；与 gcjLng/gcjLat 的 GCJ-02 地图坐标分开。 字段必返，值非 null。 */
+            center: {
+                /**
+                 * @description 几何类型：Point 为点，MultiPolygon 为多面边界。
+                 * @constant
+                 */
                 type: "Point";
+                /** @description GeoJSON 形式的 WGS84 坐标，点为 [经度, 纬度]，MultiPolygon 按多边形、环、坐标点逐层嵌套。 */
                 coordinates: unknown[];
+                /** @description 空间参考系编号，4326 表示 WGS84；仅存储的 SRID 大于 0 时返回。 */
                 srid?: number;
             };
-            gcjLng?: number;
-            gcjLat?: number;
-            /** Format: int64 */
-            campusId?: number;
-            /** @description GeometrySerializer 输出的 GeoJSON 型几何对象；srid 在大于 0 时返回。 */
-            boundary?: {
-                /** @constant */
+            /** @description GCJ-02（火星坐标系）经度，单位为度；地图展示使用此坐标系。 字段必返，值非 null。 */
+            gcjLng: number;
+            /** @description GCJ-02（火星坐标系）纬度，单位为度；地图展示使用此坐标系。 字段必返，值非 null。 */
+            gcjLat: number;
+            /**
+             * Format: int64
+             * @description 所属校区 ID；为空的商圈在推荐筛选中归入默认校区。 字段必返，值可为 null。
+             */
+            campusId: number | null;
+            /** @description 商圈边界的 WGS84 MultiPolygon 几何数据，用于范围判断。 字段必返，值可为 null。 */
+            boundary: {
+                /**
+                 * @description 几何类型：Point 为点，MultiPolygon 为多面边界。
+                 * @constant
+                 */
                 type: "MultiPolygon";
+                /** @description GeoJSON 形式的 WGS84 坐标，点为 [经度, 纬度]，MultiPolygon 按多边形、环、坐标点逐层嵌套。 */
                 coordinates: unknown[];
+                /** @description 空间参考系编号，4326 表示 WGS84；仅存储的 SRID 大于 0 时返回。 */
                 srid?: number;
-            };
-            /** Format: int64 */
-            createdAt?: number;
-            /** Format: int64 */
-            updatedAt?: number;
+            } | null;
+            /**
+             * Format: int64
+             * @description 创建时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            createdAt: number;
+            /**
+             * Format: int64
+             * @description 最后更新时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            updatedAt: number;
+        };
+        LifecycleCancellationControllerRequestRequest: {
+            /** Format: uuid */
+            requestId?: string;
+            recoveryCapability?: string;
+        };
+        LifecycleRequestStatusResponse: {
+            /**
+             * Format: uuid
+             * @description 注销请求 UUID。 字段必返，值非 null。
+             */
+            requestId: string;
+            /**
+             * @description 注销流程阶段：UNKNOWN、ACTIVE、PREPARING、PENDING、FINALIZED。 字段必返，值非 null。
+             * @enum {string}
+             */
+            phase: "UNKNOWN" | "ACTIVE" | "PREPARING" | "PENDING" | "FINALIZED";
+            /**
+             * Format: date-time
+             * @description 撤销期限（ISO 8601）；尚未设定期限时为 null。 字段必返，值可为 null。
+             */
+            deadline: string | null;
+            /** @description 注销是否已全部完成。 字段必返，值非 null。 */
+            complete: boolean;
+        };
+        LoginDTORequest: {
+            userName?: string;
+            password: string;
+            /** @enum {string} */
+            device: "WEB" | "APP";
+            /** @description 兼容旧客户端的输入字段；与 userName 同时提供时值必须相同，否则返回 PARAM_INVALID。 */
+            username?: string;
+        } | unknown | unknown;
+        LoginUsernameVOResponse: {
+            /** @description 本次设置成功的唯一登录用户名，区分大小写。 字段必返，值非 null。 */
+            userName: string;
+            /** @description 设置成功时为 true。 字段必返，值非 null。 */
+            hasUsername: boolean;
+            /** @description 设置后是否已有密码；省略 newPassword 时保留原状态。 字段必返，值非 null。 */
+            hasPassword: boolean;
+            /** @description 设置成功时为 true；清理原会话，使用新用户名或手机号重新登录。 字段必返，值非 null。 */
+            reauthenticationRequired: boolean;
+        };
+        MaintenanceInputRequest: {
+            /** @enum {string} */
+            mode: "NONE" | "READ_ONLY" | "DOWN";
+            message?: string;
+            /** Format: date-time */
+            until?: string;
+        };
+        MaintenanceResponse: {
+            /**
+             * @description 维护模式：NONE 正常、READ_ONLY 只读、DOWN 停服。 字段必返，值非 null。
+             * @enum {string}
+             */
+            mode: "NONE" | "READ_ONLY" | "DOWN";
+            /** @description 维护说明；模式为 NONE 或未填写时为 null。 字段必返，值可为 null。 */
+            message: string | null;
+            /**
+             * Format: date-time
+             * @description 预计恢复时间（ISO 8601）；模式为 NONE 或未填写时为 null。 字段必返，值可为 null。
+             */
+            until: string | null;
         };
         ManualPreferencesResponse: {
-            likedTags?: string[];
-            dislikedTags?: string[];
-            /** Format: int64 */
-            updatedAt?: number;
+            /** @description 用户手动声明喜欢的口味标签名称列表。 字段必返，值非 null。 */
+            likedTags: string[];
+            /** @description 用户手动声明不喜欢的口味标签名称列表。 字段必返，值非 null。 */
+            dislikedTags: string[];
+            /**
+             * Format: int64
+             * @description 最后更新时间，Unix 毫秒时间戳。 字段必返，值可为 null。
+             */
+            updatedAt: number | null;
+        };
+        ModerationDetailResponse: {
+            /** @description 被审核对象的领域：FOOD 菜品、RESTAURANT 餐厅。 字段必返，值可为 null。 */
+            targetDomain: string | null;
+            /**
+             * Format: int64
+             * @description 被审核对象的数值 ID。 字段必返，值非 null。
+             */
+            targetId: number;
+            /** @description 审核结论：APPROVE 通过、REJECT 驳回。 字段必返，值可为 null。 */
+            verdict: string | null;
+            /** @description 审核结论对应的原因码。 字段必返，值可为 null。 */
+            reasonCode: string | null;
+            /**
+             * Format: uuid
+             * @description 被审核的私有修订 UUID。 字段必返，值非 null。
+             */
+            revisionId: string;
+            /**
+             * @description 详情类型，固定为 moderation_result。 字段必返，值非 null。 (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            type: "moderation_result";
         };
         MyCustomTagVOResponse: {
-            /** Format: int64 */
-            id?: number;
-            name?: string;
-            /** Format: int64 */
-            usageCount?: number;
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+            /**
+             * Format: int64
+             * @description 当前用户使用此个人标签的菜品数量。 字段必返，值非 null。
+             */
+            usageCount: number;
+        };
+        NativeModerationReviewsRequestRequest: {
+            /** Format: uuid */
+            revisionId: string;
+            /** @enum {string} */
+            verdict: "APPROVE" | "REJECT" | "HIDE" | "RESTORE" | "DELETE";
+            reasonCode: string;
+        };
+        NativeModerationReviewsResultResponse: {
+            /**
+             * Format: uuid
+             * @description 本次审核决定的命令 UUID，同一命令重试返回同一值。 字段必返，值非 null。
+             */
+            decisionId: string;
+            /** @description 审核结论的发布状态：PUBLISHED 已发布、ALREADY_PUBLISHED 已发布过、PENDING 等待同步发布、REJECTED 已驳回。 字段必返，值非 null。 */
+            state: string;
         };
         NotificationDTOResponse: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int64 */
-            actorId?: number;
-            actorName?: string;
-            actorAvatar?: string;
-            type?: string;
-            targetType?: string;
-            /** Format: int64 */
-            targetId?: number;
-            data?: string;
-            read?: boolean;
-            /** Format: int64 */
-            createdAt?: number;
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * Format: int64
+             * @description 触发通知的用户数值账号 ID。 字段必返，值非 null。
+             */
+            actorId: number;
+            /** @description 触发通知的用户展示昵称。 字段必返，值非 null。 */
+            actorName: string;
+            /** @description 触发通知的用户头像读取地址。 字段必返，值可为 null。 */
+            actorAvatar: string | null;
+            /** @description 通知事件类型，如 follow（关注）、like（点赞）。 字段必返，值非 null。 */
+            type: string;
+            /** @description 通知关联的目标类型：user 用户、post 通用活动内容；food/dinner 为历史美食/聚餐活动内容类型。 字段必返，值非 null。 */
+            targetType: string;
+            /**
+             * Format: int64
+             * @description 通知关联目标的数值 ID，应结合 targetType 使用。 字段必返，值非 null。
+             */
+            targetId: number;
+            /** @description 通知附加数据，JSON 编码的字符串；如需读取其中的 targetType/targetId，须先解析 JSON。 字段必返，值可为 null。 */
+            data: string | null;
+            /** @description 当前接收者是否已读此通知。 字段必返，值非 null。 */
+            read: boolean;
+            /**
+             * Format: int64
+             * @description 创建时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            createdAt: number;
         };
         ObjectHeadConflictViewResponse: {
-            /** Format: uuid */
-            conflictId?: string;
-            /** Format: uuid */
-            objectGid?: string;
-            /** Format: int64 */
+            /**
+             * Format: uuid
+             * @description 冲突记录 UUID，用于查询或提交冲突裁决。 字段必返，值非 null。
+             */
+            conflictId: string;
+            /**
+             * Format: uuid
+             * @description 目录对象的跨站全局 UUID，与 numericId 数值业务 ID 不同。 字段必返，值非 null。
+             */
+            objectGid: string;
+            /**
+             * Format: int64
+             * @description 对象的数值业务 ID，用于普通业务接口；与全局 UUID 分开。 字段必返，值非 null。
+             */
             numericId: number;
-            /** Format: int64 */
+            /**
+             * Format: int64
+             * @description 对象版本冲突记录的修订号；裁决时作为 expectedRevision 提交。 字段必返，值非 null。
+             */
             revision: number;
-            status?: string;
-            heads?: components["schemas"]["ObjectHeadViewResponse"][];
+            /** @description 对象并发版本冲突的处理状态，OPEN 表示待裁决。 字段必返，值非 null。 */
+            status: string;
+            /** @description 同一对象当前互不覆盖的并发候选版本列表，需要人工选择保留或拒绝。 字段必返，值非 null。 */
+            heads: components["schemas"]["ObjectHeadViewResponse"][];
         };
         ObjectHeadViewResponse: {
-            /** Format: uuid */
-            operationId?: string;
-            /** Format: int64 */
+            /**
+             * Format: uuid
+             * @description 产生此对象版本的操作 UUID；选择保留版本时使用此值。 字段必返，值非 null。
+             */
+            operationId: string;
+            /**
+             * Format: int64
+             * @description 此候选操作生成的对象版本号，裁决时连同 operationId、contentHash 原样提交。 字段必返，值非 null。
+             */
             revision: number;
-            contentHash?: string;
-            sourceSite?: string;
+            /** @description 候选版本内容的摘要；裁决时与 revision 一起原样提交，用于检测候选版本变化。 字段必返，值非 null。 */
+            contentHash: string;
+            /** @description 产生此候选版本的站点标识。 字段必返，值非 null。 */
+            sourceSite: string;
         };
         OtherUserInfoDTOResponse: {
-            userName?: string;
-            avatar?: string;
-            earnedLikes?: number;
-            fansCount?: number;
-            followingsCount?: number;
-            fansVisible?: boolean;
-            followingsVisible?: boolean;
-            isFollowingMe?: boolean;
-            isFollowingHim?: boolean;
-            /** Format: int64 */
-            uploadedRestaurantsCount?: number;
-            /** Format: int64 */
-            uploadedFoodsCount?: number;
+            /** @description 用户的显示名称，可以中文、可以重复；不影响登录。 字段必返，值非 null。 */
+            displayName: string;
+            /** @description 头像读取地址，用于展示。 字段必返，值可为 null。 */
+            avatar: string | null;
+            /** @description 该用户获得的点赞数量。 字段必返，值非 null。 */
+            earnedLikes: number;
+            /** @description 该用户的粉丝数量。 字段必返，值非 null。 */
+            fansCount: number;
+            /** @description 该用户关注的人数。 字段必返，值非 null。 */
+            followingsCount: number;
+            /** @description 该用户的粉丝列表是否允许当前访问者查看。 字段必返，值非 null。 */
+            fansVisible: boolean;
+            /** @description 该用户的关注列表是否允许当前访问者查看。 字段必返，值非 null。 */
+            followingsVisible: boolean;
+            /** @description 对方是否关注了当前登录用户，方向为对方 → 我。 字段必返，值非 null。 */
+            isFollowingMe: boolean;
+            /** @description 当前登录用户是否关注了对方，方向为我 → 对方。 字段必返，值非 null。 */
+            isFollowingHim: boolean;
+            /**
+             * Format: int64
+             * @description 该用户发布的餐厅数量。 字段必返，值非 null。
+             */
+            uploadedRestaurantsCount: number;
+            /**
+             * Format: int64
+             * @description 该用户发布的菜品数量。 字段必返，值非 null。
+             */
+            uploadedFoodsCount: number;
         };
-        PageResult_ActivityDinnerDTOResponse: {
-            /** Format: int64 */
-            currentPage?: number;
-            items?: components["schemas"]["ActivityDinnerDTOResponse"][];
-            totalPages?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            hasNext?: boolean;
+        OutcomeResponse: {
+            /**
+             * Format: uuid
+             * @description 触发换发的命令 UUID。 字段必返，值非 null。
+             */
+            commandId: string;
+            /**
+             * @description 换发阶段：COMMITTED、FACT_READY、READY、SUPERSEDED、EXPIRED；成功换发为 READY。 字段必返，值非 null。
+             * @enum {string}
+             */
+            status: "COMMITTED" | "FACT_READY" | "READY" | "SUPERSEDED" | "EXPIRED";
+            /** @description 新会话令牌的请求头名称。 字段必返，值非 null。 */
+            tokenName: string;
+            /** @description 新会话令牌值，只返回一次，不得写入日志。 字段必返，值非 null。 */
+            tokenValue: string;
+            /** @description 登录账号的数值 ID，字符串形式。 字段必返，值非 null。 */
+            loginId: string;
+            /** @description 设备类型：WEB、IOS、ANDROID、UNKNOWN。 字段必返，值非 null。 */
+            device: string;
+            /**
+             * Format: int64
+             * @description 新会话的剩余有效秒数。 字段必返，值非 null。
+             */
+            expiresInSeconds: number;
+            /** @description 新会话是否为受限会话（仅可进行隐私与恢复类操作）。 字段必返，值非 null。 */
+            restricted: boolean;
         };
-        PresignBatchUploadFileDTORequest: {
-            fileName: string;
-            contentType: string;
-            /** Format: int64 */
-            fileSize: number;
+        PageResult_ActivityPostVOResponse: {
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["ActivityPostVOResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
         };
-        PageResult_ActivityFoodDTOResponse: {
-            /** Format: int64 */
-            currentPage?: number;
-            items?: components["schemas"]["ActivityFoodDTOResponse"][];
-            totalPages?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            hasNext?: boolean;
+        PageResult_ActivityVOResponse: {
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["ActivityVOResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
         };
-        PresignBatchUploadReqDTORequest: {
-            /** @enum {string} */
-            biz: "activity" | "avatar" | "foods" | "restaurants";
-            files: components["schemas"]["PresignBatchUploadFileDTORequest"][];
+        PageResult_AdminAnnouncementResponse: {
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["AdminAnnouncementResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
+        };
+        PageResult_AdminCaseViewResponse: {
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["AdminCaseViewResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
         };
         PageResult_AdminFoodTagVOResponse: {
-            /** Format: int64 */
-            currentPage?: number;
-            items?: components["schemas"]["AdminFoodTagVOResponse"][];
-            totalPages?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            hasNext?: boolean;
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["AdminFoodTagVOResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
+        };
+        PageResult_AuditEntryResponse: {
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["AuditEntryResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
+        };
+        PageResult_BlockedUserResponse: {
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["BlockedUserResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
         };
         PageResult_BrowseHistoryItemDTOResponse: {
-            /** Format: int64 */
-            currentPage?: number;
-            items?: components["schemas"]["BrowseHistoryItemDTOResponse"][];
-            totalPages?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            hasNext?: boolean;
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["BrowseHistoryItemDTOResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
         };
-        PresignUploadReqDTORequest: {
-            fileName: string;
-            contentType: string;
-            /** Format: int64 */
-            fileSize: number;
-            /** @enum {string} */
-            biz: "activity" | "avatar" | "foods" | "restaurants";
+        PageResult_CardResponse: {
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["CardResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
+        };
+        PageResult_CaseViewResponse: {
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["CaseViewResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
         };
         PageResult_FansDTOResponse: {
-            /** Format: int64 */
-            currentPage?: number;
-            items?: components["schemas"]["FansDTOResponse"][];
-            totalPages?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            hasNext?: boolean;
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["FansDTOResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
         };
         PageResult_FoodVOResponse: {
-            /** Format: int64 */
-            currentPage?: number;
-            items?: components["schemas"]["FoodVOResponse"][];
-            totalPages?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            hasNext?: boolean;
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["FoodVOResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
         };
         PageResult_HubResponse: {
-            /** Format: int64 */
-            currentPage?: number;
-            items?: components["schemas"]["HubResponse"][];
-            totalPages?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            hasNext?: boolean;
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["HubResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
         };
         PageResult_MyCustomTagVOResponse: {
-            /** Format: int64 */
-            currentPage?: number;
-            items?: components["schemas"]["MyCustomTagVOResponse"][];
-            totalPages?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            hasNext?: boolean;
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["MyCustomTagVOResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
         };
         PageResult_NotificationDTOResponse: {
-            /** Format: int64 */
-            currentPage?: number;
-            items?: components["schemas"]["NotificationDTOResponse"][];
-            totalPages?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            hasNext?: boolean;
-        };
-        RenameCustomTagDTORequest: {
-            name: string;
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["NotificationDTOResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
         };
         PageResult_RestaurantResponse: {
-            /** Format: int64 */
-            currentPage?: number;
-            items?: components["schemas"]["RestaurantResponse"][];
-            totalPages?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            hasNext?: boolean;
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["RestaurantResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
+        };
+        PageResult_SubmissionResponse: {
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["SubmissionResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
+        };
+        PageResult_SummaryResponse: {
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["SummaryResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
         };
         PageResult_UserListItemVOResponse: {
-            /** Format: int64 */
-            currentPage?: number;
-            items?: components["schemas"]["UserListItemVOResponse"][];
-            totalPages?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            hasNext?: boolean;
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["UserListItemVOResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
+        };
+        PasswordRecoveryRequest: {
+            identifier?: string;
+            /** Format: uuid */
+            subjectId?: string;
+            /** Format: uuid */
+            requestId?: string;
+            /** Format: uuid */
+            operationId?: string;
+            recoveryCapability?: string;
+            password?: string;
         };
         PasswordResetRequest: {
             newPassword: string;
@@ -3274,33 +6739,261 @@ export interface components {
             crossBorderConsent?: boolean;
             consentPolicyVersion?: string;
         };
+        PhoneRecoveryRequest: {
+            /** Format: uuid */
+            subjectId?: string;
+            /** Format: uuid */
+            requestId?: string;
+            /** Format: uuid */
+            operationId?: string;
+            recoveryCapability?: string;
+            code?: string;
+        };
+        PrepareRequest: {
+            /** Format: uuid */
+            commandId: string;
+            mobile: string;
+        };
+        PreparedResponse: {
+            /**
+             * Format: uuid
+             * @description 换绑手机号命令 UUID。 字段必返，值非 null。
+             */
+            commandId: string;
+            /**
+             * Format: date-time
+             * @description 命令准备阶段的过期时间（ISO 8601）。 字段必返，值非 null。
+             */
+            expiresAt: string;
+            /** @description 提交时是否需要旧手机号验证码或密码证明；首次绑定为 false。 字段必返，值非 null。 */
+            oldProofRequired: boolean;
+        };
+        PresignBatchUploadFileDTORequest: {
+            fileName: string;
+            contentType: string;
+            /** Format: int64 */
+            fileSize: number;
+        };
+        PresignBatchUploadReqDTORequest: {
+            /** @enum {string} */
+            biz: "activity" | "avatar" | "foods" | "restaurants" | "comments" | "feedback";
+            files: components["schemas"]["PresignBatchUploadFileDTORequest"][];
+        };
         PresignBatchUploadRespDTOResponse: {
-            files?: components["schemas"]["PresignUploadRespDTOResponse"][];
+            /** @description 各文件对应的预签名上传结果列表。 字段必返，值非 null。 */
+            files: components["schemas"]["PresignUploadRespDTOResponse"][];
+        };
+        PresignUploadReqDTORequest: {
+            fileName: string;
+            contentType: string;
+            /** Format: int64 */
+            fileSize: number;
+            /** @enum {string} */
+            biz: "activity" | "avatar" | "foods" | "restaurants" | "comments" | "feedback";
         };
         PresignUploadRespDTOResponse: {
-            putUrl?: string;
-            key?: string;
+            /** @description 上传文件原始字节使用的预签名 PUT 地址，须在 expireAt 前使用；不是图片读取地址。 字段必返，值非 null。 */
+            putUrl: string;
+            /** @description 文件的持久化存储引用；上传后用于 /upload/complete 及业务图片字段，不要替换为签名 URL。 字段必返，值非 null。 */
+            key: string;
             /**
              * Format: int64
-             * @description 上传签名过期时间，Unix毫秒。PUT使用预签名请求声明的Content-Type，独立请求且不附加satoken。
+             * @description 上传签名过期时间，Unix毫秒。PUT使用预签名请求声明的Content-Type，独立请求且不附加satoken。 字段必返，值非 null。
              */
-            expireAt?: number;
+            expireAt: number;
         };
         PrivacyDTORequest: {
             following?: boolean;
             follower?: boolean;
         };
+        ProfileConflictControllerResolveRequestRequest: {
+            /** Format: int64 */
+            expectedRevision: number;
+            /** Format: uuid */
+            selectedHeadId?: string;
+        };
         ProvinceDTOResponse: {
-            id?: number;
-            name?: string;
+            /** @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。 */
+            id: number;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+        };
+        PublicConfigResponse: {
+            /** @description 是否启用腾讯人机验证；生产默认 true。false 仅供显式关闭的隔离测试，此时初始化参数为 null。 字段必返，值非 null。 */
+            enabled: boolean;
+            /**
+             * @description 人机验证提供方，固定为 tencent-cloud-intl。 字段必返，值非 null。
+             * @enum {string}
+             */
+            provider: "tencent-cloud-intl";
+            /** @description 服务端配置的腾讯验证码应用 ID，作为字符串传给前端 SDK；关闭验证时为 null。 字段必返，值可为 null。 */
+            appId: string | null;
+            /**
+             * Format: uri
+             * @description 国际站官方前端 SDK 地址；关闭验证时为 null。 字段必返，值可为 null。
+             */
+            scriptUrl: string | null;
+            /** @description 本次新生成的短效初始化参数，标准 Base64(随机 16 字节 IV + AES-256-CBC 密文)。仅供本次新建验证实例使用；取消、失败、超时及再次验证都重新获取，禁止缓存、复用或记录日志。关闭验证时为 null。 字段必返，值可为 null。 */
+            aidEncrypted: string | null;
+            /**
+             * @description AppId 加密方式，开启验证时固定为 cbc，原样传入 TencentCaptcha options；关闭验证时为 null。 字段必返，值可为 null。
+             * @enum {string|null}
+             */
+            aidEncryptedType: "cbc" | null;
+            /**
+             * Format: int64
+             * @description 本次 aidEncrypted 到期时间，Unix 秒（不是毫秒，也不是 ticket 有效期）。默认签发后 120 秒，服务端可配置；关闭验证时为 null。 字段必返，值可为 null。
+             */
+            expiresAt: number | null;
+        } & ({
+            /**
+             * @description 人机验证开关分支。
+             * @constant
+             */
+            enabled?: true;
+            /** @description 开启验证时初始化值非 null。 */
+            appId?: unknown;
+            /** @description 开启验证时初始化值非 null。 */
+            scriptUrl?: unknown;
+            /** @description 开启验证时初始化值非 null。 */
+            aidEncrypted?: unknown;
+            /** @description 开启验证时初始化值非 null。 */
+            aidEncryptedType?: unknown;
+            /** @description 开启验证时初始化值非 null。 */
+            expiresAt?: unknown;
+        } | {
+            /**
+             * @description 人机验证开关分支。
+             * @constant
+             */
+            enabled?: false;
+            /** @description 关闭验证时初始化值为 null。 */
+            appId?: null;
+            /** @description 关闭验证时初始化值为 null。 */
+            scriptUrl?: null;
+            /** @description 关闭验证时初始化值为 null。 */
+            aidEncrypted?: null;
+            /** @description 关闭验证时初始化值为 null。 */
+            aidEncryptedType?: null;
+            /** @description 关闭验证时初始化值为 null。 */
+            expiresAt?: null;
+        });
+        ReceiptResponse: {
+            /**
+             * Format: uuid
+             * @description 本次推送命令 UUID。 字段必返，值非 null。
+             */
+            commandId: string;
+            /**
+             * Format: uuid
+             * @description 推送绑定 UUID；开关类命令不针对具体绑定，为 null。 字段必返，值可为 null。
+             */
+            bindingId: string | null;
+            /**
+             * Format: int64
+             * @description 绑定代次；开关类命令为 0。 字段必返，值非 null。
+             */
+            generation: number;
+            /**
+             * Format: int64
+             * @description 设备令牌代次；开关类命令为 0。 字段必返，值非 null。
+             */
+            tokenGeneration: number;
+            /** @description 命令状态：REGISTERED 已登记、TOKEN_REFRESHED 令牌已刷新、ENABLED 已开启、CLOSED 已关闭、PENDING 关闭等待同步确认。 字段必返，值非 null。 */
+            state: string;
+            /**
+             * Format: uuid
+             * @description 关闭命令的前沿 UUID；开启前需要原样回传，尚未关闭过时为 null。 字段必返，值可为 null。
+             */
+            closeFrontier: string | null;
+            /**
+             * Format: int64
+             * @description 栏目开关的修订号；绑定类命令为 0。 字段必返，值非 null。
+             */
+            preferenceRevision: number;
+        };
+        RecommendQueryDTORequest: {
+            /** Format: int64 */
+            campusId?: number;
+            /** @enum {string} */
+            mealTime?: "breakfast" | "lunch" | "dinner" | "night";
+            /** @enum {string} */
+            category?: "staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other";
+            size?: number;
+            limit?: number;
+            deviceId?: string;
+        };
+        RecommendationSettingsResponse: {
+            /** @description 是否使用个人偏好与行为推荐；默认 true，false 时使用通用推荐，保存设置不删除历史或手动口味。 字段必返，值非 null。 */
+            personalized: boolean;
+        };
+        RecommendationSettingsUpdateRequest: {
+            personalized: boolean;
+        };
+        RecoveryChallengeResponse: {
+            /**
+             * Format: uuid
+             * @description 验证码挑战 UUID。 字段必返，值非 null。
+             */
+            challengeId: string;
+            /**
+             * Format: date-time
+             * @description 验证码过期时间（ISO 8601）。 字段必返，值非 null。
+             */
+            expiresAt: string;
+        };
+        RecoveryGrantResponse: {
+            /**
+             * Format: uuid
+             * @description 账号主体 UUID。 字段必返，值非 null。
+             */
+            subjectId: string;
+            /**
+             * Format: uuid
+             * @description 注销请求 UUID。 字段必返，值非 null。
+             */
+            requestId: string;
+            /**
+             * Format: uuid
+             * @description 恢复凭据操作 UUID。 字段必返，值非 null。
+             */
+            operationId: string;
+            /**
+             * Format: int64
+             * @description 恢复凭据绑定版本。 字段必返，值非 null。
+             */
+            bindingVersion: number;
+            /** @description 恢复证明的摘要。 字段必返，值非 null。 */
+            proofDigest: string;
+            /**
+             * Format: date-time
+             * @description 恢复凭据的过期时间（ISO 8601）。 字段必返，值可为 null。
+             */
+            expiresAt: string | null;
         };
         RegisterDTORequest: {
-            username: string;
+            userName?: string;
             password: string;
             /** @enum {string} */
             device: "WEB" | "APP";
             crossBorderConsent?: boolean;
             consentPolicyVersion?: string;
+            /** @description 兼容旧客户端的输入字段；与 userName 同时提供时值必须相同，否则返回 PARAM_INVALID。 */
+            username?: string;
+        } | unknown | unknown;
+        /** @description 局部更新：省略/null 保持原值；变化字段按以下产品约束验证，相同历史值回显不强制清洗。不能把这些条件规则当无条件 maxLength/maximum。 */
+        RenameCustomTagDTORequest: {
+            /** @description 变化标签先 trim 并合并连续空白，再按 Unicode code point 校验 1–10；相同历史标签原值或规范后相同回显可保留 */
+            name: string;
+        };
+        ReportInputRequest: {
+            /** @enum {string} */
+            targetType?: "FOOD" | "RESTAURANT" | "COMMENT" | "USER";
+            /** Format: int64 */
+            targetId?: number;
+            /** @enum {string} */
+            reason?: "NOT_REAL_PHOTO" | "ADVERTISING" | "ILLEGAL_OR_UNFRIENDLY" | "OTHER";
+            note?: string;
         };
         RequestRequest: {
             identifier: string;
@@ -3314,9 +7007,15 @@ export interface components {
             newPassword: string;
         };
         ResolutionResultResponse: {
-            /** @enum {string} */
-            status?: "APPLIED" | "CONFLICT" | "BLOCKED";
-            /** Format: int64 */
+            /**
+             * @description 本次裁决执行结果：APPLIED 已应用、CONFLICT 输入版本已变化、BLOCKED 当前条件不允许；不代表所有站点已同步完成。 字段必返，值非 null。
+             * @enum {string}
+             */
+            status: "APPLIED" | "CONFLICT" | "BLOCKED";
+            /**
+             * Format: int64
+             * @description 本次返回的冲突修订号；部分裁决路径为 0（不提供版本），继续处理前应重读冲突详情。 字段必返，值非 null。
+             */
             revision: number;
         };
         ResolveDecisionRequestRequest: {
@@ -3339,6 +7038,12 @@ export interface components {
             reason?: string;
             decisionHeads?: string[];
         };
+        ResolveInputRequest: {
+            /** @enum {string} */
+            outcome?: "ACCEPTED" | "REJECTED" | "RESOLVED";
+            reply?: string;
+            internalNote?: string;
+        };
         ResolveRequestRequest: {
             /** Format: uuid */
             conflictId?: string;
@@ -3352,8 +7057,36 @@ export interface components {
             reason?: string;
             decisionHeads?: string[];
         };
+        ResolvedResponse: {
+            /**
+             * Format: int64
+             * @description 案件数值 ID。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * Format: uuid
+             * @description 处理决定 UUID，即本次请求的 Idempotency-Key。 字段必返，值非 null。
+             */
+            decisionId: string;
+            /**
+             * @description 处理后的案件状态，固定为 CLOSED。 字段必返，值非 null。
+             * @enum {string}
+             */
+            status: "OPEN" | "CLOSED";
+            /**
+             * @description 处理结论：ACCEPTED、REJECTED 或 RESOLVED。 字段必返，值非 null。
+             * @enum {string}
+             */
+            outcome: "ACCEPTED" | "REJECTED" | "RESOLVED";
+            /** @description 是否已为提交人生成结果通知；提交人账号已不可通知时为 false。 字段必返，值非 null。 */
+            notified: boolean;
+            /** @description 是否需要管理员通过现有目录编辑或审核流程修改目录：仅已采纳的店铺信息有误为 true。 字段必返，值非 null。 */
+            catalogChangeRequired: boolean;
+        };
         RestaurantDTORequest: {
+            /** @description 按 Unicode code point 计数，先 strip 首尾空白，有效长度 1–20；不按 UTF-16 code unit 或字节计数 */
             name: string;
+            /** @description 按 Unicode code point 计数，先 strip 首尾空白，有效长度 1–30；不按 UTF-16 code unit 或字节计数 */
             address: string;
             cityId?: number;
             gcjLng: number;
@@ -3363,502 +7096,1858 @@ export interface components {
             POI?: string;
             pictureUrl?: string[];
         };
+        RestaurantFoodSummaryResponse: {
+            /**
+             * Format: int64
+             * @description 菜品数值 ID。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * Format: int64
+             * @description 所属餐厅数值 ID。 字段必返，值非 null。
+             */
+            restaurantId: number;
+            /** @description 菜品名称。 字段必返，值非 null。 */
+            name: string;
+            /** @description 菜品价格，单位元；未填写时为 null。 字段必返，值可为 null。 */
+            price: number | null;
+            /** @description 菜品首图的读取地址（临时签名地址）；没有图片时为 null。 字段必返，值可为 null。 */
+            coverUrl: string | null;
+            /** @description 菜品舞台色，对应设计令牌 stage-<值>；未设置时为 null。 字段必返，值可为 null。 */
+            stageColor: string | null;
+            /** @description 菜品获赞数量。 字段必返，值非 null。 */
+            likesCount: number;
+        };
+        RestaurantRatingDTORequest: {
+            /** @enum {string} */
+            rating: "RECOMMEND" | "GOOD" | "AVERAGE" | "NOT_RECOMMEND";
+        };
+        RestaurantRatingViewResponse: {
+            /**
+             * @description 合并后的当前有效评分：RECOMMEND 推荐、GOOD 不错、AVERAGE 一般、NOT_RECOMMEND 不推荐；撤销评分或被屏蔽后为 null。 字段必返，值可为 null。
+             * @enum {string|null}
+             */
+            rating: "RECOMMEND" | "GOOD" | "AVERAGE" | "NOT_RECOMMEND" | null;
+        };
         RestaurantResponse: {
-            /** Format: int64 */
-            id?: number;
-            /** Format: int64 */
-            accountId?: number;
-            name?: string;
-            address?: string;
-            cityId?: number;
-            /** @description GeometrySerializer 输出的 GeoJSON 型几何对象；srid 在大于 0 时返回。 */
-            location?: {
-                /** @constant */
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * Format: int64
+             * @description 发布者的数值账号 ID；游客访问时不披露，可能为 null。 字段必返，值可为 null。
+             */
+            accountId: number | null;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+            /** @description 运营人员确认的永久停业标记，不按营业时间推断；运营状态同步中（operatingStatus=SYNC_PENDING）时为 null。 字段必返，值可为 null。 */
+            permanentlyClosed: boolean | null;
+            /** @description 运营状态：OPEN 营业、CLOSED 永久停业、SYNC_PENDING 授权同步中暂不确定。 字段必返，值非 null。 */
+            operatingStatus: string;
+            /** @description 用户到餐厅的直线距离，单位米；请求未带位置时为 null。 字段必返，值可为 null。 */
+            distanceMeters: number | null;
+            /**
+             * Format: int64
+             * @description 餐厅所属商圈归属的校区 ID；未归属商圈或商圈无校区时为 null。 字段必返，值可为 null。
+             */
+            campusId: number | null;
+            /** @description 所属商圈名称；未归属商圈或商圈不可见时为 null。 字段必返，值可为 null。 */
+            hubName: string | null;
+            /**
+             * Format: int64
+             * @description 该餐厅当前可见菜品数量，没有可见菜品时为 0。 字段必返，值非 null。
+             */
+            visibleFoodCount: number;
+            /** @description 可见菜品价格的中位数，单位元；没有可见菜品时为 null。 字段必返，值可为 null。 */
+            medianPrice: number | null;
+            /** @description 由中位价格得到的价位档：UNDER_15（低于 15 元）、FROM_15_TO_30（15 至 30 元）、OVER_30（高于 30 元）；无中位价时为 null。 字段必返，值可为 null。 */
+            priceBand: string | null;
+            /**
+             * Format: int64
+             * @description 本站已接受的去重评分人数；评分汇总未就绪（ratingSummaryState=SYNC_PENDING）时为 null。 字段必返，值可为 null。
+             */
+            ratingCount: number | null;
+            /** @description 推荐率，0 至 100 的整数百分比；评分不足 5 人或汇总未就绪时为 null。 字段必返，值可为 null。 */
+            recommendationRate: number | null;
+            /** @description 当前登录用户是否已收藏该餐厅；游客或私有状态未就绪时为 null。 字段必返，值可为 null。 */
+            isFavorite: boolean | null;
+            /** @description 评分汇总状态：READY 可用，SYNC_PENDING 汇总缺失或已过期。 字段必返，值非 null。 */
+            ratingSummaryState: string;
+            /** @description 个人状态（收藏、我的评分）读取情况：READY 可用、NOT_LOGGED_IN 游客、SYNC_PENDING 暂不可确定。 字段必返，值非 null。 */
+            personalState: string;
+            /** @description 公开口味汇总状态：READY 可用（已证明为空时 publicTastes 为空列表），SYNC_PENDING 汇总未就绪。 字段必返，值非 null。 */
+            publicTastesState: string;
+            /**
+             * @description 当前登录用户对该餐厅的有效评分：RECOMMEND 推荐、GOOD 不错、AVERAGE 一般、NOT_RECOMMEND 不推荐；未评分、游客或状态未就绪时为 null。 字段必返，值可为 null。
+             * @enum {string|null}
+             */
+            myRating: "RECOMMEND" | "GOOD" | "AVERAGE" | "NOT_RECOMMEND" | null;
+            /** @description 该餐厅点赞最多的至多 3 道可见菜品摘要；没有时为空列表。 字段必返，值非 null。 */
+            signatureFoods: components["schemas"]["RestaurantFoodSummaryResponse"][];
+            /** @description 按搜索关键词匹配到的至多 3 道可见菜品摘要；未带关键词或没有匹配时为空列表。 字段必返，值非 null。 */
+            matchedFoods: components["schemas"]["RestaurantFoodSummaryResponse"][];
+            /** @description 公开口味标签汇总，至多 6 项；没有时为空列表。 字段必返，值非 null。 */
+            publicTastes: components["schemas"]["RestaurantTasteSummaryResponse"][];
+            /** @description 封面图读取地址，取自第一道招牌菜的首图；没有招牌菜图片时为 null。 字段必返，值可为 null。 */
+            coverUrl: string | null;
+            /** @description 舞台色，取自第一道招牌菜；没有招牌菜或该菜未设置时为 null。 字段必返，值可为 null。 */
+            stageColor: string | null;
+            /** @description 餐厅的文字地址。 字段必返，值可为 null。 */
+            address: string | null;
+            /** @description 城市 ID，对应城市字典接口。 字段必返，值可为 null。 */
+            cityId: number | null;
+            /** @description 餐厅位置的 WGS84 几何坐标；地图展示使用 gcjLng/gcjLat 的 GCJ-02 坐标。 字段必返，值非 null。 */
+            location: {
+                /**
+                 * @description 几何类型：Point 为点，MultiPolygon 为多面边界。
+                 * @constant
+                 */
                 type: "Point";
+                /** @description GeoJSON 形式的 WGS84 坐标，点为 [经度, 纬度]，MultiPolygon 按多边形、环、坐标点逐层嵌套。 */
                 coordinates: unknown[];
+                /** @description 空间参考系编号，4326 表示 WGS84；仅存储的 SRID 大于 0 时返回。 */
                 srid?: number;
             };
-            gcjLng?: number;
-            gcjLat?: number;
+            /** @description GCJ-02（火星坐标系）经度，单位为度；地图展示使用此坐标系。 字段必返，值非 null。 */
+            gcjLng: number;
+            /** @description GCJ-02（火星坐标系）纬度，单位为度；地图展示使用此坐标系。 字段必返，值非 null。 */
+            gcjLat: number;
+            /**
+             * Format: int64
+             * @description 所属商圈的数值业务 ID；未归属商圈时可为 null。 字段必返，值可为 null。
+             */
+            hubId: number | null;
+            /** @description 地图兴趣点（Point of Interest）标识，用于关联地图上的餐厅地点。 字段必返，值可为 null。 */
+            POI: string | null;
+            /** @description 图片读取 URL 列表，可直接展示；可能含临时签名，失效后重新请求列表或详情获取。 字段必返，值可为 null。 */
+            pictureUrl: string[] | null;
+            /**
+             * Format: int64
+             * @description 创建时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            createdAt: number;
+            /**
+             * Format: int64
+             * @description 最后更新时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            updatedAt: number;
+        };
+        RestaurantTasteSummaryResponse: {
+            /**
+             * Format: int64
+             * @description 所属餐厅数值 ID。 字段必返，值非 null。
+             */
+            restaurantId: number;
+            /**
+             * Format: int64
+             * @description 口味标签 ID。 字段必返，值非 null。
+             */
+            tagId: number;
+            /** @description 口味标签名称。 字段必返，值非 null。 */
+            name: string;
+            /**
+             * Format: int64
+             * @description 给这家餐厅的菜打过该标签的去重用户数。 字段必返，值非 null。
+             */
+            taggerCount: number;
+        };
+        Result_AcceptedResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["AcceptedResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_ActivityPostVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ActivityPostVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_ActivityVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ActivityVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_AdminAnnouncementResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["AdminAnnouncementResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_AdminCaseViewResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["AdminCaseViewResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_AdminConfigResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["AdminConfigResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_AdminVersionLineResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["AdminVersionLineResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_AnyResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 密码冲突挑战、重置及复核提交成功时为 null；账号安全复核列表为数组，每项 eventId 是事件 UUID、subjectId 是账号主体 UUID、field 是待复核账号字段、state 是复核状态。 字段必返，当前响应值固定为 null。 */
+            data: null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_BlockStatusResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["BlockStatusResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_CaseViewResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["CaseViewResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_CatalogImportResultResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["CatalogImportResultResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_ChallengeResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ChallengeResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_ClientConfigResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ClientConfigResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_CommittedResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["CommittedResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_CompletedFileResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["CompletedFileResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_ConsentPolicySettingsVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ConsentPolicySettingsVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_ConsentPolicyVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ConsentPolicyVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_ConsentResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ConsentResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        /** @description **部署状态（2026-10-30）：两站已部署。** 2026-10-26 已双站发布：GET /auth/consent 的成功 data 仅 status、identityReady、policyVersion，三者均必返且非 null；校内和新加坡共用。授权/撤回及登录进度保留六字段。精确运行包序列化/接口测试、两站字节摘要和匿名登录门槛均通过，生产未创建测试账号或改真实用户授权。 */
+        Result_ConsentStatusViewResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ConsentStatusViewResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_CreatedResourceVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["CreatedResourceVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown & unknown);
+        Result_DecisionViewResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["DecisionViewResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & unknown;
+        Result_DetailResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["DetailResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_DeviceSessionPageResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["DeviceSessionPageResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_DeviceSessionRecoveryStatusResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["DeviceSessionRecoveryStatusResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_EvidenceUrlResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["EvidenceUrlResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_FeedbackAcceptedResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["FeedbackAcceptedResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_FoodTagSummaryVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["FoodTagSummaryVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_FoodTagViewVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["FoodTagViewVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_FoodVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["FoodVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_HubResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["HubResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & unknown;
+        Result_IntegerResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 本次商圈餐厅重新绑定操作所影响的餐厅数量。 字段必返，值可为 null。 */
+            data: number | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_LifecycleRequestStatusResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["LifecycleRequestStatusResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_ActivityVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ActivityVOResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_AuthorizationReviewResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["AuthorizationReviewResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_AuthorizationReviewViewResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["AuthorizationReviewViewResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_CampusResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["CampusResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_CityDTOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["CityDTOResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_ConflictResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ConflictResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_ConflictViewResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ConflictViewResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_DecisionViewResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["DecisionViewResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_FoodTagSummaryVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["FoodTagSummaryVOResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_FoodVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["FoodVOResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_ObjectHeadConflictViewResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ObjectHeadConflictViewResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_ProvinceDTOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ProvinceDTOResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_SettingResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["SettingResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_StringResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: string[] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_List_SummaryResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["SummaryResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_LoginUsernameVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["LoginUsernameVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_LongResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /**
+             * Format: int64
+             * @description 当前登录用户的未读通知数量。 字段必返，值可为 null。
+             */
+            data: number | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_ManualPreferencesResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ManualPreferencesResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_NativeModerationReviewsResultResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["NativeModerationReviewsResultResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_OtherUserInfoDTOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["OtherUserInfoDTOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_OutcomeResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["OutcomeResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_ActivityPostVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_ActivityPostVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_ActivityVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_ActivityVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_AdminAnnouncementResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_AdminAnnouncementResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_AdminCaseViewResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_AdminCaseViewResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_AdminFoodTagVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_AdminFoodTagVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_AuditEntryResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_AuditEntryResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_BlockedUserResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_BlockedUserResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_BrowseHistoryItemDTOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_BrowseHistoryItemDTOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_CardResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_CardResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_CaseViewResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_CaseViewResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_FansDTOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_FansDTOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_FoodVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_FoodVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_HubResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_HubResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_MyCustomTagVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_MyCustomTagVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_NotificationDTOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_NotificationDTOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_RestaurantResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_RestaurantResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_SubmissionResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_SubmissionResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_SummaryResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_SummaryResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PageResult_UserListItemVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_UserListItemVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PreparedResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PreparedResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PresignBatchUploadRespDTOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PresignBatchUploadRespDTOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PresignUploadRespDTOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PresignUploadRespDTOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_PublicConfigResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PublicConfigResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_ReceiptResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ReceiptResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_RecommendationSettingsResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["RecommendationSettingsResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_RecoveryChallengeResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["RecoveryChallengeResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_RecoveryGrantResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["RecoveryGrantResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_ResolutionResultResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ResolutionResultResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_ResolvedResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ResolvedResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_RestaurantRatingViewResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["RestaurantRatingViewResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_RestaurantResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["RestaurantResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & unknown;
+        Result_SessionRevocationResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["SessionRevocationResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_SettingsResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["SettingsResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_SsoStartVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["SsoStartVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_StatusResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["StatusResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_SubmissionResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["SubmissionResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_SummaryResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["SummaryResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & unknown;
+        Result_SummaryVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["SummaryVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_TopicModelsAcceptedResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["TopicModelsAcceptedResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_UnreadResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["UnreadResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_UserInfoDTOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["UserInfoDTOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        Result_VoidResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 无业务返回数据，为 null；操作是否成功以 code 为准。 字段必返，当前响应值固定为 null。 */
+            data: null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        ReviewSummaryResponse: {
+            /**
+             * Format: uuid
+             * @description 待复核账号操作的事件 UUID。 字段必返，值非 null。
+             */
+            eventId: string;
+            /**
+             * Format: uuid
+             * @description 账号主体的跨站全局 UUID。 字段必返，值非 null。
+             */
+            subjectId: string;
+            /** @description 待复核账号字段。 字段必返，值非 null。 */
+            field: string;
+            /** @description 账号安全复核状态。 字段必返，值非 null。 */
+            state: string;
+        };
+        RevokeOthersRequest: {
+            /** Format: uuid */
+            commandId: string;
+            recoveryCapability: string;
+        };
+        SaTokenInfoResponse: {
+            /** @description 业务会话令牌的请求头名称，当前为 satoken；后续请求使用服务端返回的名称。 字段必返，值非 null。 */
+            tokenName: string;
+            /** @description 业务会话令牌值；当前请求头内容为 Bearer <tokenValue>，只在实际登录成功后保存。 字段必返，值非 null。 */
+            tokenValue: string;
+            /** @description 是否已登录；同时检查 code=0 和 tokenName/tokenValue 才能建立业务会话。 字段必返，值非 null。 */
+            isLogin: boolean;
+            /** @description 登录账号标识，由 Sa-Token 返回；不要与全局主体 UUID 混淆。 字段必返，值非 null。 */
+            loginId: string | number;
+            /** @description Sa-Token 登录体系标识，用于区分会话所属的账号体系。 字段必返，值非 null。 */
+            loginType: string;
+            /**
+             * Format: int64
+             * @description 当前令牌剩余有效期，单位秒；-1 表示永不过期，-2 表示令牌无效。 字段必返，值非 null。
+             */
+            tokenTimeout: number;
+            /**
+             * Format: int64
+             * @description 账号 Session 剩余有效期，单位秒；-1 表示永不过期，-2 表示 Session 无效。 字段必返，值非 null。
+             */
+            sessionTimeout: number;
+            /**
+             * Format: int64
+             * @description 令牌专属 Session 剩余有效期，单位秒；-1 表示永不过期，-2 表示 Session 无效或未创建。 字段必返，值非 null。
+             */
+            tokenSessionTimeout: number;
+            /**
+             * Format: int64
+             * @description 令牌活跃有效期的剩余时间，单位秒；-1 表示不限制，-2 表示令牌无效。 字段必返，值非 null。
+             */
+            tokenActiveTimeout: number;
+            /** @description 登录设备类型，如 WEB 或 APP。 字段必返，值非 null。 */
+            loginDeviceType: string;
+            /** @description Sa-Token 会话附加标记，未设置时可为 null。 字段必返，值可为 null。 */
+            tag: string | null;
+        };
+        SaveActivityDTORequest: {
+            code?: string;
+            name: string;
+            description?: string;
+            coverUrl?: string;
+            /** Format: int64 */
+            startsAt?: number;
+            /** Format: int64 */
+            endsAt?: number;
+            sort?: number;
+            requireLocation?: boolean;
+            maxPictures?: number;
+            fieldSchema: {
+                [key: string]: unknown;
+            }[];
+        };
+        SaveAnnouncementRequest: {
+            /** @enum {string} */
+            level: "NORMAL" | "IMPORTANT";
+            title?: string;
+            content: string;
+            linkUrl?: string;
+            platforms?: string[];
+            campusIds?: number[];
+            minBuild?: number;
+            maxBuild?: number;
+            /** Format: date-time */
+            startsAt?: string;
+            /** Format: date-time */
+            endsAt?: string;
+            enabled?: boolean;
+            /** Format: int64 */
+            expectedRevision?: number;
+        };
+        SaveConsentPolicyDTORequest: {
+            /** @description 发布的政策版本号；正文范围变化须使用新版本，不能重新启用已使用过的旧版本。 */
+            version: string;
+            /** @description 完整授权说明的 HTTPS URL 或站内绝对路径；接口只保存地址，不上传或抓取正文。 */
+            url: string;
+            /**
+             * Format: int64
+             * @description 管理员读取接口返回的当前 revision；不匹配时拒绝保存，需重新读取。
+             */
+            expectedRevision: number;
+        };
+        SaveSettingsRequest: {
+            flags: {
+                [key: string]: components["schemas"]["FlagInputRequest"];
+            };
+            params: unknown;
+            maintenance: components["schemas"]["MaintenanceInputRequest"];
+            /** Format: int64 */
+            expectedRevision: number;
+        };
+        SaveVersionLineRequest: {
+            minBuild: number;
+            latestBuild: number;
+            latestVersionName?: string;
+            storeUrl?: string;
+            releaseNotes?: string;
+            /** Format: int64 */
+            expectedRevision: number;
+        };
+        ScreenshotResponse: {
+            /** @description 截图序号，从 0 开始。 字段必返，值非 null。 */
+            slot: number;
+            /** @description 截图读取地址（临时签名地址）；签名失败时为 null。 字段必返，值可为 null。 */
+            url: string | null;
+        };
+        SearchRestaurantsDTORequest: {
+            keyword?: string;
             /** Format: int64 */
             hubId?: number;
-            POI?: string;
-            pictureUrl?: string[];
             /** Format: int64 */
-            createdAt?: number;
-            /** Format: int64 */
-            updatedAt?: number;
-        };
-        Result_ActivityDinnerDTOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["ActivityDinnerDTOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_ActivityFoodDTOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["ActivityFoodDTOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_AnyResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: unknown;
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_CatalogImportResultResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["CatalogImportResultResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_CompletedFileResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["CompletedFileResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_CreatedResourceVOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["CreatedResourceVOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_DecisionViewResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["DecisionViewResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_FoodTagSummaryVOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["FoodTagSummaryVOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_FoodTagViewVOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["FoodTagViewVOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_FoodVOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["FoodVOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_HashMap_String_ObjectResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: {
-                [key: string]: unknown;
-            };
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_HubResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["HubResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_IntegerResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: number;
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_List_AuthorizationReviewResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["AuthorizationReviewResponse"][];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_List_AuthorizationReviewViewResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["AuthorizationReviewViewResponse"][];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_List_CampusResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["CampusResponse"][];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_List_CityDTOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["CityDTOResponse"][];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_List_ConflictResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["ConflictResponse"][];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_List_ConflictViewResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["ConflictViewResponse"][];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_List_DecisionViewResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["DecisionViewResponse"][];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_List_FoodTagSummaryVOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["FoodTagSummaryVOResponse"][];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_List_FoodVOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["FoodVOResponse"][];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_List_ObjectHeadConflictViewResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["ObjectHeadConflictViewResponse"][];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_List_ProvinceDTOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["ProvinceDTOResponse"][];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        UpdateSystemFoodTagDTORequest: {
-            name: string;
-        };
-        Result_LongResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /**
-             * Format: int64
-             * @description 业务数据；code 非 0 时通常为 null
-             */
-            data?: number;
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_ManualPreferencesResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["ManualPreferencesResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_OtherUserInfoDTOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["OtherUserInfoDTOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_PageResult_ActivityDinnerDTOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["PageResult_ActivityDinnerDTOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        WithdrawalRequestRequest: {
-            username: string;
-            password: string;
-        };
-        Result_PageResult_ActivityFoodDTOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["PageResult_ActivityFoodDTOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_PageResult_AdminFoodTagVOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["PageResult_AdminFoodTagVOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        ConsentPolicyReply: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            data: {
-                policyVersion: string;
-                /** @enum {string} */
-                siteMode: "CAMPUS" | "EXTERNAL";
-                temporaryAuthenticationRelay: boolean;
-                ordinarySessionRequiresAuthorization: boolean;
-            };
-            msg: string;
-            /**
-             * Format: int64
-             * @description 响应生成时间，Unix 毫秒
-             */
-            timestamp: number;
-        };
-        Result_PageResult_BrowseHistoryItemDTOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["PageResult_BrowseHistoryItemDTOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_PageResult_FansDTOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["PageResult_FansDTOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_PageResult_FoodVOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["PageResult_FoodVOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_PageResult_HubResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["PageResult_HubResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_PageResult_MyCustomTagVOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["PageResult_MyCustomTagVOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_PageResult_NotificationDTOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["PageResult_NotificationDTOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_PageResult_RestaurantResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["PageResult_RestaurantResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_PageResult_UserListItemVOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["PageResult_UserListItemVOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_PresignBatchUploadRespDTOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["PresignBatchUploadRespDTOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_PresignUploadRespDTOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["PresignUploadRespDTOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_ResolutionResultResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["ResolutionResultResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_RestaurantResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["RestaurantResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_SsoStartVOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["SsoStartVOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_SummaryVOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["SummaryVOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_UserInfoDTOResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: components["schemas"]["UserInfoDTOResponse"];
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
-        };
-        Result_VoidResponse: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 业务数据；code 非 0 时通常为 null */
-            data?: null;
-            msg: string;
-            /** Format: int64 */
-            timestamp: number;
+            campusId?: number;
+            gcjLng?: number;
+            gcjLat?: number;
+            radius?: number;
+            categories?: ("staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other")[];
+            /** @enum {string} */
+            priceBand?: "UNDER_15" | "FROM_15_TO_30" | "OVER_30";
+            /** @enum {string} */
+            sort?: "DISTANCE" | "FOOD_COUNT" | "NEWEST" | "RECOMMENDATION_RATE";
+            favoritesOnly?: boolean;
+            recommendedOnly?: boolean;
+            page?: number;
+            pageSize?: number;
         };
         SendCodeReqRequest: {
             mobile: string;
             /** @enum {string} */
             scene: "auth" | "change" | "forget" | "bind" | "verifybind" | "login";
         };
+        SendRequest: {
+            /** @enum {string} */
+            type: "OLD_PHONE" | "NEW_PHONE" | "PASSWORD" | "PHONE_LOGIN" | "VERIFIED_EMAIL" | "VERIFIED_STUDENT";
+        };
+        SessionRevocationResponse: {
+            /**
+             * Format: uuid
+             * @description 批量下线命令 UUID；下线单个设备时为 null。 字段必返，值可为 null。
+             */
+            commandId: string | null;
+            /** @description 传播状态；当前固定为 PENDING，表示撤销已记录、其他站点同步中。 字段必返，值非 null。 */
+            status: string;
+        };
+        SetLoginUsernameDTORequest: {
+            userName?: string;
+            code: string;
+            newPassword?: string;
+            /** @description 兼容旧客户端的输入字段；与 userName 同时提供时值必须相同，否则返回 PARAM_INVALID。 */
+            username?: string;
+        } | unknown | unknown;
+        SettingResponse: {
+            /**
+             * @description 推送栏目：COMMENTS、LIKES_AND_FAVORITES、FOLLOWS、SYSTEM。 字段必返，值非 null。
+             * @enum {string}
+             */
+            category: "COMMENTS" | "LIKES_AND_FAVORITES" | "FOLLOWS" | "SYSTEM";
+            /** @description 该栏目推送是否开启，默认开启。 字段必返，值非 null。 */
+            enabled: boolean;
+            /**
+             * Format: int64
+             * @description 开关修订号，开启时作为 expectedPreferenceRevision 回传。 字段必返，值非 null。
+             */
+            revision: number;
+            /**
+             * Format: uuid
+             * @description 最近一次关闭命令的前沿 UUID；从未关闭过时为 null。 字段必返，值可为 null。
+             */
+            closeFrontier: string | null;
+        };
+        SettingsResponse: {
+            /**
+             * Format: int64
+             * @description 此组配置自己的修订号；保存时作为 expectedRevision 提交。 字段必返，值非 null。
+             */
+            revision: number;
+            /** @description 功能开关，键为全部已知开关；未配置的开关默认开启。 字段必返，值非 null。 */
+            flags: {
+                [key: string]: components["schemas"]["FlagResponse"];
+            };
+            /** @description 运营参数对象，只包含已配置的已知键；未配置的键不返回。 字段必返，值非 null。 */
+            params: Record<string, never>;
+            /** @description 维护状态。 字段必返，值非 null。 */
+            maintenance: components["schemas"]["MaintenanceResponse"];
+            /**
+             * Format: date-time
+             * @description 最后修改时间（ISO 8601）。 字段必返，值非 null。
+             */
+            updatedAt: string;
+            /**
+             * Format: int64
+             * @description 最后修改的管理员数值 ID；从未修改或该管理员账号已被清理时为 null。 字段必返，值可为 null。
+             */
+            updatedBy: number | null;
+        };
         SsoStartVOResponse: {
-            url?: string;
-            /** Format: int64 */
+            /** @description 带一次性 state 的统一认证地址，客户端应在浏览器中打开。 字段必返，值非 null。 */
+            url: string;
+            /**
+             * Format: int64
+             * @description 此统一认证地址的有效时长，单位秒；state 只能使用一次。 字段必返，值非 null。
+             */
             expiresIn: number;
         };
+        StatusResponse: {
+            /**
+             * Format: uuid
+             * @description 换绑手机号命令 UUID。 字段必返，值非 null。
+             */
+            commandId: string;
+            /** @description 命令状态：APPLIED 已生效、PENDING 等待跨站同步。 字段必返，值非 null。 */
+            status: string;
+        };
+        SubmissionResponse: {
+            /**
+             * Format: int64
+             * @description 提交对象（菜品或餐厅）的数值 ID。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 提交对象类型：FOOD 菜品、RESTAURANT 餐厅。 字段必返，值非 null。 */
+            kind: string;
+            /**
+             * Format: uuid
+             * @description 提交对象的全局 UUID。 字段必返，值非 null。
+             */
+            objectGid: string;
+            /**
+             * Format: uuid
+             * @description 本次提交的私有修订 UUID。 字段必返，值非 null。
+             */
+            revisionId: string;
+            /** @description 审核状态：PENDING 待审核、APPROVED 已通过、REJECTED 已驳回、SUPERSEDED 已被后续提交替代、HIDDEN 已隐藏、DELETED 已删除。 字段必返，值非 null。 */
+            moderationStatus: string;
+            /** @description 驳回或被替代时的原因码；其他状态为 null。 字段必返，值可为 null。 */
+            reasonCode: string | null;
+            /** @description 驳回或被替代时的原因说明；其他状态为 null。 字段必返，值可为 null。 */
+            reasonMessage: string | null;
+            /**
+             * Format: date-time
+             * @description 提交时间（ISO 8601）。 字段必返，值非 null。
+             */
+            submittedAt: string;
+            /**
+             * Format: date-time
+             * @description 审核结论形成时间（ISO 8601）；尚无结论时为 null。 字段必返，值可为 null。
+             */
+            resolvedAt: string | null;
+            /** @description 提交内容的候选字段；调用者无权查看或内容不可读时为空对象，不含图片引用。 字段必返，值非 null。 */
+            candidate: {
+                [key: string]: unknown;
+            };
+            /** @description 可查看的提交图片数量，用于枚举 images/{slot}；无权查看时为 0。 字段必返，值非 null。 */
+            imageCount: number;
+        };
+        SummaryResponse: {
+            /**
+             * Format: int64
+             * @description 专题数值 ID，用于专题详情接口。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * Format: uuid
+             * @description 专题全局 UUID。 字段必返，值非 null。
+             */
+            gid: string;
+            /**
+             * Format: int64
+             * @description 专题修订号。 字段必返，值非 null。
+             */
+            revision: number;
+            /**
+             * Format: int64
+             * @description 专题所属校区 ID。 字段必返，值非 null。
+             */
+            campusId: number;
+            /** @description 专题名称。 字段必返，值非 null。 */
+            name: string;
+            /** @description 专题介绍。 字段必返，值非 null。 */
+            introduction: string;
+            /**
+             * Format: date-time
+             * @description 专题开始时间（ISO 8601）。 字段必返，值非 null。
+             */
+            startsAt: string;
+            /**
+             * Format: date-time
+             * @description 专题结束时间（ISO 8601）。 字段必返，值非 null。
+             */
+            endsAt: string;
+            /**
+             * Format: int64
+             * @description 封面菜品数值 ID；封面菜品已不可见或未设置时为 null。 字段必返，值可为 null。
+             */
+            coverFoodId: number | null;
+            /**
+             * Format: int64
+             * @description 专题内当前可见的菜品数量。 字段必返，值非 null。
+             */
+            visibleFoodCount: number;
+        };
         SummaryVOResponse: {
-            /** Format: int64 */
-            totalUsers?: number;
-            /** Format: int64 */
-            totalFoods?: number;
-            /** Format: int64 */
-            totalRestaurants?: number;
-            /** Format: int64 */
-            todayUsers?: number;
-            /** Format: int64 */
-            todayFoods?: number;
-            /** Format: int64 */
-            todayRestaurants?: number;
+            /**
+             * Format: int64
+             * @description 用户总数。 字段必返，值非 null。
+             */
+            totalUsers: number;
+            /**
+             * Format: int64
+             * @description 菜品总数。 字段必返，值非 null。
+             */
+            totalFoods: number;
+            /**
+             * Format: int64
+             * @description 餐厅总数。 字段必返，值非 null。
+             */
+            totalRestaurants: number;
+            /**
+             * Format: int64
+             * @description 数据库当前日期内新增的用户数。 字段必返，值非 null。
+             */
+            todayUsers: number;
+            /**
+             * Format: int64
+             * @description 数据库当前日期内新增的菜品数。 字段必返，值非 null。
+             */
+            todayFoods: number;
+            /**
+             * Format: int64
+             * @description 数据库当前日期内新增的餐厅数。 字段必返，值非 null。
+             */
+            todayRestaurants: number;
+            /** @description 已认证用户占比，范围 0–1，保留最多 4 位小数；例如 0.25 表示 25%，不是百分数 25。 字段必返，值非 null。 */
             verifiedRate: number;
         };
+        TargetResponse: {
+            /** @description 通知对象所属领域，如 foods 菜品、restaurant 餐厅、topics 专题、users 用户。 字段必返，值非 null。 */
+            domain: string;
+            /**
+             * Format: uuid
+             * @description 通知对象的全局 UUID。 字段必返，值非 null。
+             */
+            gid: string;
+            /**
+             * Format: int64
+             * @description 通知对象的数值 ID，用于调用对应详情接口。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 对象是否已不可见（被删除、隐藏或下线）；为 true 时只展示通知文字，不跳转详情。 字段必返，值非 null。 */
+            unavailable: boolean;
+        };
+        TopicIncludedDetailResponse: {
+            /**
+             * Format: int64
+             * @description 被专题收录的菜品数值 ID；菜品已不可见时为 null。 字段必返，值可为 null。
+             */
+            foodId: number | null;
+            /** @description 被收录菜品的名称；菜品已不可见时为 null。 字段必返，值可为 null。 */
+            foodName: string | null;
+            /**
+             * Format: int64
+             * @description 专题数值 ID；专题已不可见时为 null。 字段必返，值可为 null。
+             */
+            topicId: number | null;
+            /** @description 专题名称；专题已不可见时为 null。 字段必返，值可为 null。 */
+            topicName: string | null;
+            /** @description 菜品是否已不可见。 字段必返，值非 null。 */
+            foodUnavailable: boolean;
+            /** @description 专题是否已不可见。 字段必返，值非 null。 */
+            topicUnavailable: boolean;
+            /**
+             * @description 详情类型，固定为 topic_included。 字段必返，值非 null。 (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            type: "topic_included";
+        };
+        TopicModelsAcceptedResponse: {
+            /**
+             * Format: uuid
+             * @description 本次管理命令 UUID。 字段必返，值非 null。
+             */
+            commandId: string;
+            /**
+             * Format: uuid
+             * @description 专题全局 UUID。 字段必返，值非 null。
+             */
+            topicId: string;
+            /**
+             * Format: int64
+             * @description 专题数值 ID。 字段必返，值非 null。
+             */
+            numericId: number;
+            /**
+             * Format: int64
+             * @description 命令生效后的专题修订号。 字段必返，值非 null。
+             */
+            revision: number;
+            /** @description 命令结果状态：DRAFT 草稿、PUBLISHED 已发布、WITHDRAWN 已撤回。 字段必返，值非 null。 */
+            state: string;
+        };
+        UnreadResponse: {
+            /**
+             * Format: int64
+             * @description 含未读通知的卡片数量。 字段必返，值非 null。
+             */
+            cards: number;
+            /**
+             * Format: int64
+             * @description 未读通知总条数。 字段必返，值非 null。
+             */
+            members: number;
+        };
+        UpdateCheckResponse: {
+            /** @description 本次判定使用的平台：android、ios 或 web。 字段必返，值非 null。 */
+            platform: string;
+            /** @description 请求携带的客户端构建号。 字段必返，值非 null。 */
+            build: number;
+            /**
+             * @description 更新判定：NONE 无需更新、SUGGEST 建议更新、FORCE 必须更新。按构建号比较，不比较版本名。 字段必返，值非 null。
+             * @enum {string}
+             */
+            decision: "NONE" | "SUGGEST" | "FORCE";
+            /** @description 该平台最低可用构建号。 字段必返，值非 null。 */
+            minBuild: number;
+            /** @description 该平台最新构建号。 字段必返，值非 null。 */
+            latestBuild: number;
+            /** @description 该平台最新版本名；未填写时为 null。 字段必返，值可为 null。 */
+            latestVersionName: string | null;
+            /** @description 该平台下载或应用商店地址；未填写时为 null。 字段必返，值可为 null。 */
+            storeUrl: string | null;
+            /** @description 该平台更新说明；未填写时为 null。 字段必返，值可为 null。 */
+            releaseNotes: string | null;
+        };
+        UpdateSystemFoodTagDTORequest: {
+            name: string;
+        };
         UpdateUserInfoDTORequest: {
-            userName?: string;
+            displayName?: string;
             avatar?: string;
             gender?: string;
             /** Format: date */
@@ -3868,135 +8957,394 @@ export interface components {
             hometownCityId?: number;
         };
         UserInfoDTOResponse: {
-            /** Format: int64 */
-            id?: number;
-            userName?: string;
-            avatar?: string;
-            role?: string;
-            banned?: boolean;
-            banReason?: string;
-            /** Format: int64 */
-            bannedAt?: number;
-            email?: string;
-            phone?: string;
-            verified?: boolean;
-            method?: string;
-            studentId?: string;
-            realName?: string;
-            verifiedEmail?: string;
-            hasPassword?: boolean;
-            gender?: string;
-            /** Format: date */
-            birthday?: string;
-            signature?: string;
-            hometownProvinceId?: number;
-            hometownCityId?: number;
-            /** Format: int64 */
-            createdAt?: number;
-            /** Format: int64 */
-            updatedAt?: number;
-        };
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 用户的显示名称，可以中文、可以重复；不影响登录。 字段必返，值非 null。 */
+            displayName: string;
+            /** @description 唯一登录用户名；尚未设置或别名冲突时为 null。与显示名称 displayName 不同。 字段必返，值可为 null。 */
+            userName: string | null;
+            /** @description 是否已设置可用的登录用户名；手机号新账号初始为 false，可跳过设置。 字段必返，值非 null。 */
+            hasUsername: boolean;
+            /** @description 头像读取地址，用于展示。 字段必返，值可为 null。 */
+            avatar: string | null;
+            /** @description 账号基础角色：user 普通用户、admin 管理员；身份认证状态由 verified 单独表示。 字段必返，值非 null。 */
+            role: string;
+            /** @description 当前账号是否已被封禁。 字段必返，值非 null。 */
+            banned: boolean;
+            /** @description 封禁原因；未封禁时可为 null。 字段必返，值可为 null。 仅 banned=true 时从数据库读取；banned=false 时为 null。 */
+            banReason: string | null;
+            /**
+             * Format: int64
+             * @description 封禁时间，Unix 毫秒时间戳；未封禁时可为 null。 字段必返，值可为 null。 仅 banned=true 时从数据库读取；banned=false 时为 null。
+             */
+            bannedAt: number | null;
+            /**
+             * Format: date-time
+             * @description 当前限期封禁的到期时间（ISO 8601）；永久封禁、无期限的历史封禁或未封禁时为 null。 字段必返，值可为 null。 仅 banned=true 时从数据库读取；banned=false 时为 null。
+             */
+            banUntil: string | null;
+            /** @description 账号联系邮箱；与学校认证邮箱 verifiedEmail 分开。 字段必返，值可为 null。 */
+            email: string | null;
+            /** @description 账号绑定的手机号；未绑定时可为 null。 字段必返，值可为 null。 */
+            phone: string | null;
+            /** @description 账号是否已完成身份认证。 字段必返，值可为 null。 */
+            verified: boolean | null;
+            /** @description 身份认证方式：sso 为山东大学统一认证，school_email 为学校邮箱；未认证时可为 null。 字段必返，值可为 null。 */
+            method: string | null;
+            /** @description 统一认证取得的学号；未通过统一认证时可为 null。 字段必返，值可为 null。 */
+            studentId: string | null;
+            /** @description 统一认证取得的真实姓名；未通过统一认证时可为 null。 字段必返，值可为 null。 */
+            realName: string | null;
+            /** @description 通过学校邮箱认证的邮箱地址；未完成该认证时可为 null。 字段必返，值可为 null。 */
+            verifiedEmail: string | null;
+            /** @description 是否已设置密码；手机验证码注册的账号初始为 false，可据此显示设置密码或修改密码。 字段必返，值非 null。 */
+            hasPassword: boolean;
+            /** @description 用户填写的性别。 字段必返，值可为 null。 */
+            gender: string | null;
+            /**
+             * Format: date
+             * @description 用户生日，ISO 8601 日期字符串，格式 YYYY-MM-DD。 字段必返，值可为 null。
+             */
+            birthday: string | null;
+            /** @description 用户个性签名。 字段必返，值可为 null。 */
+            signature: string | null;
+            /** @description 家乡省份 ID，对应省份字典。 字段必返，值可为 null。 */
+            hometownProvinceId: number | null;
+            /** @description 家乡城市 ID，对应城市字典。 字段必返，值可为 null。 */
+            hometownCityId: number | null;
+            /**
+             * Format: int64
+             * @description 创建时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            createdAt: number;
+            /**
+             * Format: int64
+             * @description 最后更新时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            updatedAt: number;
+        } & unknown;
         UserListItemVOResponse: {
-            /** Format: int64 */
-            id?: number;
-            userName?: string;
-            avatar?: string;
-            role?: string;
-            email?: string;
-            phone?: string;
-            verified?: boolean;
-            method?: string;
-            studentId?: string;
-            realName?: string;
-            verifiedEmail?: string;
-            /** Format: int64 */
-            createdAt?: number;
-            /** Format: int64 */
-            updatedAt?: number;
-            accountStatus?: components["schemas"]["AccountStatusVOResponse"];
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /** @description 唯一登录用户名；尚未设置或别名冲突时为 null。 字段必返，值可为 null。 */
+            userName: string | null;
+            /** @description 用户的显示名称，可以中文、可以重复；不影响登录。 字段必返，值非 null。 */
+            displayName: string;
+            /** @description 头像读取地址，用于展示。 字段必返，值可为 null。 */
+            avatar: string | null;
+            /** @description 账号基础角色：user 普通用户、admin 管理员；身份认证状态由 verified 单独表示。 字段必返，值非 null。 */
+            role: string;
+            /** @description 账号联系邮箱；与学校认证邮箱 verifiedEmail 分开。 字段必返，值可为 null。 */
+            email: string | null;
+            /** @description 账号绑定的手机号；未绑定时可为 null。 字段必返，值可为 null。 */
+            phone: string | null;
+            /** @description 账号是否已完成身份认证。 字段必返，值可为 null。 */
+            verified: boolean | null;
+            /** @description 身份认证方式：sso 为山东大学统一认证，school_email 为学校邮箱；未认证时可为 null。 字段必返，值可为 null。 */
+            method: string | null;
+            /** @description 统一认证取得的学号；未通过统一认证时可为 null。 字段必返，值可为 null。 */
+            studentId: string | null;
+            /** @description 统一认证取得的真实姓名；未通过统一认证时可为 null。 字段必返，值可为 null。 */
+            realName: string | null;
+            /** @description 通过学校邮箱认证的邮箱地址；未完成该认证时可为 null。 字段必返，值可为 null。 */
+            verifiedEmail: string | null;
+            /**
+             * Format: int64
+             * @description 创建时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            createdAt: number;
+            /**
+             * Format: int64
+             * @description 最后更新时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            updatedAt: number;
+            /** @description 账号封禁状态详情，包含状态、原因和封禁时间。 字段必返，值非 null。 */
+            accountStatus: components["schemas"]["AccountStatusVOResponse"];
+        };
+        VersionLineResponse: {
+            /** @description 最低可用构建号；低于它的客户端必须更新。0 表示未设置。 字段必返，值非 null。 */
+            minBuild: number;
+            /** @description 最新构建号；低于它的客户端建议更新。0 表示未设置。 字段必返，值非 null。 */
+            latestBuild: number;
+            /** @description 最新版本名，仅用于展示，不参与比较；未填写时为 null。 字段必返，值可为 null。 */
+            latestVersionName: string | null;
+            /** @description 下载或应用商店地址（HTTPS 或应用商店链接）；未填写时为 null。 字段必返，值可为 null。 */
+            storeUrl: string | null;
+            /** @description 更新说明；未填写时为 null。 字段必返，值可为 null。 */
+            releaseNotes: string | null;
+        };
+        WithdrawalRequestRequest: {
+            userName: string;
+            password: string;
+        };
+        /** @description 完整的同意进度字段；可附带 consentProof。没有本地同意记录时也可能只返回 consentProof。 */
+        ConsentChallengeResponse: {
+            /** @description 跨站同意状态：NOT_GRANTED 未同意、PROVISIONAL 临时受理待协调、GRANTED 已同意、WITHDRAWN 已撤回、CONFLICT 身份或授权存在冲突；GRANTED 本身不代表已取得登录令牌。 */
+            status?: string;
+            /** @description 跨站同步同意政策的版本号；提交同意时须使用当前政策版本。 */
+            policyVersion?: string;
+            /** @description 当前站点的账号身份投影是否就绪；true 不代表所有业务数据已同步或已登录。 */
+            identityReady?: boolean;
+            /** @description 历史数据补同步进度，如 NOT_STARTED 未开始、ACCOUNT_PENDING 账号待同步、ACCOUNT_COMPLETE_DOMAINS_PENDING 账号完成但业务域待同步、CONFLICT 有冲突。 */
+            backfillStatus?: string;
+            /** @description 撤回后的清理进度，如 NOT_REQUIRED 无需清理、ACCOUNT_CLEARED_EFFECTS_PENDING 账号已清理但后续处理待完成；不等同于所有副本已物理删除。 */
+            cleanupStatus?: string;
+            /** @description 本次注册请求是否已受理；true 不代表已登录或同步完成。 */
+            registrationAccepted?: boolean;
+            /** @description 仅需同意且签发临时凭证时返回；不是登录令牌。 */
+            consentProof?: string;
+        } & (unknown | unknown);
+        PhoneLoginDataResponse: {
+            /** @description 业务会话令牌的请求头名称，当前为 satoken；后续请求使用服务端返回的名称。 字段必返，值非 null。 */
+            tokenName: string;
+            /** @description 业务会话令牌值；当前请求头内容为 Bearer <tokenValue>，只在实际登录成功后保存。 字段必返，值非 null。 */
+            tokenValue: string;
+            /** @description 是否已登录；同时检查 code=0 和 tokenName/tokenValue 才能建立业务会话。 字段必返，值非 null。 */
+            isLogin: boolean;
+            /** @description 登录账号标识，由 Sa-Token 返回；不要与全局主体 UUID 混淆。 字段必返，值非 null。 */
+            loginId: string | number;
+            /** @description Sa-Token 登录体系标识，用于区分会话所属的账号体系。 字段必返，值非 null。 */
+            loginType: string;
+            /**
+             * Format: int64
+             * @description 当前令牌剩余有效期，单位秒；-1 表示永不过期，-2 表示令牌无效。 字段必返，值非 null。
+             */
+            tokenTimeout: number;
+            /**
+             * Format: int64
+             * @description 账号 Session 剩余有效期，单位秒；-1 表示永不过期，-2 表示 Session 无效。 字段必返，值非 null。
+             */
+            sessionTimeout: number;
+            /**
+             * Format: int64
+             * @description 令牌专属 Session 剩余有效期，单位秒；-1 表示永不过期，-2 表示 Session 无效或未创建。 字段必返，值非 null。
+             */
+            tokenSessionTimeout: number;
+            /**
+             * Format: int64
+             * @description 令牌活跃有效期的剩余时间，单位秒；-1 表示不限制，-2 表示令牌无效。 字段必返，值非 null。
+             */
+            tokenActiveTimeout: number;
+            /** @description 登录设备类型，如 WEB 或 APP。 字段必返，值非 null。 */
+            loginDeviceType: string;
+            /** @description Sa-Token 会话附加标记，未设置时可为 null。 字段必返，值可为 null。 */
+            tag: string | null;
+            /** @description 本次手机验证码登录是否新注册；成功登录必返且非 null。 字段必返，值非 null。 */
+            newUser: boolean;
         };
         AuthReply: {
-            /** @description 0 为成功；非零为业务错误 */
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
             code: number;
-            /** @description 登录成功时为 SaTokenInfo 字段（取 tokenName/tokenValue）；需要跨站同意或尚未同步时为 ConsentView 字段，可能附带 consentProof；也可能为 null。 */
-            data: {
-                tokenName?: string;
-                tokenValue?: string;
-                isLogin?: boolean;
-                loginId?: unknown;
-                loginType?: string;
-                /** Format: int64 */
-                tokenTimeout?: number;
-                /** Format: int64 */
-                sessionTimeout?: number;
-                /** Format: int64 */
-                tokenSessionTimeout?: number;
-                /** Format: int64 */
-                tokenActiveTimeout?: number;
-                loginDeviceType?: string;
-                tag?: string;
-                status?: string;
-                policyVersion?: string;
-                /** Format: int64 */
-                epoch?: number;
-                /** Format: int64 */
-                revision?: number;
-                identityReady?: boolean;
-                backfillStatus?: string;
-                cleanupStatus?: string;
-                registrationAccepted?: boolean;
-                /** @description 临时同意凭证；不是登录令牌 */
-                consentProof?: string;
-            };
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["SaTokenInfoResponse"] | components["schemas"]["ConsentChallengeResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
             msg: string;
             /**
              * Format: int64
-             * @description 响应生成时间，Unix 毫秒
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
              */
             timestamp: number;
-        };
-        ConsentReply: {
-            /** @description 0 为成功；非零为业务错误 */
-            code: number;
-            /** @description 可能为 null */
-            data: components["schemas"]["ConsentViewResponse"];
-            msg: string;
-            /**
-             * Format: int64
-             * @description 响应生成时间，Unix 毫秒
-             */
-            timestamp: number;
-        };
+        } & (unknown & unknown & unknown & unknown);
         PhoneLoginReply: {
-            /** @description 0 为成功；非零为业务错误 */
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
             code: number;
-            /** @description 手机验证码登录成功返回：SaTokenInfo 字段（取 tokenName/tokenValue）附加 newUser。方法签名为 Result<?>，经反射得到泛型 Object，此处按 PhoneLoginVO（继承 SaTokenInfo 并新增 newUser）手动映射。 */
-            data: {
-                tokenName?: string;
-                tokenValue?: string;
-                isLogin?: boolean;
-                loginId?: unknown;
-                loginType?: string;
-                /** Format: int64 */
-                tokenTimeout?: number;
-                /** Format: int64 */
-                sessionTimeout?: number;
-                /** Format: int64 */
-                tokenSessionTimeout?: number;
-                /** Format: int64 */
-                tokenActiveTimeout?: number;
-                loginDeviceType?: string;
-                tag?: string;
-                /** @description 本次手机验证码登录是否触发了新号码自动注册 */
-                newUser?: boolean;
-            };
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PhoneLoginDataResponse"] | components["schemas"]["ConsentChallengeResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
             msg: string;
             /**
              * Format: int64
-             * @description 响应生成时间，Unix 毫秒
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
              */
             timestamp: number;
+        } & (unknown & unknown & unknown & unknown);
+        ConsentReply: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ConsentViewResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        ConsentOfferReply: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ConsentChallengeResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        FoodEditReply: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["CreatedResourceVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown & unknown);
+        RestaurantEditReply: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["CreatedResourceVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        AccountReviewListReply: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["ReviewSummaryResponse"][] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
+        /** @description **部署状态（2026-10-30）：两站已部署。** mealTimes、stageColor、stageAlternates、coverCrop、removeBackground 已随 V72 在两站部署；removeBackground 只保存开关，自动图像去背景尚未实现。本次列表为空，字段部署依据为运行包模型及数据库结构。 */
+        FoodRecommendationVOResponse: {
+            /**
+             * Format: int64
+             * @description 数值业务 ID，用于对应资源的详情、修改等接口。 字段必返，值非 null。
+             */
+            id: number;
+            /**
+             * Format: int64
+             * @description 发布者的数值账号 ID；游客访问时不披露，可能为 null。 字段必返，值可为 null。
+             */
+            accountId: number | null;
+            /** @description 发布者的展示昵称。 字段必返，值可为 null。 */
+            uploaderName: string | null;
+            /**
+             * Format: int64
+             * @description 所属餐厅的数值业务 ID。 字段必返，值非 null。
+             */
+            restaurantId: number;
+            /** @description 所属餐厅名称。 字段必返，值可为 null。 */
+            restaurantName: string | null;
+            /** @description 用户到餐厅的直线距离，单位米；仅请求带位置的查询填充，其余为 null。 字段必返，值可为 null。 */
+            distanceMeters: number | null;
+            /** @description 餐厅文字地址，仅推荐接口填充。 字段必返，值可为 null。 */
+            restaurantAddress: string | null;
+            /** @description 餐厅 GCJ-02 经度，单位为度，仅推荐接口填充。 字段必返，值可为 null。 */
+            restaurantGcjLng: number | null;
+            /** @description 餐厅 GCJ-02 纬度，单位为度，仅推荐接口填充。 字段必返，值可为 null。 */
+            restaurantGcjLat: number | null;
+            /**
+             * Format: int64
+             * @description 餐厅所属商圈 ID，仅推荐接口填充；无归属时可为 null。 字段必返，值可为 null。
+             */
+            hubId: number | null;
+            /** @description 餐厅所属商圈名称，仅推荐接口填充；无归属时可为 null。 字段必返，值可为 null。 */
+            hubName: string | null;
+            /** @description 名称。 字段必返，值非 null。 */
+            name: string;
+            /** @description 文字介绍。 字段必返，值可为 null。 */
+            description: string | null;
+            /** @description 菜品价格，单位元；未知价格时可为 null。 字段必返，值可为 null。 */
+            price: number | null;
+            /**
+             * @description 菜品分类代码：staple 主食、drink 饮品、snack 小吃、dessert 甜品、soup 汤类、hot_pot 火锅、grill 烧烤、cold_dish 凉菜、side_dish 配菜、other 其他。 字段必返，值可为 null。
+             * @enum {string|null}
+             */
+            category: "staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other" | null;
+            /** @description 菜品分类的中文显示名称，对应 category。 字段必返，值可为 null。 */
+            categoryLabel: string | null;
+            /** @description 图片读取 URL 列表，可直接展示；可能含临时签名，失效后重新请求列表或详情获取。 字段必返，值非 null。 */
+            pictureUrl: string[];
+            /** @description 持久化图片引用，用于编辑保留已有图片；pictureUrl只用于展示。历史非foods/引用应原样保留（不提交图片字段），或重新上传迁移。 字段必返，值非 null。 */
+            pictureKeys: string[];
+            /** @description 菜品的公共系统标签，包含标记人数和当前用户的标记状态。 字段必返，值非 null。 */
+            systemTags: components["schemas"]["FoodSystemTagVOResponse"][];
+            /** @description 仅当前登录用户可见的个人菜品标签；游客为空列表。 字段必返，值非 null。 */
+            myCustomTags: components["schemas"]["FoodTagSummaryVOResponse"][];
+            /** @description 当前登录用户是否已点赞；游客为 false。 字段必返，值非 null。 */
+            isLiked: boolean;
+            /** @description 当前登录用户是否已收藏此菜品；游客为 false。 字段必返，值非 null。 */
+            isFavorite: boolean;
+            /** @description 该内容收到的点赞总数。 字段必返，值非 null。 */
+            likesCount: number;
+            /** @description 适合的饭点：breakfast 早饭、lunch 午饭、dinner 晚饭、night 夜宵；空列表表示不限饭点。 字段必返，值非 null。 */
+            mealTimes: ("breakfast" | "lunch" | "dinner" | "night")[];
+            /**
+             * @description 菜品展示背景的舞台色，对应设计令牌 stage-<值>；null 时客户端按分类使用默认色。 字段必返，值可为 null。
+             * @enum {string|null}
+             */
+            stageColor: "broth" | "chili" | "mango" | "porcelain" | "bamboo" | "redoil" | "soy" | "matcha" | "tomato" | null;
+            /** @description 舞台背景的两个备选色，与 stageColor 使用相同色值体系；设置时三色互不相同。 字段必返，值可为 null。 */
+            stageAlternates: ("broth" | "chili" | "mango" | "porcelain" | "bamboo" | "redoil" | "soy" | "matcha" | "tomato")[] | null;
+            /** @description 封面圆形裁切参数；null 时按居中内切圆显示，即 centerX=0.5、centerY=0.5、diameter=1。 字段必返，值可为 null。 */
+            coverCrop: components["schemas"]["CoverCropDTOResponse"] | null;
+            /**
+             * Format: int64
+             * @description 创建时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            createdAt: number;
+            /**
+             * Format: int64
+             * @description 最后更新时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            updatedAt: number;
         };
+        PageResult_FoodRecommendationVOResponse: {
+            /**
+             * Format: int64
+             * @description 当前页码，从 1 开始。 字段必返，值非 null。
+             */
+            currentPage: number;
+            /** @description 当前页的数据项列表；没有匹配数据时为空列表。 字段必返，值非 null。 */
+            items: components["schemas"]["FoodRecommendationVOResponse"][];
+            /** @description 满足筛选条件的总页数；无匹配数据时为 0。 字段必返，值非 null。 */
+            totalPages: number;
+            /**
+             * Format: int64
+             * @description 满足筛选条件的总记录数，不是当前页条数。 字段必返，值非 null。
+             */
+            totalItems: number;
+            /** @description 是否还有下一页；为 true 时可请求 currentPage + 1。 字段必返，值非 null。 */
+            hasNext: boolean;
+        };
+        Result_PageResult_FoodRecommendationVOResponse: {
+            /** @description 业务状态码：0 为成功，非零为业务错误；需与 HTTP 状态码共同判断。 字段必返，值非 null。 */
+            code: number;
+            /** @description 业务数据，具体结构见本接口响应模型；无返回数据或失败时可能为 null。 字段必返，值可为 null。 */
+            data: components["schemas"]["PageResult_FoodRecommendationVOResponse"] | null;
+            /** @description 业务结果提示信息；成功时通常为 ok，失败时说明原因，程序判断应使用 code。 字段必返，值非 null。 */
+            msg: string;
+            /**
+             * Format: int64
+             * @description 响应生成时间，Unix 毫秒时间戳。 字段必返，值非 null。
+             */
+            timestamp: number;
+        } & (unknown & unknown);
     };
     responses: never;
     parameters: never;
@@ -4006,18 +9354,107 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    ActivityController_like_post: {
+    ActivityController_list_get: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ActivityLikeReqDTORequest"];
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_List_ActivityVOResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
+    };
+    ActivityController_postDetail_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ActivityPostVOResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ActivityController_deletePost_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ActivityController_like_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description 业务响应；code=0 为成功，非零为业务错误。 */
             200: {
@@ -4043,170 +9480,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ActivityLikeReqDTORequest"];
-            };
-        };
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_VoidResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    ActivityDinnerController_list_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_PageResult_ActivityDinnerDTOResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    ActivityDinnerController_publish_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateActivityDinnerDTORequest"];
-            };
-        };
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_VoidResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    ActivityDinnerController_listByLikes_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_PageResult_ActivityDinnerDTOResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    ActivityDinnerController_detail_get: {
-        parameters: {
-            query?: never;
-            header?: never;
             path: {
-                /** @example  */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_ActivityDinnerDTOResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    ActivityDinnerController_delete_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -4233,7 +9507,108 @@ export interface operations {
             };
         };
     };
-    ActivityFoodController_list_get: {
+    ActivityController_detail_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ActivityVOResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ActivityController_listPosts_get: {
+        parameters: {
+            query?: {
+                sort?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_PageResult_ActivityPostVOResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ActivityController_publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateActivityPostDTORequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_CreatedResourceVOResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ActivityAdminController_list_get: {
         parameters: {
             query?: {
                 page?: number;
@@ -4251,7 +9626,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Result_PageResult_ActivityFoodDTOResponse"];
+                    "application/json": components["schemas"]["Result_PageResult_ActivityVOResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -4265,7 +9640,7 @@ export interface operations {
             };
         };
     };
-    ActivityFoodController_publish_post: {
+    ActivityAdminController_create_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -4274,7 +9649,73 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateActivityFoodDTORequest"];
+                "application/json": components["schemas"]["SaveActivityDTORequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_CreatedResourceVOResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ActivityAdminController_detail_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ActivityVOResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ActivityAdminController_update_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveActivityDTORequest"];
             };
         };
         responses: {
@@ -4298,9 +9739,139 @@ export interface operations {
             };
         };
     };
-    ActivityFoodController_listByLikes_get: {
+    ActivityAdminController_delete_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ActivityAdminController_changeStatus_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActivityStatusDTORequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ConsentPolicyAdminController_get_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ConsentPolicySettingsVOResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ConsentPolicyAdminController_save_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveConsentPolicyDTORequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ConsentPolicySettingsVOResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    FeedbackAdminController_queue_get: {
         parameters: {
             query?: {
+                status?: "OPEN" | "CLOSED";
+                kind?: "FEEDBACK" | "CATALOG_ERROR" | "REPORT";
                 page?: number;
                 pageSize?: number;
             };
@@ -4316,7 +9887,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Result_PageResult_ActivityFoodDTOResponse"];
+                    "application/json": components["schemas"]["Result_PageResult_AdminCaseViewResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -4330,12 +9901,11 @@ export interface operations {
             };
         };
     };
-    ActivityFoodController_detail_get: {
+    FeedbackAdminController_detail_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -4348,7 +9918,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Result_ActivityFoodDTOResponse"];
+                    "application/json": components["schemas"]["Result_AdminCaseViewResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -4362,17 +9932,22 @@ export interface operations {
             };
         };
     };
-    ActivityFoodController_delete_delete: {
+    FeedbackAdminController_resolve_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveInputRequest"];
+            };
+        };
         responses: {
             /** @description 业务响应；code=0 为成功，非零为业务错误。 */
             200: {
@@ -4380,7 +9955,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Result_VoidResponse"];
+                    "application/json": components["schemas"]["Result_ResolvedResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -4464,7 +10039,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -4500,7 +10074,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -4514,6 +10087,396 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ModerationAdminController_queue_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_PageResult_SubmissionResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ModerationAdminController_review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NativeModerationReviewsRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_NativeModerationReviewsResultResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ModerationAdminController_detail_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                revisionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_SubmissionResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ModerationAdminController_image_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                revisionId: string;
+                slot: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_EvidenceUrlResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RemoteConfigAdminController_get_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_AdminConfigResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RemoteConfigAdminController_announcements_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_PageResult_AdminAnnouncementResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RemoteConfigAdminController_createAnnouncement_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveAnnouncementRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_AdminAnnouncementResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RemoteConfigAdminController_updateAnnouncement_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveAnnouncementRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_AdminAnnouncementResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RemoteConfigAdminController_deleteAnnouncement_delete: {
+        parameters: {
+            query: {
+                expectedRevision: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RemoteConfigAdminController_audit_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_PageResult_AuditEntryResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RemoteConfigAdminController_saveSettings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveSettingsRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_SettingsResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RemoteConfigAdminController_saveVersionLine_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                platform: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveVersionLineRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_AdminVersionLineResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -4585,71 +10548,6 @@ export interface operations {
             };
         };
     };
-    CatalogConflictController_listOpenObjectHeadConflicts_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_List_ObjectHeadConflictViewResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    CatalogConflictController_resolveObjectHeads_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example  */
-                conflictId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResolveHeadRequestRequest"];
-            };
-        };
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_ResolutionResultResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
     CatalogConflictController_listDecisions_get: {
         parameters: {
             query?: never;
@@ -4684,7 +10582,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 conflictId: string;
             };
             cookie?: never;
@@ -4711,19 +10608,18 @@ export interface operations {
             };
         };
     };
-    CatalogConflictController_resolve_post: {
+    CatalogConflictController_resolveDecision_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 conflictId: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ResolveRequestRequest"];
+                "application/json": components["schemas"]["ResolveDecisionRequestRequest"];
             };
         };
         responses: {
@@ -4747,19 +10643,47 @@ export interface operations {
             };
         };
     };
-    CatalogConflictController_resolveDecision_post: {
+    CatalogConflictController_listOpenObjectHeadConflicts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_List_ObjectHeadConflictViewResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CatalogConflictController_resolveObjectHeads_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 conflictId: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ResolveDecisionRequestRequest"];
+                "application/json": components["schemas"]["ResolveHeadRequestRequest"];
             };
         };
         responses: {
@@ -4799,6 +10723,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result_List_AuthorizationReviewViewResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CatalogConflictController_resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conflictId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ResolutionResultResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -4874,42 +10833,6 @@ export interface operations {
             };
         };
     };
-    ProfileConflictController_resolve_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example  */
-                conflictId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResolveRequestRequest"];
-            };
-        };
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_VoidResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
     ProfileConflictController_authorizationReviews_get: {
         parameters: {
             query?: never;
@@ -4944,14 +10867,13 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 eventId: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ResolveRequestRequest"];
+                "application/json": components["schemas"]["ProfileConflictControllerResolveRequestRequest"];
             };
         };
         responses: {
@@ -4962,6 +10884,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ProfileConflictController_resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conflictId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileConflictControllerResolveRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    TopicAdminController_command_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommandRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_TopicModelsAcceptedResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -5009,7 +10999,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 provinceId: number;
             };
             cookie?: never;
@@ -5036,42 +11025,69 @@ export interface operations {
             };
         };
     };
-    AuthController_callback_get: {
+    AuthController_callbackWithState_get: {
         parameters: {
             query?: {
                 token?: string;
             };
             header?: never;
-            path?: never;
+            path: {
+                state: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
+            /** @description 认证成功与失败均回到服务端固定预设地址；无 JSON 结果体。成功为 result=success&code=0，失败为 result=failure&code=<既有业务码>。 */
+            302: {
                 headers: {
+                    /** @description App 使用 app.oauth-app-success-redirect（默认 https://v50to.you/app/auth/callback），网页使用 app.oauth-success-redirect（默认 /home）。附加 result 和 code，不含 token、state、账号ID、学号或姓名；回调请求参数不能改变目标或来源。 */
+                    Location?: string;
+                    /** @description 禁止缓存认证回跳。 */
+                    "Cache-Control"?: "no-store";
+                    /** @description 兼容旧代理的禁止缓存声明。 */
+                    Pragma?: "no-cache";
+                    /** @description 不向回跳目标披露学校回调URL。 */
+                    "Referrer-Policy"?: "no-referrer";
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["Result_HashMap_String_ObjectResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
+                content?: never;
             };
         };
     };
-    AuthController_callback_post: {
+    AuthController_callbackWithState_post: {
         parameters: {
             query?: {
                 token?: string;
             };
+            header?: never;
+            path: {
+                state: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 认证成功与失败均回到服务端固定预设地址；无 JSON 结果体。成功为 result=success&code=0，失败为 result=failure&code=<既有业务码>。 */
+            302: {
+                headers: {
+                    /** @description App 使用 app.oauth-app-success-redirect（默认 https://v50to.you/app/auth/callback），网页使用 app.oauth-success-redirect（默认 /home）。附加 result 和 code，不含 token、state、账号ID、学号或姓名；回调请求参数不能改变目标或来源。 */
+                    Location?: string;
+                    /** @description 禁止缓存认证回跳。 */
+                    "Cache-Control"?: "no-store";
+                    /** @description 兼容旧代理的禁止缓存声明。 */
+                    Pragma?: "no-cache";
+                    /** @description 不向回跳目标披露学校回调URL。 */
+                    "Referrer-Policy"?: "no-referrer";
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_captchaConfig_get: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -5081,10 +11097,14 @@ export interface operations {
             /** @description 业务响应；code=0 为成功，非零为业务错误。 */
             200: {
                 headers: {
+                    /** @description 本次短效参数禁止缓存。 */
+                    "Cache-Control"?: "no-store";
+                    /** @description 兼容旧代理的禁止缓存响应头。 */
+                    Pragma?: "no-cache";
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Result_HashMap_String_ObjectResponse"];
+                    "application/json": components["schemas"]["Result_PublicConfigResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -5133,8 +11153,9 @@ export interface operations {
     };
     AuthController_checkUsername_post: {
         parameters: {
-            query: {
-                username: string;
+            query?: {
+                userName?: string;
+                username?: string;
             };
             header?: never;
             path?: never;
@@ -5162,12 +11183,226 @@ export interface operations {
             };
         };
     };
+    AccountConsentController_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": 0,
+                     *       "data": {
+                     *         "status": "NOT_GRANTED",
+                     *         "identityReady": false,
+                     *         "policyVersion": "cross-border-preferences-v3"
+                     *       },
+                     *       "msg": "ok",
+                     *       "timestamp": 1793737362529
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Result_ConsentStatusViewResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AccountConsentController_grant_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GrantRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentReply"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AccountConsentController_offerWithPassword_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WithdrawalRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentOfferReply"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AccountConsentController_policy_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": 0,
+                     *       "data": {
+                     *         "version": "cross-border-preferences-v3",
+                     *         "url": "/api/policies/cross-border-preferences-v3.html"
+                     *       },
+                     *       "msg": "ok",
+                     *       "timestamp": 1792763739329
+                     *     }
+                     */
+                    "application/json": components["schemas"]["Result_ConsentPolicyVOResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AccountConsentController_withdraw_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentReply"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AccountConsentController_withdrawWithPassword_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WithdrawalRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentReply"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     AuthController_sendCode_post: {
         parameters: {
             query?: {
                 mobile?: string;
             };
-            header?: never;
+            header: {
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 ticket。有效期和单次消费由腾讯检查，不接受 trerror_ 容灾票据。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Ticket": string;
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 randstr，必须与 ticket 对应。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Randstr": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -5255,7 +11490,45 @@ export interface operations {
             };
         };
     };
-    AuthController_register_post: {
+    AccountPasswordRecoveryController_challenge_post: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 ticket。有效期和单次消费由腾讯检查，不接受 trerror_ 容灾票据。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Ticket": string;
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 randstr，必须与 ticket 对应。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Randstr": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_AnyResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AccountPasswordRecoveryController_reset_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -5264,7 +11537,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["RegisterDTORequest"];
+                "application/json": components["schemas"]["ResetRequest"];
             };
         };
         responses: {
@@ -5274,180 +11547,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AuthReply"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    AuthController_sdu_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_SsoStartVOResponse"];
-                };
-            };
-            /** @description 认证/验证跳转；以 Location 为准 */
-            302: {
-                headers: {
-                    Location?: string;
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    AuthController_sdu_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_SsoStartVOResponse"];
-                };
-            };
-            /** @description 认证/验证跳转；以 Location 为准 */
-            302: {
-                headers: {
-                    Location?: string;
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    AuthController_callbackWithState_get: {
-        parameters: {
-            query?: {
-                token?: string;
-            };
-            header?: never;
-            path: {
-                /** @example  */
-                state: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_HashMap_String_ObjectResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    AuthController_callbackWithState_post: {
-        parameters: {
-            query?: {
-                token?: string;
-            };
-            header?: never;
-            path: {
-                /** @example  */
-                state: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_HashMap_String_ObjectResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    AuthController_sendEmail_get: {
-        parameters: {
-            query: {
-                email: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_VoidResponse"];
+                    "application/json": components["schemas"]["Result_AnyResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -5464,7 +11564,12 @@ export interface operations {
     AuthController_sendPasswordCode_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 ticket。有效期和单次消费由腾讯检查，不接受 trerror_ 容灾票据。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Ticket": string;
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 randstr，必须与 ticket 对应。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Randstr": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -5477,56 +11582,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result_VoidResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    AuthController_verify_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "code": 0,
-                     *       "data": [
-                     *         "verify:school_email"
-                     *       ],
-                     *       "msg": "ok",
-                     *       "timestamp": 1700000000000
-                     *     }
-                     */
-                    "application/json": {
-                        /** @description 0 为成功；非零为业务错误 */
-                        code: number;
-                        /** @description 已完成的认证方式；未认证时为空数组 */
-                        data: ("verify:sso" | "verify:school_email")[];
-                        msg: string;
-                        /**
-                         * Format: int64
-                         * @description 响应生成时间，Unix 毫秒
-                         */
-                        timestamp: number;
-                    };
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -5573,49 +11628,15 @@ export interface operations {
             };
         };
     };
-    AuthController_verifyEmail_get: {
-        parameters: {
-            query: {
-                token: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_VoidResponse"];
-                };
-            };
-            /** @description 认证/验证跳转；以 Location 为准 */
-            302: {
-                headers: {
-                    Location?: string;
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
     AuthController_sendLoginCode_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 ticket。有效期和单次消费由腾讯检查，不接受 trerror_ 容灾票据。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Ticket": string;
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 randstr，必须与 ticket 对应。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Randstr": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -5678,36 +11699,7 @@ export interface operations {
             };
         };
     };
-    AccountConsentController_status_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConsentReply"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    AccountConsentController_grant_post: {
+    AuthController_register_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -5716,7 +11708,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["GrantRequestRequest"];
+                "application/json": components["schemas"]["RegisterDTORequest"];
             };
         };
         responses: {
@@ -5726,7 +11718,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConsentReply"];
+                    "application/json": components["schemas"]["AuthReply"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -5740,7 +11732,71 @@ export interface operations {
             };
         };
     };
-    AccountConsentController_policy_get: {
+    AuthController_sdu_get: {
+        parameters: {
+            query?: {
+                /** @description 发起来源；省略或 web 的结果回跳使用 app.oauth-success-redirect（默认 /home），app 使用 app.oauth-app-success-redirect（默认 https://v50to.you/app/auth/callback）。学校回调成功和失败均 302，Location 带 result=success|failure 与 code；成功必须等认证事务提交。App 收到链接后带原会话查询 /user/info 或 /auth/verify，不签发新登录 token。 */
+                client?: "web" | "app";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_SsoStartVOResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AuthController_sdu_post: {
+        parameters: {
+            query?: {
+                /** @description 发起来源；省略或 web 的结果回跳使用 app.oauth-success-redirect（默认 /home），app 使用 app.oauth-app-success-redirect（默认 https://v50to.you/app/auth/callback）。学校回调成功和失败均 302，Location 带 result=success|failure 与 code；成功必须等认证事务提交。App 收到链接后带原会话查询 /user/info 或 /auth/verify，不签发新登录 token。 */
+                client?: "web" | "app";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_SsoStartVOResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AccountSecurityReviewController_list_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -5755,7 +11811,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConsentPolicyReply"];
+                    "application/json": components["schemas"]["AccountReviewListReply"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -5769,9 +11825,118 @@ export interface operations {
             };
         };
     };
-    AccountConsentController_withdraw_post: {
+    AccountSecurityReviewController_reset_post: {
         parameters: {
             query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_AnyResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AccountSecurityReviewController_decide_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                eventId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_AnyResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AuthController_sendEmail_get: {
+        parameters: {
+            query: {
+                email: string;
+            };
+            header: {
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 ticket。有效期和单次消费由腾讯检查，不接受 trerror_ 容灾票据。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Ticket": string;
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 randstr，必须与 ticket 对应。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Randstr": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    DeviceSessionsController_list_get: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                size?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -5784,7 +11949,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConsentReply"];
+                    "application/json": components["schemas"]["Result_DeviceSessionPageResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -5798,7 +11963,7 @@ export interface operations {
             };
         };
     };
-    AccountConsentController_withdrawWithPassword_post: {
+    DeviceSessionsController_revokeOthers_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -5807,7 +11972,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["WithdrawalRequestRequest"];
+                "application/json": components["schemas"]["RevokeOthersRequest"];
             };
         };
         responses: {
@@ -5817,7 +11982,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ConsentReply"];
+                    "application/json": components["schemas"]["Result_SessionRevocationResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -5831,13 +11996,16 @@ export interface operations {
             };
         };
     };
-    CallbackController_callback_get: {
+    DeviceSessionsController_resume_post: {
         parameters: {
-            query?: {
-                token?: string;
+            query?: never;
+            header: {
+                /** @description 专用恢复凭据（recoveryCapability），由发起该命令的登录会话在提交时生成并保管；仅对该命令的精确恢复接口有效，不是登录令牌，不要放入 URL、日志或普通存储。 */
+                "X-Recovery-Capability": string;
             };
-            header?: never;
-            path?: never;
+            path: {
+                commandId: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -5848,7 +12016,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Result_HashMap_String_ObjectResponse"];
+                    "application/json": components["schemas"]["Result_OutcomeResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -5862,10 +12030,159 @@ export interface operations {
             };
         };
     };
-    CallbackController_callback_post: {
+    DeviceSessionsController_status_post: {
         parameters: {
-            query?: {
-                token?: string;
+            query?: never;
+            header: {
+                /** @description 专用恢复凭据（recoveryCapability），由发起该命令的登录会话在提交时生成并保管；仅对该命令的精确恢复接口有效，不是登录令牌，不要放入 URL、日志或普通存储。 */
+                "X-Recovery-Capability": string;
+            };
+            path: {
+                commandId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_DeviceSessionRecoveryStatusResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    DeviceSessionsController_revokeOne_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_SessionRevocationResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AuthController_setLoginUsername_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetLoginUsernameDTORequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_LoginUsernameVOResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AuthController_verify_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "code": 0,
+                     *       "data": [
+                     *         "verify:school_email"
+                     *       ],
+                     *       "msg": "ok",
+                     *       "timestamp": 1700000000000
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description 业务状态码：0 为成功，非零为业务错误。 */
+                        code: number;
+                        /** @description 业务数据；键始终返回，值按业务状态和下列分支定义。 */
+                        data: ("verify:sso" | "verify:school_email")[] | null;
+                        /** @description 业务结果提示信息。 */
+                        msg: string;
+                        /**
+                         * Format: int64
+                         * @description 响应生成时间，Unix 毫秒时间戳。
+                         */
+                        timestamp: number;
+                    } & (unknown & unknown);
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    AuthController_verifyEmail_get: {
+        parameters: {
+            query: {
+                token: string;
             };
             header?: never;
             path?: never;
@@ -5879,8 +12196,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Result_HashMap_String_ObjectResponse"];
+                    "application/json": components["schemas"]["Result_VoidResponse"];
                 };
+            };
+            /** @description 认证/验证跳转；以 Location 为准 */
+            302: {
+                headers: {
+                    Location?: string;
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
             default: {
@@ -5900,9 +12225,64 @@ export interface operations {
             };
             header?: never;
             path: {
-                /** @example  */
                 state: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 认证成功与失败均回到服务端固定预设地址；无 JSON 结果体。成功为 result=success&code=0，失败为 result=failure&code=<既有业务码>。 */
+            302: {
+                headers: {
+                    /** @description App 使用 app.oauth-app-success-redirect（默认 https://v50to.you/app/auth/callback），网页使用 app.oauth-success-redirect（默认 /home）。附加 result 和 code，不含 token、state、账号ID、学号或姓名；回调请求参数不能改变目标或来源。 */
+                    Location?: string;
+                    /** @description 禁止缓存认证回跳。 */
+                    "Cache-Control"?: "no-store";
+                    /** @description 兼容旧代理的禁止缓存声明。 */
+                    Pragma?: "no-cache";
+                    /** @description 不向回跳目标披露学校回调URL。 */
+                    "Referrer-Policy"?: "no-referrer";
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CallbackController_callbackWithState_post: {
+        parameters: {
+            query?: {
+                token?: string;
+            };
+            header?: never;
+            path: {
+                state: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 认证成功与失败均回到服务端固定预设地址；无 JSON 结果体。成功为 result=success&code=0，失败为 result=failure&code=<既有业务码>。 */
+            302: {
+                headers: {
+                    /** @description App 使用 app.oauth-app-success-redirect（默认 https://v50to.you/app/auth/callback），网页使用 app.oauth-success-redirect（默认 /home）。附加 result 和 code，不含 token、state、账号ID、学号或姓名；回调请求参数不能改变目标或来源。 */
+                    Location?: string;
+                    /** @description 禁止缓存认证回跳。 */
+                    "Cache-Control"?: "no-store";
+                    /** @description 兼容旧代理的禁止缓存声明。 */
+                    Pragma?: "no-cache";
+                    /** @description 不向回跳目标披露学校回调URL。 */
+                    "Referrer-Policy"?: "no-referrer";
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CampusController_list_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -5913,7 +12293,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Result_HashMap_String_ObjectResponse"];
+                    "application/json": components["schemas"]["Result_List_CampusResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -5927,15 +12307,115 @@ export interface operations {
             };
         };
     };
-    CallbackController_callbackWithState_post: {
+    FeedbackController_catalogError_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CatalogErrorInputRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_FeedbackAcceptedResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    FeedbackController_submit_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackInputRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_FeedbackAcceptedResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    FeedbackController_mine_get_feedback_mine: {
         parameters: {
             query?: {
-                token?: string;
+                kind?: "FEEDBACK" | "CATALOG_ERROR" | "REPORT";
+                page?: number;
+                pageSize?: number;
             };
             header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_PageResult_CaseViewResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    FeedbackController_mine_get_feedback_mine_id: {
+        parameters: {
+            query?: never;
+            header?: never;
             path: {
-                /** @example  */
-                state: string;
+                id: number;
             };
             cookie?: never;
         };
@@ -5947,7 +12427,88 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Result_HashMap_String_ObjectResponse"];
+                    "application/json": components["schemas"]["Result_CaseViewResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    FeedbackController_report_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportInputRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_FeedbackAcceptedResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    FoodController_getUserFoods_get: {
+        parameters: {
+            query?: {
+                gcjLng?: number;
+                gcjLat?: number;
+                restaurantId?: number;
+                hubId?: number;
+                keyword?: string;
+                category?: "staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other";
+                minPrice?: number;
+                maxPrice?: number;
+                sort?: "NEWEST" | "PRICE_ASC" | "PRICE_DESC" | "POPULAR" | "FAVORITED_AT" | "DISTANCE";
+                page?: number;
+                pageSize?: number;
+                systemTagIds?: number[];
+                myCustomTagIds?: number[];
+                myCustomTagNames?: string[];
+            };
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_PageResult_FoodVOResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -5966,7 +12527,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -5998,7 +12558,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -6030,7 +12589,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -6047,7 +12605,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Result_VoidResponse"];
+                    "application/json": components["schemas"]["FoodEditReply"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -6064,13 +12622,16 @@ export interface operations {
     FoodController_getMyFavoriteFoods_get: {
         parameters: {
             query?: {
+                gcjLng?: number;
+                gcjLat?: number;
                 restaurantId?: number;
+                uploaderId?: number;
                 hubId?: number;
                 keyword?: string;
                 category?: "staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other";
                 minPrice?: number;
                 maxPrice?: number;
-                sort?: "NEWEST" | "PRICE_ASC" | "PRICE_DESC" | "POPULAR" | "FAVORITED_AT";
+                sort?: "NEWEST" | "PRICE_ASC" | "PRICE_DESC" | "POPULAR" | "FAVORITED_AT" | "DISTANCE";
                 page?: number;
                 pageSize?: number;
                 systemTagIds?: number[];
@@ -6106,13 +12667,16 @@ export interface operations {
     FoodController_listByRestaurant_get: {
         parameters: {
             query?: {
+                gcjLng?: number;
+                gcjLat?: number;
                 restaurantId?: number;
+                uploaderId?: number;
                 hubId?: number;
                 keyword?: string;
                 category?: "staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other";
                 minPrice?: number;
                 maxPrice?: number;
-                sort?: "NEWEST" | "PRICE_ASC" | "PRICE_DESC" | "POPULAR";
+                sort?: "NEWEST" | "PRICE_ASC" | "PRICE_DESC" | "POPULAR" | "DISTANCE";
                 page?: number;
                 pageSize?: number;
                 systemTagIds?: number[];
@@ -6177,6 +12741,72 @@ export interface operations {
             };
         };
     };
+    FoodController_editMyFood_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditFoodDTORequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FoodEditReply"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    FoodController_deleteMyFood_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     FoodController_recommendFoods_get: {
         parameters: {
             query?: {
@@ -6199,7 +12829,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Result_List_FoodVOResponse"];
+                    "application/json": components["schemas"]["Result_PageResult_FoodRecommendationVOResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -6250,7 +12880,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 tagId: number;
             };
             cookie?: never;
@@ -6286,7 +12915,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 tagId: number;
             };
             cookie?: never;
@@ -6300,6 +12928,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    FoodController_listFoodsByMyCustomTag_get: {
+        parameters: {
+            query?: {
+                gcjLng?: number;
+                gcjLat?: number;
+                restaurantId?: number;
+                uploaderId?: number;
+                hubId?: number;
+                keyword?: string;
+                category?: "staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other";
+                minPrice?: number;
+                maxPrice?: number;
+                sort?: "NEWEST" | "PRICE_ASC" | "PRICE_DESC" | "POPULAR" | "FAVORITED_AT" | "DISTANCE";
+                page?: number;
+                pageSize?: number;
+                systemTagIds?: number[];
+                myCustomTagIds?: number[];
+                myCustomTagNames?: string[];
+            };
+            header?: never;
+            path: {
+                tagId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_PageResult_FoodVOResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -6380,7 +13055,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -6412,7 +13086,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -6444,7 +13117,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -6476,7 +13148,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -6512,7 +13183,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -6548,9 +13218,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
-                /** @example  */
                 tagId: number;
             };
             cookie?: never;
@@ -6582,7 +13250,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -6614,75 +13281,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_VoidResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    FoodController_editMyFood_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example  */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["EditFoodDTORequest"];
-            };
-        };
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_VoidResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    FoodController_deleteMyFood_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -6742,6 +13340,37 @@ export interface operations {
             };
         };
     };
+    HistoryController_clearBrowseHistory_delete: {
+        parameters: {
+            query?: {
+                targetType?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     HubController_addHub_post: {
         parameters: {
             query?: never;
@@ -6780,7 +13409,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -6812,7 +13440,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -6844,7 +13471,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -6945,7 +13571,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -6959,6 +13584,196 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result_IntegerResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ModerationSubmissionsController_mine_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_PageResult_SubmissionResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ModerationSubmissionsController_detail_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                revisionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_SubmissionResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    ModerationSubmissionsController_image_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                revisionId: string;
+                slot: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_EvidenceUrlResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    NotificationCardsController_listCards_get: {
+        parameters: {
+            query?: {
+                column?: "ALL" | "COMMENTS" | "LIKES_AND_FAVORITES" | "FOLLOWS" | "SYSTEM" | "INTERACTION";
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_PageResult_CardResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    NotificationCardsController_unreadCards_get: {
+        parameters: {
+            query?: {
+                column?: "ALL" | "COMMENTS" | "LIKES_AND_FAVORITES" | "FOLLOWS" | "SYSTEM" | "INTERACTION";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_UnreadResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    NotificationCardsController_readCard_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_VoidResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -7038,7 +13853,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -7094,6 +13908,279 @@ export interface operations {
             };
         };
     };
+    PushController_create_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ReceiptResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    PushController_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ReceiptResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    PushController_transfer_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ReceiptResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    PushController_unbind_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ReceiptResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    PushController_status_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ReceiptResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    PushController_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_List_SettingResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    PushController_disable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ReceiptResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    PushController_enable_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ReceiptResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RemoteConfigController_get_get: {
+        parameters: {
+            query?: {
+                platform?: string;
+                build?: number;
+                campusId?: number;
+            };
+            header?: {
+                "If-None-Match"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ClientConfigResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     RestaurantController_addRestaurant_post: {
         parameters: {
             query?: never;
@@ -7127,12 +14214,54 @@ export interface operations {
             };
         };
     };
+    RestaurantController_browseRestaurants_get: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                hubId?: number;
+                campusId?: number;
+                gcjLng?: number;
+                gcjLat?: number;
+                radius?: number;
+                categories?: ("staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other")[];
+                priceBand?: "UNDER_15" | "FROM_15_TO_30" | "OVER_30";
+                sort?: "DISTANCE" | "FOOD_COUNT" | "NEWEST" | "RECOMMENDATION_RATE";
+                favoritesOnly?: boolean;
+                recommendedOnly?: boolean;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_PageResult_RestaurantResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     RestaurantController_deleteRestaurant_delete: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -7164,7 +14293,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -7196,7 +14324,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 id: number;
             };
             cookie?: never;
@@ -7213,7 +14340,50 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Result_VoidResponse"];
+                    "application/json": components["schemas"]["RestaurantEditReply"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RestaurantController_getMyFavoriteRestaurants_get: {
+        parameters: {
+            query?: {
+                keyword?: string;
+                hubId?: number;
+                campusId?: number;
+                gcjLng?: number;
+                gcjLat?: number;
+                radius?: number;
+                categories?: ("staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other")[];
+                priceBand?: "UNDER_15" | "FROM_15_TO_30" | "OVER_30";
+                sort?: "DISTANCE" | "FOOD_COUNT" | "NEWEST" | "RECOMMENDATION_RATE";
+                favoritesOnly?: boolean;
+                recommendedOnly?: boolean;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_PageResult_RestaurantResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -7263,12 +14433,18 @@ export interface operations {
     };
     RestaurantController_searchRestaurants_get: {
         parameters: {
-            query: {
+            query?: {
                 keyword?: string;
                 hubId?: number;
-                gcjLng: number;
-                gcjLat: number;
+                campusId?: number;
+                gcjLng?: number;
+                gcjLat?: number;
                 radius?: number;
+                categories?: ("staple" | "drink" | "snack" | "dessert" | "soup" | "hot_pot" | "grill" | "cold_dish" | "side_dish" | "other")[];
+                priceBand?: "UNDER_15" | "FROM_15_TO_30" | "OVER_30";
+                sort?: "DISTANCE" | "FOOD_COUNT" | "NEWEST" | "RECOMMENDATION_RATE";
+                favoritesOnly?: boolean;
+                recommendedOnly?: boolean;
                 page?: number;
                 pageSize?: number;
             };
@@ -7298,11 +14474,316 @@ export interface operations {
             };
         };
     };
-    RestaurantController_browseRestaurants_get: {
+    RestaurantController_favoriteRestaurant_put: {
         parameters: {
-            query?: {
-                keyword?: string;
-                hubId?: number;
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RestaurantController_unfavoriteRestaurant_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RestaurantController_rateRestaurant_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestaurantRatingDTORequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_RestaurantRatingViewResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RestaurantController_removeRestaurantRating_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_RestaurantRatingViewResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    TelemetryController_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ConsentResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    TelemetryController_change_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ConsentResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    TelemetryController_disable_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ConsentResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    TelemetryController_events_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_AcceptedResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    TopicController_forFood_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                foodId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_List_SummaryResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    TopicController_current_get: {
+        parameters: {
+            query: {
+                campusId: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_SummaryResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    TopicController_history_get: {
+        parameters: {
+            query: {
+                campusId: number;
                 page?: number;
                 pageSize?: number;
             };
@@ -7318,7 +14799,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Result_PageResult_RestaurantResponse"];
+                    "application/json": components["schemas"]["Result_PageResult_SummaryResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    TopicController_detail_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_DetailResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -7436,7 +14948,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 userId: number;
             };
             cookie?: never;
@@ -7487,6 +14998,337 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result_VoidResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    UserBlockController_list_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_PageResult_BlockedUserResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    UserBlockController_get_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_BlockStatusResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    UserBlockController_block_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_BlockStatusResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    UserBlockController_unblock_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_BlockStatusResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    LifecycleCancellationController_request_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LifecycleCancellationControllerRequestRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_LifecycleRequestStatusResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    LifecycleCancellationController_recoverPassword_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordRecoveryRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_RecoveryGrantResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    LifecycleCancellationController_phoneChallenge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhoneRecoveryRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_RecoveryChallengeResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    LifecycleCancellationController_recoverPhone_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhoneRecoveryRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_RecoveryGrantResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    LifecycleCancellationController_cancel_post: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 注销恢复凭据（recoveryCapability），由申请注销的登录会话在提交时生成并保管；仅对该注销请求的状态与撤销接口有效，不是登录令牌，不要放入 URL、日志或普通存储。 */
+                "X-Lifecycle-Recovery": string;
+            };
+            path: {
+                subjectId: string;
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancellationRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_LifecycleRequestStatusResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    LifecycleCancellationController_status_post: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 注销恢复凭据（recoveryCapability），由申请注销的登录会话在提交时生成并保管；仅对该注销请求的状态与撤销接口有效，不是登录令牌，不要放入 URL、日志或普通存储。 */
+                "X-Lifecycle-Recovery": string;
+            };
+            path: {
+                subjectId: string;
+                requestId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_LifecycleRequestStatusResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
@@ -7633,7 +15475,12 @@ export interface operations {
     UserController_getCode_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 ticket。有效期和单次消费由腾讯检查，不接受 trerror_ 容灾票据。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Ticket": string;
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 randstr，必须与 ticket 对应。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Randstr": string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -7724,12 +15571,371 @@ export interface operations {
             };
         };
     };
+    CredentialMobileController_prepare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrepareRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_PreparedResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CredentialMobileRecoveryController_status_post: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 专用恢复凭据（recoveryCapability），由发起该命令的登录会话在提交时生成并保管；仅对该命令的精确恢复接口有效，不是登录令牌，不要放入 URL、日志或普通存储。 */
+                "X-Recovery-Capability": string;
+            };
+            path: {
+                commandId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_CommittedResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CredentialMobileRecoveryController_resume_post: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 专用恢复凭据（recoveryCapability），由发起该命令的登录会话在提交时生成并保管；仅对该命令的精确恢复接口有效，不是登录令牌，不要放入 URL、日志或普通存储。 */
+                "X-Recovery-Capability": string;
+            };
+            path: {
+                commandId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_OutcomeResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CredentialMobileController_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                command: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_StatusResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CredentialMobileController_send_post: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 ticket。有效期和单次消费由腾讯检查，不接受 trerror_ 容灾票据。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Ticket": string;
+                /** @description 人机验证开启时必填；来自同一次腾讯 SDK 成功回调的 randstr，必须与 ticket 对应。不要放入 URL、日志或存储；每次发送均重新验证。仅隔离测试显式关闭人机验证时可省略。 */
+                "X-Captcha-Randstr": string;
+            };
+            path: {
+                command: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ChallengeResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    CredentialMobileController_commit_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                command: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommitRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_CommittedResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RecommendationProfileController_preferences_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ManualPreferencesResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RecommendationProfileController_preferences_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FoodPreferencesDTORequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ManualPreferencesResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RecommendationProfileController_clear_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_ManualPreferencesResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RecommendationSettingsController_get_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_RecommendationSettingsResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    RecommendationSettingsController_put_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecommendationSettingsUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Result_RecommendationSettingsResponse"];
+                };
+            };
+            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     UserController_unbanUser_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @example  */
                 userId: number;
             };
             cookie?: never;
@@ -7838,293 +16044,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Result_OtherUserInfoDTOResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    AccountPasswordRecoveryController_challenge_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RequestRequest"];
-            };
-        };
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_AnyResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    AccountPasswordRecoveryController_reset_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResetRequest"];
-            };
-        };
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_AnyResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    AccountSecurityReviewController_list_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_AnyResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    AccountSecurityReviewController_reset_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example  */
-                userId: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PasswordResetRequest"];
-            };
-        };
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_AnyResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    AccountSecurityReviewController_decide_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example  */
-                eventId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DecisionRequest"];
-            };
-        };
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_AnyResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    CampusController_list_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_List_CampusResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    RecommendationProfileController_preferences_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_ManualPreferencesResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    RecommendationProfileController_preferences_put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FoodPreferencesDTORequest"];
-            };
-        };
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_ManualPreferencesResponse"];
-                };
-            };
-            /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    RecommendationProfileController_clear_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 业务响应；code=0 为成功，非零为业务错误。 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Result_ManualPreferencesResponse"];
                 };
             };
             /** @description 错误响应；HTTP 状态码及 code/msg 需要共同判断。 */

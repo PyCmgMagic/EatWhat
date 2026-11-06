@@ -12,7 +12,7 @@ export type ProfileForm = {
 export function profileForm(user: User): ProfileForm {
   const date = user.birthday;
   return {
-    name: user.userName ?? "",
+    name: user.displayName ?? "",
     signature: user.signature ?? "",
     gender: user.gender ?? "",
     birthday:
@@ -27,15 +27,22 @@ export function profileForm(user: User): ProfileForm {
 }
 export function profileChanges(form: ProfileForm, saved: ProfileForm) {
   const body: Schema["UpdateUserInfoDTORequest"] = {};
-  if (form.name.trim() !== saved.name.trim()) body.userName = form.name.trim();
+  if (form.name.trim() !== saved.name.trim())
+    body.displayName = form.name.trim();
   if (form.signature !== saved.signature) body.signature = form.signature;
   if (form.gender !== saved.gender && form.gender) body.gender = form.gender;
   if (form.birthday !== saved.birthday && form.birthday !== undefined)
     body.birthday = form.birthday || undefined;
-  if (form.province !== saved.province && form.province) body.hometownProvinceId = form.province;
+  if (form.province !== saved.province && form.province)
+    body.hometownProvinceId = form.province;
   if (form.city !== saved.city && form.city) body.hometownCityId = form.city;
   return body;
 }
-export function profileClearError(form:ProfileForm,saved:ProfileForm){
-  return (saved.gender&&!form.gender)||(saved.birthday!==""&&form.birthday==="")||(saved.province&&!form.province)||(saved.city&&!form.city)?"当前接口尚未约定清空这些资料的方式，请填写有效值或取消修改。":"";
+export function profileClearError(form: ProfileForm, saved: ProfileForm) {
+  return (saved.gender && !form.gender) ||
+    (saved.birthday !== "" && form.birthday === "") ||
+    (saved.province && !form.province) ||
+    (saved.city && !form.city)
+    ? "暂不支持清空已填写的资料，请填写内容或取消本次修改。"
+    : "";
 }

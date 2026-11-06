@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, expectTypeOf } from "vitest";
 import { classifyAuth, createApi, uploadFile } from "./service";
-import type { Schema, Page } from "./models";
+import type { Schema, Page, Food } from "./models";
+import type { components } from "./schema";
 type ResponseData<T> = T extends {
   responses: { 200: { content: { "application/json": { data?: infer D } } } };
 }
@@ -116,8 +117,23 @@ describe("three-step storage upload", () => {
     ).rejects.toThrow("不一致");
   });
 });
-it("response types preserve array and page distinctions from v2", () => {
+it("response types preserve array, page and consent status distinctions from v3", () => {
   const api = createApi(async () => ({ code: 0, data: null }));
+  expectTypeOf<
+    components["schemas"]["BrowseHistoryItemDTOResponse"]
+  >().not.toBeNever();
+  expectTypeOf<
+    components["schemas"]["FoodVOResponse"]["coverCrop"]
+  >().toEqualTypeOf<components["schemas"]["CoverCropDTOResponse"] | null>();
+  expectTypeOf<Awaited<ReturnType<typeof api.consent>>>().toEqualTypeOf<
+    Schema["ConsentStatusViewResponse"]
+  >();
+  expectTypeOf<
+    components["schemas"]["SaTokenInfoResponse"]["loginId"]
+  >().toEqualTypeOf<string | number>();
+  expectTypeOf<
+    components["schemas"]["PhoneLoginDataResponse"]["loginId"]
+  >().toEqualTypeOf<string | number>();
   expectTypeOf<Awaited<ReturnType<typeof api.systemTags>>>().toEqualTypeOf<
     Schema["FoodTagSummaryVOResponse"][]
   >();
@@ -125,9 +141,9 @@ it("response types preserve array and page distinctions from v2", () => {
     Page<Schema["HubResponse"]>
   >();
   expectTypeOf<Awaited<ReturnType<typeof api.recommend>>>().toEqualTypeOf<
-    Schema["FoodVOResponse"][]
+    Food[]
   >();
-  expectTypeOf<Awaited<ReturnType<typeof api.unread>>>().toEqualTypeOf<
-    number
-  >();
+  expectTypeOf<
+    Awaited<ReturnType<typeof api.unread>>
+  >().toEqualTypeOf<number>();
 });

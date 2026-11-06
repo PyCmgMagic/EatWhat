@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Select } from "../components/Select";
+import { useContext, useEffect, useRef, useState, type FormEvent } from "react";
+import { ProfileNavigationGuardContext } from "../app/profile-workspace";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../app/state";
@@ -8,6 +10,8 @@ import { validateFiles } from "../api/validation";
 import { DesignIcon as Icon, type Draft } from "../mobile/ui";
 import { profileChanges, profileForm, profileClearError } from "./profile";
 import CropDialog from "./CropDialog";
+import { useSurfaceDismiss } from "../motion/hooks";
+import { useMemoryDraft, useSessionDraft } from "../app/drafts";
 import "./profile.css";
 
 type Avatar = Draft["images"][number];
@@ -17,8 +21,12 @@ export default function DesktopProfile() {
     cache = useQueryClient(),
     nav = useNavigate();
   const [saved, setSaved] = useState(() => profileForm(app.user!));
-  const [form, setForm] = useState(saved);
-  const [avatar, setAvatar] = useState<Avatar | null>(null);
+  const draftKey = `profile:${app.user?.id}`;
+  const [form, setForm, clearFormDraft] = useSessionDraft(draftKey, saved);
+  const [avatar, setAvatar, clearAvatarDraft] = useMemoryDraft<Avatar | null>(
+    draftKey,
+    null,
+  );
   const [cropping, setCropping] = useState<Avatar | null>(null);
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false),
@@ -27,15 +35,21 @@ export default function DesktopProfile() {
     [notice, setNotice] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [leaveTo, setLeaveTo] = useState("/me");
+  const navigationGuard = useContext(ProfileNavigationGuardContext);
   const input = useRef<HTMLInputElement>(null),
     leaveDialog = useRef<HTMLDialogElement>(null);
+  const dismissLeave = useSurfaceDismiss(leaveDialog, () => setLeaving(false));
   const saving = useRef(false),
     uploaded = useRef<{ file: File; key: string } | null>(null);
   const changes = profileChanges(form, saved);
-  const dirty = !!avatar || Object.keys(changes).length > 0;
-  const clearError = profileClearError(form,saved);
+  const dirty =
+    !!avatar ||
+    Object.keys(changes).length > 0 ||
+    JSON.stringify(form) !== JSON.stringify(saved);
+  const clearError = profileClearError(form, saved);
   const nameInvalid =
-    form.name.trim().length < 3 || form.name.trim().length > 10;
+    form.name.trim().length < 2 || form.name.trim().length > 12;
   const provinces = useQuery({
     queryKey: ["provinces"],
     queryFn: () => app.api.provinces(),
@@ -57,12 +71,6 @@ export default function DesktopProfile() {
   useEffect(() => {
     document.title = "编辑个人资料 · 山软今天吃什么";
   }, []);
-  useEffect(
-    () => () => {
-      if (avatar?.url) URL.revokeObjectURL(avatar.url);
-    },
-    [avatar],
-  );
   useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => {
       e.preventDefault();
@@ -74,6 +82,20 @@ export default function DesktopProfile() {
   useEffect(() => {
     if (leaving) leaveDialog.current?.showModal();
   }, [leaving]);
+  useEffect(() => {
+    if (!navigationGuard) return;
+    const guard = (destination: string) => {
+      if (busy) return false;
+      if (!dirty) return true;
+      setLeaveTo(destination);
+      setLeaving(true);
+      return false;
+    };
+    navigationGuard.current = guard;
+    return () => {
+      if (navigationGuard.current === guard) navigationGuard.current = null;
+    };
+  }, [busy, dirty, navigationGuard]);
 
   function change(patch: Partial<typeof form>) {
     setForm((current) => ({ ...current, ...patch }));
@@ -93,8 +115,11 @@ export default function DesktopProfile() {
     }
   }
   function reset() {
+    if (avatar?.url) URL.revokeObjectURL(avatar.url);
     setForm(saved);
     setAvatar(null);
+    clearFormDraft();
+    clearAvatarDraft();
     uploaded.current = null;
     setError("");
     setNotice("");
@@ -102,6 +127,7 @@ export default function DesktopProfile() {
   }
   function back() {
     if (busy) return;
+    setLeaveTo("/me");
     if (dirty) setLeaving(true);
     else nav("/me");
   }
@@ -109,7 +135,10 @@ export default function DesktopProfile() {
     event.preventDefault();
     if (saving.current || !dirty) return;
     setNameTouched(true);
-    if (clearError) { setError(clearError); return; }
+    if (clearError) {
+      setError(clearError);
+      return;
+    }
     if (nameInvalid) {
       document.getElementById("nick")?.focus();
       return;
@@ -149,7 +178,10 @@ export default function DesktopProfile() {
       const next = profileForm(user);
       setSaved(next);
       setForm(next);
+      if (avatar?.url) URL.revokeObjectURL(avatar.url);
       setAvatar(null);
+      clearFormDraft();
+      clearAvatarDraft();
       uploaded.current = null;
       setNotice("修改已保存，个人主页已同步更新。");
       app.toast("个人资料已更新");
@@ -328,12 +360,12 @@ export default function DesktopProfile() {
                 <div className="pc-profile-field">
                   <label htmlFor="nick">
                     昵称<span className="pc-profile-required">必填</span>
-                    <small>{form.name.length} / 10</small>
+                    <small>{form.name.length} / 12</small>
                   </label>
                   <input
                     id="nick"
                     autoComplete="nickname"
-                    maxLength={10}
+                    maxLength={12}
                     value={form.name}
                     onChange={(e) => change({ name: e.target.value })}
                     onBlur={() => setNameTouched(true)}
@@ -347,8 +379,8 @@ export default function DesktopProfile() {
                     }
                   >
                     {nameTouched && nameInvalid
-                      ? "昵称需要 3–10 个字，请调整后再保存。"
-                      : "3–10 个字，可以和其他食友重名。"}
+                      ? "昵称需要 2–12 个字，请调整后再保存。"
+                      : "2–12 个字，可以和其他食友重名。"}
                   </p>
                 </div>
                 <div className="pc-profile-field">
@@ -381,7 +413,7 @@ export default function DesktopProfile() {
               <div className="pc-profile-fields">
                 <div className="pc-profile-field">
                   <label htmlFor="profile-gender">性别</label>
-                  <select
+                  <Select
                     id="profile-gender"
                     value={form.gender}
                     onChange={(e) => change({ gender: e.target.value })}
@@ -394,7 +426,7 @@ export default function DesktopProfile() {
                       !["male", "female", "other"].includes(form.gender) && (
                         <option value={form.gender}>已设置</option>
                       )}
-                  </select>
+                  </Select>
                 </div>
                 <div className="pc-profile-field">
                   <label htmlFor="profile-birthday">
@@ -422,7 +454,7 @@ export default function DesktopProfile() {
                 </div>
                 <div className="pc-profile-field">
                   <label htmlFor="home-province">家乡省份</label>
-                  <select
+                  <Select
                     id="home-province"
                     value={form.province ?? ""}
                     disabled={provinces.isPending || provinces.isError}
@@ -445,11 +477,11 @@ export default function DesktopProfile() {
                           {p.name}
                         </option>
                       ))}
-                  </select>
+                  </Select>
                 </div>
                 <div className="pc-profile-field">
                   <label htmlFor="home-city">家乡城市</label>
-                  <select
+                  <Select
                     id="home-city"
                     value={form.city ?? ""}
                     disabled={
@@ -473,7 +505,7 @@ export default function DesktopProfile() {
                           {c.name}
                         </option>
                       ))}
-                  </select>
+                  </Select>
                 </div>
               </div>
               {(provinces.error || (form.province && cities.error)) && (
@@ -544,6 +576,7 @@ export default function DesktopProfile() {
           image={cropping}
           onClose={() => setCropping(null)}
           onApply={(result, framing) => {
+            if (avatar?.url) URL.revokeObjectURL(avatar.url);
             setAvatar({
               file: result.file,
               original: cropping.original ?? cropping.file,
@@ -561,27 +594,30 @@ export default function DesktopProfile() {
           ref={leaveDialog}
           className="pc-profile-leave"
           aria-labelledby="pc-profile-leave-title"
-          onCancel={() => setLeaving(false)}
+          onCancel={(e) => {
+            e.preventDefault();
+            dismissLeave();
+          }}
         >
           <h2 id="pc-profile-leave-title">还有修改未保存</h2>
-          <p>返回主页会放弃这次修改，继续编辑可以保留当前内容。</p>
+          <p>离开当前页面会放弃这次修改，继续编辑可以保留当前内容。</p>
           <div>
             <button
               type="button"
               className="pc-button light"
-              onClick={() => {
-                leaveDialog.current?.close();
-                setLeaving(false);
-              }}
+              onClick={dismissLeave}
             >
               继续编辑
             </button>
             <button
               type="button"
               className="pc-button"
-              onClick={() => nav("/me")}
+              onClick={() => {
+                reset();
+                nav(leaveTo);
+              }}
             >
-              放弃修改并返回
+              放弃修改并离开
             </button>
           </div>
         </dialog>

@@ -1,0 +1,61 @@
+.auth-dish-carousel {
+  --dish-size: 168px;
+  --dish-radius: 330px;
+  --dish-offset: 237px;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.auth-dish-wheel {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + var(--dish-offset));
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  transform: rotate(0deg);
+  animation: auth-dish-orbit 90s linear infinite;
+  animation-play-state: paused;
+}
+.auth-dish-carousel[data-playing="true"] .auth-dish-wheel {
+  animation-play-state: running;
+}
+.auth-dish-wheel > img {
+  position: absolute;
+  left: calc(var(--dish-size) / -2);
+  top: calc(var(--dish-size) / -2);
+  width: var(--dish-size);
+  height: var(--dish-size);
+  max-width: none;
+  transform: rotate(var(--dish-angle)) translateY(calc(-1 * var(--dish-radius)));
+  filter: drop-shadow(0 7px 0 rgb(83 55 27 / 8%));
+}
+@keyframes auth-dish-orbit {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+.pc-secondary-auth .pc-secondary-auth-art .auth-dish-carousel {
+  --dish-size: 220px;
+  --dish-radius: 440px;
+  --dish-offset: 300px;
+}
+.pc-secondary-auth-art > small {
+  z-index: 1;
+}
+@media (max-width: 899px) {
+  .pc-secondary-auth .pc-secondary-auth-art {
+    min-height: 420px;
+  }
+  .pc-secondary-auth .pc-secondary-auth-art .auth-dish-carousel {
+    --dish-size: 168px;
+    --dish-radius: 330px;
+    --dish-offset: 237px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-dish-wheel {
+    animation: none;
+  }
+}

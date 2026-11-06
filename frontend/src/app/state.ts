@@ -11,12 +11,20 @@ export type AppState = {
   toast: (message: string) => void;
   signIn: (session: Session) => Promise<void>;
   signOut: () => Promise<void>;
+  clearLocalSession: () => Promise<void>;
   refreshMe: () => void;
   upload: (
     file: File,
-    biz: "foods" | "avatar" | "restaurants",
+    biz:
+      "foods" | "avatar" | "restaurants" | "feedback" | "comments" | "activity",
     onPhase?: (phase: "uploading" | "confirming") => void,
   ) => Promise<string>;
+  uploadMany: (
+    files: File[],
+    biz:
+      "foods" | "restaurants" | "avatar" | "feedback" | "comments" | "activity",
+    onComplete?: (index: number, key: string) => void,
+  ) => Promise<string[]>;
 };
 export const AppContext = createContext<AppState | null>(null);
 export function useApp() {

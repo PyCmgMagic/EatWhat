@@ -1,10 +1,12 @@
 import { it, expect, vi } from "vitest";
 import { hasCoordinates, mediaUrl, money, parseId, wgsToGcj } from "./models";
-it("displays uploaded photos in default development Mock without accepting data URLs in live mode", () => {
+it("displays uploaded demo photos only in explicitly enabled Mock mode", () => {
   const photo = "data:image/jpeg;base64,dGVzdA==";
   try {
     vi.stubEnv("DEV", true);
     vi.stubGlobal("location", { search: "" });
+    expect(mediaUrl(photo)).toBeUndefined();
+    vi.stubGlobal("location", { search: "?demo=1" });
     expect(mediaUrl(photo)).toBe(photo);
     vi.stubGlobal("location", { search: "?demo=0" });
     expect(mediaUrl(photo)).toBeUndefined();

@@ -1,0 +1,55 @@
+import { createContext, type RefObject } from "react";
+
+export const profileSections = [
+  { to: "/me", name: "个人总览", icon: "me", group: "" },
+  { to: "/me/shares", name: "我的分享", icon: "bowl", group: "我的内容" },
+  { to: "/favorites", name: "我的收藏", icon: "bookmark", group: "我的内容" },
+  { to: "/history", name: "浏览足迹", icon: "history", group: "我的内容" },
+  { to: "/notifications", name: "消息通知", icon: "bell", group: "账号与服务" },
+  { to: "/settings", name: "账号设置", icon: "settings", group: "账号与服务" },
+  { to: "/help", name: "帮助与反馈", icon: "question", group: "账号与服务" },
+] as const;
+
+export type ProfileSection = (typeof profileSections)[number]["to"];
+export const ProfileWorkspaceContext = createContext(false);
+export type ProfileNavigationGuard = (destination: string) => boolean;
+export const ProfileNavigationGuardContext =
+  createContext<RefObject<ProfileNavigationGuard | null> | null>(null);
+
+/** Presentation only: each destination retains its own access and recovery gates. */
+export function profileSection(path: string): ProfileSection | null {
+  if (path === "/me" || path === "/features") return "/me";
+  if (path === "/me/shares" || /^\/submissions(?:\/[^/]+)?$/.test(path))
+    return "/me/shares";
+  if (path === "/favorites" || path === "/restaurants/favorites")
+    return "/favorites";
+  if (path === "/me/tags" || /^\/me\/tags\/\d+\/foods$/.test(path))
+    return "/favorites";
+  if (path === "/history") return "/history";
+  if (path === "/notifications" || path === "/announcements")
+    return "/notifications";
+  if (
+    path === "/help" ||
+    path === "/feedback" ||
+    /^\/feedback\/mine(?:\/\d+)?$/.test(path) ||
+    path === "/reports/new" ||
+    path === "/restaurants/correction"
+  )
+    return "/help";
+  if (
+    path === "/settings" ||
+    path.startsWith("/settings/") ||
+    [
+      "/verify",
+      "/data-notice",
+      "/me/edit",
+      "/me/details",
+      "/auth/consent-offer",
+      "/auth/account-recovery",
+      "/auth/device-recovery",
+      "/auth/mobile-recovery",
+    ].includes(path)
+  )
+    return "/settings";
+  return null;
+}

@@ -10,22 +10,28 @@
     "test": "vitest run",
     "typecheck": "tsc -b",
     "prototype:generate": "python scripts/compile-prototype.py",
-    "api:generate": "openapi-typescript \"../docs/EatWhat 业务服务 API.openapi.json\" -o src/api/schema.d.ts"
+    "api:audit": "node scripts/audit-api-coverage.mjs",
+    "api:diff": "node scripts/audit-api-v4.mjs \"docs/EatWhat 业务服务 APIv4.yaml\" \"docs/EatWhat 业务服务 APIv5.yaml\" output/api-v5-diff-20261104.json",
+    "api:generate": "node scripts/generate-api.mjs"
   },
   "dependencies": {
+    "@baidumap/jsapi-loader": "^1.0.0",
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
     "@fontsource-variable/noto-sans-sc": "^5.3.1",
     "@tanstack/react-query": "^5.104.5",
+    "dompurify": "^3.4.17",
     "lucide-react": "^1.61.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
+    "@baidumap/jsapi-v4-types": "^4.0.5",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "jsdom": "^29.1.1",
     "openapi-typescript": "^7.13.0",
     "prettier": "^3.9.10",
     "typescript": "~5.9.3",

@@ -1,0 +1,1462 @@
+/* Responsive rules are shared by the real page layouts, after page styles.
+   Generated 390px prototype sources remain untouched. */
+.pc-header-actions .pc-compact-search {
+  display: none;
+}
+.pc-nav-tabs {
+  overflow: clip;
+}
+.pc-app {
+  --page-gutter: clamp(20px, 3.2vw, 48px);
+  --header-height: 94px;
+}
+.pc-header-inner,
+.pc-main,
+.pc-footer {
+  padding-left: max(var(--page-gutter), env(safe-area-inset-left));
+  padding-right: max(var(--page-gutter), env(safe-area-inset-right));
+}
+.pc-main {
+  min-height: calc(100dvh - var(--header-height) - 90px);
+}
+.pc-app :is(main, section, article, aside, fieldset, form) {
+  min-width: 0;
+}
+.pc-app :is(h1, h2, h3, p),
+.pc-secondary-details dd {
+  overflow-wrap: anywhere;
+}
+.pc-food-card-title h3 {
+  min-width: 0;
+}
+.pc-food-card-title > span {
+  flex-shrink: 0;
+}
+.pc-section-toolbar {
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.pc-footer > div {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.pc-composer-heading,
+.pc-profile-heading,
+.pc-library-heading,
+.pc-secondary-head,
+.pc-page-heading {
+  min-width: 0;
+}
+.pc-crop-dialog,
+.pc-confirm-dialog,
+.pc-profile-leave {
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.pc-crop-frame {
+  width: min(300px, calc(100% - 4px));
+  height: auto;
+  aspect-ratio: 1;
+}
+.profile-people-heading,
+.profile-people-toolbar,
+.profile-people-footer {
+  flex-shrink: 0;
+}
+.profile-people-heading > div {
+  min-width: 0;
+}
+.profile-people-eyebrow {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-people-heading h2 {
+  overflow-wrap: anywhere;
+}
+.profile-people-search {
+  min-width: 0;
+}
+.profile-people-footer nav {
+  flex-shrink: 0;
+}
+.design-notice {
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+.desktop-mode .mobile-panel-layer {
+  padding: max(12px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+}
+.desktop-mode .mobile-panel-layer > .mobile-canvas {
+  width: min(480px, 100%);
+}
+.desktop-mode .mobile-panel-layer .design-screen {
+  width: 100% !important;
+}
+.desktop-mode .mobile-panel-layer [role="dialog"] {
+  width: 100% !important;
+  max-height: calc(100dvh - 32px);
+}
+.desktop-mode .design-notice {
+  width: min(460px, calc(100vw - 32px));
+  padding-left: clamp(20px, 4vw, 30px);
+  padding-right: clamp(20px, 4vw, 30px);
+}
+.ew-search-label {
+  min-width: 0;
+}
+.ew-food-photo {
+  width: 100%;
+  min-width: 0;
+}
+.ew-region-filter {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.ew-region-filter > button {
+  text-align: left;
+}
+.ew-policy-content > :is(header, footer) {
+  flex-shrink: 0;
+}
+.ew-results-head {
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Laptops: retain working space instead of squeezing four narrow cards. */
+@media (min-width: 1200px) and (max-width: 1250px) {
+  .pc-header-actions .pc-compact-search {
+    display: grid;
+  }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  .pc-header {
+    height: 80px;
+  }
+  .pc-app {
+    --header-height: 80px;
+  }
+  .pc-header-inner {
+    gap: 22px;
+  }
+  .pc-header-search {
+    display: none;
+  }
+  .pc-header-actions .pc-compact-search {
+    display: grid;
+  }
+  .pc-header-actions {
+    gap: 7px;
+  }
+  .pc-header nav a {
+    min-width: 72px;
+  }
+  .pc-brand b {
+    font-size: 17px;
+  }
+  .pc-brand small {
+    font-size: 9px;
+    letter-spacing: 1.2px;
+  }
+  .pc-food-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px 20px;
+  }
+  .pc-food-grid.three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pc-food-card-image {
+    height: auto;
+    aspect-ratio: 1.4;
+  }
+  .pc-food-card-image > .pc-plate {
+    width: 85%;
+    max-width: 230px;
+  }
+  .pc-profile-content .pc-food-card-image {
+    height: auto;
+    aspect-ratio: 1.4;
+  }
+  .pc-profile-content .pc-food-card-image > .pc-plate {
+    width: 85%;
+  }
+  .pc-settings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pc-secondary-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-secondary-note {
+    position: static;
+  }
+  .pc-secondary-rail,
+  .pc-secondary-sticky,
+  .pc-secondary-user-card {
+    top: 100px;
+  }
+  .pc-composer-shops {
+    top: 100px;
+  }
+  .pc-composer-editor {
+    grid-template-columns: minmax(200px, 0.85fr) minmax(0, 1.15fr);
+  }
+  .pc-composer-stage {
+    height: 270px;
+  }
+  .pc-composer-submit {
+    flex-wrap: wrap;
+  }
+  .pc-composer-submit > div:last-child {
+    margin-left: auto;
+  }
+  .food-discussion-layout {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 24px;
+  }
+  .ew-catalog-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .ew-region-filter {
+    grid-column: span 2;
+  }
+  .ew-results {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Tablets and narrow desktop windows use their available CSS pixels at 1:1. */
+@media (max-width: 1023px) {
+  .pc-app {
+    --page-gutter: 24px;
+  }
+  .pc-header-inner {
+    gap: 18px;
+  }
+  .pc-brand {
+    gap: 8px;
+  }
+  .pc-brand small {
+    display: none;
+  }
+  .pc-brand b {
+    font-size: 16px;
+  }
+  .pc-brand b > span {
+    display: block;
+    margin: 0;
+    font-size: 13px;
+  }
+  .pc-brand-symbol {
+    width: 40px;
+    height: 40px;
+  }
+  .pc-header nav a {
+    min-width: 66px;
+    gap: 5px;
+    font-size: 13px;
+  }
+  .pc-publish-button {
+    min-height: 42px;
+    padding: 0 15px;
+    font-size: 12px;
+  }
+  .pc-main {
+    padding-top: 24px;
+  }
+  .pc-footer {
+    gap: 20px;
+    align-items: flex-start;
+    line-height: 1.8;
+  }
+  .pc-footer > span {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .pc-footer > div {
+    gap: 12px;
+  }
+  .pc-hero {
+    height: 460px;
+  }
+  .pc-hero > .pc-location {
+    top: 22px;
+    left: 28px;
+  }
+  .pc-hero-counter {
+    right: 28px;
+    top: 27px;
+  }
+  .pc-hero-copy {
+    top: 100px;
+    left: 28px;
+  }
+  .pc-hero-copy h1 {
+    font-size: 52px;
+    min-height: 112px;
+    letter-spacing: -2px;
+  }
+  .pc-hero-price {
+    font-size: 50px;
+  }
+  .pc-hero-food {
+    --plate-size: 350px;
+    --plate-right: 0px;
+    --plate-top: 75px;
+    left: 42%;
+  }
+  .pc-hero-actions {
+    left: 28px;
+    bottom: 42px;
+    gap: 10px;
+  }
+  .pc-hero-actions :is(a, button) {
+    min-width: 140px;
+    padding: 0 18px;
+    height: 48px;
+    font-size: 14px;
+  }
+  .pc-hero-dots {
+    left: 28px;
+    bottom: 18px;
+  }
+  .pc-drag-hint {
+    right: 24px;
+    bottom: 48px;
+  }
+  .pc-discovery-sheet,
+  .pc-content-sheet {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .pc-tabs {
+    gap: 22px;
+  }
+  .pc-tabs > :is(button, a) {
+    font-size: 16px;
+  }
+  .pc-nearby-layout {
+    grid-template-columns: 290px minmax(0, 1fr);
+    min-height: 480px;
+    height: 620px;
+  }
+  .pc-nearby-list-header {
+    padding: 20px 16px 14px;
+  }
+  .pc-map-selected {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    padding: 18px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .pc-map-selected h2 {
+    font-size: 21px;
+  }
+  .pc-map-selected .pc-button {
+    min-height: 42px;
+    font-size: 12px;
+    padding: 0 18px;
+  }
+  .pc-profile-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .pc-profile-rail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 220px;
+    gap: 20px;
+  }
+  .pc-profile-card {
+    padding: 22px 26px;
+  }
+  .pc-profile-avatar {
+    width: 60px;
+    height: 60px;
+    margin: 0 0 12px;
+    font-size: 27px;
+  }
+  .pc-profile-card h1 {
+    font-size: 24px;
+  }
+  .pc-profile-card > p {
+    max-width: none;
+    margin-bottom: 18px;
+  }
+  .pc-profile-stats {
+    margin-bottom: 18px;
+  }
+  .pc-profile-stats b {
+    font-size: 25px;
+  }
+  .pc-profile-menu {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .pc-profile-menu > a {
+    padding: 14px 12px;
+  }
+  .pc-profile-card .pc-button {
+    width: fit-content;
+    min-width: 150px;
+  }
+  .pc-profile-content {
+    padding: 26px;
+    min-height: 400px;
+  }
+  .pc-profile-content .pc-food-grid.three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .pc-profile-editor-layout {
+    grid-template-columns: 230px minmax(0, 1fr);
+  }
+  .pc-profile-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-profile-form fieldset {
+    padding: 0 22px;
+  }
+  .pc-profile-savebar {
+    flex-wrap: wrap;
+    padding: 18px 22px;
+  }
+  .pc-profile-savebar > div:last-child {
+    margin-left: auto;
+  }
+  .pc-profile-save-status {
+    max-width: none;
+  }
+  .pc-profile-heading h1 > span {
+    display: block;
+    margin: 8px 0 0;
+  }
+  .pc-secondary-layout {
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 20px;
+  }
+  .pc-secondary-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-secondary-user-layout {
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 20px;
+  }
+  .pc-secondary-user-card {
+    padding: 26px 22px;
+  }
+  .pc-secondary-user-relations {
+    gap: 10px;
+  }
+  .pc-secondary-user-relations > :is(a, div) {
+    padding: 16px 12px;
+    gap: 8px;
+  }
+  .pc-secondary-auth {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+    min-height: 540px;
+  }
+  .pc-secondary-auth-art {
+    min-height: 540px;
+    padding: 28px;
+  }
+  .pc-secondary-auth-art h1 {
+    font-size: 34px;
+  }
+  .pc-secondary-auth-content {
+    padding: 30px;
+  }
+  .pc-secondary-auth-art > img {
+    width: 280px;
+  }
+  .pc-restaurant-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pc-restaurant-hero {
+    padding: 28px;
+  }
+  .pc-restaurant-hero h1 {
+    font-size: 34px;
+  }
+  .pc-restaurant-hero > div:first-child {
+    max-width: 65%;
+  }
+  .pc-restaurant-hero-plate {
+    width: 260px;
+    right: -35px;
+  }
+  .pc-dish-layout {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+    min-height: 580px;
+  }
+  .pc-dish-stage {
+    min-height: 580px;
+  }
+  .pc-dish-plate {
+    width: 340px;
+    right: -40px;
+    top: 115px;
+  }
+  .pc-dish-info {
+    padding: 26px 24px;
+  }
+  .pc-dish-info h1 {
+    font-size: 30px;
+  }
+  .pc-dish-actions {
+    flex-wrap: wrap;
+  }
+  .pc-dish-actions > .pc-button {
+    min-width: 0;
+    padding: 0 18px;
+    font-size: 13px;
+  }
+  .food-discussion {
+    padding: 26px;
+  }
+  .food-discussion-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .food-comment-composer {
+    position: static;
+    grid-row: 1;
+  }
+  .pc-tag-grid,
+  .pc-history-grid {
+    gap: 16px;
+  }
+  .pc-composer-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .pc-composer-shops {
+    position: static;
+    height: auto;
+    min-height: 0;
+    padding: 20px;
+  }
+  .pc-composer-shop-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: 240px;
+    min-height: 100px;
+  }
+  .pc-composer-editor {
+    grid-template-columns: 240px minmax(0, 1fr);
+    padding: 24px;
+    gap: 24px;
+  }
+  .pc-composer-submit {
+    margin-top: 0;
+  }
+  .pc-composer-heading {
+    align-items: flex-start;
+  }
+  .ew-catalog-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .ew-search-label {
+    grid-column: 1 / -1;
+  }
+  .ew-region-filter {
+    grid-column: 1 / -1;
+  }
+  .ew-results {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px 18px;
+  }
+  .ew-food-photo {
+    height: auto;
+    aspect-ratio: 1.25;
+  }
+  .ew-food-photo img {
+    width: 90%;
+    height: 95%;
+  }
+  .ew-edit-columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+}
+
+/* Phones: also usable when a shared link explicitly requests desktop view. */
+@media (max-width: 767px) {
+  .pc-app {
+    --page-gutter: 16px;
+    --header-height: 124px;
+  }
+  .pc-header {
+    height: auto;
+  }
+  .pc-header-inner {
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .pc-brand {
+    flex: 1;
+  }
+  .pc-brand b {
+    font-size: 14px;
+  }
+  .pc-brand b > span {
+    font-size: 12px;
+  }
+  .pc-brand-symbol {
+    width: 36px;
+    height: 36px;
+  }
+  .pc-header nav {
+    order: 3;
+    width: 100%;
+    justify-content: space-around;
+  }
+  .pc-header nav a {
+    flex: 1;
+    min-width: 0;
+    height: 40px;
+  }
+  .pc-header-actions {
+    gap: 4px;
+  }
+  .pc-header-search,
+  .pc-header-actions > .pc-user-avatar {
+    display: none;
+  }
+  .pc-header-actions .pc-compact-search {
+    display: grid;
+  }
+  .pc-publish-button {
+    width: 40px;
+    min-height: 40px;
+    padding: 0;
+  }
+  .pc-publish-button > span:not(.design-icon) {
+    display: none;
+  }
+  .pc-icon-button {
+    width: 40px;
+    height: 40px;
+  }
+  .pc-main {
+    padding-top: 20px;
+  }
+  .pc-footer {
+    flex-direction: column;
+    padding-top: 26px;
+    gap: 14px;
+  }
+  .pc-footer > div {
+    justify-content: flex-start;
+  }
+  .pc-button {
+    padding: 0 18px;
+    min-height: 44px;
+    font-size: 13px;
+  }
+  .pc-hero {
+    height: 620px;
+    border-radius: 24px 24px 0 0;
+  }
+  .pc-hero > .pc-location {
+    left: 20px;
+    top: 16px;
+    font-size: 13px;
+  }
+  .pc-hero > .pc-location > span {
+    font-size: 11px;
+  }
+  .pc-hero-counter {
+    top: 26px;
+    right: 20px;
+    font-size: 13px;
+  }
+  .pc-hero-counter > span:first-child {
+    font-size: 22px;
+  }
+  .pc-hero-copy {
+    left: 20px;
+    top: 80px;
+  }
+  .pc-hero-copy h1 {
+    font-size: 40px;
+    min-height: 84px;
+    margin-bottom: 12px;
+  }
+  .pc-hero-shop {
+    font-size: 13px;
+  }
+  .pc-hero-price {
+    font-size: 38px;
+    margin-top: 14px;
+  }
+  .pc-hero-food {
+    inset: 210px 0 85px;
+    --plate-size: 280px;
+    --plate-right: calc(50% - 140px);
+    --plate-top: 20px;
+  }
+  .pc-hero-actions {
+    left: 20px;
+    right: 20px;
+    bottom: 47px;
+    gap: 10px;
+  }
+  .pc-hero-actions :is(a, button) {
+    min-width: 0;
+    padding: 0 10px;
+    flex: 1;
+    font-size: 13px;
+  }
+  .pc-hero-dots {
+    left: 20px;
+    bottom: 18px;
+  }
+  .pc-drag-hint {
+    display: none;
+  }
+  .pc-discovery-sheet,
+  .pc-content-sheet {
+    padding: 12px 16px 24px;
+    border-radius: 24px;
+  }
+  .pc-section-toolbar {
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .pc-tabs {
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+  .pc-tabs > :is(button, a) {
+    font-size: 14px;
+  }
+  .pc-section-toolbar > a {
+    font-size: 11px;
+  }
+  .pc-food-grid,
+  .pc-food-grid.three,
+  .pc-profile-content .pc-food-grid.three,
+  .ew-results {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 14px;
+  }
+  .pc-food-card-image,
+  .pc-profile-content .pc-food-card-image {
+    height: auto;
+    aspect-ratio: 1.1;
+    border-radius: 18px;
+  }
+  .pc-food-card-image > .pc-plate,
+  .pc-profile-content .pc-food-card-image > .pc-plate {
+    width: 95%;
+  }
+  .pc-food-card-title {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .pc-food-card-title h3 {
+    font-size: 13px;
+    width: 100%;
+  }
+  .pc-food-card-title > span {
+    font-size: 16px;
+  }
+  .pc-food-card-meta {
+    font-size: 11px;
+    gap: 6px;
+  }
+  .pc-card-category {
+    top: 10px;
+    left: 10px;
+    font-size: 10px;
+  }
+  .pc-page-heading,
+  .pc-secondary-head,
+  .pc-library-heading,
+  .pc-profile-heading,
+  .pc-composer-heading {
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .pc-page-heading h1,
+  .pc-secondary-head h1,
+  .pc-library-heading h1,
+  .pc-profile-heading h1,
+  .pc-composer-heading h1,
+  .ew-head h1 {
+    font-size: 25px;
+  }
+  .pc-nearby-layout {
+    display: flex;
+    flex-direction: column-reverse;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+  }
+  .pc-map {
+    height: 350px;
+    flex: none;
+  }
+  .pc-nearby-list-scroll {
+    max-height: 480px;
+  }
+  .pc-profile-rail {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .pc-profile-card {
+    padding: 24px;
+  }
+  .pc-profile-menu {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 8px;
+  }
+  .pc-profile-menu > a {
+    padding: 12px 10px;
+    font-size: 12px;
+    gap: 7px;
+  }
+  .pc-profile-content {
+    padding: 20px 16px;
+    min-height: 350px;
+    border-radius: 24px;
+  }
+  .pc-profile-content .pc-section-toolbar {
+    padding-bottom: 12px;
+    gap: 10px;
+  }
+  .pc-profile-editor-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .pc-profile-cover {
+    height: 90px;
+  }
+  .pc-profile-preview-body {
+    padding: 0 22px 22px;
+  }
+  .pc-profile-editor-avatar {
+    width: 84px;
+    height: 84px;
+    margin-top: -36px;
+  }
+  .pc-profile-preview-sign {
+    min-height: 0;
+  }
+  .pc-profile-avatar-actions {
+    margin-top: 18px;
+  }
+  .pc-profile-savebar {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    border-radius: 0 0 24px 24px;
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+  }
+  .pc-profile-savebar > div:last-child {
+    width: 100%;
+  }
+  .pc-profile-savebar .pc-button {
+    min-width: 0;
+    flex: 1;
+  }
+  .pc-settings-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .pc-secondary-layout,
+  .pc-secondary-user-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-secondary-rail {
+    position: static;
+    padding: 16px;
+  }
+  .pc-secondary-rail > nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .pc-secondary-rail nav + nav {
+    margin-top: 8px;
+  }
+  .pc-secondary-rail nav > p {
+    width: 100%;
+    margin: 6px 8px;
+  }
+  .pc-secondary-rail nav a {
+    font-size: 12px;
+    padding: 10px;
+  }
+  .pc-secondary-rail nav a > .design-icon:last-child,
+  .pc-secondary-rail-note {
+    display: none;
+  }
+  .pc-secondary-section {
+    padding: 22px 18px;
+    margin-bottom: 16px;
+  }
+  .pc-secondary-note {
+    padding: 20px;
+  }
+  .pc-secondary-field-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-secondary-form-footer,
+  .pc-secondary-row,
+  .pc-secondary-list-toolbar {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .pc-secondary-message-title {
+    flex-wrap: wrap;
+  }
+  .pc-secondary-message time {
+    margin: 0;
+  }
+  .pc-secondary-search {
+    width: 100%;
+  }
+  .pc-secondary-user-card {
+    position: relative;
+    padding: 24px;
+  }
+  .pc-secondary-user-relations {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-secondary-auth {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+  .pc-secondary-auth-art {
+    min-height: 190px;
+    padding: 24px;
+  }
+  .pc-secondary-auth-art > .pc-eyebrow {
+    margin-top: 0;
+  }
+  .pc-secondary-auth-art h1 {
+    font-size: 29px;
+    margin: 14px 0 10px;
+  }
+  .pc-secondary-auth-art > p {
+    max-width: 65%;
+    font-size: 12px;
+  }
+  .pc-secondary-auth-art > img {
+    width: 190px;
+    right: -45px;
+    bottom: -55px;
+    opacity: 0.65;
+  }
+  .pc-secondary-auth-art > small {
+    display: none;
+  }
+  .pc-secondary-auth-content {
+    padding: 26px 22px;
+  }
+  .pc-restaurant-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-restaurant-hero {
+    padding: 24px;
+    min-height: 260px;
+  }
+  .pc-restaurant-hero > div:first-child {
+    max-width: 100%;
+  }
+  .pc-restaurant-hero h1 {
+    font-size: 28px;
+  }
+  .pc-restaurant-hero-plate {
+    opacity: 0.2;
+    right: -50px;
+    pointer-events: none;
+  }
+  .pc-restaurant-stats {
+    flex-wrap: wrap;
+  }
+  .pc-restaurant-actions {
+    flex-wrap: wrap;
+  }
+  .pc-dish-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-dish-stage {
+    min-height: 350px;
+  }
+  .pc-dish-plate {
+    width: 270px;
+    top: 50px;
+    right: calc(50% - 135px);
+  }
+  .pc-dish-stage-category {
+    left: 22px;
+    top: 20px;
+  }
+  .pc-photo-thumbnails {
+    bottom: 16px;
+    left: 18px;
+    right: 18px;
+  }
+  .pc-photo-thumbnails button {
+    width: 44px;
+    height: 44px;
+  }
+  .pc-dish-info {
+    padding: 24px 20px;
+  }
+  .pc-dish-info h1 {
+    font-size: 28px;
+  }
+  .food-discussion {
+    padding: 22px 18px;
+    border-radius: 24px;
+  }
+  .food-discussion-heading {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .food-discussion-heading h2 {
+    font-size: 22px;
+    flex-wrap: wrap;
+  }
+  .food-comment {
+    gap: 10px;
+  }
+  .food-comment-byline {
+    flex-wrap: wrap;
+  }
+  .food-comment-byline time {
+    margin-left: 0;
+  }
+  .food-comment-images > button {
+    width: 64px;
+    height: 64px;
+  }
+  .food-comment-actions {
+    gap: 16px;
+  }
+  .pc-tag-grid,
+  .pc-history-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-library-toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .pc-library-search {
+    width: 100%;
+  }
+  .pc-composer-shop-list {
+    grid-template-columns: minmax(0, 1fr);
+    max-height: 220px;
+  }
+  .pc-composer-editor {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    padding: 20px;
+  }
+  .pc-composer-submit {
+    position: static;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .pc-composer-submit > div:last-child {
+    margin: 0;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .pc-composer-submit .pc-button {
+    min-width: 0;
+    flex: 1;
+  }
+  .pc-composer-draft {
+    white-space: normal;
+  }
+  .pc-crop-dialog {
+    padding: 20px;
+    width: calc(100vw - 24px);
+  }
+  .pc-crop-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .pc-crop-stage {
+    min-height: 0;
+    padding: 16px;
+  }
+  .pc-crop-controls {
+    padding: 0;
+  }
+  .pc-crop-controls p {
+    margin-bottom: 16px;
+  }
+  .pc-crop-controls small {
+    margin-top: 16px;
+  }
+  .pc-crop-dialog > footer {
+    position: sticky;
+    bottom: -20px;
+    background: #fff;
+    padding: 12px 0;
+    gap: 10px;
+  }
+  .pc-crop-dialog > footer .pc-button {
+    min-width: 0;
+    padding: 0 14px;
+  }
+  .ew-catalog-filters {
+    padding: 20px;
+  }
+  .ew-form-panel {
+    padding: 22px 18px;
+  }
+  .ew-field-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ew-inline {
+    flex-wrap: wrap;
+  }
+  .ew-food-title {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .ew-food-title h3 {
+    width: 100%;
+  }
+  .ew-mobile-feature .ew-food-photo {
+    height: auto;
+    aspect-ratio: 1.1;
+  }
+  .ew-code-row {
+    flex-wrap: wrap;
+  }
+  .ew-code-row > input {
+    flex-basis: 100%;
+  }
+  .ew-mobile-feature
+    :is(input:not([type="checkbox"]):not([type="file"]), select, textarea),
+  .pc-app
+    :is(
+      input:not([type="checkbox"]):not([type="range"]):not([type="file"]),
+      select,
+      textarea
+    ) {
+    font-size: 16px;
+  }
+  .profile-people-footer {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .profile-people-footer nav {
+    margin-left: auto;
+  }
+  .profile-people-close {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* A short viewport needs scrollable content, with a reachable close/action row. */
+@media (max-height: 600px) {
+  .pc-header {
+    position: relative;
+  }
+  .pc-composer-shops,
+  .pc-secondary-rail,
+  .pc-secondary-sticky,
+  .food-comment-composer {
+    position: static;
+  }
+  .pc-secondary-user-card {
+    position: relative;
+    top: auto;
+  }
+  .pc-composer-shops {
+    height: auto;
+    min-height: 0;
+  }
+  .pc-composer-shop-list {
+    max-height: 240px;
+  }
+  .profile-people-dialog {
+    height: calc(100dvh - 24px);
+    margin: auto;
+    border-radius: 24px;
+    width: min(700px, calc(100vw - 24px));
+  }
+  .profile-people-handle {
+    display: none;
+  }
+  .profile-people-heading {
+    padding: 14px 20px;
+  }
+  .profile-people-avatar.owner {
+    width: 40px;
+    height: 40px;
+  }
+  .profile-people-heading h2 {
+    font-size: 20px;
+  }
+  .profile-people-toolbar {
+    margin: 0 20px;
+    flex-wrap: nowrap;
+    padding-bottom: 0;
+    gap: 16px;
+  }
+  .profile-people-toolbar .pc-tabs {
+    flex: none;
+    gap: 20px;
+  }
+  .profile-people-search {
+    width: min(220px, 40%);
+    margin: 0 0 9px;
+    padding: 8px 10px;
+  }
+  .profile-people-scroll {
+    padding: 12px 16px;
+  }
+  .profile-people-results,
+  .profile-people-dialog .pc-secondary-state {
+    min-height: 120px;
+  }
+  .profile-people-dialog .pc-secondary-state {
+    padding: 20px 12px;
+  }
+  .profile-people-footer {
+    min-height: 52px;
+    padding: 10px 20px max(10px, env(safe-area-inset-bottom));
+  }
+}
+@media (max-height: 600px) and (max-width: 479px) {
+  .profile-people-toolbar {
+    flex-wrap: wrap;
+    padding-bottom: 10px;
+    gap: 5px;
+  }
+  .profile-people-search {
+    width: 100%;
+    margin: 0;
+  }
+}
+@media (pointer: coarse) {
+  .pc-app
+    :is(
+      .pc-icon-button,
+      .pc-secondary-rail nav a,
+      .pc-profile-menu > a,
+      .pc-composer-shop,
+      .pc-composer-kind button
+    ),
+  .profile-people-close,
+  .profile-people-footer button {
+    min-height: 44px;
+  }
+  .profile-people-footer button {
+    min-width: 44px;
+  }
+}
+
+/* Small tablets use normal text and fluid content instead of a magnified phone. */
+@media (min-width: 600px) and (max-width: 767px) {
+  .pc-profile-rail {
+    grid-template-columns: minmax(0, 1fr) 190px;
+    gap: 16px;
+  }
+  .pc-profile-menu {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-profile-card {
+    padding: 22px;
+  }
+  .pc-profile-content .pc-food-grid.three,
+  .pc-food-grid,
+  .ew-results {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .pc-secondary-layout {
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 18px;
+  }
+  .pc-secondary-rail {
+    align-self: start;
+    padding: 16px 10px;
+  }
+  .pc-secondary-rail > nav {
+    display: block;
+  }
+  .pc-secondary-rail nav > p {
+    width: auto;
+  }
+  .pc-secondary-rail nav a {
+    padding: 12px 9px;
+  }
+  .pc-composer-shop-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pc-composer-editor {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 20px;
+  }
+  .pc-profile-editor-layout {
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 18px;
+  }
+  .pc-profile-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Reserve space for the map legend and selection card at tablet widths. */
+@media (max-width: 1199px) {
+  .pc-map {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+  .pc-map-surface {
+    position: relative;
+    flex: 1;
+    min-height: 320px;
+  }
+  .pc-map-pins {
+    inset: 64px 12px 34px;
+  }
+  .pc-map-selected {
+    position: relative;
+    inset: auto;
+    flex: none;
+    margin: 0 16px 16px;
+  }
+  .pc-map-selected > div {
+    min-width: 0;
+  }
+  .pc-map-selected h2,
+  .pc-map-selected p {
+    overflow-wrap: anywhere;
+  }
+}
+@media (max-height: 600px) and (min-width: 600px) and (max-width: 1199px) {
+  .pc-nearby-layout {
+    height: auto;
+    max-height: none;
+    min-height: 0;
+  }
+  .pc-nearby-list-scroll {
+    max-height: 460px;
+  }
+}
+
+/* Native account forms share the width and inset treatment of phone pages. */
+body:not(.desktop-mode) > #root .mobile-page-native {
+  width: 100%;
+  max-width: 520px;
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+  padding-bottom: max(32px, env(safe-area-inset-bottom));
+}
+.mobile-page-native :is(input, textarea, select) {
+  min-width: 0;
+  max-width: 100%;
+}
+.mobile-page-native input[type="checkbox"] {
+  display: inline-block;
+  width: 17px;
+  height: 17px;
+}
+.mobile-viewport .design-screen :is(h1, h2, h3, p, strong, small) {
+  overflow-wrap: anywhere;
+}
+.mobile-full-food-name {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.6;
+  font-weight: 800;
+}
+.mobile-store-address {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.mobile-full-store-address {
+  margin: 0 20px;
+  font-size: 13px;
+  line-height: 1.9;
+  color: #6e625b;
+}
+@media (max-width: 359px) {
+  .mobile-page-native .form-two-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Keyboard overlays must follow the visual viewport, including iOS panning. */
+html[data-viewport-occluded="true"]
+  :is(
+    .profile-people-dialog,
+    .ew-policy-dialog,
+    .modal,
+    .pc-crop-dialog,
+    .pc-confirm-dialog,
+    .pc-profile-leave,
+    .pc-library-dialog
+  )[open] {
+  top: calc(var(--visible-top) + 12px);
+  bottom: auto;
+  margin-top: 0;
+  margin-bottom: 0;
+  max-height: calc(var(--visible-height) - 24px);
+}
+html[data-viewport-occluded="true"] .profile-people-heading {
+  padding: 14px 20px;
+}
+html[data-viewport-occluded="true"] .profile-people-heading h2 {
+  font-size: 20px;
+}
+html[data-viewport-occluded="true"] .profile-people-avatar.owner {
+  width: 40px;
+  height: 40px;
+}
+html[data-viewport-occluded="true"] .profile-people-handle {
+  display: none;
+}
+html[data-viewport-occluded="true"] .profile-people-footer {
+  padding: 10px 20px;
+  min-height: 52px;
+}
+html[data-viewport-occluded="true"] .profile-people-toolbar {
+  padding-bottom: 10px;
+  gap: 6px;
+}
+html[data-viewport-occluded="true"]
+  :is(.mobile-panel-layer, .design-notice-backdrop) {
+  top: var(--visible-top);
+  bottom: auto;
+  height: var(--visible-height);
+}
+html[data-viewport-occluded="true"] .mobile-panel-layer .mobile-canvas {
+  --screen-height: calc(
+    var(--visible-height) / var(--mobile-scale, 1)
+  ) !important;
+}
+html[data-viewport-occluded="true"] .mobile-panel-layer [role="dialog"] {
+  max-height: calc((var(--visible-height) - 24px) / var(--mobile-scale, 1));
+}
+html[data-viewport-occluded="true"] .design-notice {
+  max-height: calc(var(--visible-height) - 24px);
+}

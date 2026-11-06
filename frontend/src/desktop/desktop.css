@@ -20,8 +20,8 @@
 .pc-app img {
   max-width: 100%;
 }
-.pc-design-preview .pc-main {
-  min-height: calc(100dvh / var(--preview-scale) - 184px);
+.pc-compact-search {
+  display: none;
 }
 .pc-header {
   height: 94px;
@@ -394,9 +394,7 @@
   --plate-size: 474px;
   --plate-right: 104px;
   --plate-top: 19px;
-  --peek-x: 401px;
-  --peek-y: 197px;
-  --peek-scale: 0.654;
+  --orbit-radius: calc(var(--plate-size) * 1.03);
   position: absolute;
   inset: 0 0 0 40%;
   touch-action: pan-y;
@@ -434,26 +432,18 @@
   top: var(--plate-top);
   pointer-events: none;
   opacity: 0;
-  transform: translate3d(calc(var(--peek-x) + 140px), var(--peek-y), 0)
-    rotate(38deg) scale(var(--peek-scale));
   transition:
-    transform 320ms cubic-bezier(0.25, 1, 0.5, 1),
-    opacity 240ms ease-out;
+    transform 360ms cubic-bezier(0.25, 1, 0.5, 1),
+    opacity 180ms ease-out;
   filter: drop-shadow(0 13px 16px #231c1814);
 }
 .pc-hero-food > .pc-current-plate {
   z-index: 2;
   opacity: 1;
-  transform: translate3d(0, 0, 0) rotate(0) scale(1);
 }
 .pc-hero-food > .pc-next-plate {
   z-index: 1;
-  transform: translate3d(var(--peek-x), var(--peek-y), 0) rotate(28deg)
-    scale(var(--peek-scale));
   opacity: 0.92;
-}
-.pc-hero-food > .pc-previous-plate {
-  transform: translate3d(-280px, -100px, 0) rotate(-28deg) scale(0.65);
 }
 .pc-hero-actions {
   position: absolute;
@@ -617,6 +607,8 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
 }
 .pc-motion-region {
   min-width: 0;
+  /* Keep lazy content in sync when a modal clears its parent's inert state. */
+  interactivity: inherit;
 }
 .pc-category-content {
   min-height: 350px;
@@ -959,6 +951,14 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   height: 100%;
   inset: 0;
 }
+.pc-map-surface {
+  position: absolute;
+  inset: 0;
+}
+.pc-map-pins {
+  position: absolute;
+  inset: 0;
+}
 .pc-map-pin {
   position: absolute;
   width: 55px;
@@ -981,6 +981,7 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   border-radius: 50%;
 }
 .pc-map-pin span {
+  pointer-events: none;
   position: absolute;
   left: 50%;
   top: calc(100% + 7px);
@@ -1520,6 +1521,9 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   font-size: 12px;
 }
 .pc-profile-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   border-radius: 24px;
   background: #fff;
   padding: 10px;
@@ -1536,8 +1540,8 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   margin-left: auto;
   color: #9a8b80;
 }
-.pc-profile-menu > a:hover {
-  background: #f4efeb;
+.pc-profile-menu > a:not([aria-current="page"]):hover {
+  background: #f8f5f1;
 }
 .pc-profile-content {
   position: relative;
@@ -2046,9 +2050,6 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
     --plate-size: 510px;
     --plate-right: 142px;
     --plate-top: 20px;
-    --peek-x: 457px;
-    --peek-y: 178px;
-    --peek-scale: 0.608;
   }
   .pc-hero-actions {
     bottom: 48px;
@@ -2095,9 +2096,6 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
     --plate-size: 420px;
     --plate-right: 36px;
     --plate-top: 40px;
-    --peek-x: 346px;
-    --peek-y: 200px;
-    --peek-scale: 0.643;
   }
   .pc-hero-copy h1 {
     font-size: 63px;

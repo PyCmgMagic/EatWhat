@@ -1,3 +1,4 @@
+import { useSendSignal } from "../features/useSendSignal";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -14,6 +15,7 @@ import {
 import { useTask } from "../components/useTask";
 import { validateFiles } from "../api/validation";
 import { ProfileExtras, MobileBinding } from "./ProfileExtras";
+import { PolicyConsent, usePolicyConsent } from "../features/Consent";
 export default function Settings() {
   return (
     <>
@@ -28,6 +30,7 @@ export default function Settings() {
   );
 }
 function SettingsContent() {
+  const getSignal = useSendSignal();
   const { api, user, refreshMe, upload, signOut, toast } = useApp(),
     navigate = useNavigate(),
     [avatar, setAvatar] = useState<File | null>(null),
@@ -40,13 +43,13 @@ function SettingsContent() {
     e.preventDefault();
     const d = new FormData(e.currentTarget);
     task.run(async () => {
-      const userName = String(d.get("userName")).trim();
-      if (userName.length < 3 || userName.length > 10)
-        throw new Error("昵称需要 3–10 个字符。");
+      const displayName = String(d.get("displayName")).trim();
+      if (displayName.length < 2 || displayName.length > 12)
+        throw new Error("昵称需要 2–12 个字符。");
       let key: string | undefined;
       if (avatar) key = await upload(avatar, "avatar");
       await api.updateProfile({
-        userName,
+        displayName,
         signature: String(d.get("signature") || "").trim(),
         avatar: key,
       });
@@ -72,15 +75,15 @@ function SettingsContent() {
         <form onSubmit={profile}>
           <div className="field-group">
             <label className="form-label" htmlFor="profile-name">
-              昵称 <span className="optional">3–10 个字符</span>
+              昵称 <span className="optional">2–12 个字符</span>
             </label>
             <input
               className="field"
               id="profile-name"
-              name="userName"
-              defaultValue={user?.userName || ""}
-              minLength={3}
-              maxLength={10}
+              name="displayName"
+              defaultValue={user?.displayName || ""}
+              minLength={2}
+              maxLength={12}
               required
             />
           </div>
@@ -160,7 +163,7 @@ function SettingsContent() {
           </a>
         ) : (
           <p className="section-caption">
-            统一认证入口尚待部署配置，可以尝试邮箱认证，或联系管理员。
+            统一认证正在准备中，敬请期待。你可以先使用邮箱认证，或联系管理员。
           </p>
         )}
         <form
@@ -177,7 +180,7 @@ function SettingsContent() {
                 !email.toLowerCase().endsWith("@" + domain.toLowerCase())
               )
                 throw new Error(`请使用 @${domain} 邮箱。`);
-              await api.sendEmail(email);
+              await api.sendEmail(email, getSignal());
             });
           }}
         >
@@ -376,12 +379,10 @@ function Privacy({ onClose }: { onClose: () => void }) {
   );
 }
 export function ConsentSettings() {
+  const consent = usePolicyConsent();
   const { api } = useApp(),
     q = useQuery({ queryKey: ["consent"], queryFn: () => api.consent() }),
-    p = useQuery({
-      queryKey: ["consent-policy"],
-      queryFn: () => api.consentPolicy(),
-    }),
+    p = consent.query,
     [confirm, setConfirm] = useState(false),
     [withdraw, setWithdraw] = useState(false);
   const task = useTask(
@@ -413,47 +414,49 @@ export function ConsentSettings() {
         </div>
         <div>
           <dt>身份已就绪</dt>
-          <dd>{c?.identityReady ? "是" : "否"}</dd>
+          <dd>
+            {c?.identityReady === true
+              ? "是"
+              : c?.identityReady === false
+                ? "否"
+                : "待确认"}
+          </dd>
         </div>
         <div>
-          <dt>注册已接受</dt>
-          <dd>{c?.registrationAccepted ? "是" : "否"}</dd>
+          <dt>授权政策版本</dt>
+          <dd>{c?.policyVersion || "待确认"}</dd>
         </div>
         <div>
-          <dt>当前政策</dt>
-          <dd>{p.data?.policyVersion || "待确认"}</dd>
+          <dt>当前政策版本</dt>
+          <dd>{p.data?.version || "待确认"}</dd>
         </div>
       </dl>
-      {import.meta.env.VITE_CONSENT_POLICY_URL && (
-        <a
-          className="text-link"
-          target="_blank"
-          rel="noopener noreferrer"
-          href={import.meta.env.VITE_CONSENT_POLICY_URL}
+      {consent.ready && (
+        <button
+          className="btn btn-secondary"
+          disabled={task.isPending || !p.data?.version}
+          onClick={() => {
+            consent.setAgreed(false);
+            setConfirm(true);
+          }}
         >
-          阅读授权政策 ↗
-        </a>
+          管理授权
+        </button>
       )}
-      {p.data?.siteMode === "CAMPUS" &&
-        import.meta.env.VITE_CONSENT_POLICY_URL && (
-          <button
-            className="btn btn-secondary"
-            disabled={task.isPending || !p.data?.policyVersion}
-            onClick={() => setConfirm(true)}
-          >
-            管理授权
-          </button>
-        )}
       {confirm && (
         <div className="info-strip">
           <p>请确认已阅读政策。重新授权将采用当前政策版本。</p>
+          <PolicyConsent consent={consent} busy={task.isPending} />
           <button
             className="btn btn-primary"
-            disabled={task.isPending}
+            disabled={task.isPending || !consent.canSubmit}
             onClick={() =>
-              task.run(() =>
-                api.grantConsent({ policyVersion: p.data!.policyVersion! }),
-              )
+              task.run(async () => {
+                const accepted = await consent.requireAcceptance();
+                await api.grantConsent({
+                  policyVersion: accepted.consentPolicyVersion,
+                });
+              })
             }
           >
             同意并授权

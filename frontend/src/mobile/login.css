@@ -1,0 +1,137 @@
+.ew-login {
+  --pc-ink: #231c18;
+  --pc-muted: #6e625b;
+  --pc-line: #efe9e4;
+  max-width: 520px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: #f3c46e;
+  color: var(--pc-ink);
+  overflow: clip;
+}
+.ew-login a {
+  text-decoration: none;
+}
+.ew-login-stage {
+  position: relative;
+  min-height: 420px;
+  padding: 24px;
+  overflow: hidden;
+}
+.ew-login-stage::before,
+.ew-login-stage::after {
+  content: "";
+  position: absolute;
+  left: -30%;
+  top: 188px;
+  width: 170%;
+  height: 500px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 20%);
+}
+.ew-login-stage::after {
+  top: 210px;
+  border: 1px solid rgb(255 255 255 / 65%);
+  background: none;
+}
+.ew-login-brand {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.ew-login-brand a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  color: #51402e;
+  font-size: 11px;
+  font-weight: 500;
+}
+.ew-login-stage h1 {
+  position: relative;
+  z-index: 1;
+  margin: 18px 0 12px;
+  font-size: 50px;
+  line-height: 1.04;
+  letter-spacing: -1.5px;
+  font-weight: 900;
+}
+.ew-login-stage p {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.85;
+  color: #51402e;
+}
+.ew-login .ew-login-sheet {
+  position: relative;
+  z-index: 2;
+  min-height: calc(100dvh - 420px);
+  padding: 24px 24px max(28px, env(safe-area-inset-bottom));
+  border-radius: 28px 28px 0 0;
+  background: white;
+  justify-content: flex-start;
+}
+.ew-login-sheet .pc-secondary-auth-tabs {
+  display: none;
+}
+.ew-login .ew-login-sheet > h2 {
+  font-size: 23px;
+  margin: 0 0 6px;
+}
+.ew-login-sheet > .pc-secondary-copy {
+  margin: 0 0 22px;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.ew-login .ew-login-sheet > form {
+  gap: 14px;
+}
+.ew-login-sheet .pc-secondary-field {
+  gap: 8px;
+}
+.ew-login-sheet .pc-secondary-field input {
+  font-size: 16px;
+  min-height: 48px;
+}
+.ew-login-sheet .ew-consent {
+  margin: 0;
+}
+.ew-login-sheet .ew-consent-note {
+  margin-top: 8px !important;
+}
+.ew-login .ew-login-sheet > form > .pc-button {
+  min-height: 52px;
+  margin-top: 0;
+}
+.ew-login .ew-login-sheet > .pc-secondary-text-link {
+  margin-top: 18px;
+  font-size: 12px;
+}
+.ew-login-sheet .pc-secondary-auth-footnote {
+  margin-top: 16px;
+}
+.ew-login-sheet > .ew-auth-phone-form {
+  margin: 0;
+}
+@media (max-width: 359px) {
+  .ew-login-stage {
+    padding-inline: 20px;
+  }
+  .ew-login .ew-login-sheet {
+    padding-inline: 20px;
+  }
+  .ew-login .ew-login-sheet > h2 {
+    font-size: 21px;
+  }
+  .ew-login-sheet .ew-auth-phone-form h2 {
+    font-size: 21px;
+  }
+}

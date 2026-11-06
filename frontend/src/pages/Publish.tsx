@@ -1,3 +1,4 @@
+import { Select } from "../components/Select";
 import { useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -220,7 +221,7 @@ function PublishForm() {
                 <label className="form-label" htmlFor="publish-category">
                   分类
                 </label>
-                <select
+                <Select
                   className="field"
                   id="publish-category"
                   name="category"
@@ -233,7 +234,7 @@ function PublishForm() {
                         {c.label}
                       </option>
                     ))}
-                </select>
+                </Select>
               </div>
             </div>
             <div className="field-group">

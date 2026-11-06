@@ -3,23 +3,37 @@ import React, {
   createElement,
   useEffect,
   useContext,
+  lazy,
+  Suspense,
   type ReactNode,
 } from "react";
-import source from "./generated/trees.json";
+import { screenModules } from "virtual:eatwhat-screens";
+import manifest from "./generated/manifest.json";
+import {
+  MobilePageSkeleton,
+  ContentSkeleton,
+} from "../components/LoadingSkeleton";
 import type { DesignNode, Values, NodeView, Bridge } from "./types";
 import { useDesignBridge } from "./bridge";
-import { DesignNav, DesignIcon, DesignRegistryContext } from "./ui";
+import { DesignNav, DesignIcon, DesignRegistryContext, useMobile } from "./ui";
+import { readDraft, writeDraft } from "../app/drafts";
 
 export class DesignController extends Component<any, any> {
   state: Values = {};
   static getDerivedStateFromProps(props: Values, state: Values) {
-    if (state?.__initialized) return null;
+    const profile = !props.reference && props.screen === "G-EditProfile";
+    if (
+      state?.__initialized &&
+      (!profile || state.__draftOwner === props.user?.id)
+    )
+      return null;
     if (!props.reference && props.screen === "G-EditProfile" && !props.user)
       return null;
     const patch: Values = { __initialized: true };
     if (!props.reference) {
+      if (props.screen === "G-UserProfile") patch.menu = false;
       if (props.screen === "G-PasswordLogin")
-        Object.assign(patch, { account: "", pwd: "" });
+        Object.assign(patch, { account: props.loginUserName ?? "", pwd: "" });
       if (
         [
           "G-PhoneLogin",
@@ -37,10 +51,14 @@ export class DesignController extends Component<any, any> {
           old: "",
         });
       if (props.screen === "G-EditProfile")
-        Object.assign(patch, {
-          nick: props.user?.userName ?? "",
-          sign: props.user?.signature ?? "",
-        });
+        Object.assign(
+          patch,
+          readDraft(`profile-mobile:${props.user?.id}`, {
+            nick: props.user?.displayName ?? "",
+            sign: props.user?.signature ?? "",
+          }),
+          { __draftOwner: props.user?.id },
+        );
       if (props.screen === "G-AddDish" && props.draft)
         Object.assign(patch, {
           desc: props.draft.description ?? "",
@@ -75,6 +93,20 @@ export class DesignController extends Component<any, any> {
   componentWillUnmount() {
     const self = this as any;
     if (self.timer) clearInterval(self.timer);
+  }
+  componentDidUpdate(_previousProps: any, previousState: Values) {
+    if (
+      !this.props.reference &&
+      this.props.screen === "G-EditProfile" &&
+      this.props.user?.id &&
+      (previousState.nick !== this.state.nick ||
+        previousState.sign !== this.state.sign)
+    ) {
+      writeDraft(`profile-mobile:${this.props.user.id}`, {
+        nick: String(this.state.nick ?? ""),
+        sign: String(this.state.sign ?? ""),
+      });
+    }
   }
   renderVals(): Values {
     return {};
@@ -259,7 +291,7 @@ function Tree({
     />
   ));
   if (path === "0") {
-    const preview = (source as any)[screen]?.preview ?? {
+    const preview = (manifest as any)[screen]?.preview ?? {
       width: 390,
       height: 844,
     };
@@ -291,6 +323,54 @@ function Tree({
   if (custom !== undefined) return custom;
   return createElement(tag, props, ...children);
 }
+type ScreenProps = { screen: string; bridge: Bridge };
+const screenViews = Object.fromEntries(
+  Object.entries(screenModules).map(([name, load]) => [
+    name,
+    lazy(() =>
+      load().then(({ default: design }) => ({
+        default: (props: ScreenProps) => (
+          <ResolvedScreen {...props} design={design} />
+        ),
+      })),
+    ),
+  ]),
+);
+function ScreenFallback({ screen }: { screen: string }) {
+  const mobile = useMobile();
+  if (screen.startsWith("G-Panel"))
+    return (
+      <div
+        className="mobile-status"
+        role="dialog"
+        aria-modal="true"
+        aria-label="正在加载面板"
+      >
+        <ContentSkeleton kind="rows" count={2} />
+        <button className="mobile-inline-link" onClick={mobile.closePanel}>
+          关闭
+        </button>
+      </div>
+    );
+  return (
+    <>
+      <MobilePageSkeleton screen={screen} />
+      {["G2-Home", "G-HomePhoto", "G-Me", "G-Nearby"].includes(screen) && (
+        <div className="ew-mobile-loading-nav">
+          <DesignNav
+            active={
+              screen === "G-Me"
+                ? "me"
+                : screen === "G-Nearby"
+                  ? "nearby"
+                  : "home"
+            }
+          />
+        </div>
+      )}
+    </>
+  );
+}
 function DesignRenderer({
   screen,
   controller,
@@ -302,7 +382,33 @@ function DesignRenderer({
 }) {
   const original = controller.renderVals();
   const bridge = useDesignBridge(screen, controller, original, !!reference);
-  const design = (source as any)[screen];
+  const Screen = screenViews[screen];
+  return Screen ? (
+    <Suspense
+      fallback={
+        <div
+          className="mobile-code-loading"
+          style={{
+            width: 390,
+            height: "var(--screen-height,844px)",
+            position: "relative",
+          }}
+        >
+          <ScreenFallback screen={screen} />
+        </div>
+      }
+    >
+      <Screen screen={screen} bridge={bridge} />
+    </Suspense>
+  ) : null;
+}
+function ResolvedScreen({
+  screen,
+  bridge,
+  design,
+}: ScreenProps & {
+  design: Awaited<ReturnType<(typeof screenModules)[string]>>["default"];
+}) {
   useEffect(() => {
     document.title = design?.title ?? "山软今天吃什么";
   }, [design]);

@@ -1,4 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  validateFoodDraft,
+  normalizedTag,
+  submissionPath,
+} from "../api/content-rules";
+import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   keepPreviousData,
@@ -6,8 +12,9 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useApp } from "../app/state";
+import { usePageLifetime } from "../app/drafts";
 import { useArea } from "../app/area";
-import { errorMessage, resultUncertain } from "../api/client";
+import { duplicateFoodId, errorMessage, resultUncertain } from "../api/client";
 import { mediaUrl, money, type Category } from "../api/models";
 import { validateFiles } from "../api/validation";
 import { DesignIcon as Icon, useMobile } from "../mobile/ui";
@@ -15,6 +22,7 @@ import { stageColors } from "../mobile/catalog";
 import { adjustPhoto, saveVisual } from "../mobile/photos";
 import CropDialog from "./CropDialog";
 import "./publish.css";
+import { publishDisplay, mealOptions, mealCode } from "../api/food-display";
 
 const kinds: { id: Category; name: string }[] = [
   { id: "staple", name: "主食" },
@@ -37,6 +45,9 @@ export default function DesktopPublish() {
     location = useLocation(),
     nav = useNavigate(),
     cache = useQueryClient();
+  const active = usePageLifetime();
+  const routeKey = useRef(location.key);
+  routeKey.current = location.key;
   const { draft } = m,
     draftRef = useRef(draft);
   draftRef.current = draft;
@@ -50,7 +61,8 @@ export default function DesktopPublish() {
     [cropIndex, setCropIndex] = useState<number | null>(null),
     [photoBusy, setPhotoBusy] = useState(false),
     [dragging, setDragging] = useState(false);
-  const [error, setError] = useState(""),
+  const [duplicate, setDuplicate] = useState<number>(),
+    [error, setError] = useState(""),
     [progress, setProgress] = useState(""),
     [checked, setChecked] = useState(false);
   const selectedId =
@@ -59,16 +71,25 @@ export default function DesktopPublish() {
   const shops = useQuery({
     queryKey: ["restaurants", "publish", area, search, page],
     queryFn: () =>
-      app.api.restaurantSearch({
-        gcjLng: area!.gcjLng,
-        gcjLat: area!.gcjLat,
-        hubId: area?.hubId,
-        keyword: search || undefined,
-        page,
-        pageSize: 12,
-      }),
-    enabled: !!area,
+      area
+        ? app.api.restaurantSearch({
+            gcjLng: area!.gcjLng,
+            gcjLat: area!.gcjLat,
+            hubId: area?.hubId,
+            keyword: search || undefined,
+            page,
+            pageSize: 12,
+          })
+        : app.api.browseRestaurants({
+            keyword: search || undefined,
+            page,
+            pageSize: 12,
+          }),
     placeholderData: keepPreviousData,
+  });
+  const systemTags = useQuery({
+    queryKey: ["system-tags"],
+    queryFn: () => app.api.systemTags(),
   });
   const restaurant = useQuery({
     queryKey: ["restaurants", "detail", selectedId],
@@ -139,6 +160,7 @@ export default function DesktopPublish() {
       setPhoto(current.length);
     } catch (e) {
       setError(errorMessage(e));
+      setDuplicate(duplicateFoodId(e));
     } finally {
       photoLock.current = false;
       setPhotoBusy(false);
@@ -148,6 +170,17 @@ export default function DesktopPublish() {
     event.preventDefault();
     if (submissionInFlight || locked || draft.publishUncertain) return;
     const snapshot = draftRef.current;
+    const startedAtRoute = routeKey.current;
+    try {
+      validateFoodDraft(snapshot);
+    } catch (error) {
+      setError(errorMessage(error));
+      return;
+    }
+    if (snapshot.mealTimes?.length === 0) {
+      setError("至少选择一个饭点。");
+      return;
+    }
     const price =
       snapshot.price.trim() === "" ? undefined : Number(snapshot.price);
     if (!shop?.id) {
@@ -169,24 +202,40 @@ export default function DesktopPublish() {
     let creating = false;
     try {
       const images = [...snapshot.images];
+      const pending = images
+        .map((image, index) => ({ image, index }))
+        .filter(({ image }) => !image.key);
+      if (pending.length)
+        await app.uploadMany(
+          pending.map(({ image }) => image.file),
+          "foods",
+          (index, key) => {
+            const original = pending[index].index;
+            images[original] = { ...images[original], key };
+            m.setDraft({ images: [...images] });
+            setProgress(`已上传照片 ${index + 1}/${pending.length}`);
+          },
+        );
       for (let i = 0; i < images.length; i++) {
-        setProgress(`正在上传照片 ${i + 1}/${images.length}`);
-        if (!images[i].key) {
-          const key = await app.upload(images[i].file, "foods");
-          images[i] = { ...images[i], key };
-          m.setDraft({ images: [...images] });
-        }
         saveVisual(images[i].key!, snapshot.stage);
       }
       setProgress("正在发布这道菜…");
       creating = true;
-      await app.api.createFood({
+      const created = await app.api.createFood({
         restaurantId: shop.id,
         name: snapshot.name.trim(),
         price,
         category: snapshot.category as Category,
         description: snapshot.description.trim() || undefined,
         pictureUrl: images.map((item) => item.key!),
+        myCustomTagNames: snapshot.tags.map(normalizedTag),
+        systemTagIds: snapshot.systemTagIds,
+        ...publishDisplay(
+          snapshot.stage,
+          snapshot.candidates,
+          snapshot.mealTimes ?? [mealCode(m.meal)],
+        ),
+        coverCrop: { centerX: 0.5, centerY: 0.5, diameter: 1 },
       });
       for (const item of images)
         if (item.url.startsWith("blob:")) URL.revokeObjectURL(item.url);
@@ -198,20 +247,29 @@ export default function DesktopPublish() {
         images: [],
         stage: stageColors[0],
         tags: [],
+        systemTagIds: [],
         crop: undefined,
         candidates: undefined,
         shopName: undefined,
         restaurantId: undefined,
         publishUncertain: false,
         publishing: false,
+        mealTimes: undefined,
       });
       void cache.invalidateQueries({ queryKey: ["foods"] });
       void cache.invalidateQueries({ queryKey: ["user"] });
       app.refreshMe();
-      app.toast("这道菜已发布，快来看看你的分享。");
-      nav("/me?tab=uploads");
+      app.toast(
+        created.revisionId
+          ? "提交已受理，请在我的提交中查看审核进度。"
+          : "这道菜已发布，快来看看你的分享。",
+      );
+      m.setFoodId(created.id);
+      if (active.current && routeKey.current === startedAtRoute)
+        nav(submissionPath(created, `/foods/${created.id}`));
     } catch (e) {
       setError(errorMessage(e));
+      setDuplicate(duplicateFoodId(e));
       if (creating && resultUncertain(e))
         m.setDraft({ publishUncertain: true });
     } finally {
@@ -282,14 +340,8 @@ export default function DesktopPublish() {
             aria-label="选择发布餐厅"
             aria-busy={shops.isFetching}
           >
-            {!area ? (
-              <div className="pc-composer-list-message">
-                选一个区域，找找附近的店。
-              </div>
-            ) : shops.isPending ? (
-              <div className="pc-composer-list-message" role="status">
-                正在找附近的店…
-              </div>
+            {shops.isPending ? (
+              <ContentSkeleton kind="rows" count={4} />
             ) : shops.error ? (
               <div className="pc-composer-list-message" role="alert">
                 {errorMessage(shops.error)}
@@ -576,12 +628,13 @@ export default function DesktopPublish() {
                   aria-label="菜名"
                   value={draft.name}
                   required
+                  maxLength={24}
                   placeholder="例如：鲜虾蟹籽云吞"
                   onChange={(event) => m.setDraft({ name: event.target.value })}
                 />
               </label>
               <label>
-                价格 <span>选填</span>
+                价格 <span>必填，免费可填 0</span>
                 <div className="pc-composer-price">
                   <span>¥</span>
                   <input
@@ -589,7 +642,8 @@ export default function DesktopPublish() {
                     aria-label="价格"
                     type="number"
                     min="0"
-                    step="0.01"
+                    max="999"
+                    step="0.1"
                     placeholder="如 18"
                     value={draft.price}
                     onChange={(event) =>
@@ -621,16 +675,89 @@ export default function DesktopPublish() {
                 aria-label="推荐理由"
                 placeholder="味道怎么样？分量够不够？有什么值得推荐的吃法？"
                 value={draft.description}
+                maxLength={600}
                 onChange={(event) =>
                   m.setDraft({ description: event.target.value })
                 }
               />
             </label>
+            <div className="ew-feature ew-meals">
+              <b>适合的饭点</b>
+              {mealOptions.map((item) => (
+                <label key={item.id}>
+                  <input
+                    type="checkbox"
+                    checked={(draft.mealTimes ?? [mealCode(m.meal)]).includes(
+                      item.id,
+                    )}
+                    onChange={(e) => {
+                      const current = draft.mealTimes ?? [mealCode(m.meal)];
+                      m.setDraft({
+                        mealTimes: e.target.checked
+                          ? [...current, item.id]
+                          : current.filter((x) => x !== item.id),
+                      });
+                    }}
+                  />
+                  {item.name}
+                </label>
+              ))}
+            </div>
+            <label>
+              个人标签（最多 20 个）
+              <input
+                aria-label="发布个人标签"
+                defaultValue={draft.tags.join("、")}
+                placeholder="用逗号分隔，例如：午饭、考试周"
+                onChange={(e) =>
+                  m.setDraft({
+                    tags: [
+                      ...new Set(
+                        e.target.value
+                          .split(/[,，、]/)
+                          .map((t) => t.trim())
+                          .filter(Boolean),
+                      ),
+                    ],
+                  })
+                }
+              />
+            </label>
+            <div className="ew-feature ew-meals">
+              <b>公共口味标签</b>
+              {systemTags.data?.map((t) => (
+                <label key={t.id}>
+                  <input
+                    type="checkbox"
+                    checked={draft.systemTagIds?.includes(t.id!) ?? false}
+                    disabled={
+                      !draft.systemTagIds?.includes(t.id!) &&
+                      (draft.systemTagIds?.length ?? 0) >= 20
+                    }
+                    onChange={(e) =>
+                      m.setDraft({
+                        systemTagIds: e.target.checked
+                          ? [...(draft.systemTagIds ?? []), t.id!]
+                          : (draft.systemTagIds ?? []).filter(
+                              (id) => id !== t.id,
+                            ),
+                      })
+                    }
+                  />
+                  {t.name}
+                </label>
+              ))}
+              {systemTags.isError && (
+                <button type="button" onClick={() => void systemTags.refetch()}>
+                  口味标签加载失败，重试
+                </button>
+              )}
+            </div>
             <div className="pc-composer-tip">
               <Icon name="tag" size={19} />
               <div>
                 <strong>好味道，也留给下一位同学</strong>
-                <p>发布后，可以在菜品详情补充口味标签，和同学分享更多吃法。</p>
+                <p>初始标签与菜品一起保存，发布后也可以继续补充。</p>
               </div>
             </div>
             <div className="pc-composer-recap">
@@ -689,10 +816,15 @@ export default function DesktopPublish() {
           {(error || draft.publishUncertain) && (
             <div className="pc-composer-error" role="alert">
               {error && <p>{error}</p>}
+              {duplicate && (
+                <Link to={`/foods/${duplicate}`}>
+                  查看已有菜品 →（当前草稿已保留）
+                </Link>
+              )}
               {draft.publishUncertain && (
                 <>
                   <strong>发布结果尚未确认，请先核实，避免重复分享。</strong>
-                  <Link to="/me?tab=uploads">查看我的分享</Link>
+                  <Link to="/me/shares">查看我的分享</Link>
                   <label>
                     <input
                       type="checkbox"

@@ -16,10 +16,12 @@ import {
   type Session,
   type Transport,
 } from "../api/client";
-import { createApi, uploadFile, type Api } from "../api/service";
+import { createApi, uploadFile, uploadFiles, type Api } from "../api/service";
 import { AppContext } from "./state";
 import { isDemo, readSession, writeSession } from "./runtime";
-import { demoTransport, demoUpload } from "../demo/transport";
+import { recoveryCommands } from "../api/recovery";
+import { clearConsentProof } from "./consent";
+import { useExitPresence } from "../motion/hooks";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,6 +46,7 @@ function useMe(api: Api, session: Session | null) {
 function StateProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState(readSession),
     [message, setMessage] = useState("");
+  const toastPresence = useExitPresence(message || null);
   const api = useMemo(() => {
     const live = createTransport(
       import.meta.env.VITE_API_BASE_URL || "/api",
@@ -51,14 +54,26 @@ function StateProvider({ children }: { children: ReactNode }) {
     );
     const transport: Transport = async (path, options) => {
       try {
-        return await (isDemo ? demoTransport : live)(path, options);
+        const send = isDemo
+          ? (await import("../demo/transport")).demoTransport
+          : live;
+        return await send(path, options);
       } catch (error) {
-        if (error instanceof ApiError && error.status === 401)
+        if (
+          error instanceof ApiError &&
+          error.status === 401 &&
+          !options.public
+        )
           window.dispatchEvent(new Event("eatwhat:expired"));
         throw error;
       }
     };
-    return createApi(transport);
+    return createApi(transport, async (...args) => {
+      const captcha = await import("../api/captcha");
+      return (isDemo ? captcha.runDemoCaptcha : captcha.runBrowserCaptcha)(
+        ...args,
+      );
+    });
   }, []);
   const me = useMe(api, session);
   const toast = useCallback((message: string) => setMessage(message), []);
@@ -80,12 +95,33 @@ function StateProvider({ children }: { children: ReactNode }) {
   }, [toast]);
   const signIn = async (s: Session) => {
     await queryClient.cancelQueries();
-    queryClient.clear();
+    // Guest pages must keep their cached content mounted while a login dialog
+    // completes (comments, filters and scroll position belong to that page).
+    // Logout/expiry already clear private data; replacing an existing identity
+    // still requires a full reset to avoid showing another account's data.
+    if (readSession()) queryClient.clear();
     writeSession(s);
     setSession(s);
+    // Finish the identity refresh before a successful login/recovery navigates.
+    // Otherwise a later pending transition can unmount the next page's form.
+    try {
+      await queryClient.fetchQuery({
+        queryKey: ["me"],
+        queryFn: () => api.me(),
+        retry: false,
+      });
+    } catch {
+      /* The normal account gate displays the identity read error. */
+    } finally {
+      recoveryCommands.clear();
+      void queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] !== "me",
+      });
+    }
   };
-  const signOut = async () => {
-    await api.logout();
+  const clearLocalSession = async () => {
+    clearConsentProof();
+    recoveryCommands.clear();
     await queryClient.cancelQueries();
     writeSession(null);
     queryClient.clear();
@@ -100,13 +136,29 @@ function StateProvider({ children }: { children: ReactNode }) {
         me,
         toast,
         signIn,
-        signOut,
+        signOut: async () => {
+          await api.logout();
+          await clearLocalSession();
+        },
+        clearLocalSession,
         refreshMe: () =>
           void queryClient.invalidateQueries({ queryKey: ["me"] }),
-        upload: (file, biz, onPhase) =>
+        upload: async (file, biz, onPhase) =>
           isDemo
-            ? demoUpload(file)
+            ? (await import("../demo/transport")).demoUpload(file, biz)
             : uploadFile(api, file, biz, undefined, fetch, onPhase),
+        uploadMany: async (files, biz, onComplete) => {
+          if (!isDemo)
+            return uploadFiles(api, files, biz, undefined, fetch, onComplete);
+          const keys: string[] = [];
+          const { demoUpload } = await import("../demo/transport");
+          for (let i = 0; i < files.length; i++) {
+            const key = await demoUpload(files[i], biz);
+            keys.push(key);
+            onComplete?.(i, key);
+          }
+          return keys;
+        },
       }}
     >
       {children}
@@ -115,7 +167,7 @@ function StateProvider({ children }: { children: ReactNode }) {
         role="status"
         aria-live="polite"
       >
-        {message}
+        {toastPresence.value}
       </div>
     </AppContext.Provider>
   );

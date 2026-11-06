@@ -1,10 +1,32 @@
-import React, { useEffect, useState, type ReactNode } from "react";
+import { unreadCount } from "../api/notifications";
+import {
+  useRemoteConfig,
+  recommendationBatchSize,
+} from "../features/v4/Remote";
+import { useSendSignal } from "../features/useSendSignal";
+import React, { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  validateFoodDraft,
+  normalizedTag,
+  submissionPath,
+} from "../api/content-rules";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useApp } from "../app/state";
+import { removeDraft } from "../app/drafts";
+import { useDebouncedSearch } from "../app/search";
 import { isDemo } from "../app/runtime";
 import { useArea } from "../app/area";
-import { ApiError, errorMessage, resultUncertain } from "../api/client";
+import {
+  ApiError,
+  duplicateFoodId,
+  errorMessage,
+  resultUncertain,
+} from "../api/client";
 import { classifyAuth } from "../api/service";
 import {
   mediaUrl,
@@ -26,26 +48,51 @@ import {
   FoodTile,
   ShopRow,
   MobileEmpty,
+  DesignNav,
 } from "./ui";
+import {
+  ContentSkeleton,
+  MobilePageSkeleton,
+  Skeleton,
+} from "../components/LoadingSkeleton";
 import { demoDishes, visualFor, stageColors } from "./catalog";
 import { screenRoutes, panelScreens, pendingScreens } from "./routes";
 import { adjustPhoto, saveVisual } from "./photos";
+import {
+  guestDeviceId,
+  mealCode,
+  mealOptions,
+  publishDisplay,
+} from "../api/food-display";
+import { FoodManage } from "../features/Catalog";
+import { useActionAccess } from "../features/access";
+import { PolicyConsent, usePolicyConsent } from "../features/Consent";
+import { clearConsentProof, setConsentProof } from "../app/consent";
+import { useContentMotion } from "../motion/hooks";
+import { instantMotion } from "../motion/runtime";
+import { peopleHref } from "../features/profile-people";
+import { AccessWelcome } from "../components/AccessWelcome";
+import RestaurantMap from "../features/RestaurantMap";
+import { baiduMarkerUrl } from "../features/map-geometry";
+import { RestaurantHeaderFavorite } from "../features/v4/RestaurantHeaderFavorite";
+import { useReturnTo } from "../app/navigation";
 
 const needsVerification = new Set([
-  "G2-Home",
-  "G-HomePhoto",
-  "G-Dish",
-  "G-Detail",
   "G-PickShop",
   "G-AddDish",
   "G-NewShop",
   "G-Crop",
   "G-MyTags",
-  "G-TagDishes",
-  "G-History",
   "G-PanelTag",
 ]);
 const publicScreens = new Set([
+  "G2-Home",
+  "G-HomePhoto",
+  "G-Dish",
+  "G-Detail",
+  "G-Nearby",
+  "G-Search",
+  "G-PanelPlace",
   "G-Login",
   "G-PasswordLogin",
   "G-PhoneLogin",
@@ -80,14 +127,35 @@ export function useDesignBridge(
   original: Values,
   reference: boolean,
 ): Bridge {
+  const getSignal = useSendSignal();
   const app = useApp(),
     { api, user, session, toast } = app,
     m = useMobile(),
     nav = useNavigate(),
     location = useLocation(),
     cache = useQueryClient(),
-    { area, selectArea } = useArea();
+    { area, selectArea, campusId, selectCampus } = useArea();
+  const access = useActionAccess();
+  const foodBack = useReturnTo("/"),
+    shopBack = useReturnTo("/nearby");
+  const activeLocation = useRef(location.key);
+  activeLocation.current = location.key;
+  useEffect(() => {
+    activeLocation.current = location.key;
+    return () => {
+      activeLocation.current = "unmounted";
+    };
+  }, [location.key]);
+  const policyConsent = usePolicyConsent(
+    !reference && ["G-Login", "G-PasswordLogin"].includes(screen),
+  );
+  const campusList = useQuery({
+    queryKey: ["campuses"],
+    queryFn: () => api.campuses(),
+    enabled: !reference,
+  });
   const [busy, setBusy] = useState(false),
+    [duplicate, setDuplicate] = useState<number>(),
     [error, setError] = useState(""),
     [done, setDone] = useState(false),
     [uncertain, setUncertain] = useState(false),
@@ -95,8 +163,10 @@ export function useDesignBridge(
     [category, setCategory] = useState(""),
     [search, setSearch] = useState(""),
     [expanded, setExpanded] = useState(false);
+  const [mapShopId, setMapShopId] = useState<number>();
   const active = !reference && !!session,
     verified = active && user?.verified === true && !user?.banned;
+  const browse = !reference;
   const foodId =
     parseId(location.pathname.match(/^\/foods\/(\d+)/)?.[1]) ?? m.foodId;
   const shopId =
@@ -110,16 +180,64 @@ export function useDesignBridge(
     () => setPage(1),
     [controller.state.tab, search, controller.state.q],
   );
+  const remote = useRemoteConfig(),
+    batchSize = recommendationBatchSize(remote.data);
   const recommendations = useQuery({
-    queryKey: ["foods", "mobile-recommend"],
-    queryFn: () => api.recommend(8),
-    enabled: verified && homeScreens.has(screen),
+    queryKey: ["foods", "mobile-recommend", campusId, m.meal, "", batchSize],
+    queryFn: () =>
+      api.recommend(batchSize, {
+        campusId,
+        mealTime: mealCode(m.meal),
+        deviceId: guestDeviceId(),
+      }),
+    enabled: browse && homeScreens.has(screen),
   });
+  const categoryRecommendations = useQuery({
+    queryKey: [
+      "foods",
+      "mobile-recommend",
+      campusId,
+      m.meal,
+      category,
+      batchSize,
+    ],
+    queryFn: () =>
+      api.recommend(batchSize, {
+        campusId,
+        mealTime: mealCode(m.meal),
+        category,
+        deviceId: guestDeviceId(),
+      }),
+    enabled: browse && homeScreens.has(screen) && !!category,
+    placeholderData: keepPreviousData,
+  });
+  const recommendationCopy = useRef<HTMLElement>(null),
+    categoryContent = useRef<HTMLDivElement>(null);
+  const recommendationIndex = recommendations.data?.length
+    ? (((controller.state.n ?? 0) % recommendations.data.length) +
+        recommendations.data.length) %
+      recommendations.data.length
+    : 0;
+  useContentMotion(
+    recommendationCopy,
+    reference
+      ? undefined
+      : (recommendations.data?.[recommendationIndex]?.id ?? undefined),
+    0,
+    "y",
+  );
+  useContentMotion(
+    categoryContent,
+    reference ? undefined : category,
+    0,
+    "opacity",
+  );
   const detail = useQuery({
     queryKey: ["foods", "detail", foodId],
     queryFn: () => api.food(foodId),
+    staleTime: 0,
     enabled:
-      verified &&
+      browse &&
       [
         "G-Dish",
         "G-PanelTag",
@@ -131,28 +249,31 @@ export function useDesignBridge(
   const restaurant = useQuery({
     queryKey: ["restaurants", "detail", shopId],
     queryFn: () => api.restaurant(shopId),
+    staleTime: 0,
     enabled:
-      verified && ["G-Detail", "G-AddDish", "G-WrongInfo"].includes(screen),
+      browse && ["G-Detail", "G-AddDish", "G-WrongInfo"].includes(screen),
   });
   const restaurantFoods = useQuery({
     queryKey: ["foods", "restaurant", shopId, page],
     queryFn: () => api.foods(shopId, page),
-    enabled: verified && screen === "G-Detail",
+    placeholderData: keepPreviousData,
+    enabled: browse && screen === "G-Detail",
   });
   const dishRestaurant = useQuery({
     queryKey: ["restaurants", "detail", detail.data?.restaurantId],
     queryFn: () => api.restaurant(detail.data!.restaurantId!),
-    enabled: verified && screen === "G-Dish" && !!detail.data?.restaurantId,
+    enabled: browse && screen === "G-Dish" && !!detail.data?.restaurantId,
   });
   const favorites = useQuery({
-    queryKey: ["foods", "favorites", page],
-    queryFn: () => api.favorites(page),
-    enabled: verified && (screen === "G-TagDishes" || screen === "G-Me"),
+    queryKey: ["foods", "favorites", page, m.tagId],
+    queryFn: () =>
+      api.favorites(page, { myCustomTagIds: m.tagId ? [m.tagId] : undefined }),
+    enabled: active && (screen === "G-TagDishes" || screen === "G-Me"),
   });
   const myFoods = useQuery({
     queryKey: ["foods", "mine", page],
     queryFn: () => api.myFoods(page),
-    enabled: verified && screen === "G-Me",
+    enabled: active && screen === "G-Me",
   });
   const myTags = useQuery({
     queryKey: ["my-tags", page],
@@ -191,7 +312,7 @@ export function useDesignBridge(
         controller.state.tab === "shop" ? "restaurant" : "food",
         page,
       ),
-    enabled: verified && screen === "G-History",
+    enabled: active && screen === "G-History",
   });
   const follows = useQuery({
     queryKey: [
@@ -215,32 +336,37 @@ export function useDesignBridge(
   });
   const unread = useQuery({
     queryKey: ["notifications", "unread"],
-    queryFn: () => api.unread(),
+    queryFn: () => unreadCount(api),
     enabled: active && (homeScreens.has(screen) || screen === "G-Inbox"),
     refetchInterval: 60_000,
   });
   const hubs = useQuery({
     queryKey: ["hubs", page],
     queryFn: () => api.hubs(page),
-    enabled: active && screen === "G-PanelPlace",
+    enabled: browse && screen === "G-PanelPlace",
   });
   const queryKeyword =
     screen === "G-Search" ? String(controller.state.q ?? "") : search;
+  const debouncedKeyword = useDebouncedSearch(queryKeyword);
   const shops = useQuery({
-    queryKey: ["restaurants", "mobile-search", area, queryKeyword, page],
+    queryKey: ["restaurants", "mobile-search", area, debouncedKeyword, page],
     queryFn: () =>
-      api.restaurantSearch({
-        keyword: queryKeyword || undefined,
-        gcjLng: area!.gcjLng,
-        gcjLat: area!.gcjLat,
-        hubId: area?.hubId,
-        page,
-        pageSize: 12,
-      }),
-    enabled:
-      active &&
-      !!area &&
-      ["G-Nearby", "G-PickShop", "G-Search"].includes(screen),
+      area
+        ? api.restaurantSearch({
+            keyword: debouncedKeyword || undefined,
+            gcjLng: area!.gcjLng,
+            gcjLat: area!.gcjLat,
+            hubId: area?.hubId,
+            page,
+            pageSize: 12,
+          })
+        : api.browseRestaurants({
+            keyword: debouncedKeyword || undefined,
+            page,
+            pageSize: 12,
+          }),
+    enabled: browse && ["G-Nearby", "G-PickShop", "G-Search"].includes(screen),
+    placeholderData: keepPreviousData,
   });
   const consent = useQuery({
     queryKey: ["consent-policy"],
@@ -275,6 +401,10 @@ export function useDesignBridge(
     screen === "G-HomePhoto"
       ? (recommendations.data?.slice(0, 5) ?? [])
       : (recommendations.data ?? []);
+  const homeWithoutRecommendations =
+    homeScreens.has(screen) &&
+    !recommendations.isPending &&
+    carouselFoods.length === 0;
   const liveFood = detail.data;
   const draftPanel =
     screen === "G-PanelTag" && location.pathname === "/publish/dish";
@@ -297,21 +427,32 @@ export function useDesignBridge(
       if (success) toast(success);
     } catch (e) {
       setError(errorMessage(e));
+      setDuplicate(duplicateFoodId(e));
       if (resultUncertain(e)) setUncertain(true);
     } finally {
       setBusy(false);
     }
   }
-  const unavailable = (name: string) =>
-    m.notice(`${name}待接入。当前接口文档未提供完整协议，本次不会提交数据。`);
+  const unavailable = (name: string) => {
+    const feature = name
+      .replace(/待接入|敬请期待/g, "")
+      .replace(/（\s*）/g, "")
+      .trim();
+    m.notice(
+      `${feature}${feature.endsWith("功能") ? "" : "功能"}正在准备中，敬请期待。`,
+    );
+  };
   async function toggleFavorite() {
+    if (!access()) return;
     if (!liveFood || liveFood.isFavorite == null) return;
     await run(() => api.favorite(foodId, liveFood.isFavorite!));
   }
   async function login(mockAccount = false) {
     await run(async () => {
+      await policyConsent.requireAcceptance();
+      clearConsentProof();
       const reply = await api.login({
-        username:
+        userName:
           isDemo && mockAccount
             ? "mock_student"
             : String(controller.state.account ?? "").trim(),
@@ -324,10 +465,17 @@ export function useDesignBridge(
       const result = classifyAuth(reply);
       if (result.kind === "session") {
         await app.signIn(result.session);
-        nav(new URLSearchParams(location.search).get("next") ?? "/");
+        const next = new URLSearchParams(location.search).get("next");
+        nav(
+          next?.startsWith("/") &&
+            !next.startsWith("//") &&
+            !next.startsWith("/auth")
+            ? next
+            : "/",
+        );
       } else if (result.kind === "consent") {
         m.setDraft({});
-        sessionProof = result.proof;
+        setConsentProof(result.proof, "/auth/password" + location.search);
         nav("/auth/consent");
       } else throw new Error(result.message);
     });
@@ -351,28 +499,57 @@ export function useDesignBridge(
     }
   }
   async function publish() {
-    if (uncertain) return;
+    if (uncertain || !access(true)) return;
+    const publishingLocation = location.key;
     m.setDraft({
       description: String(controller.state.desc ?? m.draft.description),
       category: categoryCodes[controller.state.cat ?? 0],
     });
     await run(async () => {
       const draft = m.draft;
+      validateFoodDraft({
+        ...draft,
+        description: String(controller.state.desc ?? draft.description),
+      });
       if (!draft.name.trim()) throw new Error("写一个菜名，再发布。");
       if (!draft.images.length) throw new Error("先加一张你拍的照片。");
       if (!shopId) throw new Error("先选一家店。");
-      const images = [...draft.images];
-      for (let i = 0; i < images.length; i++) {
-        if (images[i].key) continue;
-        const key = await app.upload(images[i].file, "foods");
-        images[i] = { ...images[i], key };
-        m.setDraft({ images: [...images] });
-        saveVisual(key, draft.stage);
-      }
+      if (draft.mealTimes?.length === 0)
+        throw new Error("至少选择一个适合的饭点。");
       const price = draft.price.trim() === "" ? undefined : Number(draft.price);
-      if (price !== undefined && (!Number.isFinite(price) || price < 0))
-        throw new Error("价格填 0 或更大的数字。");
-      await api.createFood({
+      if (
+        price !== undefined &&
+        (!Number.isFinite(price) ||
+          price < 0 ||
+          price > 999 ||
+          Math.abs(price * 10 - Math.round(price * 10)) > 0.000001)
+      )
+        throw new Error("价格为 0 至 999，最多保留一位有效小数。");
+      if (
+        draft.tags.length > 20 ||
+        draft.tags.some(
+          (tag) => !tag.trim() || [...normalizedTag(tag)].length > 10,
+        )
+      )
+        throw new Error("最多添加 20 个个人标签，每个标签不超过 10 字。");
+      const images = [...draft.images];
+      const pending = images
+        .map((image, index) => ({ image, index }))
+        .filter(({ image }) => !image.key);
+      if (pending.length)
+        await app.uploadMany(
+          pending.map(({ image }) => image.file),
+          "foods",
+          (index, key) => {
+            images[pending[index].index] = {
+              ...images[pending[index].index],
+              key,
+            };
+            m.setDraft({ images: [...images] });
+            saveVisual(key, draft.stage);
+          },
+        );
+      const created = await api.createFood({
         restaurantId: shopId,
         name: draft.name.trim(),
         price,
@@ -380,6 +557,14 @@ export function useDesignBridge(
           String(controller.state.desc ?? draft.description) || undefined,
         category: categoryCodes[controller.state.cat ?? 0] as Category,
         pictureUrl: images.map((i) => i.key!),
+        myCustomTagNames: draft.tags.map(normalizedTag),
+        systemTagIds: draft.systemTagIds,
+        ...publishDisplay(
+          draft.stage,
+          draft.candidates,
+          draft.mealTimes ?? [mealCode(m.meal)],
+        ),
+        coverCrop: { centerX: 0.5, centerY: 0.5, diameter: 1 },
       });
       setDone(true);
       for (const image of draft.images) URL.revokeObjectURL(image.url);
@@ -390,6 +575,8 @@ export function useDesignBridge(
         description: "",
         images: [],
         tags: [],
+        systemTagIds: [],
+        mealTimes: undefined,
         stage: "#F3C46E",
         crop: undefined,
         candidates: undefined,
@@ -398,21 +585,27 @@ export function useDesignBridge(
         publishing: false,
         publishUncertain: false,
       });
-      m.notice(
-        draft.tags.length
-          ? "菜已发布。创建接口暂未返回新编号，请到我的分享找到它，再保存标签。"
-          : "菜已发布。请到我的分享查看刚提交的内容。",
+      m.setFoodId(created.id);
+      toast(
+        created.revisionId
+          ? "菜品已提交审核，可在我的提交查看进度。"
+          : "菜已发布，标签与展示设置已同步保存。",
       );
-      nav("/me?tab=uploads");
+      if (activeLocation.current === publishingLocation)
+        nav(submissionPath(created, `/foods/${created.id}`));
     });
   }
 
   if (homeScreens.has(screen) && !reference) {
+    values.tr =
+      instantMotion() || controller.state.dragging
+        ? "none"
+        : "transform 360ms cubic-bezier(0.25,1,0.5,1), opacity 180ms ease-out";
     const list = carouselFoods,
       N = list.length,
       n = controller.state.n ?? 0,
       k = N ? ((n % N) + N) % N : 0;
-    if (list[k]) values.s = visualFor(list[k], isDemo);
+    values.s = visualFor(list[k] ?? { name: "", category: "drink" }, isDemo);
     values.dots = list.map((_, i) => ({
       w: i === k ? 16 : 5,
       o: i === k ? 1 : 0.4,
@@ -427,24 +620,28 @@ export function useDesignBridge(
       };
     }
   }
+  if (screen === "G-Login" && !reference) {
+    values.agreed = policyConsent.canSubmit;
+    values.notAgreed = !values.agreed;
+  }
   if (screen === "G-PasswordLogin" && !reference) {
     values.msg = error;
     values.hasMsg = !!error;
     values.invalid = !!error;
     values.line = error ? "#A8321C" : "#E6DED8";
-    values.locked = busy;
-    values.canLogin = !busy;
+    values.locked = busy || !policyConsent.canSubmit;
+    values.canLogin = !busy && policyConsent.canSubmit;
   }
   if (screen === "G-EditProfile" && !reference) {
     const invalid =
-      String(controller.state.nick ?? "").trim().length < 3 ||
-      String(controller.state.nick ?? "").trim().length > 10;
+      String(controller.state.nick ?? "").trim().length < 2 ||
+      String(controller.state.nick ?? "").trim().length > 12;
     values.nickBad = invalid ? "true" : "false";
     values.nickTip = invalid
-      ? "昵称需要 3–10 个字"
-      : "3–10 个字，可以和别人重名";
+      ? "昵称需要 2–12 个字"
+      : "2–12 个字，可以和别人重名";
     values.setNick = (e: any) =>
-      controller.setState({ nick: e.target.value.slice(0, 10) });
+      controller.setState({ nick: e.target.value.slice(0, 12) });
   }
   if (screen === "G-Verify" && !reference) {
     values.verified = user?.verified === true;
@@ -456,7 +653,7 @@ export function useDesignBridge(
           const email = String(controller.state.email ?? "").trim();
           if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
             throw new Error("填写有效的学校邮箱。");
-          return api.sendEmail(email);
+          return api.sendEmail(email, getSignal());
         },
         isDemo ? "演示模式不发送邮件" : "验证邮件已发送",
       );
@@ -498,7 +695,9 @@ export function useDesignBridge(
       plain: !editing,
       draft: controller.state.draft ?? "",
       setDraft: (e: any) =>
-        controller.setState({ draft: e.target.value.slice(0, 64) }),
+        controller.setState({
+          draft: [...e.target.value].slice(0, 10).join(""),
+        }),
       rename: () => controller.setState({ renaming: t.id, draft: t.name }),
       save: () =>
         run(async () => {
@@ -514,7 +713,7 @@ export function useDesignBridge(
   if (screen === "G-PanelTag" && !reference) {
     values.taste = (systemTags.data ?? []).map((t) => {
       const on = draftPanel
-        ? m.draft.tags.includes(t.name!)
+        ? m.draft.systemTagIds?.includes(t.id!)
         : tags.data?.systemTags?.some((x) => x.id === t.id && x.taggedByMe);
       return {
         name: t.name,
@@ -525,9 +724,9 @@ export function useDesignBridge(
         pick: () =>
           draftPanel
             ? m.setDraft({
-                tags: on
-                  ? m.draft.tags.filter((n) => n !== t.name)
-                  : [...m.draft.tags, t.name!],
+                systemTagIds: on
+                  ? (m.draft.systemTagIds ?? []).filter((id) => id !== t.id)
+                  : [...(m.draft.systemTagIds ?? []), t.id!],
               })
             : run(() =>
                 on
@@ -561,7 +760,8 @@ export function useDesignBridge(
       run(async () => {
         const name = String(controller.state.draft ?? "").trim();
         if (!name) return;
-        if (draftPanel) m.setDraft({ tags: [...m.draft.tags, name] });
+        if (draftPanel)
+          m.setDraft({ tags: [...new Set([...m.draft.tags, name])] });
         else await api.addCustomTags(foodId, [name]);
         controller.setState({ writing: false, draft: "" });
       });
@@ -582,13 +782,13 @@ export function useDesignBridge(
     };
     values.tags = (systemTags.data ?? []).map((t) => ({
       label: t.name,
-      ...qstyle(m.draft.tags.includes(t.name!)),
-      line: m.draft.tags.includes(t.name!) ? "#231C18" : "#E6DED8",
+      ...qstyle(!!m.draft.systemTagIds?.includes(t.id!)),
+      line: m.draft.systemTagIds?.includes(t.id!) ? "#231C18" : "#E6DED8",
       toggle: () =>
         m.setDraft({
-          tags: m.draft.tags.includes(t.name!)
-            ? m.draft.tags.filter((n) => n !== t.name)
-            : [...m.draft.tags, t.name!],
+          systemTagIds: m.draft.systemTagIds?.includes(t.id!)
+            ? m.draft.systemTagIds.filter((id) => id !== t.id)
+            : [...(m.draft.systemTagIds ?? []), t.id!],
         }),
     }));
   }
@@ -604,6 +804,7 @@ export function useDesignBridge(
       tint: "#F4EFEB",
       img: mediaUrl(r.pictureUrl?.[0]) ?? "/prototype/assets/dishes/yuntun.svg",
       ...qstyle(r.id === m.shopId),
+      bg: r.id === m.shopId ? "#FFF0C3" : "#F4EFEB",
       ring: r.id === m.shopId ? "#231C18" : "#D9D0C9",
       fill: r.id === m.shopId ? "#231C18" : "transparent",
       check: r.id === m.shopId ? 1 : 0,
@@ -633,8 +834,8 @@ export function useDesignBridge(
       ? `/users/${followingUserId}`
       : "G-Me.dc.html";
     values.rows = (follows.data?.items ?? []).map((p) => ({
-      name: p.userName,
-      initial: p.userName?.slice(0, 1) ?? "食",
+      name: p.displayName,
+      initial: p.displayName?.slice(0, 1) ?? "食",
       sign: "",
       label: "查看主页",
       bg: "#F4EFEB",
@@ -659,7 +860,7 @@ export function useDesignBridge(
   if (screen === "G-SettingsNotify" && !reference)
     values.types = (original.types ?? []).map((t: any) => ({
       ...t,
-      flip: () => unavailable("通知偏好同步"),
+      flip: () => unavailable("通知设置"),
     }));
   if (screen === "G-Search" && !reference) {
     values.showResults = !!queryKeyword;
@@ -698,9 +899,6 @@ export function useDesignBridge(
         ? "#FFFFFF"
         : "#231C18",
     };
-    values.toggleCut = () => unavailable("自动去背景");
-    values.cutLabel = "false";
-    values.cutTrack = "rgba(255,255,255,0.25)";
     const originalMove = original.move;
     values.move = (event: any) => {
       originalMove?.(event);
@@ -774,10 +972,154 @@ export function useDesignBridge(
       st = p.style ?? {},
       tag = n.tag,
       id = n.id;
+    if (
+      screen === "G-Crop" &&
+      tag === "div" &&
+      n.children.some(
+        (child) =>
+          typeof child !== "string" &&
+          child.attrs["aria-label"] === "自动去掉背景",
+      )
+    )
+      return null;
+    if (typeof p["aria-label"] === "string")
+      p["aria-label"] = p["aria-label"].replace(/待接入/g, "敬请期待");
+    if (tag === "span" && clean(text) === "待接入")
+      return <span {...p}>敬请期待</span>;
+    if (screen === "G-Nearby" && id === 1) {
+      const restaurants = shops.data?.items ?? [];
+      const selected =
+        restaurants.find((r) => r.id === mapShopId) ?? restaurants[0];
+      return (
+        <div {...p} className={`${p.className ?? ""} mobile-nearby-screen`}>
+          <header className="mobile-nearby-toolbar">
+            <div className="mobile-nearby-search">
+              <DesignIcon name="search" size={20} />
+              <input
+                type="search"
+                aria-label="搜店名或菜名"
+                placeholder="搜一家店"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
+            <button
+              type="button"
+              className="mobile-nearby-area"
+              onClick={() => m.openPanel("G-PanelPlace")}
+            >
+              <DesignIcon name="nearby" size={16} />
+              {area?.name ?? "选择查询区域"}
+              <DesignIcon name="chevronDown" size={14} />
+            </button>
+          </header>
+          <div className="mobile-nearby-map">
+            <RestaurantMap
+              restaurants={restaurants}
+              selectedId={selected?.id ?? undefined}
+              onSelect={(r) => {
+                setMapShopId(r.id ?? undefined);
+                document
+                  .getElementById(`mobile-restaurant-${r.id}`)
+                  ?.scrollIntoView({ block: "nearest" });
+              }}
+            />
+          </div>
+          <section className="mobile-nearby-sheet" aria-label="附近店铺列表">
+            <div className="mobile-nearby-heading">
+              <h1>
+                附近 <span>{shops.data?.totalItems ?? "—"}</span>
+              </h1>
+              <span>{area ? "按所选区域查询" : "全部店铺"}</span>
+            </div>
+            <div className="mobile-nearby-results">
+              {shops.isError && !restaurants.length ? (
+                <MobileEmpty
+                  title="附近的店暂时没加载成功"
+                  detail={errorMessage(shops.error)}
+                  action={
+                    <button
+                      type="button"
+                      className="mobile-inline-link"
+                      onClick={() => void shops.refetch()}
+                    >
+                      重新加载店铺
+                    </button>
+                  }
+                />
+              ) : shops.isPending || !restaurants.length ? (
+                shopList()
+              ) : (
+                restaurants.map((r) => (
+                  <div
+                    key={r.id}
+                    id={`mobile-restaurant-${r.id}`}
+                    className={`mobile-nearby-shop${selected?.id === r.id ? " is-selected" : ""}`}
+                  >
+                    <ShopRow
+                      shop={r}
+                      selected={selected?.id === r.id}
+                      onSelect={() => setMapShopId(r.id ?? undefined)}
+                    />
+                    <Link
+                      to={`/restaurants/${r.id}`}
+                      aria-label={`查看${r.name ?? "店铺"}`}
+                      onClick={() => r.id && m.setShopId(r.id)}
+                    >
+                      看菜单
+                    </Link>
+                  </div>
+                ))
+              )}
+              <More />
+            </div>
+          </section>
+          <div className="mobile-nearby-navigation">
+            <DesignNav active="nearby" />
+          </div>
+        </div>
+      );
+    }
+    if (screen === "G-PasswordLogin" && tag === "a" && clean(text) === "登录") {
+      const { href: _href, onClick: _onClick, ...attributes } = p;
+      return (
+        <button
+          {...attributes}
+          type="button"
+          style={{ ...st, border: 0, cursor: "pointer" }}
+          disabled={busy || !policyConsent.canSubmit}
+          onClick={() => void login()}
+        >
+          {view.children}
+        </button>
+      );
+    }
+    if (screen === "G-PasswordLogin" && id === 27)
+      return (
+        <div {...p}>
+          <PolicyConsent consent={policyConsent} busy={busy} />
+          {view.children}
+        </div>
+      );
+    if (screen === "G-Login" && id === 29)
+      return <PolicyConsent consent={policyConsent} busy={busy} />;
+    if (screen === "G-Login" && id === 24)
+      p.style = { ...st, top: 600, overflowY: "auto" };
     // Business navigation replaces every prototype cross-file link with SPA routes.
     if (tag === "a") {
       const target = String(p.href ?? "");
-      p.href = "#" + resolveHref(target, m, screen);
+      p.href =
+        "#" +
+        (target === "G-Follows.dc.html"
+          ? peopleHref(
+              screen === "G-UserProfile" ? `/users/${otherId}` : "/me",
+              location.search,
+              clean(text).includes("粉丝") ? "fans" : "follow",
+            )
+          : resolveHref(target, m, screen));
       p.onClick = (event: any) => {
         event.preventDefault();
         navigateDesign(target, clean(text), p["aria-label"]);
@@ -786,6 +1128,19 @@ export function useDesignBridge(
     if (tag === "button" && !p.onClick && !p.disabled)
       p.onClick = () =>
         unavailable(p["aria-label"] ?? clean(text) ?? "这个功能");
+    if (
+      tag === "a" &&
+      ((screen === "G-Dish" && id === 6) || (screen === "G-Detail" && id === 5))
+    ) {
+      const back = screen === "G-Dish" ? foodBack : shopBack;
+      p.href = "#" + back;
+      p.onClick = (event: React.MouseEvent) => {
+        event.preventDefault();
+        nav(back);
+      };
+    }
+    if (screen === "G-Detail" && id === 8)
+      return <RestaurantHeaderFavorite {...p} id={shopId} />;
     if (tag === "ul" && ["G-MyTags", "G-History", "G-Follows"].includes(screen))
       return (
         <ul {...p} style={{ ...st, bottom: 30, overflowY: "auto" }}>
@@ -807,7 +1162,7 @@ export function useDesignBridge(
       tag === "span" &&
       clean(text) === "这台设备，正在用"
     )
-      return <span {...p}>设备会话列表待接入，暂不能查询其他登录</span>;
+      return <span {...p}>更多设备管理功能正在准备中，敬请期待</span>;
     if (p.onClick && busy && tag === "button") p.disabled = true;
     if (st.fontFamily?.includes("Bricolage"))
       p.style = {
@@ -817,6 +1172,10 @@ export function useDesignBridge(
     if (n.id === 1 && panelScreens.has(screen)) {
       p.style = { ...p.style, background: "transparent" };
     }
+    if (panelScreens.has(screen) && n.attrs.role === "dialog")
+      p["aria-modal"] = true;
+    if (screen === "G-Comments" && id === 15)
+      p.className = (p.className ?? "") + " mobile-scroll-region";
     // Make the original absolute-positioned drawers genuinely scrollable without shifting their first frame.
     if (
       st.position === "absolute" &&
@@ -832,11 +1191,7 @@ export function useDesignBridge(
       )
     )
       p.style = { ...st, zIndex: 30 };
-    if (
-      (pendingScreens[screen] || screen === "G-DataNotice") &&
-      tag === "h1" &&
-      !text.includes("待接入")
-    )
+    if (pendingScreens[screen] && tag === "h1" && !/待接入|敬请期待/.test(text))
       return React.createElement(
         "h1",
         p,
@@ -848,7 +1203,7 @@ export function useDesignBridge(
       );
     if (
       tag === "a" &&
-      !text.includes("待接入") &&
+      !/待接入|敬请期待/.test(text) &&
       typeof n.attrs.href === "string" &&
       pendingScreens[String(n.attrs.href).replace(".dc.html", "")]
     )
@@ -861,6 +1216,74 @@ export function useDesignBridge(
         </span>,
       );
     if (homeScreens.has(screen)) {
+      if (homeWithoutRecommendations) {
+        if (id === 1)
+          p.className = `${p.className ?? ""} mobile-home-unavailable`;
+        if (tag === "div" && st.top === "0" && st.height === "520px")
+          return (
+            <div {...p} className="mobile-home-resting-stage">
+              <span className="mobile-home-empty-plate" aria-hidden="true">
+                <DesignIcon name="bowl" size={66} />
+              </span>
+            </div>
+          );
+        if (n.attrs.role === "group") return null;
+        if (tag === "section" && n.attrs["aria-label"] === "今天吃什么")
+          return (
+            <section
+              className="mobile-home-resting-copy"
+              aria-label="今天吃什么"
+            >
+              <h1>
+                今天
+                <br />
+                吃点什么？
+              </h1>
+              <p>
+                灵感还没上桌，
+                <br />
+                先去附近发现好味道。
+              </p>
+            </section>
+          );
+        if (tag === "div" && st.top === "392px") return null;
+        if (tag === "div" && st.top === "414px")
+          return (
+            <div className="mobile-home-resting-actions">
+              <Link to="/nearby" className="design-button">
+                <DesignIcon name="nearby" size={18} />
+                逛逛附近
+              </Link>
+              <Link to="/publish" className="design-button light">
+                <DesignIcon name="add" size={18} />
+                分享一道菜
+              </Link>
+            </div>
+          );
+        if (tag === "div" && st.top === "488px") {
+          p.className = `${p.className ?? ""} mobile-home-resting-sheet`;
+          p.style = { ...p.style, top: 354, bottom: 104 };
+        }
+      }
+      if (tag === "section" && n.attrs["aria-live"] === "polite")
+        p.ref = recommendationCopy;
+      if (st.transition && !st.transform) {
+        p.style = {
+          ...p.style,
+          transition: st.transition
+            .replace(/500ms/g, "240ms")
+            .replace(/300ms/g, "180ms"),
+        };
+      }
+      if (tag === "span" && String(n.attrs.style).includes("{{d.w}}")) {
+        p.style = {
+          ...p.style,
+          width: 16,
+          transform: `scaleX(${parseFloat(st.width) / 16})`,
+          transition:
+            "transform 180ms cubic-bezier(0.22,1,0.36,1), opacity 180ms ease-out, background-color 240ms ease-out",
+        };
+      }
       if (tag === "a" && n.attrs.href === "G-PanelPlace.dc.html")
         return (
           <a {...p}>
@@ -903,7 +1326,8 @@ export function useDesignBridge(
           };
       }
       if (tag === "div" && st.gridTemplateColumns?.includes("repeat(2")) {
-        const list = recommendations.data ?? [],
+        const listQuery = category ? categoryRecommendations : recommendations;
+        const list = listQuery.data ?? [],
           shown = category
             ? list.filter((f) => f.category === category)
             : isDemo
@@ -914,11 +1338,49 @@ export function useDesignBridge(
                 ].filter(Boolean)
               : list;
         return (
-          <div {...p} className="design-food-grid mobile-data-grid">
+          <div
+            {...p}
+            ref={categoryContent}
+            className="design-food-grid mobile-data-grid"
+            aria-busy={listQuery.isFetching}
+          >
+            {listQuery.isFetching && !shown.length && (
+              <ContentSkeleton count={2} />
+            )}
             {shown.slice(0, expanded ? undefined : 2).map((f) => (
               <FoodTile key={f.id} food={f} visual={visualFor(f, isDemo)} />
             ))}
-            {!shown.length && <MobileEmpty title="这一组里还没有这个口味" />}
+            {listQuery.isError ? (
+              <MobileEmpty
+                title="推荐暂时没端上来"
+                detail={errorMessage(listQuery.error)}
+                action={
+                  <button
+                    className="mobile-inline-link"
+                    disabled={listQuery.isFetching}
+                    onClick={() => void listQuery.refetch()}
+                  >
+                    {listQuery.isFetching ? "正在加载推荐…" : "重新加载推荐"}
+                  </button>
+                }
+              />
+            ) : (
+              !shown.length &&
+              !listQuery.isFetching && (
+                <MobileEmpty
+                  title={category ? "这个分类还没有推荐" : "暂时没有推荐"}
+                  detail="换个分类或饭点，也可以逛逛附近。"
+                  action={
+                    <button
+                      className="mobile-inline-link"
+                      onClick={() => void listQuery.refetch()}
+                    >
+                      <DesignIcon name="shuffle" size={16} /> 刷新推荐
+                    </button>
+                  }
+                />
+              )
+            )}
             {!expanded && shown.length > 2 && (
               <div style={{ gridColumn: "1/-1", marginTop: 60 }}>
                 <PrimaryButton light onClick={() => setExpanded(true)}>
@@ -944,7 +1406,7 @@ export function useDesignBridge(
         p.style = {
           ...st,
           fontWeight: category === key ? 900 : 400,
-          fontSize: category === key ? "17px" : "15px",
+          fontSize: "15px",
           color: category === key ? "#231C18" : "#6E625B",
         };
       }
@@ -975,10 +1437,22 @@ export function useDesignBridge(
       }
       if (tag === "h1")
         return (
-          <h1 {...p} style={{ ...st, color: vis.on }}>
+          <h1
+            {...p}
+            aria-label={liveFood.name ?? undefined}
+            style={{ ...st, color: vis.on }}
+          >
             <span style={{ display: "block" }}>{vis.l1}</span>
             <span style={{ display: "block" }}>{vis.l2}</span>
           </h1>
+        );
+      if (id === 22 && (liveFood.name?.length ?? 0) > 8)
+        return (
+          <div {...p}>
+            {view.children[0]}
+            <h2 className="mobile-full-food-name">{liveFood.name}</h2>
+            {view.children.slice(1)}
+          </div>
         );
       if (tag === "span" && clean(text) === "¥18")
         return (
@@ -992,10 +1466,16 @@ export function useDesignBridge(
         return vis.dist ? <span {...p}>{vis.dist}</span> : null;
       if (tag === "span" && clean(text) === "万达金街 1 层")
         return (
-          <span {...p}>{dishRestaurant.data?.address ?? "地址待补充"}</span>
+          <span {...p}>
+            {dishRestaurant.isPending && !dishRestaurant.data ? (
+              <Skeleton width={170} height={14} />
+            ) : (
+              (dishRestaurant.data?.address ?? "地址待补充")
+            )}
+          </span>
         );
       if (tag === "a" && String(n.attrs.href) === "G-Comments.dc.html")
-        p["aria-label"] = "评论（待接入）";
+        p["aria-label"] = "评论（敬请期待）";
       if (tag === "span" && id === 38) return <span {...p}>—</span>;
       if (tag === "a" && String(n.attrs.href) === "G-Detail.dc.html")
         p.onClick = (e: any) => {
@@ -1007,9 +1487,14 @@ export function useDesignBridge(
         p.onClick = () =>
           shareCurrent(liveFood.name ?? "山软今天吃什么", m.notice);
       if (id === 32) {
-        p.onClick = () => run(() => api.like(foodId, liveFood.isLiked!));
+        p.onClick = () => {
+          if (access(true))
+            void run(() => api.like(foodId, liveFood.isLiked === true));
+        };
         p["aria-pressed"] = liveFood.isLiked === true;
-        p.disabled = busy || liveFood.isLiked == null;
+        p.disabled =
+          busy ||
+          (!!session && user?.verified === true && liveFood.isLiked == null);
         return (
           <button {...p}>
             <DesignIcon
@@ -1047,19 +1532,28 @@ export function useDesignBridge(
             </button>
           </div>
         );
-      if (id === 54)
+      if (id === 54) {
+        const author = (
+          <>
+            <span className="mobile-avatar">
+              {liveFood.uploaderName?.slice(0, 1) ?? "食"}
+            </span>
+            <strong>{liveFood.uploaderName ?? "校园食友"}</strong>
+            <small>{relativeTime(liveFood.createdAt)}上传</small>
+          </>
+        );
         return (
           <section {...p}>
-            <Link
-              to={`/users/${liveFood.accountId}`}
-              className="mobile-contributor"
-            >
-              <span className="mobile-avatar">
-                {liveFood.uploaderName?.slice(0, 1) ?? "食"}
-              </span>
-              <strong>{liveFood.uploaderName ?? "同学"}</strong>
-              <small>{relativeTime(liveFood.createdAt)}上传</small>
-            </Link>
+            {parseId(String(liveFood.accountId)) ? (
+              <Link
+                to={`/users/${liveFood.accountId}`}
+                className="mobile-contributor"
+              >
+                {author}
+              </Link>
+            ) : (
+              <div className="mobile-contributor">{author}</div>
+            )}
             <p
               style={{
                 margin: 0,
@@ -1072,6 +1566,7 @@ export function useDesignBridge(
             </p>
           </section>
         );
+      }
       if (id === 17)
         return (
           <span {...p}>
@@ -1096,6 +1591,37 @@ export function useDesignBridge(
     }
     if (screen === "G-Detail" && restaurant.data) {
       const r = restaurant.data;
+      if (id === 21)
+        return (
+          <button
+            type="button"
+            aria-label="查看店铺评价与评分"
+            style={{
+              ...p.style,
+              border: 0,
+              background: "none",
+              padding: 0,
+              minHeight: 44,
+              textAlign: "left",
+            }}
+            onClick={() => {
+              const panel = document.getElementById("restaurant-evaluation");
+              panel?.scrollIntoView({
+                block: "center",
+                behavior: instantMotion() ? "instant" : "smooth",
+              });
+              (panel?.querySelector("select") as HTMLElement | null)?.focus({
+                preventScroll: true,
+              });
+            }}
+          >
+            {r.ratingSummaryState === "READY"
+              ? `${r.ratingCount ?? 0} 人评价${r.recommendationRate == null ? "" : ` · ${r.recommendationRate}% 推荐`}`
+              : "查看评价"}
+          </button>
+        );
+      if (id === 12 && (r.name?.length ?? 0) > 8)
+        p.style = { ...p.style, top: 108, gap: 8 };
       if (id === 19)
         return <span {...p}>{restaurantFoods.data?.totalItems ?? "—"}</span>;
       if (id === 16)
@@ -1111,13 +1637,38 @@ export function useDesignBridge(
               大家怎么说 <Pending />
             </h2>
             <p style={{ fontSize: 13, color: "#6e625b" }}>
-              餐厅口味聚合待接入，可在具体菜品中查看标签。
+              更多口味评价敬请期待，你可以先看看具体菜品的标签。
             </p>
           </section>
         );
-      if (tag === "h1") return <h1 {...p}>{r.name}</h1>;
+      if (tag === "h1")
+        return (
+          <h1
+            {...p}
+            style={{
+              ...p.style,
+              ...((r.name?.length ?? 0) > 8
+                ? { fontSize: 30, lineHeight: "36px", overflowWrap: "anywhere" }
+                : {}),
+            }}
+          >
+            {r.name}
+          </h1>
+        );
       if (tag === "span" && clean(text) === "万达金街 1 层")
-        return <span {...p}>{r.address ?? "地址待补充"}</span>;
+        return (
+          <span {...p} className="mobile-store-address">
+            {r.address ?? "地址待补充"}
+          </span>
+        );
+      if (id === 23 && (r.address?.length ?? 0) > 20)
+        return (
+          <div {...p}>
+            {view.children[0]}
+            <p className="mobile-full-store-address">{r.address}</p>
+            {view.children.slice(1)}
+          </div>
+        );
       if (tag === "section" && id === 29)
         return (
           <section {...p}>
@@ -1132,6 +1683,7 @@ export function useDesignBridge(
               招牌
             </h2>
             <div className="mobile-food-carousel">
+              {restaurantFoods.isPending && <ContentSkeleton count={2} />}
               {restaurantFoods.data?.items?.map((f) => (
                 <FoodTile
                   key={f.id}
@@ -1141,21 +1693,66 @@ export function useDesignBridge(
                 />
               ))}
             </div>
+            {restaurantFoods.isError && !restaurantFoods.data && (
+              <MobileEmpty
+                title="菜品暂时没加载成功"
+                action={
+                  <button
+                    className="mobile-inline-link"
+                    onClick={() => void restaurantFoods.refetch()}
+                  >
+                    重新加载
+                  </button>
+                }
+              />
+            )}
+            {!restaurantFoods.isPending &&
+              !restaurantFoods.isError &&
+              !restaurantFoods.data?.items?.length && (
+                <MobileEmpty title="这家店还没有分享的菜" />
+              )}
             <More />
           </section>
         );
       if (tag === "button" && clean(text) === "导航去店里")
         p.onClick = () => {
           if (!hasCoordinates(r)) m.notice("这家店还没有可用的位置。");
-          else
-            window.open(
-              `https://uri.amap.com/marker?position=${r.gcjLng},${r.gcjLat}&name=${encodeURIComponent(r.name ?? "餐厅")}&coordinate=gaode`,
-              "_blank",
-              "noopener,noreferrer",
-            );
+          else window.open(baiduMarkerUrl(r), "_blank", "noopener,noreferrer");
         };
     }
     if (screen === "G-AddDish") {
+      if (id === 19)
+        return (
+          <div
+            {...p}
+            className="mobile-publish-fields"
+            style={{ ...st, bottom: 96, overflowY: "auto", paddingBottom: 24 }}
+          >
+            {view.children}
+            <fieldset className="mobile-publish-meals">
+              <legend>适合的饭点</legend>
+              {mealOptions.map((meal) => {
+                const current = m.draft.mealTimes ?? [mealCode(m.meal)];
+                return (
+                  <label key={meal.id}>
+                    <input
+                      type="checkbox"
+                      checked={current.includes(meal.id)}
+                      onChange={(e) =>
+                        m.setDraft({
+                          mealTimes: e.target.checked
+                            ? [...current, meal.id]
+                            : current.filter((x) => x !== meal.id),
+                        })
+                      }
+                    />
+                    {meal.name}
+                  </label>
+                );
+              })}
+            </fieldset>
+          </div>
+        );
       if (id === 2) {
         p.style = {
           ...st,
@@ -1286,30 +1883,76 @@ export function useDesignBridge(
         };
     }
     if (screen === "G-EditProfile") {
-      if (tag === "input" && p.id === "nick") p.maxLength = 10;
+      if (tag === "input" && p.id === "nick") p.maxLength = 12;
       if (tag === "label" && p.htmlFor === "nick")
         return (
           <label {...p}>
-            昵称<span>{String(controller.state.nick ?? "").length} / 10</span>
+            昵称<span>{String(controller.state.nick ?? "").length} / 12</span>
           </label>
         );
       if (tag === "button" && ["拍一张", "从相册选"].includes(clean(text)))
         p.onClick = () => void pickAvatar();
-      if (id === 11 && user?.avatar) {
+      if (id === 11) {
+        const avatar = mediaUrl(user?.avatar);
         p.style = { ...st, overflow: "hidden" };
         return (
           <button {...p} onClick={() => void pickAvatar()}>
-            <img
-              src={mediaUrl(user.avatar)}
-              alt="头像"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
+            {avatar ? (
+              <img
+                src={avatar}
+                alt="头像"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              user?.displayName?.slice(0, 1) || "食"
+            )}
           </button>
         );
       }
     }
-    if (screen === "G-Settings" && tag === "span" && clean(text) === "已认证")
-      return <span {...p}>{user?.verified ? "已认证" : "去认证"}</span>;
+    if (screen === "G-Settings") {
+      if (tag === "a" && n.attrs.href === "G-EditProfile.dc.html") {
+        const avatar = mediaUrl(user?.avatar);
+        return (
+          <a {...p} className="mobile-settings-profile">
+            <span className="mobile-settings-avatar" aria-hidden="true">
+              {avatar ? (
+                <img src={avatar} alt="" />
+              ) : (
+                user?.displayName?.slice(0, 1) || "食"
+              )}
+            </span>
+            <span className="mobile-settings-identity">
+              <strong>{user?.displayName || "同学"}</strong>
+              <span>
+                <DesignIcon name="verify" size={16} />
+                {user?.verified ? "已认证" : "去认证"}
+              </span>
+            </span>
+            <DesignIcon name="chevronRight" size={20} />
+          </a>
+        );
+      }
+      if (tag === "button" && clean(text) === "退出登录")
+        return (
+          <div className="mobile-settings-actions">
+            <Link to="/settings/preferences">
+              口味偏好 · 让推荐更懂你
+              <DesignIcon name="chevronRight" size={18} />
+            </Link>
+            <button
+              {...p}
+              style={{
+                ...p.style,
+                position: "static",
+                width: "100%",
+              }}
+            >
+              {view.children}
+            </button>
+          </div>
+        );
+    }
     if (screen === "G-Verify" && tag === "button") {
       if (clean(text).includes("山大统一认证"))
         p.onClick = () => {
@@ -1359,56 +2002,9 @@ export function useDesignBridge(
       if (n.attrs.role === "tab")
         p.onClick = () => unavailable("消息按类型查询");
     }
-    if (screen === "G-Nearby") {
-      if (tag === "input") {
-        p.value = search;
-        p.onChange = (e: any) => {
-          setSearch(e.target.value);
-          setPage(1);
-        };
-        delete p.defaultValue;
-      }
-      if (id === 59)
-        return (
-          <div {...p} className="mobile-scroll-region mobile-data-grid">
-            <span className="mobile-drawer-handle" />
-            <div className="mobile-nearby-heading">
-              <h1>
-                附近 <span>{shops.data?.totalItems ?? "—"}</span>
-              </h1>
-              <span>按所选区域查询</span>
-            </div>
-            {shopList()}
-            <More />
-          </div>
-        );
-      if (tag === "button" && p["aria-label"] === "回到我的位置")
-        p.onClick = locate;
-      if (
-        tag === "button" &&
-        p["aria-label"] &&
-        /袁记|饭庄|一点点|研究所|小站|点心/.test(p["aria-label"])
-      )
-        p.onClick = () => {
-          const r = shops.data?.items?.find((r) => r.name === p["aria-label"]);
-          if (r?.id) {
-            m.setShopId(r.id);
-            nav(`/restaurants/${r.id}`);
-          } else m.notice("地图底图目前是设计示意，真实地图图层待接入。");
-        };
-      if (
-        tag === "a" &&
-        n.attrs["aria-label"] === "袁记云饺，已选中" &&
-        !isDemo
-      )
-        return null;
-      if (
-        tag === "button" &&
-        ["万达金街", "银座商城", "校内食堂", "西门小吃街"].includes(clean(text))
-      )
-        p.onClick = () => m.openPanel("G-PanelPlace");
-    }
     if (screen === "G-PickShop") {
+      if (id === 15) p.style = { ...p.style, bottom: 168, paddingBottom: 12 };
+      if (id === 27) p.style = { ...p.style, top: "auto", bottom: 108 };
       if (tag === "span" && clean(text).includes("离你近的排在前面"))
         return <span {...p}>当前查询区域：{area?.name ?? "待选择"}</span>;
       if (tag === "input") {
@@ -1424,7 +2020,7 @@ export function useDesignBridge(
     if (screen === "G-Search" && id === 29)
       return (
         <MobileEmpty
-          title="菜品全站搜索待接入"
+          title="更多搜索方式，敬请期待"
           detail="可以切换到店名，找到店铺后查看它的菜。"
         />
       );
@@ -1437,21 +2033,38 @@ export function useDesignBridge(
         return (
           <span {...p}>{myTags.data?.totalItems ?? "—"} 个，用来给菜分类</span>
         );
-      if (tag === "h1") return <h1 {...p}>{user?.userName ?? "同学"}</h1>;
-      if (tag === "p" && clean(text) === "只吃好吃的，也只推荐好吃的")
-        return <p {...p}>{user?.signature ?? "认真吃饭，认真生活。"}</p>;
-      if (tag === "span" && clean(text) === "天")
-        return <span {...p}>{user?.userName?.slice(0, 1) ?? "食"}</span>;
-      if (id === 9 && user?.avatar)
+      if (tag === "h1")
         return (
-          <span {...p} style={{ ...st, overflow: "hidden" }}>
-            <img
-              src={mediaUrl(user.avatar)}
-              alt="我的头像"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
+          <h1 {...p} className="mobile-profile-name">
+            {user?.displayName || "同学"}
+          </h1>
+        );
+      if (tag === "p" && clean(text) === "只吃好吃的，也只推荐好吃的")
+        return (
+          <p {...p} className="mobile-profile-signature">
+            {user?.signature || "认真吃饭，认真生活。"}
+          </p>
+        );
+      if (tag === "span" && clean(text) === "天" && st.borderRadius === "50%") {
+        const avatar = mediaUrl(user?.avatar);
+        return (
+          <span
+            {...p}
+            className="mobile-profile-avatar"
+            style={{ ...st, overflow: "hidden" }}
+          >
+            {avatar ? (
+              <img
+                src={avatar}
+                alt="我的头像"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              user?.displayName?.slice(0, 1) || "食"
+            )}
           </span>
         );
+      }
       if (tag === "span" && clean(text) === "37")
         return (
           <span {...p}>
@@ -1473,7 +2086,15 @@ export function useDesignBridge(
               : label === "16"
                 ? personal.data?.fansCount
                 : personal.data?.followingsCount;
-        return <span {...p}>{val ?? "—"}</span>;
+        return (
+          <span {...p}>
+            {personal.isPending ? (
+              <span className="ew-inline-skeleton" aria-label="正在加载统计" />
+            ) : (
+              (val ?? "—")
+            )}
+          </span>
+        );
       }
       if (
         (tag === "button" && [39, 41, 43].includes(id)) ||
@@ -1525,8 +2146,22 @@ export function useDesignBridge(
             ))}
             {list?.length === 0 && (
               <MobileEmpty
-                title="还没有收进来一道菜"
-                detail="去发现，或者分享你今天吃到的好味道。"
+                title={
+                  category === "收藏" ? "还没有收藏的菜" : "还没有分享过菜"
+                }
+                detail={
+                  category === "收藏"
+                    ? "去发现，收下你想尝的好味道。"
+                    : "分享今天吃到的好味道，记下你的第一餐。"
+                }
+                action={
+                  <Link
+                    className="design-button light"
+                    to={category === "收藏" ? "/" : "/publish"}
+                  >
+                    {category === "收藏" ? "去发现" : "分享一道菜"}
+                  </Link>
+                }
               />
             )}
             <More />
@@ -1552,7 +2187,7 @@ export function useDesignBridge(
               margin: 0,
             }}
           >
-            分类只筛选本页收藏 <Pending name="全量分类待接入" />
+            当前分类仅筛选本页收藏，更多筛选方式敬请期待。
           </p>
           {list.map((f) => (
             <FoodTile key={f.id} food={f} visual={visualFor(f, isDemo)} />
@@ -1604,27 +2239,56 @@ export function useDesignBridge(
       n.attrs["aria-label"] === "校区"
     )
       return (
-        <div {...p}>
+        <div {...p} role="group" aria-label="推荐校区与附近区域">
+          <div role="radiogroup" aria-label="推荐校区">
+            {campusList.data
+              ?.filter((c) => c.open !== false)
+              .map((c) => (
+                <button
+                  key={c.id}
+                  role="radio"
+                  aria-checked={campusId === c.id}
+                  className="mobile-place-chip"
+                  style={
+                    campusId === c.id
+                      ? { background: "#231c18", color: "white" }
+                      : undefined
+                  }
+                  onClick={() => selectCampus(c.id!)}
+                >
+                  {c.name}
+                </button>
+              ))}
+          </div>
           {hubs.data?.items?.map((h) => (
             <button
               key={h.id}
               className="mobile-place-chip"
-              disabled={!hasCoordinates(h)}
-              onClick={() => {
-                selectArea({
-                  name: h.name ?? "所选区域",
-                  gcjLng: h.gcjLng!,
-                  gcjLat: h.gcjLat!,
-                  hubId: h.id ?? undefined,
-                  source: "hub",
-                });
-                m.closePanel();
-              }}
+              disabled={!h.id || busy}
+              onClick={() =>
+                void run(async () => {
+                  const detail = await api.hubDetail(h.id!);
+                  if (detail.id !== h.id || !hasCoordinates(detail))
+                    throw new Error("区域详情缺少有效坐标，请重试或使用定位。");
+                  selectArea({
+                    name: detail.name ?? "所选区域",
+                    gcjLng: detail.gcjLng!,
+                    gcjLat: detail.gcjLat!,
+                    hubId: detail.id!,
+                    source: "hub",
+                  });
+                  m.closePanel();
+                })
+              }
             >
               {h.name}
             </button>
           ))}
-          <button className="mobile-place-chip" onClick={locate}>
+          <button
+            className="mobile-place-chip"
+            disabled={busy}
+            onClick={locate}
+          >
             <DesignIcon name="locate" size={16} />
             使用我的位置
           </button>
@@ -1635,6 +2299,22 @@ export function useDesignBridge(
         m.setMeal(scope.m.name);
         m.closePanel();
       };
+    if (
+      screen === "G-PanelPlace" &&
+      tag === "button" &&
+      clean(text).startsWith("按现在的时间")
+    )
+      p.onClick = () => {
+        const h = new Date().getHours();
+        m.setMeal(h < 10 ? "早饭" : h < 14 ? "午饭" : h < 20 ? "晚饭" : "夜宵");
+        m.closePanel();
+      };
+    if (
+      screen === "G-PanelPlace" &&
+      tag === "span" &&
+      clean(text) === "其他校区开放后会出现在这里"
+    )
+      return <span {...p}>校区用于推荐，附近区域用于查找店铺。</span>;
     if (
       screen === "G-PanelFilter" &&
       tag === "a" &&
@@ -1668,12 +2348,12 @@ export function useDesignBridge(
       tag === "span" &&
       clean(text) === "tianliang"
     )
-      return <span {...p}>{user?.userName ?? "—"}</span>;
+      return <span {...p}>{user?.displayName ?? "—"}</span>;
     if (screen === "G-UserProfile") {
       const u = other.data;
-      if (tag === "h1") return <h1 {...p}>{u?.userName ?? "同学"}</h1>;
+      if (tag === "h1") return <h1 {...p}>{u?.displayName ?? "同学"}</h1>;
       if (tag === "span" && clean(text) === "哲")
-        return <span {...p}>{u?.userName?.slice(0, 1) ?? "食"}</span>;
+        return <span {...p}>{u?.displayName?.slice(0, 1) ?? "食"}</span>;
       if (tag === "p" && clean(text) === "西门小吃街常驻选手")
         return <p {...p}>校园食友</p>;
       if (tag === "span" && ["312", "18", "56", "21"].includes(clean(text))) {
@@ -1696,8 +2376,8 @@ export function useDesignBridge(
         return (
           <div {...p}>
             <MobileEmpty
-              title="TA 的分享列表待接入"
-              detail="可以先关注这位同学。"
+              title="分享列表正在准备中"
+              detail="敬请期待，也可以先关注这位同学。"
             />
           </div>
         );
@@ -1714,7 +2394,11 @@ export function useDesignBridge(
       )
         p.onClick = (e: any) => {
           e.preventDefault();
-          unavailable("专题目录");
+          nav(
+            String(n.attrs.href).includes("Archive")
+              ? "/topics"
+              : "/topics/current",
+          );
         };
     }
     return undefined;
@@ -1737,21 +2421,8 @@ export function useDesignBridge(
     ) : null;
   }
   function shopList() {
-    if (!area)
-      return (
-        <MobileEmpty
-          title="先选一个区域"
-          detail="按区域中心，找附近的店。"
-          action={
-            <PrimaryButton onClick={() => m.openPanel("G-PanelPlace")}>
-              选择地点
-            </PrimaryButton>
-          }
-        />
-      );
-    if (shops.isPending)
-      return <div className="mobile-loading">在找附近的店</div>;
-    if (shops.error)
+    if (shops.isPending) return <ContentSkeleton kind="rows" count={4} />;
+    if (shops.error && !shops.data)
       return <div className="mobile-error">{errorMessage(shops.error)}</div>;
     return shops.data.items?.length ? (
       shops.data.items.map((r) => <ShopRow key={r.id} shop={r} />)
@@ -1760,26 +2431,26 @@ export function useDesignBridge(
     );
   }
   function locate() {
-    if (!navigator.geolocation) {
-      m.notice("当前浏览器无法定位，请手选区域。");
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        try {
-          selectArea({
-            name: "当前位置",
-            ...wgsToGcj(pos.coords.longitude, pos.coords.latitude),
-            source: "device",
-          });
-          m.closePanel();
-        } catch (e) {
-          m.notice(errorMessage(e));
-        }
-      },
-      () => m.notice("没有获取到位置，可以手动选区域。"),
-      { timeout: 10000 },
-    );
+    void run(async () => {
+      if (!navigator.geolocation)
+        throw new Error("当前浏览器无法定位，请手选区域。");
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          () => reject(new Error("未获取到位置，请手动选择区域。")),
+          { timeout: 10000, maximumAge: 60000 },
+        ),
+      );
+      const coordinates = wgsToGcj(pos.coords.longitude, pos.coords.latitude);
+      const hub = await api.locateHub(coordinates.gcjLng, coordinates.gcjLat);
+      selectArea({
+        name: hub?.name ? `${hub.name}附近` : "当前位置",
+        ...coordinates,
+        hubId: hub?.id ?? undefined,
+        source: "device",
+      });
+      m.closePanel();
+    });
   }
   async function pickAvatar() {
     const files = await pickFiles(false);
@@ -1795,7 +2466,15 @@ export function useDesignBridge(
   function navigateDesign(target: string, label: string, aria?: string) {
     if (target === "G-Follows.dc.html") {
       nav(
-        `/follows?tab=${label.includes("粉丝") ? "fans" : "follow"}${screen === "G-UserProfile" ? `&userId=${otherId}` : ""}`,
+        peopleHref(
+          screen === "G-UserProfile" ? `/users/${otherId}` : "/me",
+          location.search,
+          label.includes("粉丝") ? "fans" : "follow",
+        ),
+        {
+          state: { profilePeopleFrom: location.key },
+          preventScrollReset: true,
+        },
       );
       return;
     }
@@ -1821,15 +2500,21 @@ export function useDesignBridge(
     if (screen === "G-EditProfile" && label === "保存") {
       void run(async () => {
         const name = String(controller.state.nick ?? "").trim();
-        if (name.length < 3 || name.length > 10)
-          throw new Error("昵称需要 3–10 个字。");
+        if (name.length < 2 || name.length > 12)
+          throw new Error("昵称需要 2–12 个字。");
         await api.updateProfile({
-          userName: name,
+          displayName: name,
           signature: String(controller.state.sign ?? ""),
         });
+        removeDraft(`profile-mobile:${user?.id}`);
         await app.me.refetch();
         nav("/me");
       });
+      return;
+    }
+    if (screen === "G-EditProfile" && label === "取消") {
+      removeDraft(`profile-mobile:${user?.id}`);
+      nav("/me");
       return;
     }
     if (screen === "G-AddDish" && label === "发布") {
@@ -1914,7 +2599,16 @@ export function useDesignBridge(
       return;
     }
     if (target.startsWith("#")) {
-      m.notice("政策正文尚待部署方提供。");
+      m.notice("政策内容暂时无法查看，请稍后再试。");
+      return;
+    }
+    if (target === "G-PanelReport.dc.html") {
+      m.closePanel();
+      nav(`/reports/new?type=FOOD&id=${foodId}`);
+      return;
+    }
+    if (target === "G-WrongInfo.dc.html") {
+      nav(`/restaurants/correction?id=${shopId}`);
       return;
     }
     if (target === "G-PanelTag.dc.html") {
@@ -1958,47 +2652,66 @@ export function useDesignBridge(
       node: (v) => referenceNode(v, m),
       reference: true,
     };
-  const denied =
+  const accountPending =
+    !publicScreens.has(screen) && !!session && app.me.isPending;
+  const accountUnavailable =
     !publicScreens.has(screen) &&
-    (!session ||
-      !user ||
-      (needsVerification.has(screen) && user.verified !== true) ||
-      user.banned);
+    !!session &&
+    !accountPending &&
+    (app.me.isError || !user);
+  const verificationRequired =
+    !!session &&
+    !!user &&
+    needsVerification.has(screen) &&
+    user.verified !== true;
+  const denied =
+    !accountPending &&
+    !publicScreens.has(screen) &&
+    (!session || accountUnavailable || verificationRequired || user?.banned);
   let before: ReactNode;
-  if (denied)
+  if (accountUnavailable)
     before = (
-      <div className="mobile-status" role="status">
-        <DesignIcon name="verify" size={30} />
-        <h2>
-          {!session
-            ? "先登录，认识同校的你"
-            : user?.banned
-              ? "账号暂时无法使用"
-              : "先完成学生认证"}
-        </h2>
+      <div className="mobile-status" role="alert">
+        <DesignIcon name="wifiOff" size={30} />
+        <h2>暂时没能读取账号</h2>
         <p>
-          {!session
-            ? "登录后就能收藏喜欢的菜，也能分享这一餐。"
-            : user?.banned
-              ? (user.banReason ?? "请联系管理员了解账号状态。")
-              : "完成认证后，可以浏览菜品、收藏和发布。"}
+          {app.me.isError
+            ? errorMessage(app.me.error)
+            : "没有读取到账号信息，请重新加载。"}
         </p>
         <PrimaryButton
-          onClick={() =>
-            nav(
-              !session
-                ? `/auth/password?next=${encodeURIComponent(location.pathname)}`
-                : user?.banned
-                  ? "/me"
-                  : "/verify",
-            )
-          }
+          disabled={app.me.isFetching}
+          onClick={() => void app.me.refetch()}
         >
-          {!session ? "登录" : user?.banned ? "返回我的" : "去认证"}
+          {app.me.isFetching ? "正在重新加载…" : "重新加载账号"}
         </PrimaryButton>
       </div>
     );
-  if (!denied && relevant?.isError)
+  else if (denied && (!session || !user?.banned))
+    before = (
+      <div className="mobile-access-screen">
+        <AccessWelcome
+          canvas
+          verification={verificationRequired}
+          footer={screen === "G-Me" ? <DesignNav active="me" /> : undefined}
+        />
+      </div>
+    );
+  else if (denied)
+    before = (
+      <div className="mobile-status" role="status">
+        <DesignIcon name="verify" size={30} />
+        <h2>账号暂时无法使用</h2>
+        <p>{user?.banReason ?? "请联系管理员了解账号状态。"}</p>
+        <PrimaryButton onClick={() => nav("/me")}>返回我的</PrimaryButton>
+      </div>
+    );
+  if (
+    !denied &&
+    relevant?.isError &&
+    !relevant.data &&
+    !homeScreens.has(screen)
+  )
     before = (
       <div className="mobile-status">
         <h2>这一份内容暂时没端上来</h2>
@@ -2008,19 +2721,24 @@ export function useDesignBridge(
         </PrimaryButton>
       </div>
     );
-  if (!denied && relevant?.isPending)
+  if (accountPending || (!denied && relevant?.isPending))
     before = (
-      <div className="mobile-status">
-        <p>正在端上这一份好味道</p>
-      </div>
-    );
-  if (!denied && homeScreens.has(screen) && recommendations.data?.length === 0)
-    before = (
-      <div className="mobile-status">
-        <h2>今天的推荐还在等一道菜</h2>
-        <p>先去看看附近的店，或者分享你的私藏。</p>
-        <PrimaryButton onClick={() => nav("/nearby")}>找一家店</PrimaryButton>
-      </div>
+      <>
+        <MobilePageSkeleton screen={screen} />
+        {["G2-Home", "G-HomePhoto", "G-Me", "G-Nearby"].includes(screen) && (
+          <div className="ew-mobile-loading-nav">
+            <DesignNav
+              active={
+                screen === "G-Me"
+                  ? "me"
+                  : screen === "G-Nearby"
+                    ? "nearby"
+                    : "home"
+              }
+            />
+          </div>
+        )}
+      </>
     );
   if (!denied && screen === "G-Crop" && !m.draft.images.length)
     before = (
@@ -2037,33 +2755,17 @@ export function useDesignBridge(
       {isDemo && ["G-Login", "G-PasswordLogin"].includes(screen) && (
         <div
           className="mobile-mock-login"
-          style={{ top: screen === "G-Login" ? 520 : 560 }}
+          style={{ top: screen === "G-Login" ? 490 : 660 }}
         >
           <button
             type="button"
-            disabled={busy}
+            disabled={busy || !policyConsent.canSubmit}
             onClick={() => void login(true)}
           >
             {busy ? "正在进入…" : "一键 Mock 登录"}
           </button>
           <p>本地模拟数据，无需账号和密码</p>
         </div>
-      )}
-      {screen === "G-Nearby" && !isDemo && (
-        <span
-          style={{
-            position: "absolute",
-            left: 20,
-            top: 426,
-            padding: "4px 10px",
-            fontSize: 11,
-            borderRadius: 14,
-            background: "#fff",
-            color: "#6e625b",
-          }}
-        >
-          示意地图 <Pending name="地图图层待接入" />
-        </span>
       )}
       {screen === "G-EditProfile" && (
         <Link
@@ -2079,6 +2781,21 @@ export function useDesignBridge(
           性别、生日和家乡
         </Link>
       )}
+      {screen === "G-Dish" && liveFood && (
+        <div
+          style={{
+            position: "absolute",
+            right: 20,
+            top: 68,
+            zIndex: 20,
+            background: "#ffffffdd",
+            borderRadius: 15,
+            padding: "0 12px 12px",
+          }}
+        >
+          <FoodManage food={liveFood} />
+        </div>
+      )}
       {screen === "G-Crop" && (
         <span
           style={{
@@ -2091,17 +2808,15 @@ export function useDesignBridge(
             textAlign: "center",
           }}
         >
-          舞台色保存在本机，云端同步待接入
-        </span>
-      )}
-      {!isDemo && pendingScreens[screen] && (
-        <span className="mobile-demo-content-note">
-          本页为设计示例，真实功能待接入
+          舞台色与裁剪后的照片将在发布时同步保存
         </span>
       )}
       {error && screen !== "G-PasswordLogin" && (
         <div className="mobile-error-banner" role="alert">
           {error}
+          {duplicate && (
+            <Link to={`/foods/${duplicate}`}>查看已有菜品（草稿已保留） →</Link>
+          )}
           {uncertain && <span>结果尚未确认，请先核实，避免重复提交。</span>}
           <button onClick={() => setError("")} aria-label="关闭错误提示">
             <DesignIcon name="close" size={18} />
@@ -2112,7 +2827,7 @@ export function useDesignBridge(
       {screen === "G-PhoneLogin" && (
         <div className="mobile-supported-register">
           <Pending />
-          <p>手机号验证码注册暂未提供接口</p>
+          <p>手机验证码注册正在准备中，敬请期待。</p>
           <button
             className="mobile-inline-link"
             onClick={() => nav("/auth/username-register")}
@@ -2131,10 +2846,10 @@ export function useDesignBridge(
     busy,
     hideContent:
       !!denied ||
+      accountPending ||
       !!relevant?.isPending ||
-      !!relevant?.isError ||
-      (screen === "G-Crop" && !m.draft.images.length) ||
-      (homeScreens.has(screen) && recommendations.data?.length === 0),
+      (!!relevant?.isError && !relevant.data && !homeScreens.has(screen)) ||
+      (screen === "G-Crop" && !m.draft.images.length),
   };
 }
 const categoryCodes = [
@@ -2149,16 +2864,11 @@ const categoryCodes = [
   "side_dish",
   "other",
 ];
-let sessionProof: string | undefined;
-export function setConsentProof(proof: string | undefined) {
-  sessionProof = proof;
-}
-export function getConsentProof() {
-  return sessionProof;
-}
-export function clearConsentProof() {
-  sessionProof = undefined;
-}
+export {
+  setConsentProof,
+  getConsentProof,
+  clearConsentProof,
+} from "../app/consent";
 function resolveHref(
   target: string,
   m: ReturnType<typeof useMobile>,

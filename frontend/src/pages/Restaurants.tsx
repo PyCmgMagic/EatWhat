@@ -1,3 +1,4 @@
+import { Select } from "../components/Select";
 import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -236,7 +237,7 @@ function RestaurantContent({ id }: { id: number }) {
           <label htmlFor="store-tag" className="muted">
             按口味找店内菜品
           </label>
-          <select
+          <Select
             className="field"
             id="store-tag"
             value={tag ?? ""}
@@ -251,7 +252,7 @@ function RestaurantContent({ id }: { id: number }) {
                 {t.name}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
       )}
       {foods.isPending ? (

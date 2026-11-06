@@ -1,8 +1,10 @@
 import type { Session } from "../api/client";
-export const isDemo = import.meta.env.DEV
-  ? new URLSearchParams(location.search).get("demo") !== "0"
-  : import.meta.env.VITE_ENABLE_DEMO === "true" &&
-    new URLSearchParams(location.search).get("demo") === "1";
+import { demoEnabled } from "./mode";
+export const isDemo = demoEnabled(
+  location.search,
+  import.meta.env.DEV,
+  import.meta.env.VITE_ENABLE_DEMO === "true",
+);
 const storageKey = isDemo ? "eatwhat-demo-session" : "eatwhat-session";
 let memorySession: Session | null = null;
 export function readSession(): Session | null {

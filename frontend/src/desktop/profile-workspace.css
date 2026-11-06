@@ -1,0 +1,431 @@
+/* A single navigation rail stays in place while personal-center panels change. */
+.pc-profile-layout.pc-profile-workspace {
+  grid-template-columns: 232px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+.pc-profile-workspace > .pc-profile-rail {
+  position: sticky;
+  top: calc(var(--header-height, 94px) + 24px);
+  max-height: calc(100dvh - var(--header-height, 94px) - 40px);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pc-profile-workspace .pc-profile-card {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  column-gap: 12px;
+  padding: 22px 18px 18px;
+  border-radius: 20px;
+  background: #fff5d6;
+  flex-shrink: 0;
+}
+.pc-profile-workspace .pc-profile-decoration {
+  display: none;
+}
+.pc-profile-workspace .pc-profile-avatar {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  width: 48px;
+  height: 48px;
+  margin: 0;
+  font-size: 23px;
+}
+.pc-profile-workspace .pc-profile-card h1 {
+  align-self: center;
+  margin: 0;
+  font-size: 19px;
+  overflow-wrap: anywhere;
+}
+.pc-profile-workspace .pc-profile-card > p {
+  grid-column: 1 / -1;
+  margin: 14px 0 18px;
+  font-size: 11px;
+  color: #6e625b;
+  max-width: none;
+  overflow-wrap: anywhere;
+}
+.pc-profile-workspace .pc-profile-stats {
+  grid-column: 1 / -1;
+  margin: 0 0 17px;
+  padding-top: 15px;
+  border-top: 1px solid #e9dcb6;
+  text-align: center;
+}
+.pc-profile-workspace .pc-profile-stats b {
+  font-size: 21px;
+  letter-spacing: 0;
+}
+.pc-profile-workspace .pc-profile-stats > :is(span, a) {
+  font-size: 10px;
+  white-space: nowrap;
+}
+.pc-profile-workspace .pc-profile-card .pc-button {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  border: 1px solid #e9dcb6;
+  background: transparent;
+  box-shadow: none;
+  color: #231c18 !important;
+  font-size: 11px;
+}
+.pc-profile-workspace .pc-profile-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  border-radius: 20px;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.pc-profile-workspace .pc-profile-menu > a {
+  padding: 13px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+.pc-profile-workspace .pc-profile-menu > a[aria-current="page"] {
+  background: #ffcb45;
+  font-weight: 750;
+}
+.pc-profile-workspace-content {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  container: profile-panel / inline-size;
+  scroll-margin-top: calc(var(--header-height, 94px) + 24px);
+}
+/* Quiet, draggable scrollbars for the two independent workspace columns. */
+.pc-profile-workspace > :is(.pc-profile-rail, .pc-profile-workspace-content) {
+  scrollbar-width: thin;
+  scrollbar-color: #c8beb5 transparent;
+}
+.pc-profile-workspace
+  > :is(.pc-profile-rail, .pc-profile-workspace-content):is(
+    :hover,
+    :focus-within
+  ) {
+  scrollbar-color: #a99b8f transparent;
+}
+/* Chromium's standard scrollbar properties override its pseudo-elements.
+   Use the native pseudo-elements here to remove Windows' arrow buttons too. */
+@supports selector(::-webkit-scrollbar) {
+  .pc-profile-workspace > :is(.pc-profile-rail, .pc-profile-workspace-content),
+  .pc-profile-workspace
+    > :is(.pc-profile-rail, .pc-profile-workspace-content):is(
+      :hover,
+      :focus-within
+    ) {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+  .pc-profile-workspace
+    > :is(.pc-profile-rail, .pc-profile-workspace-content)::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  .pc-profile-workspace
+    > :is(
+      .pc-profile-rail,
+      .pc-profile-workspace-content
+    )::-webkit-scrollbar-track,
+  .pc-profile-workspace
+    > :is(
+      .pc-profile-rail,
+      .pc-profile-workspace-content
+    )::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  .pc-profile-workspace
+    > :is(
+      .pc-profile-rail,
+      .pc-profile-workspace-content
+    )::-webkit-scrollbar-thumb {
+    min-height: 40px;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: #c8beb5;
+    background-clip: padding-box;
+  }
+  .pc-profile-workspace
+    > :is(.pc-profile-rail, .pc-profile-workspace-content):is(
+      :hover,
+      :focus-within
+    )::-webkit-scrollbar-thumb {
+    background-color: #a99b8f;
+  }
+  .pc-profile-workspace
+    > :is(
+      .pc-profile-rail,
+      .pc-profile-workspace-content
+    )::-webkit-scrollbar-thumb:active {
+    background-color: #8f7f71;
+  }
+  .pc-profile-workspace
+    > :is(
+      .pc-profile-rail,
+      .pc-profile-workspace-content
+    )::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+.pc-profile-workspace
+  .pc-profile-workspace-content
+  > .pc-motion-region
+  > :is(.ew-feature, .settings-home, .v4-page, .pc-profile-editor) {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+.pc-profile-workspace-content
+  > .pc-motion-region
+  > :is(.settings-home, .v4-page) {
+  padding-top: 3px;
+}
+.pc-profile-workspace-content .pc-profile-content {
+  min-height: 560px;
+  border-radius: 20px;
+  padding: 26px;
+}
+.pc-profile-workspace-content .pc-secondary-body {
+  width: 100%;
+  min-width: 0;
+}
+.pc-profile-workspace-content .v4-page .v4-directory-search input {
+  padding-left: 39px;
+}
+.pc-profile-workspace-content .settings-home-heading h1,
+.pc-profile-workspace-content .v4-page .v4-page-title h1 {
+  font-size: 30px;
+}
+.pc-profile-workspace-content .settings-home-heading p,
+.pc-profile-workspace-content .v4-page .v4-page-title p {
+  font-size: 13px;
+}
+.pc-profile-workspace-content .settings-home-groups {
+  gap: 18px;
+}
+.pc-profile-workspace-content .feature-quick-link {
+  padding: 18px 14px;
+}
+.pc-profile-workspace-content .pc-profile-editor-layout {
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 20px;
+}
+.pc-profile-workspace-content .v4-page .v4-directory-filters {
+  top: 0;
+}
+
+@media (min-width: 768px) {
+  .pc-profile-layout.pc-profile-workspace {
+    height: calc(100dvh - var(--header-height, 94px) - 124px);
+    min-height: 0;
+  }
+  .pc-profile-workspace > .pc-profile-rail {
+    top: 0;
+    height: 100%;
+    max-height: 100%;
+  }
+  .pc-profile-workspace-content {
+    height: 100%;
+    max-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+    padding: 4px 8px 12px 4px;
+  }
+}
+
+/* These panels respond to their available column, not the full viewport. */
+@container profile-panel (max-width: 1000px) {
+  .pc-profile-workspace-content .v4-page .v4-directory-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+  .pc-profile-workspace-content .v4-page .v4-directory-filters {
+    position: static;
+    top: auto;
+    padding: 20px;
+  }
+  .pc-profile-workspace-content .v4-page .v4-filter-heading {
+    margin-bottom: 16px;
+  }
+  .pc-profile-workspace-content .v4-page button.v4-mobile-filter {
+    display: none;
+  }
+  .pc-profile-workspace-content .v4-page .v4-filter-controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+  }
+  .pc-profile-workspace-content .v4-page .v4-filter-checks {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    padding-top: 12px;
+  }
+  .pc-profile-workspace-content .v4-page .v4-filter-note {
+    grid-column: 1 / -1;
+    padding: 12px 16px;
+  }
+  .pc-profile-workspace-content .v4-page .v4-restaurant-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+  .pc-profile-workspace-content .feature-quick-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pc-profile-workspace-content .feature-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-profile-workspace-content .feature-groups[data-single] .feature-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pc-profile-workspace-content .pc-profile-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-profile-workspace-content .settings-home-row {
+    gap: 8px;
+  }
+  .pc-profile-workspace-content .settings-home-value {
+    max-width: 90px;
+    font-size: 11px;
+  }
+  .pc-profile-workspace-content .pc-secondary-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container profile-panel (max-width: 720px) {
+  .pc-profile-workspace-content .settings-home-groups,
+  .pc-profile-workspace-content .settings-home-support > div,
+  .pc-profile-workspace-content .feature-groups,
+  .pc-profile-workspace-content .pc-tag-grid,
+  .pc-profile-workspace-content .pc-history-grid,
+  .pc-profile-workspace-content .v4-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-profile-workspace-content .feature-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pc-profile-workspace-content
+    .settings-home-support
+    .settings-home-row
+    + .settings-home-row {
+    border-left: 0;
+    border-top: 1px solid var(--settings-line);
+  }
+  .pc-profile-workspace-content .settings-home-support .settings-home-icon {
+    display: grid;
+  }
+  .pc-profile-workspace-content .settings-home-heading > div,
+  .pc-profile-workspace-content .feature-directory-heading,
+  .pc-profile-workspace-content .pc-library-heading,
+  .pc-profile-workspace-content .pc-profile-heading {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .pc-profile-workspace-content .feature-directory-heading > .feature-search {
+    width: 100%;
+    max-width: none;
+  }
+  .pc-profile-workspace-content .pc-profile-content .pc-food-grid.three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pc-profile-workspace-content .pc-profile-editor-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-profile-workspace-content .v4-page .v4-page-title {
+    flex-wrap: wrap;
+  }
+  .pc-profile-workspace-content .v4-page .v4-page-symbol {
+    width: 46px;
+    height: 46px;
+    border-radius: 15px;
+  }
+}
+@container profile-panel (max-width: 600px) {
+  .pc-profile-workspace-content .v4-page .v4-filter-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pc-profile-workspace-content .v4-page .v4-restaurant-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container profile-panel (max-width: 480px) {
+  .pc-profile-workspace-content .feature-list,
+  .pc-profile-workspace-content .feature-groups[data-single] .feature-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-profile-workspace-content .pc-profile-content {
+    padding: 20px 16px;
+    min-height: 350px;
+  }
+  .pc-profile-workspace-content .settings-home-heading h1,
+  .pc-profile-workspace-content .v4-page .v4-page-title h1 {
+    font-size: 25px;
+  }
+  .pc-profile-workspace-content .settings-home-session,
+  .pc-profile-workspace-content .feature-help,
+  .pc-profile-workspace-content .pc-library-toolbar {
+    flex-wrap: wrap;
+  }
+  .pc-profile-workspace-content .pc-secondary-section,
+  .pc-profile-workspace-content .v4-page .v4-card {
+    padding: 20px;
+  }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  .pc-profile-layout.pc-profile-workspace {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 22px;
+  }
+  .pc-profile-workspace .pc-profile-card {
+    padding: 18px 14px 15px;
+  }
+}
+@media (max-width: 767px) {
+  .pc-profile-layout.pc-profile-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+  .pc-profile-workspace > .pc-profile-rail {
+    top: calc(var(--header-height, 72px) + 8px);
+    max-height: none;
+    overflow: visible;
+    z-index: 10;
+    display: block;
+  }
+  .pc-profile-workspace .pc-profile-card {
+    display: none;
+  }
+  .pc-profile-workspace .pc-profile-menu {
+    flex-direction: row;
+    justify-content: flex-start;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    border-radius: 14px;
+    scrollbar-width: thin;
+  }
+  .pc-profile-workspace .pc-profile-menu > a {
+    flex: 0 0 auto;
+    min-height: 44px;
+    font-size: 11px;
+    padding: 10px;
+    gap: 6px;
+  }
+  .pc-profile-workspace .pc-profile-menu > a .design-icon:last-child {
+    display: none;
+  }
+  .pc-profile-workspace-content {
+    scroll-margin-top: calc(var(--header-height, 72px) + 88px);
+  }
+}

@@ -1,0 +1,157 @@
+/* History follows the same document flow as the other personal sections. */
+.pc-app .pc-profile-workspace-content .pc-profile-content.pc-history-page {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.pc-history-page .pc-library-heading {
+  margin-bottom: 24px;
+}
+.pc-history-page .pc-library-heading h1 {
+  margin: 3px 0 10px;
+  font-size: 30px;
+  font-weight: 800;
+}
+.pc-history-page .pc-library-heading p {
+  font-size: 14px;
+  color: #827367;
+}
+.pc-history-tabs {
+  border-bottom: 1px solid #e8e1d9;
+  margin-bottom: 24px;
+}
+.pc-history-tabs .pc-tabs {
+  gap: 28px;
+}
+.pc-history-tabs .pc-tabs > button {
+  font-size: 14px;
+  min-height: 48px;
+  gap: 7px;
+  padding: 12px 2px 15px;
+  white-space: nowrap;
+}
+.pc-history-tabs .pc-tab-indicator {
+  background: #d99c18;
+}
+.pc-history-page .pc-history-toolbar {
+  padding: 0;
+  border: 0;
+  margin: 0 0 22px;
+  gap: 18px;
+}
+.pc-history-toolbar .pc-history-count {
+  font-size: 13px;
+  white-space: nowrap;
+  color: #76695e;
+}
+.pc-history-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.pc-history-page .pc-library-search {
+  width: 220px;
+  min-height: 42px;
+  background: #fff;
+  border-color: #e6ded4;
+  border-radius: 10px;
+}
+.pc-history-page .pc-library-search input {
+  font-size: 13px;
+}
+.pc-history-page .pc-history-content {
+  min-height: 0;
+}
+.pc-history-page .pc-library-empty,
+.pc-history-failure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  padding: 40px 24px;
+  border: 1px solid #e8dfd6;
+  border-radius: 20px;
+  background: #fff;
+  text-align: center;
+}
+.pc-history-page .pc-library-empty-symbol {
+  display: grid;
+  place-items: center;
+  padding: 17px;
+  border-radius: 22px;
+  background: #fff5d6;
+  color: #96732c;
+}
+.pc-history-page .pc-library-empty h2,
+.pc-history-failure h2 {
+  font-size: 20px;
+  margin: 20px 0 10px;
+  color: #30271f;
+}
+.pc-history-page .pc-library-empty p,
+.pc-history-failure p {
+  font-size: 14px;
+  color: #827367;
+  line-height: 1.8;
+  margin: 0 0 22px;
+}
+.pc-history-page .pc-library-empty .pc-button,
+.pc-history-failure .pc-button {
+  min-height: 44px;
+  height: auto;
+  padding: 11px 20px;
+  border-radius: 11px;
+  font-size: 14px;
+  background: #ffce47;
+  color: #30271f;
+  box-shadow: none;
+}
+.pc-history-page .pc-history-entry {
+  background: #fff;
+  border-color: #e8dfd6;
+}
+.pc-history-page .pc-history-entry-info strong {
+  font-size: 15px;
+}
+.pc-history-page .pc-history-entry-info :is(small, time) {
+  font-size: 12px;
+}
+.pc-history-page .pc-history-group > h2 > span,
+.pc-history-page .pc-library-page-note {
+  font-size: 12px;
+}
+@media (max-width: 1100px) {
+  .pc-history-tools {
+    flex: 1 0 100%;
+  }
+  .pc-history-page .pc-library-search {
+    flex: 1;
+    min-width: 160px;
+  }
+  .pc-history-page .pc-history-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .pc-history-tabs .pc-tabs {
+    gap: 18px;
+  }
+  .pc-history-tabs .pc-tabs > button {
+    font-size: 13px;
+  }
+  .pc-history-page .pc-library-heading p {
+    align-items: flex-start;
+  }
+  .pc-history-page .pc-library-heading p .design-icon {
+    margin-top: 4px;
+  }
+  .pc-history-page .pc-library-search {
+    flex-basis: 100%;
+  }
+  .pc-history-page .pc-library-empty,
+  .pc-history-failure {
+    padding: 30px 20px;
+  }
+}

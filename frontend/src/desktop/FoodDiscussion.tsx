@@ -6,7 +6,6 @@ import { isDemo } from "../app/runtime";
 import { errorMessage } from "../api/client";
 import { mediaUrl, type Food } from "../api/models";
 import { validateFiles } from "../api/validation";
-import { demoUpload } from "../demo/transport";
 import {
   addMessage,
   readDiscussion,
@@ -18,6 +17,7 @@ import {
 } from "../demo/comments";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { MotionRegion, SlidingTabs } from "./motion";
+import { useSurfaceDismiss } from "../motion/hooks";
 import "./discussion.css";
 
 function timeLabel(time: number) {
@@ -70,6 +70,7 @@ export default function FoodDiscussion({ food }: { food: Food }) {
     input = useRef<HTMLInputElement>(null),
     photoDialog = useRef<HTMLDialogElement>(null);
   const lock = useRef(false);
+  const dismissPhoto = useSurfaceDismiss(photoDialog, () => setViewPhoto(null));
   const discussion = query.data,
     comments = [...(discussion?.comments ?? [])].sort((a, b) =>
       sort === "newest"
@@ -111,7 +112,10 @@ export default function FoodDiscussion({ food }: { food: Food }) {
       validateFiles(files, photos.length);
       lock.current = true;
       setBusy(true);
-      const images = await Promise.all(files.map(demoUpload));
+      const { demoUpload } = await import("../demo/transport");
+      const images = await Promise.all(
+        files.map((file) => demoUpload(file, "comments")),
+      );
       setPhotos((current) => [...current, ...images]);
     } catch (e) {
       setError(errorMessage(e));
@@ -179,7 +183,7 @@ export default function FoodDiscussion({ food }: { food: Food }) {
           {!isDemo ? (
             <div className="food-comment-empty">
               <Icon name="comment" size={32} />
-              <h3>食友讨论即将开放</h3>
+              <h3>食友讨论，敬请期待</h3>
               <p>先收藏这道菜，等你来分享吃过的感受。</p>
             </div>
           ) : query.error ? (
@@ -221,7 +225,7 @@ export default function FoodDiscussion({ food }: { food: Food }) {
                       comment.userId === app.user?.id
                         ? {
                             ...comment,
-                            name: app.user.userName ?? comment.name,
+                            name: app.user.displayName ?? comment.name,
                             avatar: app.user.avatar,
                           }
                         : comment
@@ -231,7 +235,7 @@ export default function FoodDiscussion({ food }: { food: Food }) {
                     <div className="food-comment-byline">
                       <strong>
                         {comment.userId === app.user?.id
-                          ? (app.user?.userName ?? comment.name)
+                          ? (app.user?.displayName ?? comment.name)
                           : comment.name}
                       </strong>
                       {comment.userId === app.user?.id && <span>我</span>}
@@ -271,7 +275,7 @@ export default function FoodDiscussion({ food }: { food: Food }) {
                           reply(
                             comment.id,
                             comment.userId === app.user?.id
-                              ? (app.user.userName ?? comment.name)
+                              ? (app.user.displayName ?? comment.name)
                               : comment.name,
                           )
                         }
@@ -290,7 +294,7 @@ export default function FoodDiscussion({ food }: { food: Food }) {
                             <p>
                               <strong>
                                 {item.userId === app.user?.id
-                                  ? (app.user.userName ?? item.name)
+                                  ? (app.user.displayName ?? item.name)
                                   : item.name}
                               </strong>
                               <span>{item.text}</span>
@@ -396,7 +400,7 @@ export default function FoodDiscussion({ food }: { food: Food }) {
               placeholder={
                 isDemo
                   ? "聊聊口味、分量，或给下次来吃的食友一点建议…"
-                  : "评论功能即将开放"
+                  : "评论功能正在准备中，敬请期待"
               }
               maxLength={500}
               onKeyDown={(event) => {
@@ -486,16 +490,16 @@ export default function FoodDiscussion({ food }: { food: Food }) {
           ref={photoDialog}
           className="food-comment-photo-dialog"
           aria-label="评论图片预览"
-          onCancel={() => setViewPhoto(null)}
+          onCancel={(e) => {
+            e.preventDefault();
+            dismissPhoto();
+          }}
         >
           <button
             type="button"
             className="pc-icon-button"
             aria-label="关闭评论图片"
-            onClick={() => {
-              photoDialog.current?.close();
-              setViewPhoto(null);
-            }}
+            onClick={dismissPhoto}
           >
             <Icon name="close" size={23} />
           </button>
@@ -515,8 +519,12 @@ export function MyFoodComments({
     return (
       <div className="food-comment-empty">
         <Icon name="comment" size={34} />
-        <h3>{isDemo ? "还没有留下用餐感受" : "食友讨论即将开放"}</h3>
-        <p>在菜品详情里评论、回复，会在这里留下记录。</p>
+        <h3>{isDemo ? "还没有留下用餐感受" : "食友讨论，敬请期待"}</h3>
+        <p>
+          {isDemo
+            ? "在菜品详情里评论、回复，会在这里留下记录。"
+            : "评论功能正在准备中，可以先去发现一道好吃的。"}
+        </p>
         <Link className="pc-button light" to="/">
           发现一道好吃的
         </Link>

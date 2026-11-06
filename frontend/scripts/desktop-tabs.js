@@ -50,7 +50,7 @@ async(page)=>{
  if(await page.locator('.pc-main > .pc-motion-region').evaluate(el=>el.getAnimations().length))throw new Error('减少动态效果仍播放页面过渡');
  checks.push('减少动态效果即时切换');await page.emulateMedia({reducedMotion:'no-preference'});
  await page.setViewportSize({width:760,height:950});await page.goto(base+'#/nearby');await align('.pc-nav-tabs');
- if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('缩放预览横向溢出');checks.push('760px 缩放 PC 预览指示器对齐');
+ if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1))throw new Error('窄屏 PC 布局横向溢出');checks.push('760px PC 布局重新排版，指示器对齐');
  await page.setViewportSize({width:1440,height:1000});await page.goto(base+'#/nearby');await page.getByRole('heading',{name:'好吃的，就在附近'}).waitFor();await settle();await page.screenshot({path:'output/playwright/pc-tabs-nearby.png'});
  const result={checks,pageTransition:timing,errors};await page.evaluate(value=>sessionStorage.setItem('eatwhat-qa-tabs',JSON.stringify(value)),result);if(errors.length)throw new Error(errors.join('\n'));return result;
 }

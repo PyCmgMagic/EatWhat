@@ -58,7 +58,8 @@ export function screenForPath(path: string) {
   if (path === "/restaurants") return "G-Nearby";
   if (path === "/recommend") return "G2-Home";
   return (
-    Object.keys(screenRoutes).find((k) => screenRoutes[k] === path) ?? "G2-Home"
+    Object.keys(screenRoutes).find((k) => screenRoutes[k] === path) ??
+    "G-NotFound"
   );
 }
 export const panelScreens = new Set([
@@ -69,15 +70,12 @@ export const panelScreens = new Set([
 ]);
 export const pendingScreens: Record<string, string> = {
   "G-Topic": "专题详情",
-  "G-PhoneLogin": "手机号验证码注册",
-  "G-RegisterConfirm": "手机号注册确认",
-  "G-ForgotPassword": "找回密码",
   "G-ChangePhone": "换绑手机号",
   "G-Devices": "登录设备管理",
   "G-DeleteAccount": "注销账号",
   "G-Blocked": "屏蔽用户",
-  "G-SettingsNotify": "通知偏好同步",
-  "G-Feedback": "反馈提交",
+  "G-SettingsNotify": "通知设置",
+  "G-Feedback": "意见反馈",
   "G-WrongInfo": "信息纠错",
   "G-PanelReport": "内容举报",
   "G-Comments": "评论列表",
