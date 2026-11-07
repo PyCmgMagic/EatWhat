@@ -174,7 +174,11 @@ def retain_assets(previous, candidate):
         if path.is_file():
             target = candidate / path.relative_to(previous)
             if target.exists():
-                require(digest(target.read_bytes()) == digest(path.read_bytes()), "Asset filename collision")
+                # Vite also copies public/assets verbatim (e.g. sources.json).
+                # Mutable public files use the verified candidate; only generated
+                # fingerprinted URLs must retain identical bytes for old pages.
+                if re.search(r"-[A-Za-z0-9_-]{8,}\.[^/]+$", path.name):
+                    require(digest(target.read_bytes()) == digest(path.read_bytes()), "Asset filename collision")
             else:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(path, target)
