@@ -1,0 +1,80 @@
+.modal.ew-verification-dialog {
+  width: min(380px, calc(100vw - 40px));
+  max-height: calc(100dvh - 40px);
+  height: fit-content;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 24px;
+  color: #231c18;
+  background: #fff;
+  box-shadow: 0 18px 64px #231c182e;
+}
+.ew-verification-dialog::backdrop {
+  background: #231c1880;
+  backdrop-filter: blur(3px);
+}
+.ew-verification-dialog .modal-pad {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 24px 24px;
+}
+.ew-verification-dialog .modal-pad > h2 {
+  order: 1;
+  margin: 18px 0 10px;
+  font-family: inherit;
+  font-size: 22px;
+  line-height: 1.4;
+  font-weight: 800;
+}
+.ew-verification-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: #fff1ce;
+  color: #8f5b24;
+}
+.ew-verification-dialog .modal-pad > p {
+  order: 2;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.85;
+  color: #6e625b;
+}
+.ew-verification-actions {
+  order: 3;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+.ew-verification-actions button {
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 24px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+}
+.ew-verification-later {
+  color: #6e625b;
+  background: #f4efeb;
+}
+.ew-verification-go {
+  color: white;
+  background: #231c18;
+}
+.ew-verification-dialog .modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  color: #6e625b;
+  background: transparent;
+}

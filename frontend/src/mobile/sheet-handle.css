@@ -1,0 +1,52 @@
+.mobile-sheet-handle,
+.design-screen .mobile-sheet-handle:active,
+dialog .mobile-sheet-handle:active {
+  display: flex;
+  flex: none;
+  align-self: stretch;
+  align-items: flex-start;
+  justify-content: center;
+  width: calc(100% + 40px);
+  height: 44px;
+  margin: -10px -20px -16px;
+  padding: 10px 0 0;
+  border: 0;
+  border-radius: 28px 28px 0 0;
+  background: transparent;
+  color: inherit;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  scale: 1;
+}
+.mobile-sheet-handle > span {
+  flex: none;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: #c5b9af;
+}
+.mobile-sheet-handle:focus-visible {
+  outline: 2px solid #8a5b22;
+  outline-offset: -4px;
+}
+.mobile-draggable-surface {
+  overflow-anchor: none;
+}
+.mobile-draggable-surface .mobile-sheet-handle {
+  touch-action: none;
+}
+.mobile-draggable-surface[data-sheet-moving] {
+  will-change: transform;
+}
+.mobile-draggable-surface[data-sheet-dragging] .mobile-sheet-handle {
+  cursor: grabbing;
+}
+.mobile-sheet-handle:disabled {
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-draggable-surface {
+    transition: none !important;
+  }
+}

@@ -2,7 +2,6 @@ import { useEffect, type ButtonHTMLAttributes } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import { useMobile, DesignIcon } from "../../mobile/ui";
-import { useActionAccess } from "../access";
 import { useCommand } from "./shared";
 
 /** The first-screen action shares the detail query with the rating panel. */
@@ -11,8 +10,7 @@ export function RestaurantHeaderFavorite({
   ...props
 }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "id"> & { id: number }) {
   const { api } = useApp(),
-    cache = useQueryClient(),
-    access = useActionAccess();
+    cache = useQueryClient();
   const mobile = useMobile(),
     task = useCommand();
   const query = useQuery({
@@ -40,7 +38,6 @@ export function RestaurantHeaderFavorite({
         shop.personalState === "SYNC_PENDING"
       }
       onClick={() => {
-        if (!access(!shop?.isFavorite)) return;
         void task.run(
           () =>
             shop?.isFavorite

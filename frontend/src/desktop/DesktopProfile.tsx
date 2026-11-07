@@ -12,11 +12,18 @@ import { profileChanges, profileForm, profileClearError } from "./profile";
 import CropDialog from "./CropDialog";
 import { useSurfaceDismiss } from "../motion/hooks";
 import { useMemoryDraft, useSessionDraft } from "../app/drafts";
+import { useProfileReturnTo } from "../app/profile-navigation";
 import "./profile.css";
 
 type Avatar = Draft["images"][number];
 
 export default function DesktopProfile() {
+  const returnTo = useProfileReturnTo();
+  const returnLabel = returnTo.startsWith("/settings")
+    ? "返回设置"
+    : returnTo === "/me"
+      ? "返回个人主页"
+      : "返回原页面";
   const app = useApp(),
     cache = useQueryClient(),
     nav = useNavigate();
@@ -35,7 +42,7 @@ export default function DesktopProfile() {
     [notice, setNotice] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
   const [leaving, setLeaving] = useState(false);
-  const [leaveTo, setLeaveTo] = useState("/me");
+  const [leaveTo, setLeaveTo] = useState(returnTo);
   const navigationGuard = useContext(ProfileNavigationGuardContext);
   const input = useRef<HTMLInputElement>(null),
     leaveDialog = useRef<HTMLDialogElement>(null);
@@ -127,9 +134,9 @@ export default function DesktopProfile() {
   }
   function back() {
     if (busy) return;
-    setLeaveTo("/me");
+    setLeaveTo(returnTo);
     if (dirty) setLeaving(true);
-    else nav("/me");
+    else nav(returnTo);
   }
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -201,13 +208,13 @@ export default function DesktopProfile() {
         <div>
           <div className="pc-breadcrumb">
             <Link
-              to="/me"
+              to={returnTo}
               onClick={(e) => {
                 e.preventDefault();
                 back();
               }}
             >
-              我的主页
+              {returnLabel}
             </Link>
             <Icon name="chevronRight" size={13} />
             <span>编辑个人资料</span>
@@ -223,7 +230,7 @@ export default function DesktopProfile() {
           onClick={back}
           disabled={busy}
         >
-          返回个人主页
+          {returnLabel}
           <Icon name="chevronRight" size={16} />
         </button>
       </header>

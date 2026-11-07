@@ -143,7 +143,7 @@ export function PageSkeleton({ kind }: { kind: PageSkeletonKind }) {
   );
 }
 
-// The prototype canvas keeps these dimensions while real data is loading.
+// Fill the current canvas, whether it is fluid or a scaled reference artboard.
 export function MobilePageSkeleton({ screen }: { screen: string }) {
   const profile = screen === "G-Me" || screen === "G-UserProfile";
   const hero =

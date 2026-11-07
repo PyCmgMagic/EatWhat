@@ -1,0 +1,17 @@
+/* The original SVG already includes its plate and shadow. Preserve the artwork. */
+.dish-illustration {
+  display: block;
+  flex: none;
+  width: var(--dish-illustration-size, 128px);
+  max-width: 100%;
+  aspect-ratio: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.dish-illustration > img,
+.dish-illustration > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}

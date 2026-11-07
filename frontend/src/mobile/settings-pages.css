@@ -1,0 +1,392 @@
+/* One phone presentation for the existing settings controllers. All overrides
+   stay inside this frame; desktop and authentication pages keep their layouts. */
+.mobile-settings-content {
+  padding: 0 20px;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(.pc-secondary-head, .pc-secondary-rail, .ew-head, .v4-heading) {
+  display: none;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(
+    .pc-secondary-layout,
+    .pc-secondary-body,
+    .pc-secondary-columns,
+    .v4-page,
+    .v4-workspace,
+    .v4-page-content,
+    .ew-feature
+  ) {
+  display: block;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(
+    .pc-secondary-section,
+    .v4-card,
+    .ew-v2-card,
+    .ew-form-panel,
+    .settings-card
+  ) {
+  min-width: 0;
+  margin: 0 0 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.mobile-settings-page .mobile-settings-content :is(h2, h3) {
+  margin: 0 0 12px;
+  color: #231c18;
+  font:
+    600 16px/1.6 "Noto Sans SC Variable",
+    sans-serif;
+}
+.mobile-settings-page .mobile-settings-content .pc-secondary-section-title {
+  margin-bottom: 8px;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(.pc-secondary-section-title h2, .v4-card > h2) {
+  color: #6e625b;
+  font-size: 13px;
+}
+.mobile-settings-page .mobile-settings-content p {
+  margin: 8px 0 16px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #6e625b;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(small, .ew-note, .section-caption) {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #6e625b;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(.pc-secondary-switch-row, .ew-v2-row, .v4-preference-row) {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 12px 0;
+  border: 0;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(
+    .pc-secondary-switch-row > span,
+    .ew-v2-row > div,
+    .v4-preference-row > div
+  ) {
+  flex: 1;
+  min-width: 0;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(.pc-secondary-switch-row b, .ew-v2-row h3, .v4-row strong) {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(
+    .pc-secondary-switch-row small,
+    .ew-v2-row .ew-note,
+    .v4-preference-row p
+  ) {
+  display: block;
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+}
+.mobile-settings-page .mobile-settings-content input[role="switch"] {
+  appearance: none;
+  position: relative;
+  flex: 0 0 52px;
+  width: 52px;
+  height: 32px;
+  min-height: 0;
+  margin: 6px 0;
+  padding: 3px;
+  border: 0;
+  border-radius: 16px;
+  background: #e6ded8;
+  cursor: pointer;
+}
+.mobile-settings-page .mobile-settings-content input[role="switch"]::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px #231c1840;
+  transform: none;
+}
+.mobile-settings-page .mobile-settings-content input[role="switch"]:checked {
+  background: #231c18;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  input[role="switch"]:checked::before {
+  transform: translateX(20px);
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(
+    .pc-secondary-form,
+    .ew-form-panel form,
+    .ew-v2-account form,
+    .v4-card form
+  ) {
+  display: grid;
+  gap: 20px;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(
+    .pc-secondary-field,
+    .v4-field,
+    .ew-form-panel form > label,
+    .ew-v2-account form > label
+  ) {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(.pc-secondary-field > span, .v4-field > span) {
+  font-size: 16px;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    textarea,
+    select
+  ) {
+  width: 100%;
+  min-width: 0;
+  min-height: 52px;
+  max-width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e6ded8;
+  border-radius: 14px;
+  background: #f8f5f2;
+  color: #231c18;
+  font: inherit;
+  font-size: 16px;
+  box-shadow: none;
+}
+.mobile-settings-page .mobile-settings-content textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(.pc-secondary-field-pair, .form-two-cols) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(button:not(.v4-toggle), .pc-button, .ew-button, .btn, .v4-button) {
+  min-height: 48px;
+  max-width: 100%;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 26px;
+  background: #f4efeb;
+  color: #231c18;
+  font:
+    600 15px/1.5 "Noto Sans SC Variable",
+    sans-serif;
+  text-decoration: none;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(
+    .pc-button:not(.light),
+    .ew-button:not(.light),
+    .btn-primary,
+    button.primary,
+    .v4-button.primary
+  ) {
+  background: #231c18;
+  color: #fff;
+}
+.mobile-settings-page .mobile-settings-content button.danger {
+  color: #a8321c;
+  background: #fff0eb;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(.pc-secondary-form-footer, .v4-actions, .ew-inline) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0 0;
+  align-items: center;
+}
+.mobile-settings-page .mobile-settings-content .pc-secondary-form-footer {
+  flex-direction: column;
+  align-items: stretch;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  .pc-secondary-form-footer
+  > span {
+  color: #6e625b;
+  font-size: 13px;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  .pc-secondary-form-footer
+  .pc-button {
+  width: 100%;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(.pc-secondary-note, .v4-advice) {
+  position: static;
+  margin: 24px 0;
+  padding: 20px 0 0;
+  border: 0;
+  border-top: 1px solid #eee7e1;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(.pc-secondary-note > .design-icon, .v4-advice-art, .v4-kicker) {
+  display: none;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(.v4-advice-tip, .pc-secondary-verification, .v4-privacy-hero) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #f4efeb;
+  margin: 0 0 20px;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(.v4-icon-tile, .v4-lifecycle-icon) {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  color: #6e625b;
+  background: #f4efeb;
+}
+.mobile-settings-page .mobile-settings-content .v4-toggle {
+  display: flex;
+  align-items: center;
+  flex: 0 0 52px;
+  width: 52px;
+  min-width: 52px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.mobile-settings-page .mobile-settings-content .v4-toggle > span {
+  flex: 0 0 52px;
+  width: 52px;
+  height: 32px;
+  border-radius: 16px;
+  background: #e6ded8;
+}
+.mobile-settings-page .mobile-settings-content .v4-toggle > span::after {
+  width: 26px;
+  height: 26px;
+  left: 3px;
+  top: 3px;
+}
+.mobile-settings-page .mobile-settings-content .v4-toggle[data-on] > span {
+  background: #231c18;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  .v4-toggle[data-on]
+  > span::after {
+  transform: translateX(20px);
+}
+.mobile-settings-page .mobile-settings-content .v4-toggle > b {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(.v4-check, .pc-secondary-details summary, details > summary) {
+  min-height: 44px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.mobile-settings-page .mobile-settings-content .v4-check input {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  accent-color: #231c18;
+}
+.mobile-settings-page .mobile-settings-content .v4-steps {
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 0 0 24px;
+}
+.mobile-settings-page .mobile-settings-content .v4-steps li::after {
+  display: none;
+}
+.mobile-settings-page .mobile-settings-content .pc-secondary-about {
+  display: block;
+  padding: 0;
+  min-height: 0;
+  border-radius: 0;
+  background: transparent;
+  margin-bottom: 28px;
+}
+.mobile-settings-page .mobile-settings-content .pc-secondary-about > img {
+  display: none;
+}
+.mobile-settings-page .mobile-settings-content .pc-secondary-about h2 {
+  font-size: 32px;
+  line-height: 1.3;
+}
+.mobile-settings-feedback {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+}

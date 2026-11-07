@@ -289,6 +289,9 @@
   color: #231c18;
   margin: 0;
 }
+.ew-state > .dish-illustration {
+  margin-bottom: 8px;
+}
 .ew-state p {
   font-size: 12px;
   line-height: 1.9;

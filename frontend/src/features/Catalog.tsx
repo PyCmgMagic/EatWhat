@@ -40,6 +40,10 @@ import { FavoritesEmpty, FavoritesFilters } from "./FavoritesControls";
 import { ProfileSectionNav } from "./ProfileSectionNav";
 import { ProfileWorkspaceContext } from "../app/profile-workspace";
 import { useTask } from "../components/useTask";
+import {
+  DishIllustration,
+  type DishIllustrationName,
+} from "../components/DishIllustration";
 
 export function FeaturePage({
   title,
@@ -69,18 +73,24 @@ export function FeatureState({
   empty,
   retry,
   kind = "form",
+  illustration,
 }: {
   error?: unknown;
   loading?: boolean;
   empty?: string;
   retry?: () => void;
   kind?: "cards" | "rows" | "form";
+  illustration?: DishIllustrationName;
 }) {
   if (loading)
     return <ContentSkeleton kind={kind} count={kind === "form" ? 3 : 6} />;
   return (
     <div className="ew-state" role={error ? "alert" : "status"}>
-      <Icon name="bowl" size={30} />
+      {illustration && !error ? (
+        <DishIllustration name={illustration} />
+      ) : (
+        <Icon name="bowl" size={30} />
+      )}
       <h2>{error ? "暂时没有加载成功" : empty || "还没有内容"}</h2>
       {!!error && <p>{errorMessage(error)}</p>}
       {!!error && retry && (
@@ -131,7 +141,6 @@ export function FoodManage({ food }: { food: Food }) {
 }
 function CollectionAction({ food }: { food: Food }) {
   const { api } = useApp();
-  const access = useActionAccess();
   const task = useTask("已取消收藏", undefined, [
     "foods",
     "food-tags",
@@ -148,7 +157,7 @@ function CollectionAction({ food }: { food: Food }) {
         disabled={task.isPending || !food.id}
         aria-label={`取消收藏${food.name ?? "这道菜"}`}
         onClick={() => {
-          if (food.id && access()) task.run(() => api.favorite(food.id!, true));
+          if (food.id) task.run(() => api.favorite(food.id!, true));
         }}
       >
         {task.isPending ? "正在取消…" : "取消收藏"}
@@ -424,7 +433,10 @@ export function Catalog({ favorites = false }: { favorites?: boolean }) {
             reset={resetFilters}
           />
         ) : (
-          <FeatureState empty="没有找到符合条件的结果，试试放宽条件" />
+          <FeatureState
+            illustration={mode === "food" ? "jiaozi" : undefined}
+            empty="没有找到符合条件的结果，试试放宽条件"
+          />
         )
       ) : (
         <div

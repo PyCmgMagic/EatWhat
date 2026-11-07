@@ -1,34 +1,28 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useRemoteConfig } from "./v4/Remote";
 import { useApp } from "../app/state";
 import { useLoginDialog } from "../app/auth-dialog";
+import { useVerificationDialog } from "../app/verification-dialog";
+import { actionUnavailable, requestAccess } from "../api/access-policy";
+import type { RequestOptions } from "../api/client";
 export function useActionAccess() {
   const { session, user, toast } = useApp(),
-    nav = useNavigate(),
     loc = useLocation(),
     { openLogin } = useLoginDialog();
+  const openVerification = useVerificationDialog();
   const remote = useRemoteConfig();
-  return (verified = false) => {
-    const feature = loc.pathname.startsWith("/publish")
-      ? "publish"
-      : loc.pathname.startsWith("/restaurants/new")
-        ? "newShop"
-        : undefined;
-    const flag = feature ? remote.data?.flags?.[feature] : undefined;
-    if (remote.data?.update?.decision === "FORCE") {
-      toast("请先更新版本，再继续操作。");
-      return false;
-    }
-    if (
-      remote.data?.maintenance?.mode === "DOWN" ||
-      remote.data?.maintenance?.mode === "READ_ONLY" ||
-      flag?.on === false
-    ) {
-      toast(
-        flag?.reason ||
-          remote.data?.maintenance?.message ||
-          "这项操作暂时暂停，请稍后再试。",
-      );
+  // Optional early guard for opening editors/panels. API commands are always
+  // guarded centrally, even when their button does not call this hook.
+  return (
+    target: boolean | { path: string; options?: RequestOptions } = false,
+  ) => {
+    const verified =
+      typeof target === "boolean"
+        ? target
+        : requestAccess(target.path, target.options) === "verified";
+    const unavailable = actionUnavailable(remote.data, loc.pathname);
+    if (unavailable) {
+      toast(unavailable);
       return false;
     }
     if (!session) {
@@ -42,7 +36,8 @@ export function useActionAccess() {
       return false;
     }
     if (verified && user?.verified !== true) {
-      nav("/verify");
+      if (!user) toast("正在读取账号信息，请稍后再试。");
+      else openVerification();
       return false;
     }
     return true;

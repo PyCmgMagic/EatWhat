@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import openapiTS, { astToString, COMMENT_HEADER } from "openapi-typescript";
 import { parse } from "yaml";
+import { writeAccessRules } from "./access-rules.mjs";
 
 const source = new URL(
   "../../docs/EatWhat 业务服务 APIv5.yaml",
@@ -26,6 +27,7 @@ function nullableRefs(value) {
 const spec = parse(await fs.readFile(source, "utf8"));
 const ast = await openapiTS(nullableRefs(spec));
 await fs.writeFile(output, COMMENT_HEADER + astToString(ast));
+await writeAccessRules();
 console.log(
   `Generated API types from ${spec.info.version}, preserving nullable references.`,
 );

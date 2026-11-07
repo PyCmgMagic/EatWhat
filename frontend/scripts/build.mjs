@@ -17,6 +17,7 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { zipSync } from "fflate";
+import { accessRulesSource } from "./access-rules.mjs";
 
 const require = createRequire(import.meta.url);
 const frontend = realpathSync(fileURLToPath(new URL("../", import.meta.url)));
@@ -88,6 +89,12 @@ function collectFiles(directory, files = Object.create(null)) {
 
 let temporaryArchive;
 try {
+  const rulesFile = join(frontend, "src/api/access-rules.generated.ts");
+  if (
+    readFileSync(rulesFile, "utf8").replaceAll("\r\n", "\n") !==
+    (await accessRulesSource())
+  )
+    throw new Error("接口权限规则已变化，请先执行 npm run api:access。");
   ensureOutputDirectory(output, project);
   ensureOutputDirectory(packages, output);
   ensureOutputDirectory(dist, frontend);

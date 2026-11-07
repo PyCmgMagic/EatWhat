@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
+import { ProfileEditLink } from "../app/profile-navigation";
 import { useArea } from "../app/area";
 import { isDemo } from "../app/runtime";
 import { resultUncertain } from "../api/client";
@@ -261,9 +262,9 @@ export function DesktopUser() {
             </span>
           </div>
           {self ? (
-            <Link className="pc-button" to="/me/edit">
+            <ProfileEditLink className="pc-button">
               编辑个人资料
-            </Link>
+            </ProfileEditLink>
           ) : (
             <button
               className={`pc-button ${u.isFollowingHim ? "light" : ""}`}

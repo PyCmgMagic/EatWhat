@@ -80,20 +80,28 @@
   overflow-wrap: anywhere;
 }
 .ew-verification-methods {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  padding: 16px 0;
-  border-bottom: 1px solid #efe9e4;
-  font-size: 13px;
-  margin-bottom: 20px;
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #efe9e4;
+  font-size: 14px;
 }
-.ew-verification-methods > div {
+.ew-verification-methods-heading {
   display: flex;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 4px 12px;
   flex-wrap: wrap;
   align-items: center;
+}
+.ew-verification-methods .ew-verification-methods-heading h3 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.ew-verification-methods-list {
+  display: grid;
+  gap: 8px;
   min-width: 0;
 }
 .ew-verification-methods span {
@@ -101,19 +109,50 @@
   color: #6e625b;
 }
 .ew-verification-methods .ew-method-badge {
-  padding: 5px 10px;
-  background: #fff1c4;
-  color: #554321;
-  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #f8f5f2;
+  color: #231c18;
+  border-radius: 14px;
 }
-.ew-verification-methods button {
-  border: 0;
-  background: none;
+.ew-method-badge > svg {
+  flex-shrink: 0;
   color: #725139;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+}
+.ew-verification-methods-heading button,
+.mobile-settings-page
+  .mobile-settings-content
+  .ew-verification-methods
+  .ew-verification-methods-heading
+  button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 0 8px 8px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: #6e625b;
+  box-shadow: none;
+  text-decoration: none;
   font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
   cursor: pointer;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  .ew-verification-methods-heading
+  h3 {
+  margin: 0;
+}
+.ew-verification-methods-heading button:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 @media (max-width: 600px) {
   .ew-withdrawal h2 {
@@ -121,8 +160,5 @@
   }
   .ew-withdrawal {
     padding: 4px;
-  }
-  .ew-verification-methods {
-    align-items: flex-start;
   }
 }

@@ -18,6 +18,10 @@ import {
 } from "../api/client";
 import { createApi, uploadFile, uploadFiles, type Api } from "../api/service";
 import { AppContext } from "./state";
+import { withActionAccess } from "../api/access";
+import { showAccessPrompt } from "./access-prompt";
+import type { User, Schema } from "../api/models";
+import { actionUnavailable } from "../api/access-policy";
 import {
   isDemo,
   readSession,
@@ -77,12 +81,40 @@ function StateProvider({ children }: { children: ReactNode }) {
         throw error;
       }
     };
-    return createApi(transport, async (...args) => {
+    const guarded = withActionAccess(transport, {
+      session: readSession,
+      user: () => queryClient.getQueryData<User>(["me"]),
+      loadUser: () =>
+        queryClient.fetchQuery({
+          queryKey: ["me"],
+          queryFn: () => client.me(),
+          retry: false,
+        }),
+      context: () => window.location.hash,
+      prompt: showAccessPrompt,
+      activeElement: () => document.activeElement as HTMLElement | null,
+      unavailable: (path) => {
+        // Keep account/security recovery available during content maintenance.
+        if (
+          !/^\/(foods|restaurant|activity|upload)\//.test(path) &&
+          !/^\/user\/(un)?follow$/.test(path)
+        )
+          return;
+        const remote = queryClient
+          .getQueryCache()
+          .findAll({ queryKey: ["remote-config"], type: "active" })
+          .sort((a, b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt)[0]
+          ?.state.data as Schema["ClientConfigResponse"] | undefined;
+        return actionUnavailable(remote, path);
+      },
+    });
+    const client = createApi(guarded, async (...args) => {
       const captcha = await import("../api/captcha");
       return (isDemo ? captcha.runDemoCaptcha : captcha.runBrowserCaptcha)(
         ...args,
       );
     });
+    return client;
   }, []);
   const me = useMe(api, session);
   const toast = useCallback((message: string) => setMessage(message), []);

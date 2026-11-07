@@ -71,7 +71,7 @@ export function usePolicyConsent(enabled = true) {
     },
   };
 }
-type PolicyControl = ReturnType<typeof usePolicyConsent>;
+export type PolicyControl = ReturnType<typeof usePolicyConsent>;
 function PolicyDocument({
   url,
   version,

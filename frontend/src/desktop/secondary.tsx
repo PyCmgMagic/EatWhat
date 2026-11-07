@@ -218,7 +218,7 @@ export function State({
   );
 }
 export function TaskError({ error }: { error: unknown }) {
-  return error ? (
+  return error && errorMessage(error) ? (
     <p className="pc-secondary-error" role="alert">
       {errorMessage(error)}
     </p>

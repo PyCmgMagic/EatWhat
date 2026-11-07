@@ -1,0 +1,123 @@
+.mobile-account-settings {
+  width: 100%;
+  max-width: 520px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: max(46px, env(safe-area-inset-top)) 0 var(--mobile-nav-clearance);
+  background: #fff;
+  color: #231c18;
+  font-family: "Noto Sans SC Variable", "PingFang SC", sans-serif;
+}
+.mobile-account-heading {
+  margin-bottom: 20px;
+}
+.mobile-account-heading > a {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-left: 8px;
+  text-decoration: none;
+}
+.mobile-account-heading h1 {
+  margin: 8px 20px 0;
+  font-size: 34px;
+  line-height: 42px;
+  font-weight: 900;
+}
+.mobile-account-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.mobile-account-group h2 {
+  margin: 0;
+  padding: 0 20px 4px;
+  color: #6e625b;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 600;
+}
+.mobile-account-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 20px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
+  text-align: left;
+}
+.mobile-account-row > .design-icon {
+  flex-shrink: 0;
+}
+.mobile-account-row > .design-icon:last-child {
+  color: #6e625b;
+}
+.mobile-account-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 16px;
+  line-height: 24px;
+}
+.mobile-account-value {
+  min-width: 0;
+  max-width: 50%;
+  overflow-wrap: anywhere;
+  color: #6e625b;
+  font-size: 14px;
+  line-height: 22px;
+  text-align: right;
+}
+.mobile-account-row:is(a, button):active {
+  background: #f4efeb;
+}
+.mobile-account-consent {
+  margin: 4px 20px 12px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #f4efeb;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.mobile-account-consent .status-list {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 16px;
+}
+.mobile-account-consent .status-list > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+.mobile-account-consent :is(dt, .section-caption) {
+  color: #6e625b;
+}
+.mobile-account-consent dd {
+  margin: 0;
+}
+.mobile-account-consent :is(.btn, .text-link) {
+  min-height: 44px;
+  max-width: 100%;
+  margin: 4px 8px 4px 0;
+  padding: 10px 16px;
+  border: 1px solid #e6ded8;
+  border-radius: 22px;
+  background: #fff;
+  color: #231c18;
+  font: inherit;
+}
+.mobile-account-consent .btn-primary {
+  border-color: #231c18;
+  background: #231c18;
+  color: #fff;
+}
+.mobile-account-consent .section-caption {
+  margin: 12px 0 0;
+  font-size: 12px;
+}

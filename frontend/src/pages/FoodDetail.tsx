@@ -161,7 +161,7 @@ function DetailActions({ food }: { food: Food }) {
     <div className="detail-actions">
       <button
         className={`btn ${food.isFavorite ? "btn-lime" : "btn-primary"}`}
-        disabled={a.busy || food.isFavorite == null}
+        disabled={a.favoriteDisabled}
         onClick={a.favorite}
         aria-pressed={food.isFavorite ?? false}
       >

@@ -4,7 +4,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
+import { ProfileEditLink } from "../app/profile-navigation";
 import { useAuthBusy, useAuthFlow } from "../app/auth-dialog";
+import { localDestination } from "../app/navigation";
 import { isDemo } from "../app/runtime";
 import { classifyAuth } from "../api/service";
 import { useTask } from "../components/useTask";
@@ -15,6 +17,7 @@ import {
   PolicyConsent,
   usePolicyConsent,
   ConsentRecovery,
+  type PolicyControl,
 } from "../features/Consent";
 import { MobileBinding } from "../pages/ProfileExtras";
 import { ConsentSettings } from "../pages/Settings";
@@ -28,6 +31,12 @@ import {
   SsoStart,
   RecoverPassword,
 } from "../features/Account";
+import "../features/student-verification.css";
+import {
+  readVerificationCallback,
+  rememberVerificationReturn,
+} from "../app/verification-return";
+import VerificationResult from "../features/VerificationResult";
 import {
   Avatar,
   Note,
@@ -131,9 +140,9 @@ function Account() {
                 {user?.verified ? "学生身份已认证" : "学生身份待认证"}
               </small>
             </div>
-            <Link className="pc-secondary-text-link" to="/me/edit">
+            <ProfileEditLink className="pc-secondary-text-link">
               编辑资料
-            </Link>
+            </ProfileEditLink>
           </div>
           <Row
             title="学生认证"
@@ -177,7 +186,7 @@ function Account() {
           />
           <Row
             title="通知偏好"
-            value="管理通知栏目与当前设备"
+            value="功能准备中，敬请期待"
             to="/settings/notifications"
           />
           <Row
@@ -445,116 +454,183 @@ function Binding() {
   );
 }
 function Verification() {
+  const callback = readVerificationCallback(useLocation().search);
+  return callback ? (
+    <VerificationResult callback={callback} />
+  ) : (
+    <VerificationForm />
+  );
+}
+function VerificationForm() {
   const getSignal = useSendSignal();
+  const location = useLocation();
+  const returnTo = localDestination(
+    new URLSearchParams(location.search).get("next"),
+  );
   const { api, user, me, refreshMe } = useApp(),
-    send = useTask("验证邮件已发送，请到邮箱完成验证");
+    send = useTask("认证邮件已发送，请到学校邮箱继续完成认证");
+  useEffect(() => {
+    if (user?.verified) return;
+    let lastRefresh = 0;
+    const refresh = () => {
+      if (
+        document.visibilityState !== "visible" ||
+        Date.now() - lastRefresh < 1000
+      )
+        return;
+      lastRefresh = Date.now();
+      refreshMe();
+    };
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [user?.verified, refreshMe]);
   return (
     <>
       <PageHead
         title="学生认证"
-        detail="和同校的你，一起发现、分享与收藏。"
-        back="/settings/account"
-        crumb="账号与安全"
+        detail={
+          user?.verified
+            ? "学生身份已确认，可以继续探索校园美食。"
+            : "学校统一认证或学校邮箱认证，完成其中一种即可。"
+        }
+        back={returnTo ?? "/settings/account"}
+        crumb={returnTo ? "返回原页面" : "账号与安全"}
       />
-      <div className="pc-secondary-columns">
-        <Section title="校内身份">
+      <div
+        className={`pc-secondary-columns student-verification${user?.verified ? " verification-complete" : ""}`}
+      >
+        <Section title={user?.verified ? "认证结果" : "两种方式，任选其一"}>
           <div
             className={`pc-secondary-verification ${user?.verified ? "verified" : ""}`}
           >
             <Icon name="verify" size={35} />
             <div>
-              <b>{user?.verified ? "学生身份已认证" : "等待完成学生认证"}</b>
+              <b>{user?.verified ? "学生身份已认证" : "完成一种方式即可"}</b>
               <p>
                 {user?.verified
-                  ? "你可以浏览、收藏和分享喜欢的菜品。"
-                  : "选择一种认证方式，完成后刷新状态。"}
+                  ? "收藏、喜欢和分享已开启。"
+                  : "以下两种方式任选其一，无需全部完成。"}
               </p>
             </div>
-            <span className="pc-secondary-badge">
-              {user?.verified ? "已认证" : "待认证"}
-            </span>
+            {!user?.verified && (
+              <span className="pc-secondary-badge">未认证</span>
+            )}
           </div>
           {user?.verified ? (
-            <div className="pc-secondary-form-footer">
-              <Link to="/">去发现好味道</Link>
-              <Link className="pc-button" to="/me">
-                回到我的主页
+            <div className="verification-complete-actions">
+              <Link className="pc-button" to={returnTo ?? "/me"}>
+                {returnTo ? "返回原页面" : "回到我的主页"}
+              </Link>
+              <Link className="verification-discover" to="/">
+                去发现好味道 <Icon name="chevronRight" size={16} />
               </Link>
             </div>
           ) : (
             <>
-              <SsoStart />
-              <form
-                className="pc-secondary-form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const d = new FormData(e.currentTarget),
-                    email = String(d.get("email") || "").trim();
-                  send.run(async () => {
-                    const domain = import.meta.env.VITE_VERIFY_EMAIL_DOMAIN;
-                    if (
-                      domain &&
-                      !email.toLowerCase().endsWith("@" + domain.toLowerCase())
-                    )
-                      throw new Error(`请使用 @${domain} 邮箱。`);
-                    await api.sendEmail(email, getSignal());
-                  });
-                }}
+              <section
+                className="verification-option"
+                aria-labelledby="verification-sso-title"
               >
-                <Field
-                  label="使用邮箱认证"
-                  hint={
-                    isDemo
-                      ? "演示模式不会发送真实邮件。"
-                      : "收到验证邮件后，请按照邮件中的步骤完成认证。"
-                  }
+                <h3 id="verification-sso-title">学校统一认证</h3>
+                <p>使用学校统一身份账号，在学校认证页面完成登录。</p>
+                <SsoStart returnTo={returnTo ?? "/settings/account"} />
+              </section>
+              <div className="verification-or">或，选择学校邮箱认证</div>
+              <section
+                className="verification-option"
+                aria-labelledby="verification-email-title"
+              >
+                <h3 id="verification-email-title">学校邮箱认证</h3>
+                <p>使用你本人的学校邮箱，收取邮件并按提示完成认证。</p>
+                <form
+                  className="pc-secondary-form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const d = new FormData(e.currentTarget),
+                      email = String(d.get("email") || "").trim();
+                    send.run(async () => {
+                      const domain = import.meta.env.VITE_VERIFY_EMAIL_DOMAIN;
+                      if (
+                        domain &&
+                        !email
+                          .toLowerCase()
+                          .endsWith("@" + domain.toLowerCase())
+                      )
+                        throw new Error(`请使用 @${domain} 邮箱。`);
+                      await api.sendEmail(email, getSignal());
+                      rememberVerificationReturn(
+                        user?.id,
+                        returnTo ?? "/settings/account",
+                      );
+                    });
+                  }}
                 >
-                  <input
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="输入你的认证邮箱"
-                    required
-                  />
-                </Field>
-                {send.isSuccess && (
-                  <p role="status">
-                    验证邮件已发送，请到邮箱完成认证后刷新状态。
-                  </p>
-                )}
-                <TaskError error={send.error} />
-                <button
-                  className="pc-button"
-                  disabled={send.isPending || send.isSuccess}
-                >
-                  {send.isPending ? "正在发送…" : "发送认证邮件"}
-                </button>
-              </form>
+                  <Field
+                    label="学校邮箱地址"
+                    hint={
+                      isDemo
+                        ? "演示模式不会发送真实邮件。"
+                        : import.meta.env.VITE_VERIFY_EMAIL_DOMAIN
+                          ? `请使用 @${import.meta.env.VITE_VERIFY_EMAIL_DOMAIN} 邮箱。`
+                          : "请填写学校邮箱，不要使用个人邮箱。"
+                    }
+                  >
+                    <input
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="输入你的学校邮箱"
+                      required
+                    />
+                  </Field>
+                  {send.isSuccess && (
+                    <p className="verification-email-sent" role="status">
+                      邮件已发送，还差最后一步：打开学校邮箱，按邮件提示完成认证，再回到这里刷新认证状态。无需再进行学校统一认证。
+                    </p>
+                  )}
+                  <TaskError error={send.error} />
+                  <button
+                    className="pc-button"
+                    disabled={send.isPending || send.isSuccess}
+                  >
+                    {send.isPending ? "正在发送…" : "发送认证邮件"}
+                  </button>
+                </form>
+              </section>
             </>
           )}
-          <VerificationMethods />
-          <div className="pc-secondary-row">
-            <div>
-              <b>已经完成认证？</b>
-              <p>刷新后查看最新的认证结果。</p>
+          {user?.verified ? (
+            <VerificationMethods />
+          ) : (
+            <div className="pc-secondary-row verification-refresh">
+              <div>
+                <b>在学校页面或邮箱中完成后</b>
+                <p>回到这里刷新认证状态，成功后即可使用收藏等功能。</p>
+              </div>
+              <button
+                className="pc-button light"
+                disabled={me.isFetching}
+                onClick={refreshMe}
+              >
+                {me.isFetching ? "正在刷新…" : "刷新认证状态"}
+              </button>
             </div>
-            <button
-              className="pc-button light"
-              disabled={me.isFetching}
-              onClick={refreshMe}
-            >
-              {me.isFetching ? "正在刷新…" : "刷新认证状态"}
-            </button>
-          </div>
+          )}
           <TaskError error={me.error} />
         </Section>
-        <Note title="认证后，开启更多美味" icon="verify">
-          <ul>
-            <li>浏览同学们分享的菜品</li>
-            <li>收藏好味道并整理个人标签</li>
-            <li>分享菜品，参与校园美食交流</li>
-          </ul>
-        </Note>
+        {!user?.verified && (
+          <Note title="认证后可以" icon="verify">
+            <ul>
+              <li>收藏和喜欢菜品</li>
+              <li>添加标签，整理喜欢的口味</li>
+              <li>分享菜品，参与校园美食交流</li>
+            </ul>
+          </Note>
+        )}
       </div>
     </>
   );
@@ -691,9 +767,11 @@ export function DesktopAuth() {
 export function AuthForm({
   register,
   compact = false,
+  policyConsent,
 }: {
   register: boolean;
   compact?: boolean;
+  policyConsent?: PolicyControl;
 }) {
   const { navigate: nav, location: loc, finish } = useAuthFlow();
   const { api, signIn, session } = useApp(),
@@ -701,7 +779,8 @@ export function AuthForm({
     check = useTask("这个用户名可以使用"),
     [checked, setChecked] = useState(false),
     [showPassword, setShowPassword] = useState(false);
-  const consent = usePolicyConsent();
+  const localConsent = usePolicyConsent(!policyConsent);
+  const consent = policyConsent ?? localConsent;
   useAuthBusy(task.isPending || check.isPending);
   const next = new URLSearchParams(loc.search).get("next"),
     suffix = next ? "?next=" + encodeURIComponent(next) : "";

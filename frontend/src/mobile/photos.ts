@@ -1,4 +1,5 @@
 import { stageColors } from "./catalog";
+import { photoFraming } from "./photo-framing";
 export async function adjustPhoto(
   file: File,
   crop: { x: number; y: number; zoom: number },
@@ -15,21 +16,12 @@ export async function adjustPhoto(
     canvas.width = canvas.height = 768;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("当前浏览器无法处理照片。");
-    const size =
-      Math.min(img.naturalWidth, img.naturalHeight) / Math.max(1, crop.zoom);
-    const x = (img.naturalWidth - size) / 2 - (crop.x * size) / 300,
-      y = (img.naturalHeight - size) / 2 - (crop.y * size) / 300;
-    ctx.drawImage(
-      img,
-      Math.max(0, Math.min(img.naturalWidth - size, x)),
-      Math.max(0, Math.min(img.naturalHeight - size, y)),
-      size,
-      size,
-      0,
-      0,
-      768,
-      768,
-    );
+    const { x, y, size } = photoFraming(
+      img.naturalWidth,
+      img.naturalHeight,
+      crop,
+    ).source;
+    ctx.drawImage(img, x, y, size, size, 0, 0, 768, 768);
     const data = ctx.getImageData(0, 0, 768, 768).data;
     const scores = stageColors.map(() => 0);
     const hsv = (r: number, g: number, b: number) => {

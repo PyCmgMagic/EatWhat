@@ -197,7 +197,9 @@
 }
 .mobile-nearby-screen {
   display: grid;
-  grid-template-rows: auto minmax(220px, 1fr) minmax(160px, 28%) 100px;
+  grid-template-rows: auto minmax(100px, 1fr) minmax(180px, 40%);
+  /* The shared nav is outside this zoomed canvas. Reserve its physical height. */
+  padding-bottom: calc(var(--mobile-nav-clearance) / var(--mobile-scale, 1));
 }
 .mobile-nearby-toolbar {
   display: flex;
@@ -244,6 +246,11 @@
   position: relative;
 }
 .mobile-nearby-sheet {
+  /* A separate grid area keeps the map stable while the sheet moves over it. */
+  position: absolute;
+  grid-row: 3 / 4;
+  inset: 0;
+  z-index: 2;
   display: flex;
   min-height: 0;
   flex-direction: column;
@@ -251,6 +258,11 @@
   padding: 14px 20px 0;
   background: white;
   border-radius: 24px 24px 0 0;
+  box-shadow: 0 -6px 20px #231c1808;
+  overflow: hidden;
+}
+.mobile-nearby-sheet .mobile-nearby-heading {
+  flex-shrink: 0;
 }
 .mobile-nearby-sheet .mobile-nearby-heading h1 {
   margin: 0;
@@ -261,6 +273,7 @@
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
+  touch-action: pan-y;
   padding-bottom: 10px;
 }
 .mobile-nearby-shop {
@@ -282,8 +295,4 @@
   padding: 12px 8px;
   font-size: 12px;
   color: #6e625b;
-}
-.mobile-nearby-navigation {
-  padding: 16px 16px 24px;
-  background: white;
 }

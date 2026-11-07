@@ -13,12 +13,13 @@ import { isDemo } from "../app/runtime";
 import { useTask } from "../components/useTask";
 import { classifyAuth } from "../api/service";
 import { setConsentProof, clearConsentProof } from "../app/consent";
-import { PolicyConsent, usePolicyConsent } from "./Consent";
+import { PolicyConsent, usePolicyConsent, type PolicyControl } from "./Consent";
 import { FeaturePage, FeatureState } from "./Catalog";
 import { useArea } from "../app/area";
 import { useMobile } from "../mobile/ui";
 import { mealOptions } from "../api/food-display";
 import "./latest.css";
+import { rememberVerificationReturn } from "../app/verification-return";
 
 export function RecommendationControls() {
   const cache = useQueryClient(),
@@ -93,9 +94,15 @@ export function RecommendationControls() {
 export function PhoneLoginForm({
   embedded = false,
   compact = false,
-}: { embedded?: boolean; compact?: boolean } = {}) {
+  policyConsent,
+}: {
+  embedded?: boolean;
+  compact?: boolean;
+  policyConsent?: PolicyControl;
+} = {}) {
   const { navigate: nav, location: loc, finish } = useAuthFlow();
-  const consent = usePolicyConsent();
+  const localConsent = usePolicyConsent(!policyConsent);
+  const consent = policyConsent ?? localConsent;
   const getSignal = useSendSignal();
   const mobileInput = useRef<HTMLInputElement>(null);
   const [consentFeedback, setConsentFeedback] = useState<{
@@ -522,15 +529,19 @@ function PreferencesForm({
     </div>
   );
 }
-export function SsoStart() {
-  const { api } = useApp(),
+export function SsoStart({
+  returnTo = "/settings/account",
+}: {
+  returnTo?: string;
+}) {
+  const { api, user } = useApp(),
     [url, setUrl] = useState(""),
     [expires, setExpires] = useState(0),
     task = useTask();
   return (
     <div className="ew-feature ew-sso">
       <button
-        className="ew-button light"
+        className={`ew-button${url ? " light" : ""}`}
         disabled={task.isPending || isDemo}
         onClick={() =>
           task.run(async () => {
@@ -544,7 +555,11 @@ export function SsoStart() {
           })
         }
       >
-        {task.isPending ? "正在获取认证地址…" : "发起学校统一认证"}
+        {task.isPending
+          ? "正在获取认证入口…"
+          : url
+            ? "重新获取认证入口"
+            : "获取学校认证入口"}
       </button>
       {url && (
         <a
@@ -556,10 +571,10 @@ export function SsoStart() {
             if (Date.now() >= expires) {
               e.preventDefault();
               setUrl("");
-            }
+            } else rememberVerificationReturn(user?.id, returnTo);
           }}
         >
-          打开本次认证页面 ↗
+          前往学校认证页面 ↗
         </a>
       )}
       {task.errorText && (
@@ -570,7 +585,9 @@ export function SsoStart() {
       <p className="ew-note">
         {isDemo
           ? "演示模式不会发起真实学校认证。"
-          : "认证链接一次有效；完成后返回此页刷新认证状态。"}
+          : url
+            ? "入口已准备好。将在新页面完成学校认证，结束后显示认证结果，并提供返回原页面的入口。"
+            : "先获取入口，再前往学校页面；每次获取的入口仅可使用一次。"}
       </p>
     </div>
   );

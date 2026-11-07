@@ -12,6 +12,7 @@ import {
   useLoginDialog,
 } from "./auth-dialog";
 import { getConsentProof, setConsentProof } from "./consent";
+import { AccessWelcome } from "../components/AccessWelcome";
 
 type Flow = ReturnType<typeof useAuthFlow>;
 let currentFlow: Flow;
@@ -79,7 +80,13 @@ vi.mock("../components/AuthDialogContent", () => ({
   },
 }));
 
-function Background({ loginTo = "/auth" }: { loginTo?: string }) {
+function Background({
+  loginTo = "/auth",
+  access,
+}: {
+  loginTo?: string;
+  access?: "login" | "verification";
+}) {
   const location = useLocation(),
     navigate = useNavigate();
   const { openLogin } = useLoginDialog();
@@ -92,6 +99,9 @@ function Background({ loginTo = "/auth" }: { loginTo?: string }) {
   }, []);
   return (
     <main>
+      {access && !location.pathname.startsWith("/auth") && (
+        <AccessWelcome verification={access === "verification"} />
+      )}
       <output data-testid="page-path">
         {location.pathname + location.search + location.hash}
       </output>
@@ -163,13 +173,14 @@ async function cancel() {
 async function render(
   path = "/foods/7?sort=popular#comments",
   loginTo = "/auth",
+  access?: "login" | "verification",
 ) {
   window.history.replaceState(null, "", "/#" + path);
   await act(async () => {
     root.render(
       <HashRouter>
         <LoginDialogProvider>
-          <Background loginTo={loginTo} />
+          <Background loginTo={loginTo} access={access} />
         </LoginDialogProvider>
       </HashRouter>,
     );
@@ -197,6 +208,10 @@ async function writeDraft(value: string) {
 }
 
 beforeEach(() => {
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    value: 1024,
+  });
   (
     globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -238,6 +253,66 @@ afterEach(async () => {
   if (originalClose)
     Object.defineProperty(HTMLDialogElement.prototype, "close", originalClose);
   else Reflect.deleteProperty(HTMLDialogElement.prototype, "close");
+});
+
+describe("protected page login entry", () => {
+  it("uses the mobile auth route instead of a desktop dialog, preserving the destination", async () => {
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 390,
+    });
+    await render("/foods/7", "/auth?next=%2Fpublish");
+    await click(element("open-login"));
+    expect(dialog()).toBeNull();
+    expect(route()).toBe("/auth?next=%2Fpublish");
+    expect(window.history.state.usr.returnTo).toBe("/foods/7");
+  });
+
+  it("replaces a protected mobile route and offers a public return path", async () => {
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 390,
+    });
+    await render("/me", "/auth", "login");
+    expect(dialog()).toBeNull();
+    expect(route()).toBe("/auth?next=%2Fme");
+    expect(window.history.state.usr.returnTo).toBe("/");
+  });
+  it("opens the existing form directly and retains the complete protected destination", async () => {
+    await render("/publish/dish?restaurant=4", "/auth", "login");
+    expect(dialog()?.open).toBe(true);
+    expect(authPath()).toBe("/auth");
+    expect(document.querySelector(".ew-access-stage")).toBeNull();
+    expect(element("auth-search").textContent).toBe(
+      "?next=%2Fpublish%2Fdish%3Frestaurant%3D4",
+    );
+    await click(element("register"));
+    await click(element("finish"));
+    expect(dialog()).toBeNull();
+    expect(route()).toBe("/publish/dish?restaurant=4");
+  });
+
+  it("allows cancellation and explicit reopening without forcing login on re-renders", async () => {
+    await render("/me", "/auth", "login");
+    await cancel();
+    expect(dialog()).toBeNull();
+    await writeDraft("保持当前页");
+    expect(dialog()).toBeNull();
+    expect(route()).toBe("/me");
+    await click(
+      document.querySelector<HTMLElement>(".ew-login-required-primary")!,
+    );
+    expect(dialog()?.open).toBe(true);
+    expect(document.querySelectorAll(".ew-login-dialog")).toHaveLength(1);
+  });
+
+  it("keeps student verification separate from login", async () => {
+    await render("/publish", "/auth", "verification");
+    expect(dialog()).toBeNull();
+    expect(
+      document.querySelector(".ew-access-primary")?.getAttribute("href"),
+    ).toBe("#/verify");
+  });
 });
 
 describe("login dialog preserves the active page", () => {

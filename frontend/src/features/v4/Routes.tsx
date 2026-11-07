@@ -9,7 +9,6 @@ import {
   Cancellation,
   AccountRecovery,
   ConsentOffer,
-  PushSettings,
   TelemetrySettings,
 } from "./Account";
 import {
@@ -23,6 +22,7 @@ import {
 } from "./Community";
 import { Announcements, FeatureAvailability } from "./Remote";
 import Features from "./Hub";
+import NotificationSettings from "./NotificationSettings";
 const Directory = lazy(() => import("./Directory"));
 const Admin = lazy(() => import("./Admin"));
 export default function V4Routes() {
@@ -68,12 +68,7 @@ export default function V4Routes() {
   if (path === "/settings/devices") page = <Devices />;
   else if (path === "/settings/phone") page = <MobileChange />;
   else if (path === "/settings/delete") page = <Cancellation />;
-  else if (path === "/settings/notifications")
-    page = (
-      <FeatureAvailability name="push">
-        <PushSettings />
-      </FeatureAvailability>
-    );
+  else if (path === "/settings/notifications") page = <NotificationSettings />;
   else if (path === "/settings/telemetry") page = <TelemetrySettings />;
   else if (path === "/notifications") page = <NotificationCards />;
   else if (path === "/feedback") page = <FeedbackForm />;

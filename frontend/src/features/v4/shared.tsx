@@ -75,11 +75,13 @@ export function Shell({
   detail,
   children,
   back = "/me",
+  advice = true,
 }: {
   title: string;
   detail?: string;
   children: ReactNode;
   back?: string;
+  advice?: boolean;
 }) {
   const location = useLocation();
   const embedded = useContext(ProfileWorkspaceContext);
@@ -173,6 +175,7 @@ export function Shell({
     },
   };
   const aside =
+    advice &&
     !embedded &&
     ((section === "feedback" && !path.startsWith("/feedback/mine")) ||
       section === "account");

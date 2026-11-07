@@ -1,0 +1,72 @@
+.notification-coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 36px 24px 32px;
+  border-radius: 28px;
+  background: #faf5e9;
+  text-align: center;
+  color: #231c18;
+}
+.notification-coming-soon-art {
+  width: clamp(156px, 48vw, 224px);
+  aspect-ratio: 1;
+  margin-bottom: 18px;
+}
+.notification-coming-soon-art > .dish-illustration {
+  width: 100%;
+  transform: rotate(-9deg);
+}
+.notification-coming-soon-label {
+  padding: 5px 13px;
+  border-radius: 20px;
+  background: #ffdf84;
+  font-size: 12px;
+  line-height: 20px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.notification-coming-soon h2,
+.mobile-settings-page .mobile-settings-content .notification-coming-soon h2 {
+  margin: 14px 0 10px;
+  color: #231c18;
+  font:
+    900 28px/1.3 "Noto Sans SC Variable",
+    "PingFang SC",
+    sans-serif;
+}
+.notification-coming-soon p,
+.mobile-settings-page .mobile-settings-content .notification-coming-soon p {
+  margin: 0;
+  color: #6e625b;
+  font-size: 14px;
+  line-height: 1.85;
+}
+.notification-coming-soon .notification-coming-soon-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 260px;
+  min-height: 48px;
+  margin-top: 26px;
+  padding: 12px 20px;
+  border-radius: 26px;
+  background: #231c18;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  scroll-margin-block: 24px calc(var(--mobile-nav-clearance, 92px) + 24px);
+}
+.notification-coming-soon-action:active {
+  opacity: 0.85;
+}
+@media (max-width: 359px) {
+  .notification-coming-soon {
+    padding: 24px 20px;
+  }
+}

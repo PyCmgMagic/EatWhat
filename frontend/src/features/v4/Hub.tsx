@@ -188,7 +188,7 @@ const groups = [
       {
         to: "/settings/notifications",
         title: "通知偏好",
-        detail: "选择希望收到的提醒",
+        detail: "功能准备中，敬请期待",
         icon: "bell",
         keywords: "消息 推送 关闭",
       },

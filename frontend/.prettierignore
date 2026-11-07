@@ -8,6 +8,7 @@ scripts/api-v2-*.js
 scripts/api-v3-*.js
 src/mobile/generated/**
 src/api/schema.d.ts
+src/api/access-rules.generated.ts
 dist/
 scripts/api-v4-*.js
 scripts/baidu-map-lifecycle.js
@@ -16,3 +17,5 @@ scripts/settings-*.js
 scripts/home-recommendations.js
 scripts/mobile-home-empty.js
 scripts/mobile-layout.js
+scripts/mobile-dish-layout.js
+scripts/mobile-navigation.js

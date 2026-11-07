@@ -3,13 +3,47 @@ import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import { RestaurantActions } from "./Community";
 import { Card, QueryView } from "./shared";
-export function FoodExtras({ id }: { id: number }) {
+export function FoodExtras({
+  id,
+  inline = false,
+}: {
+  id: number;
+  inline?: boolean;
+}) {
   const { api } = useApp(),
     q = useQuery({
       queryKey: ["topics", "food", id],
       queryFn: () => api.topicsForFood(id),
       retry: false,
     });
+  if (inline)
+    return (
+      <footer className="mobile-food-footer" aria-label="菜品相关操作">
+        {!!q.data?.length && (
+          <nav className="mobile-food-topics" aria-label="相关专题">
+            {q.data.map((t) => (
+              <Link key={t.id} to={`/topics/${t.id}`}>
+                已入选：{t.name} →
+              </Link>
+            ))}
+          </nav>
+        )}
+        {q.isError && (
+          <p className="mobile-food-topics-error" role="status">
+            相关专题暂时未能加载
+            <button disabled={q.isFetching} onClick={() => void q.refetch()}>
+              {q.isFetching ? "加载中…" : "重试"}
+            </button>
+          </p>
+        )}
+        <Link
+          className="mobile-food-report"
+          to={`/reports/new?type=FOOD&id=${id}`}
+        >
+          举报这道菜
+        </Link>
+      </footer>
+    );
   return (
     <Card title="发现与反馈">
       <Link to={`/reports/new?type=FOOD&id=${id}`}>举报这道菜 →</Link>

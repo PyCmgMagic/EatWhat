@@ -181,19 +181,22 @@ export function Modal({
   onClose,
   className = "",
   dismissible = true,
+  returnFocus,
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   className?: string;
   dismissible?: boolean;
+  returnFocus?: HTMLElement | null;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const dismiss = useSurfaceDismiss(ref, onClose);
   useEffect(() => {
     const dialog = ref.current;
-    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousFocus =
+      returnFocus ?? (document.activeElement as HTMLElement | null);
     dialog?.showModal();
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";

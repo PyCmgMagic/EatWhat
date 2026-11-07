@@ -1,0 +1,320 @@
+.mobile-viewport.mobile-fluid-detail > .mobile-canvas {
+  width: 100%;
+  zoom: 1;
+}
+.mobile-viewport .mobile-dish-screen {
+  width: 100%;
+  height: auto;
+  min-height: 100dvh;
+  background: #fff;
+  font-family:
+    "Noto Sans SC Variable", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+.mobile-dish-screen .dish-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--dish-stage);
+  color: var(--dish-ink);
+}
+.dish-hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 180%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--dish-glass);
+  top: 115px;
+  left: -35%;
+  opacity: 0.45;
+}
+.dish-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px 8px;
+}
+.dish-toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+.dish-icon-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: var(--dish-glass);
+  color: inherit;
+}
+.dish-icon-button[aria-pressed="true"] {
+  border-color: currentColor;
+}
+.dish-hero-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+  padding: 12px 20px 56px;
+  min-height: 290px;
+}
+.dish-hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  min-height: 235px;
+  min-width: 0;
+}
+.dish-category {
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--dish-glass);
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+.mobile-dish-screen .dish-hero-copy h1 {
+  margin: 0;
+  font-size: clamp(28px, 8.5vw, 40px);
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: -0.8px;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+.dish-price {
+  margin: auto 0 0;
+  padding-top: 20px;
+  font:
+    800 clamp(36px, 11vw, 48px)/1.1 "Bricolage Grotesque Variable",
+    sans-serif;
+  letter-spacing: -1.5px;
+  overflow-wrap: anywhere;
+}
+.dish-price.is-unknown {
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+.dish-plate {
+  display: grid;
+  place-items: center;
+  width: calc(100% + 76px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 6px solid #fff;
+  background: #f4efeb;
+  color: #8a7e76;
+  box-shadow: 0 10px 28px #231c1820;
+}
+.dish-plate img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dish-plate.is-illustration {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.dish-sheet {
+  position: relative;
+  margin-top: -26px;
+  padding: 24px 20px max(24px, env(safe-area-inset-bottom));
+  border-radius: 28px 28px 0 0;
+  background: #fff;
+  color: #231c18;
+}
+.dish-shop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  color: inherit;
+}
+.dish-shop-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: #f4efeb;
+  color: #6e625b;
+}
+.dish-shop-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.dish-shop-copy strong {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.dish-shop-copy > span {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #6e625b;
+}
+.dish-actions {
+  display: grid;
+  grid-template-columns: minmax(116px, 1fr) minmax(0, 1.35fr);
+  gap: 12px;
+  margin: 20px 0 28px;
+}
+.dish-actions > :is(a, button) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 24px;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 600;
+  text-align: center;
+  color: #231c18;
+  background: #f4efeb;
+}
+.dish-like b {
+  font-family: "Bricolage Grotesque Variable", sans-serif;
+  font-weight: 600;
+}
+.dish-like[aria-pressed="true"] {
+  color: #a8321c;
+  background: #fff1ed;
+  border-color: #f2d6cd;
+}
+.dish-actions > .dish-visit {
+  background: #231c18;
+  color: #fff;
+}
+.dish-sheet h2 {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+.dish-story {
+  padding-top: 24px;
+  border-top: 1px solid #f0ebe7;
+}
+.dish-description {
+  margin: 12px 0 18px;
+  font-size: 16px;
+  line-height: 1.85;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.dish-description.is-empty {
+  font-size: 14px;
+  color: #8a7e76;
+}
+.dish-story .mobile-contributor {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+}
+.dish-story .mobile-contributor .mobile-avatar {
+  width: 34px;
+  height: 34px;
+  background: #f4efeb;
+  color: #6e625b;
+  flex: none;
+  font-size: 14px;
+}
+.dish-story .dish-author-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.dish-story .mobile-contributor strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+.dish-story .mobile-contributor small {
+  font-size: 11px;
+  color: #8a7e76;
+}
+.dish-tastes {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #f0ebe7;
+}
+.dish-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.dish-section-heading > button,
+.dish-add-taste {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #6e625b;
+  font-size: 13px;
+}
+.dish-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.dish-tag-list > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  max-width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: #f4efeb;
+  color: #231c18;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.dish-tag-list > button > span {
+  color: #8a7e76;
+  font-size: 12px;
+}
+.dish-sheet .ew-food-manage {
+  margin: 12px 0 0;
+  gap: 20px;
+}
+.dish-sheet .ew-food-manage :is(a, button) {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 13px;
+}
+.dish-sheet .mobile-food-footer {
+  margin-top: 16px;
+}
+.dish-sheet .mobile-food-footer a {
+  min-height: 44px;
+}

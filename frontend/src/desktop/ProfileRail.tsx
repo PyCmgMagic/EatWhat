@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { Link } from "react-router-dom";
 import { useApp } from "../app/state";
+import { ProfileEditLink } from "../app/profile-navigation";
 import { mediaUrl } from "../api/models";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { profileSections, type ProfileSection } from "../app/profile-workspace";
@@ -32,9 +33,8 @@ export default function ProfileRail({
         if (target && !allowNavigate(target)) event.preventDefault();
       }}
     >
-      <Link
+      <ProfileEditLink
         className="profile-rail-identity"
-        to="/me/edit"
         aria-label="编辑个人资料"
       >
         <span className="profile-rail-avatar">
@@ -49,7 +49,7 @@ export default function ProfileRail({
           <small>查看与编辑资料</small>
         </span>
         <Icon name="chevronRight" size={14} />
-      </Link>
+      </ProfileEditLink>
       <nav className="pc-profile-menu" aria-label="个人中心">
         {profileSections.map((item, index) => (
           <Fragment key={item.to}>

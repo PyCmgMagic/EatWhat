@@ -1,10 +1,10 @@
 import { Select } from "../components/Select";
 import { isDemo } from "../app/runtime";
-import { authNext } from "../app/navigation";
+import { authNext, useReturnTo } from "../app/navigation";
 import { historyEntry, historyTime } from "../desktop/history";
 import { emptyHistoryCache, historyCacheFilters } from "./history-cache";
 import { useSendSignal } from "./useSendSignal";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   keepPreviousData,
@@ -12,14 +12,19 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useApp } from "../app/state";
+import { ProfileEditLink } from "../app/profile-navigation";
 import { LoginLink } from "../app/auth-dialog";
 import { useTask } from "../components/useTask";
 import { errorMessage, unavailable } from "../api/client";
-import { categories, mediaUrl, parseId } from "../api/models";
+import { categories, mediaUrl, money, parseId, type Food } from "../api/models";
 import { DesignIcon as Icon, useMobile } from "../mobile/ui";
 import { peopleHref } from "./profile-people";
-import { CatalogCard, FeaturePage, FeatureState } from "./Catalog";
+import { CatalogCard, FeaturePage, FeatureState, FoodManage } from "./Catalog";
+import { visualFor } from "../mobile/catalog";
+import SheetHandle from "../mobile/SheetHandle";
+import { useFoodImageRefresh } from "./media";
 import "./api-v2.css";
+import "./user-profile.css";
 
 function RequestError({ error }: { error: unknown }) {
   return error ? (
@@ -53,14 +58,71 @@ function Pages({
     </div>
   );
 }
-export function UserFoods({ userId }: { userId: number }) {
+const userFoodDefaults = { keyword: "", category: "", sort: "NEWEST" };
+
+function ProfileFoodCard({ food }: { food: Food }) {
+  const src = mediaUrl(food.pictureUrl?.[0]);
+  const [failed, setFailed] = useState<string>();
+  const renewImage = useFoodImageRefresh();
+  return (
+    <article className="mobile-user-food-card">
+      <Link to={`/foods/${food.id}`}>
+        <div className="mobile-user-food-photo">
+          {src && failed !== src ? (
+            <img
+              src={src}
+              alt={food.name || "菜品"}
+              loading="lazy"
+              decoding="async"
+              onError={() => {
+                setFailed(src);
+                renewImage(src);
+              }}
+            />
+          ) : (
+            <span className="mobile-user-photo-empty">
+              <Icon name="image" size={28} />
+              <span>暂无照片</span>
+            </span>
+          )}
+        </div>
+        <div className="mobile-user-food-title">
+          <h3>{food.name || "未命名菜品"}</h3>
+          <span
+            aria-label={
+              food.likesCount == null
+                ? "获赞数量未知"
+                : `${food.likesCount} 次获赞`
+            }
+          >
+            <Icon name="heart" size={14} />
+            {food.likesCount ?? "—"}
+          </span>
+        </div>
+        <div className="mobile-user-food-meta">
+          <span>{food.restaurantName || "餐厅信息待补充"}</span>
+          {food.price != null && <b>{money(food.price)}</b>}
+        </div>
+      </Link>
+      <FoodManage food={food} />
+    </article>
+  );
+}
+
+export function UserFoods({
+  userId,
+  heading,
+}: {
+  userId: number;
+  heading?: string;
+}) {
+  const compact = !!heading;
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const filtersId = useId(),
+    form = useRef<HTMLFormElement>(null);
   const { api, session } = useApp();
   const [page, setPage] = useState(1),
-    [filters, setFilters] = useState({
-      keyword: "",
-      category: "",
-      sort: "NEWEST",
-    });
+    [filters, setFilters] = useState(userFoodDefaults);
   const q = useQuery({
     queryKey: ["foods", "by-user", userId, filters, page],
     queryFn: () => api.userFoods(userId, page, filters),
@@ -70,9 +132,34 @@ export function UserFoods({ userId }: { userId: number }) {
   if (!session)
     return <LoginLink to="/auth/password">登录后查看分享 →</LoginLink>;
   return (
-    <div className="ew-feature ew-v2-foods">
+    <div
+      className={`ew-feature ew-v2-foods${compact ? " mobile-user-foods" : ""}`}
+    >
+      {heading && (
+        <header className="mobile-user-foods-heading">
+          <h2>
+            {heading}
+            <span>{q.data?.totalItems ?? "—"}</span>
+          </h2>
+          <button
+            type="button"
+            aria-label="搜索和筛选分享"
+            aria-expanded={toolsOpen}
+            aria-controls={filtersId}
+            onClick={() => setToolsOpen(!toolsOpen)}
+          >
+            <Icon name="search" size={20} />
+            <span>筛选</span>
+          </button>
+        </header>
+      )}
       <form
-        className="ew-v2-filter"
+        ref={form}
+        id={filtersId}
+        hidden={compact && !toolsOpen}
+        className={compact ? "mobile-user-filters" : "ew-v2-filter"}
+        role="search"
+        aria-label="筛选食友分享"
         onSubmit={(e) => {
           e.preventDefault();
           const data = new FormData(e.currentTarget);
@@ -84,27 +171,103 @@ export function UserFoods({ userId }: { userId: number }) {
           setPage(1);
         }}
       >
-        <input
-          name="keyword"
-          aria-label="搜索食友分享"
-          placeholder="在分享中搜一道菜"
-          maxLength={64}
-        />
-        <Select name="category" aria-label="分享分类">
+        {compact ? (
+          <div className="mobile-user-search">
+            <Icon name="search" size={20} />
+            <input
+              name="keyword"
+              type="search"
+              enterKeyHint="search"
+              aria-label="搜索食友分享"
+              placeholder="搜一道分享的菜"
+              maxLength={64}
+            />
+            <button type="submit">搜索</button>
+          </div>
+        ) : (
+          <input
+            name="keyword"
+            aria-label="搜索食友分享"
+            placeholder="在分享中搜一道菜"
+            maxLength={64}
+          />
+        )}
+        <Select
+          name="category"
+          aria-label="分享分类"
+          value={compact ? filters.category : undefined}
+          onChange={
+            compact
+              ? (event) => {
+                  setFilters((current) => ({
+                    ...current,
+                    category: event.target.value,
+                  }));
+                  setPage(1);
+                }
+              : undefined
+          }
+        >
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.label}
             </option>
           ))}
         </Select>
-        <Select name="sort" aria-label="分享排序">
+        <Select
+          name="sort"
+          aria-label="分享排序"
+          value={compact ? filters.sort : undefined}
+          onChange={
+            compact
+              ? (event) => {
+                  setFilters((current) => ({
+                    ...current,
+                    sort: event.target.value,
+                  }));
+                  setPage(1);
+                }
+              : undefined
+          }
+        >
           <option value="NEWEST">最新分享</option>
           <option value="POPULAR">最多获赞</option>
           <option value="PRICE_ASC">价格从低到高</option>
           <option value="PRICE_DESC">价格从高到低</option>
         </Select>
-        <button className="ew-button">筛选</button>
+        {!compact && <button className="ew-button">筛选</button>}
       </form>
+      {compact &&
+        (filters.keyword || filters.category || filters.sort !== "NEWEST") && (
+          <div className="mobile-user-applied-filters" role="status">
+            <span>
+              {[
+                filters.keyword && `“${filters.keyword}”`,
+                categories.find((c) => c.id === filters.category)?.label,
+                (
+                  {
+                    NEWEST: "最新分享",
+                    POPULAR: "最多获赞",
+                    PRICE_ASC: "价格从低到高",
+                    PRICE_DESC: "价格从高到低",
+                  } as Record<string, string>
+                )[filters.sort],
+              ]
+                .filter(Boolean)
+                .join(" / ")}
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                form.current?.reset();
+                setFilters(userFoodDefaults);
+                setPage(1);
+              }}
+            >
+              重置
+            </button>
+          </div>
+        )}
       {q.isPending || (q.isError && !q.data) ? (
         <FeatureState
           loading={q.isPending}
@@ -115,35 +278,54 @@ export function UserFoods({ userId }: { userId: number }) {
       ) : (
         <>
           <RequestError error={q.error} />
-          <p className="ew-note" role="status">
-            {q.isFetching
-              ? "正在加载分享…"
-              : `共 ${q.data?.totalItems ?? 0} 道菜`}
-          </p>
+          {!compact && (
+            <p className="ew-note" role="status">
+              {q.isFetching
+                ? "正在加载分享…"
+                : `共 ${q.data?.totalItems ?? 0} 道菜`}
+            </p>
+          )}
           {!q.data?.items?.length ? (
-            <FeatureState empty="还没有符合条件的分享" />
+            <FeatureState illustration="yuntun" empty="还没有符合条件的分享" />
           ) : (
             <div
-              className="ew-results ew-v2-food-grid"
+              className={
+                compact ? "mobile-user-food-grid" : "ew-results ew-v2-food-grid"
+              }
               aria-busy={q.isFetching}
             >
-              {q.data.items.map((f) => (
-                <CatalogCard key={f.id} food={f} />
-              ))}
+              {q.data.items.map((f) =>
+                compact ? (
+                  <ProfileFoodCard key={f.id} food={f} />
+                ) : (
+                  <CatalogCard key={f.id} food={f} />
+                ),
+              )}
             </div>
           )}
-          <Pages
-            page={page}
-            next={!!q.data?.hasNext || page < (q.data?.totalPages ?? 0)}
-            busy={q.isFetching}
-            change={setPage}
-          />
+          {(!compact ||
+            page > 1 ||
+            q.data?.hasNext ||
+            (q.data?.totalPages ?? 0) > 1) && (
+            <Pages
+              page={page}
+              next={!!q.data?.hasNext || page < (q.data?.totalPages ?? 0)}
+              busy={q.isFetching}
+              change={setPage}
+            />
+          )}
         </>
       )}
     </div>
   );
 }
-export function BlockControl({ userId }: { userId: number }) {
+export function BlockControl({
+  userId,
+  onAction,
+}: {
+  userId: number;
+  onAction?: () => void;
+}) {
   const { api, user, session } = useApp(),
     m = useMobile(),
     cache = useQueryClient();
@@ -162,7 +344,8 @@ export function BlockControl({ userId }: { userId: number }) {
         disabled={
           q.isPending || q.isError || typeof q.data?.blocked !== "boolean"
         }
-        onClick={() =>
+        onClick={() => {
+          onAction?.();
           m.confirm(
             q.data?.blocked
               ? "解除屏蔽这位食友？"
@@ -174,8 +357,8 @@ export function BlockControl({ userId }: { userId: number }) {
               await cache.invalidateQueries({ queryKey: ["foods"] });
             },
             q.data?.blocked ? "解除屏蔽" : "屏蔽食友",
-          )
-        }
+          );
+        }}
       >
         {q.isPending
           ? "正在读取…"
@@ -674,7 +857,7 @@ export function PasswordConflictReset() {
   );
 }
 export function MobileUserProfile() {
-  const { api, user } = useApp(),
+  const { api, user, session } = useApp(),
     loc = useLocation(),
     id = parseId(loc.pathname.split("/").pop());
   const q = useQuery({
@@ -682,75 +865,191 @@ export function MobileUserProfile() {
     queryFn: () => api.otherUser(id!),
     enabled: !!id,
   });
+  // Share the initial list's cache; searching never changes the profile's cover.
+  const shares = useQuery({
+    queryKey: ["foods", "by-user", id, userFoodDefaults, 1],
+    queryFn: () => api.userFoods(id!, 1, userFoodDefaults),
+    enabled: !!id && !!session,
+  });
+  const cover = shares.data?.items?.find((food) =>
+    mediaUrl(food.pictureUrl?.[0]),
+  );
+  const visual = visualFor(cover ?? { stageColor: "soy" }, isDemo);
+  const coverSrc = mediaUrl(cover?.pictureUrl?.[0]);
+  const [failedCover, setFailedCover] = useState<string>();
+  const renewImage = useFoodImageRefresh();
   const follow = useTask("关注状态已更新", undefined, ["user", "social"]);
+  const back = useReturnTo("/me"),
+    moreId = useId();
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const self = user?.id === id,
+    ready = !!id && !!q.data;
+  const following = q.data?.isFollowingHim === true,
+    followsMe = q.data?.isFollowingMe === true;
   return (
-    <FeaturePage title="食友主页">
-      {q.isPending || q.isError ? (
-        <FeatureState
-          loading={q.isPending}
-          error={q.error}
-          retry={() => void q.refetch()}
-        />
-      ) : (
-        <>
-          <div className="ew-v2-card ew-v2-profile">
-            <div className="ew-v2-profile-avatar">
-              {mediaUrl(q.data.avatar) ? (
-                <img src={mediaUrl(q.data.avatar)} alt="食友头像" />
+    <div
+      className="ew-feature mobile-public-profile"
+      style={
+        {
+          "--profile-stage": visual.stage,
+          "--profile-on": visual.on,
+          "--profile-ghost": visual.ghost,
+        } as CSSProperties
+      }
+    >
+      <div className="mobile-user-stage">
+        <div className="mobile-user-plate" aria-hidden="true">
+          {coverSrc && failedCover !== coverSrc ? (
+            <img
+              src={coverSrc}
+              alt=""
+              onError={() => {
+                setFailedCover(coverSrc);
+                renewImage(coverSrc);
+              }}
+            />
+          ) : (
+            <Icon name="bowl" size={92} />
+          )}
+        </div>
+        <header
+          className="mobile-user-header"
+          aria-label={self ? "我的公开主页" : "食友主页"}
+        >
+          <Link to={back} aria-label="返回">
+            <Icon name="back" size={24} />
+          </Link>
+          <div className="mobile-user-header-actions">
+            {ready &&
+              (self ? (
+                <ProfileEditLink className="mobile-user-follow">
+                  编辑资料
+                </ProfileEditLink>
               ) : (
-                (q.data.displayName || "食").slice(0, 1)
+                <button
+                  className="mobile-user-follow"
+                  aria-pressed={following}
+                  disabled={follow.isPending || q.data?.isFollowingHim == null}
+                  onClick={() => follow.run(() => api.follow(id!, following))}
+                >
+                  <Icon name={following ? "followed" : "follow"} size={18} />
+                  {follow.isPending
+                    ? "更新中…"
+                    : following
+                      ? followsMe
+                        ? "已互关"
+                        : "已关注"
+                      : followsMe
+                        ? "回关"
+                        : "关注"}
+                </button>
+              ))}
+            {ready && !self && (
+              <button
+                type="button"
+                className="mobile-user-more-trigger"
+                popoverTarget={moreId}
+                aria-label="更多食友操作"
+              >
+                <Icon name="more" size={24} />
+              </button>
+            )}
+          </div>
+        </header>
+        {ready ? (
+          <section
+            className="mobile-user-identity"
+            aria-labelledby="mobile-user-name"
+          >
+            <div className="mobile-user-avatar">
+              {mediaUrl(q.data!.avatar) && !avatarFailed ? (
+                <img
+                  src={mediaUrl(q.data!.avatar)}
+                  alt="食友头像"
+                  onError={() => setAvatarFailed(true)}
+                />
+              ) : (
+                Array.from(q.data!.displayName || "食")[0]
               )}
             </div>
-            <h2>{q.data.displayName || "校园食友"}</h2>
-            <p className="ew-note">
-              {q.data.uploadedFoodsCount ?? "—"} 道分享 ·{" "}
-              {q.data.earnedLikes ?? "—"} 次获赞
+            <h1 id="mobile-user-name">{q.data!.displayName || "校园食友"}</h1>
+            <p className="mobile-user-caption">
+              {self ? "我的公开主页" : followsMe ? "关注了你" : "校园食友"}
             </p>
-            <div className="ew-inline">
+            <div
+              className="mobile-user-stats"
+              role="group"
+              aria-label="食友数据"
+            >
+              <div>
+                <strong>{q.data!.earnedLikes ?? "—"}</strong>
+                <span>获赞</span>
+              </div>
+              <div>
+                <strong>{q.data!.uploadedFoodsCount ?? "—"}</strong>
+                <span>上传的菜</span>
+              </div>
               {(
                 [
-                  ["fans", "粉丝", q.data.fansVisible, q.data.fansCount],
+                  ["fans", "粉丝", q.data!.fansVisible, q.data!.fansCount],
                   [
                     "follow",
                     "关注",
-                    q.data.followingsVisible,
-                    q.data.followingsCount,
+                    q.data!.followingsVisible,
+                    q.data!.followingsCount,
                   ],
                 ] as const
               ).map(([tab, label, visible, count]) =>
-                user?.id === id || visible ? (
+                self || visible === true ? (
                   <Link
                     key={tab}
                     to={peopleHref(loc.pathname, loc.search, tab)}
+                    state={{ profilePeopleFrom: loc.key }}
+                    preventScrollReset
                   >
-                    {label} {count ?? "—"}
+                    <strong>{count ?? "—"}</strong>
+                    <span>{label}</span>
                   </Link>
                 ) : (
-                  <span key={tab}>{label}未公开</span>
+                  <div key={tab}>
+                    <strong className="is-private">未公开</strong>
+                    <span>{label}</span>
+                  </div>
                 ),
               )}
             </div>
-            {user?.id !== id && (
-              <button
-                className="ew-button"
-                disabled={follow.isPending || q.data.isFollowingHim == null}
-                onClick={() =>
-                  follow.run(() =>
-                    api.follow(id!, q.data.isFollowingHim === true),
-                  )
-                }
-              >
-                {q.data.isFollowingHim ? "已关注 · 取消" : "关注食友"}
-              </button>
-            )}
+          </section>
+        ) : (
+          <div className="mobile-user-loading-title">食友主页</div>
+        )}
+      </div>
+      <section className="mobile-user-sheet" aria-label="食友分享">
+        <SheetHandle label="食友分享" />
+        {!id ? (
+          <FeatureState empty="食友编号无效" />
+        ) : q.isPending || (q.isError && !q.data) ? (
+          <FeatureState
+            loading={q.isPending}
+            error={q.error}
+            retry={() => void q.refetch()}
+          />
+        ) : (
+          <>
             <RequestError error={follow.error} />
-            {id && <BlockControl userId={id} />}
-          </div>
-          <h2>TA 的分享</h2>
-          {id && <UserFoods userId={id} />}
-        </>
+            <RequestError error={q.error} />
+            <UserFoods key={id} userId={id} heading="上传" />
+          </>
+        )}
+      </section>
+      {ready && !self && (
+        <div id={moreId} popover="auto" className="mobile-user-more">
+          <BlockControl
+            userId={id!}
+            onAction={() => document.getElementById(moreId)?.hidePopover()}
+          />
+        </div>
       )}
-    </FeaturePage>
+    </div>
   );
 }
 export function MobileHistory() {

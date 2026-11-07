@@ -1,0 +1,135 @@
+.student-verification .verification-option {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #e6ded8;
+  border-radius: 18px;
+  background: #fff;
+}
+.student-verification .verification-option h3 {
+  margin: 0 0 8px;
+  color: #231c18;
+  font-size: 17px;
+  line-height: 1.6;
+}
+.student-verification .verification-option > p {
+  margin: 0 0 16px;
+  color: #6e625b;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.student-verification .verification-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  color: #6e625b;
+  font-size: 13px;
+  text-align: center;
+}
+.student-verification .verification-or::before,
+.student-verification .verification-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e6ded8;
+}
+.student-verification .ew-sso {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+}
+.student-verification .ew-sso > :is(button, a) {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 0 0 10px;
+}
+.student-verification .ew-sso .ew-note {
+  margin: 10px 0 0;
+}
+.student-verification .verification-refresh {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+}
+.student-verification .verification-refresh p {
+  margin-bottom: 0;
+}
+.student-verification .verification-email-sent {
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff4d6;
+  color: #231c18;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.mobile-settings-page .student-verification .verification-option {
+  padding: 16px;
+}
+.mobile-settings-page .student-verification .verification-option > p {
+  margin: 0 0 16px;
+}
+.mobile-settings-page .student-verification .verification-option h3 {
+  margin: 0 0 8px;
+}
+.mobile-settings-page .student-verification .pc-secondary-verification {
+  align-items: flex-start;
+}
+.mobile-settings-page
+  .student-verification
+  .pc-secondary-verification
+  > .design-icon {
+  flex-shrink: 0;
+  width: 24px;
+}
+.mobile-settings-page .student-verification .pc-secondary-verification p {
+  margin: 6px 0 0;
+}
+.verification-result .verification-result-actions {
+  display: grid;
+  gap: 14px;
+  justify-items: stretch;
+}
+.verification-result .verification-result-actions > a {
+  text-align: center;
+}
+.verification-result .pc-secondary-verification h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+.student-verification.verification-complete {
+  display: block;
+  max-width: 760px;
+}
+.student-verification.verification-complete .pc-secondary-verification b {
+  font-size: 18px;
+  line-height: 1.6;
+}
+.student-verification.verification-complete .pc-secondary-verification p {
+  font-size: 14px;
+  line-height: 1.7;
+}
+.verification-complete-actions {
+  display: grid;
+  gap: 4px;
+}
+.verification-complete-actions > .pc-button {
+  display: flex;
+  justify-content: center;
+  min-height: 48px;
+  width: 100%;
+}
+.verification-complete-actions .verification-discover {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 12px;
+  color: #6e625b;
+  font-size: 14px;
+  text-decoration: none;
+}

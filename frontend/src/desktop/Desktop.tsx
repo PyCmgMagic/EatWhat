@@ -1458,9 +1458,13 @@ function DesktopDish() {
                   className="pc-icon-button"
                   aria-label={food.isFavorite ? "取消收藏" : "收藏"}
                   aria-pressed={food.isFavorite === true}
-                  disabled={task.busy || (!!session && food.isFavorite == null)}
+                  disabled={
+                    task.busy ||
+                    (!!session &&
+                      user?.verified === true &&
+                      food.isFavorite == null)
+                  }
                   onClick={() =>
-                    access() &&
                     void task.run(() =>
                       api.favorite(id, food.isFavorite === true),
                     )
@@ -1505,7 +1509,6 @@ function DesktopDish() {
                       food.isLiked == null)
                   }
                   onClick={() =>
-                    access(true) &&
                     void task.run(() => api.like(id, food.isLiked === true))
                   }
                 >

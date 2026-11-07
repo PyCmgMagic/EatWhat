@@ -6,6 +6,7 @@ import { categories } from "../api/models";
 import type { FoodFilters } from "../api/service";
 import { useArea } from "../app/area";
 import { DesignIcon as Icon } from "../mobile/ui";
+import { DishIllustration } from "../components/DishIllustration";
 import "./favorites.css";
 
 export function FavoritesFilters({
@@ -210,7 +211,7 @@ export function FavoritesEmpty({
   return (
     <div className="favorites-empty" role="status">
       <div className="favorites-empty-art" aria-hidden="true">
-        <img src="/prototype/assets/dishes/yangzhi.svg" alt="" />
+        <DishIllustration name="yangzhi" />
         <span>
           <Bookmark size={23} />
         </span>

@@ -8,7 +8,6 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useActionAccess } from "../access";
 import { useApp } from "../../app/state";
 import {
   useMemoryDraft,
@@ -1045,7 +1044,6 @@ export function RestaurantActions({
   id: number;
   hideFavorite?: boolean;
 }) {
-  const access = useActionAccess();
   const { api, session } = useApp(),
     cache = useQueryClient(),
     task = useCommand(),
@@ -1073,11 +1071,9 @@ export function RestaurantActions({
                 onClick={() =>
                   void task.run(
                     () =>
-                      !access(!shop?.isFavorite)
-                        ? Promise.reject(new Error("请先完成登录与认证。"))
-                        : shop?.isFavorite
-                          ? api.unfavoriteRestaurant(id)
-                          : api.favoriteRestaurant(id),
+                      shop?.isFavorite
+                        ? api.unfavoriteRestaurant(id)
+                        : api.favoriteRestaurant(id),
                     refresh,
                   )
                 }
@@ -1096,7 +1092,6 @@ export function RestaurantActions({
               }
               onChange={(e) => {
                 const rating = e.target.value;
-                if (!access(!!rating)) return;
                 void task.run(
                   () =>
                     rating

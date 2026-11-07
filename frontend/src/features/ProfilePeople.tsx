@@ -15,6 +15,7 @@ import {
   type PeopleTab,
 } from "./profile-people";
 import { useExitPresence } from "../motion/hooks";
+import SheetHandle from "../mobile/SheetHandle";
 import "./profile-people.css";
 
 /** Old bookmarks now open the same profile with its people panel. */
@@ -266,7 +267,13 @@ export function ProfilePeopleDialog() {
       }}
     >
       <div className="profile-people-shell">
-        <span className="profile-people-handle" aria-hidden="true" />
+        <SheetHandle
+          className="profile-people-handle"
+          label="关注与粉丝"
+          mode="dismiss"
+          target="dialog"
+          onDismiss={close}
+        />
         <header className="profile-people-heading">
           <span className="profile-people-avatar owner">
             {avatar ? <img src={avatar} alt="" /> : name?.slice(0, 1) || "食"}

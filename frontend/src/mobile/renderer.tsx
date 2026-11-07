@@ -249,7 +249,9 @@ function Tree({
         />
       );
     if (name === "G-Nav")
-      return <DesignNav active={String(node.attrs.active ?? "home")} />;
+      return bridge.reference ? (
+        <DesignNav active={String(node.attrs.active ?? "home")} />
+      ) : null;
     const Imported = registry[name];
     return bridge.reference && Imported ? (
       <Imported screen={name} reference />
@@ -352,24 +354,7 @@ function ScreenFallback({ screen }: { screen: string }) {
         </button>
       </div>
     );
-  return (
-    <>
-      <MobilePageSkeleton screen={screen} />
-      {["G2-Home", "G-HomePhoto", "G-Me", "G-Nearby"].includes(screen) && (
-        <div className="ew-mobile-loading-nav">
-          <DesignNav
-            active={
-              screen === "G-Me"
-                ? "me"
-                : screen === "G-Nearby"
-                  ? "nearby"
-                  : "home"
-            }
-          />
-        </div>
-      )}
-    </>
-  );
+  return <MobilePageSkeleton screen={screen} />;
 }
 function DesignRenderer({
   screen,
@@ -386,14 +371,7 @@ function DesignRenderer({
   return Screen ? (
     <Suspense
       fallback={
-        <div
-          className="mobile-code-loading"
-          style={{
-            width: 390,
-            height: "var(--screen-height,844px)",
-            position: "relative",
-          }}
-        >
+        <div className="mobile-code-loading">
           <ScreenFallback screen={screen} />
         </div>
       }
@@ -418,14 +396,7 @@ function ResolvedScreen({
       <style>{design.css}</style>
       {bridge.before}
       {bridge.hideContent ? (
-        <div
-          className="design-screen"
-          style={{
-            width: 390,
-            height: "var(--screen-height,844px)",
-            background: "white",
-          }}
-        />
+        <div className="design-screen mobile-data-loading" />
       ) : (
         <Tree
           screen={screen}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { localDestination, useReturnTo } from "../app/navigation";
 import { useApp } from "../app/state";
+import { ProfileEditLink } from "../app/profile-navigation";
 import { mediaUrl } from "../api/models";
 import { Modal } from "../components/ui";
 import { useTask } from "../components/useTask";
@@ -142,7 +143,7 @@ export default function SettingsHome({
     },
     {
       title: "通知偏好",
-      detail: "选择想收到的消息提醒",
+      detail: "功能准备中，敬请期待",
       to: "/settings/notifications",
       icon: "bell",
     },
@@ -248,10 +249,10 @@ export default function SettingsHome({
             <span>当前登录的账号</span>
           </div>
         </div>
-        <Link className="settings-home-edit" to="/me/edit">
+        <ProfileEditLink className="settings-home-edit">
           <Icon name="edit" size={17} />
           编辑资料
-        </Link>
+        </ProfileEditLink>
         <div className="settings-home-status">
           <Link to={account[1].to}>
             <Icon name="phone" size={17} />

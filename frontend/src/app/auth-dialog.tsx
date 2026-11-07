@@ -19,6 +19,7 @@ import {
   type Location,
 } from "react-router-dom";
 import { clearConsentProof } from "./consent";
+import { desktopLayout } from "./layout";
 import "./auth-dialog.css";
 
 const AuthDialogContent = lazy(() => import("../components/AuthDialogContent"));
@@ -42,7 +43,18 @@ export function safeLoginNext(value: string | null) {
     : null;
 }
 
-type LoginRequest = { id: number; to: string; origin: Location; next: string };
+type LoginRequest = {
+  id: number;
+  to: string;
+  origin: Location;
+  next: string;
+  returnFocus: HTMLElement | null;
+};
+type LoginOptions = {
+  replace?: boolean;
+  returnTo?: string;
+  returnFocus?: HTMLElement | null;
+};
 type AuthFlow = {
   location: Location;
   navigate: (to: string) => void;
@@ -50,7 +62,7 @@ type AuthFlow = {
   setBusy: (busy: boolean) => void;
 };
 const LoginDialogContext = createContext<{
-  openLogin: (to?: string) => void;
+  openLogin: (to?: string, options?: LoginOptions) => void;
 } | null>(null);
 const AuthFlowContext = createContext<AuthFlow | null>(null);
 
@@ -138,16 +150,45 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
     clearConsentProof();
   }, []);
   const openLogin = useCallback(
-    (to = "/auth") => {
+    (to = "/auth", options?: LoginOptions) => {
       if (active.current) return;
       const next =
         safeLoginNext(new URLSearchParams(to.split("?")[1]).get("next")) ??
         location.pathname + location.search + location.hash;
-      const value = { id: ++sequence.current, to, origin: location, next };
+      if (
+        !desktopLayout(
+          window.innerWidth,
+          new URLSearchParams(window.location.search).get("view"),
+          false,
+          false,
+        )
+      ) {
+        const [path, search = ""] = to.split("?");
+        const params = new URLSearchParams(search);
+        params.set("next", next);
+        void navigate(path + "?" + params, {
+          replace: options?.replace,
+          state: {
+            returnTo:
+              options?.returnTo ??
+              location.pathname + location.search + location.hash,
+          },
+        });
+        return;
+      }
+      const value = {
+        id: ++sequence.current,
+        to,
+        origin: location,
+        next,
+        returnFocus:
+          options?.returnFocus ??
+          (document.activeElement as HTMLElement | null),
+      };
       active.current = value;
       setRequest(value);
     },
-    [location],
+    [location, navigate],
   );
   useEffect(() => {
     if (active.current && active.current.origin.key !== location.key) close();
@@ -199,7 +240,7 @@ function LoginDialog({
   };
   useEffect(() => {
     const dialog = ref.current!;
-    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousFocus = request.returnFocus;
     const overflow = document.body.style.overflow;
     dialog.showModal();
     document.body.style.overflow = "hidden";

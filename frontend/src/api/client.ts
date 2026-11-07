@@ -45,6 +45,25 @@ export class ApiError extends Error {
   }
 }
 
+/** A blocked action rejects normally; it must never run success callbacks. */
+export class AccessRequiredError extends ApiError {
+  constructor(
+    public reason: "login" | "verification",
+    public presented = false,
+  ) {
+    super(
+      reason === "login"
+        ? "请先登录，再继续操作。"
+        : "请先完成学生认证，再继续操作。",
+      "ACCESS_REQUIRED",
+    );
+    this.name = "AccessRequiredError";
+  }
+}
+export function accessPromptPresented(error: unknown) {
+  return error instanceof AccessRequiredError && error.presented;
+}
+
 export function buildUrl(base: string, path: string, query?: Query) {
   // The gateway /api and location controller /api are both intentional.
   const url = `${base.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
@@ -168,6 +187,7 @@ export function requiredData<T>(data: T | null | undefined): T {
 }
 
 export function errorMessage(error: unknown): string {
+  if (accessPromptPresented(error)) return "";
   if (error instanceof ApiError) {
     const hints: Record<string, string> = {
       "30010": "这个账号还没有设置密码，请使用手机验证码登录后设置。",

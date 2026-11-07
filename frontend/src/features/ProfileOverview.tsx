@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
+import { ProfileEditLink } from "../app/profile-navigation";
 import { isDemo } from "../app/runtime";
 import { mediaUrl, money, type Food } from "../api/models";
 import { DesignIcon as Icon } from "../mobile/ui";
@@ -137,10 +138,10 @@ export default function ProfileOverview() {
           <h1>{user?.displayName || "我的"}</h1>
           <p>{user?.signature || "认真吃饭，认真生活。"}</p>
         </div>
-        <Link className="profile-overview-edit" to="/me/edit">
+        <ProfileEditLink className="profile-overview-edit">
           <Icon name="edit" size={17} />
           编辑资料
-        </Link>
+        </ProfileEditLink>
       </header>
       <div className="profile-overview-social" aria-label="个人统计">
         <div>

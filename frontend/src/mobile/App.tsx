@@ -11,11 +11,17 @@ import {
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { controllers } from "./generated/controllers";
 import manifest from "./generated/manifest.json";
-import { screenForPath, screenRoutes, panelScreens } from "./routes";
+import {
+  screenForPath,
+  screenRoutes,
+  panelScreens,
+  mobileSettingsPages,
+} from "./routes";
 import {
   MobileContext,
   DesignRegistryContext,
   DesignIcon,
+  DesignNav,
   PrimaryButton,
   useMobile,
   type Draft,
@@ -34,42 +40,34 @@ const V4Routes = lazy(() => import("../features/v4/Routes"));
 const ApiV2Routes = lazy(() => import("../features/ApiV2Routes"));
 const Admin = lazy(() => import("../pages/Admin"));
 const MobileLogin = lazy(() => import("./Login"));
-const SettingsHome = lazy(() => import("../features/SettingsHome"));
-import { ProfileExtras, MobileBinding } from "../pages/ProfileExtras";
+const MobileAccountSettings = lazy(() => import("./AccountSettings"));
+const MobileSettingsPages = lazy(() => import("./SettingsPages"));
+import { ProfileExtras } from "../pages/ProfileExtras";
 import { Gate } from "../components/ui";
 import { PasswordConsentWithdrawal } from "../features/AccountExtras";
 import "@fontsource-variable/noto-sans-sc";
 import "@fontsource-variable/bricolage-grotesque";
 import "./mobile.css";
 import DesktopExperience from "../desktop/Desktop";
-import { DesktopShares } from "../desktop/Desktop";
-import ProfileOverview from "../features/ProfileOverview";
 import ProfileHelp from "../features/ProfileHelp";
 import { profileSection } from "../app/profile-workspace";
-const DesktopTags = lazy(() =>
-  import("../desktop/DesktopLibrary").then((m) => ({ default: m.DesktopTags })),
-);
 import { Catalog, FeaturePage } from "../features/Catalog";
 import {
   PasswordByCode,
-  Preferences,
   RecommendationControls,
   RecoverPassword,
 } from "../features/Account";
 import { EditFood } from "../features/EditFood";
-const DesktopSettingsPage = lazy(() =>
-  import("../desktop/DesktopAccount").then((m) => ({
-    default: m.DesktopSettingsPage,
-  })),
-);
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { idOf } from "../api/models";
 import { useContentMotion, useExitPresence } from "../motion/hooks";
 import { desktopLayout, editingFlow } from "../app/layout";
 import { NotFound } from "../app/navigation";
+import { useProfileReturnTo } from "../app/profile-navigation";
 import { usePageLifetime } from "../app/drafts";
 import { useVisibleViewport } from "../app/viewport";
 import RestaurantMap from "../features/RestaurantMap";
+import SheetHandle from "./SheetHandle";
 import { mapPoint } from "../features/map-geometry";
 import {
   ProfilePeopleDialog,
@@ -86,6 +84,7 @@ const emptyDraft: Draft = {
   tags: [],
 };
 export default function MobileApp() {
+  const profileReturnTo = useProfileReturnTo();
   useVisibleViewport();
   useLegacyPeopleRedirect();
   const app = useApp(),
@@ -210,6 +209,14 @@ export default function MobileApp() {
       ? Math.min(1, viewport.width / 390)
       : Math.min(520, viewport.width) / 390;
   const height = Math.max(640, viewport.height / scale);
+  const navigationSection =
+    loc.pathname === "/" || loc.pathname === "/home-photo"
+      ? "home"
+      : loc.pathname === "/nearby"
+        ? "nearby"
+        : profileSection(loc.pathname)
+          ? "me"
+          : null;
   useEffect(() => {
     setPanel(null);
   }, [loc.pathname]);
@@ -222,7 +229,7 @@ export default function MobileApp() {
         : null,
     loc.pathname,
     0,
-    // Prototype canvases contain fixed navigation; opacity preserves its position.
+    // Animate page content only; the shared navigation stays mounted outside it.
     "opacity",
   );
   useLayoutEffect(() => {
@@ -273,6 +280,7 @@ export default function MobileApp() {
     setMeal,
   };
   if (
+    desktop &&
     loc.pathname === "/me" &&
     !new URLSearchParams(loc.search).has("people")
   ) {
@@ -292,7 +300,7 @@ export default function MobileApp() {
       );
     }
   }
-  if (loc.pathname === "/auth/password")
+  if (desktop && loc.pathname === "/auth/password")
     return (
       <Navigate
         replace
@@ -300,6 +308,11 @@ export default function MobileApp() {
         state={loc.state}
       />
     );
+  if (!desktop && !reference && loc.pathname === "/me/shares") {
+    const params = new URLSearchParams(loc.search);
+    if (!params.has("tab")) params.set("tab", "uploads");
+    return <Navigate replace to={"/me?" + params} state={loc.state} />;
+  }
   return (
     <DesignRegistryContext.Provider value={controllers}>
       <MobileContext.Provider value={state}>
@@ -340,32 +353,12 @@ export default function MobileApp() {
           overlay={!!panelPresence.value || !!noticePresence.value}
         >
           <Suspense fallback={<ContentSkeleton kind="form" count={3} />}>
-            {!desktop &&
-            !reference &&
-            ["/me", "/me/shares", "/help", "/me/tags"].includes(
-              loc.pathname,
-            ) ? (
+            {!desktop && !reference && loc.pathname === "/help" ? (
               <div className="ew-mobile-feature profile-mobile-page">
-                {loc.pathname === "/help" ? (
-                  <ProfileHelp />
-                ) : (
-                  <Gate verified={loc.pathname === "/me/tags"}>
-                    {loc.pathname === "/me" ? (
-                      <ProfileOverview />
-                    ) : loc.pathname === "/me/shares" ? (
-                      <DesktopShares />
-                    ) : (
-                      <DesktopTags />
-                    )}
-                  </Gate>
-                )}
+                <ProfileHelp />
               </div>
-            ) : !desktop && !reference && loc.pathname === "/settings" ? (
-              <div className="ew-mobile-feature">
-                <Gate verified={false}>
-                  <SettingsHome />
-                </Gate>
-              </div>
+            ) : !desktop && !reference && mobileSettingsPages[loc.pathname] ? (
+              <MobileSettingsPages key={loc.pathname} />
             ) : !desktop && !reference && isV4Path(loc.pathname) ? (
               <div className="ew-mobile-feature">
                 <V4Routes key={loc.pathname} />
@@ -374,6 +367,7 @@ export default function MobileApp() {
               !reference &&
               [
                 "/auth",
+                "/auth/password",
                 "/auth/register",
                 "/auth/register/confirm",
                 "/auth/username-register",
@@ -381,38 +375,23 @@ export default function MobileApp() {
               <MobileLogin />
             ) : !desktop &&
               !reference &&
-              ([
-                "/settings/username",
-                "/settings/blocked",
-                "/history",
-                "/auth/password-conflict/reset",
-              ].includes(loc.pathname) ||
+              (loc.pathname === "/auth/password-conflict/reset" ||
                 /^\/users\/\d+$/.test(loc.pathname)) ? (
               <div className="ew-mobile-feature">
                 <ApiV2Routes key={loc.pathname} />
               </div>
             ) : !desktop &&
               !reference &&
-              ["/settings/privacy", "/settings/account"].includes(
-                loc.pathname,
-              ) ? (
-              <div className="ew-mobile-feature">
-                <Gate verified={false}>
-                  <DesktopSettingsPage />
-                </Gate>
-              </div>
+              loc.pathname === "/settings/account" ? (
+              <MobileAccountSettings />
             ) : loc.pathname === "/follows" ? null : !desktop &&
               !reference &&
               (loc.pathname === "/search" ||
                 loc.pathname === "/favorites" ||
                 /^\/foods\/\d+\/edit$/.test(loc.pathname) ||
-                [
-                  "/auth/forgot",
-                  "/auth/withdraw-consent",
-                  "/settings/preferences",
-                  "/settings/password",
-                  "/verify",
-                ].includes(loc.pathname)) ? (
+                ["/auth/forgot", "/auth/withdraw-consent"].includes(
+                  loc.pathname,
+                )) ? (
               <div className="ew-mobile-feature">
                 {loc.pathname === "/search" ? (
                   <Catalog />
@@ -426,16 +405,6 @@ export default function MobileApp() {
                   </FeaturePage>
                 ) : loc.pathname === "/auth/forgot" ? (
                   <RecoverPassword />
-                ) : loc.pathname === "/settings/preferences" ? (
-                  <Preferences />
-                ) : loc.pathname === "/settings/password" ? (
-                  <Gate verified={false}>
-                    <DesktopSettingsPage />
-                  </Gate>
-                ) : loc.pathname === "/verify" ? (
-                  <Gate verified={false}>
-                    <DesktopSettingsPage />
-                  </Gate>
                 ) : null}
               </div>
             ) : loc.pathname === "/admin" ? (
@@ -445,22 +414,16 @@ export default function MobileApp() {
               </div>
             ) : loc.pathname === "/me/details" ? (
               <div className="mobile-page-native">
-                <Link to="/me/edit" aria-label="返回">
+                <Link
+                  to="/me/edit"
+                  state={{ returnTo: profileReturnTo }}
+                  aria-label="返回"
+                >
                   <DesignIcon name="back" />
                 </Link>
                 <h1>更多资料</h1>
                 <Gate verified={false}>
                   <ProfileExtras />
-                </Gate>
-              </div>
-            ) : loc.pathname === "/settings/bind-phone" ? (
-              <div className="mobile-page-native">
-                <Link to="/settings/account" aria-label="返回">
-                  <DesignIcon name="back" />
-                </Link>
-                <h1>绑定手机号</h1>
-                <Gate verified={false}>
-                  <MobileBinding />
                 </Gate>
               </div>
             ) : showIndex ? (
@@ -491,7 +454,7 @@ export default function MobileApp() {
               </div>
             ) : (
               <div
-                className={`mobile-viewport${!reference && ["G2-Home", "G-HomePhoto"].includes(screen) ? " mobile-fluid-home" : ""}`}
+                className={`mobile-viewport${!reference && ["G2-Home", "G-HomePhoto"].includes(screen) ? " mobile-fluid-home" : ""}${!reference && screen === "G-Dish" ? " mobile-fluid-detail" : ""}${!reference && screen === "G-Me" ? " mobile-fluid-profile" : ""}`}
                 style={
                   {
                     minHeight: height * scale,
@@ -536,28 +499,22 @@ export default function MobileApp() {
             )}
           </Suspense>
         </DesktopExperience>
+        {!desktop && !reference && !showIndex && navigationSection && (
+          <div
+            className="mobile-main-navigation"
+            aria-hidden={
+              panelPresence.value || noticePresence.value ? true : undefined
+            }
+            inert={
+              panelPresence.value || noticePresence.value ? true : undefined
+            }
+          >
+            <DesignNav active={navigationSection} />
+          </div>
+        )}
         {!desktop &&
           !reference &&
-          !showIndex &&
-          profileSection(loc.pathname) && (
-            <nav className="profile-mobile-mainnav" aria-label="主导航">
-              <Link to="/">
-                <DesignIcon name="discover" size={20} />
-                发现
-              </Link>
-              <Link to="/nearby">
-                <DesignIcon name="nearby" size={20} />
-                附近
-              </Link>
-              <Link to="/me" aria-current="page">
-                <DesignIcon name="me" size={20} />
-                我的
-              </Link>
-            </nav>
-          )}
-        {!desktop &&
-          !reference &&
-          /^\/(foods|restaurants)\/\d+$/.test(loc.pathname) && (
+          /^\/restaurants\/\d+$/.test(loc.pathname) && (
             <Suspense fallback={<ContentSkeleton kind="rows" count={1} />}>
               <DetailExtras key={loc.pathname} path={loc.pathname} />
             </Suspense>
@@ -608,7 +565,16 @@ export default function MobileApp() {
               aria-modal="true"
               aria-label="操作提示"
             >
-              <span className="handle" />
+              <SheetHandle
+                mode="dismiss"
+                label="操作提示"
+                disabled={confirmBusy}
+                onDismiss={() => {
+                  if (confirmationLock.current) return;
+                  setMessage("");
+                  setConfirmation(null);
+                }}
+              />
               <h2>这件事，和你说一下</h2>
               <p>{noticePresence.value}</p>
               {confirmation ? (

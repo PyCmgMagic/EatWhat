@@ -12,7 +12,9 @@
     "prototype:generate": "python scripts/compile-prototype.py",
     "api:audit": "node scripts/audit-api-coverage.mjs",
     "api:diff": "node scripts/audit-api-v4.mjs \"docs/EatWhat 业务服务 APIv4.yaml\" \"docs/EatWhat 业务服务 APIv5.yaml\" output/api-v5-diff-20261104.json",
-    "api:generate": "node scripts/generate-api.mjs"
+    "api:generate": "node scripts/generate-api.mjs",
+    "api:access": "node scripts/generate-access-rules.mjs",
+    "api:access:check": "node scripts/generate-access-rules.mjs --check"
   },
   "dependencies": {
     "@baidumap/jsapi-loader": "^1.0.0",

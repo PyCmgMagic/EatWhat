@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../app/state";
-import { errorMessage } from "../api/client";
+import { accessPromptPresented, errorMessage } from "../api/client";
 import { useRef } from "react";
 export function useTask(
   message?: string,
@@ -25,6 +25,7 @@ export function useTask(
   });
   return {
     ...task,
+    error: accessPromptPresented(task.error) ? null : task.error,
     errorText: task.error ? errorMessage(task.error) : "",
     run: (fn: () => Promise<unknown>) => {
       if (!locked.current) {

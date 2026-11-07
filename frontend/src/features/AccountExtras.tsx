@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { Check, RotateCw } from "lucide-react";
 import { useApp } from "../app/state";
 import { useAuthBusy } from "../app/auth-dialog";
 import { ApiError, errorMessage } from "../api/client";
@@ -16,22 +17,31 @@ export function VerificationMethods() {
     enabled: !!session,
   });
   return (
-    <div className="ew-verification-methods">
-      <strong>认证方式</strong>
-      {query.isPending ? (
-        <span role="status">正在读取认证方式…</span>
-      ) : query.isError ? (
-        <div role="alert">
-          <span>{errorMessage(query.error)}</span>
-          <button type="button" onClick={() => void query.refetch()}>
-            重试认证方式
+    <section className="ew-verification-methods" aria-label="认证记录">
+      <header className="ew-verification-methods-heading">
+        <h3>认证记录</h3>
+        {!query.isPending && (
+          <button
+            type="button"
+            aria-label={query.isError ? "重新读取认证记录" : "刷新认证记录"}
+            disabled={query.isFetching}
+            onClick={() => void query.refetch()}
+          >
+            <RotateCw size={14} aria-hidden="true" />
+            {query.isFetching ? "刷新中…" : query.isError ? "重试" : "刷新记录"}
           </button>
-        </div>
+        )}
+      </header>
+      {query.isPending ? (
+        <span role="status">正在读取认证记录…</span>
+      ) : query.isError ? (
+        <span role="alert">{errorMessage(query.error)}</span>
       ) : (
-        <div>
+        <div className="ew-verification-methods-list">
           {query.data.length ? (
             query.data.map((method) => (
               <span key={method} className="ew-method-badge">
+                <Check size={16} aria-hidden="true" />
                 {method === "verify:sso"
                   ? "山东大学统一认证"
                   : method === "verify:school_email"
@@ -44,16 +54,7 @@ export function VerificationMethods() {
           )}
         </div>
       )}
-      {!query.isPending && !query.isError && (
-        <button
-          type="button"
-          disabled={query.isFetching}
-          onClick={() => void query.refetch()}
-        >
-          刷新认证方式
-        </button>
-      )}
-    </div>
+    </section>
   );
 }
 

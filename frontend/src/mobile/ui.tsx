@@ -3,6 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import type { Food, Restaurant } from "../api/models";
 import { mediaUrl, money } from "../api/models";
 import { useFoodImageRefresh } from "../features/media";
+import { useApp } from "../app/state";
+import { useLoginDialog } from "../app/auth-dialog";
+import { useActionAccess } from "../features/access";
+import {
+  DishIllustration,
+  type DishIllustrationName,
+} from "../components/DishIllustration";
 
 export type MobileState = {
   foodId: number;
@@ -79,6 +86,9 @@ export function DesignIcon({
 }
 export function DesignNav({ active }: { active: string }) {
   const nav = useNavigate();
+  const { session } = useApp();
+  const { openLogin } = useLoginDialog();
+  const access = useActionAccess();
   return (
     <div className="design-navigation">
       <nav aria-label="主导航">
@@ -105,7 +115,10 @@ export function DesignNav({ active }: { active: string }) {
       <button
         className="design-fab"
         aria-label="发布一道菜"
-        onClick={() => nav("/publish")}
+        onClick={() => {
+          if (!session) openLogin("/auth?next=%2Fpublish");
+          else if (access(true)) void nav("/publish");
+        }}
       >
         <DesignIcon name="add" size={26} />
       </button>
@@ -140,14 +153,20 @@ export function MobileEmpty({
   title,
   detail,
   action,
+  illustration,
 }: {
   title: string;
   detail?: string;
   action?: ReactNode;
+  illustration?: DishIllustrationName;
 }) {
   return (
     <div className="mobile-empty">
-      <DesignIcon name="bowl" size={32} />
+      {illustration ? (
+        <DishIllustration name={illustration} />
+      ) : (
+        <DesignIcon name="bowl" size={32} />
+      )}
       <h2>{title}</h2>
       {detail && <p>{detail}</p>}
       {action}

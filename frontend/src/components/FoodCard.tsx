@@ -9,7 +9,7 @@ import { errorMessage } from "../api/client";
 import { money, type Food } from "../api/models";
 import { Icon, Picture } from "./ui";
 export function useFoodActions(food: Food) {
-  const { api, toast } = useApp(),
+  const { api, toast, session, user } = useApp(),
     cache = useQueryClient();
   const busy = useIsMutating({ mutationKey: ["food-action", food.id] }) > 0;
   const mutation = useMutation({
@@ -21,9 +21,9 @@ export function useFoodActions(food: Food) {
           throw new Error("暂未获取到点赞状态，请刷新详情。");
         await api.like(food.id, food.isLiked);
       } else {
-        if (food.isFavorite == null)
+        if (food.isFavorite == null && user?.verified === true)
           throw new Error("暂未获取到收藏状态，请刷新详情。");
-        await api.favorite(food.id, food.isFavorite);
+        await api.favorite(food.id, food.isFavorite === true);
       }
     },
     onSuccess: async (_, action) => {
@@ -42,8 +42,12 @@ export function useFoodActions(food: Food) {
   });
   return {
     busy,
+    favoriteDisabled:
+      busy || (!!session && user?.verified === true && food.isFavorite == null),
     like: () => mutation.mutate("like"),
-    favorite: () => mutation.mutate("favorite"),
+    favorite: () => {
+      mutation.mutate("favorite");
+    },
   };
 }
 export function FoodCard({ food, index = 0 }: { food: Food; index?: number }) {
@@ -67,7 +71,7 @@ export function FoodCard({ food, index = 0 }: { food: Food; index?: number }) {
         </Link>
         <button
           className={`save-button ${food.isFavorite ? "saved" : ""}`}
-          disabled={actions.busy || food.isFavorite == null}
+          disabled={actions.favoriteDisabled}
           onClick={actions.favorite}
           aria-label={`${food.isFavorite ? "取消收藏" : "收藏"}${food.name}`}
           aria-pressed={food.isFavorite ?? false}
