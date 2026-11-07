@@ -1,5 +1,6 @@
 import type { operations } from "./schema";
 import { boundedText, normalizedTag } from "./content-rules";
+import { putImage } from "./storage-upload";
 export type RestaurantFilters = NonNullable<
   operations["RestaurantController_browseRestaurants_get"]["parameters"]["query"]
 >;
@@ -566,18 +567,13 @@ export async function uploadFiles(
   const keys: string[] = [];
   for (let index = 0; index < files.length; index++) {
     const item = credentials[index]!;
-    const response = await fetcher(item.putUrl!, {
-      method: "PUT",
-      headers: { "Content-Type": files[index].type },
-      body: files[index],
-      credentials: "omit",
-      redirect: "error",
-      signal: signal ?? AbortSignal.timeout(60_000),
-    });
-    if (!response.ok)
-      throw new Error(
-        `第 ${index + 1} 张图片上传失败（HTTP ${response.status}），请重试。`,
-      );
+    await putImage(
+      item.putUrl!,
+      files[index],
+      signal,
+      fetcher,
+      `第 ${index + 1} 张图片`,
+    );
     const completed = await api.complete(item.key!);
     if (completed.key !== item.key)
       throw new Error("图片确认结果不一致，请重试。");
@@ -650,20 +646,7 @@ export async function uploadFile(
   });
   if (!signed.putUrl || !signed.key)
     throw new Error("上传凭证不完整，请重新选择图片。");
-  const url = new URL(signed.putUrl);
-  if (url.protocol !== "https:" && url.protocol !== "http:")
-    throw new Error("上传地址无效。");
-  // Intentionally separate from API transport: never forward the app session to object storage.
-  const response = await fetcher(signed.putUrl, {
-    method: "PUT",
-    headers: { "Content-Type": file.type },
-    body: file,
-    credentials: "omit",
-    redirect: "error",
-    signal: signal ?? AbortSignal.timeout(60_000),
-  });
-  if (!response.ok)
-    throw new Error(`图片上传失败（HTTP ${response.status}），请重试。`);
+  await putImage(signed.putUrl, file, signal, fetcher);
   onPhase?.("confirming");
   const completed = await api.complete(signed.key);
   if (!completed.key || completed.key !== signed.key)
