@@ -11,7 +11,7 @@ async (page) => {
     { id: 83, name: "尚未标注位置的店", address: "保留在列表中", gcjLng: null, gcjLat: null, pictureUrl: [] },
   ];
   await context.addInitScript(() => {
-    if (location.hostname === "127.0.0.1") sessionStorage.setItem("eatwhat-session", JSON.stringify({ tokenName: "x-map-test", tokenValue: "isolated-map-test" }));
+    if (location.hostname === "127.0.0.1") localStorage.setItem("eatwhat-session", JSON.stringify({ tokenName: "x-map-test", tokenValue: "isolated-map-test" }));
   });
   const reply = (r, data) => r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ code: 0, data, msg: "ok" }) });
   await context.route(() => true, r => {

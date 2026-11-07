@@ -15,7 +15,7 @@ async (page) => {
     try {
       if (state !== "guest")
         await context.addInitScript(() =>
-          sessionStorage.setItem(
+          localStorage.setItem(
             "eatwhat-session",
             JSON.stringify({
               tokenName: "x-session",

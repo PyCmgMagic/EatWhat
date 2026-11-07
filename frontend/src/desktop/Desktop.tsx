@@ -839,7 +839,7 @@ function DesktopHome() {
       api.recommend(batchSize, {
         campusId,
         mealTime: mealCode(m.meal),
-        category,
+        category: category || undefined,
         deviceId: guestDeviceId(),
       }),
     enabled: !!category,

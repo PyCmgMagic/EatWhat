@@ -98,7 +98,7 @@ async (page) => {
       throw new Error("username not prefilled");
     if (
       (await p.evaluate(() =>
-        sessionStorage.getItem("eatwhat-demo-session"),
+        localStorage.getItem("eatwhat-demo-session"),
       )) !== "null"
     )
       throw new Error("old session retained");

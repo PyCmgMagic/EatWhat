@@ -18,7 +18,13 @@ import {
 } from "../api/client";
 import { createApi, uploadFile, uploadFiles, type Api } from "../api/service";
 import { AppContext } from "./state";
-import { isDemo, readSession, writeSession } from "./runtime";
+import {
+  isDemo,
+  readSession,
+  sameSession,
+  subscribeSession,
+  writeSession,
+} from "./runtime";
 import { recoveryCommands } from "../api/recovery";
 import { clearConsentProof } from "./consent";
 import { useExitPresence } from "../motion/hooks";
@@ -53,6 +59,7 @@ function StateProvider({ children }: { children: ReactNode }) {
       readSession,
     );
     const transport: Transport = async (path, options) => {
+      const requestSession = readSession();
       try {
         const send = isDemo
           ? (await import("../demo/transport")).demoTransport
@@ -62,7 +69,9 @@ function StateProvider({ children }: { children: ReactNode }) {
         if (
           error instanceof ApiError &&
           error.status === 401 &&
-          !options.public
+          !options.public &&
+          requestSession &&
+          sameSession(requestSession, readSession())
         )
           window.dispatchEvent(new Event("eatwhat:expired"));
         throw error;
@@ -78,6 +87,20 @@ function StateProvider({ children }: { children: ReactNode }) {
   const me = useMe(api, session);
   const toast = useCallback((message: string) => setMessage(message), []);
   useEffect(() => {
+    const syncSession = (next: Session | null) => {
+      if (sameSession(session, next)) return;
+      clearConsentProof();
+      recoveryCommands.clear();
+      // clear() also cancels pending queries, so data from the previous account
+      // cannot repopulate this tab after another tab changes the shared login.
+      queryClient.clear();
+      setSession(next);
+    };
+    const unsubscribe = subscribeSession(syncSession);
+    syncSession(readSession());
+    return unsubscribe;
+  }, [session]);
+  useEffect(() => {
     if (message) {
       const timer = setTimeout(() => setMessage(""), 4000);
       return () => clearTimeout(timer);
@@ -85,9 +108,11 @@ function StateProvider({ children }: { children: ReactNode }) {
   }, [message]);
   useEffect(() => {
     const expire = () => {
+      clearConsentProof();
+      recoveryCommands.clear();
       writeSession(null);
       setSession(null);
-      void queryClient.cancelQueries().then(() => queryClient.clear());
+      queryClient.clear();
       toast("登录已过期，请重新登录。");
     };
     window.addEventListener("eatwhat:expired", expire);
@@ -122,7 +147,6 @@ function StateProvider({ children }: { children: ReactNode }) {
   const clearLocalSession = async () => {
     clearConsentProof();
     recoveryCommands.clear();
-    await queryClient.cancelQueries();
     writeSession(null);
     queryClient.clear();
     setSession(null);
@@ -137,8 +161,9 @@ function StateProvider({ children }: { children: ReactNode }) {
         toast,
         signIn,
         signOut: async () => {
+          const signingOut = readSession();
           await api.logout();
-          await clearLocalSession();
+          if (sameSession(signingOut, readSession())) await clearLocalSession();
         },
         clearLocalSession,
         refreshMe: () =>

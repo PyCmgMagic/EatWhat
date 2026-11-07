@@ -16,9 +16,9 @@ async (page) => {
   await c.addInitScript(() => {
     if (
       location.hostname === "127.0.0.1" &&
-      sessionStorage.getItem("eatwhat-demo-session") === null
+      localStorage.getItem("eatwhat-demo-session") === null
     )
-      sessionStorage.setItem("eatwhat-demo-session", "null");
+      localStorage.setItem("eatwhat-demo-session", "null");
   });
   await c.route(
     (u) => u.hostname !== "127.0.0.1" || u.pathname.startsWith("/api/"),

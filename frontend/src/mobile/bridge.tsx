@@ -205,7 +205,7 @@ export function useDesignBridge(
       api.recommend(batchSize, {
         campusId,
         mealTime: mealCode(m.meal),
-        category,
+        category: category || undefined,
         deviceId: guestDeviceId(),
       }),
     enabled: browse && homeScreens.has(screen) && !!category,
@@ -616,7 +616,8 @@ export function useDesignBridge(
       const theta = d * 55 + (controller.state.drag ?? 0);
       values["p" + i] = {
         t: `rotate(${theta.toFixed(2)}deg) translateY(-430px) scale(${(1 - 0.15 * Math.min(1, Math.abs(theta) / 55)).toFixed(3)})`,
-        o: !list[i] || Math.abs(d) >= 2 ? 0 : 1,
+        // Neighbouring photos must not sit behind the price and restaurant copy.
+        o: !list[i] || d !== 0 ? 0 : 1,
       };
     }
   }
@@ -1033,7 +1034,12 @@ export function useDesignBridge(
               <h1>
                 附近 <span>{shops.data?.totalItems ?? "—"}</span>
               </h1>
-              <span>{area ? "按所选区域查询" : "全部店铺"}</span>
+              <Link
+                to="/restaurants/directory"
+                className="mobile-nearby-directory"
+              >
+                更多筛选 <DesignIcon name="chevronRight" size={14} />
+              </Link>
             </div>
             <div className="mobile-nearby-results">
               {shops.isError && !restaurants.length ? (
@@ -1216,12 +1222,75 @@ export function useDesignBridge(
         </span>,
       );
     if (homeScreens.has(screen)) {
+      if (id === 1) {
+        // Keep the carousel artwork, but let real text and the list set the
+        // document height instead of fitting them into the prototype's viewport.
+        const sheetIndex = n.children.findIndex(
+          (child) =>
+            typeof child !== "string" &&
+            String(child.attrs.style).includes("top: 488px"),
+        );
+        return (
+          <div
+            {...p}
+            className={`${p.className ?? ""} mobile-home-screen${homeWithoutRecommendations ? " mobile-home-unavailable" : ""}`}
+          >
+            <div
+              className="mobile-home-hero"
+              style={{ background: values.s.stage }}
+            >
+              {view.children.slice(0, sheetIndex)}
+            </div>
+            {view.children.slice(sheetIndex)}
+          </div>
+        );
+      }
+      if (tag === "div" && st.top === "0" && st.height === "520px")
+        p.className = "mobile-home-art";
+      if (st.top === "570px") p.className = "mobile-home-plate";
+      if (tag === "header") p.className = "mobile-home-toolbar";
+      if (tag === "div" && st.top === "392px") p.className = "mobile-home-dots";
+      if (tag === "div" && st.top === "414px")
+        p.className = "mobile-home-actions";
+      if (tag === "div" && st.top === "488px")
+        p.className = "mobile-home-sheet";
+      if (
+        n.children.some(
+          (child) => typeof child !== "string" && child.attrs.name === "G-Nav",
+        )
+      )
+        p.className = "mobile-home-navigation";
+      if (
+        tag === "section" &&
+        n.attrs["aria-label"] === "今天吃什么" &&
+        !homeWithoutRecommendations
+      ) {
+        const index =
+          (((controller.state.n ?? 0) % carouselFoods.length) +
+            carouselFoods.length) %
+          carouselFoods.length;
+        const food = carouselFoods[index];
+        return (
+          <section {...p} className="mobile-home-copy" ref={recommendationCopy}>
+            <h1>{food?.name}</h1>
+            <p className="mobile-home-shop">
+              {food?.restaurantName || "餐厅信息待补充"}
+            </p>
+            {values.s.dist && (
+              <p className="mobile-home-distance">{values.s.dist}</p>
+            )}
+            <p
+              className={`mobile-home-price${food?.price == null ? " is-unknown" : ""}`}
+            >
+              {money(food?.price)}
+            </p>
+          </section>
+        );
+      }
       if (homeWithoutRecommendations) {
-        if (id === 1)
-          p.className = `${p.className ?? ""} mobile-home-unavailable`;
         if (tag === "div" && st.top === "0" && st.height === "520px")
           return (
-            <div {...p} className="mobile-home-resting-stage">
+            <div {...p} className="mobile-home-art mobile-home-resting-stage">
               <span className="mobile-home-empty-plate" aria-hidden="true">
                 <DesignIcon name="bowl" size={66} />
               </span>
@@ -1382,7 +1451,7 @@ export function useDesignBridge(
               )
             )}
             {!expanded && shown.length > 2 && (
-              <div style={{ gridColumn: "1/-1", marginTop: 60 }}>
+              <div style={{ gridColumn: "1/-1" }}>
                 <PrimaryButton light onClick={() => setExpanded(true)}>
                   再看几道
                 </PrimaryButton>
@@ -1422,6 +1491,9 @@ export function useDesignBridge(
     }
     if (screen === "G-Dish" && liveFood) {
       const vis = visualFor(liveFood, isDemo);
+      if (id === 1)
+        p.className = `${p.className ?? ""} mobile-detail-flow mobile-dish-flow`;
+      if (id === 22) p.className = `${p.className ?? ""} mobile-detail-sheet`;
       if (id === 2) p.style = { ...st, background: vis.stage };
       if ([5, 16, 6, 9, 14].includes(id)) p.style = { ...st, color: vis.on };
       if (tag === "img" && String(n.attrs.src).includes("yuntun")) {
@@ -1591,6 +1663,9 @@ export function useDesignBridge(
     }
     if (screen === "G-Detail" && restaurant.data) {
       const r = restaurant.data;
+      if (id === 1)
+        p.className = `${p.className ?? ""} mobile-detail-flow mobile-restaurant-flow`;
+      if (id === 23) p.className = `${p.className ?? ""} mobile-detail-sheet`;
       if (id === 21)
         return (
           <button

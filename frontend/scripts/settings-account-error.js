@@ -68,7 +68,7 @@ async (page) => {
   }
   try {
     await context.addInitScript(() => {
-      sessionStorage.setItem(
+      localStorage.setItem(
         "eatwhat-session",
         JSON.stringify({ tokenName: "x-settings-qa", tokenValue: "isolated-account-error" }),
       );

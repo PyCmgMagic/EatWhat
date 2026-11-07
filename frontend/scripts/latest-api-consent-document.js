@@ -1,6 +1,6 @@
 async(page)=>{
  const base='http://127.0.0.1:5173',checks=[],errors=[],writes=[],documents=[],assets=[],guard=u=>u.origin===base&&u.pathname.startsWith('/api/');
- const saved=await page.evaluate(()=>({session:sessionStorage.getItem('eatwhat-session'),demo:sessionStorage.getItem('eatwhat-demo-session')}));
+ const saved=await page.evaluate(()=>({session:localStorage.getItem('eatwhat-session'),demo:localStorage.getItem('eatwhat-demo-session')}));
  const err=e=>errors.push(e.message);page.on('pageerror',err);
  let mode='hold',release,version=3;
  const valid=()=>'<main><h1>完整政策验收</h1><p>policy-v'+version+'</p><h2>撤回与保留</h2><p>这是完整正文。可在设置中撤回。</p><a href="./withdraw.html">撤回说明</a><script>window.policyAttack=true</script><img src="https://policy-track.invalid/pixel" onerror="window.policyAttack=true"><p style="display:none" onclick="window.policyAttack=true">可读说明</p></main>';
@@ -23,7 +23,7 @@ async(page)=>{
   return route.fulfill({contentType:'application/json',body:JSON.stringify(ok(data))});
  });
  const visit=async(view='desktop')=>{
-  await page.evaluate(()=>sessionStorage.removeItem('eatwhat-session'));
+  await page.evaluate(()=>localStorage.removeItem('eatwhat-session'));
   await page.goto(base+'/?demo=0&view='+view+'#/auth/password');await page.reload();
   await page.getByRole('button',{name:'《跨站同步授权政策》',exact:true}).waitFor();
  };
@@ -56,6 +56,6 @@ async(page)=>{
   if(errors.length||writes.length||documents.some(d=>d.headers.authorization||d.headers['x-consent-test']))throw new Error(JSON.stringify({errors,writes,documents}));
   return{checks,documentRequests:documents.length,pageErrors:errors,realBackendRequests:0,realBackendWrites:0,remoteAssetRequests:assets.length};
  }finally{
-  if(release)release();await page.goto(base+'/?demo=1&view=desktop#/');await page.evaluate(saved=>{for(const [key,value]of [['eatwhat-session',saved.session],['eatwhat-demo-session',saved.demo]])value===null?sessionStorage.removeItem(key):sessionStorage.setItem(key,value);},saved);await page.setViewportSize({width:1440,height:1000});await page.unroute(guard);await page.unroute('https://policy-track.invalid/**');page.off('pageerror',err);
+  if(release)release();await page.goto(base+'/?demo=1&view=desktop#/');await page.evaluate(saved=>{for(const [key,value]of [['eatwhat-session',saved.session],['eatwhat-demo-session',saved.demo]])value===null?localStorage.removeItem(key):localStorage.setItem(key,value);},saved);await page.setViewportSize({width:1440,height:1000});await page.unroute(guard);await page.unroute('https://policy-track.invalid/**');page.off('pageerror',err);
  }
 }

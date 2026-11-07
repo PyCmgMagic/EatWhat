@@ -185,7 +185,7 @@ export function FoodTile({
             alt={food.name ?? "菜品"}
             className={visual?.asset ? "is-food-illustration" : "is-food-photo"}
             style={
-              visual
+              visual?.asset
                 ? {
                     position: "absolute",
                     width: 150,

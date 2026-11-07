@@ -13,3 +13,6 @@ scripts/api-v4-*.js
 scripts/baidu-map-lifecycle.js
 scripts/features-redesign*.js
 scripts/settings-*.js
+scripts/home-recommendations.js
+scripts/mobile-home-empty.js
+scripts/mobile-layout.js

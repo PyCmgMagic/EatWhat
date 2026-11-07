@@ -141,7 +141,7 @@ async (page) => {
       exact: true,
     })
     .waitFor();
-  if (await page.evaluate(() => sessionStorage.getItem("eatwhat-session")))
+  if (await page.evaluate(() => JSON.parse(localStorage.getItem("eatwhat-session"))))
     throw new Error("Consent proof stored as session");
   if (
     !(await page
@@ -177,7 +177,7 @@ async (page) => {
   await page.getByText("验收：业务失败应显示错误", { exact: true }).waitFor();
   await page.goto(origin + "/?demo=0#/foods/9");
   await page.getByText("验收：无权访问此菜品", { exact: true }).waitFor();
-  if (!(await page.evaluate(() => sessionStorage.getItem("eatwhat-session"))))
+  if (!(await page.evaluate(() => JSON.parse(localStorage.getItem("eatwhat-session")))))
     throw new Error("403 incorrectly cleared session");
   checks.push(
     "HTTP 200 business failure and 403 permission failure stay distinct",
@@ -185,7 +185,7 @@ async (page) => {
   favoriteMode = "expired";
   await page.goto(origin + "/?demo=0#/favorites");
   await page.getByRole("link", { name: "登录 / 注册", exact: true }).waitFor();
-  if (await page.evaluate(() => sessionStorage.getItem("eatwhat-session")))
+  if (await page.evaluate(() => JSON.parse(localStorage.getItem("eatwhat-session"))))
     throw new Error("401 did not clear session");
   checks.push("HTTP 401 clears the expired session");
   await page.goto(origin + "/?demo=0#/auth?next=%2Fpublish%3FrestaurantId%3D1");
@@ -227,7 +227,7 @@ async (page) => {
   checks.push(
     "live upload sequence; no session in PUT; uncertain creation cannot auto-retry",
   );
-  await page.evaluate(() => sessionStorage.removeItem("eatwhat-session"));
+  await page.evaluate(() => localStorage.removeItem("eatwhat-session"));
   await page.unrouteAll({ behavior: "wait" });
   await page.goto(origin + "/?demo=1");
   return {

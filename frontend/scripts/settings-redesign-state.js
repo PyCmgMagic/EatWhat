@@ -6,7 +6,7 @@ async (page) => {
   let logoutRequests = 0, externalRequests = 0, logoutMode = 'failure', releaseLogout, onLogoutPending;
   p.setDefaultTimeout(8000);
   p.on('pageerror', error => errors.push(error.message));
-  await context.addInitScript(() => sessionStorage.setItem('eatwhat-session', JSON.stringify({ tokenName: 'x-session', tokenValue: 'isolated-settings-test' })));
+  await context.addInitScript(() => localStorage.setItem('eatwhat-session', JSON.stringify({ tokenName: 'x-session', tokenValue: 'isolated-settings-test' })));
   await context.route(url => !['localhost', '127.0.0.1'].includes(url.hostname), route => { externalRequests++; return route.abort(); });
   await context.route(url => url.pathname.startsWith('/api/'), async route => {
     const path = new URL(route.request().url()).pathname.slice(4);
@@ -61,7 +61,7 @@ async (page) => {
     assert(logoutRequests === 1, 'Only one pending logout request');
     releaseLogout();
     await p.getByRole('alert').waitFor();
-    assert(await p.evaluate(() => !!sessionStorage.getItem('eatwhat-session')), 'Logout failure preserves session');
+    assert(await p.evaluate(() => !!JSON.parse(localStorage.getItem('eatwhat-session'))), 'Logout failure preserves session');
     assert(p.url().endsWith('#/settings'), 'Failure stays on settings');
     logoutMode = 'success';
     requestPending = new Promise(resolve => { onLogoutPending = resolve; });
@@ -70,7 +70,7 @@ async (page) => {
     await p.getByRole('button', { name: '正在退出…', exact: true }).waitFor();
     releaseLogout();
     await p.waitForURL(url => url.hash === '#/auth');
-    assert(await p.evaluate(() => sessionStorage.getItem('eatwhat-session')) === null, 'Successful logout clears session');
+    assert(await p.evaluate(() => JSON.parse(localStorage.getItem('eatwhat-session'))) === null, 'Successful logout clears session');
     assert(logoutRequests === 2, 'Retry sends one additional request');
     checks.push('Pending logout lock, failure preserves session, retry clears session and returns to login');
     assert(!errors.length && !externalRequests, JSON.stringify({ errors, externalRequests }));

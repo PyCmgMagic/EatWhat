@@ -865,7 +865,7 @@ export const demoTransport: Transport = async (path, options) => {
       .filter((f) => !s.blocked!.includes(f.accountId ?? 0))
       .filter((f) => !q.mealTime || f.mealTimes?.includes(q.mealTime as any))
       .slice(0, Number(q.size ?? q.limit ?? 8));
-    result = paginate(items, { page: 1, pageSize: items.length || 8 });
+    result = items;
   } else if (/^\/foods\/by-user\/\d+$/.test(path))
     result = paginate(
       filterFoods(

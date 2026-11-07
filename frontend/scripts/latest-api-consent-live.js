@@ -1,10 +1,10 @@
 async(page)=>{
  const base='http://127.0.0.1:5173',errors=[],writes=[],requests=[],guard=u=>u.origin===base&&u.pathname.startsWith('/api/');
- const saved=await page.evaluate(()=>sessionStorage.getItem('eatwhat-session')),err=e=>errors.push(e.message);page.on('pageerror',err);
+ const saved=await page.evaluate(()=>localStorage.getItem('eatwhat-session')),err=e=>errors.push(e.message);page.on('pageerror',err);
  await page.route(guard,route=>{const req=route.request();if(!['GET','HEAD','OPTIONS'].includes(req.method())){writes.push(req.method()+' '+req.url());return route.abort();}requests.push(req.url());return route.continue();});
  const checks=[];
  try{
-  await page.evaluate(()=>sessionStorage.removeItem('eatwhat-session'));
+  await page.evaluate(()=>localStorage.removeItem('eatwhat-session'));
   for(const view of ['desktop','mobile']){
    await page.setViewportSize({width:view==='desktop'?1440:390,height:view==='desktop'?1000:844});
    await page.goto(base+'/?demo=0&view='+view+'#/auth/password');await page.reload();
@@ -29,5 +29,5 @@ async(page)=>{
    checks.push(view+'真实正文逐字一致，末节完整，无 iframe 或横向溢出，关闭不自动同意');
   }
   if(errors.length||writes.length)throw new Error(JSON.stringify({errors,writes}));return{checks,backendPolicy:'cross-border-preferences-v3',backendDocument:'passed',pageErrors:errors,realReadRequests:requests.length,realBackendWrites:0};
- }finally{await page.goto(base+'/?demo=1&view=desktop#/');await page.evaluate(saved=>saved===null?sessionStorage.removeItem('eatwhat-session'):sessionStorage.setItem('eatwhat-session',saved),saved);await page.setViewportSize({width:1440,height:1000});await page.unroute(guard);page.off('pageerror',err);}
+ }finally{await page.goto(base+'/?demo=1&view=desktop#/');await page.evaluate(saved=>saved===null?localStorage.removeItem('eatwhat-session'):localStorage.setItem('eatwhat-session',saved),saved);await page.setViewportSize({width:1440,height:1000});await page.unroute(guard);page.off('pageerror',err);}
 }

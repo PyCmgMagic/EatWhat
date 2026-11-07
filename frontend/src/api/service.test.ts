@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, expectTypeOf } from "vitest";
 import { classifyAuth, createApi, uploadFile } from "./service";
+import { createTransport } from "./client";
 import type { Schema, Page, Food } from "./models";
 import type { components } from "./schema";
 type ResponseData<T> = T extends {
@@ -7,6 +8,82 @@ type ResponseData<T> = T extends {
 }
   ? NonNullable<D>
   : never;
+
+describe("recommendation response formats", () => {
+  const food: Food = {
+    id: 1000000245,
+    accountId: 1000000001,
+    name: "招牌牛筋面",
+    restaurantId: 1000000141,
+    restaurantName: "测试餐厅",
+    category: "staple",
+    description: "免费加面 吃得很爽",
+    price: 18.9,
+    pictureKeys: ["foods/test/noodles.jpg"],
+    pictureUrl: ["https://images.example.test/noodles.jpg?signature=test"],
+    coverCrop: { centerX: 0.5, centerY: 0.4704, diameter: 1 },
+    stageColor: "soy",
+    stageAlternates: ["redoil", "chili"],
+    mealTimes: ["lunch", "dinner"],
+    isLiked: true,
+    isFavorite: false,
+    myCustomTags: [],
+  };
+
+  it("reads the deployed data array through the real HTTP adapter without losing display fields", async () => {
+    const fetcher = vi.fn<typeof fetch>(
+      async () => new Response(JSON.stringify({ code: 0, data: [food] })),
+    );
+    const api = createApi(createTransport("/api", () => null, fetcher));
+    await expect(
+      api.recommend(4, {
+        campusId: 1,
+        mealTime: "dinner",
+        category: "staple",
+        deviceId: "test-device",
+      }),
+    ).resolves.toEqual([food]);
+    expect(fetcher.mock.calls[0][0]).toBe(
+      "/api/foods/recommend?size=4&campusId=1&mealTime=dinner&category=staple&deviceId=test-device",
+    );
+  });
+
+  it.each([
+    { data: [], expected: [] },
+    { data: { items: [food], totalItems: 1 }, expected: [food] },
+    { data: { items: [], totalItems: 0 }, expected: [] },
+  ])(
+    "also accepts empty arrays and documented page responses: $data",
+    async ({ data, expected }) => {
+      const api = createApi(async () => ({ code: 0, data }));
+      await expect(api.recommend()).resolves.toEqual(expected);
+    },
+  );
+
+  it.each([{}, { items: null }, { items: {} }, "invalid"])(
+    "reports malformed recommendation data instead of displaying an empty result: %j",
+    async (data) => {
+      const api = createApi(async () => ({ code: 0, data }));
+      await expect(api.recommend()).rejects.toMatchObject({
+        code: "INVALID_RESPONSE",
+      });
+    },
+  );
+
+  it("keeps missing data and business failures distinct from empty recommendations", async () => {
+    const missing = createApi(async () => ({ code: 0, data: null }));
+    await expect(missing.recommend()).rejects.toMatchObject({
+      code: "MISSING_DATA",
+    });
+    const failed = createApi(async () => ({
+      code: 503,
+      msg: "推荐服务暂不可用",
+      data: [],
+    }));
+    await expect(failed.recommend()).rejects.toMatchObject({ code: 503 });
+  });
+});
+
 describe("authentication states", () => {
   it("accepts only an explicit successful logged-in session", () => {
     expect(

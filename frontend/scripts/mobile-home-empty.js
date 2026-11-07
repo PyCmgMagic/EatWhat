@@ -3,7 +3,7 @@ async (page) => {
     viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
   });
   const p = await context.newPage(), checks = [], errors = [], remote = [];
-  let status = 200, available = false, calls = 0;
+  let status = 200, available = false, calls = 0, blockedMapRequests = 0;
   const food = {
     id: 71, name: "接口返回的午餐", restaurantName: "校内餐厅", restaurantId: 9,
     price: 12, category: "staple", pictureUrl: ["/prototype/assets/photos/sq_luosi.png"],
@@ -11,7 +11,11 @@ async (page) => {
   p.setDefaultTimeout(10000);
   p.on("pageerror", e => errors.push(e.message));
   await context.route(u => u.hostname !== "127.0.0.1", r => {
-    remote.push(r.request().url());
+    // Checking the nearby link may load the configured map SDK. Keep it offline
+    // without treating this expected SDK load as a business request or logging AKs.
+    const url = new URL(r.request().url());
+    if (url.hostname === "api.map.baidu.com" && url.pathname === "/api") blockedMapRequests++;
+    else remote.push(url.origin + url.pathname);
     return r.abort();
   });
   const reply = (r, data, code = 200) => r.fulfill({
@@ -25,7 +29,7 @@ async (page) => {
     if (url.pathname === "/api/foods/recommend") {
       calls++;
       const items = available && !url.searchParams.has("category") ? [food] : [];
-      return reply(r, { items, totalItems: items.length, hasNext: false }, status);
+      return reply(r, items, status);
     }
     return reply(r, { items: [], totalItems: 0, hasNext: false });
   });
@@ -56,6 +60,8 @@ async (page) => {
         if (await p.locator(".design-food-tile").count() || await p.getByText("就它了", { exact: true }).count())
           throw new Error("empty response rendered prototype food or an invalid selection action");
         const before = calls;
+        // The responsive home scrolls as a document, including on short phones.
+        await p.getByRole("button", { name: "刷新推荐", exact: true }).evaluate(el => el.scrollIntoView({block: "center", behavior: "instant"}));
         const refreshBox = await p.getByRole("button", { name: "刷新推荐", exact: true }).boundingBox();
         const navBox = await nav.boundingBox();
         if (!refreshBox || !navBox || refreshBox.y + refreshBox.height > navBox.y)
@@ -91,6 +97,7 @@ async (page) => {
     await shell();
     if (await p.locator(".mobile-home-unavailable").count())
       throw new Error("recovered recommendations kept the empty hero");
+    await p.screenshot({ path: "output/playwright/home-recommendation-array-mobile.png", fullPage: true });
     await p.getByRole("tab", { name: "主食", exact: true }).click();
     await p.getByRole("heading", { name: "这个分类还没有推荐", exact: true }).waitFor();
     await shell();
@@ -98,10 +105,10 @@ async (page) => {
     await p.locator(".design-food-tile").getByRole("heading", { name: food.name, exact: true }).waitFor();
     checks.push("API failure preserves navigation; retry restores the real hero and food; empty category does not hide the home");
     if (errors.length || remote.length) throw new Error("Unexpected runtime errors or remote requests");
-    return { checks, errors, remoteRequests: remote.length };
+    return { checks, errors, remoteRequests: remote.length, blockedMapRequests };
   } catch (error) {
     await p.screenshot({ path: "output/playwright/mobile-home-empty-failure.png" });
-    return { checks, errors, failure: String(error), url: p.url(), snapshot: await p.locator(".mobile-viewport").innerText() };
+    throw new Error(JSON.stringify({ checks, errors, remote, failure: String(error), url: p.url(), snapshot: await p.locator(".mobile-viewport").innerText() }));
   } finally {
     await context.close();
   }

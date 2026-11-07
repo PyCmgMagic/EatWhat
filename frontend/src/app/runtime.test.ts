@@ -1,18 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const values = new Map<string, string>();
+const legacyValues = new Map<string, string>();
 const storedSession = { tokenName: "satoken", tokenValue: "test-live-session" };
 
 beforeEach(() => {
   vi.resetModules();
   values.clear();
+  legacyValues.clear();
   vi.stubEnv("DEV", true);
   vi.stubEnv("VITE_ENABLE_DEMO", "false");
   vi.stubGlobal("location", { search: "" });
-  vi.stubGlobal("sessionStorage", {
+  vi.stubGlobal("localStorage", {
     getItem: (key: string) => values.get(key) ?? null,
     setItem: (key: string, value: string) => values.set(key, value),
     removeItem: (key: string) => values.delete(key),
+  });
+  vi.stubGlobal("sessionStorage", {
+    getItem: (key: string) => legacyValues.get(key) ?? null,
+    setItem: (key: string, value: string) => legacyValues.set(key, value),
+    removeItem: (key: string) => legacyValues.delete(key),
   });
 });
 
@@ -83,7 +90,7 @@ describe("Mock mode and isolated sessions", () => {
     expect(runtime.isDemo).toBe(false);
     expect(runtime.readSession()).toEqual(storedSession);
     runtime.writeSession(null);
-    expect(values.has("eatwhat-session")).toBe(false);
+    expect(values.get("eatwhat-session")).toBe("null");
     expect(values.has("eatwhat-demo-session")).toBe(true);
   });
 
@@ -106,7 +113,7 @@ describe("Mock mode and isolated sessions", () => {
 
   it("still supports Mock login and logout when browser storage is unavailable", async () => {
     vi.stubGlobal("location", { search: "?demo=1" });
-    vi.stubGlobal("sessionStorage", {
+    vi.stubGlobal("localStorage", {
       getItem() {
         throw new Error("Storage unavailable");
       },
@@ -121,5 +128,115 @@ describe("Mock mode and isolated sessions", () => {
     expect(runtime.readSession()?.tokenValue).toBe("isolated-demo-token");
     runtime.writeSession(null);
     expect(runtime.readSession()).toBeNull();
+  });
+});
+
+describe("shared persistent login", () => {
+  it("keeps login and logout in memory when storage reads work but writes fail", async () => {
+    values.set("eatwhat-session", JSON.stringify(storedSession));
+    const runtime = await import("./runtime");
+    vi.spyOn(localStorage, "setItem").mockImplementation(() => {
+      throw new Error("Quota exceeded");
+    });
+    runtime.writeSession(null);
+    expect(runtime.readSession()).toBeNull();
+    const next = { tokenName: "satoken", tokenValue: "new-memory-session" };
+    runtime.writeSession(next);
+    expect(runtime.readSession()).toEqual(next);
+    vi.restoreAllMocks();
+    runtime.writeSession(next);
+    expect(values.get("eatwhat-session")).toBe(JSON.stringify(next));
+  });
+
+  it("restores a login in a new tab with empty sessionStorage", async () => {
+    const firstTab = await import("./runtime");
+    firstTab.writeSession(storedSession);
+    legacyValues.clear();
+    vi.resetModules();
+    const secondTab = await import("./runtime");
+    expect(secondTab.readSession()).toEqual(storedSession);
+    secondTab.writeSession(null);
+    expect(firstTab.readSession()).toBeNull();
+    vi.resetModules();
+    expect((await import("./runtime")).readSession()).toBeNull();
+  });
+
+  it("migrates the current tab's old login without copying unrelated tab state", async () => {
+    legacyValues.set("eatwhat-session", JSON.stringify(storedSession));
+    legacyValues.set("eatwhat:live:draft:profile:10", "draft");
+    const runtime = await import("./runtime");
+    expect(runtime.readSession()).toEqual(storedSession);
+    expect(values.get("eatwhat-session")).toBe(JSON.stringify(storedSession));
+    expect(legacyValues.has("eatwhat-session")).toBe(false);
+    expect(legacyValues.get("eatwhat:live:draft:profile:10")).toBe("draft");
+  });
+
+  it.each(["null", JSON.stringify(storedSession)])(
+    "keeps shared state %s instead of resurrecting another tab's old login",
+    async (shared) => {
+      values.set("eatwhat-session", shared);
+      legacyValues.set(
+        "eatwhat-session",
+        JSON.stringify({ tokenName: "satoken", tokenValue: "old-account" }),
+      );
+      const runtime = await import("./runtime");
+      expect(runtime.readSession()).toEqual(JSON.parse(shared));
+      expect(legacyValues.has("eatwhat-session")).toBe(false);
+    },
+  );
+
+  it("migrates a Mock logout without importing a real account", async () => {
+    vi.stubGlobal("location", { search: "?demo=1" });
+    legacyValues.set("eatwhat-session", JSON.stringify(storedSession));
+    legacyValues.set("eatwhat-demo-session", "null");
+    const runtime = await import("./runtime");
+    expect(runtime.readSession()).toBeNull();
+    expect(values.get("eatwhat-demo-session")).toBe("null");
+    expect(values.has("eatwhat-session")).toBe(false);
+    expect(legacyValues.has("eatwhat-session")).toBe(true);
+  });
+
+  it.each([
+    null,
+    "null",
+    "broken-json",
+    "{}",
+    '{"tokenName":"","tokenValue":"x"}',
+  ])(
+    "does not restore an in-memory login after storage changes to %s",
+    async (raw) => {
+      const runtime = await import("./runtime");
+      runtime.writeSession(storedSession);
+      if (raw === null) values.delete("eatwhat-session");
+      else values.set("eatwhat-session", raw);
+      expect(runtime.readSession()).toBeNull();
+    },
+  );
+
+  it("notifies only for this mode's shared storage, reads current state and unsubscribes", async () => {
+    const target = new EventTarget();
+    vi.stubGlobal("window", target);
+    const runtime = await import("./runtime");
+    const listener = vi.fn();
+    const unsubscribe = runtime.subscribeSession(listener);
+    const dispatch = (key: string | null, storageArea = localStorage) => {
+      target.dispatchEvent(
+        Object.assign(new Event("storage"), { key, storageArea }),
+      );
+    };
+    values.set("eatwhat-session", JSON.stringify(storedSession));
+    dispatch("eatwhat-demo-session");
+    dispatch("eatwhat-area");
+    dispatch("eatwhat-session", sessionStorage);
+    expect(listener).not.toHaveBeenCalled();
+    dispatch("eatwhat-session");
+    expect(listener).toHaveBeenLastCalledWith(storedSession);
+    values.clear();
+    dispatch(null);
+    expect(listener).toHaveBeenLastCalledWith(null);
+    expect(listener).toHaveBeenCalledTimes(2);
+    unsubscribe();
+    dispatch("eatwhat-session");
+    expect(listener).toHaveBeenCalledTimes(2);
   });
 });

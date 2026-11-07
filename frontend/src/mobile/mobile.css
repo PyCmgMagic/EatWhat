@@ -89,6 +89,156 @@ button:disabled {
   transform-origin: top left;
   zoom: var(--mobile-scale, 1);
 }
+/* The home page follows the phone width and document flow. Only the decorative
+   carousel uses artboard coordinates; text, cards and navigation do not scale. */
+.mobile-fluid-home > .mobile-canvas {
+  width: 100%;
+  zoom: 1;
+}
+.mobile-home-screen {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 100dvh !important;
+  overflow: visible !important;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}
+.mobile-home-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: max(20px, env(safe-area-inset-top)) 20px 50px;
+}
+.mobile-home-hero .mobile-home-art {
+  width: 100% !important;
+  height: 100% !important;
+  z-index: -1;
+}
+.mobile-home-art .mobile-home-plate {
+  left: 56% !important;
+  width: clamp(180px, 60vw, 260px) !important;
+  height: clamp(180px, 60vw, 260px) !important;
+}
+.mobile-home-toolbar {
+  position: relative !important;
+  inset: auto !important;
+  gap: 8px;
+}
+.mobile-home-toolbar > a {
+  min-width: 0;
+  flex-wrap: wrap;
+  height: auto !important;
+  min-height: 44px;
+}
+.mobile-home-toolbar > div {
+  flex: none;
+}
+.mobile-home-copy,
+.mobile-home-hero .mobile-home-resting-copy {
+  position: relative !important;
+  inset: auto !important;
+  width: 52% !important;
+  height: auto !important;
+  min-height: 260px;
+  margin-top: 24px;
+}
+.mobile-home-copy h1 {
+  margin: 0;
+  max-width: 4em;
+  font-size: clamp(32px, 10vw, 42px);
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: -1px;
+}
+.mobile-home-copy .mobile-home-shop {
+  margin: 14px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  font-weight: 600;
+}
+.mobile-home-distance {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+.mobile-home-copy .mobile-home-price {
+  margin: auto 0 0;
+  padding-top: 20px;
+  font:
+    800 48px/1.1 "Bricolage Grotesque Variable",
+    sans-serif;
+  letter-spacing: -2px;
+  overflow-wrap: normal;
+}
+.mobile-home-copy .mobile-home-price.is-unknown {
+  font-size: 18px;
+  letter-spacing: 0;
+}
+.mobile-home-dots {
+  position: relative !important;
+  inset: auto !important;
+  margin-top: 10px;
+}
+.mobile-home-actions,
+.mobile-home-hero .mobile-home-resting-actions {
+  position: relative !important;
+  inset: auto !important;
+  margin-top: 18px;
+}
+.mobile-home-screen > .mobile-home-sheet {
+  position: relative !important;
+  inset: auto !important;
+  margin-top: -28px;
+  overflow: visible !important;
+}
+.mobile-home-sheet [role="tablist"] {
+  height: auto !important;
+  min-height: 44px;
+  flex-wrap: wrap;
+  gap: 4px 18px !important;
+}
+.mobile-home-sheet [role="tab"] {
+  min-height: 44px;
+}
+.mobile-home-sheet .mobile-data-grid {
+  overflow: visible;
+  padding-bottom: 16px;
+}
+.mobile-home-navigation {
+  position: fixed !important;
+  left: 50% !important;
+  right: auto !important;
+  bottom: max(12px, env(safe-area-inset-bottom)) !important;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 488px;
+}
+.mobile-home-unavailable .mobile-home-resting-copy {
+  width: 75% !important;
+  min-height: 165px;
+}
+@media (max-height: 700px) {
+  .mobile-home-copy {
+    min-height: 180px;
+  }
+}
+/* Detail content must participate in page height so descriptions and feedback
+   follow one another, including on phones shorter than the original artboard. */
+.mobile-detail-flow {
+  height: auto !important;
+}
+.mobile-dish-flow {
+  padding-top: 472px;
+}
+.mobile-restaurant-flow {
+  padding-top: 344px;
+}
+.mobile-detail-flow > .mobile-detail-sheet {
+  position: relative !important;
+  inset: auto !important;
+  overflow: visible !important;
+  padding-bottom: 28px !important;
+}
 .design-screen {
   isolation: isolate;
   min-height: 844px;
@@ -504,6 +654,10 @@ button:disabled {
   color: #231c18;
 }
 .design-tile-image > img.is-food-photo {
+  width: calc(100% - 16px);
+  height: auto;
+  max-height: calc(100% - 16px);
+  aspect-ratio: 1;
   border-radius: 50%;
   border: 5px solid white;
   object-fit: cover;
@@ -523,12 +677,14 @@ button:disabled {
   object-fit: cover;
 }
 .design-food-tile h3 {
+  overflow-wrap: anywhere;
   font-size: 15px;
   font-weight: 600;
   margin: 0;
   line-height: 1.5;
 }
 .design-food-tile > div:last-child > span {
+  overflow-wrap: anywhere;
   font-size: 13px;
   color: #6e625b;
 }
@@ -680,6 +836,14 @@ button:disabled {
 }
 .mobile-nearby-heading > span {
   font-size: 12px;
+  color: #6e625b;
+}
+.mobile-nearby-directory {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  font-size: 13px;
   color: #6e625b;
 }
 .mobile-error-banner {

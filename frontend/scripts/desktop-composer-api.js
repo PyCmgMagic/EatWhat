@@ -2,7 +2,7 @@ async(page)=>{
  const base='http://127.0.0.1:5173',checks=[],posts=[],calls=[],puts=[];let failure='uncertain';
  const ok=data=>({code:0,msg:'success',data}),empty={items:[],currentPage:1,totalItems:0,totalPages:0,hasNext:false},shop={id:44,name:'验收餐厅',address:'软件园校区',gcjLng:117.134,gcjLat:36.667};
  const isApi=url=>url.origin===base&&url.pathname.startsWith('/api/');
- const previous=await page.evaluate(()=>({session:sessionStorage.getItem('eatwhat-session'),area:localStorage.getItem('eatwhat-area')}));
+ const previous=await page.evaluate(()=>({session:localStorage.getItem('eatwhat-session'),area:localStorage.getItem('eatwhat-area')}));
  await page.route(isApi,async route=>{const req=route.request(),path=new URL(req.url()).pathname.slice(4);calls.push(path);let status=200,result=ok(null);
   if(path==='/user/info')result=ok({id:90,userName:'验收食友',verified:true,role:'user'});
   else if(path==='/notification/unread/count')result=ok(0);
@@ -18,7 +18,7 @@ async(page)=>{
  });
  await page.route('https://storage.invalid/composer-test.png',async route=>{if(route.request().method()==='PUT')puts.push(route.request().headers());await route.fulfill({status:200,headers:{'access-control-allow-origin':'*','access-control-allow-methods':'PUT,OPTIONS','access-control-allow-headers':'content-type'},body:''})});
  try{
-  await page.evaluate(()=>{sessionStorage.setItem('eatwhat-session',JSON.stringify({tokenName:'x-composer-test',tokenValue:'qa-session'}));localStorage.setItem('eatwhat-area',JSON.stringify({name:'软件园校区',gcjLng:117.134,gcjLat:36.667,hubId:1,source:'hub'}))});
+  await page.evaluate(()=>{localStorage.setItem('eatwhat-session',JSON.stringify({tokenName:'x-composer-test',tokenValue:'qa-session'}));localStorage.setItem('eatwhat-area',JSON.stringify({name:'软件园校区',gcjLng:117.134,gcjLat:36.667,hubId:1,source:'hub'}))});
   await page.setViewportSize({width:1440,height:1000});await page.goto(base+'/?demo=0&view=desktop#/publish');await page.reload();
   await page.getByRole('radio',{name:/验收餐厅/}).click();await page.getByRole('textbox',{name:'菜名',exact:true}).fill('接口验收菜');await page.getByRole('spinbutton',{name:'价格',exact:true}).fill('0');await page.locator('input[type=file]').setInputFiles('prototype/assets/photos/sq_luosi.png');
   await page.getByRole('button',{name:'发布这道菜',exact:true}).waitFor();await page.getByRole('button',{name:'发布这道菜',exact:true}).dblclick();
@@ -36,7 +36,7 @@ async(page)=>{
   return {checks,createRequests:posts.length,storagePuts:puts.length,interceptedRequests:calls.length,realBackendRequests:0};
  }finally{
   await page.goto(base+'/?demo=1&view=desktop#/publish');
-  await page.evaluate(value=>{if(value.session===null)sessionStorage.removeItem('eatwhat-session');else sessionStorage.setItem('eatwhat-session',value.session);if(value.area===null)localStorage.removeItem('eatwhat-area');else localStorage.setItem('eatwhat-area',value.area)},previous);
+  await page.evaluate(value=>{if(value.session===null)localStorage.removeItem('eatwhat-session');else localStorage.setItem('eatwhat-session',value.session);if(value.area===null)localStorage.removeItem('eatwhat-area');else localStorage.setItem('eatwhat-area',value.area)},previous);
   await page.unroute(isApi);await page.unroute('https://storage.invalid/composer-test.png');
  }
 }

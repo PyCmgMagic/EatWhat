@@ -262,12 +262,20 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
           public: true,
         },
       ),
-    recommend: async (limit = 8, filters: RecommendFilters = {}) =>
-      (
-        await data<Page<Food>>("/foods/recommend", {
-          query: { size: limit, ...filters },
-        })
-      ).items ?? [],
+    recommend: async (limit = 8, filters: RecommendFilters = {}) => {
+      // Deployed servers return data as an array; the checked-in API contract
+      // still describes a page. Normalize both here for desktop and mobile.
+      const result = await data<Food[] | Page<Food>>("/foods/recommend", {
+        query: { size: limit, ...filters },
+      });
+      const items = Array.isArray(result) ? result : result.items;
+      if (!Array.isArray(items))
+        throw new ApiError(
+          "推荐数据格式不正确，请稍后重试。",
+          "INVALID_RESPONSE",
+        );
+      return items;
+    },
     food: (id: number) => data<Food>(`/foods/detail/${id}`),
     foods: (
       restaurantId: number | undefined,

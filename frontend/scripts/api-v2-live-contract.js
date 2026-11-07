@@ -14,7 +14,7 @@ async (page) => {
   await context.addInitScript(() => {
     if (location.hostname !== "127.0.0.1") return;
     if (!sessionStorage.getItem("v2-test-logged-out"))
-      sessionStorage.setItem(
+      localStorage.setItem(
         "eatwhat-session",
         JSON.stringify({ tokenName: "x-session", tokenValue: "isolated-test" }),
       );
@@ -112,7 +112,7 @@ async (page) => {
       .waitFor();
     checks.push("真实模式：404明确不可用，重试后读取真实返回，不回退Mock");
     await p.evaluate(() => {
-      sessionStorage.removeItem("eatwhat-session");
+      localStorage.removeItem("eatwhat-session");
       sessionStorage.setItem("v2-test-logged-out", "true");
     });
     await p.goto("about:blank");

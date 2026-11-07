@@ -42,7 +42,7 @@ async (page) => {
     await context.route(u => u.hostname !== '127.0.0.1' && u.hostname !== 'localhost', r => {
       outside.push(r.request().url()); return r.abort();
     });
-    await context.addInitScript(() => sessionStorage.setItem('eatwhat-session', JSON.stringify({ tokenName: 'x-session', tokenValue: 'isolated-v3' })));
+    await context.addInitScript(() => localStorage.setItem('eatwhat-session', JSON.stringify({ tokenName: 'x-session', tokenValue: 'isolated-v3' })));
     let status = { status: 'GRANTED', identityReady: true, policyVersion: 'accepted-policy-v2' }, failStatus = false;
     const currentVersion = 'current-policy-v3';
     const reply = (r, data, httpStatus = 200) => r.fulfill({

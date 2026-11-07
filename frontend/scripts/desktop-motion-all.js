@@ -5,7 +5,7 @@ async(page)=>{
  const settle=()=>page.evaluate(async()=>{await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));await Promise.all(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{})))});
  const goto=async(view,path='')=>{await page.goto(base+'/?demo=1&view='+view+'#/'+path);await settle()};
  await page.setViewportSize({width:1440,height:1000});await goto('desktop');await page.locator('.pc-current-plate img').waitFor();
- const saved=await page.evaluate(key=>({db:localStorage.getItem(key),session:sessionStorage.getItem('eatwhat-demo-session'),campus:localStorage.getItem('eatwhat-campus')}),key);
+ const saved=await page.evaluate(key=>({db:localStorage.getItem(key),session:localStorage.getItem('eatwhat-demo-session'),campus:localStorage.getItem('eatwhat-campus')}),key);
  try{
   const dots=()=>page.locator('.pc-hero-dots button').evaluateAll(nodes=>nodes.map(e=>e.getBoundingClientRect().left));
   const positions=await dots();await page.getByRole('button',{name:'看第 6 道菜',exact:true}).click();await settle();
@@ -20,7 +20,7 @@ async(page)=>{
   checks.push('圆点固定位置、按钮即时按压、拖动跟手与小距离回弹');
   await page.screenshot({path:'output/playwright/motion-desktop-home.png'});
 
-  await page.evaluate(()=>sessionStorage.setItem('eatwhat-demo-session','null'));
+  await page.evaluate(()=>localStorage.setItem('eatwhat-demo-session','null'));
   await goto('desktop','auth/password');await page.reload();const policy=page.getByRole('button',{name:'《跨站同步授权政策》',exact:true});await policy.click();
   await page.getByRole('dialog').waitFor();await settle();
   const open=await page.locator('.ew-policy-dialog').evaluate(el=>({opacity:getComputedStyle(el).opacity,transform:getComputedStyle(el).transform}));
@@ -32,7 +32,7 @@ async(page)=>{
   if(await page.locator('.ew-policy-dialog').getAttribute('open')!==null)throw new Error('Escape未即时关闭弹窗');
   if(!await policy.evaluate(e=>document.activeElement===e))throw new Error('弹窗关闭未恢复焦点');checks.push('原生政策弹窗退出过渡、Escape 即时关闭与焦点恢复');
 
-  await page.evaluate(()=>sessionStorage.setItem('eatwhat-demo-session',JSON.stringify({tokenName:'satoken',tokenValue:'isolated-demo-token'})));
+  await page.evaluate(()=>localStorage.setItem('eatwhat-demo-session',JSON.stringify({tokenName:'satoken',tokenValue:'isolated-demo-token'})));
   await goto('desktop','foods/1');await page.reload();const favorite=page.getByRole('button',{name:/^(收藏|取消收藏)$/});const wasFavorite=await favorite.getAttribute('aria-pressed');await favorite.click();await page.waitForFunction(was=>document.querySelector('.pc-dish-heading button')?.getAttribute('aria-pressed')!==was,wasFavorite);
   await goto('desktop','publish');await page.getByRole('button',{name:'暂存并离开',exact:true}).click();await page.locator('.toast.visible').waitFor();
   const toastExit=await page.evaluate(async()=>new Promise(resolve=>{const sample=()=>{const e=document.querySelector('.toast');if(!e.classList.contains('visible'))return resolve({text:e.textContent,animations:e.getAnimations().map(a=>a.transitionProperty)});requestAnimationFrame(sample)};sample()}));
@@ -93,7 +93,7 @@ async(page)=>{
   await page.evaluate(result=>sessionStorage.setItem('eatwhat-qa-motion',JSON.stringify(result)),result);return result;
  }catch(cause){await page.screenshot({path:'output/playwright/motion-failure.png',fullPage:true});throw cause}
  finally{
-  await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(({key,saved})=>{for(const [storage,k,value]of [[localStorage,key,saved.db],[sessionStorage,'eatwhat-demo-session',saved.session],[localStorage,'eatwhat-campus',saved.campus]])value===null?storage.removeItem(k):storage.setItem(k,value)},{key,saved});
+  await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(({key,saved})=>{for(const [storage,k,value]of [[localStorage,key,saved.db],[localStorage,'eatwhat-demo-session',saved.session],[localStorage,'eatwhat-campus',saved.campus]])value===null?storage.removeItem(k):storage.setItem(k,value)},{key,saved});
   await page.setViewportSize({width:1440,height:1000});await goto('desktop');await page.reload();await page.unroute(guard);page.off('pageerror',error);
  }
 }

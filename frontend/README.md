@@ -29,9 +29,13 @@ npm run prototype:generate  # prototype 更新后重新生成，需 Python 3 标
 npm run api:generate        # 从 ../docs/EatWhat 业务服务 APIv5.yaml 生成类型
 npm run typecheck
 npm test
-npm run build
+pnpm build                  # 清理旧 dist、构建并生成时间戳 ZIP
 npm run preview             # 生产产物，5174
 ```
+
+`pnpm build`（或 `npm run build`）会先检查 TypeScript，再删除旧 `dist/` 并重新构建，最后将 `dist/` 内的全部文件压缩到项目根目录的 `output/packages/YYYYMMDD-HHmmss.zip`，时间采用北京时间。ZIP 根目录直接包含 `index.html`、`assets/` 和 `.vite/manifest.json` 等部署文件。
+
+新包完整生成后，仅清理 `output/packages/` 中符合该时间戳命名的旧 ZIP，保留最新一份；构建或压缩失败时保留上次的 ZIP。`dist/` 保留供本地预览使用。输出目录已被 Git 忽略。
 
 生成内容在 `src/mobile/generated/`，资源在 `public/prototype/assets/`，业务适配在 `src/mobile/bridge.tsx`，不要直接修改生成文件。画板结构调整后需检查适配层中的节点编号。前端运行和生产构建不依赖 Python 或 Claude Design 服务。
 
@@ -45,6 +49,14 @@ npm run preview             # 生产产物，5174
 `../output/`、`output/` 和 `dist/` 为本地产物目录，不纳入 Git；下文引用的报告、截图及日志是运行验收脚本后生成的本地记录。`scripts/` 中的可复用验收脚本及 `src/` 中的测试继续纳入版本管理。后续各日期段落保留当时的测试数量与边界，以本节为本次交付结果。
 
 ## 配置后端
+
+首页推荐 `/foods/recommend` 的线上响应为 `data: [...]`；当前本地 APIv5 契约仍描述为 `data.items` 分页对象。前端适配层兼容这两种响应，演示推荐使用数组格式；无法识别的数据结构会显示错误，不再静默当成空推荐。
+
+推荐回归脚本为 `scripts/home-recommendations.js`（桌面数组/分页格式、分类、刷新和错误恢复）与 `scripts/mobile-home-empty.js`（手机三种宽度的空态、失败重试及数组响应恢复），均使用独立浏览器上下文并拦截业务请求。
+
+登录会话使用 `localStorage`，同一浏览器、同一源（协议、域名和端口一致）的新标签页会继承登录，已打开的标签页同步登录、退出和过期状态。真实会话与演示会话分别保存；首次加载新版时会迁移当前标签页原有的 `sessionStorage` 登录，已有共享登录或退出记录优先。退出后保留值为 `null` 的标记，防止旧标签页重新导入失效凭证。草稿和管理页面导航状态仍按标签页隔离。
+
+多标签页验收使用 `scripts/session-sync.js`（Playwright CLI `run-code --filename`，运行方式见下文），在独立浏览器上下文中拦截全部业务请求，覆盖迁移、新标签页、账号切换、退出、过期、旧请求竞态及演示隔离。
 
 复制 `.env.example` 为 `.env.local`，配置可用测试环境后重启服务。现行契约为 `../docs/EatWhat 业务服务 APIv5.yaml`，文档版本 `source-contract-20261101`；旧版契约保留作历史差异对照。185 项客户端操作已有封装，APIv4 新增的 68 项对应页面已接入。APIv5 已移除发布请求中的 `removeBackground` 和管理配置中的 `autoCutout`，生成类型和演示数据同步更新。功能导航为 `/?demo=1#/features`，管理页面为 `/?demo=1&persona=admin#/admin/v4`。接入及部署边界见 [APIv4 接入与验收](../docs/APIv4接入与验收-20261102.md)。
 

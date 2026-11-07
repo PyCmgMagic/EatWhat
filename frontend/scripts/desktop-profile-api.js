@@ -3,7 +3,7 @@ async (page) => {
   const user={id:90,userName:'验收食友',signature:'爱吃热汤面',verified:false,role:'user',birthday:946684800000,gender:'custom',hometownProvinceId:81,hometownCityId:91};
   const ok=data=>({code:0,msg:'success',data}); let updateFailure=true, dictionaryFailure=true, readbackFailure=false;
   const isApi=url=>url.origin===base&&url.pathname.startsWith('/api/');
-  const previous=await page.evaluate(()=>sessionStorage.getItem('eatwhat-session'));
+  const previous=await page.evaluate(()=>localStorage.getItem('eatwhat-session'));
   const onDialog=d=>d.type()==='beforeunload'?d.accept():d.dismiss();page.on('dialog',onDialog);
   await page.route(isApi,async route=>{
     const req=route.request(),path=new URL(req.url()).pathname.slice(4);calls.push(path);let status=200,result=ok(null);
@@ -20,7 +20,7 @@ async (page) => {
   });
   await page.route('https://storage.invalid/profile-test.jpg',async route=>{if(route.request().method()==='PUT')puts.push(route.request().headers());await route.fulfill({status:200,headers:{'access-control-allow-origin':'*','access-control-allow-methods':'PUT,OPTIONS','access-control-allow-headers':'content-type'},body:''})});
   try{
-    await page.evaluate(()=>sessionStorage.setItem('eatwhat-session',JSON.stringify({tokenName:'x-profile-test',tokenValue:'isolated-qa'})));
+    await page.evaluate(()=>localStorage.setItem('eatwhat-session',JSON.stringify({tokenName:'x-profile-test',tokenValue:'isolated-qa'})));
     await page.goto(base+'/?demo=0&view=desktop#/me/edit');await page.locator('#nick').waitFor();
     await page.getByText(/省份列表暂时无法加载/).waitFor(); await page.getByText('已设置生日，重新选择可修改，留空会保留。',{exact:true}).waitFor();
     await page.locator('#nick').fill('新的验收食友');await page.locator('#sign').fill('资料接口验收');
@@ -51,7 +51,7 @@ async (page) => {
     return {checks,profileUpdates:updates.length,storagePuts:puts.length,interceptedRequests:calls.length,realBackendRequests:0};
   }finally{
     await page.goto(base+'/?demo=1&view=desktop#/me/edit');
-    await page.evaluate(value=>value===null?sessionStorage.removeItem('eatwhat-session'):sessionStorage.setItem('eatwhat-session',value),previous);
+    await page.evaluate(value=>value===null?localStorage.removeItem('eatwhat-session'):localStorage.setItem('eatwhat-session',value),previous);
     await page.unroute(isApi);await page.unroute('https://storage.invalid/profile-test.jpg');page.off('dialog',onDialog);
   }
 }

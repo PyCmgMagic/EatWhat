@@ -491,10 +491,10 @@ export default function MobileApp() {
               </div>
             ) : (
               <div
-                className="mobile-viewport"
+                className={`mobile-viewport${!reference && ["G2-Home", "G-HomePhoto"].includes(screen) ? " mobile-fluid-home" : ""}`}
                 style={
                   {
-                    height: height * scale,
+                    minHeight: height * scale,
                     maxWidth: reference ? 390 : 520,
                     "--mobile-scale": scale,
                   } as any
@@ -539,7 +539,7 @@ export default function MobileApp() {
         {!desktop &&
           !reference &&
           !showIndex &&
-          (profileSection(loc.pathname) ? (
+          profileSection(loc.pathname) && (
             <nav className="profile-mobile-mainnav" aria-label="主导航">
               <Link to="/">
                 <DesignIcon name="discover" size={20} />
@@ -554,13 +554,7 @@ export default function MobileApp() {
                 我的
               </Link>
             </nav>
-          ) : (
-            <nav className="v4-mobile-nav">
-              <Link to="/me">个人中心</Link>
-              <Link to="/restaurants/directory">找一家店</Link>
-              <Link to="/submissions">我的提交</Link>
-            </nav>
-          ))}
+          )}
         {!desktop &&
           !reference &&
           /^\/(foods|restaurants)\/\d+$/.test(loc.pathname) && (

@@ -3,7 +3,7 @@ async(page)=>{
  const fail=e=>errors.push(e.message),guard=u=>u.origin===base&&u.pathname.startsWith('/api/');page.on('pageerror',fail);
  const settle=()=>page.evaluate(async()=>{await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));await Promise.all(document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).map(a=>a.finished.catch(()=>{})))});
  const panel=()=>page.locator('.profile-people-dialog'),close=async()=>{await page.getByRole('button',{name:'关闭关注与粉丝',exact:true}).click();await page.waitForFunction(()=>!document.querySelector('.profile-people-dialog').open);await settle()};
- const saved=await page.evaluate(()=>({session:sessionStorage.getItem('eatwhat-session')}));
+ const saved=await page.evaluate(()=>({session:localStorage.getItem('eatwhat-session')}));
  let privacy={fans:false,follow:true},failure=false,banned=false;
  await page.route(guard,async route=>{
   const req=route.request(),url=new URL(req.url()),path=url.pathname.slice(4),id=Number(url.searchParams.get('userId')||90),p=Number(url.searchParams.get('page')||1);calls.push({path,id,page:p,method:req.method()});let data=null,status=200,msg='ok';
@@ -31,7 +31,7 @@ async(page)=>{
   await page.getByRole('link',{name:'查看我的关注',exact:true}).click();await panel().waitFor();await page.goBack();await page.waitForFunction(()=>!document.querySelector('.profile-people-dialog').open);await page.goForward();await panel().waitFor();await close();
   checks.push('旧链接回到主页弹层、直接进入可关闭、浏览器后退关闭与前进重开');
 
-  await page.evaluate(()=>sessionStorage.setItem('eatwhat-session',JSON.stringify({tokenName:'x-people-test',tokenValue:'isolated-test'})));
+  await page.evaluate(()=>localStorage.setItem('eatwhat-session',JSON.stringify({tokenName:'x-people-test',tokenValue:'isolated-test'})));
   await page.goto(base+'/?demo=0&view=desktop#/me');await page.reload();await page.getByRole('link',{name:'查看我的关注',exact:true}).click();await panel().getByRole('link',{name:'查看阿圆不想早八的主页',exact:true}).waitFor();
   if(calls.filter(c=>c.path==='/user/followings').at(-1).id!==90)throw new Error('未使用当前用户 ID');
   const before=calls.filter(c=>c.path.startsWith('/user/follow')).length;await panel().getByRole('textbox',{name:'搜索本页食友'}).fill('不存在');await panel().getByRole('heading',{name:'本页没有找到这位食友'}).waitFor();await panel().getByRole('button',{name:'清除搜索',exact:true}).click();
@@ -71,9 +71,9 @@ async(page)=>{
   await page.getByRole('link',{name:'查看我的关注'}).click();await panel().getByRole('tab',{name:/^关注/}).focus();await page.keyboard.press('ArrowRight');await page.waitForFunction(()=>document.querySelector('.profile-people-toolbar [role=tab]:last-child')?.getAttribute('aria-selected')==='true');await close();checks.push('减少动态效果、Escape、方向键切换');
 
   banned=true;await page.goto(base+'/?demo=0&view=desktop#/me?people=follow');await page.reload();const bannedCalls=calls.filter(c=>c.path==='/user/followings').length;await panel().getByRole('heading',{name:'账号暂时无法使用'}).waitFor();if(calls.filter(c=>c.path==='/user/followings').length!==bannedCalls)throw new Error('封禁用户仍读取');banned=false;
-  await page.evaluate(()=>sessionStorage.setItem('eatwhat-session','null'));await page.reload();const guestCalls=calls.filter(c=>c.path==='/user/followings').length;await panel().getByRole('heading',{name:'登录后，认识更多食友'}).waitFor();if(calls.filter(c=>c.path==='/user/followings').length!==guestCalls)throw new Error('游客仍读取');checks.push('游客与封禁账号门槛');
+  await page.evaluate(()=>localStorage.setItem('eatwhat-session','null'));await page.reload();const guestCalls=calls.filter(c=>c.path==='/user/followings').length;await panel().getByRole('heading',{name:'登录后，认识更多食友'}).waitFor();if(calls.filter(c=>c.path==='/user/followings').length!==guestCalls)throw new Error('游客仍读取');checks.push('游客与封禁账号门槛');
   if(errors.length||unexpected.length||calls.some(c=>c.method!=='GET'))throw new Error(JSON.stringify({errors,unexpected,writes:calls.filter(c=>c.method!=='GET')}));
   const result={checks,responsive,interceptedRequests:calls.length,realBackendRequests:0,writes:0,pageErrors:errors};await page.evaluate(r=>sessionStorage.setItem('eatwhat-qa-profile-people',JSON.stringify(r)),result);return result;
  }catch(cause){await page.screenshot({path:'output/playwright/profile-people-failure.png'});throw cause}
- finally{await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(saved=>saved.session===null?sessionStorage.removeItem('eatwhat-session'):sessionStorage.setItem('eatwhat-session',saved.session),saved);await page.setViewportSize({width:1440,height:900});await page.goto(base+'/?demo=1&view=desktop#/me');await page.reload();await page.unroute(guard);page.off('pageerror',fail)}
+ finally{await page.emulateMedia({reducedMotion:'no-preference'});await page.evaluate(saved=>saved.session===null?localStorage.removeItem('eatwhat-session'):localStorage.setItem('eatwhat-session',saved.session),saved);await page.setViewportSize({width:1440,height:900});await page.goto(base+'/?demo=1&view=desktop#/me');await page.reload();await page.unroute(guard);page.off('pageerror',fail)}
 }

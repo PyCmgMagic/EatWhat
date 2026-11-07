@@ -56,10 +56,8 @@ it.each(["原来的昵称", "alice"])(
     });
     expect(saved.schemaVersion).toBe(2);
     const recommendation = (await demoTransport("/foods/recommend", {}))
-      .data as {
-      items: { id: number }[];
-    };
-    expect(recommendation.items[0].id).toBe(501);
+      .data as { id: number }[];
+    expect(recommendation[0].id).toBe(501);
   },
 );
 it("the isolated mock rejects missing and reused CAPTCHA proofs, including after a business failure", async () => {

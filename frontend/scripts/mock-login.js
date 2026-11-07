@@ -8,12 +8,12 @@ async(page)=>{
  await page.route(isApi,r=>r.fulfill({status:503,contentType:'application/json',body:JSON.stringify({code:503,msg:'QA network guard',data:null})}));
  await page.setViewportSize({width:1440,height:1000});
  await page.goto(base+'/?view=desktop');
- const realSession=await page.evaluate(()=>sessionStorage.getItem('eatwhat-session'));
+ const realSession=await page.evaluate(()=>localStorage.getItem('eatwhat-session'));
  try{
-  await page.evaluate(()=>{sessionStorage.removeItem('eatwhat-demo-session');sessionStorage.removeItem('eatwhat-session')});
+  await page.evaluate(()=>{localStorage.removeItem('eatwhat-demo-session');localStorage.removeItem('eatwhat-session')});
   await page.reload();
   await page.getByRole('heading',{name:'鲜虾蟹籽 云吞'}).waitFor();
-  if(!await page.evaluate(()=>JSON.parse(sessionStorage.getItem('eatwhat-demo-session'))?.tokenValue==='isolated-demo-token'))throw new Error('Default Mock session missing');
+  if(!await page.evaluate(()=>JSON.parse(localStorage.getItem('eatwhat-demo-session'))?.tokenValue==='isolated-demo-token'))throw new Error('Default Mock session missing');
   checks.push('无 demo 参数默认 Mock，自动登录模拟学生');
   await page.goto(base+'/?view=desktop#/settings');
   await page.getByRole('button',{name:'退出登录',exact:true}).click();
@@ -40,7 +40,7 @@ async(page)=>{
   await page.goto(base+'/?view=mobile#/auth');
   await page.getByRole('button',{name:'一键 Mock 登录',exact:true}).click();await page.waitForURL('**#/');
   checks.push('移动端密码页和欢迎页一键 Mock 登录');
-  if(await page.evaluate(()=>sessionStorage.getItem('eatwhat-session'))!==null)throw new Error('Mock leaked into live session');
+  if(await page.evaluate(()=>localStorage.getItem('eatwhat-session'))!==null)throw new Error('Mock leaked into live session');
   await page.setViewportSize({width:1440,height:1000});
   await page.goto(base+'/?demo=0&view=desktop#/auth/password');
   await page.getByRole('banner').getByRole('link',{name:'登录',exact:true}).waitFor();
@@ -55,7 +55,7 @@ async(page)=>{
   return {checks,apiRequests:requests.length,errors};
  }finally{
   await page.goto(base+'/?view=desktop');
-  await page.evaluate(v=>{if(v===null)sessionStorage.removeItem('eatwhat-session');else sessionStorage.setItem('eatwhat-session',v)},realSession);
+  await page.evaluate(v=>{if(v===null)localStorage.removeItem('eatwhat-session');else localStorage.setItem('eatwhat-session',v)},realSession);
   await page.unroute(isApi);
  }
 }

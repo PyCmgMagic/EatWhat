@@ -29,9 +29,11 @@ npm run dev
 
 ```powershell
 npm test
-npm run build
+pnpm build
 npm run api:audit
 ```
+
+`pnpm build` 自动清理旧 `frontend/dist/`、构建并压缩，输出为 `output/packages/YYYYMMDD-HHmmss.zip`（北京时间）。新包成功后删除该目录中同格式的旧 ZIP，仅保留最新一份；失败时保留上次的压缩包。`npm run build` 同样支持。
 
 2026-11-06 验证：34 个测试文件、241 项测试通过，TypeScript 检查和生产构建通过；185 项客户端接口封装通过 APIv5 覆盖核查。生产默认关闭演示模式。真实账号登录、认证及上传发布尚未完成端到端验收。
 

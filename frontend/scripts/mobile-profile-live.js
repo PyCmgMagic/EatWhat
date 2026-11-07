@@ -28,7 +28,7 @@ async (page) => {
   p.on("request", (r) => requests.push(r.url()));
   await context.addInitScript(() => {
     if (location.hostname === "127.0.0.1")
-      sessionStorage.setItem(
+      localStorage.setItem(
         "eatwhat-session",
         JSON.stringify({
           tokenName: "x-session",

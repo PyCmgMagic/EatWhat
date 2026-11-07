@@ -1,6 +1,6 @@
 async (page) => {
  const base='http://127.0.0.1:5173',calls=[],unexpected=[];
- const previous=await page.evaluate(()=>sessionStorage.getItem('eatwhat-session'));
+ const previous=await page.evaluate(()=>localStorage.getItem('eatwhat-session'));
  const isApi=url=>url.origin===base&&url.pathname.startsWith('/api/');
  await page.route(isApi,async route=>{
   const req=route.request(),path=new URL(req.url()).pathname.slice(4);calls.push({path,method:req.method()});let data=null;
@@ -12,7 +12,7 @@ async (page) => {
   await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({code:0,msg:'success',data})});
  });
  try{
-  await page.evaluate(()=>sessionStorage.setItem('eatwhat-session',JSON.stringify({tokenName:'x-comment-test',tokenValue:'isolated-qa'})));
+  await page.evaluate(()=>localStorage.setItem('eatwhat-session',JSON.stringify({tokenName:'x-comment-test',tokenValue:'isolated-qa'})));
   await page.goto(base+'/?demo=0&view=desktop#/comments/write?foodId=44');await page.waitForURL('**#/foods/44?section=comments&compose=1');
   await page.getByRole('heading',{name:'食友讨论即将开放',exact:true}).waitFor();
   if(await page.locator('.food-comment').count())throw new Error('真实模式出现模拟评论');
@@ -20,6 +20,6 @@ async (page) => {
   if(unexpected.length||calls.some(c=>c.method!=='GET'))throw new Error('发起了未约定接口或写入');
   return {checks:['真实模式不展示 Mock 评论','缺少评论接口时只展示开放提示，输入与提交禁用','旧入口指向准确菜品，全部请求拦截'],interceptedRequests:calls.length,commentApiRequests:0,writeRequests:0,realBackendRequests:0};
  }finally{
-  await page.goto(base+'/?demo=1&view=desktop#/foods/4');await page.evaluate(value=>value===null?sessionStorage.removeItem('eatwhat-session'):sessionStorage.setItem('eatwhat-session',value),previous);await page.unroute(isApi);
+  await page.goto(base+'/?demo=1&view=desktop#/foods/4');await page.evaluate(value=>value===null?localStorage.removeItem('eatwhat-session'):localStorage.setItem('eatwhat-session',value),previous);await page.unroute(isApi);
  }
 }
