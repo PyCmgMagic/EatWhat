@@ -23,13 +23,13 @@ class DeploymentTest(unittest.TestCase):
         self.base = self.root / "server"
         self.old = self.base / "releases/bootstrap"
         (self.old / "assets").mkdir(parents=True)
-        (self.old / "assets/old-hash.js").write_text("old chunk")
-        (self.old / "index.html").write_text('<script src="/assets/old-hash.js"></script>')
+        (self.old / "assets/old-abcdefgh.js").write_text("old chunk")
+        (self.old / "index.html").write_text('<script src="/assets/old-abcdefgh.js"></script>')
         (self.base / "current").symlink_to("releases/bootstrap")
         self.dist = self.root / "dist"
         (self.dist / "assets").mkdir(parents=True)
-        (self.dist / "assets/new-hash.js").write_text("new chunk")
-        (self.dist / "index.html").write_text('<script type="module" src="/assets/new-hash.js"></script>')
+        (self.dist / "assets/new-ijklmnop.js").write_text("new chunk")
+        (self.dist / "index.html").write_text('<script type="module" src="/assets/new-ijklmnop.js"></script>')
         self.bundle = self.root / "site.tar.gz"
         self.sha = "a" * 40
         self.release = deploy.pack(self.dist, self.bundle, self.sha, 100, 1, 2)
@@ -43,8 +43,8 @@ class DeploymentTest(unittest.TestCase):
             self.apply()
         target = (self.base / "current").resolve()
         self.assertEqual(target.name, self.release)
-        self.assertEqual((target / "assets/old-hash.js").read_text(), "old chunk")
-        self.assertEqual((target / "assets/new-hash.js").read_text(), "new chunk")
+        self.assertEqual((target / "assets/old-abcdefgh.js").read_text(), "old chunk")
+        self.assertEqual((target / "assets/new-ijklmnop.js").read_text(), "new chunk")
         self.assertEqual(json.loads((target / "deployment.json").read_text())["sourceSha"], self.sha)
 
     def test_bad_bundle_digest_does_not_switch(self):
@@ -80,10 +80,25 @@ class DeploymentTest(unittest.TestCase):
         self.assertEqual((self.base / "current").resolve(), self.old)
 
     def test_asset_name_collision_keeps_current_release(self):
-        (self.old / "assets/new-hash.js").write_text("different bytes")
+        (self.old / "assets/new-ijklmnop.js").write_text("different bytes")
         with patch.object(deploy, "check_api"), self.assertRaisesRegex(ValueError, "collision"):
             self.apply()
         self.assertEqual((self.base / "current").resolve(), self.old)
+
+    def test_mutable_public_asset_keeps_verified_candidate_bytes(self):
+        for old_bytes, new_bytes in (
+            (b'{"source":"same"}\r\n', b'{"source":"same"}\n'),
+            (b'{"source":"old"}\n', b'{"source":"new"}\n'),
+        ):
+            with self.subTest(old_bytes=old_bytes):
+                candidate = self.root / ('candidate-' + str(len(old_bytes)))
+                candidate.mkdir(exist_ok=True)
+                (candidate / 'assets').mkdir(exist_ok=True)
+                (self.old / 'assets/sources.json').write_bytes(old_bytes)
+                (candidate / 'assets/sources.json').write_bytes(new_bytes)
+                deploy.retain_assets(self.old, candidate)
+                self.assertEqual((candidate / 'assets/sources.json').read_bytes(), new_bytes)
+                self.assertEqual((candidate / 'assets/old-abcdefgh.js').read_text(), 'old chunk')
 
     def malicious_bundle(self, name, kind=None):
         with tarfile.open(self.bundle, "w:gz") as archive:
@@ -134,7 +149,7 @@ class DeploymentTest(unittest.TestCase):
             self.apply()
             deploy.rollback(self.base, "bootstrap", "https://frontend.invalid", "https://api.invalid")
         self.assertEqual((self.base / "current").resolve(), self.old)
-        self.assertEqual((self.old / "assets/new-hash.js").read_text(), "new chunk")
+        self.assertEqual((self.old / "assets/new-ijklmnop.js").read_text(), "new chunk")
 
     def test_rollback_does_not_lower_stale_build_fence(self):
         with patch.object(deploy, "check_api"), patch.object(deploy, "check_site"):
