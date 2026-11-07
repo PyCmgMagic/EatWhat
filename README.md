@@ -25,6 +25,8 @@ npm run dev
 
 ## 构建与验收
 
+自动部署到服务器的工作流、GitHub Secrets 和 Nginx 初始化步骤见 [前端服务器部署](docs/frontend-server-deployment.md)。
+
 在 `frontend/` 中执行：
 
 ```powershell
