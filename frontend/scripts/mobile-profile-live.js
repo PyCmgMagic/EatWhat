@@ -1,4 +1,4 @@
-async (page) => {
+async function validateMobileProfile(page) {
   const context = await page
     .context()
     .browser()
@@ -197,11 +197,7 @@ async (page) => {
     if (overflow) throw new Error("long account content overflows the phone");
     await p.getByRole("link", { name: "编辑资料", exact: true }).click();
     await p.locator("#nick").waitFor();
-    if (
-      (await p
-        .getByLabel("换头像", { exact: true })
-        .innerText()) !== "十"
-    )
+    if ((await p.getByLabel("换头像", { exact: true }).innerText()) !== "十")
       throw new Error("editor fallback avatar kept a prototype initial");
     if ((await p.locator("#nick").inputValue()) !== user.displayName)
       throw new Error("editor does not match the current account");
@@ -212,8 +208,13 @@ async (page) => {
     await p.goto(base + "/me");
     await p.reload();
     await p
-      .getByRole("heading", { name: "这一份内容暂时没端上来", exact: true })
+      .getByRole("heading", { name: "暂时没能加载这些菜", exact: true })
       .waitFor();
+    await p
+      .getByRole("heading", { name: user.displayName, exact: true })
+      .waitFor();
+    await p.getByRole("tab", { name: /^收藏/ }).click();
+    await p.getByRole("button", { name: "重新加载", exact: true }).waitFor();
     if (await p.getByText("鲜虾蟹籽云吞", { exact: true }).count())
       throw new Error("API failure fell back to prototype dishes");
     checks.push("Failed live list shows retry instead of prototype content");

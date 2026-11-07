@@ -80,18 +80,18 @@ async (page) => {
       }
       await p.goto(base+'/?demo=0&view=mobile#/foods/71');
       await p.locator('.mobile-contributor').waitFor();
-      await p.locator('.v4-mobile-extras').waitFor();
+      await p.locator('.mobile-food-footer').waitFor();
       await settled();
       await noOverflow();
       const sequential=await p.evaluate(()=>{
         const text=document.querySelector('.mobile-contributor').parentElement.getBoundingClientRect();
         const sheet=document.querySelector('.mobile-detail-sheet').getBoundingClientRect();
-        const extras=document.querySelector('.v4-mobile-extras').getBoundingClientRect();
-        return text.bottom<=sheet.bottom+1&&sheet.bottom<=extras.top+1;
+        const extras=document.querySelector('.mobile-food-footer').getBoundingClientRect();
+        return !document.querySelector('.v4-mobile-extras')&&text.bottom<=extras.top+1&&extras.bottom<=sheet.bottom+1;
       });
       assert(sequential,'Description, detail sheet and feedback overlap');
-      await hit(p.getByRole('link',{name:'举报这道菜 →',exact:true}));
-      checks.push(`${width}x${height} detail: long description precedes reachable feedback`);
+      await hit(p.getByRole('link',{name:'举报这道菜',exact:true}));
+      checks.push(`${width}x${height} detail: feedback is reachable within the same detail sheet`);
     }
     for(const [width,height] of [[320,568],[390,844],[430,932]]) {
       await p.setViewportSize({width,height});

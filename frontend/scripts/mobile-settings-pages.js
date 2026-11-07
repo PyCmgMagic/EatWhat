@@ -1,0 +1,319 @@
+async function validateSettingsPages(page) {
+  const context = await page
+    .context()
+    .browser()
+    .newContext({ viewport: { width: 390, height: 844 } });
+  const p = await context.newPage(),
+    errors = [],
+    writes = [],
+    checks = [];
+  p.setDefaultTimeout(10000);
+  await p.emulateMedia({ reducedMotion: "reduce" });
+  p.on("pageerror", (e) => errors.push(e.message));
+  const user = {
+    id: 10,
+    displayName: "PyCmg",
+    userName: "",
+    hasUsername: false,
+    hasPassword: true,
+    phone: "18712344033",
+    verified: false,
+    banned: false,
+    role: "user",
+  };
+  let privacy = { followingsVisible: true, fansVisible: true },
+    personalized = true;
+  let preferences = { likedTags: ["清淡"], dislikedTags: ["太甜"] };
+  const notifications = [
+    { category: "COMMENTS", enabled: true, revision: 1 },
+    { category: "LIKES_AND_FAVORITES", enabled: false, revision: 2 },
+  ];
+  await context.addInitScript(() => {
+    if (location.hostname === "127.0.0.1")
+      localStorage.setItem(
+        "eatwhat-session",
+        JSON.stringify({
+          tokenName: "x-session",
+          tokenValue: "isolated-settings-test",
+        }),
+      );
+  });
+  await context.route(
+    (u) => u.origin !== "http://127.0.0.1:5173",
+    (r) => r.abort(),
+  );
+  await context.route(
+    (u) => u.pathname.startsWith("/api/"),
+    (r) => {
+      const path = new URL(r.request().url()).pathname,
+        method = r.request().method(),
+        body = r.request().postDataJSON();
+      if (method !== "GET") writes.push({ path, method, body });
+      let data = [];
+      if (path === "/api/user/info") data = user;
+      else if (path === "/api/user/userInfo") data = { ...user, ...privacy };
+      else if (path === "/api/user/changePrivacy") {
+        privacy = {
+          followingsVisible: body.following,
+          fansVisible: body.follower,
+        };
+        data = null;
+      } else if (path === "/api/user/recommendation-settings") {
+        if (method === "PUT") personalized = body.personalized;
+        data = { personalized };
+      } else if (path === "/api/user/recommendation-profile/preferences") {
+        if (method === "PUT") preferences = body;
+        data = preferences;
+      } else if (path === "/api/user/blocks")
+        data = {
+          items: [{ userId: 21, displayName: "测试食友" }],
+          totalItems: 1,
+          totalPages: 1,
+          hasNext: false,
+        };
+      else if (path === "/api/campus/list")
+        data = [{ id: 1, name: "软件园", open: true, isDefault: true }];
+      else if (path === "/api/remote-config")
+        data = {
+          configVersion: 1,
+          flags: {},
+          params: {},
+          maintenance: { mode: "NONE" },
+          announcements: [],
+          versions: {},
+        };
+      else if (path === "/api/auth/sessions")
+        data = {
+          devices: [
+            {
+              sessionId: "mock-session",
+              device: "当前手机",
+              current: true,
+              lastSeenAt: "2026-11-07T12:00:00Z",
+              expiresAt: "2026-12-07T12:00:00Z",
+            },
+          ],
+        };
+      else if (path === "/api/push/settings") data = notifications;
+      else if (path === "/api/push/settings/disable") {
+        const n = notifications.find((x) => x.category === body.category);
+        n.enabled = false;
+        n.revision++;
+        data = { state: "APPLIED" };
+      } else if (path === "/api/telemetry/consent")
+        data = {
+          enabled: false,
+          policyVersion: "qa-v1",
+          retentionDays: 30,
+          revision: 1,
+        };
+      else if (path === "/api/auth/verify") data = ["EMAIL"];
+      return r.fulfill({ status: 200, json: { code: 0, data } });
+    },
+  );
+  const base = "http://127.0.0.1:5173/?demo=0#";
+  const paths = [
+    "/settings/privacy",
+    "/settings/password",
+    "/settings/bind-phone",
+    "/settings/username",
+    "/settings/blocked",
+    "/settings/devices",
+    "/settings/phone",
+    "/settings/delete",
+    "/settings/notifications",
+    "/settings/telemetry",
+    "/settings/preferences",
+    "/verify",
+    "/settings/about",
+    "/data-notice",
+  ];
+  const assert = (ok, message) => {
+    if (!ok) throw new Error(message);
+  };
+  const open = async (path) => {
+    await p.goto(base + path);
+    await p.locator(".mobile-settings-page").waitFor();
+    await p.waitForLoadState("networkidle");
+    await p.evaluate(() => document.fonts.ready);
+  };
+  try {
+    for (const width of [390, 320, 440, 520]) {
+      await p.setViewportSize({ width, height: 844 });
+      for (const path of paths) {
+        await open(path);
+        const layout = await p.evaluate(() => {
+          const page = document.querySelector(".mobile-settings-page"),
+            h = page.querySelector(".mobile-account-heading h1"),
+            rect = page.getBoundingClientRect();
+          const controls = [
+            ...page.querySelectorAll("input, textarea, select, button"),
+          ].filter(
+            (el) => el.getBoundingClientRect().width && !el.closest("[hidden]"),
+          );
+          return {
+            x: rect.x,
+            width: rect.width,
+            title: getComputedStyle(h).fontSize,
+            bg: getComputedStyle(page).backgroundColor,
+            scroll: document.documentElement.scrollWidth,
+            controls: controls
+              .filter((el) => {
+                const b = el.getBoundingClientRect();
+                return b.left < -1 || b.right > innerWidth + 1;
+              })
+              .map((el) => el.outerHTML.slice(0, 180)),
+          };
+        });
+        assert(
+          layout.x === 0 &&
+            layout.width === width &&
+            layout.title === "34px" &&
+            layout.bg === "rgb(255, 255, 255)" &&
+            layout.scroll <= width + 1 &&
+            !layout.controls.length,
+          `${width}px ${path}: ${JSON.stringify(layout)}`,
+        );
+        assert(
+          (await p.getByRole("heading", { level: 1 }).count()) === 1,
+          "Duplicate page headings: " + path,
+        );
+        assert(
+          await p
+            .locator(".mobile-account-heading a")
+            .getAttribute("href")
+            ?.then((h) => h?.startsWith("#/")),
+          "Missing back target",
+        );
+        if (
+          width === 390 &&
+          [
+            "/settings/privacy",
+            "/settings/password",
+            "/settings/notifications",
+            "/settings/phone",
+          ].includes(path)
+        )
+          await p.screenshot({
+            path: `output/playwright/settings-${path.split("/").pop()}-390.png`,
+          });
+        checks.push(
+          `${width}px ${path}: consistent frame, title, back and control bounds`,
+        );
+      }
+    }
+    await p.setViewportSize({ width: 390, height: 844 });
+    await open("/settings/privacy");
+    const following = p.getByRole("switch", { name: /公开我的关注列表/ });
+    await following.uncheck();
+    await p.getByRole("button", { name: "保存可见性", exact: true }).click();
+    await p.waitForFunction(() =>
+      document.body.innerText.includes("隐私设置已保存"),
+    );
+    assert(
+      !privacy.followingsVisible && privacy.fansVisible,
+      "Visibility save changed the wrong preference",
+    );
+    await p.getByRole("switch", { name: "个性化推荐", exact: true }).uncheck();
+    await p.waitForFunction(() =>
+      document.body.innerText.includes("推荐设置已更新"),
+    );
+    assert(!personalized, "Personalization did not persist");
+    await open("/settings/password");
+    await p
+      .locator('.pc-secondary-form input[name="old"]')
+      .fill("mock-old-password");
+    await p
+      .locator('.pc-secondary-form input[name="password"]')
+      .fill("mock-new-password");
+    await p
+      .locator('.pc-secondary-form input[name="confirm"]')
+      .fill("mock-other-password");
+    await p.getByRole("button", { name: "更新密码", exact: true }).click();
+    await p.getByText("两次输入的新密码不一致。", { exact: true }).waitFor();
+    assert(
+      !writes.some((x) => x.path.includes("changePassword")),
+      "Invalid password form submitted",
+    );
+    await open("/settings/notifications");
+    await p.getByRole("heading", { name: "敬请期待", exact: true }).waitFor();
+    assert(
+      (await p
+        .locator(".notification-coming-soon .dish-illustration img")
+        .count()) === 1,
+      "Notification placeholder has no dish artwork",
+    );
+    assert(
+      !writes.some((x) => x.path.startsWith("/api/push/")),
+      "Unreleased notifications sent a write",
+    );
+    await open("/settings/preferences");
+    await p
+      .getByRole("textbox", { name: "喜欢的口味", exact: true })
+      .fill("清淡、鲜香");
+    await p.getByRole("button", { name: "保存口味偏好", exact: true }).click();
+    await p.waitForFunction(() =>
+      document.body.innerText.includes("口味偏好已更新"),
+    );
+    assert(preferences.likedTags.includes("鲜香"), "Preferences did not save");
+    await open("/settings/delete");
+    assert(
+      await p
+        .getByRole("button", { name: "提交注销申请", exact: true })
+        .isDisabled(),
+      "Cancellation confirmation bypassed",
+    );
+    await open("/settings/telemetry");
+    assert(
+      await p
+        .getByRole("button", { name: "开启使用统计", exact: true })
+        .isDisabled(),
+      "Telemetry consent requirement changed",
+    );
+    await open("/verify?next=%2Ffoods%2F71");
+    assert(
+      (await p
+        .getByRole("link", { name: "返回原页面", exact: true })
+        .getAttribute("href")) === "#/foods/71",
+      "Verification return target lost",
+    );
+    checks.push(
+      "Mocked interactions: visibility/personalization/preferences save, notification coming-soon view, password validation, cancellation gate, verification return",
+    );
+    await p.setViewportSize({ width: 1280, height: 900 });
+    await p.goto(base + "/settings/privacy");
+    await p.locator(".pc-secondary-switch-row").first().waitFor();
+    assert(
+      (await p.locator(".mobile-settings-page").count()) === 0,
+      "Desktop layout replaced",
+    );
+    assert(errors.length === 0, errors.join("\n"));
+    assert(
+      writes.length === 3,
+      "Unexpected API writes: " + JSON.stringify(writes),
+    );
+    return {
+      checks: checks.length,
+      details: checks,
+      errors,
+      mockedWrites: writes,
+      realBackendRequests: 0,
+    };
+  } catch (error) {
+    await p.screenshot({
+      path: "output/playwright/settings-pages-failure.png",
+      fullPage: true,
+    });
+    throw new Error(
+      JSON.stringify({
+        error: String(error),
+        checks: checks.length,
+        errors,
+        url: p.url(),
+        text: (await p.locator("body").innerText()).slice(0, 1400),
+      }),
+    );
+  } finally {
+    await context.close();
+  }
+}
