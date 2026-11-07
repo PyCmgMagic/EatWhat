@@ -4,6 +4,7 @@ frontend/.env
 frontend/.env.local
 frontend/.env.*.local
 *.tsbuildinfo
+__pycache__/
 .playwright-cli/
 
 # Local validation artifacts, browser profiles, logs, and release archives.
