@@ -1,13 +1,11 @@
 import { DesignIcon as Icon } from "../../mobile/ui";
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import { useSendSignal } from "../useSendSignal";
 import RecoveryFile from "./RecoveryFile";
 import { recoveryCommands } from "../../api/recovery";
-import { classifyAuth } from "../../api/service";
-import { setConsentProof } from "../../app/consent";
 import type { Schema } from "../../api/models";
 import type { PushCategory, PushCommand } from "../../api/v4-types";
 import {
@@ -163,7 +161,7 @@ export function Devices() {
       {command && (
         <Card title="当前设备恢复">
           <RecoveryFile kind="devices" value={command} />
-          <p>下线请求的跨站传播与当前设备恢复分别处理，请以查询结果为准。</p>
+          <p>下线请求可能需要时间处理，请以查询结果为准。</p>
           {progress && (
             <p>
               当前设备：{statusText(progress.currentDevice)} · 其他设备：
@@ -950,69 +948,6 @@ export function AccountRecovery() {
     </Shell>
   );
 }
-export function ConsentOffer() {
-  const app = useApp(),
-    nav = useNavigate(),
-    [name, setName] = useState(""),
-    [password, setPassword] = useState(""),
-    task = useCommand();
-  return (
-    <Shell title="重新验证授权" back="/auth/password">
-      <Card>
-        <p>
-          使用密码重新确认身份，获取本次授权进度。临时授权凭证不等于登录会话。
-        </p>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            void task.run(
-              () =>
-                app.api.consentOfferWithPassword({ userName: name, password }),
-              (reply) => {
-                setPassword("");
-                const state = classifyAuth(reply);
-                if (state.kind === "consent" && state.proof) {
-                  setConsentProof(state.proof, "/auth/password");
-                  nav("/auth/consent");
-                } else if (state.kind === "consent")
-                  task.say("身份或授权仍在协调，请稍后重新验证。");
-                else
-                  throw new Error(
-                    state.kind === "error"
-                      ? state.message
-                      : "当前接口没有返回授权进度，请返回登录。",
-                  );
-              },
-            );
-          }}
-        >
-          <Field label="登录名、邮箱或手机号">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              autoComplete="username"
-            />
-          </Field>
-          <Field label="登录密码">
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
-          </Field>
-          <button className="primary" disabled={task.busy || task.uncertain}>
-            验证并查看授权
-          </button>
-          <CommandState task={task} />
-        </form>
-      </Card>
-    </Shell>
-  );
-}
-
 const pushNames: Record<PushCategory, string> = {
   COMMENTS: "评论通知",
   LIKES_AND_FAVORITES: "点赞与收藏",
@@ -1332,7 +1267,7 @@ export function TelemetrySettings() {
             </div>
           </div>
           <p>
-            使用统计与跨站授权相互独立。仅在你明确开启后上报预设事件，不采集自由文本、网址或用户标识。保留时间：
+            仅在你明确开启后上报预设事件，不采集自由文本、网址或用户标识。保留时间：
             {q.data?.retentionDays ?? "待确认"} 天。
           </p>
           <p>政策版本：{q.data?.policyVersion}</p>

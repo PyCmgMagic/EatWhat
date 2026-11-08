@@ -30,7 +30,6 @@ import {
   writeSession,
 } from "./runtime";
 import { recoveryCommands } from "../api/recovery";
-import { clearConsentProof } from "./consent";
 import { useExitPresence } from "../motion/hooks";
 
 const queryClient = new QueryClient({
@@ -121,7 +120,6 @@ function StateProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const syncSession = (next: Session | null) => {
       if (sameSession(session, next)) return;
-      clearConsentProof();
       recoveryCommands.clear();
       // clear() also cancels pending queries, so data from the previous account
       // cannot repopulate this tab after another tab changes the shared login.
@@ -140,7 +138,6 @@ function StateProvider({ children }: { children: ReactNode }) {
   }, [message]);
   useEffect(() => {
     const expire = () => {
-      clearConsentProof();
       recoveryCommands.clear();
       writeSession(null);
       setSession(null);
@@ -177,7 +174,6 @@ function StateProvider({ children }: { children: ReactNode }) {
     }
   };
   const clearLocalSession = async () => {
-    clearConsentProof();
     recoveryCommands.clear();
     writeSession(null);
     queryClient.clear();

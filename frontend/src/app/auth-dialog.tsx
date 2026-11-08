@@ -18,7 +18,6 @@ import {
   type LinkProps,
   type Location,
 } from "react-router-dom";
-import { clearConsentProof } from "./consent";
 import { desktopLayout } from "./layout";
 import "./auth-dialog.css";
 
@@ -29,9 +28,7 @@ const dialogPaths = new Set([
   "/auth/username-register",
   "/auth/register",
   "/auth/register/confirm",
-  "/auth/consent",
   "/auth/forgot",
-  "/auth/withdraw-consent",
 ]);
 
 export function safeLoginNext(value: string | null) {
@@ -147,7 +144,6 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
   const close = useCallback(() => {
     active.current = null;
     setRequest(null);
-    clearConsentProof();
   }, []);
   const openLogin = useCallback(
     (to = "/auth", options?: LoginOptions) => {

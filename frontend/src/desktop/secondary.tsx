@@ -26,8 +26,6 @@ export const secondaryTitles: Record<string, string> = {
   "/auth": "欢迎回来",
   "/auth/password": "密码登录",
   "/auth/username-register": "注册账号",
-  "/auth/consent": "授权确认",
-  "/auth/withdraw-consent": "撤回同步授权",
   "/auth/register": "手机登录 / 注册",
   "/auth/register/confirm": "注册确认",
   "/auth/forgot": "找回密码",

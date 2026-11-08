@@ -164,13 +164,6 @@ const groups = [
         keywords: "换绑 手机号",
       },
       {
-        to: "/auth/consent-offer",
-        title: "重新确认授权",
-        detail: "查看并确认账号授权",
-        icon: "verify",
-        keywords: "同意 隐私 协议",
-      },
-      {
         to: "/auth/account-recovery",
         title: "恢复账号操作",
         detail: "继续未完成的账号操作",

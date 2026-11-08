@@ -29,10 +29,6 @@ import {
   Pagination,
 } from "../components/ui";
 import { useTask } from "../components/useTask";
-import AdminSync from "./AdminSync";
-const AdminPolicy = lazy(() =>
-  import("./AdminApiV2").then((m) => ({ default: m.AdminPolicy })),
-);
 const AccountReviews = lazy(() =>
   import("./AdminApiV2").then((m) => ({ default: m.AccountReviews })),
 );
@@ -40,20 +36,25 @@ const AdminPasswordReset = lazy(() =>
   import("./AdminApiV2").then((m) => ({ default: m.AdminPasswordReset })),
 );
 type AdminTab =
-  | "summary"
-  | "restaurants"
-  | "foods"
-  | "tags"
-  | "users"
-  | "hubs"
-  | "sync"
-  | "policy"
-  | "security";
+  "summary" | "restaurants" | "foods" | "tags" | "users" | "hubs" | "security";
 export default function Admin() {
   const { user } = useApp(),
     [params, setParams] = useSearchParams();
   const operationsReturnTo = useAdminReturnTo("/admin/v4");
-  const tab = (params.get("tab") ?? "summary") as AdminTab;
+  const requested = params.get("tab");
+  const tab = (
+    [
+      "summary",
+      "restaurants",
+      "foods",
+      "tags",
+      "users",
+      "hubs",
+      "security",
+    ].includes(requested ?? "")
+      ? requested
+      : "summary"
+  ) as AdminTab;
   const setTab = (tab: AdminTab) => setParams({ tab });
   return (
     <>
@@ -76,8 +77,6 @@ export default function Admin() {
                   { id: "tags", name: "公共标签" },
                   { id: "users", name: "用户管理" },
                   { id: "hubs", name: "区域维护" },
-                  { id: "sync", name: "跨站同步" },
-                  { id: "policy", name: "授权政策" },
                   { id: "security", name: "账号安全复核" },
                 ] as { id: AdminTab; name: string }[]
               ).map((t) => (
@@ -100,16 +99,10 @@ export default function Admin() {
               <AdminTags />
             ) : tab === "users" ? (
               <AdminUsers />
-            ) : tab === "policy" ? (
-              <Suspense fallback={<Loading />}>
-                <AdminPolicy />
-              </Suspense>
             ) : tab === "security" ? (
               <Suspense fallback={<Loading />}>
                 <AccountReviews />
               </Suspense>
-            ) : tab === "sync" ? (
-              <AdminSync />
             ) : (
               <AdminHubs />
             )}

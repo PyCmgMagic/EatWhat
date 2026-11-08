@@ -85,6 +85,15 @@ describe("recommendation response formats", () => {
 });
 
 describe("authentication states", () => {
+  it.each([20005, 20006, "20005", "20006"])(
+    "reports a legacy authorization failure without inventing a session: %s",
+    (code) => {
+      expect(classifyAuth({ code, data: null })).toEqual({
+        kind: "error",
+        message: "账号暂时无法登录，请稍后重试或联系管理员检查账号状态。",
+      });
+    },
+  );
   it("accepts only an explicit successful logged-in session", () => {
     expect(
       classifyAuth({
@@ -115,13 +124,13 @@ describe("authentication states", () => {
         code: 20005,
         data: { consentProof: "proof", status: "PENDING" },
       }),
-    ).toMatchObject({ kind: "consent", proof: "proof" });
+    ).toMatchObject({ kind: "error" });
     expect(
       classifyAuth({
         code: 0,
         data: { identityReady: false, registrationAccepted: true },
       }).kind,
-    ).toBe("consent");
+    ).toBe("error");
   });
 });
 describe("three-step storage upload", () => {

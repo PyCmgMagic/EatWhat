@@ -29,7 +29,6 @@ import {
 import { useApp } from "../app/state";
 import { isDemo } from "../app/runtime";
 import { errorMessage, resultUncertain } from "../api/client";
-import { ConsentRecovery } from "../features/Consent";
 import { useQuery } from "@tanstack/react-query";
 import { useArea } from "../app/area";
 import { isV4Path } from "../features/v4-paths";
@@ -44,14 +43,13 @@ const MobileAccountSettings = lazy(() => import("./AccountSettings"));
 const MobileSettingsPages = lazy(() => import("./SettingsPages"));
 import { ProfileExtras } from "../pages/ProfileExtras";
 import { Gate } from "../components/ui";
-import { PasswordConsentWithdrawal } from "../features/AccountExtras";
 import "@fontsource-variable/noto-sans-sc";
 import "@fontsource-variable/bricolage-grotesque";
 import "./mobile.css";
 import DesktopExperience from "../desktop/Desktop";
 import ProfileHelp from "../features/ProfileHelp";
 import { profileSection } from "../app/profile-workspace";
-import { Catalog, FeaturePage } from "../features/Catalog";
+import { Catalog } from "../features/Catalog";
 import {
   PasswordByCode,
   RecommendationControls,
@@ -389,9 +387,7 @@ export default function MobileApp() {
               (loc.pathname === "/search" ||
                 loc.pathname === "/favorites" ||
                 /^\/foods\/\d+\/edit$/.test(loc.pathname) ||
-                ["/auth/forgot", "/auth/withdraw-consent"].includes(
-                  loc.pathname,
-                )) ? (
+                loc.pathname === "/auth/forgot") ? (
               <div className="ew-mobile-feature">
                 {loc.pathname === "/search" ? (
                   <Catalog />
@@ -399,10 +395,6 @@ export default function MobileApp() {
                   <Catalog favorites />
                 ) : /^\/foods\/\d+\/edit$/.test(loc.pathname) ? (
                   <EditFood />
-                ) : loc.pathname === "/auth/withdraw-consent" ? (
-                  <FeaturePage title="撤回同步授权" back="/auth/password">
-                    <PasswordConsentWithdrawal />
-                  </FeaturePage>
                 ) : loc.pathname === "/auth/forgot" ? (
                   <RecoverPassword />
                 ) : null}
@@ -439,8 +431,6 @@ export default function MobileApp() {
                   </Link>
                 ))}
               </div>
-            ) : loc.pathname === "/auth/consent" ? (
-              <ConsentPage />
             ) : ["/restaurants/new", "/restaurants/new/details"].includes(
                 loc.pathname,
               ) ? (
@@ -630,13 +620,6 @@ export default function MobileApp() {
   );
 }
 
-function ConsentPage() {
-  return (
-    <div className="mobile-page-native">
-      <ConsentRecovery />
-    </div>
-  );
-}
 function NewShopDetails({
   draft,
   nameHint,

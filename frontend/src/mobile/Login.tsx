@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { AuthForm } from "../desktop/DesktopAccount";
 import { PhoneLoginForm } from "../features/Account";
-import { PolicyConsent, usePolicyConsent } from "../features/Consent";
 import { DishCarousel } from "../components/DishCarousel";
 import { localDestination } from "../app/navigation";
 import "./login.css";
@@ -11,7 +10,6 @@ import "./login.css";
 /** G-Login's yellow stage and G-PasswordLogin's full-page, underlined form. */
 export default function MobileLogin() {
   const location = useLocation();
-  const consent = usePolicyConsent();
   const landing = location.pathname === "/auth";
   const phone = ["/auth/register", "/auth/register/confirm"].includes(
     location.pathname,
@@ -55,20 +53,13 @@ export default function MobileLogin() {
           <DishCarousel />
         </header>
         <section className="mobile-login-sheet" aria-label="登录与注册">
-          {consent.canSubmit ? (
-            <Link
-              className="mobile-login-primary"
-              to={"/auth/password" + suffix}
-              state={location.state}
-            >
-              登录
-            </Link>
-          ) : (
-            <button className="mobile-login-primary" disabled>
-              登录
-            </button>
-          )}
-          <PolicyConsent consent={consent} showWithdrawalLink={false} />
+          <Link
+            className="mobile-login-primary"
+            to={"/auth/password" + suffix}
+            state={location.state}
+          >
+            登录
+          </Link>
           <p className="mobile-login-register">
             还没有账号？
             <Link to={"/auth/register" + suffix} state={location.state}>
@@ -104,13 +95,12 @@ export default function MobileLogin() {
         aria-label={title}
       >
         {phone ? (
-          <PhoneLoginForm embedded compact policyConsent={consent} />
+          <PhoneLoginForm embedded compact />
         ) : (
           <AuthForm
             key={register ? "register" : "login"}
             register={register}
             compact
-            policyConsent={consent}
           />
         )}
         {!phone && !register && (

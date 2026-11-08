@@ -15,7 +15,6 @@ export const screenRoutes: Record<string, string> = {
   "G-RegisterConfirm": "/auth/register/confirm",
   "G-ForgotPassword": "/auth/forgot",
   "G-DataNotice": "/data-notice",
-  "G-Reconsent": "/auth/consent",
   "G-Verify": "/verify",
   "G-Search": "/search",
   "G-TopicArchive": "/topics",

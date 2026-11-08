@@ -494,8 +494,6 @@ function DesktopPage({
       "/auth/register/confirm",
       "/auth/username-register",
       "/auth/forgot",
-      "/auth/consent",
-      "/auth/withdraw-consent",
     ].includes(loc.pathname) ? (
       <DesktopAuth key={loc.pathname} />
     ) : (
@@ -592,7 +590,6 @@ function DesktopPage({
       "G-PhoneLogin",
       "G-ForgotPassword",
       "G-RegisterConfirm",
-      "G-Reconsent",
     ].includes(screen);
     return (
       <DesktopSource screen={screen} auth={auth}>

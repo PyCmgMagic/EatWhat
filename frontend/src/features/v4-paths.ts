@@ -10,7 +10,6 @@ export function isV4Path(path: string) {
       "/settings/delete",
       "/settings/notifications",
       "/settings/telemetry",
-      "/auth/consent-offer",
       "/auth/account-recovery",
       "/auth/device-recovery",
       "/auth/mobile-recovery",

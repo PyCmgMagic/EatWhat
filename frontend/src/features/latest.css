@@ -386,9 +386,6 @@
   min-height: 48px;
   font-weight: 600;
 }
-.ew-auth-phone-form .ew-consent {
-  margin: 0;
-}
 .ew-auth-phone-form > form > .ew-button {
   width: 100%;
   min-height: 52px;

@@ -269,7 +269,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
     sendEmail: (email: string, signal?: AbortSignal) =>
       sendVerified("/auth/sendEmail", { query: { email }, signal }),
     consentPolicy: () =>
-      data<import("./consent").ConsentPolicy>("/auth/consent/policy", {
+      data<Schema["ConsentPolicyVOResponse"]>("/auth/consent/policy", {
         public: true,
       }),
     consent: () => data<Schema["ConsentStatusViewResponse"]>("/auth/consent"),
@@ -630,18 +630,16 @@ export function classifyAuth(reply: Envelope<unknown>) {
     };
   }
   if (
-    d &&
-    typeof d === "object" &&
-    ("consentProof" in d || "identityReady" in d || "registrationAccepted" in d)
+    ["20005", "20006"].includes(String(reply.code)) ||
+    (d &&
+      typeof d === "object" &&
+      ("consentProof" in d ||
+        "identityReady" in d ||
+        "registrationAccepted" in d))
   ) {
-    const proof =
-      "consentProof" in d && typeof d.consentProof === "string"
-        ? d.consentProof
-        : undefined;
     return {
-      kind: "consent" as const,
-      proof,
-      message: reply.msg || "账号授权或身份同步尚未完成，请查看授权状态。",
+      kind: "error" as const,
+      message: "账号暂时无法登录，请稍后重试或联系管理员检查账号状态。",
     };
   }
   return {

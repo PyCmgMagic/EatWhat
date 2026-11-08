@@ -11,7 +11,6 @@ import {
   useAuthFlow,
   useLoginDialog,
 } from "./auth-dialog";
-import { getConsentProof, setConsentProof } from "./consent";
 import { AccessWelcome } from "../components/AccessWelcome";
 
 type Flow = ReturnType<typeof useAuthFlow>;
@@ -25,7 +24,7 @@ vi.mock("../components/AuthDialogContent", () => ({
   default: function AuthContent({ path }: { path: string }) {
     currentFlow = useAuthFlow();
     const [busy, setBusy] = useState(false);
-    const [policyOpen, setPolicyOpen] = useState(false);
+    const [helpOpen, setHelpOpen] = useState(false);
     useAuthBusy(busy);
     return (
       <section data-testid="auth-content" data-path={path}>
@@ -46,32 +45,26 @@ vi.mock("../components/AuthDialogContent", () => ({
         <Link data-testid="password" to="/auth">
           密码登录
         </Link>
-        <button
-          data-testid="consent"
-          onClick={() => currentFlow.navigate("/auth/consent")}
-        >
-          授权确认
-        </button>
         <button data-testid="finish" onClick={() => currentFlow.finish("/me")}>
           完成登录
         </button>
         <button data-testid="busy" onClick={() => setBusy((value) => !value)}>
           切换提交状态
         </button>
-        <button data-testid="open-policy" onClick={() => setPolicyOpen(true)}>
-          查看授权政策
+        <button data-testid="open-help" onClick={() => setHelpOpen(true)}>
+          查看登录帮助
         </button>
-        {policyOpen &&
+        {helpOpen &&
           createPortal(
             <dialog
               open
-              data-testid="policy-dialog"
+              data-testid="help-dialog"
               onCancel={(event) => {
                 event.preventDefault();
-                setPolicyOpen(false);
+                setHelpOpen(false);
               }}
             >
-              授权政策正文
+              登录帮助正文
             </dialog>,
             document.body,
           )}
@@ -332,7 +325,7 @@ describe("login dialog preserves the active page", () => {
     expect(unmounted).not.toHaveBeenCalled();
   });
 
-  it("switches registration, password recovery and consent inside the modal only", async () => {
+  it("switches registration and password recovery inside the modal only", async () => {
     await render();
     const hash = window.location.hash;
     await click(element("open-login"));
@@ -340,8 +333,6 @@ describe("login dialog preserves the active page", () => {
     expect(authPath()).toBe("/auth/username-register");
     await click(element("forgot"));
     expect(authPath()).toBe("/auth/forgot");
-    await click(element("consent"));
-    expect(authPath()).toBe("/auth/consent");
     await click(element("password"));
     expect(authPath()).toBe("/auth");
     expect(window.location.hash).toBe(hash);
@@ -359,13 +350,11 @@ describe("login dialog preserves the active page", () => {
     )!;
     input.value = "previous-account";
     input.focus();
-    setConsentProof("temporary-consent-proof");
     expect(document.body.style.overflow).toBe("hidden");
     await cancel();
     expect(dialog()).toBeNull();
     expect(document.body.style.overflow).toBe("auto");
     expect(document.activeElement).toBe(trigger);
-    expect(getConsentProof()).toBeUndefined();
     await click(trigger);
     expect(
       document.querySelector<HTMLInputElement>('[aria-label="登录账号"]')!
@@ -434,14 +423,14 @@ describe("login dialog request lifecycle", () => {
       '[aria-label="登录账号"]',
     )!;
     account.value = "keep-this-account";
-    await click(element("open-policy"));
-    expect(element("policy-dialog").parentElement).toBe(document.body);
+    await click(element("open-help"));
+    expect(element("help-dialog").parentElement).toBe(document.body);
     await act(async () => {
-      element("policy-dialog").dispatchEvent(
+      element("help-dialog").dispatchEvent(
         new Event("cancel", { cancelable: true }),
       );
     });
-    expect(document.querySelector('[data-testid="policy-dialog"]')).toBeNull();
+    expect(document.querySelector('[data-testid="help-dialog"]')).toBeNull();
     expect(dialog()).toBe(loginDialog);
     expect(dialog()?.open).toBe(true);
     expect(account.value).toBe("keep-this-account");
@@ -547,8 +536,8 @@ describe("standalone login compatibility", () => {
   it("still supports regular authentication-flow navigation outside the modal", async () => {
     await renderStandalone("/auth");
     await act(async () => {
-      currentFlow.navigate("/auth/consent");
+      currentFlow.navigate("/auth/forgot");
     });
-    expect(route()).toBe("/auth/consent");
+    expect(route()).toBe("/auth/forgot");
   });
 });

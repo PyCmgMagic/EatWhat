@@ -1,10 +1,7 @@
-import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { useTask } from "../components/useTask";
 import { errorMessage, unavailable } from "../api/client";
-import { policyDocumentUrl } from "../api/consent";
-import type { Schema } from "../api/models";
 import { FeatureState } from "../features/Catalog";
 import { useMobile } from "../mobile/ui";
 import "../features/api-v2.css";
@@ -15,138 +12,6 @@ function Failure({ error }: { error: unknown }) {
       {unavailable(error) ? "当前站点未开启此管理功能。" : errorMessage(error)}
     </p>
   ) : null;
-}
-export function AdminPolicy() {
-  const { api } = useApp();
-  const q = useQuery({
-    queryKey: ["admin-policy"],
-    queryFn: () => api.adminPolicy(),
-    retry: false,
-  });
-  return (
-    <section className="ew-feature">
-      <h2>授权政策配置</h2>
-      <p>维护政策版本与正文地址，仅权威站管理员可保存。</p>
-      {q.isPending ? (
-        <FeatureState loading />
-      ) : q.isError ? (
-        <>
-          <Failure error={q.error} />
-          <button className="ew-button light" onClick={() => void q.refetch()}>
-            重新读取
-          </button>
-        </>
-      ) : (
-        <PolicyEditor initial={q.data} />
-      )}
-    </section>
-  );
-}
-function PolicyEditor({
-  initial,
-}: {
-  initial: Schema["ConsentPolicySettingsVOResponse"];
-}) {
-  const { api } = useApp(),
-    cache = useQueryClient();
-  const [version, setVersion] = useState(initial.version || ""),
-    [url, setUrl] = useState(initial.url || ""),
-    [revision, setRevision] = useState(initial.revision),
-    [latest, setLatest] = useState(initial),
-    [notice, setNotice] = useState("");
-  const task = useTask(),
-    reload = useTask();
-  return (
-    <div className="ew-v2-card ew-v2-account">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          task.run(async () => {
-            if (revision == null)
-              throw new Error("缺少当前修订号，请重新读取配置。");
-            if (!policyDocumentUrl({ version, url }))
-              throw new Error("正文地址需为 HTTPS URL 或站内绝对路径。");
-            const saved = await api.saveAdminPolicy({
-              version: version.trim(),
-              url: url.trim(),
-              expectedRevision: revision,
-            });
-            setRevision(saved.revision);
-            setVersion(saved.version || "");
-            setUrl(saved.url || "");
-            setLatest(saved);
-            setNotice("政策配置已保存。");
-            cache.setQueryData(["admin-policy"], saved);
-            await cache.invalidateQueries({ queryKey: ["consent-policy"] });
-          });
-        }}
-      >
-        <label>
-          政策版本
-          <input
-            value={version}
-            onChange={(e) => setVersion(e.target.value)}
-            pattern="[A-Za-z0-9][A-Za-z0-9._-]{0,63}"
-            maxLength={64}
-            required
-          />
-        </label>
-        <label>
-          完整政策正文地址
-          <input
-            aria-label="完整政策正文地址"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            maxLength={2048}
-            required
-            placeholder="/api/policies/政策版本.html"
-          />
-          <small>此处保存地址，请先在对应地址提供政策正文。</small>
-        </label>
-        <p className="ew-note">
-          当前提交基于修订 {revision ?? "—"}
-          。保存冲突时保留输入，重新读取后请比较服务端配置。
-        </p>
-        <details>
-          <summary>最近读取的服务端配置</summary>
-          <p>
-            版本：{latest.version}
-            <br />
-            地址：{latest.url || "未配置"}
-            <br />
-            修订：{latest.revision}
-          </p>
-        </details>
-        <Failure error={task.error || reload.error} />
-        {notice && <p role="status">{notice}</p>}
-        <div className="ew-inline">
-          <button
-            className="ew-button"
-            disabled={task.isPending || reload.isPending || revision == null}
-          >
-            保存政策配置
-          </button>
-          <button
-            type="button"
-            className="ew-button light"
-            disabled={task.isPending || reload.isPending}
-            onClick={() =>
-              reload.run(async () => {
-                const current = await api.adminPolicy();
-                setLatest(current);
-                setRevision(current.revision);
-                setNotice(
-                  "已读取最新配置，输入已保留。请展开服务端配置核对后再保存。",
-                );
-              })
-            }
-          >
-            重新读取并比较
-          </button>
-        </div>
-      </form>
-    </div>
-  );
 }
 export function AccountReviews() {
   const { api } = useApp(),

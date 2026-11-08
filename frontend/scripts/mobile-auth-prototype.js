@@ -106,8 +106,6 @@ async function validateMobileAuthPrototype(page) {
       throw new Error("Protected page lost its login destination");
     if (await p.getByRole("dialog").count())
       throw new Error("Mobile unexpectedly opened a desktop login dialog");
-    await p.getByRole("checkbox").waitFor();
-    await p.getByRole("checkbox").check();
     for (const width of [320, 390, 520]) {
       await p.setViewportSize({ width, height: 844 });
       await p
@@ -127,8 +125,6 @@ async function validateMobileAuthPrototype(page) {
     });
     await p.getByRole("link", { name: "登录", exact: true }).click();
     await p.locator('[data-screen="G-PasswordLogin"]').waitFor();
-    if (!(await p.getByRole("checkbox").isChecked()))
-      throw new Error("Consent did not survive the mobile form transition");
     await p.getByRole("link", { name: "使用验证码登录", exact: true }).click();
     await p.locator('[data-screen="G-PhoneLogin"]').waitFor();
     await p.screenshot({
@@ -141,8 +137,6 @@ async function validateMobileAuthPrototype(page) {
     await p.locator('[data-screen="G-PasswordLogin"]').waitFor();
     if (!p.url().endsWith("/auth/password?next=%2Fme"))
       throw new Error("Auth mode switch lost its return destination");
-    if (!(await p.getByRole("checkbox").isChecked()))
-      throw new Error("Consent did not survive auth mode switching");
     await p.screenshot({
       path: "output/playwright/mobile-prototype-password-390.png",
       fullPage: true,
@@ -156,7 +150,7 @@ async function validateMobileAuthPrototype(page) {
     if (!p.url().endsWith("#/me"))
       throw new Error("Login did not return to the profile");
     checks.push(
-      "Mobile protected route, consent, password/phone switching and successful return (isolated API mocks)",
+      "Mobile protected route, single-site login, password/phone switching and successful return (isolated API mocks)",
     );
     if ((await p.getByRole("tab", { selected: true }).count()) !== 1)
       throw new Error("Profile selected more than one tab");

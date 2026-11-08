@@ -8,7 +8,6 @@ import {
   MobileChange,
   Cancellation,
   AccountRecovery,
-  ConsentOffer,
   TelemetrySettings,
 } from "./Account";
 import {
@@ -32,7 +31,6 @@ export default function V4Routes() {
   if (path === "/auth/device-recovery") return <Devices />;
   if (path === "/auth/mobile-recovery") return <MobileChange />;
   if (path === "/auth/account-recovery") return <AccountRecovery />;
-  if (path === "/auth/consent-offer") return <ConsentOffer />;
   if (path === "/announcements") return <Announcements />;
   if (path === "/restaurants/directory")
     return (

@@ -724,7 +724,7 @@ export function PasswordConflictRequest() {
     <div className="ew-form-panel ew-v2-card">
       <h2>密码冲突恢复</h2>
       <p>
-        如果账号因跨站密码冲突无法登录，可以申请恢复邮件。此功能需由当前站点开启。
+        如果账号因密码安全冲突无法登录，可以申请恢复邮件。此功能需由服务端开启。
       </p>
       {sent ? (
         <p role="status">

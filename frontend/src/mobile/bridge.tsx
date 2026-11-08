@@ -73,8 +73,6 @@ import SheetHandle from "./SheetHandle";
 import TagPanel from "./TagPanel";
 import { withDraftTag } from "./draft-tags";
 import { useActionAccess } from "../features/access";
-import { PolicyConsent, usePolicyConsent } from "../features/Consent";
-import { clearConsentProof, setConsentProof } from "../app/consent";
 import { useContentMotion } from "../motion/hooks";
 import { instantMotion } from "../motion/runtime";
 import { peopleHref } from "../features/profile-people";
@@ -112,7 +110,6 @@ const publicScreens = new Set([
   "G-PhoneLogin",
   "G-RegisterConfirm",
   "G-ForgotPassword",
-  "G-Reconsent",
   "G-DataNotice",
   "G-SettingsAbout",
   "G-Kit",
@@ -161,9 +158,6 @@ export function useDesignBridge(
       activeLocation.current = "unmounted";
     };
   }, [location.key]);
-  const policyConsent = usePolicyConsent(
-    !reference && ["G-Login", "G-PasswordLogin"].includes(screen),
-  );
   const campusList = useQuery({
     queryKey: ["campuses"],
     queryFn: () => api.campuses(),
@@ -424,11 +418,6 @@ export function useDesignBridge(
     enabled: browse && ["G-Nearby", "G-PickShop", "G-Search"].includes(screen),
     placeholderData: keepPreviousData,
   });
-  const consent = useQuery({
-    queryKey: ["consent-policy"],
-    queryFn: () => api.consentPolicy(),
-    enabled: !reference && screen === "G-Reconsent",
-  });
   const relevant = homeScreens.has(screen)
     ? recommendations
     : screen === "G-Dish"
@@ -538,8 +527,6 @@ export function useDesignBridge(
   }
   async function login(mockAccount = false) {
     await run(async () => {
-      await policyConsent.requireAcceptance();
-      clearConsentProof();
       const reply = await api.login({
         userName:
           isDemo && mockAccount
@@ -562,10 +549,6 @@ export function useDesignBridge(
             ? next
             : "/",
         );
-      } else if (result.kind === "consent") {
-        m.setDraft({});
-        setConsentProof(result.proof, "/auth/password" + location.search);
-        nav("/auth/consent");
       } else throw new Error(result.message);
     });
   }
@@ -711,7 +694,7 @@ export function useDesignBridge(
     }
   }
   if (screen === "G-Login" && !reference) {
-    values.agreed = policyConsent.canSubmit;
+    values.agreed = true;
     values.notAgreed = !values.agreed;
   }
   if (screen === "G-PasswordLogin" && !reference) {
@@ -719,8 +702,8 @@ export function useDesignBridge(
     values.hasMsg = !!error;
     values.invalid = !!error;
     values.line = error ? "#A8321C" : "#E6DED8";
-    values.locked = busy || !policyConsent.canSubmit;
-    values.canLogin = !busy && policyConsent.canSubmit;
+    values.locked = busy;
+    values.canLogin = !busy;
   }
   if (screen === "G-EditProfile" && !reference) {
     const invalid =
@@ -1291,24 +1274,21 @@ export function useDesignBridge(
           {...attributes}
           type="button"
           style={{ ...st, border: 0, cursor: "pointer" }}
-          disabled={busy || !policyConsent.canSubmit}
+          disabled={busy}
           onClick={() => void login()}
         >
           {view.children}
         </button>
       );
     }
-    if (screen === "G-PasswordLogin" && id === 27)
-      return (
-        <div {...p}>
-          <PolicyConsent consent={policyConsent} busy={busy} />
-          {view.children}
-        </div>
-      );
-    if (screen === "G-Login" && id === 29)
-      return <PolicyConsent consent={policyConsent} busy={busy} />;
+
     if (screen === "G-Login" && id === 24)
       p.style = { ...st, top: 600, overflowY: "auto" };
+    if (
+      (screen === "G-PasswordLogin" && id === 27) ||
+      (screen === "G-Login" && id === 29)
+    )
+      return null;
     // Business navigation replaces every prototype cross-file link with SPA routes.
     if (tag === "a") {
       const target = String(p.href ?? "");
@@ -1349,9 +1329,15 @@ export function useDesignBridge(
           {!(relevant?.data as any)?.items?.length && (
             <li style={{ listStyle: "none" }}>
               <MobileEmpty
-                title={screen === "G-History" ? "还没有浏览足迹" : "这里还没有内容"}
+                title={
+                  screen === "G-History" ? "还没有浏览足迹" : "这里还没有内容"
+                }
                 illustration={screen === "G-History" ? "baozi" : undefined}
-                detail={screen === "G-History" ? "看过的菜和店会留在这里，方便下次找回来。" : undefined}
+                detail={
+                  screen === "G-History"
+                    ? "看过的菜和店会留在这里，方便下次找回来。"
+                    : undefined
+                }
               />
             </li>
           )}
@@ -3054,7 +3040,7 @@ export function useDesignBridge(
         >
           <button
             type="button"
-            disabled={busy || !policyConsent.canSubmit}
+            disabled={busy}
             onClick={() => void login(true)}
           >
             {busy ? "正在进入…" : "一键 Mock 登录"}
@@ -3152,11 +3138,6 @@ const categoryCodes = [
   "side_dish",
   "other",
 ];
-export {
-  setConsentProof,
-  getConsentProof,
-  clearConsentProof,
-} from "../app/consent";
 function resolveHref(
   target: string,
   m: ReturnType<typeof useMobile>,

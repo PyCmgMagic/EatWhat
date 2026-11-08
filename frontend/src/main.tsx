@@ -9,6 +9,7 @@ import { LoginDialogProvider } from "./app/auth-dialog";
 import { VerificationDialogProvider } from "./app/verification-dialog";
 import { ActionAccessPrompts } from "./app/access-prompt";
 import ForegroundActivity from "./app/ForegroundActivity";
+import RetiredRouteBoundary from "./app/retired-routes";
 import MobileApp from "./mobile/App";
 // Keep responsive overrides last even when their page JavaScript is lazy.
 import "./desktop/profile.css";
@@ -36,7 +37,9 @@ createRoot(document.getElementById("root")!).render(
                 <ActionAccessPrompts />
                 <ForegroundActivity />
                 <RouteContinuityProvider>
-                  <MobileApp />
+                  <RetiredRouteBoundary>
+                    <MobileApp />
+                  </RetiredRouteBoundary>
                 </RouteContinuityProvider>
               </VerificationDialogProvider>
             </LoginDialogProvider>

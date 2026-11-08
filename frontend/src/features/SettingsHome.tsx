@@ -85,7 +85,7 @@ export default function SettingsHome({
   const account: Setting[] = [
     {
       title: "账号信息",
-      detail: "登录名、认证信息与跨站授权",
+      detail: "登录名与学生认证信息",
       to: "/settings/account",
       icon: "idcard",
     },
@@ -161,12 +161,6 @@ export default function SettingsHome({
     },
   ];
   const recovery: Setting[] = [
-    {
-      title: "重新确认授权",
-      detail: "查看当前政策并确认跨站同步授权",
-      to: "/auth/consent-offer",
-      icon: "verify",
-    },
     {
       title: "恢复账号操作",
       detail: "继续未完成的设备、手机号或注销操作",

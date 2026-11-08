@@ -46,7 +46,6 @@ export function profileSection(path: string): ProfileSection | null {
       "/data-notice",
       "/me/edit",
       "/me/details",
-      "/auth/consent-offer",
       "/auth/account-recovery",
       "/auth/device-recovery",
       "/auth/mobile-recovery",

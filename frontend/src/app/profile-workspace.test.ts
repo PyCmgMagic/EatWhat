@@ -34,7 +34,6 @@ describe("personal workspace information architecture", () => {
     ["/me/details", "/settings"],
     ["/verify", "/settings"],
     ["/auth/account-recovery", "/settings"],
-    ["/auth/consent-offer", "/settings"],
     ["/help", "/help"],
     ["/feedback", "/help"],
     ["/feedback/mine", "/help"],

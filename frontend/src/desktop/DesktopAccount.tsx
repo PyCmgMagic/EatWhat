@@ -12,19 +12,8 @@ import { classifyAuth } from "../api/service";
 import { useTask } from "../components/useTask";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { DishCarousel } from "../components/DishCarousel";
-import { setConsentProof, clearConsentProof } from "../app/consent";
-import {
-  PolicyConsent,
-  usePolicyConsent,
-  ConsentRecovery,
-  type PolicyControl,
-} from "../features/Consent";
 import { MobileBinding } from "../pages/ProfileExtras";
-import { ConsentSettings } from "../pages/Settings";
-import {
-  PasswordConsentWithdrawal,
-  VerificationMethods,
-} from "../features/AccountExtras";
+import { VerificationMethods } from "../features/AccountExtras";
 import {
   PhoneLoginForm,
   PasswordByCode,
@@ -120,13 +109,12 @@ export function DesktopSettingsPage() {
   );
 }
 function Account() {
-  const { user } = useApp(),
-    [consentOpen, setConsentOpen] = useState(false);
+  const { user } = useApp();
   return (
     <>
       <PageHead
         title="账号与安全"
-        detail="账号信息、登录方式与授权，在这里管理。"
+        detail="账号信息、登录方式与安全设置，在这里管理。"
         back="/settings"
         crumb="设置"
       />
@@ -211,15 +199,6 @@ function Account() {
           <Link to="/settings/privacy">管理我的公开范围 →</Link>
         </Note>
       </div>
-      <Section title="跨站授权与同步" detail="查看当前授权与身份同步状态。">
-        <details
-          className="pc-secondary-details"
-          onToggle={(e) => setConsentOpen(e.currentTarget.open)}
-        >
-          <summary>查看与管理授权</summary>
-          {consentOpen && <ConsentSettings />}
-        </details>
-      </Section>
     </>
   );
 }
@@ -747,16 +726,12 @@ export function DesktopAuth() {
         <small>好好吃饭，认真生活。</small>
       </aside>
       <section className="pc-secondary-auth-content" key={path}>
-        {path === "/auth/withdraw-consent" ? (
-          <PasswordConsentWithdrawal />
-        ) : path === "/auth/forgot" ? (
+        {path === "/auth/forgot" ? (
           <RecoverPassword />
         ) : ["/auth/register", "/auth/register/confirm"].includes(path) ? (
           <PhoneLoginForm embedded />
         ) : pendingPages[path] ? (
           <PendingPage path={path} />
-        ) : path === "/auth/consent" ? (
-          <Consent />
         ) : (
           <AuthForm register={path === "/auth/username-register"} />
         )}
@@ -767,42 +742,32 @@ export function DesktopAuth() {
 export function AuthForm({
   register,
   compact = false,
-  policyConsent,
 }: {
   register: boolean;
   compact?: boolean;
-  policyConsent?: PolicyControl;
 }) {
-  const { navigate: nav, location: loc, finish } = useAuthFlow();
+  const { location: loc, finish } = useAuthFlow();
   const { api, signIn, session } = useApp(),
     task = useTask(),
     check = useTask("这个用户名可以使用"),
     [checked, setChecked] = useState(false),
     [showPassword, setShowPassword] = useState(false);
-  const localConsent = usePolicyConsent(!policyConsent);
-  const consent = policyConsent ?? localConsent;
   useAuthBusy(task.isPending || check.isPending);
   const next = new URLSearchParams(loc.search).get("next"),
     suffix = next ? "?next=" + encodeURIComponent(next) : "";
   async function authenticate(username: string, password: string) {
-    const accepted = await consent.requireAcceptance();
-    clearConsentProof();
     if (register) await api.checkUsername(username);
     const reply = register
       ? await api.register({
           userName: username,
           password,
           device: "WEB",
-          ...accepted,
         })
       : await api.login({ userName: username, password, device: "WEB" });
     const result = classifyAuth(reply);
     if (result.kind === "session") {
       await signIn(result.session);
       finish(register ? "/verify" : "/");
-    } else if (result.kind === "consent") {
-      setConsentProof(result.proof, "/auth/password" + suffix);
-      nav("/auth/consent");
     } else throw new Error(result.message);
   }
   if (session)
@@ -961,15 +926,10 @@ export function AuthForm({
             </Link>
           )
         )}
-        <PolicyConsent
-          consent={consent}
-          busy={task.isPending}
-          showWithdrawalLink={!compact}
-        />
         <TaskError error={task.error || check.error} />
         <button
           className={compact ? "ew-auth-submit" : "pc-button"}
-          disabled={task.isPending || !consent.canSubmit}
+          disabled={task.isPending}
         >
           {task.isPending ? "正在处理…" : register ? "注册账号" : "登录"}
           <Icon name="chevronRight" size={17} />
@@ -982,7 +942,7 @@ export function AuthForm({
               ? "ew-auth-demo-login"
               : "pc-button light pc-secondary-demo-login"
           }
-          disabled={task.isPending || !consent.canSubmit}
+          disabled={task.isPending}
           onClick={() =>
             task.run(() => authenticate("mock_student", "mock-password"))
           }
@@ -1015,7 +975,4 @@ export function AuthForm({
       )}
     </>
   );
-}
-function Consent() {
-  return <ConsentRecovery />;
 }

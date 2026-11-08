@@ -12,8 +12,6 @@ import { LoginLink, useAuthBusy, useAuthFlow } from "../app/auth-dialog";
 import { isDemo } from "../app/runtime";
 import { useTask } from "../components/useTask";
 import { classifyAuth } from "../api/service";
-import { setConsentProof, clearConsentProof } from "../app/consent";
-import { PolicyConsent, usePolicyConsent, type PolicyControl } from "./Consent";
 import { FeaturePage, FeatureState } from "./Catalog";
 import { useArea } from "../app/area";
 import { useMobile } from "../mobile/ui";
@@ -94,21 +92,13 @@ export function RecommendationControls() {
 export function PhoneLoginForm({
   embedded = false,
   compact = false,
-  policyConsent,
 }: {
   embedded?: boolean;
   compact?: boolean;
-  policyConsent?: PolicyControl;
 } = {}) {
-  const { navigate: nav, location: loc, finish } = useAuthFlow();
-  const localConsent = usePolicyConsent(!policyConsent);
-  const consent = policyConsent ?? localConsent;
+  const { location: loc, finish } = useAuthFlow();
   const getSignal = useSendSignal();
   const mobileInput = useRef<HTMLInputElement>(null);
-  const [consentFeedback, setConsentFeedback] = useState<{
-    attempt: number;
-    animate: boolean;
-  } | null>(null);
   const { api, signIn } = useApp(),
     [mobile, setMobile] = useState(""),
     [code, setCode] = useState(""),
@@ -118,9 +108,6 @@ export function PhoneLoginForm({
     send = useTask(),
     login = useTask();
   useAuthBusy(send.isPending || login.isPending);
-  useEffect(() => {
-    if (consent.agreed) setConsentFeedback(null);
-  }, [consent.agreed]);
   useEffect(() => {
     if (until <= Date.now()) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -141,15 +128,12 @@ export function PhoneLoginForm({
         onSubmit={(e) => {
           e.preventDefault();
           login.run(async () => {
-            const accepted = await consent.requireAcceptance();
             if (sentTo !== mobile)
               throw new Error("请先为当前手机号获取验证码。");
-            clearConsentProof();
             const reply = await api.phoneLogin({
               mobile,
               code,
               device: "WEB",
-              ...accepted,
             });
             const result = classifyAuth(reply);
             if (result.kind === "session") {
@@ -159,9 +143,6 @@ export function PhoneLoginForm({
                   ? "/settings/username?first=1"
                   : "/me",
               );
-            } else if (result.kind === "consent") {
-              setConsentProof(result.proof, "/auth/register" + loc.search);
-              nav("/auth/consent");
             } else throw new Error(result.message);
           });
         }}
@@ -197,24 +178,10 @@ export function PhoneLoginForm({
             />
             <button
               type="button"
-              disabled={
-                send.isPending ||
-                login.isPending ||
-                seconds > 0 ||
-                !consent.ready ||
-                consent.query.isFetching
-              }
-              onClick={(e) => {
-                if (!consent.agreed) {
-                  setConsentFeedback((previous) => ({
-                    attempt: (previous?.attempt ?? 0) + 1,
-                    animate: e.detail > 0,
-                  }));
-                  return;
-                }
+              disabled={send.isPending || login.isPending || seconds > 0}
+              onClick={() => {
                 if (!mobileInput.current?.reportValidity()) return;
                 send.run(async () => {
-                  await consent.requireAcceptance();
                   await api.phoneCode(mobile, getSignal());
                   setSentTo(mobile);
                   setNow(Date.now());
@@ -230,19 +197,6 @@ export function PhoneLoginForm({
             </button>
           </div>
         </label>
-        <PolicyConsent
-          consent={consent}
-          busy={login.isPending || send.isPending}
-          showWithdrawalLink={!compact}
-          feedback={
-            consentFeedback && consent.ready && !consent.agreed
-              ? {
-                  ...consentFeedback,
-                  message: "请先阅读并勾选授权政策，再获取验证码。",
-                }
-              : undefined
-          }
-        />
         {isDemo && (
           <p className="ew-note">本地演示不发送短信，获取后输入 123456。</p>
         )}
@@ -253,16 +207,14 @@ export function PhoneLoginForm({
         )}
         <button
           className={compact ? "ew-auth-submit" : "ew-button"}
-          disabled={login.isPending || !sentTo || !consent.canSubmit}
+          disabled={login.isPending || !sentTo}
         >
           {login.isPending ? "正在登录…" : "登录 / 注册"}
         </button>
       </form>
       {!compact && (
         <>
-          <p className="ew-note">
-            验证码 5 分钟有效，请在获取验证码的站点使用。
-          </p>
+          <p className="ew-note">验证码 5 分钟有效，请勿向他人透露。</p>
           <Link
             className={embedded ? "pc-secondary-text-link" : undefined}
             to={"/auth" + loc.search}

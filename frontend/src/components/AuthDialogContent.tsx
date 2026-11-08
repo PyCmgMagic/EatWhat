@@ -1,16 +1,12 @@
 import { AuthForm } from "../desktop/DesktopAccount";
 import { PhoneLoginForm, RecoverPassword } from "../features/Account";
-import { PasswordConsentWithdrawal } from "../features/AccountExtras";
-import { ConsentRecovery } from "../features/Consent";
 import { Link } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { useAuthFlow } from "../app/auth-dialog";
 
 export default function AuthDialogContent({ path }: { path: string }) {
   const { location } = useAuthFlow();
-  if (path === "/auth/consent") return <ConsentRecovery />;
   if (path === "/auth/forgot") return <RecoverPassword />;
-  if (path === "/auth/withdraw-consent") return <PasswordConsentWithdrawal />;
   const phone = path === "/auth/register" || path === "/auth/register/confirm";
   const register = path === "/auth/username-register";
   const suffix = location.search;
@@ -67,7 +63,6 @@ export default function AuthDialogContent({ path }: { path: string }) {
           </summary>
           <div>
             <Link to="/auth/forgot">找回密码</Link>
-            <Link to="/auth/withdraw-consent">撤回同步授权</Link>
           </div>
         </details>
       </footer>

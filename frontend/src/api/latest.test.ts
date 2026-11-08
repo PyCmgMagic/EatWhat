@@ -93,7 +93,7 @@ describe("latest business contract", () => {
     expect(
       classifyAuth({ code: 0, data: { newUser: true, identityReady: true } })
         .kind,
-    ).toBe("consent");
+    ).toBe("error");
   });
   it("maps display choices to cloud tokens and prioritizes server stage metadata", () => {
     const metadata = publishDisplay(

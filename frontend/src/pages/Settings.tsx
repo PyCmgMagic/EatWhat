@@ -15,7 +15,6 @@ import {
 import { useTask } from "../components/useTask";
 import { validateFiles } from "../api/validation";
 import { ProfileExtras, MobileBinding } from "./ProfileExtras";
-import { PolicyConsent, usePolicyConsent } from "../features/Consent";
 export default function Settings() {
   return (
     <>
@@ -34,7 +33,6 @@ function SettingsContent() {
   const { api, user, refreshMe, upload, signOut, toast } = useApp(),
     navigate = useNavigate(),
     [avatar, setAvatar] = useState<File | null>(null),
-    [consent, setConsent] = useState(false),
     [privacy, setPrivacy] = useState(false);
   const task = useTask("个人资料已更新", refreshMe),
     authTask = useTask("验证邮件已发送，请到邮箱中完成验证"),
@@ -226,11 +224,6 @@ function SettingsContent() {
             关注关系可见性
             <Icon name="right" />
           </button>
-          <button onClick={() => setConsent(true)}>
-            <Icon name="shield" />
-            跨站授权与同步状态
-            <Icon name="right" />
-          </button>
         </div>
         <button
           className="btn btn-secondary"
@@ -253,11 +246,6 @@ function SettingsContent() {
           onClose={() => setPrivacy(false)}
         >
           <Privacy onClose={() => setPrivacy(false)} />
-        </Modal>
-      )}
-      {consent && (
-        <Modal title="跨站授权与同步状态" onClose={() => setConsent(false)}>
-          <ConsentSettings />
         </Modal>
       )}
     </div>
@@ -376,119 +364,5 @@ function Privacy({ onClose }: { onClose: () => void }) {
         保存可见性
       </button>
     </form>
-  );
-}
-export function ConsentSettings() {
-  const consent = usePolicyConsent();
-  const { api } = useApp(),
-    q = useQuery({ queryKey: ["consent"], queryFn: () => api.consent() }),
-    p = consent.query,
-    [confirm, setConfirm] = useState(false),
-    [withdraw, setWithdraw] = useState(false);
-  const task = useTask(
-    "授权状态已更新",
-    () => {
-      setConfirm(false);
-      setWithdraw(false);
-    },
-    ["consent"],
-  );
-  if (q.isPending || p.isPending) return <Loading />;
-  if (q.isError || p.isError)
-    return (
-      <ErrorState
-        error={q.error || p.error}
-        retry={() => {
-          void q.refetch();
-          void p.refetch();
-        }}
-      />
-    );
-  const c = q.data;
-  return (
-    <>
-      <dl className="status-list">
-        <div>
-          <dt>授权状态</dt>
-          <dd>{c?.status || "待确认"}</dd>
-        </div>
-        <div>
-          <dt>身份已就绪</dt>
-          <dd>
-            {c?.identityReady === true
-              ? "是"
-              : c?.identityReady === false
-                ? "否"
-                : "待确认"}
-          </dd>
-        </div>
-        <div>
-          <dt>授权政策版本</dt>
-          <dd>{c?.policyVersion || "待确认"}</dd>
-        </div>
-        <div>
-          <dt>当前政策版本</dt>
-          <dd>{p.data?.version || "待确认"}</dd>
-        </div>
-      </dl>
-      {consent.ready && (
-        <button
-          className="btn btn-secondary"
-          disabled={task.isPending || !p.data?.version}
-          onClick={() => {
-            consent.setAgreed(false);
-            setConfirm(true);
-          }}
-        >
-          管理授权
-        </button>
-      )}
-      {confirm && (
-        <div className="info-strip">
-          <p>请确认已阅读政策。重新授权将采用当前政策版本。</p>
-          <PolicyConsent consent={consent} busy={task.isPending} />
-          <button
-            className="btn btn-primary"
-            disabled={task.isPending || !consent.canSubmit}
-            onClick={() =>
-              task.run(async () => {
-                const accepted = await consent.requireAcceptance();
-                await api.grantConsent({
-                  policyVersion: accepted.consentPolicyVersion,
-                });
-              })
-            }
-          >
-            同意并授权
-          </button>
-        </div>
-      )}
-      <button
-        className="text-link"
-        disabled={task.isPending}
-        onClick={() => setWithdraw(true)}
-      >
-        撤回当前授权
-      </button>
-      {withdraw && (
-        <div className="info-strip">
-          <p>撤回后可能停止同步并触发数据清理。确认撤回当前授权？</p>
-          <button
-            className="btn btn-secondary"
-            disabled={task.isPending}
-            onClick={() => task.run(() => api.withdrawConsent())}
-          >
-            确认撤回授权
-          </button>
-          <button className="text-link" onClick={() => setWithdraw(false)}>
-            取消
-          </button>
-        </div>
-      )}
-      {task.error && <ErrorState error={task.error} />}
-      <p className="section-caption">
-        授权变更可能触发同步或清理任务，身份是否就绪以服务端状态为准。
-      </p>
-    </>
   );
 }

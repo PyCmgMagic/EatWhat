@@ -179,26 +179,10 @@ async function validateAccountSettings(page) {
         }),
         "Navigation covers the last action",
       );
-      const consent = p.getByRole("button", {
-        name: "跨站授权与同步",
-        exact: true,
-      });
-      await consent.click();
-      await p.locator(".mobile-account-consent .status-list").waitFor();
-      await p.getByRole("button", { name: "管理授权", exact: true }).waitFor();
-      await p.getByRole("button", { name: "管理授权", exact: true }).click();
-      await p
-        .getByRole("button", { name: "同意并授权", exact: true })
-        .waitFor();
       assert(
-        await p
-          .getByRole("button", { name: "同意并授权", exact: true })
-          .isDisabled(),
-        "Authorization acceptance requirement changed",
+        (await p.getByRole("button", { name: "跨站授权与同步" }).count()) === 0,
+        "Retired authorization entry remains",
       );
-      await checkLayout(width);
-      await consent.click();
-      await p.locator(".mobile-account-consent").waitFor({ state: "detached" });
       await p.getByRole("link", { name: "返回设置", exact: true }).click();
       await p.getByRole("heading", { name: "设置", exact: true }).waitFor();
       await p.getByRole("link", { name: "账号与安全", exact: true }).click();
@@ -206,7 +190,7 @@ async function validateAccountSettings(page) {
         .getByRole("heading", { name: "账号与安全", exact: true })
         .waitFor();
       checks.push(
-        `${width}px: prototype typography/rows, all routes, masked phone, consent disclosure, back navigation, bottom clearance`,
+        `${width}px: prototype typography/rows, all routes, masked phone, retired consent absent, back navigation, bottom clearance`,
       );
     }
     user = {

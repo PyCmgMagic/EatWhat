@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useApp } from "../app/state";
 import { Gate } from "../components/ui";
-import { ConsentSettings } from "../pages/Settings";
 import { DesignIcon } from "./ui";
 import SettingsFrame from "./SettingsFrame";
 import { ProfileEditLink } from "../app/profile-navigation";
@@ -39,7 +37,6 @@ function AccountRow({
 
 function AccountContent() {
   const { user } = useApp();
-  const [consentOpen, setConsentOpen] = useState(false);
   return (
     <div className="mobile-account-groups">
       <section
@@ -100,25 +97,6 @@ function AccountContent() {
         />
         <AccountRow icon="document" label="使用统计" to="/settings/telemetry" />
         <AccountRow icon="earth" label="数据存放" to="/data-notice" />
-        <button
-          type="button"
-          className="mobile-account-row"
-          aria-expanded={consentOpen}
-          aria-controls="mobile-account-consent"
-          onClick={() => setConsentOpen(!consentOpen)}
-        >
-          <DesignIcon name="shield" size={22} />
-          <span className="mobile-account-label">跨站授权与同步</span>
-          <DesignIcon
-            name={consentOpen ? "chevronDown" : "chevronRight"}
-            size={20}
-          />
-        </button>
-        {consentOpen && (
-          <div className="mobile-account-consent" id="mobile-account-consent">
-            <ConsentSettings />
-          </div>
-        )}
       </section>
       <section className="mobile-account-group" aria-labelledby="account-more">
         <h2 id="account-more">更多</h2>

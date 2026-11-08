@@ -94,9 +94,9 @@ Hash 路由支持刷新详情。开发和 Vite preview 均使用同源代理；�
 
 保留原有 API 约定：动态 tokenName 请求头、Bearer tokenValue；非零业务码失败；401 清会话，403 保留会话；临时授权凭证不当作登录；presign → 原始 PUT → complete → 保存 key，存储 PUT 不带应用 token。当前创建返回 `{ id, moderationStatus, revisionId }`；有 revisionId 时进入私有提交进度，无私有修订时使用准确 ID 继续详情或发布。成功响应缺少有效 ID 时按结果不确定处理，暂停重复创建。
 
-## 登录注册政策
+## 单站登录与认证
 
-密码登录、用户名注册和手机验证码登录/注册均需主动勾选当前政策；支持后端正文弹窗、版本变化后重新确认和 proof 待授权恢复。默认读取政策接口的 version/url，正文地址按站点绝对路径或 HTTPS URL 解析；正文加载失败时不能提交同意。Mock 同样提供明确标注的演示政策。详见 [政策同意接入](../docs/登录注册政策同意接入-20261023.md)。
+2026-11-08 已移除双站时期的跨站授权：登录、注册与验证码发送不再读取政策或等待勾选；设置与后台不再提供跨站授权、政策配置及同步工作台。旧授权地址自动返回登录或账号设置。学生认证、隐私设置、使用统计的自主授权保持独立。服务端仍公开旧政策接口，APIv6 原始契约与兼容适配保留，但业务页面不调用；不自动补填同意字段，也不将旧 proof 当成会话。详见 [单站清理记录](../docs/单站跨站功能清理-20261108.md)。
 
 历史 APIv2 迁移覆盖 117 项客户端操作，另有 5 项后端回调、14 项按约定排除的活动操作。已新增首次设置登录名、TA 的分享、足迹清空、个性化推荐、屏蔽管理、密码冲突恢复、政策配置及账号安全复核。该阶段的资料裁决保护已在 APIv4 升级时替换为 expectedRevision/selectedHeadId 裁决。详见 [APIv2 接入与验收](../docs/APIv2接入与验收-20261026.md)。
 
@@ -109,7 +109,7 @@ npm run api:diff            # APIv5 → APIv6 接口与模型差异
 
 APIv2 历史回归脚本为 `scripts/api-v2-flows.js`、`api-v2-mobile-flows.js`、`api-v2-admin-responsive.js`、`api-v2-live-contract.js`、`api-v2-production.js`，均隔离真实写入。生产检查需先执行 `npm run build` 与 `npm run preview`。历史 `latest-api-*` 和 APIv2 记录继续保留，当前契约为 APIv6，覆盖及差异报告分别为 `../output/api-v6-coverage-20261108.json` 和 `../output/api-v6-diff-20261108.json`。
 
-APIv3 的授权状态查询仅返回 `status`、`identityReady`、`policyVersion`，授权面板分别展示授权政策版本与当前政策版本；授权、撤回及登录过程仍保留原进度模型。Mock 查询同样只返回三字段，兼容旧本地记录并保留上传。历史 APIv4 的 `loginId` 支持字符串或数值，当前 APIv6 已收窄为字符串。APIv3 历史覆盖记录为 `../output/api-coverage-20261102.json`，差异记录为 `../output/api-v3-diff-20261102.json`，浏览器专项为 `scripts/api-v3-consent.js`。
+APIv3 的授权状态查询仅返回 `status`、`identityReady`、`policyVersion`，该旧授权面板与恢复流程已于单站清理时移除，协议适配仅用于历史契约核对。Mock 查询同样只返回三字段，兼容旧本地记录并保留上传。历史 APIv4 的 `loginId` 支持字符串或数值，当前 APIv6 已收窄为字符串。APIv3 历史覆盖记录为 `../output/api-coverage-20261102.json`，差异记录为 `../output/api-v3-diff-20261102.json`，浏览器专项为 `scripts/api-v3-consent.js`。
 
 类型生成统一使用 `npm run api:generate`，读取 APIv6 OpenAPI JSON，并兼容历史 `$ref` 的 nullable 标记。
 
@@ -125,6 +125,8 @@ APIv3 的授权状态查询仅返回 `status`、`identityReady`、`policyVersion
 举报、反馈、设备、换绑、注销、通知偏好和专题已按现行协议接入，真实可用性依赖后端部署及账号联调。评论 CRUD 仍待后端提供接口。常规找回密码支持先手机登录再设置密码；密码冲突恢复另有邮件申请与令牌重置入口。地图已接入百度地图官方 JSAPI 4.0，支持拖动缩放、设备定位、按后端坐标展示店铺及新店选点；缺失坐标的店铺只保留在列表中。手机裁剪页已移除自动去背景入口，普通照片按圆盘样式展示。舞台色读取优先使用云端字段，兼容旧本地记录。地图配置、坐标处理与验收见 [真实地图接入](../docs/真实地图接入-20261030.md)。
 
 详见 [还原说明](../docs/移动端原型还原与实现.md)。尚未使用真实后端账号完成端到端联调。
+
+历史 `latest-api-consent*`、`api-v3-consent.js` 等双站专项只用于当时版本，不再适用于单站 UI。当前登录与旧链接回归使用 `scripts/single-site-auth.js`，所有请求在浏览器测试中隔离，不发送真实短信或写入真实账号。
 
 ## 浏览器验收
 
