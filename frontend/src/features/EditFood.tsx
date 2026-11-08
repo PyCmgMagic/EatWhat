@@ -14,7 +14,7 @@ import {
   type Schema,
 } from "../api/models";
 import { duplicateFoodId, errorMessage, resultUncertain } from "../api/client";
-import { validateFiles } from "../api/validation";
+import { FoodPhotoPicker, type EditableFoodPhoto } from "./FoodPhotoPicker";
 import {
   mealOptions,
   stagePalette,
@@ -133,7 +133,7 @@ function EditForm({
   const setStage = (stage: Stage) => setFields((f) => ({ ...f, stage }));
   const setMeals = (meals: string[]) => setFields((f) => ({ ...f, meals }));
   const [photoDraft, setPhotoDraft, clearPhotos] = useMemoryDraft<{
-    photos: { url: string; key?: string; file?: File }[];
+    photos: EditableFoodPhoto[];
     changed: boolean;
   }>(draftKey, {
     photos:
@@ -146,8 +146,6 @@ function EditForm({
   const { photos, changed: photosChanged } = photoDraft;
   const setPhotos = (photos: typeof photoDraft.photos) =>
     setPhotoDraft((p) => ({ ...p, photos }));
-  const setPhotosChanged = (changed: boolean) =>
-    setPhotoDraft((p) => ({ ...p, changed }));
   const dirty =
     name !== food.name ||
     description !== (food.description ?? "") ||
@@ -217,7 +215,9 @@ function EditForm({
                 );
             }
             body.pictureUrl = next.map((p) => p.key!);
-            body.coverCrop = { centerX: 0.5, centerY: 0.5, diameter: 1 };
+            // Adding or removing secondary photos must not recrop the cover.
+            if (next[0].key !== food.pictureKeys?.[0])
+              body.coverCrop = { centerX: 0.5, centerY: 0.5, diameter: 1 };
           }
           const result = await api.editMyFood(
             food.id!,
@@ -246,53 +246,34 @@ function EditForm({
       <fieldset disabled={busy || uncertain}>
         <div className="ew-edit-columns">
           <section>
-            <h2>照片</h2>
-            <div className="ew-edit-photos">
-              {photos.map((p, i) => (
-                <div key={p.url + String(i)}>
-                  <img src={p.url} alt={`菜品照片 ${i + 1}`} />
-                  <button
-                    type="button"
-                    aria-label={`移除第 ${i + 1} 张照片`}
-                    onClick={() => {
-                      setPhotos(photos.filter((_, n) => n !== i));
-                      setPhotosChanged(true);
-                    }}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-            <label className="ew-file-label">
-              添加照片
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                multiple
-                onChange={(e) => {
-                  const files = Array.from(e.target.files ?? []);
-                  if (!files.length) return;
-                  try {
-                    validateFiles(files, photos.length);
-                    setPhotos([
-                      ...photos,
-                      ...files.map((file) => {
-                        const url = URL.createObjectURL(file);
-                        return { url, file };
-                      }),
-                    ]);
-                    setPhotosChanged(true);
-                  } catch (err) {
-                    setError(errorMessage(err));
-                  }
-                  e.target.value = "";
-                }}
-              />
-            </label>
-            <p className="ew-note">
-              最多 9 张。只修改文字时保留已有图片和裁剪设置。
-            </p>
+            <FoodPhotoPicker
+              photos={photos}
+              disabled={busy || uncertain}
+              onAdd={(files) => {
+                if (locked.current || uncertain) return;
+                setPhotoDraft((current) => ({
+                  photos: [
+                    ...current.photos,
+                    ...files.map((file) => ({
+                      url: URL.createObjectURL(file),
+                      file,
+                    })),
+                  ],
+                  changed: true,
+                }));
+                setError("");
+              }}
+              onRemove={(index) => {
+                if (locked.current || uncertain) return;
+                const removed = photos[index];
+                if (removed?.url.startsWith("blob:"))
+                  URL.revokeObjectURL(removed.url);
+                setPhotoDraft((current) => ({
+                  photos: current.photos.filter((_, i) => i !== index),
+                  changed: true,
+                }));
+              }}
+            />
             <label>
               舞台色
               <Select

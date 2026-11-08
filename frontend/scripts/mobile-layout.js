@@ -58,8 +58,8 @@ async (page) => {
         });
         assert(fits,'Real text overlaps restaurant, price or actions');
         await hit(p.getByRole('link',{name:'就它了',exact:true}));
-        await p.getByRole('button',{name:'再看几道',exact:true}).click();
-        assert(await p.locator('.design-food-tile').count()===foods.length,'Expanded recommendations missing');
+        assert(await p.locator('.design-food-tile').count()===foods.length,'Loaded recommendations are hidden');
+        assert(await p.getByRole('button',{name:'再看几道',exact:true}).count()===0,'Recommendations still require expansion');
         await p.evaluate(()=>window.scrollTo(0,document.documentElement.scrollHeight));
         await hit(p.locator('.design-food-tile').last());
         const nav=p.getByRole('navigation',{name:'主导航',exact:true});

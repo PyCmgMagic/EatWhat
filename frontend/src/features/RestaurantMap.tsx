@@ -16,6 +16,8 @@ export type RestaurantMapProps = {
   selectedId?: number;
   onSelect?: (restaurant: Restaurant) => void;
   pickedPoint?: MapPoint;
+  focusPoint?: MapPoint;
+  onCenterChange?: (point: MapPoint) => void;
   onPick?: (point: MapPoint) => void;
   disabled?: boolean;
   autoLocate?: boolean;

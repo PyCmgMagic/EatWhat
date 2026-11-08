@@ -1,0 +1,230 @@
+/* Keep browsing and map selection in one viewport, including shorter laptops. */
+.pc-main:has(.pc-nearby) {
+  padding-top: 24px;
+}
+.pc-nearby .pc-page-heading {
+  margin: 0 0 18px;
+  gap: 16px;
+}
+.pc-nearby .pc-page-heading h1 {
+  font-size: 27px;
+  letter-spacing: -0.8px;
+}
+.pc-nearby .pc-page-heading .pc-button {
+  min-height: 42px;
+  padding: 0 18px;
+  font-size: 13px;
+}
+.pc-nearby-layout {
+  display: grid;
+  grid-template-columns: clamp(310px, 25vw, 360px) minmax(0, 1fr);
+  height: clamp(340px, calc(100svh - var(--header-height) - 112px), 580px);
+  background: #fff;
+  border: 1px solid #e9e1d9;
+  border-radius: 22px;
+  overflow: hidden;
+}
+.pc-nearby-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid #efe9e4;
+  z-index: 2;
+}
+.pc-nearby-list-header {
+  flex: none;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid #efe9e4;
+}
+.pc-nearby-list-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.pc-nearby-list h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 26px;
+}
+.pc-nearby-list h2 > span {
+  margin-left: 5px;
+  color: #8a7e76;
+  font: 700 14px "Bricolage Grotesque Variable";
+}
+.pc-nearby-list-title a {
+  padding: 4px 0;
+  flex: none;
+  font-size: 12px;
+  line-height: 18px;
+  color: #6e625b;
+}
+.pc-nearby-list-header .pc-search-field {
+  height: 40px;
+  margin-bottom: 5px;
+  padding: 0 12px;
+}
+.pc-nearby-list-header .pc-small-note {
+  font-size: 11px;
+  line-height: 18px;
+}
+.pc-nearby-list-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: #e6ded8 transparent;
+  scrollbar-gutter: stable;
+}
+.pc-shop-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  text-align: left;
+  transition: background 160ms;
+}
+.pc-shop-row:hover {
+  background: #f7f4f1;
+}
+.pc-shop-row[aria-pressed="true"] {
+  background: #f8f1e4;
+  box-shadow: inset 3px 0 #e9b538;
+}
+.pc-shop-thumbnail {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #f4efeb;
+}
+.pc-shop-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pc-shop-row > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.pc-shop-row strong,
+.pc-shop-row small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pc-shop-row strong {
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 22px;
+}
+.pc-shop-row small {
+  color: #8a7e76;
+  font-size: 11px;
+  line-height: 18px;
+}
+.pc-shop-row > .design-icon:last-child {
+  flex: none;
+  color: #9a8b80;
+}
+.pc-nearby-list .pc-pagination {
+  gap: 12px;
+  margin: 12px 0 6px;
+}
+.pc-nearby-list .pc-pagination .pc-button {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.pc-nearby-list .pc-status {
+  min-height: 200px;
+  padding: 24px 12px;
+}
+.pc-nearby-list .pc-status h1 {
+  font-size: 17px;
+}
+.pc-map-selected {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 600px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fffffff5;
+  box-shadow: 0 4px 20px #231c1812;
+  z-index: 6;
+}
+.pc-map-selected > div {
+  min-width: 0;
+}
+.pc-map-selected h2 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.pc-map-selected p {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #8a7e76;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.pc-map-selected .pc-button {
+  flex: none;
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 12px;
+}
+.pc-nearby .restaurant-map-cluster-list {
+  max-height: calc(100% - 184px);
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .pc-nearby-layout {
+    grid-template-columns: 290px minmax(0, 1fr);
+  }
+}
+@media (max-width: 767px) {
+  .pc-nearby .pc-page-heading h1 {
+    font-size: 24px;
+  }
+  .pc-nearby-layout {
+    display: flex;
+    flex-direction: column-reverse;
+    height: auto;
+  }
+  .pc-nearby .pc-map {
+    height: 340px;
+    flex: none;
+  }
+  .pc-nearby-list {
+    border-right: 0;
+  }
+  .pc-nearby-list-scroll {
+    flex: auto;
+    max-height: 420px;
+  }
+}

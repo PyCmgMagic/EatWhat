@@ -1,0 +1,69 @@
+.profile-growth {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 8px 0;
+  color: #3d3128;
+  text-decoration: none;
+}
+.profile-growth-level {
+  flex: none;
+  font:
+    800 20px/1.2 "Bricolage Grotesque Variable",
+    "Noto Sans SC Variable",
+    sans-serif;
+  white-space: nowrap;
+}
+.profile-growth-body {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 7px;
+}
+.profile-growth-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.profile-growth-track {
+  display: block;
+  height: 4px;
+  border-radius: 4px;
+  background: #3d31281a;
+  overflow: hidden;
+}
+.profile-growth-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #6e4d20;
+}
+.profile-growth > .design-icon {
+  flex: none;
+}
+.profile-growth:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .profile-growth:hover .profile-growth-level {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+}
+.mobile-profile-identity > .profile-growth {
+  margin-top: 10px;
+  border-top: 1px solid #3d31281f;
+}
+.profile-overview-intro > .profile-growth {
+  max-width: 370px;
+  margin-top: 10px;
+}

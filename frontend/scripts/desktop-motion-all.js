@@ -40,9 +40,11 @@ async(page)=>{
   await page.waitForFunction(()=>document.querySelector('.toast').textContent==='');checks.push('收藏状态反馈、提示消息保留文字完成退场');
 
   await page.setViewportSize({width:390,height:844});await goto('mobile');await page.getByRole('navigation',{name:'主导航',exact:true}).waitFor();
-  const mobilePlates=page.locator('.mobile-viewport img[style*="top: 570px"]'),plateNodes=await mobilePlates.elementHandles();
-  for(let i=0;i<8;i++)await page.getByRole('button',{name:'换一个',exact:true}).click();await settle();
-  for(const node of plateNodes)if(!await node.evaluate(e=>e.isConnected))throw new Error('移动转盘重建图片');
+  const mobilePlates=page.locator('.mobile-home-plate'),outgoing=await page.locator('.mobile-home-plate[data-orbit-offset="0"]').elementHandle();
+  const incoming=await page.locator('.mobile-home-plate[data-orbit-offset="1"]').elementHandle();
+  await page.getByRole('button',{name:'换一个',exact:true}).click();await settle();
+  if(!await outgoing.evaluate(e=>e.isConnected&&e.dataset.orbitOffset==='-1')||!await incoming.evaluate(e=>e.isConnected&&e.dataset.orbitOffset==='0'))throw new Error('移动转盘重建正在进出的图片');
+  for(let i=0;i<7;i++)await page.getByRole('button',{name:'换一个',exact:true}).click();await settle();
   const mobileDuration=await mobilePlates.first().evaluate(e=>getComputedStyle(e).transitionDuration);
   if(mobileDuration.includes('0.68s'))throw new Error('移动转盘仍使用原长动画');
   const title=await page.locator('section[aria-live="polite"] h1').innerText();

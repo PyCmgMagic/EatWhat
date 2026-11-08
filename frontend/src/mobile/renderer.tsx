@@ -1,7 +1,6 @@
 import React, {
   Component,
   createElement,
-  useEffect,
   useContext,
   lazy,
   Suspense,
@@ -387,9 +386,6 @@ function ResolvedScreen({
 }: ScreenProps & {
   design: Awaited<ReturnType<(typeof screenModules)[string]>>["default"];
 }) {
-  useEffect(() => {
-    document.title = design?.title ?? "山软今天吃什么";
-  }, [design]);
   if (!design) return null;
   return (
     <>

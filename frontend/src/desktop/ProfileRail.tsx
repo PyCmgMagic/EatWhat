@@ -50,6 +50,17 @@ export default function ProfileRail({
         </span>
         <Icon name="chevronRight" size={14} />
       </ProfileEditLink>
+      <Link
+        className="profile-rail-search"
+        to="/features"
+        state={{ focusFeatureSearch: true }}
+        aria-current={activeSection === "/features" ? "page" : undefined}
+        aria-controls="profile-workspace-panel"
+      >
+        <Icon name="search" size={17} />
+        <span>搜索功能</span>
+        <Icon name="chevronRight" size={14} />
+      </Link>
       <nav className="pc-profile-menu" aria-label="个人中心">
         {profileSections.map((item, index) => (
           <Fragment key={item.to}>
@@ -69,10 +80,6 @@ export default function ProfileRail({
         ))}
       </nav>
       <div className="profile-rail-tools">
-        <Link to="/features">
-          <Icon name="search" size={17} />
-          查找功能
-        </Link>
         {user?.role === "admin" && (
           <Link to="/admin/v4">
             <Icon name="tool" size={17} />

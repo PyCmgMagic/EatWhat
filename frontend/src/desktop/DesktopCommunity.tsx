@@ -15,8 +15,10 @@ import { SlidingTabs } from "./motion";
 import { useContentMotion } from "../motion/hooks";
 import { peopleHref } from "../features/profile-people";
 import { historyTime } from "./history";
-import RestaurantMap from "../features/RestaurantMap";
-import { mapPoint } from "../features/map-geometry";
+import RestaurantLocationField, {
+  requireShopLocation,
+} from "../features/RestaurantLocationField";
+import type { MapPoint } from "../features/map-geometry";
 import { PageSkeleton } from "../components/LoadingSkeleton";
 import { ProfileSectionNav } from "../features/ProfileSectionNav";
 import "../features/profile-activity.css";
@@ -351,8 +353,7 @@ export function DesktopUser() {
 type ShopDraft = {
   name: string;
   address: string;
-  lng: string;
-  lat: string;
+  point?: MapPoint;
   uncertain: boolean;
   done: boolean;
 };
@@ -368,8 +369,6 @@ export function DesktopNewShop() {
         shopDrafts.get(key) ?? {
           name: m.draft.restaurantId ? "" : (m.draft.shopName ?? ""),
           address: "",
-          lng: "",
-          lat: "",
           uncertain: false,
           done: false,
         },
@@ -383,8 +382,7 @@ export function DesktopNewShop() {
       return next;
     });
   }
-  const dirty =
-    !!(draft.name || draft.address || draft.lng || draft.lat) && !draft.done;
+  const dirty = !!(draft.name || draft.address || draft.point) && !draft.done;
   useEffect(() => {
     if (!dirty) return;
     const leave = (e: BeforeUnloadEvent) => {
@@ -435,11 +433,11 @@ export function DesktopNewShop() {
                       address = boundedText(draft.address, 30, "地址");
                     if (!name || !address)
                       throw new Error("请填写店名和详细地址。");
+                    const point = requireShopLocation(draft.point);
                     const created = await api.createRestaurant({
                       name,
                       address,
-                      gcjLng: Number(draft.lng),
-                      gcjLat: Number(draft.lat),
+                      ...point,
                       hubId: area?.hubId,
                     });
                     update({ done: true });
@@ -466,74 +464,25 @@ export function DesktopNewShop() {
                 <input
                   aria-label="店铺名称"
                   value={draft.name}
+                  maxLength={20}
                   onChange={(e) => update({ name: e.target.value })}
                   disabled={task.isPending || draft.uncertain}
                   required
                   placeholder="例如：西门口的那家云吞店"
                 />
               </label>
-              <label className="pc-secondary-field">
-                <span>详细地址</span>
-                <input
-                  value={draft.address}
-                  onChange={(e) => update({ address: e.target.value })}
-                  disabled={task.isPending || draft.uncertain}
-                  required
-                  placeholder="街道、门牌或食堂楼层与窗口"
-                />
-              </label>
-              <div className="pc-secondary-form-divider">
-                <Icon name="pin" size={20} />
-                <h3>准确位置</h3>
-              </div>
-              <p className="pc-secondary-copy">
-                在地图上点击店铺位置，可拖动标记微调。请确认是店铺所在位置，再提交。
-              </p>
-              <div className="restaurant-map-picker">
-                <RestaurantMap
-                  pickedPoint={mapPoint({
-                    gcjLng: Number(draft.lng),
-                    gcjLat: Number(draft.lat),
-                  })}
-                  onPick={(point) =>
-                    update({
-                      lng: point.gcjLng.toFixed(6),
-                      lat: point.gcjLat.toFixed(6),
-                    })
-                  }
-                  disabled={task.isPending || draft.uncertain}
-                />
-              </div>
-              <div className="pc-secondary-field-pair">
-                <label className="pc-secondary-field">
-                  <span>GCJ02 经度</span>
-                  <input
-                    type="number"
-                    min="72.004"
-                    max="137.8347"
-                    step="any"
-                    value={draft.lng}
-                    onChange={(e) => update({ lng: e.target.value })}
-                    disabled={task.isPending || draft.uncertain}
-                    required
-                    placeholder="72.004–137.8347"
-                  />
-                </label>
-                <label className="pc-secondary-field">
-                  <span>GCJ02 纬度</span>
-                  <input
-                    type="number"
-                    min="0.8293"
-                    max="55.8271"
-                    step="any"
-                    value={draft.lat}
-                    onChange={(e) => update({ lat: e.target.value })}
-                    disabled={task.isPending || draft.uncertain}
-                    required
-                    placeholder="0.8293–55.8271"
-                  />
-                </label>
-              </div>
+              <RestaurantLocationField
+                name={draft.name}
+                onNameChange={(name) => update({ name })}
+                point={draft.point}
+                onPick={(point) => {
+                  update({ point });
+                  task.reset();
+                }}
+                address={draft.address}
+                onAddressChange={(address) => update({ address })}
+                disabled={task.isPending || draft.uncertain}
+              />
               <TaskError error={task.error} />
               {draft.uncertain && (
                 <div className="pc-secondary-error" role="alert">
@@ -544,9 +493,13 @@ export function DesktopNewShop() {
                 <span>未提交内容在本次访问中保留</span>
                 <button
                   className="pc-button"
-                  disabled={task.isPending || draft.uncertain}
+                  disabled={task.isPending || draft.uncertain || !draft.point}
                 >
-                  {task.isPending ? "正在提交…" : "提交新店"}
+                  {task.isPending
+                    ? "正在提交…"
+                    : draft.point
+                      ? "提交新店"
+                      : "请先在地图选点"}
                   <Icon name="check" size={17} />
                 </button>
               </div>
@@ -560,7 +513,7 @@ export function DesktopNewShop() {
               <Link to="/publish">返回发布页搜索 →</Link>
             </Note>
             <Note title="位置越准确，越容易找到" icon="pin">
-              <p>请填写店铺实际位置，别用学校或商圈中心代替。</p>
+              <p>请在地图上标记店铺入口，方便同学找到它。</p>
               <p>新店提交后，需要回到列表选择准确的店铺，再继续发布菜品。</p>
             </Note>
           </div>

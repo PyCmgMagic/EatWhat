@@ -1,0 +1,15 @@
+.settings-home-loading-status {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 24px;
+  font-size: 13px;
+}
+.settings-home-loading .settings-home-avatar,
+.pc-profile-loading .pc-profile-avatar-picker {
+  background: transparent;
+}
+.pc-profile-loading .pc-profile-avatar-picker > .ew-skeleton {
+  color: transparent;
+}

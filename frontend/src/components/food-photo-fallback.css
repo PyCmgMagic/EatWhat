@@ -1,0 +1,37 @@
+.food-photo-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  color: #756454;
+  pointer-events: none;
+}
+.food-photo-fallback .dish-illustration {
+  width: 100%;
+  max-width: 116px;
+  height: 100%;
+  min-height: 0;
+  aspect-ratio: auto;
+  filter: saturate(0.6);
+  opacity: 0.82;
+}
+.food-photo-fallback-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  border: 1px dashed #b6a593;
+  border-radius: 8px;
+  background: #fffaf2e8;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+/* Keep the category chip clear while the artwork and disclosure stay centered. */
+:is(.ew-food-photo, .pc-food-card-image) > .food-photo-fallback {
+  padding-top: 36px;
+}

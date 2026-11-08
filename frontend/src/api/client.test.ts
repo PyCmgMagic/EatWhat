@@ -4,6 +4,8 @@ import {
   buildUrl,
   createRequester,
   createTransport,
+  errorMessage,
+  resultUncertain,
   requiredData,
   safeJson,
 } from "./client";
@@ -102,4 +104,45 @@ describe("v2 transport boundaries", () => {
     expect(() => requiredData(null)).toThrow("未返回所需数据");
     expect(requiredData(false)).toBe(false);
   });
+  it.each([200, 500])(
+    "handles UNKNOWN_ERROR as an uncertain server failure even with HTTP %s",
+    async (status) => {
+      const fetcher = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify({
+              code: 90004,
+              data: null,
+              msg: "未捕获异常",
+              timestamp: 1794153014570,
+            }),
+            { status },
+          ),
+        );
+      const request = createRequester(
+        createTransport("/api", () => null, fetcher),
+      );
+      let failure: unknown;
+      try {
+        await request("/restaurant/add", {
+          method: "POST",
+          body: { name: "测试店" },
+        });
+      } catch (error) {
+        failure = error;
+      }
+      expect(failure).toBeInstanceOf(ApiError);
+      expect((failure as ApiError).code).toBe(90004);
+      expect((failure as ApiError).message).toBe("未捕获异常");
+      expect(errorMessage(failure)).toBe(
+        "服务端处理请求时出现异常（错误码 90004）。",
+      );
+      expect(resultUncertain(failure)).toBe(true);
+      expect(resultUncertain(new ApiError("未捕获异常", "90004"))).toBe(true);
+      expect(resultUncertain(new ApiError("地址过长", 10001))).toBe(false);
+      expect(errorMessage(new ApiError("地址过长", 10001))).toBe("地址过长");
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    },
+  );
 });

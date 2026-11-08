@@ -16,6 +16,7 @@ import {
   screenRoutes,
   panelScreens,
   mobileSettingsPages,
+  browserTitle,
 } from "./routes";
 import {
   MobileContext,
@@ -64,9 +65,11 @@ import { NotFound } from "../app/navigation";
 import { useProfileReturnTo } from "../app/profile-navigation";
 import { usePageLifetime } from "../app/drafts";
 import { useVisibleViewport } from "../app/viewport";
-import RestaurantMap from "../features/RestaurantMap";
+import RestaurantLocationField, {
+  requireShopLocation,
+} from "../features/RestaurantLocationField";
 import SheetHandle from "./SheetHandle";
-import { mapPoint } from "../features/map-geometry";
+import type { MapPoint } from "../features/map-geometry";
 import {
   ProfilePeopleDialog,
   useLegacyPeopleRedirect,
@@ -235,18 +238,8 @@ export default function MobileApp() {
     return () => document.body.classList.remove("desktop-mode");
   }, [desktop]);
   useEffect(() => {
-    if (desktop || reference) return;
-    const titles: Record<string, string> = {
-      "/me": "个人总览",
-      "/me/shares": "我的分享",
-      "/favorites": "我的收藏",
-      "/me/tags": "标签管理",
-      "/history": "浏览足迹",
-      "/help": "帮助与反馈",
-    };
-    if (titles[loc.pathname])
-      document.title = titles[loc.pathname] + " · 山软今天吃什么";
-  }, [desktop, reference, loc.pathname]);
+    document.title = browserTitle(loc.pathname);
+  }, [loc.pathname]);
   const state = {
     foodId,
     shopId,
@@ -648,7 +641,9 @@ function NewShopDetailsForm({
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [uncertain, setUncertain] = useState(false),
-    [position, setPosition] = useState({ lng: "", lat: "" });
+    [position, setPosition] = useState<MapPoint>(),
+    [name, setName] = useState(nameHint),
+    [address, setAddress] = useState("");
   return (
     <div className="mobile-page-native">
       <Link to="/publish" aria-label="返回">
@@ -662,11 +657,11 @@ function NewShopDetailsForm({
           const d = new FormData(e.currentTarget);
           setBusy(true);
           try {
+            const point = requireShopLocation(position);
             const created = await api.createRestaurant({
               name: boundedText(String(d.get("name")), 20, "店名"),
-              address: boundedText(String(d.get("address")), 30, "地址"),
-              gcjLng: Number(d.get("lng")),
-              gcjLat: Number(d.get("lat")),
+              address: boundedText(address, 30, "地址"),
+              ...point,
               hubId: area?.hubId,
             });
             if (!active.current) return;
@@ -691,66 +686,36 @@ function NewShopDetailsForm({
       >
         <label>
           店名
-          <input name="name" defaultValue={nameHint} required />
-        </label>
-        <label>
-          详细地址
-          <input name="address" required />
-        </label>
-        <p>在地图上点击店铺位置，或拖动标记微调。</p>
-        <div className="restaurant-map-picker">
-          <RestaurantMap
-            pickedPoint={mapPoint({
-              gcjLng: Number(position.lng),
-              gcjLat: Number(position.lat),
-            })}
-            onPick={(point) =>
-              setPosition({
-                lng: point.gcjLng.toFixed(6),
-                lat: point.gcjLat.toFixed(6),
-              })
-            }
+          <input
+            name="name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            maxLength={20}
             disabled={busy || uncertain}
-          />
-        </div>
-        <label>
-          GCJ02 经度
-          <input
-            name="lng"
-            type="number"
-            min="72.004"
-            max="137.8347"
-            step="any"
-            value={position.lng}
-            onChange={(e) =>
-              setPosition((previous) => ({ ...previous, lng: e.target.value }))
-            }
             required
           />
         </label>
-        <label>
-          GCJ02 纬度
-          <input
-            name="lat"
-            type="number"
-            min="0.8293"
-            max="55.8271"
-            step="any"
-            value={position.lat}
-            onChange={(e) =>
-              setPosition((previous) => ({ ...previous, lat: e.target.value }))
-            }
-            required
-          />
-        </label>
-        <p>填写餐厅准确位置，所选区域中心不代表餐厅位置。</p>
+        <RestaurantLocationField
+          name={name}
+          onNameChange={setName}
+          point={position}
+          onPick={(point) => {
+            setPosition(point);
+            setError("");
+          }}
+          address={address}
+          onAddressChange={setAddress}
+          disabled={busy || uncertain}
+        />
         {error && <p className="mobile-error">{error}</p>}
         {uncertain && (
           <p className="mobile-error">
             提交结果尚未确认，请返回列表核实，避免重复创建。
           </p>
         )}
-        <PrimaryButton disabled={busy || uncertain}>提交新店</PrimaryButton>
+        <PrimaryButton disabled={busy || uncertain || !position}>
+          {busy ? "正在提交…" : position ? "提交新店" : "请先在地图选点"}
+        </PrimaryButton>
       </form>
     </div>
   );

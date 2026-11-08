@@ -2,6 +2,7 @@ import { foodAuthor } from "../api/models";
 import ProfileRail from "./ProfileRail";
 import ProfileOverview from "../features/ProfileOverview";
 import ProfileHelp from "../features/ProfileHelp";
+import DesktopRouteSkeleton from "./DesktopRouteSkeleton";
 import { ProfileSectionNav } from "../features/ProfileSectionNav";
 import { unreadCount } from "../api/notifications";
 import {
@@ -43,6 +44,7 @@ import {
 import { DesignIcon as Icon, Pending, useMobile } from "../mobile/ui";
 import { visualFor } from "../mobile/catalog";
 import "./desktop.css";
+import "./nearby.css";
 import "./profile-workspace.css";
 import "./profile-shell.css";
 import {
@@ -62,7 +64,7 @@ import {
   heroOrbitStep,
   heroPlateTransform,
   nearestHeroPosition,
-} from "./hero-orbit";
+} from "../motion/hero-orbit";
 import { isV4Path } from "../features/v4-paths";
 import {
   FeatureAvailability,
@@ -98,7 +100,8 @@ import { RecommendationControls, Preferences } from "../features/Account";
 import { EditFood } from "../features/EditFood";
 import { useActionAccess } from "../features/access";
 import { guestDeviceId, mealCode } from "../api/food-display";
-import { useFoodImageRefresh } from "../features/media";
+import { useFoodImageRefresh, useFoodPhoto } from "../features/media";
+import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
 import RestaurantMap from "../features/RestaurantMap";
 import { baiduMarkerUrl } from "../features/map-geometry";
 const DesktopAuth = lazy(() =>
@@ -127,12 +130,7 @@ import {
   Skeleton,
   type PageSkeletonKind,
 } from "../components/LoadingSkeleton";
-import {
-  PendingPage,
-  pendingPages,
-  secondaryTitle,
-  secondaryTitles,
-} from "./secondary";
+import { PendingPage, pendingPages, secondaryTitles } from "./secondary";
 
 const categoryNames: Record<string, string> = {
   staple: "主食",
@@ -199,27 +197,6 @@ export default function DesktopExperience({
   const location = useLocation();
   const { session } = useApp();
   const workspace = !!session && profileSection(location.pathname) !== null;
-  useEffect(() => {
-    const label =
-      secondaryTitle(location.pathname) ??
-      (
-        {
-          "G2-Home": "发现",
-          "G-HomePhoto": "发现",
-          "G-Nearby": "附近",
-          "G-Me": "我的",
-          "G-Dish": "菜品详情",
-          "G-Detail": "餐厅详情",
-          "G-TagDishes": "我的收藏",
-          "G-Search": "搜索",
-          "G-Settings": "设置",
-          "G-MyTags": "我的标签",
-          "G-History": "浏览足迹",
-        } as Record<string, string>
-      )[screen];
-    if (isV4Path(location.pathname)) return;
-    if (enabled && label) document.title = label + " · 山软今天吃什么";
-  }, [enabled, screen, location.pathname]);
   if (!enabled) return children;
   return (
     <div className="pc-app" inert={overlay || undefined}>
@@ -442,7 +419,7 @@ function ProfileWorkspace({
               changeKey={location.pathname}
               order={profileSections.findIndex((item) => item.to === section)}
             >
-              <Suspense fallback={<ContentSkeleton kind="form" count={3} />}>
+              <Suspense fallback={<DesktopRouteSkeleton />}>
                 {children}
               </Suspense>
             </MotionRegion>
@@ -671,7 +648,7 @@ function DesktopGate({
 }) {
   const { session, user, me } = useApp();
   if (!session) return <AccessWelcome />;
-  if (me.isPending) return <PageSkeleton kind="profile" />;
+  if (me.isPending) return <DesktopRouteSkeleton />;
   if (me.error)
     return (
       <Status title="暂时没能读取账号" detail={errorMessage(me.error)}>
@@ -766,6 +743,7 @@ function Plate({
   lazy = false,
   priority = false,
   orbitOffset,
+  onImageError,
 }: {
   food: Food;
   className?: string;
@@ -774,6 +752,7 @@ function Plate({
   lazy?: boolean;
   priority?: boolean;
   orbitOffset?: number;
+  onImageError?: () => void;
 }) {
   const visual = visualFor(food, isDemo),
     src = mediaUrl(food.pictureUrl?.[0]);
@@ -789,7 +768,7 @@ function Plate({
         <img
           src={src}
           alt={food.name ?? "菜品"}
-          onError={() => renew(src)}
+          onError={onImageError ?? (() => renew(src))}
           loading={lazy ? "lazy" : "eager"}
           decoding="async"
           fetchPriority={priority ? "high" : "auto"}
@@ -893,9 +872,7 @@ function DesktopHome() {
         <div className="pc-hero-copy" ref={copy}>
           <span className="pc-eyebrow">今天这顿，就从这里开始</span>
           <h1 title={food.name ?? undefined}>
-            {visual.l1}
-            <br />
-            {visual.l2}
+            {food.name || `${visual.l1}${visual.l2}`}
           </h1>
           <Link
             to={`/restaurants/${food.restaurantId}`}
@@ -1107,6 +1084,7 @@ function DesktopHome() {
 function FoodCard({ food }: { food: Food }) {
   const v = visualFor(food, isDemo),
     m = useMobile();
+  const photo = useFoodPhoto(mediaUrl(food.pictureUrl?.[0]));
   return (
     <Link
       to={`/foods/${food.id}`}
@@ -1114,7 +1092,11 @@ function FoodCard({ food }: { food: Food }) {
       onClick={() => m.setFoodId(food.id!)}
     >
       <div className="pc-food-card-image" style={{ background: v.tile }}>
-        <Plate food={food} lazy />
+        {photo.unavailable ? (
+          <FoodPhotoFallback category={food.category} failed={photo.failed} />
+        ) : (
+          <Plate food={food} lazy onImageError={photo.onError} />
+        )}
         <span className="pc-card-category">
           {categoryNames[food.category ?? "other"]}
         </span>
@@ -1240,8 +1222,8 @@ function DesktopNearby() {
     shops = query.data?.items ?? [],
     current = shops.find((s) => s.id === selected) ?? shops[0];
   return (
-    <>
-      <PageHeading title="好吃的，就在附近" kicker="从这一站，找到下一餐">
+    <div className="pc-nearby">
+      <PageHeading title="好吃的，就在附近">
         <button
           className="pc-button light"
           onClick={() => m.openPanel("G-PanelPlace")}
@@ -1254,10 +1236,12 @@ function DesktopNearby() {
       <div className="pc-nearby-layout">
         <section className="pc-nearby-list">
           <div className="pc-nearby-list-header">
-            <Link to="/restaurants/directory">更多筛选 →</Link>
-            <h2>
-              附近的店 <span>{query.data?.totalItems ?? "—"}</span>
-            </h2>
+            <div className="pc-nearby-list-title">
+              <h2>
+                附近的店 <span>{query.data?.totalItems ?? "—"}</span>
+              </h2>
+              <Link to="/restaurants/directory">更多筛选 →</Link>
+            </div>
             <div className="pc-search-field">
               <Icon name="search" size={20} />
               <input
@@ -1302,12 +1286,16 @@ function DesktopNearby() {
                           decoding="async"
                         />
                       ) : (
-                        <Icon name="store" size={28} />
+                        <Icon name="store" size={22} />
                       )}
                     </div>
                     <span>
-                      <strong>{shop.name}</strong>
-                      <small>{shop.address ?? "地址待补充"}</small>
+                      <strong title={shop.name ?? undefined}>
+                        {shop.name}
+                      </strong>
+                      <small title={shop.address ?? undefined}>
+                        {shop.address ?? "地址待补充"}
+                      </small>
                     </span>
                     <Icon name="chevronRight" size={20} />
                   </button>
@@ -1339,9 +1327,10 @@ function DesktopNearby() {
           {current && (
             <div className="pc-map-selected">
               <div>
-                <span className="pc-eyebrow">这一家，想去看看</span>
                 <h2>{current.name}</h2>
-                <p>{current.address ?? "地址待补充"}</p>
+                <p title={current.address ?? undefined}>
+                  {current.address ?? "地址待补充"}
+                </p>
               </div>
               <Link
                 className="pc-button"
@@ -1355,7 +1344,7 @@ function DesktopNearby() {
           )}
         </section>
       </div>
-    </>
+    </div>
   );
 }
 function DesktopSearch() {

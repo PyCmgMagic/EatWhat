@@ -46,6 +46,7 @@
 }
 .profile-overview-intro {
   min-width: 0;
+  flex: 1;
 }
 .profile-overview-eyebrow {
   display: block;

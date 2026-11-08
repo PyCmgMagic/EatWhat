@@ -67,7 +67,6 @@ async function validateDishArtSurfaces(page) {
     for (const width of [320, 390, 1440]) {
       await p.setViewportSize({ width, height: 844 });
       for (const [route, selector, dish] of [
-        ["/me", ".profile-overview-growth", "danchaofan"],
         ["/me/growth", ".growth-summary", "danchaofan"],
         ["/history", width < 600 ? ".mobile-empty" : ".pc-library-empty", "baozi"],
         ["/help", ".profile-help-contact", "baozi"],

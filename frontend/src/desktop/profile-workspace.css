@@ -214,10 +214,6 @@
 .pc-profile-workspace-content .feature-quick-link {
   padding: 18px 14px;
 }
-.pc-profile-workspace-content .pc-profile-editor-layout {
-  grid-template-columns: 230px minmax(0, 1fr);
-  gap: 20px;
-}
 .pc-profile-workspace-content .v4-page .v4-directory-filters {
   top: 0;
 }
@@ -290,9 +286,6 @@
   .pc-profile-workspace-content .feature-groups[data-single] .feature-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .pc-profile-workspace-content .pc-profile-fields {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .pc-profile-workspace-content .settings-home-row {
     gap: 8px;
   }
@@ -328,8 +321,7 @@
   }
   .pc-profile-workspace-content .settings-home-heading > div,
   .pc-profile-workspace-content .feature-directory-heading,
-  .pc-profile-workspace-content .pc-library-heading,
-  .pc-profile-workspace-content .pc-profile-heading {
+  .pc-profile-workspace-content .pc-library-heading {
     flex-wrap: wrap;
     gap: 12px;
   }
@@ -339,9 +331,6 @@
   }
   .pc-profile-workspace-content .pc-profile-content .pc-food-grid.three {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .pc-profile-workspace-content .pc-profile-editor-layout {
-    grid-template-columns: minmax(0, 1fr);
   }
   .pc-profile-workspace-content .v4-page .v4-page-title {
     flex-wrap: wrap;

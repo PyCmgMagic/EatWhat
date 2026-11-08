@@ -192,6 +192,7 @@ export function errorMessage(error: unknown): string {
   if (accessPromptPresented(error)) return "";
   if (error instanceof ApiError) {
     const hints: Record<string, string> = {
+      "90004": "服务端处理请求时出现异常（错误码 90004）。",
       "30010": "这个账号还没有设置密码，请使用手机验证码登录后设置。",
       "30011": "请先绑定手机号，再使用短信设置密码。",
       "30015": "请先完成人机验证，再重新发送。",
@@ -213,7 +214,7 @@ export function errorMessage(error: unknown): string {
 export function resultUncertain(error: unknown) {
   return (
     error instanceof ApiError &&
-    (["NETWORK", "INVALID_RESPONSE", "UNSAFE_INTEGER"].includes(
+    (["NETWORK", "INVALID_RESPONSE", "UNSAFE_INTEGER", "90004"].includes(
       String(error.code),
     ) ||
       (error.status ?? 0) >= 500)

@@ -120,10 +120,38 @@ button:disabled {
   height: 100% !important;
   z-index: -1;
 }
-.mobile-home-art .mobile-home-plate {
-  left: 56% !important;
-  width: clamp(180px, 60vw, 260px) !important;
-  height: clamp(180px, 60vw, 260px) !important;
+.mobile-home-orbit {
+  --plate-size: clamp(180px, 60vw, 260px);
+  /* Scale the original 430 / 320 orbit with its plate on narrow screens. */
+  --orbit-radius: calc(var(--plate-size) * 1.34375);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.mobile-home-orbit .mobile-home-plate {
+  position: absolute;
+  left: 56%;
+  top: 140px;
+  width: var(--plate-size);
+  aspect-ratio: 1;
+  transition: var(--orbit-transition, none);
+}
+.mobile-home-plate > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.mobile-home-plate > img.is-food-photo {
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow:
+    0 0 0 8px white,
+    0 22px 40px rgb(0 0 0 / 30%);
+}
+.mobile-home-plate > .food-photo-fallback {
+  border-radius: 50%;
+  background: #fff9ef;
 }
 .mobile-home-toolbar {
   position: relative !important;
@@ -325,19 +353,66 @@ button:disabled {
   font-family: "Noto Sans SC Variable", sans-serif;
 }
 .design-navigation nav {
+  position: relative;
   flex: 1;
   min-width: 0;
   height: 60px;
   padding: 5px;
   border-radius: 30px;
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(16px);
-  box-shadow: var(--shadow-float);
+  background: #f8f5f1;
+  box-shadow:
+    0 8px 24px #35271c14,
+    0 2px 5px #35271c0a,
+    0 0 0 1px #806b501a,
+    inset 0 1.5px 1px #fff,
+    inset 0 -1px 1px #ad9b853b;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 2px;
 }
+.design-navigation nav::before,
+.design-navigation .design-fab::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  /* A narrow, directional rim gives the glass thickness without blurring labels. */
+  border: 1px solid transparent;
+  background: linear-gradient(
+      145deg,
+      #fff,
+      #ffffff24 40%,
+      #8b756d30 66%,
+      #ffffffe6
+    )
+    border-box;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+.design-nav-lens {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: calc((100% - 14px) / 3);
+  border-radius: 25px;
+  pointer-events: none;
+  background: linear-gradient(160deg, #fffffff2, #e9e0d494 68%, #fff9f1bd);
+  box-shadow:
+    inset 0 1px 1px #fff,
+    inset 0 -1px 1px #a6927652,
+    0 1px 4px #46331d12;
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
 .design-navigation nav a {
+  position: relative;
   border-radius: 25px;
   display: flex;
   flex-direction: column;
@@ -345,23 +420,116 @@ button:disabled {
   justify-content: center;
   gap: 1px;
   font-size: 11px;
+  font-weight: 400;
+  color: #493f37;
+  background: transparent;
   text-decoration: none;
   line-height: normal;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.design-navigation nav a[aria-current="page"] {
+  color: #231c18;
+  font-weight: 700;
+}
+.design-navigation :is(a, button):focus-visible {
+  outline: 2px solid #85602e;
+  outline-offset: 2px;
 }
 .design-fab {
+  position: relative;
   flex: none;
   width: 60px;
   height: 60px;
   border: 0;
   border-radius: 30px;
-  background: linear-gradient(180deg, #3b312b, #231c18);
+  background: linear-gradient(155deg, #65574c, #342a23 58%, #231c18);
   color: white;
-  box-shadow: var(--shadow-fab);
+  box-shadow:
+    0 7px 18px #281b2429,
+    0 2px 4px #281b241a,
+    inset 0 1.5px 1px #ffffff75,
+    inset 0 -1px 1px #160e1970;
   display: grid;
   place-items: center;
   transition: transform 90ms ease;
 }
-.design-fab:active,
+.design-navigation .design-fab::before {
+  background: linear-gradient(
+      145deg,
+      #ffffffb3,
+      #ffffff14 44%,
+      #21170f30 68%,
+      #ffffff52
+    )
+    border-box;
+}
+@supports (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .design-navigation nav {
+    background: linear-gradient(135deg, #ffffffc7, #fffaf3b8 55%, #ffffffbd);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    backdrop-filter: blur(18px) saturate(1.5);
+  }
+  .design-navigation .design-fab {
+    background: linear-gradient(155deg, #65574ce8, #342a23e6 58%, #231c18ed);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    backdrop-filter: blur(14px) saturate(1.3);
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .design-navigation nav a:hover {
+    color: #231c18;
+    background-color: #ffffff38;
+  }
+}
+.design-navigation nav[data-motion="instant"] .design-nav-lens {
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .design-navigation .design-nav-lens {
+    transition: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .design-navigation nav {
+    background: #fffaf5;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .design-navigation .design-fab {
+    background: #342a23;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .design-nav-lens {
+    background: #e8ded1;
+  }
+}
+@media (forced-colors: active) {
+  .design-navigation nav,
+  .design-navigation .design-fab {
+    background: Canvas;
+    color: ButtonText;
+    outline: 1px solid ButtonText;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .design-nav-lens {
+    background: Canvas;
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+  .design-navigation nav a,
+  .design-navigation nav a[aria-current="page"] {
+    color: LinkText;
+  }
+  .design-navigation nav::before,
+  .design-navigation .design-fab::before {
+    display: none;
+  }
+}
 .design-button:active {
   transform: translateY(1px);
   box-shadow: var(--shadow-button-pressed);
@@ -575,6 +743,19 @@ button:disabled {
 .mobile-profile-stage > img {
   left: auto !important;
   right: -106px;
+}
+.mobile-profile-screen > .mobile-profile-identity {
+  top: 96px !important;
+}
+.mobile-profile-identity .mobile-profile-avatar {
+  width: 64px !important;
+  height: 64px !important;
+}
+.mobile-profile-identity .mobile-profile-name {
+  margin-top: 12px !important;
+}
+.mobile-profile-identity .mobile-profile-statistics {
+  margin-top: 14px !important;
 }
 .mobile-profile-sheet {
   position: absolute;
@@ -802,17 +983,30 @@ body:has(
   color: #231c18;
 }
 .design-tile-image > img.is-food-photo {
-  width: calc(100% - 16px);
-  height: auto;
-  max-height: calc(100% - 16px);
+  /* Match G2-Home's oversized, offset plates; the tile crops the circle,
+     rather than squeezing it to fit or shrinking it into a centered avatar. */
+  position: absolute;
+  top: 18px;
+  left: calc(100% - var(--tile-height) + 12px);
+  width: var(--tile-height);
+  height: var(--tile-height);
+  max-width: none;
   aspect-ratio: 1;
   border-radius: 50%;
   border: 5px solid white;
   object-fit: cover;
   box-shadow: 0 8px 18px #231c181a;
 }
+:is(.design-food-grid, .mobile-food-carousel)
+  > .design-food-tile:nth-child(even)
+  .design-tile-image
+  > img.is-food-photo {
+  left: -16px;
+  top: 24px;
+}
 .design-tile-image {
-  height: 150px;
+  --tile-height: 150px;
+  height: var(--tile-height);
   border-radius: 22px;
   overflow: hidden;
   position: relative;

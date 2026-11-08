@@ -191,7 +191,7 @@
   position: relative;
   overflow: hidden;
 }
-.ew-food-photo img {
+.ew-food-photo > img {
   position: absolute;
   width: 175px;
   height: 175px;
@@ -199,7 +199,7 @@
   bottom: -10px;
   object-fit: contain;
 }
-.ew-food-photo img.photo {
+.ew-food-photo > img.photo {
   border-radius: 50%;
   border: 6px solid #fff;
   object-fit: cover;
@@ -499,40 +499,6 @@
   gap: 20px;
   min-width: 0;
 }
-.ew-edit-photos {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
-.ew-edit-photos > div {
-  aspect-ratio: 1;
-  position: relative;
-}
-.ew-edit-photos img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 15px;
-}
-.ew-edit-photos button {
-  position: absolute;
-  right: 5px;
-  top: 5px;
-  border: 0;
-  border-radius: 50%;
-  width: 25px;
-  height: 25px;
-  background: white;
-}
-.ew-file-label {
-  border: 1px dashed #cbb89a;
-  border-radius: 12px;
-  padding: 15px;
-}
-.ew-file-label input {
-  font-size: 11px;
-  max-width: 100%;
-}
 .ew-meals {
   display: flex;
   align-items: center;
@@ -594,7 +560,7 @@
   height: 145px;
   border-radius: 19px;
 }
-.ew-mobile-feature .ew-food-photo img {
+.ew-mobile-feature .ew-food-photo > img {
   width: 135px;
   height: 135px;
 }
@@ -610,9 +576,6 @@
 }
 .ew-mobile-feature .ew-edit-columns {
   grid-template-columns: 1fr;
-}
-.ew-mobile-feature .ew-edit-photos {
-  grid-template-columns: repeat(3, 1fr);
 }
 .ew-mobile-feature .ew-tabs {
   margin-bottom: 16px;

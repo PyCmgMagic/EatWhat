@@ -14,6 +14,10 @@
   height: 100%;
   z-index: 0;
   font-family: inherit;
+  /* Let the SDK handle one-finger panning/pinch inside the map only. */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .restaurant-map-marker {
   position: relative;
@@ -236,6 +240,7 @@
   border: 3px solid white;
   background: #2f6feb;
   box-shadow: 0 0 0 7px #2f6feb22;
+  pointer-events: none;
 }
 .restaurant-map-locate {
   position: absolute;
@@ -320,9 +325,6 @@
 .pc-map-surface > .restaurant-map {
   position: absolute;
   inset: 0;
-}
-.pc-map-selected {
-  bottom: 42px;
 }
 .pc-map .restaurant-map-locate {
   top: 12px;

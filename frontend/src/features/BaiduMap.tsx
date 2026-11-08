@@ -81,7 +81,7 @@ export default function BaiduMap(props: Props) {
         instance.enableAutoResize();
         instance.enableKeyboard();
         instance.enablePinchToZoom();
-        instance.disableScrollWheelZoom();
+        instance.enableScrollWheelZoom();
         scale = new api.ScaleControl({
           anchor: BMAP_ANCHOR_BOTTOM_LEFT,
           offset: new api.Size(80, 12),
@@ -99,10 +99,19 @@ export default function BaiduMap(props: Props) {
           current.onPick(selected);
         };
         instance.addEventListener("click", clicked);
+        const moved = () => {
+          if (!active || !callbacks.current.onCenterChange) return;
+          const center = instance?.getCenter();
+          const position = center && baiduToGcj(center.lng, center.lat);
+          if (position) callbacks.current.onCenterChange(position);
+        };
+        instance.addEventListener("moveend", moved);
+        if (origin) moved();
         removeListeners = () => {
           instance?.removeEventListener("tilesloaded", loaded);
           instance?.removeEventListener("style_loaded_error", styleError);
           instance?.removeEventListener("click", clicked);
+          instance?.removeEventListener("moveend", moved);
         };
         resize = new ResizeObserver(() => {
           if (active) instance?.checkResize();
@@ -193,7 +202,13 @@ export default function BaiduMap(props: Props) {
         dot.setAttribute("aria-label", "你的位置");
         return dot;
       },
-      { point: point(api, props.devicePoint), anchors: [0.5, 0.5], zIndex: 1 },
+      {
+        point: point(api, props.devicePoint),
+        anchors: [0.5, 0.5],
+        zIndex: 1,
+        // This dot is informational, so starting here must still pan the map.
+        enableDraggingMap: true,
+      },
     );
     instance.addOverlay(location);
     instance.panTo(point(api, props.devicePoint), { noAnimation: true });
@@ -206,6 +221,11 @@ export default function BaiduMap(props: Props) {
     props.devicePoint?.gcjLat,
     props.deviceRevision,
   ]);
+  // A search result explicitly moves the viewport; dragging a selected pin does not.
+  useEffect(() => {
+    if (map.current && sdk.current && props.focusPoint)
+      map.current.centerAndZoom(point(sdk.current, props.focusPoint), 18);
+  }, [ready, props.focusPoint]);
   useEffect(() => {
     const instance = map.current,
       api = sdk.current;

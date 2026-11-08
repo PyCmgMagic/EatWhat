@@ -786,36 +786,6 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   font-size: 13px;
   line-height: 1.8;
 }
-.pc-nearby-layout {
-  display: grid;
-  grid-template-columns: 350px minmax(0, 1fr);
-  height: 690px;
-  max-height: calc(100dvh - 245px);
-  min-height: 560px;
-  background: #fff;
-  border-radius: 28px;
-  overflow: hidden;
-}
-.pc-nearby-list {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  z-index: 2;
-}
-.pc-nearby-list-header {
-  padding: 25px 24px 18px;
-  border-bottom: 1px solid #efe9e4;
-}
-.pc-nearby-list h2 {
-  font-size: 21px;
-  font-weight: 900;
-  margin: 0 0 18px;
-}
-.pc-nearby-list h2 > span {
-  font: 700 18px "Bricolage Grotesque Variable";
-  margin-left: 5px;
-  color: #8a7e76;
-}
 .pc-search-field {
   display: flex;
   align-items: center;
@@ -841,73 +811,6 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   border: 0;
   padding: 0;
   display: flex;
-}
-.pc-nearby-list-scroll {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 8px 10px 20px;
-  scrollbar-width: thin;
-  scrollbar-color: #e6ded8 transparent;
-}
-.pc-shop-row {
-  width: 100%;
-  min-height: 92px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 13px;
-  background: transparent;
-  border: 0;
-  border-radius: 18px;
-  text-align: left;
-  transition: background 160ms;
-}
-.pc-shop-row:hover {
-  background: #f7f4f1;
-}
-.pc-shop-row[aria-pressed="true"] {
-  background: #f8f1e4;
-}
-.pc-shop-thumbnail {
-  width: 56px;
-  height: 56px;
-  flex-shrink: 0;
-  border-radius: 18px;
-  background: #f4efeb;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
-.pc-shop-thumbnail img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.pc-shop-row > span {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.pc-shop-row strong {
-  font-size: 15px;
-  font-weight: 800;
-}
-.pc-shop-row small {
-  font-size: 11px;
-  color: #8a7e76;
-  line-height: 1.7;
-}
-.pc-shop-row > .design-icon:last-child {
-  color: #9a8b80;
-}
-.pc-nearby-list .pc-status {
-  padding: 30px 15px;
-  min-height: 250px;
-}
-.pc-nearby-list .pc-status h1 {
-  font-size: 19px;
 }
 .pc-map {
   position: relative;
@@ -996,35 +899,6 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
 }
 .pc-map-legend .design-pending {
   font-size: 9px;
-}
-.pc-map-selected {
-  position: absolute;
-  left: 24px;
-  right: 24px;
-  bottom: 24px;
-  border-radius: 24px;
-  background: #fffffff5;
-  box-shadow: 0 6px 28px #231c1812;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px;
-  gap: 18px;
-  z-index: 6;
-}
-.pc-map-selected h2 {
-  font-size: 24px;
-  font-weight: 900;
-  margin: 7px 0 5px;
-}
-.pc-map-selected p {
-  font-size: 12px;
-  color: #8a7e76;
-  margin: 0;
-}
-.pc-map-selected .pc-eyebrow {
-  font-size: 10px;
-  color: #8a7e76;
 }
 .pc-search-panel {
   display: flex;
@@ -2098,21 +1972,6 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   }
   .pc-food-card-title > span {
     font-size: 17px;
-  }
-  .pc-nearby-layout {
-    grid-template-columns: 310px minmax(0, 1fr);
-  }
-  .pc-map-selected {
-    padding: 20px;
-    left: 18px;
-    right: 18px;
-  }
-  .pc-map-selected h2 {
-    font-size: 21px;
-  }
-  .pc-map-selected .pc-button {
-    padding: 0 17px;
-    font-size: 12px;
   }
   .pc-profile-layout {
     grid-template-columns: 255px minmax(0, 1fr);

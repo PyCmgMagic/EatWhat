@@ -1,0 +1,219 @@
+.food-photo-picker {
+  container: food-photos / inline-size;
+  min-width: 0;
+}
+.food-photo-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ew-feature .food-photo-heading h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.food-photo-heading > span {
+  color: #827367;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.ew-feature .food-photo-caption {
+  margin: 8px 0 16px;
+  color: #827367;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.food-photo-dropzone {
+  position: relative;
+  padding: 14px;
+  border: 1px solid #e8dfd5;
+  border-radius: 18px;
+  background: #fcfaf7;
+}
+.food-photo-dropzone[data-dragging] {
+  border-color: #a57c26;
+  outline: 2px solid #f2d993;
+  outline-offset: 2px;
+}
+.food-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.food-photo-tile {
+  position: relative;
+  aspect-ratio: 1;
+  min-width: 0;
+}
+.ew-feature .food-photo-preview {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: #eee7df;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+.food-photo-preview img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.food-photo-badge {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #30271fde;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.food-photo-zoom {
+  position: absolute;
+  right: 9px;
+  bottom: 10px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #30271f;
+  background: #ffffffdf;
+}
+.ew-feature .food-photo-remove {
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0 12px 0 12px;
+  color: #59493e;
+  background: #ffffffed;
+  cursor: pointer;
+}
+.ew-feature .food-photo-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  aspect-ratio: 1;
+  padding: 8px;
+  border: 1px dashed #cbb89a;
+  border-radius: 12px;
+  background: #fff;
+  color: #6e5941;
+  cursor: pointer;
+}
+.food-photo-add[data-empty] {
+  grid-column: 1 / -1;
+  aspect-ratio: auto;
+  min-height: 200px;
+}
+.food-photo-add-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f6efdf;
+}
+.food-photo-add strong {
+  font-size: 13px;
+  font-weight: 650;
+}
+.food-photo-add small {
+  font-size: 11px;
+  font-weight: 400;
+  color: #8a7a66;
+}
+.food-photo-drop-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: inherit;
+  background: #fff5d9ed;
+  color: #77551e;
+  pointer-events: none;
+  font-size: 14px;
+}
+.ew-feature .food-photo-help,
+.ew-feature .food-photo-error {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #827367;
+}
+.ew-feature .food-photo-error {
+  display: flex;
+  align-items: start;
+  gap: 6px;
+  color: #a6402c;
+}
+.food-photo-error .design-icon {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.food-photo-picker button:focus-visible {
+  outline: 2px solid #947220;
+  outline-offset: 3px;
+}
+.food-photo-picker button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.food-photo-dialog {
+  width: min(760px, calc(100vw - 32px));
+}
+.food-photo-dialog img {
+  display: block;
+  width: 100%;
+  max-height: 70dvh;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #f4efeb;
+}
+@container food-photos (min-width: 620px) {
+  .food-photo-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@container food-photos (max-width: 380px) {
+  .food-photo-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .food-photo-dropzone {
+    padding: 10px;
+  }
+  .food-photo-add-icon {
+    width: 32px;
+    height: 32px;
+  }
+}
+@media (hover: hover) {
+  .ew-feature .food-photo-add:hover {
+    background: #fff8e6;
+    border-color: #a57c26;
+  }
+  .ew-feature .food-photo-remove:hover {
+    background: #fff0e8;
+    color: #a6402c;
+  }
+}

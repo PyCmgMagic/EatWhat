@@ -11,7 +11,8 @@ export const profileSections = [
   { to: "/help", name: "帮助与反馈", icon: "question", group: "账号与服务" },
 ] as const;
 
-export type ProfileSection = (typeof profileSections)[number]["to"];
+export type ProfileSection =
+  (typeof profileSections)[number]["to"] | "/features";
 export const ProfileWorkspaceContext = createContext(false);
 export type ProfileNavigationGuard = (destination: string) => boolean;
 export const ProfileNavigationGuardContext =
@@ -19,7 +20,8 @@ export const ProfileNavigationGuardContext =
 
 /** Presentation only: each destination retains its own access and recovery gates. */
 export function profileSection(path: string): ProfileSection | null {
-  if (path === "/me" || path === "/features") return "/me";
+  if (path === "/features") return "/features";
+  if (path === "/me") return "/me";
   if (path === "/me/shares" || /^\/submissions(?:\/[^/]+)?$/.test(path))
     return "/me/shares";
   if (path === "/favorites" || path === "/restaurants/favorites")

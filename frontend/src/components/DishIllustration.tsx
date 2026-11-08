@@ -13,7 +13,7 @@ export type DishIllustrationName =
   | "danchaofan"
   | "baozi";
 
-/** Prototype artwork for empty states and onboarding, never a food photo fallback. */
+/** Decorative artwork; photo placeholders must use the labeled FoodPhotoFallback. */
 export function DishIllustration({
   name,
   className = "",

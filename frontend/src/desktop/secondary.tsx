@@ -50,20 +50,36 @@ export function PageHead({
   action,
   back = "/me",
   crumb = "我的",
+  onBack,
+  backDisabled = false,
 }: {
   title: string;
   detail?: string;
   action?: ReactNode;
   back?: string;
   crumb?: string;
+  onBack?: () => void;
+  backDisabled?: boolean;
 }) {
   return (
     <header className="pc-secondary-head">
       <div>
-        <Link className="pc-secondary-back" to={back}>
-          <Icon name="back" size={17} />
-          {crumb}
-        </Link>
+        {onBack ? (
+          <button
+            type="button"
+            className="pc-secondary-back"
+            onClick={onBack}
+            disabled={backDisabled}
+          >
+            <Icon name="back" size={17} />
+            {crumb}
+          </button>
+        ) : (
+          <Link className="pc-secondary-back" to={back}>
+            <Icon name="back" size={17} />
+            {crumb}
+          </Link>
+        )}
         <h1>{title}</h1>
         {detail && <p>{detail}</p>}
       </div>

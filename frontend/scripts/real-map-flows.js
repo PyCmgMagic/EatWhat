@@ -109,17 +109,23 @@ async (page) => {
       await p.goto(base + "#/restaurants/new");
       await p.reload();
       await loaded();
-      const lng = width < 600 ? p.locator('input[name="lng"]') : p.getByLabel("GCJ02 经度", { exact: true });
-      const lat = width < 600 ? p.locator('input[name="lat"]') : p.getByLabel("GCJ02 纬度", { exact: true });
-      if ((await lng.inputValue()) || (await lat.inputValue())) throw new Error("Campus center silently became a shop location");
+      if (await p.locator('input[name="lng"], input[name="lat"]').count()) throw new Error("Manual coordinate fields remain");
+      if (!await p.getByRole('button', {name:'请先在地图选点',exact:true}).isDisabled()) throw new Error("Campus center silently became a shop location");
+      const picked = () => p.evaluate(async () => {
+        const marker = window.__baiduTestMap.getOverlays().find(o => o.getTitle?.() === '店铺位置，可拖动调整');
+        const value = marker.getPosition();
+        const { baiduToGcj } = await import('/src/features/map-geometry.ts');
+        return baiduToGcj(value.lng, value.lat);
+      });
       const box = await p.locator(".restaurant-map-canvas").boundingBox();
       await p.locator(".restaurant-map-canvas").click({ position: { x: box.width * 0.55, y: box.height * 0.45 } });
       await p.locator('.restaurant-map-canvas [title="店铺位置，可拖动调整"]').waitFor();
-      const selectedLng = Number(await lng.inputValue()), selectedLat = Number(await lat.inputValue());
+      const {gcjLng:selectedLng,gcjLat:selectedLat} = await picked();
       if (Math.abs(selectedLng - 117.14) > 0.03 || Math.abs(selectedLat - 36.667) > 0.03) throw new Error("Map pick did not fill converted coordinates");
       const pin = await p.locator('.restaurant-map-canvas [title="店铺位置，可拖动调整"]').boundingBox();
       await p.mouse.move(pin.x + pin.width / 2, pin.y + pin.height / 2); await p.mouse.down(); await p.mouse.move(pin.x + 40, pin.y + 40, { steps: 8 }); await p.mouse.up();
-      if (Number(await lng.inputValue()) === selectedLng && Number(await lat.inputValue()) === selectedLat) throw new Error("Dragging the picked pin did not update coordinates");
+      const afterDrag = await picked();
+      if (afterDrag.gcjLng === selectedLng && afterDrag.gcjLat === selectedLat) throw new Error("Dragging the picked pin did not update coordinates");
       await p.getByLabel(width < 600 ? "店名" : "店铺名称", { exact: true }).fill(`地图选点验收${width}`);
       await p.getByLabel("详细地址", { exact: true }).fill("验收地址，不会写入真实后端");
       await p.getByRole("button", { name: "提交新店", exact: true }).click();

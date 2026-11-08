@@ -1,9 +1,10 @@
 export const heroOrbitStep = 55;
 
 /** Keep the same transform list so the browser interpolates the angle on an arc. */
-export function heroPlateTransform(angle: number) {
+export function heroPlateTransform(angle: number, tilt = 0) {
   const scale = 1 - 0.15 * Math.min(1, Math.abs(angle) / heroOrbitStep);
-  return `translateY(var(--orbit-radius)) rotate(${angle}deg) translateY(calc(-1 * var(--orbit-radius))) scale(${scale})`;
+  const arc = `translateY(var(--orbit-radius)) rotate(${angle}deg) translateY(calc(-1 * var(--orbit-radius)))`;
+  return `${tilt ? `rotate(${-tilt}deg) ` : ""}${arc}${tilt ? ` rotate(${tilt}deg)` : ""} scale(${scale})`;
 }
 
 /** Logical slots keep visible plates continuous when the food index wraps. */

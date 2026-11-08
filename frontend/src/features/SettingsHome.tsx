@@ -200,7 +200,6 @@ export default function SettingsHome({
         )}
         <div>
           <div>
-            <span className="settings-home-eyebrow">账号与使用习惯</span>
             <h1 id="settings-home-title">账号设置</h1>
             <p>管理你的账号，调整自己的使用习惯。</p>
           </div>
@@ -240,7 +239,6 @@ export default function SettingsHome({
                   ? "学生身份未认证"
                   : "认证状态待确认"}
             </span>
-            <span>当前登录的账号</span>
           </div>
         </div>
         <ProfileEditLink className="settings-home-edit">
@@ -277,32 +275,25 @@ export default function SettingsHome({
         {[
           {
             title: "账号与安全",
-            detail: "登录方式与身份管理",
             icon: "shield",
-            tone: "gold",
             items: account,
           },
           {
             title: "偏好与隐私",
-            detail: "让使用方式更适合你",
             icon: "settings",
-            tone: "green",
             items: preferences,
           },
         ].map((group) => (
           <section
             key={group.title}
-            className={"settings-home-group tone-" + group.tone}
+            className="settings-home-group"
             aria-label={group.title}
           >
             <header>
               <span>
-                <Icon name={group.icon} size={20} />
+                <Icon name={group.icon} size={18} />
               </span>
-              <div>
-                <h2>{group.title}</h2>
-                <p>{group.detail}</p>
-              </div>
+              <h2>{group.title}</h2>
             </header>
             <div className="settings-home-group-content">
               <div className="settings-home-group-items">
@@ -312,7 +303,7 @@ export default function SettingsHome({
               </div>
               {group.title === "账号与安全" && (
                 <details className="settings-home-recovery">
-                  <summary>授权与账号恢复</summary>
+                  <summary>账号恢复</summary>
                   {recovery.map((item) => (
                     <SettingLink key={item.to} item={item} />
                   ))}
@@ -329,7 +320,6 @@ export default function SettingsHome({
       >
         <header>
           <h2 id="settings-home-support-title">帮助与关于</h2>
-          <span>使用帮助、站点介绍与数据说明</span>
         </header>
         <div>
           {support.map((item) => (

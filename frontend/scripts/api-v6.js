@@ -211,12 +211,12 @@ async function validateApiV6(page) {
     try {
       await go("/me");
       await p.locator("body").ariaSnapshot();
-      await p.locator(".profile-overview-growth").waitFor();
+      await p.locator(".profile-growth").waitFor();
       await p.screenshot({
         path: `output/playwright/api-v6-profile-${width}.png`,
         fullPage: true,
       });
-      await p.locator(".profile-overview-growth").click();
+      await p.locator(".profile-growth").click();
       await p.getByRole("heading", { name: "Lv.3", exact: true }).waitFor();
       await p.getByText("所属日期 2026-11-07", { exact: true }).waitFor();
       assert(

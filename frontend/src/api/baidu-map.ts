@@ -1,4 +1,42 @@
 import BMapLoader from "@baidumap/jsapi-loader";
+import { gcjToBaidu, mapPoint, type MapPoint } from "../features/map-geometry";
+
+/** Best-effort address suggestion; a lookup failure never discards the picked point. */
+export async function addressForMapPoint(
+  value: MapPoint,
+): Promise<string | undefined> {
+  if (!mapPoint(value)) return undefined;
+  const api = await loadBaiduMap();
+  const converted = gcjToBaidu(value);
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(undefined), 6000);
+    try {
+      new api.Geocoder().getLocation(
+        new api.Point(converted.lng, converted.lat),
+        (result) => {
+          clearTimeout(timer);
+          const address = result?.address?.trim();
+          if (address && address.length <= 30) {
+            resolve(address);
+            return;
+          }
+          // Keep useful street/door information instead of truncating a long address.
+          const c = result?.addressComponents;
+          const compact = c
+            ? [c.city, c.district, c.street, c.streetNumber]
+                .filter(Boolean)
+                .join("")
+                .trim()
+            : "";
+          resolve(compact && compact.length <= 30 ? compact : undefined);
+        },
+      );
+    } catch {
+      clearTimeout(timer);
+      resolve(undefined);
+    }
+  });
+}
 
 export type BaiduNamespace = typeof BMap & { coordType: CoordType };
 let pending: Promise<BaiduNamespace> | undefined;
@@ -41,6 +79,8 @@ export function acquireBaiduMap(api: BaiduNamespace, host: HTMLElement) {
     lease.instance.enableAutoResize();
     lease.instance.checkResize();
   }
+  // Reused maps must not retain a disabled drag state from an earlier overlay.
+  lease.instance.enableDragging();
   return lease;
 }
 

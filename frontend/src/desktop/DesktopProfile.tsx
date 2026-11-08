@@ -1,7 +1,7 @@
 import { Select } from "../components/Select";
 import { useContext, useEffect, useRef, useState, type FormEvent } from "react";
 import { ProfileNavigationGuardContext } from "../app/profile-workspace";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { errorMessage } from "../api/client";
@@ -13,6 +13,7 @@ import CropDialog from "./CropDialog";
 import { useSurfaceDismiss } from "../motion/hooks";
 import { useMemoryDraft, useSessionDraft } from "../app/drafts";
 import { useProfileReturnTo } from "../app/profile-navigation";
+import { PageHead, Section } from "./secondary";
 import "./profile.css";
 
 type Avatar = Draft["images"][number];
@@ -66,10 +67,6 @@ export default function DesktopProfile() {
     queryFn: () => app.api.cities(form.province!),
     enabled: form.province !== null,
   });
-  const provinceName = provinces.data?.find(
-    (p) => p.id === form.province,
-  )?.name;
-  const cityName = cities.data?.find((c) => c.id === form.city)?.name;
   const avatarUrl = avatar?.url || mediaUrl(app.user?.avatar);
   const unknownBirthday = form.birthday === undefined;
   const today = new Date(),
@@ -204,379 +201,305 @@ export default function DesktopProfile() {
 
   return (
     <div className="pc-profile-editor">
-      <header className="pc-profile-heading">
-        <div>
-          <div className="pc-breadcrumb">
-            <Link
-              to={returnTo}
-              onClick={(e) => {
-                e.preventDefault();
-                back();
-              }}
-            >
-              {returnLabel}
-            </Link>
-            <Icon name="chevronRight" size={13} />
-            <span>编辑个人资料</span>
-          </div>
-          <h1>
-            编辑个人资料<span>让食友认识你</span>
-          </h1>
-          <p>换个新头像，写下你的口味，分享每一份好吃的。</p>
-        </div>
-        <button
-          type="button"
-          className="pc-profile-back"
-          onClick={back}
-          disabled={busy}
-        >
-          {returnLabel}
-          <Icon name="chevronRight" size={16} />
-        </button>
-      </header>
-      <div className="pc-profile-editor-layout">
-        <aside className="pc-profile-preview" aria-label="个人主页实时预览">
-          <div className="pc-profile-cover">
-            <span>主页预览</span>
-            <Icon name="bowl" size={100} />
-          </div>
-          <div className="pc-profile-preview-body">
-            <button
-              type="button"
-              className={`pc-profile-editor-avatar ${dragging ? "is-dragging" : ""}`}
-              aria-label="选择头像图片"
-              disabled={busy}
-              onClick={() => input.current?.click()}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragging(true);
-              }}
-              onDragLeave={() => setDragging(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragging(false);
-                pick(Array.from(e.dataTransfer.files));
-              }}
-            >
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="头像预览" />
-              ) : (
-                <span>{form.name.trim().slice(0, 1) || "食"}</span>
-              )}
-              <i>
-                <Icon name="camera" size={17} />
-              </i>
-            </button>
-            <input
-              ref={input}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              hidden
-              aria-label="上传头像"
-              onChange={(e) => {
-                pick(Array.from(e.target.files ?? []));
-                e.target.value = "";
-              }}
-            />
-            <h2>{form.name.trim() || "你的昵称"}</h2>
-            <p className="pc-profile-preview-sign">
-              {form.signature || "好好吃饭，认真生活。"}
-            </p>
-            <div className="pc-profile-preview-meta">
-              {app.user?.verified && (
-                <span>
-                  <Icon name="verify" size={14} />
-                  学生认证
-                </span>
-              )}
-              {(provinceName || cityName) && (
-                <span>
-                  <Icon name="pin" size={14} />
-                  {cityName || provinceName}
-                </span>
-              )}
-            </div>
-            <div className="pc-profile-avatar-actions">
+      <PageHead
+        title="编辑个人资料"
+        detail="管理头像、昵称和个人信息，保存后同步到个人主页。"
+        crumb={returnLabel}
+        onBack={back}
+        backDisabled={busy}
+      />
+      <form
+        className="pc-profile-form"
+        onSubmit={save}
+        noValidate
+        aria-label="个人资料表单"
+      >
+        <fieldset disabled={busy}>
+          <Section title="基本资料" detail="头像、昵称和签名会展示在个人主页。">
+            <div className="pc-profile-avatar-row">
               <button
                 type="button"
-                className="pc-button light"
+                className={`pc-profile-avatar-picker ${dragging ? "is-dragging" : ""}`}
+                aria-label="选择头像图片"
                 disabled={busy}
                 onClick={() => input.current?.click()}
-              >
-                <Icon name="image" size={16} />
-                更换头像
-              </button>
-              {avatar && (
-                <button
-                  type="button"
-                  className="pc-profile-text-button"
-                  disabled={busy}
-                  onClick={() => setCropping(avatar)}
-                >
-                  调整取景
-                </button>
-              )}
-            </div>
-            <small>
-              也可以将图片拖到头像上
-              <br />
-              JPG、PNG 或 WebP，10 MB 以内
-            </small>
-            {avatar && (
-              <button
-                type="button"
-                className="pc-profile-undo"
-                disabled={busy}
-                onClick={() => {
-                  setAvatar(null);
-                  uploaded.current = null;
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragging(true);
+                }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragging(false);
+                  pick(Array.from(e.dataTransfer.files));
                 }}
               >
-                撤销头像更换
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="头像预览" />
+                ) : (
+                  <span>{form.name.trim().slice(0, 1) || "食"}</span>
+                )}
+                <i>
+                  <Icon name="camera" size={17} />
+                </i>
               </button>
-            )}
-          </div>
-          <div className="pc-profile-preview-caption">
-            <Icon name="me" size={15} />
-            <span>
-              这里会随你的修改实时更新
-              <br />
-              点击保存后，食友才能看到新资料
-            </span>
-          </div>
-        </aside>
-        <form
-          className="pc-profile-form"
-          onSubmit={save}
-          noValidate
-          aria-label="个人资料表单"
-        >
-          <fieldset disabled={busy}>
-            <section
-              className="pc-profile-section"
-              aria-labelledby="pc-profile-basic"
-            >
-              <div className="pc-profile-section-heading">
-                <div>
-                  <h2 id="pc-profile-basic">基本资料</h2>
-                  <p>头像、昵称和签名，组成你的第一印象。</p>
-                </div>
-                <span>展示在个人主页</span>
-              </div>
-              <div className="pc-profile-fields">
-                <div className="pc-profile-field">
-                  <label htmlFor="nick">
-                    昵称<span className="pc-profile-required">必填</span>
-                    <small>{form.name.length} / 12</small>
-                  </label>
-                  <input
-                    id="nick"
-                    autoComplete="nickname"
-                    maxLength={12}
-                    value={form.name}
-                    onChange={(e) => change({ name: e.target.value })}
-                    onBlur={() => setNameTouched(true)}
-                    aria-invalid={nameTouched && nameInvalid}
-                    aria-describedby="pc-profile-name-hint"
-                  />
-                  <p
-                    id="pc-profile-name-hint"
-                    className={
-                      nameTouched && nameInvalid ? "pc-profile-invalid" : ""
-                    }
-                  >
-                    {nameTouched && nameInvalid
-                      ? "昵称需要 2–12 个字，请调整后再保存。"
-                      : "2–12 个字，可以和其他食友重名。"}
-                  </p>
-                </div>
-                <div className="pc-profile-field">
-                  <label htmlFor="sign">
-                    个性签名<span>选填</span>
-                    <small>{form.signature.length} / 30</small>
-                  </label>
-                  <textarea
-                    id="sign"
-                    rows={2}
-                    maxLength={30}
-                    placeholder="一句话介绍自己，或写下你的口味"
-                    value={form.signature}
-                    onChange={(e) => change({ signature: e.target.value })}
-                  />
-                </div>
-              </div>
-            </section>
-            <section
-              className="pc-profile-section"
-              aria-labelledby="pc-profile-more"
-            >
-              <div className="pc-profile-section-heading">
-                <div>
-                  <h2 id="pc-profile-more">更多资料</h2>
-                  <p>再多认识你一点，这些信息都可以选填。</p>
-                </div>
-                <Icon name="leaf" size={25} />
-              </div>
-              <div className="pc-profile-fields">
-                <div className="pc-profile-field">
-                  <label htmlFor="profile-gender">性别</label>
-                  <Select
-                    id="profile-gender"
-                    value={form.gender}
-                    onChange={(e) => change({ gender: e.target.value })}
-                  >
-                    <option value="">暂不填写</option>
-                    <option value="male">男</option>
-                    <option value="female">女</option>
-                    <option value="other">其他</option>
-                    {form.gender &&
-                      !["male", "female", "other"].includes(form.gender) && (
-                        <option value={form.gender}>已设置</option>
-                      )}
-                  </Select>
-                </div>
-                <div className="pc-profile-field">
-                  <label htmlFor="profile-birthday">
-                    生日
-                    {(form.birthday || unknownBirthday) && (
-                      <button
-                        type="button"
-                        className="pc-profile-text-button"
-                        onClick={() => change({ birthday: "" })}
-                      >
-                        清除
-                      </button>
-                    )}
-                  </label>
-                  <input
-                    id="profile-birthday"
-                    type="date"
-                    value={form.birthday ?? ""}
-                    max={maxDate}
-                    onChange={(e) => change({ birthday: e.target.value })}
-                  />
-                  {unknownBirthday && (
-                    <p>已设置生日，重新选择可修改，留空会保留。</p>
-                  )}
-                </div>
-                <div className="pc-profile-field">
-                  <label htmlFor="home-province">家乡省份</label>
-                  <Select
-                    id="home-province"
-                    value={form.province ?? ""}
-                    disabled={provinces.isPending || provinces.isError}
-                    onChange={(e) =>
-                      change({
-                        province: Number(e.target.value) || null,
-                        city: null,
-                      })
-                    }
-                  >
-                    <option value="">暂不填写</option>
-                    {form.province &&
-                      !provinces.data?.some((p) => p.id === form.province) && (
-                        <option value={form.province}>已保存的省份</option>
-                      )}
-                    {provinces.data
-                      ?.filter((p) => p.id)
-                      .map((p) => (
-                        <option key={p.id} value={p.id!}>
-                          {p.name}
-                        </option>
-                      ))}
-                  </Select>
-                </div>
-                <div className="pc-profile-field">
-                  <label htmlFor="home-city">家乡城市</label>
-                  <Select
-                    id="home-city"
-                    value={form.city ?? ""}
-                    disabled={
-                      !form.province || cities.isPending || cities.isError
-                    }
-                    onChange={(e) =>
-                      change({ city: Number(e.target.value) || null })
-                    }
-                  >
-                    <option value="">
-                      {form.province ? "选择城市（选填）" : "先选择省份"}
-                    </option>
-                    {form.city &&
-                      !cities.data?.some((c) => c.id === form.city) && (
-                        <option value={form.city}>已保存的城市</option>
-                      )}
-                    {cities.data
-                      ?.filter((c) => c.id)
-                      .map((c) => (
-                        <option key={c.id} value={c.id!}>
-                          {c.name}
-                        </option>
-                      ))}
-                  </Select>
-                </div>
-              </div>
-              {(provinces.error || (form.province && cities.error)) && (
-                <div className="pc-profile-dictionary-error" role="alert">
-                  {provinces.error
-                    ? "省份列表暂时无法加载"
-                    : "城市列表暂时无法加载"}
-                  ，已保存的家乡会保留。
+              <input
+                ref={input}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                hidden
+                aria-label="上传头像"
+                onChange={(e) => {
+                  pick(Array.from(e.target.files ?? []));
+                  e.target.value = "";
+                }}
+              />
+              <div className="pc-profile-avatar-details">
+                <b>头像</b>
+                <p>点击或拖入图片，支持 JPG、PNG、WebP，10 MB 以内。</p>
+                <div className="pc-profile-avatar-actions">
                   <button
                     type="button"
-                    onClick={() =>
-                      void (provinces.error
-                        ? provinces.refetch()
-                        : cities.refetch())
-                    }
+                    className="pc-button light"
+                    disabled={busy}
+                    onClick={() => input.current?.click()}
                   >
-                    重新加载
+                    <Icon name="image" size={16} />
+                    更换头像
                   </button>
+                  {avatar && (
+                    <button
+                      type="button"
+                      className="pc-profile-text-button"
+                      disabled={busy}
+                      onClick={() => setCropping(avatar)}
+                    >
+                      调整取景
+                    </button>
+                  )}
                 </div>
-              )}
-            </section>
-          </fieldset>
-          {error && (
-            <div className="pc-profile-feedback is-error" role="alert">
-              <Icon name="info" size={18} />
-              <span>{error} 修改已保留，请调整后重试。</span>
+
+                {avatar && (
+                  <button
+                    type="button"
+                    className="pc-profile-undo"
+                    disabled={busy}
+                    onClick={() => {
+                      setAvatar(null);
+                      uploaded.current = null;
+                    }}
+                  >
+                    撤销头像更换
+                  </button>
+                )}
+              </div>
             </div>
-          )}
-          <footer className="pc-profile-savebar">
-            <div
-              className={`pc-profile-save-status ${notice ? "is-saved" : ""}`}
-              role="status"
+            <div className="pc-profile-fields">
+              <div className="pc-profile-field">
+                <label htmlFor="nick">
+                  昵称<span className="pc-profile-required">必填</span>
+                  <small>{form.name.length} / 12</small>
+                </label>
+                <input
+                  id="nick"
+                  autoComplete="nickname"
+                  maxLength={12}
+                  value={form.name}
+                  onChange={(e) => change({ name: e.target.value })}
+                  onBlur={() => setNameTouched(true)}
+                  aria-invalid={nameTouched && nameInvalid}
+                  aria-describedby="pc-profile-name-hint"
+                />
+                <p
+                  id="pc-profile-name-hint"
+                  className={
+                    nameTouched && nameInvalid ? "pc-profile-invalid" : ""
+                  }
+                >
+                  {nameTouched && nameInvalid
+                    ? "昵称需要 2–12 个字，请调整后再保存。"
+                    : "2–12 个字，可以和其他食友重名。"}
+                </p>
+              </div>
+              <div className="pc-profile-field">
+                <label htmlFor="sign">
+                  个性签名<span>选填</span>
+                  <small>{form.signature.length} / 30</small>
+                </label>
+                <textarea
+                  id="sign"
+                  rows={2}
+                  maxLength={30}
+                  placeholder="一句话介绍自己，或写下你的口味"
+                  value={form.signature}
+                  onChange={(e) => change({ signature: e.target.value })}
+                />
+              </div>
+            </div>
+          </Section>
+          <Section
+            title="更多资料"
+            detail="以下信息均为选填，可以按自己的意愿填写。"
+          >
+            <div className="pc-profile-fields">
+              <div className="pc-profile-field">
+                <label htmlFor="profile-gender">性别</label>
+                <Select
+                  id="profile-gender"
+                  value={form.gender}
+                  onChange={(e) => change({ gender: e.target.value })}
+                >
+                  <option value="">暂不填写</option>
+                  <option value="male">男</option>
+                  <option value="female">女</option>
+                  <option value="other">其他</option>
+                  {form.gender &&
+                    !["male", "female", "other"].includes(form.gender) && (
+                      <option value={form.gender}>已设置</option>
+                    )}
+                </Select>
+              </div>
+              <div className="pc-profile-field">
+                <label htmlFor="profile-birthday">
+                  生日
+                  {(form.birthday || unknownBirthday) && (
+                    <button
+                      type="button"
+                      className="pc-profile-text-button"
+                      onClick={() => change({ birthday: "" })}
+                    >
+                      清除
+                    </button>
+                  )}
+                </label>
+                <input
+                  id="profile-birthday"
+                  type="date"
+                  value={form.birthday ?? ""}
+                  max={maxDate}
+                  onChange={(e) => change({ birthday: e.target.value })}
+                />
+                {unknownBirthday && (
+                  <p>已设置生日，重新选择可修改，留空会保留。</p>
+                )}
+              </div>
+              <div className="pc-profile-field">
+                <label htmlFor="home-province">家乡省份</label>
+                <Select
+                  id="home-province"
+                  value={form.province ?? ""}
+                  disabled={provinces.isPending || provinces.isError}
+                  onChange={(e) =>
+                    change({
+                      province: Number(e.target.value) || null,
+                      city: null,
+                    })
+                  }
+                >
+                  <option value="">暂不填写</option>
+                  {form.province &&
+                    !provinces.data?.some((p) => p.id === form.province) && (
+                      <option value={form.province}>已保存的省份</option>
+                    )}
+                  {provinces.data
+                    ?.filter((p) => p.id)
+                    .map((p) => (
+                      <option key={p.id} value={p.id!}>
+                        {p.name}
+                      </option>
+                    ))}
+                </Select>
+              </div>
+              <div className="pc-profile-field">
+                <label htmlFor="home-city">家乡城市</label>
+                <Select
+                  id="home-city"
+                  value={form.city ?? ""}
+                  disabled={
+                    !form.province || cities.isPending || cities.isError
+                  }
+                  onChange={(e) =>
+                    change({ city: Number(e.target.value) || null })
+                  }
+                >
+                  <option value="">
+                    {form.province ? "选择城市（选填）" : "先选择省份"}
+                  </option>
+                  {form.city &&
+                    !cities.data?.some((c) => c.id === form.city) && (
+                      <option value={form.city}>已保存的城市</option>
+                    )}
+                  {cities.data
+                    ?.filter((c) => c.id)
+                    .map((c) => (
+                      <option key={c.id} value={c.id!}>
+                        {c.name}
+                      </option>
+                    ))}
+                </Select>
+              </div>
+            </div>
+            {(provinces.error || (form.province && cities.error)) && (
+              <div className="pc-profile-dictionary-error" role="alert">
+                {provinces.error
+                  ? "省份列表暂时无法加载"
+                  : "城市列表暂时无法加载"}
+                ，已保存的家乡会保留。
+                <button
+                  type="button"
+                  onClick={() =>
+                    void (provinces.error
+                      ? provinces.refetch()
+                      : cities.refetch())
+                  }
+                >
+                  重新加载
+                </button>
+              </div>
+            )}
+          </Section>
+        </fieldset>
+        {error && (
+          <div className="pc-profile-feedback is-error" role="alert">
+            <Icon name="info" size={18} />
+            <span>{error} 修改已保留，请调整后重试。</span>
+          </div>
+        )}
+        <footer className="pc-profile-savebar">
+          <div
+            className={`pc-profile-save-status ${notice ? "is-saved" : ""}`}
+            role="status"
+          >
+            <Icon
+              name={notice ? "check" : dirty ? "edit" : "check"}
+              size={18}
+            />
+            <span>
+              {busy
+                ? phase
+                : notice || (dirty ? "有修改尚未保存" : "资料已是最新状态")}
+            </span>
+          </div>
+          <div>
+            <button
+              type="button"
+              className="pc-button light"
+              disabled={busy || !dirty}
+              onClick={reset}
             >
-              <Icon
-                name={notice ? "check" : dirty ? "edit" : "check"}
-                size={18}
-              />
-              <span>
-                {busy
-                  ? phase
-                  : notice || (dirty ? "有修改尚未保存" : "资料已是最新状态")}
-              </span>
-            </div>
-            <div>
-              <button
-                type="button"
-                className="pc-button light"
-                disabled={busy || !dirty}
-                onClick={reset}
-              >
-                取消修改
-              </button>
-              <button
-                type="submit"
-                className="pc-button"
-                disabled={busy || !dirty}
-              >
-                {busy ? "正在保存…" : "保存修改"}
-                <Icon name="check" size={17} />
-              </button>
-            </div>
-          </footer>
-        </form>
-      </div>
+              取消修改
+            </button>
+            <button
+              type="submit"
+              className="pc-button"
+              disabled={busy || !dirty}
+            >
+              {busy ? "正在保存…" : "保存修改"}
+              <Icon name="check" size={17} />
+            </button>
+          </div>
+        </footer>
+      </form>
       {cropping && (
         <CropDialog
           variant="avatar"

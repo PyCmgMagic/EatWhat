@@ -32,7 +32,8 @@ import { isDemo } from "../app/runtime";
 import { errorMessage } from "../api/client";
 import { useActionAccess } from "./access";
 import "./latest.css";
-import { useFoodImageRefresh } from "./media";
+import { useFoodPhoto } from "./media";
+import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
 import { useContentMotion } from "../motion/hooks";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { AccessWelcome } from "../components/AccessWelcome";
@@ -173,24 +174,24 @@ export function CatalogCard({
   food: Food;
   collection?: boolean;
 }) {
-  const renew = useFoodImageRefresh();
   const v = visualFor(food, isDemo),
     src = mediaUrl(food.pictureUrl?.[0]);
+  const photo = useFoodPhoto(src);
   return (
     <article className="ew-food-card">
       <Link to={`/foods/${food.id}`}>
         <div className="ew-food-photo" style={{ background: v.tile }}>
-          {src ? (
+          {!photo.unavailable ? (
             <img
               className={v.asset ? "illustration" : "photo"}
               src={src}
               alt={food.name ?? "菜品"}
               loading="lazy"
               decoding="async"
-              onError={() => renew(src)}
+              onError={photo.onError}
             />
           ) : (
-            <Icon name="image" size={28} />
+            <FoodPhotoFallback category={food.category} failed={photo.failed} />
           )}
           <span>
             {categories.find((x) => x.id === food.category)?.label ?? "菜品"}

@@ -1,8 +1,9 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { Food, Restaurant } from "../api/models";
 import { mediaUrl, money } from "../api/models";
-import { useFoodImageRefresh } from "../features/media";
+import { useFoodPhoto } from "../features/media";
+import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
 import { useApp } from "../app/state";
 import { useLoginDialog } from "../app/auth-dialog";
 import { useActionAccess } from "../features/access";
@@ -89,9 +90,22 @@ export function DesignNav({ active }: { active: string }) {
   const { session } = useApp();
   const { openLogin } = useLoginDialog();
   const access = useActionAccess();
+  const [instant, setInstant] = useState(false);
+  const selected = Math.max(0, ["home", "nearby", "me"].indexOf(active));
   return (
     <div className="design-navigation">
-      <nav aria-label="主导航">
+      <nav
+        aria-label="主导航"
+        data-motion={instant ? "instant" : undefined}
+        onClickCapture={(event) => setInstant(event.detail === 0)}
+      >
+        <span
+          className="design-nav-lens"
+          aria-hidden="true"
+          style={{
+            transform: `translateX(calc(${selected * 100}% + ${selected * 2}px))`,
+          }}
+        />
         {[
           { key: "home", path: "/", icon: "discover", label: "发现" },
           { key: "nearby", path: "/nearby", icon: "nearby", label: "附近" },
@@ -101,11 +115,6 @@ export function DesignNav({ active }: { active: string }) {
             key={n.key}
             to={n.path}
             aria-current={active === n.key ? "page" : undefined}
-            style={{
-              background: active === n.key ? "#F4EFEB" : "transparent",
-              fontWeight: active === n.key ? 700 : 400,
-              color: active === n.key ? "#231C18" : "#6E625B",
-            }}
           >
             <DesignIcon name={n.icon} size={22} />
             {n.label}
@@ -184,7 +193,7 @@ export function FoodTile({
 }) {
   const m = useMobile();
   const src = mediaUrl(food.pictureUrl?.[0]);
-  const renew = useFoodImageRefresh();
+  const photo = useFoodPhoto(src);
   return (
     <Link
       className={`design-food-tile design-food-meta-${meta}`}
@@ -195,12 +204,12 @@ export function FoodTile({
         className="design-tile-image"
         style={{ background: visual?.tile ?? "#F4EFEB" }}
       >
-        {src ? (
+        {!photo.unavailable ? (
           <img
             src={src}
             loading="lazy"
             decoding="async"
-            onError={() => renew(src)}
+            onError={photo.onError}
             alt={food.name ?? "菜品"}
             className={visual?.asset ? "is-food-illustration" : "is-food-photo"}
             style={
@@ -228,7 +237,7 @@ export function FoodTile({
             }
           />
         ) : (
-          <DesignIcon name="image" size={28} />
+          <FoodPhotoFallback category={food.category} failed={photo.failed} />
         )}
       </div>
       <div>

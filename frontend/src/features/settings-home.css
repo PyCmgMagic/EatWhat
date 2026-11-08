@@ -29,7 +29,7 @@
   outline-offset: 4px;
 }
 .settings-home-heading {
-  margin-bottom: 26px;
+  margin-bottom: 22px;
 }
 .settings-home-back {
   display: inline-flex;
@@ -45,12 +45,6 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-}
-.settings-home-eyebrow {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--settings-muted);
-  font-size: 12px;
 }
 .settings-home-heading h1 {
   font-size: 32px;
@@ -79,9 +73,9 @@
   display: grid;
   grid-template-columns: 54px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 18px;
-  margin-bottom: 34px;
-  padding: 24px 26px 0;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding: 20px 24px 0;
   background: #fffaf0;
   border: 1px solid #e9dec8;
   border-radius: 16px;
@@ -140,7 +134,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-height: 42px;
+  min-height: 44px;
   padding: 9px 14px;
   border: 1px solid #ded2bc;
   border-radius: 10px;
@@ -176,8 +170,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  margin: -2px -26px 0;
-  padding: 10px 26px;
+  margin: -2px -24px 0;
+  padding: 10px 24px;
   background: #fff1cb;
   color: #77551e;
   font-size: 13px;
@@ -195,69 +189,56 @@
 }
 .settings-home-groups {
   display: grid;
-  gap: 28px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 20px;
 }
-.settings-home-group {
-  display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
-  gap: 24px;
+.settings-home-group,
+.settings-home-support {
   min-width: 0;
+  border: 1px solid var(--settings-line);
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
 }
-.settings-home-group > header {
-  padding-top: 19px;
+.settings-home-group > header,
+.settings-home-support > header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee8e1;
 }
 .settings-home-group > header > span {
   display: inline-flex;
-  margin-bottom: 12px;
   color: #8a7355;
 }
 .settings-home-group h2,
 .settings-home-support h2 {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 750;
   line-height: 1.5;
 }
-.settings-home-group > header p {
-  margin-top: 7px;
-  color: var(--settings-muted);
-  font-size: 13px;
-  line-height: 1.7;
-}
 .settings-home-group-content {
   min-width: 0;
-  border: 1px solid var(--settings-line);
-  border-radius: 15px;
-  background: #fff;
-  overflow: hidden;
 }
 .settings-home-group-items {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
 }
 .settings-home-row {
   display: flex;
   align-items: center;
   gap: 12px;
   min-width: 0;
-  min-height: 84px;
-  padding: 18px;
+  min-height: 76px;
+  padding: 15px 20px;
   transition: background 0.16s;
 }
 .settings-home-group-items > .settings-home-row {
   border-bottom: 1px solid #eee8e1;
 }
-.settings-home-group-items > .settings-home-row:nth-child(odd) {
-  border-right: 1px solid #eee8e1;
-}
 .settings-home-group-items > .settings-home-row:last-child {
-  border-bottom: 0;
-}
-.settings-home-group-items > .settings-home-row:last-child:nth-child(odd) {
-  grid-column: 1 / -1;
-  border-right: 0;
-}
-.settings-home-group-items
-  > .settings-home-row:nth-last-child(2):nth-child(odd) {
   border-bottom: 0;
 }
 .settings-home-icon {
@@ -322,33 +303,16 @@
   border-top: 1px solid #eee8e1;
 }
 .settings-home-support {
-  display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
-  gap: 24px;
-  margin-top: 28px;
-}
-.settings-home-support > header {
-  padding-top: 19px;
-}
-.settings-home-support > header span {
-  display: block;
-  margin-top: 7px;
-  color: var(--settings-muted);
-  font-size: 13px;
-  line-height: 1.7;
+  margin-top: 22px;
 }
 .settings-home-support > div {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  border: 1px solid var(--settings-line);
-  border-radius: 15px;
-  background: #fff;
-  overflow: hidden;
 }
 .settings-home-support .settings-home-row {
-  align-items: start;
+  align-items: center;
   gap: 10px;
-  padding: 20px 16px;
+  padding: 16px 20px;
 }
 .settings-home-support .settings-home-row + .settings-home-row {
   border-left: 1px solid #eee8e1;
@@ -361,8 +325,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  margin-top: 30px;
-  padding: 22px 0 0;
+  margin-top: 24px;
+  padding: 20px 0 0;
   border-top: 1px solid var(--settings-line);
 }
 .settings-home-session strong {
@@ -445,29 +409,25 @@
   outline: 2px solid #947220;
   outline-offset: 3px;
 }
-@container settings (max-width: 920px) {
-  .settings-home-group,
-  .settings-home-support {
+@container settings (max-width: 960px) {
+  .settings-home-groups {
     grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
   }
-  .settings-home-group > header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding-top: 0;
+}
+@container settings (min-width: 631px) and (max-width: 960px) {
+  .settings-home-group-items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .settings-home-group > header > span {
-    margin: 0;
+  .settings-home-group-items > .settings-home-row:nth-child(odd) {
+    border-right: 1px solid #eee8e1;
   }
-  .settings-home-group > header p {
-    margin-top: 3px;
+  .settings-home-group-items > .settings-home-row:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    border-right: 0;
   }
-  .settings-home-support > header {
-    padding: 0;
-  }
-  .settings-home-support > header span {
-    margin-top: 3px;
+  .settings-home-group-items
+    > .settings-home-row:nth-last-child(2):nth-child(odd) {
+    border-bottom: 0;
   }
 }
 @container settings (max-width: 630px) {
@@ -509,9 +469,6 @@
   }
   .settings-home-identity h2 {
     font-size: 18px;
-  }
-  .settings-home-identity > div > span:last-child {
-    display: none;
   }
   .settings-home-edit {
     padding: 8px 10px;

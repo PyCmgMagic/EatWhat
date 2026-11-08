@@ -37,7 +37,7 @@ async function validateProfileReturn(page) {
     (u) => u.pathname.startsWith("/api/"),
     (r) => {
       const path = new URL(r.request().url()).pathname;
-      if (r.request().method() !== "GET")
+      if (path === "/api/user/updateInfo" && r.request().method() !== "GET")
         writes.push({ path, body: r.request().postDataJSON() });
       let data = [];
       if (path === "/api/user/info") data = user;

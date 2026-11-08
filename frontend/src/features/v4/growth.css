@@ -150,33 +150,6 @@
   color: #8c7865;
   font-size: 11px;
 }
-.profile-overview-growth {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  margin: 12px 0 24px;
-  background: #faf0d7;
-  border-radius: 18px;
-  color: #6c5022;
-}
-.profile-overview-growth > .dish-illustration {
-  --dish-illustration-size: 48px;
-}
-.profile-overview-growth > span:nth-child(2) {
-  flex: 1;
-  display: grid;
-  gap: 4px;
-}
-.profile-overview-growth strong {
-  font-size: 14px;
-}
-.profile-overview-growth small {
-  font-size: 11px;
-}
-.mobile-profile-sheet-content > .profile-overview-growth {
-  margin: 0;
-}
 @media (max-width: 600px) {
   .growth-stats-filter > button {
     margin-top: 0;

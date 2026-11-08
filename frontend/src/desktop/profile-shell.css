@@ -68,6 +68,36 @@
   color: #9b8c7d;
   flex-shrink: 0;
 }
+.profile-rail-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 42px;
+  margin-top: -12px;
+  padding: 10px 12px;
+  border: 1px solid #e5ddd3;
+  border-radius: 10px;
+  background: #faf7f3;
+  color: #827367;
+  text-decoration: none;
+  font-size: 13px;
+}
+.profile-rail-search > span:not(.design-icon) {
+  flex: 1;
+}
+.profile-rail-search .design-icon {
+  flex-shrink: 0;
+}
+.profile-rail-search:hover,
+.profile-rail-search[aria-current="page"] {
+  background: #fff9e8;
+  border-color: #d6bf8c;
+  color: #5e4b30;
+}
+.profile-rail-search:focus-visible {
+  outline: 2px solid #947220;
+  outline-offset: 3px;
+}
 .pc-app .pc-profile-workspace .pc-profile-menu {
   display: flex;
   flex-direction: column;
@@ -295,6 +325,18 @@
 .pc-profile-workspace-content .settings-home {
   padding: 0;
 }
+.pc-profile-workspace-content .v4-page[data-route="/features"] .v4-heading {
+  margin-bottom: 16px;
+}
+.pc-profile-workspace-content
+  .v4-page[data-route="/features"]
+  .v4-page-title
+  h1 {
+  font-size: 22px;
+}
+.pc-profile-workspace-content .profile-function-search .feature-directory {
+  margin-top: 0;
+}
 .pc-profile-workspace-content
   .profile-function-search
   .feature-directory-heading {
@@ -309,15 +351,30 @@
 .pc-profile-workspace-content .profile-function-search .feature-search {
   width: 100%;
   max-width: none;
-  margin: 4px 0 20px;
+  margin: 0;
 }
 .pc-profile-workspace-content .profile-function-search .feature-groups {
   grid-template-columns: 1fr;
   gap: 16px;
 }
 .pc-profile-workspace-content .profile-function-search .feature-group {
-  padding: 20px 24px;
+  padding: 16px 20px;
   border-radius: 16px;
+}
+.pc-profile-workspace-content .profile-function-search .feature-group > header {
+  margin: 0 0 8px;
+  padding-bottom: 12px;
+}
+.pc-profile-workspace-content .profile-function-search .feature-group h3 {
+  font-size: 14px;
+}
+.pc-profile-workspace-content .profile-function-search .feature-link {
+  min-height: 68px;
+}
+.pc-profile-workspace-content .profile-function-search .feature-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
 }
 .pc-profile-workspace-content .profile-function-search .feature-list {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -469,6 +526,7 @@ html:has(.pc-profile-workspace) {
     padding: 0;
   }
   .profile-rail-identity,
+  .profile-rail-search,
   .profile-rail-tools,
   .profile-nav-group {
     display: none;

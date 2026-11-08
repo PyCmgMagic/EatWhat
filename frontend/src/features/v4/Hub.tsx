@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useRef } from "react";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import { DesignIcon as Icon } from "../../mobile/ui";
@@ -220,7 +220,12 @@ const allFeatures: Feature[] = groups.flatMap((group) => group.items);
 export default function Features() {
   const { user, api, session } = useApp();
   const [params, setParams] = useSearchParams();
+  const location = useLocation();
   const searchRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (location.state?.focusFeatureSearch)
+      searchRef.current?.focus({ preventScroll: true });
+  }, [location.key, location.state?.focusFeatureSearch]);
   const search = params.get("q") ?? "";
   const featuresReturnTo =
     "/features" + (params.size ? "?" + params.toString() : "");
@@ -294,7 +299,7 @@ export default function Features() {
 
   return (
     <Shell
-      title="查找功能"
+      title="功能搜索"
       detail="输入你想做的事，快速找到对应入口。"
       back="/me"
     >

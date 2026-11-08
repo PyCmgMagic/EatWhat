@@ -11,8 +11,8 @@ import { peopleHref } from "./profile-people";
 import { useFoodImageRefresh } from "./media";
 import { AccessWelcome } from "../components/AccessWelcome";
 import { DishIllustration } from "../components/DishIllustration";
+import ProfileGrowth from "./ProfileGrowth";
 import "./profile-overview.css";
-import "./v4/growth.css";
 
 const mobileLinks = [
   { to: "/me/shares", name: "我的分享", icon: "bowl" },
@@ -139,6 +139,7 @@ export default function ProfileOverview() {
           <span className="profile-overview-eyebrow">个人总览</span>
           <h1>{user?.displayName || "我的"}</h1>
           <p>{user?.signature || "认真吃饭，认真生活。"}</p>
+          <ProfileGrowth />
         </div>
         <ProfileEditLink className="profile-overview-edit">
           <Icon name="edit" size={17} />
@@ -192,14 +193,6 @@ export default function ProfileOverview() {
         ))}
       </nav>
 
-      <Link to="/me/growth" className="profile-overview-growth">
-        <DishIllustration name="danchaofan" />
-        <span>
-          <strong>我的成长</strong>
-          <small>看看等级与经验记录</small>
-        </span>
-        <Icon name="chevronRight" size={16} />
-      </Link>
       <div className="profile-overview-columns">
         <section
           className="profile-overview-collection"

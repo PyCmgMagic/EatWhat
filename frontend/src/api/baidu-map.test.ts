@@ -22,6 +22,65 @@ afterEach(() => {
 });
 
 describe("Baidu Maps integration", () => {
+  it("reverse geocodes the BD09 equivalent of the selected GCJ point", async () => {
+    const getLocation = vi.fn((_p, callback) =>
+      callback({ address: "历城区舜华路1号" }),
+    );
+    const Point = vi.fn(function (lng, lat) {
+      return { lng, lat };
+    });
+    load.mockResolvedValue({
+      Point,
+      Geocoder: class {
+        getLocation = getLocation;
+      },
+    });
+    const { addressForMapPoint } = await import("./baidu-map");
+    const selected = { gcjLng: 117.14, gcjLat: 36.66 };
+    await expect(addressForMapPoint(selected)).resolves.toBe("历城区舜华路1号");
+    const bd = gcjToBaidu(selected);
+    expect(Point).toHaveBeenCalledWith(bd.lng, bd.lat);
+  });
+  it("does not query an invalid point and tolerates missing address results", async () => {
+    const { addressForMapPoint } = await import("./baidu-map");
+    await expect(
+      addressForMapPoint({ gcjLng: 0, gcjLat: 0 }),
+    ).resolves.toBeUndefined();
+    expect(load).not.toHaveBeenCalled();
+    load.mockResolvedValue({
+      Point: class {},
+      Geocoder: class {
+        getLocation(_p: unknown, callback: (r: null) => void) {
+          callback(null);
+        }
+      },
+    });
+    await expect(
+      addressForMapPoint({ gcjLng: 117.14, gcjLat: 36.66 }),
+    ).resolves.toBeUndefined();
+  });
+  it("uses structured street information rather than truncating a long address", async () => {
+    load.mockResolvedValue({
+      Point: class {},
+      Geocoder: class {
+        getLocation(_p: unknown, callback: (r: unknown) => void) {
+          callback({
+            address: "很长的地址".repeat(10),
+            addressComponents: {
+              city: "济南市",
+              district: "历城区",
+              street: "舜华路",
+              streetNumber: "1号",
+            },
+          });
+        }
+      },
+    });
+    const { addressForMapPoint } = await import("./baidu-map");
+    await expect(
+      addressForMapPoint({ gcjLng: 117.14, gcjLat: 36.66 }),
+    ).resolves.toBe("济南市历城区舜华路1号");
+  });
   it("requires configured credentials instead of silently loading a different map provider", async () => {
     vi.stubEnv("VITE_BAIDU_MAP_AK", "");
     const { loadBaiduMap } = await import("./baidu-map");
@@ -77,6 +136,7 @@ describe("Baidu Maps integration", () => {
     const MapConstructor = vi.fn(function () {
       return {
         enableAutoResize: vi.fn(),
+        enableDragging: vi.fn(),
         addEventListener: vi.fn(),
         disableAutoResize: vi.fn(),
         checkResize: vi.fn(),
@@ -107,6 +167,8 @@ describe("Baidu Maps integration", () => {
     expect(acquireBaiduMap(api, host)).toBe(first);
     expect(MapConstructor).toHaveBeenCalledTimes(2);
     expect(first.instance.checkResize).toHaveBeenCalledOnce();
+    expect(first.instance.enableDragging).toHaveBeenCalledTimes(2);
+    expect(concurrent.instance.enableDragging).toHaveBeenCalledOnce();
   });
   it("does not place restaurants with missing or invalid coordinates on the map", () => {
     for (const value of [

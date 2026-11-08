@@ -1,6 +1,5 @@
 import { unreadCount } from "../api/notifications";
 import { DishIllustration } from "../components/DishIllustration";
-import "../features/v4/growth.css";
 import {
   useRemoteConfig,
   recommendationBatchSize,
@@ -69,7 +68,9 @@ import {
 import { FoodManage } from "../features/Catalog";
 import DishDetail from "./DishDetail";
 import ProfileSheet from "./ProfileSheet";
+import ProfileGrowth from "../features/ProfileGrowth";
 import SheetHandle from "./SheetHandle";
+import HomeOrbit from "./HomeOrbit";
 import TagPanel from "./TagPanel";
 import { withDraftTag } from "./draft-tags";
 import { useActionAccess } from "../features/access";
@@ -175,8 +176,7 @@ export function useDesignBridge(
         ? "收藏"
         : "",
     ),
-    [search, setSearch] = useState(""),
-    [expanded, setExpanded] = useState(false);
+    [search, setSearch] = useState("");
   const [mapShopId, setMapShopId] = useState<number>();
   const tagAdding = useRef(false);
   const active = !reference && !!session,
@@ -682,15 +682,8 @@ export function useDesignBridge(
       w: i === k ? 16 : 5,
       o: i === k ? 1 : 0.4,
     }));
-    for (let i = 0; i < 8; i++) {
-      let d = N ? (((i - n) % N) + N) % N : 0;
-      if (d > N / 2) d -= N;
-      const theta = d * 55 + (controller.state.drag ?? 0);
-      values["p" + i] = {
-        t: `rotate(${theta.toFixed(2)}deg) translateY(-430px) scale(${(1 - 0.15 * Math.min(1, Math.abs(theta) / 55)).toFixed(3)})`,
-        // Neighbouring photos must not sit behind the price and restaurant copy.
-        o: !list[i] || d !== 0 ? 0 : 1,
-      };
+    if (N < 2) {
+      values.next = values.down = values.move = values.up = () => {};
     }
   }
   if (screen === "G-Login" && !reference) {
@@ -1432,7 +1425,34 @@ export function useDesignBridge(
       }
       if (tag === "div" && st.top === "0" && st.height === "520px")
         p.className = "mobile-home-art";
-      if (st.top === "570px") p.className = "mobile-home-plate";
+      if (
+        tag === "div" &&
+        n.children.some(
+          (child) =>
+            typeof child !== "string" &&
+            String(child.attrs.style).includes("top: 570px"),
+        )
+      )
+        return (
+          <HomeOrbit
+            foods={carouselFoods}
+            position={controller.state.n ?? 0}
+            drag={controller.state.drag ?? 0}
+            transition={values.tr}
+            demo={isDemo}
+          />
+        );
+      if (tag === "button" && n.attrs.onclick === "{{next}}")
+        p.disabled = busy || carouselFoods.length < 2;
+      if (tag === "a" && n.attrs.href === "G-Dish.dc.html") {
+        const count = carouselFoods.length;
+        const index = (((controller.state.n ?? 0) % count) + count) % count;
+        const food = carouselFoods[index];
+        if (food?.id) p.href = `#/foods/${food.id}`;
+      }
+      if (n.attrs.role === "group")
+        p.onPointerCancel = () =>
+          controller.setState({ drag: 0, dragging: false });
       if (tag === "header") p.className = "mobile-home-toolbar";
       if (tag === "div" && st.top === "392px") p.className = "mobile-home-dots";
       if (tag === "div" && st.top === "414px")
@@ -1547,38 +1567,6 @@ export function useDesignBridge(
             <DesignIcon name="chevronDown" size={14} />
           </a>
         );
-      if (
-        screen === "G-HomePhoto" &&
-        tag === "img" &&
-        String(n.attrs.src).includes("/sq_")
-      ) {
-        const idx = [
-          "sq_luosi",
-          "sq_tieguo",
-          "sq_niandou",
-          "sq_hongshao",
-          "sq_paigu",
-        ].findIndex((s) => String(n.attrs.src).includes(s));
-        const food = carouselFoods[idx];
-        if (!food) return null;
-        p.src = mediaUrl(food.pictureUrl?.[0]);
-        p.alt = food.name;
-      }
-      if (tag === "img" && st.top === "570px") {
-        const index = demoDishes.findIndex((d) =>
-          String(n.attrs.src).includes("/" + d.asset + "."),
-        );
-        const f = recommendations.data?.[index];
-        p.src = f ? mediaUrl(f.pictureUrl?.[0]) : undefined;
-        if (!f) return null;
-        if (!visualFor(f, isDemo).asset)
-          p.style = {
-            ...st,
-            borderRadius: "50%",
-            objectFit: "cover",
-            boxShadow: "0 0 0 8px white,0 22px 40px rgba(0,0,0,.3)",
-          };
-      }
       if (tag === "div" && st.gridTemplateColumns?.includes("repeat(2")) {
         const listQuery = category ? categoryRecommendations : recommendations;
         const list = listQuery.data ?? [],
@@ -1601,7 +1589,7 @@ export function useDesignBridge(
             {listQuery.isFetching && !shown.length && (
               <ContentSkeleton count={2} />
             )}
-            {shown.slice(0, expanded ? undefined : 2).map((f) => (
+            {shown.map((f) => (
               <FoodTile key={f.id} food={f} visual={visualFor(f, isDemo)} />
             ))}
             {listQuery.isError ? (
@@ -1634,13 +1622,6 @@ export function useDesignBridge(
                   }
                 />
               )
-            )}
-            {!expanded && shown.length > 2 && (
-              <div style={{ gridColumn: "1/-1" }}>
-                <PrimaryButton light onClick={() => setExpanded(true)}>
-                  再看几道
-                </PrimaryButton>
-              </div>
             )}
           </div>
         );
@@ -2235,19 +2216,16 @@ export function useDesignBridge(
       if (tag === "div" && st.top === "0" && st.height === "400px")
         p.className = "mobile-profile-stage";
       if (tag === "div" && st.top === "372px")
+        return <ProfileSheet>{view.children.slice(1)}</ProfileSheet>;
+      if (tag === "section" && st.top === "100px")
         return (
-          <ProfileSheet>
-            <Link to="/me/growth" className="profile-overview-growth">
-              <DishIllustration name="danchaofan" />
-              <span>
-                <strong>我的成长</strong>
-                <small>看看等级与经验记录</small>
-              </span>
-              <DesignIcon name="chevronRight" size={16} />
-            </Link>
-            {view.children.slice(1)}
-          </ProfileSheet>
+          <section {...p} className="mobile-profile-identity">
+            {view.children}
+            <ProfileGrowth />
+          </section>
         );
+      if (tag === "div" && st.marginTop === "18px")
+        p.className = "mobile-profile-statistics";
       // The application shell owns the same floating navigation as home.
       if (
         n.children.some(
