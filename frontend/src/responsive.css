@@ -284,10 +284,6 @@
   .pc-hero {
     height: 460px;
   }
-  .pc-hero > .pc-location {
-    top: 22px;
-    left: 28px;
-  }
   .pc-hero-counter {
     right: 28px;
     top: 27px;
@@ -666,14 +662,6 @@
   .pc-hero {
     height: 620px;
     border-radius: 24px 24px 0 0;
-  }
-  .pc-hero > .pc-location {
-    left: 20px;
-    top: 16px;
-    font-size: 13px;
-  }
-  .pc-hero > .pc-location > span {
-    font-size: 11px;
   }
   .pc-hero-counter {
     top: 26px;

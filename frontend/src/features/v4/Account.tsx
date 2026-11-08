@@ -532,6 +532,10 @@ export function MobileChange() {
 export function Cancellation() {
   const app = useApp(),
     [ack, setAck] = useState(false),
+    [deleteContent, setDeleteContent] = useState(
+      () =>
+        recoveryCommands.get("cancellation")?.deletePostsAndComments === true,
+    ),
     [progress, setProgress] =
       useState<Schema["LifecycleRequestStatusResponse"]>(),
     [command, setCommand] = useState(() =>
@@ -548,6 +552,32 @@ export function Cancellation() {
         <p>
           提交后账号会进入注销流程。处理进度、撤销期限与最终状态由服务端返回；受理不代表清理已经完成。
         </p>
+        <fieldset
+          className="v6-cancellation-options"
+          disabled={task.busy || task.uncertain || !!progress || !!command}
+        >
+          <legend>已发布的帖子和评论如何处理？</legend>
+          <label className="v4-check">
+            <input
+              type="radio"
+              name="deleteContent"
+              checked={!deleteContent}
+              onChange={() => setDeleteContent(false)}
+            />
+            匿名保留正文和图片（默认）
+          </label>
+          <p>内容不再关联你的个人资料，其他用户仍可点赞和回复。</p>
+          <label className="v4-check">
+            <input
+              type="radio"
+              name="deleteContent"
+              checked={deleteContent}
+              onChange={() => setDeleteContent(true)}
+            />
+            删除我发布的帖子、评论及其图片
+          </label>
+          <p>此选择会绑定本次注销申请。提交后不能通过重试改变。</p>
+        </fieldset>
         <label className="v4-check">
           <input
             type="checkbox"
@@ -568,6 +598,7 @@ export function Cancellation() {
                   const saved = {
                     commandId: id,
                     capability: capability(),
+                    deletePostsAndComments: deleteContent,
                     identifier:
                       app.user?.userName ??
                       app.user?.phone ??
@@ -579,6 +610,7 @@ export function Cancellation() {
                   return app.api.requestCancellation({
                     requestId: id,
                     recoveryCapability: saved.capability,
+                    deletePostsAndComments: saved.deletePostsAndComments,
                   });
                 },
                 (r) => {
@@ -629,6 +661,7 @@ export function Cancellation() {
 export function AccountRecovery() {
   const app = useApp(),
     [saved, setSaved] = useState(() => recoveryCommands.get("cancellation")),
+    [importedDeletion, setImportedDeletion] = useState<boolean | undefined>(),
     [identifier, setIdentifier] = useState(saved?.identifier ?? ""),
     [subject, setSubject] = useState(saved?.subjectId ?? ""),
     [mode, setMode] = useState<"password" | "phone">("password"),
@@ -666,6 +699,9 @@ export function AccountRecovery() {
                   capability: proof,
                   subjectId:
                     String(d.get("subjectId") || "").trim() || undefined,
+                  ...(kind === "cancellation" && importedDeletion !== undefined
+                    ? { deletePostsAndComments: importedDeletion }
+                    : {}),
                 };
                 recoveryCommands.set(kind, value);
                 if (kind === "cancellation") {
@@ -698,9 +734,12 @@ export function AccountRecovery() {
                     if (
                       !["cancellation", "devices", "mobile"].includes(x.kind) ||
                       typeof x.commandId !== "string" ||
-                      typeof x.capability !== "string"
+                      typeof x.capability !== "string" ||
+                      (x.deletePostsAndComments !== undefined &&
+                        typeof x.deletePostsAndComments !== "boolean")
                     )
                       throw new Error();
+                    setImportedDeletion(x.deletePostsAndComments);
                     const form = e.target.form!;
                     (
                       form.elements.namedItem("kind") as HTMLSelectElement

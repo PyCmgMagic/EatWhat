@@ -5,7 +5,7 @@ import {
   releaseBaiduMap,
   type BaiduNamespace,
 } from "../api/baidu-map";
-import { mediaUrl } from "../api/models";
+import RestaurantMarkers from "./RestaurantMarkers";
 import {
   mapPoint,
   gcjToBaidu,
@@ -137,68 +137,6 @@ export default function BaiduMap(props: Props) {
   }, [attempt]);
 
   const restaurants = props.restaurants ?? [];
-  const signature = JSON.stringify(
-    restaurants.map((r) => [
-      r.id,
-      r.gcjLng,
-      r.gcjLat,
-      r.name,
-      r.pictureUrl?.[0],
-    ]),
-  );
-  useEffect(() => {
-    const instance = map.current,
-      api = sdk.current;
-    if (!instance || !api) return;
-    const overlays: BMap.Overlay[] = [];
-    for (const restaurant of callbacks.current.restaurants ?? []) {
-      const position = mapPoint(restaurant);
-      if (!position) continue;
-      const selected = restaurant.id === props.selectedId;
-      const overlay = new api.CustomOverlay(
-        () => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.className = `restaurant-map-marker${selected ? " is-selected" : ""}`;
-          button.setAttribute("aria-label", `选择${restaurant.name || "餐厅"}`);
-          button.setAttribute("aria-pressed", String(selected));
-          const content = document.createElement("span");
-          content.className = "restaurant-map-marker-content";
-          const photo = mediaUrl(restaurant.pictureUrl?.[0]);
-          if (photo) {
-            const img = document.createElement("img");
-            img.src = photo;
-            img.alt = "";
-            content.append(img);
-          } else content.textContent = restaurant.name?.slice(0, 1) || "店";
-          button.append(content);
-          if (selected) {
-            const label = document.createElement("span");
-            label.className = "restaurant-map-tooltip";
-            label.textContent = restaurant.name || "餐厅";
-            button.append(label);
-          }
-          button.addEventListener("click", (event) => {
-            event.stopPropagation();
-            callbacks.current.onSelect?.(restaurant);
-          });
-          return button;
-        },
-        {
-          point: point(api, position),
-          anchors: [0.5, 0.5],
-          zIndex: selected ? 1000 : 10,
-          enableDraggingMap: false,
-        },
-      );
-      instance.addOverlay(overlay);
-      overlays.push(overlay);
-    }
-    return () => {
-      overlays.forEach((overlay) => instance.removeOverlay(overlay));
-    };
-  }, [ready, signature, props.selectedId]);
-
   const extent = JSON.stringify(
     restaurants.map((r) => [r.id, r.gcjLng, r.gcjLat]),
   );
@@ -212,12 +150,25 @@ export default function BaiduMap(props: Props) {
       .map((p) => point(api, p));
     if (props.pickedPoint)
       instance.centerAndZoom(point(api, props.pickedPoint), 18);
-    else if (points.length > 1)
+    else if (points.length > 1) {
+      const container = instance.getContainer();
+      const bounds = container.getBoundingClientRect();
+      const scale = bounds.width / container.clientWidth || 1;
+      const desktop = element.current?.closest(".pc-map");
+      const card = desktop
+        ?.querySelector(".pc-map-selected")
+        ?.getBoundingClientRect();
+      const coveredBottom =
+        card && card.top < bounds.bottom
+          ? (bounds.bottom - card.top) / scale + 20
+          : 0;
       instance.setViewport(points, {
-        margins: [100, 58, 80, 58],
+        // Mobile has much less map height. Desktop also needs to reserve the
+        // actual overlaid card, while tablet cards sit outside the map itself.
+        margins: [desktop ? 88 : 64, 58, Math.max(60, coveredBottom), 28],
         enableAnimation: false,
       });
-    else if (points.length === 1) instance.centerAndZoom(points[0], 17);
+    } else if (points.length === 1) instance.centerAndZoom(points[0], 17);
     else if (props.center) instance.centerAndZoom(point(api, props.center), 17);
   }, [ready, extent, props.center?.gcjLng, props.center?.gcjLat]);
   const previousSelection = useRef({ id: props.selectedId, extent });
@@ -300,6 +251,14 @@ export default function BaiduMap(props: Props) {
         aria-label="百度地图，支持拖动和缩放"
         aria-busy={loading}
         data-map-state={error ? "error" : loading ? "loading" : "ready"}
+      />
+      <RestaurantMarkers
+        instance={map.current}
+        api={sdk.current}
+        restaurants={restaurants}
+        selectedId={props.selectedId}
+        onSelect={props.onSelect}
+        disabled={props.disabled}
       />
       <div className="restaurant-map-zoom" aria-label="地图缩放">
         <button

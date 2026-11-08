@@ -28,6 +28,21 @@ export type Food = Omit<
     | "hubName"
   >;
 export type Restaurant = Schema["RestaurantResponse"];
+/** Explicit null means no displayable profile; only old responses omit user. */
+export function foodAuthor(
+  food: Pick<Food, "user" | "accountId" | "uploaderName">,
+) {
+  return {
+    id:
+      food.user === undefined
+        ? parseId(String(food.accountId))
+        : food.user
+          ? parseId(String(food.user.id))
+          : undefined,
+    name:
+      food.user?.displayName?.trim() || food.uploaderName?.trim() || "校园食友",
+  };
+}
 export type Hub = Schema["HubResponse"];
 export type User = Omit<Schema["UserInfoDTOResponse"], "birthday"> & {
   birthday?: string | number | null;

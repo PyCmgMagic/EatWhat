@@ -27,6 +27,8 @@ export type RequestOptions = {
   cache?: RequestCache;
   raw?: boolean;
   public?: boolean;
+  /** Passive lifecycle calls still enforce access, but never open action dialogs. */
+  background?: boolean;
 };
 export type Transport = (
   path: string,

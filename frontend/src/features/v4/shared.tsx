@@ -12,6 +12,10 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import { DesignIcon as Icon } from "../../mobile/ui";
 import { ContentSkeleton } from "../../components/LoadingSkeleton";
+import {
+  DishIllustration,
+  type DishIllustrationName,
+} from "../../components/DishIllustration";
 import { errorMessage, resultUncertain, unavailable } from "../../api/client";
 import { ProfileWorkspaceContext } from "../../app/profile-workspace";
 import "./v4.css";
@@ -101,28 +105,36 @@ export function Shell({
   ].includes(path);
   const showBreadcrumb =
     !embedded || !!featuresReturnTo || !workspaceSectionPage;
-  const section = path.startsWith("/admin/")
-    ? "admin"
-    : path.startsWith("/settings/") || path.startsWith("/auth/")
-      ? "account"
-      : path.startsWith("/feedback") ||
-          path.startsWith("/reports") ||
-          path.includes("correction")
-        ? "feedback"
-        : path.startsWith("/topics")
-          ? "topics"
-          : path.startsWith("/restaurants")
-            ? "restaurants"
-            : path.startsWith("/submissions")
-              ? "submissions"
-              : path === "/notifications"
-                ? "notifications"
-                : path === "/announcements"
-                  ? "announcements"
-                  : path.startsWith("/me/tags/")
-                    ? "tags"
-                    : "hub";
+  const section =
+    path === "/me/growth"
+      ? "growth"
+      : path.startsWith("/admin/")
+        ? "admin"
+        : path.startsWith("/settings/") || path.startsWith("/auth/")
+          ? "account"
+          : path.startsWith("/feedback") ||
+              path.startsWith("/reports") ||
+              path.includes("correction")
+            ? "feedback"
+            : path.startsWith("/topics")
+              ? "topics"
+              : path.startsWith("/restaurants")
+                ? "restaurants"
+                : path.startsWith("/submissions")
+                  ? "submissions"
+                  : path === "/notifications"
+                    ? "notifications"
+                    : path === "/announcements"
+                      ? "announcements"
+                      : path.startsWith("/me/tags/")
+                        ? "tags"
+                        : "hub";
   const meta: Record<string, { name: string; icon: string; detail: string }> = {
+    growth: {
+      name: "个人成长",
+      icon: "bowl",
+      detail: "好好吃饭的日常，也在一点点积累。",
+    },
     hub: {
       name: "个人中心",
       icon: "tool",
@@ -303,6 +315,7 @@ export function QueryView({
   empty = false,
   emptyTitle = "这里暂时没有记录。",
   emptyDetail = "新的记录会出现在这里，先去看看校园里有什么好味道。",
+  emptyIllustration,
 }: {
   query: {
     isPending: boolean;
@@ -314,6 +327,7 @@ export function QueryView({
   empty?: boolean;
   emptyTitle?: string;
   emptyDetail?: string;
+  emptyIllustration?: DishIllustrationName;
 }) {
   if (query.isPending) return <ContentSkeleton kind="rows" count={3} />;
   if (query.error && !query.data)
@@ -336,10 +350,17 @@ export function QueryView({
   if (empty)
     return (
       <div className="v4-state" role="status">
-        <span className="v4-state-art">
-          <Icon name="bowl" size={37} />
-          <i />
-        </span>
+        {emptyIllustration ? (
+          <DishIllustration
+            name={emptyIllustration}
+            className="v4-state-dish"
+          />
+        ) : (
+          <span className="v4-state-art">
+            <Icon name="bowl" size={37} />
+            <i />
+          </span>
+        )}
         <h3>{emptyTitle}</h3>
         <p>{emptyDetail}</p>
       </div>

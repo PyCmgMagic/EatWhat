@@ -67,6 +67,8 @@ async function validateVerificationCallback(page) {
         } else if (path === "/api/foods/71/favorite") {
           state.writes.push(path);
           data = null;
+        } else if (path === "/api/user/activity") {
+          data = { firstUseToday: false, experienceAdded: 0 };
         } else if (r.request().method() !== "GET") {
           errors.push("Unexpected mutation: " + path);
           return r.abort();

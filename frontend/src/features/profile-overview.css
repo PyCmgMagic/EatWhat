@@ -366,6 +366,10 @@
   margin-bottom: 15px;
   color: #a99579;
 }
+.profile-overview-empty > .dish-illustration {
+  --dish-illustration-size: 100px;
+  margin-bottom: 12px;
+}
 .profile-overview .profile-overview-empty h3 {
   font-size: 14px;
   line-height: 1.5;

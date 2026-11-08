@@ -20,6 +20,8 @@ import {
 import { CaseContent, SubmissionContent } from "./Community";
 import { useAdminReturnTo, useAdminState } from "../../app/admin-state";
 
+import { EngagementStats } from "./Growth";
+
 export default function V4Admin() {
   const { user } = useApp(),
     [params, setParams] = useSearchParams();
@@ -45,6 +47,7 @@ export default function V4Admin() {
           <nav className="v4-admin-nav" aria-label="管理模块">
             {[
               ["feedback", "反馈举报", "feedback"],
+              ["engagement", "活跃统计", "history"],
               ["moderation", "提交审核", "shield"],
               ["topics", "校园专题", "topic"],
               ["config", "远程配置", "settings"],
@@ -70,7 +73,9 @@ export default function V4Admin() {
           </Link>
         </aside>
         <div className="v4-admin-main">
-          {tab === "feedback" ? (
+          {tab === "engagement" ? (
+            <EngagementStats />
+          ) : tab === "feedback" ? (
             <FeedbackAdmin />
           ) : tab === "moderation" ? (
             <ModerationAdmin />

@@ -43,10 +43,45 @@ function setup() {
   };
 }
 describe("shared request permissions", () => {
+  it("keeps APIv6 public and optional-login operations accessible despite security export conflicts", () => {
+    const spec = JSON.parse(
+      readFileSync(
+        new URL(
+          "../../../docs/EatWhat 业务服务 APIv6.openapi.json",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    );
+    let optional = 0;
+    for (const [path, methods] of Object.entries(spec.paths))
+      for (const [method, op] of Object.entries(
+        methods as Record<string, { summary?: string }>,
+      )) {
+        if (!/^【(?:公开|可选登录)】/.test(op.summary ?? "")) continue;
+        expect(requestAccess(path.replace(/\{[^}]+\}/g, "7"), { method })).toBe(
+          "public",
+        );
+        if (op.summary?.includes("可选登录")) optional++;
+      }
+    expect(optional).toBe(23);
+  });
+  it("rejects passive activity for guests without opening a login dialog", async () => {
+    const s = setup();
+    s.state.session = null;
+    await expect(s.api.recordActivity()).rejects.toMatchObject({
+      presented: false,
+    });
+    expect(s.prompt).not.toHaveBeenCalled();
+    expect(s.send).not.toHaveBeenCalled();
+  });
   it("covers every verified operation declared by the current API contract", () => {
     const spec = parse(
       readFileSync(
-        new URL("../../../docs/EatWhat 业务服务 APIv5.yaml", import.meta.url),
+        new URL(
+          "../../../docs/EatWhat 业务服务 APIv6.openapi.json",
+          import.meta.url,
+        ),
         "utf8",
       ),
     );

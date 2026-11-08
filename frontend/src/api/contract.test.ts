@@ -6,11 +6,14 @@ import { parse } from "yaml";
 // Read the only authoritative specification, including its unusual /api controller prefix.
 const spec = parse(
   readFileSync(
-    new URL("../../../docs/EatWhat 业务服务 APIv5.yaml", import.meta.url),
+    new URL(
+      "../../../docs/EatWhat 业务服务 APIv6.openapi.json",
+      import.meta.url,
+    ),
     "utf8",
   ),
 );
-it("every implemented service operation exists in the latest YAML contract and supplies its required parameters", async () => {
+it("every implemented service operation exists in the latest APIv6 contract and supplies its required parameters", async () => {
   const calls: { path: string; options: RequestOptions }[] = [];
   const api = createApi(
     async (path, options) => {
@@ -30,6 +33,10 @@ it("every implemented service operation exists in the latest YAML contract and s
     },
   );
   await Promise.all([
+    api.recordActivity(),
+    api.growth(),
+    api.growthLedger(1, 20),
+    api.engagementStats("2026-11-08"),
     api.adminFeedbackCases({}),
     api.adminFeedbackCase(1),
     api.resolveFeedback(1, {}, "11111111-1111-4111-8111-111111111111"),
@@ -366,7 +373,7 @@ it("every implemented service operation exists in the latest YAML contract and s
     expect(matched, `undefined endpoint ${path}`).toBeTruthy();
     const method = (options.method ?? "GET").toLowerCase();
     const op = spec.paths[matched!][method];
-    expect(op, `${method} ${path} missing from v5`).toBeTruthy();
+    expect(op, `${method} ${path} missing from v6`).toBeTruthy();
     for (const param of op.parameters ?? [])
       if (param.required && param.in === "query")
         expect(
@@ -409,6 +416,10 @@ it("every implemented service operation exists in the latest YAML contract and s
     }),
   );
   const backendOnly = new Set([
+    "GET /auth/callback",
+    "POST /auth/callback",
+    "GET /callback",
+    "POST /callback",
     "GET /auth/verifyEmail",
     "GET /auth/callback/{state}",
     "POST /auth/callback/{state}",
@@ -428,5 +439,5 @@ it("every implemented service operation exists in the latest YAML contract and s
     }
   expect(missing).toEqual([]);
   expect(excluded).toHaveLength(14);
-  expect(implemented.size).toBe(185);
+  expect(implemented.size).toBe(189);
 });

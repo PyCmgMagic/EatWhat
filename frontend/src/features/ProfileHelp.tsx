@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { DesignIcon as Icon } from "../mobile/ui";
 import ProfileSectionNav from "./ProfileSectionNav";
+import { DishIllustration } from "../components/DishIllustration";
 import "./profile-help.css";
 
 const questions = [
@@ -165,9 +166,10 @@ export default function ProfileHelp() {
         </section>
         <aside className="profile-help-actions" aria-label="反馈入口">
           <section className="profile-help-contact">
-            <span className="profile-help-contact-icon">
-              <Icon name="feedback" size={26} />
-            </span>
+            <DishIllustration
+              name="baozi"
+              className="profile-help-contact-dish"
+            />
             <h2>还有其他问题？</h2>
             <p>告诉我们发生了什么，也欢迎分享你对这里的建议。</p>
             <Link to="/feedback">

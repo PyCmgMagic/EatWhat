@@ -7,6 +7,7 @@ describe("personal workspace information architecture", () => {
       "/me",
       "/me/shares",
       "/favorites",
+      "/me/growth",
       "/history",
       "/notifications",
       "/settings",
@@ -16,6 +17,7 @@ describe("personal workspace information architecture", () => {
 
   it.each([
     ["/me", "/me"],
+    ["/me/growth", "/me/growth"],
     ["/me/shares", "/me/shares"],
     ["/submissions", "/me/shares"],
     ["/submissions/revision-123", "/me/shares"],

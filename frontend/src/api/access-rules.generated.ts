@@ -1,20 +1,10 @@
-// Generated from docs/EatWhat 业务服务 APIv5.yaml by npm run api:access.
+// Generated from docs/EatWhat 业务服务 APIv6.openapi.json by npm run api:access.
 // Do not add button-specific permission rules here.
 export const requestAccessRules = [
   [
-    "GET",
-    "/activity/list",
-    "login"
-  ],
-  [
     "DELETE",
     "/activity/posts/{id}",
     "verified"
-  ],
-  [
-    "GET",
-    "/activity/posts/{id}",
-    "login"
   ],
   [
     "POST",
@@ -27,74 +17,9 @@ export const requestAccessRules = [
     "verified"
   ],
   [
-    "GET",
-    "/activity/{code}",
-    "login"
-  ],
-  [
-    "GET",
-    "/activity/{code}/posts",
-    "login"
-  ],
-  [
     "POST",
     "/activity/{code}/posts",
     "verified"
-  ],
-  [
-    "POST",
-    "/admin/activities",
-    "login"
-  ],
-  [
-    "GET",
-    "/admin/activities",
-    "login"
-  ],
-  [
-    "DELETE",
-    "/admin/activities/{id}",
-    "login"
-  ],
-  [
-    "GET",
-    "/admin/activities/{id}",
-    "login"
-  ],
-  [
-    "PUT",
-    "/admin/activities/{id}",
-    "login"
-  ],
-  [
-    "POST",
-    "/admin/activities/{id}/status",
-    "login"
-  ],
-  [
-    "GET",
-    "/admin/consent/policy",
-    "login"
-  ],
-  [
-    "PUT",
-    "/admin/consent/policy",
-    "login"
-  ],
-  [
-    "GET",
-    "/admin/feedback/cases",
-    "login"
-  ],
-  [
-    "GET",
-    "/admin/feedback/cases/{id}",
-    "login"
-  ],
-  [
-    "POST",
-    "/admin/feedback/cases/{id}/resolution",
-    "login"
   ],
   [
     "POST",
@@ -114,66 +39,6 @@ export const requestAccessRules = [
   [
     "PUT",
     "/admin/food-tags/{id}",
-    "login"
-  ],
-  [
-    "GET",
-    "/admin/moderation/queue",
-    "login"
-  ],
-  [
-    "POST",
-    "/admin/moderation/reviews",
-    "login"
-  ],
-  [
-    "GET",
-    "/admin/moderation/revisions/{revisionId}",
-    "login"
-  ],
-  [
-    "GET",
-    "/admin/moderation/revisions/{revisionId}/images/{slot}",
-    "login"
-  ],
-  [
-    "GET",
-    "/admin/remote-config",
-    "login"
-  ],
-  [
-    "GET",
-    "/admin/remote-config/announcements",
-    "login"
-  ],
-  [
-    "POST",
-    "/admin/remote-config/announcements",
-    "login"
-  ],
-  [
-    "DELETE",
-    "/admin/remote-config/announcements/{id}",
-    "login"
-  ],
-  [
-    "PUT",
-    "/admin/remote-config/announcements/{id}",
-    "login"
-  ],
-  [
-    "GET",
-    "/admin/remote-config/audit",
-    "login"
-  ],
-  [
-    "PUT",
-    "/admin/remote-config/settings",
-    "login"
-  ],
-  [
-    "PUT",
-    "/admin/remote-config/versions/{platform}",
     "login"
   ],
   [
@@ -248,32 +113,7 @@ export const requestAccessRules = [
   ],
   [
     "POST",
-    "/admin/topics/commands",
-    "login"
-  ],
-  [
-    "GET",
-    "/api/location/provinces",
-    "login"
-  ],
-  [
-    "GET",
-    "/api/location/provinces/{provinceId}/cities",
-    "login"
-  ],
-  [
-    "POST",
     "/auth/changePassword",
-    "login"
-  ],
-  [
-    "GET",
-    "/auth/consent",
-    "login"
-  ],
-  [
-    "POST",
-    "/auth/consent/withdraw",
     "login"
   ],
   [
@@ -308,47 +148,7 @@ export const requestAccessRules = [
   ],
   [
     "GET",
-    "/auth/security/account-reviews",
-    "login"
-  ],
-  [
-    "POST",
-    "/auth/security/account-reviews/password-conflicts/{userId}/reset",
-    "login"
-  ],
-  [
-    "POST",
-    "/auth/security/account-reviews/{eventId}/decision",
-    "login"
-  ],
-  [
-    "GET",
     "/auth/sendEmail",
-    "login"
-  ],
-  [
-    "GET",
-    "/auth/sessions",
-    "login"
-  ],
-  [
-    "POST",
-    "/auth/sessions/revoke-others",
-    "login"
-  ],
-  [
-    "POST",
-    "/auth/sessions/{commandId}/resume",
-    "login"
-  ],
-  [
-    "POST",
-    "/auth/sessions/{commandId}/status",
-    "login"
-  ],
-  [
-    "DELETE",
-    "/auth/sessions/{sessionId}",
     "login"
   ],
   [
@@ -363,32 +163,12 @@ export const requestAccessRules = [
   ],
   [
     "GET",
-    "/campus/list",
+    "/auth/consent",
     "login"
   ],
   [
     "POST",
-    "/feedback/catalog-errors",
-    "login"
-  ],
-  [
-    "POST",
-    "/feedback/messages",
-    "login"
-  ],
-  [
-    "GET",
-    "/feedback/mine",
-    "login"
-  ],
-  [
-    "GET",
-    "/feedback/mine/{id}",
-    "login"
-  ],
-  [
-    "POST",
-    "/feedback/reports",
+    "/auth/consent/withdraw",
     "login"
   ],
   [
@@ -402,11 +182,6 @@ export const requestAccessRules = [
     "login"
   ],
   [
-    "GET",
-    "/foods/detail/{id}",
-    "login"
-  ],
-  [
     "PUT",
     "/foods/edit/{id}",
     "login"
@@ -414,11 +189,6 @@ export const requestAccessRules = [
   [
     "GET",
     "/foods/favorites",
-    "login"
-  ],
-  [
-    "GET",
-    "/foods/list",
     "login"
   ],
   [
@@ -435,11 +205,6 @@ export const requestAccessRules = [
     "PUT",
     "/foods/my/{id}",
     "verified"
-  ],
-  [
-    "GET",
-    "/foods/recommend",
-    "login"
   ],
   [
     "GET",
@@ -462,11 +227,6 @@ export const requestAccessRules = [
     "verified"
   ],
   [
-    "GET",
-    "/foods/tags/system",
-    "login"
-  ],
-  [
     "POST",
     "/foods/upload",
     "verified"
@@ -480,11 +240,6 @@ export const requestAccessRules = [
     "POST",
     "/foods/{id}/like",
     "verified"
-  ],
-  [
-    "GET",
-    "/foods/{id}/tags",
-    "login"
   ],
   [
     "POST",
@@ -532,28 +287,388 @@ export const requestAccessRules = [
     "login"
   ],
   [
-    "GET",
-    "/hub/detail/{id}",
-    "login"
-  ],
-  [
     "PUT",
     "/hub/edit/{id}",
     "login"
   ],
   [
-    "GET",
-    "/hub/list",
+    "POST",
+    "/hub/rebind-restaurants/{id}",
     "login"
   ],
   [
     "GET",
-    "/hub/locate",
+    "/notification/list",
     "login"
   ],
   [
     "POST",
-    "/hub/rebind-restaurants/{id}",
+    "/notification/read/all",
+    "login"
+  ],
+  [
+    "POST",
+    "/notification/read/{id}",
+    "login"
+  ],
+  [
+    "GET",
+    "/notification/unread/count",
+    "login"
+  ],
+  [
+    "POST",
+    "/restaurant/add",
+    "verified"
+  ],
+  [
+    "DELETE",
+    "/restaurant/delete/{id}",
+    "login"
+  ],
+  [
+    "PUT",
+    "/restaurant/edit/{id}",
+    "login"
+  ],
+  [
+    "GET",
+    "/restaurant/favorites",
+    "login"
+  ],
+  [
+    "GET",
+    "/restaurant/list",
+    "login"
+  ],
+  [
+    "PUT",
+    "/restaurant/{id}/favorite",
+    "verified"
+  ],
+  [
+    "DELETE",
+    "/restaurant/{id}/favorite",
+    "login"
+  ],
+  [
+    "PUT",
+    "/restaurant/{id}/rating",
+    "verified"
+  ],
+  [
+    "DELETE",
+    "/restaurant/{id}/rating",
+    "login"
+  ],
+  [
+    "POST",
+    "/upload/complete",
+    "login"
+  ],
+  [
+    "POST",
+    "/upload/presign",
+    "upload"
+  ],
+  [
+    "POST",
+    "/upload/presign/batch",
+    "upload"
+  ],
+  [
+    "POST",
+    "/user/ban/{userId}",
+    "login"
+  ],
+  [
+    "POST",
+    "/user/bindMobile",
+    "login"
+  ],
+  [
+    "POST",
+    "/user/changePrivacy",
+    "login"
+  ],
+  [
+    "POST",
+    "/user/follow",
+    "verified"
+  ],
+  [
+    "GET",
+    "/user/followers",
+    "login"
+  ],
+  [
+    "GET",
+    "/user/followings",
+    "login"
+  ],
+  [
+    "POST",
+    "/user/getCode",
+    "verified"
+  ],
+  [
+    "GET",
+    "/user/info",
+    "login"
+  ],
+  [
+    "GET",
+    "/user/list",
+    "login"
+  ],
+  [
+    "POST",
+    "/user/unban/{userId}",
+    "login"
+  ],
+  [
+    "POST",
+    "/user/unfollow",
+    "login"
+  ],
+  [
+    "PUT",
+    "/user/updateInfo",
+    "login"
+  ],
+  [
+    "GET",
+    "/user/userInfo",
+    "login"
+  ],
+  [
+    "GET",
+    "/auth/security/account-reviews",
+    "login"
+  ],
+  [
+    "POST",
+    "/auth/security/account-reviews/password-conflicts/{userId}/reset",
+    "login"
+  ],
+  [
+    "POST",
+    "/auth/security/account-reviews/{eventId}/decision",
+    "login"
+  ],
+  [
+    "DELETE",
+    "/user/recommendation-profile/preferences",
+    "login"
+  ],
+  [
+    "PUT",
+    "/user/recommendation-profile/preferences",
+    "login"
+  ],
+  [
+    "GET",
+    "/user/recommendation-profile/preferences",
+    "login"
+  ],
+  [
+    "POST",
+    "/admin/activities",
+    "login"
+  ],
+  [
+    "GET",
+    "/admin/activities",
+    "login"
+  ],
+  [
+    "DELETE",
+    "/admin/activities/{id}",
+    "login"
+  ],
+  [
+    "GET",
+    "/admin/activities/{id}",
+    "login"
+  ],
+  [
+    "PUT",
+    "/admin/activities/{id}",
+    "login"
+  ],
+  [
+    "POST",
+    "/admin/activities/{id}/status",
+    "login"
+  ],
+  [
+    "GET",
+    "/admin/consent/policy",
+    "login"
+  ],
+  [
+    "PUT",
+    "/admin/consent/policy",
+    "login"
+  ],
+  [
+    "GET",
+    "/user/blocks",
+    "login"
+  ],
+  [
+    "PUT",
+    "/user/blocks/{userId}",
+    "login"
+  ],
+  [
+    "GET",
+    "/user/blocks/{userId}",
+    "login"
+  ],
+  [
+    "DELETE",
+    "/user/blocks/{userId}",
+    "login"
+  ],
+  [
+    "GET",
+    "/user/recommendation-settings",
+    "login"
+  ],
+  [
+    "PUT",
+    "/user/recommendation-settings",
+    "login"
+  ],
+  [
+    "GET",
+    "/admin/feedback/cases",
+    "login"
+  ],
+  [
+    "GET",
+    "/admin/feedback/cases/{id}",
+    "login"
+  ],
+  [
+    "POST",
+    "/admin/feedback/cases/{id}/resolution",
+    "login"
+  ],
+  [
+    "GET",
+    "/admin/moderation/queue",
+    "login"
+  ],
+  [
+    "POST",
+    "/admin/moderation/reviews",
+    "login"
+  ],
+  [
+    "GET",
+    "/admin/moderation/revisions/{revisionId}",
+    "login"
+  ],
+  [
+    "GET",
+    "/admin/moderation/revisions/{revisionId}/images/{slot}",
+    "login"
+  ],
+  [
+    "GET",
+    "/admin/remote-config",
+    "login"
+  ],
+  [
+    "GET",
+    "/admin/remote-config/announcements",
+    "login"
+  ],
+  [
+    "POST",
+    "/admin/remote-config/announcements",
+    "login"
+  ],
+  [
+    "DELETE",
+    "/admin/remote-config/announcements/{id}",
+    "login"
+  ],
+  [
+    "PUT",
+    "/admin/remote-config/announcements/{id}",
+    "login"
+  ],
+  [
+    "GET",
+    "/admin/remote-config/audit",
+    "login"
+  ],
+  [
+    "PUT",
+    "/admin/remote-config/settings",
+    "login"
+  ],
+  [
+    "PUT",
+    "/admin/remote-config/versions/{platform}",
+    "login"
+  ],
+  [
+    "POST",
+    "/admin/topics/commands",
+    "login"
+  ],
+  [
+    "GET",
+    "/auth/sessions",
+    "login"
+  ],
+  [
+    "POST",
+    "/auth/sessions/revoke-others",
+    "login"
+  ],
+  [
+    "POST",
+    "/auth/sessions/{commandId}/resume",
+    "login"
+  ],
+  [
+    "POST",
+    "/auth/sessions/{commandId}/status",
+    "login"
+  ],
+  [
+    "DELETE",
+    "/auth/sessions/{sessionId}",
+    "login"
+  ],
+  [
+    "POST",
+    "/feedback/catalog-errors",
+    "login"
+  ],
+  [
+    "POST",
+    "/feedback/messages",
+    "login"
+  ],
+  [
+    "GET",
+    "/feedback/mine",
+    "login"
+  ],
+  [
+    "GET",
+    "/feedback/mine/{id}",
+    "login"
+  ],
+  [
+    "POST",
+    "/feedback/reports",
     "login"
   ],
   [
@@ -584,26 +699,6 @@ export const requestAccessRules = [
   [
     "POST",
     "/notification/cards/{id}/read",
-    "login"
-  ],
-  [
-    "GET",
-    "/notification/list",
-    "login"
-  ],
-  [
-    "POST",
-    "/notification/read/all",
-    "login"
-  ],
-  [
-    "POST",
-    "/notification/read/{id}",
-    "login"
-  ],
-  [
-    "GET",
-    "/notification/unread/count",
     "login"
   ],
   [
@@ -647,71 +742,6 @@ export const requestAccessRules = [
     "login"
   ],
   [
-    "GET",
-    "/remote-config",
-    "login"
-  ],
-  [
-    "POST",
-    "/restaurant/add",
-    "verified"
-  ],
-  [
-    "GET",
-    "/restaurant/browse",
-    "login"
-  ],
-  [
-    "DELETE",
-    "/restaurant/delete/{id}",
-    "login"
-  ],
-  [
-    "GET",
-    "/restaurant/detail/{id}",
-    "login"
-  ],
-  [
-    "PUT",
-    "/restaurant/edit/{id}",
-    "login"
-  ],
-  [
-    "GET",
-    "/restaurant/favorites",
-    "login"
-  ],
-  [
-    "GET",
-    "/restaurant/list",
-    "login"
-  ],
-  [
-    "GET",
-    "/restaurant/search",
-    "login"
-  ],
-  [
-    "PUT",
-    "/restaurant/{id}/favorite",
-    "verified"
-  ],
-  [
-    "DELETE",
-    "/restaurant/{id}/favorite",
-    "login"
-  ],
-  [
-    "PUT",
-    "/restaurant/{id}/rating",
-    "verified"
-  ],
-  [
-    "DELETE",
-    "/restaurant/{id}/rating",
-    "login"
-  ],
-  [
     "PUT",
     "/telemetry/consent",
     "login"
@@ -732,71 +762,6 @@ export const requestAccessRules = [
     "login"
   ],
   [
-    "GET",
-    "/topics/by-food/{foodId}",
-    "login"
-  ],
-  [
-    "GET",
-    "/topics/current",
-    "login"
-  ],
-  [
-    "GET",
-    "/topics/history",
-    "login"
-  ],
-  [
-    "GET",
-    "/topics/{id}",
-    "login"
-  ],
-  [
-    "POST",
-    "/upload/complete",
-    "login"
-  ],
-  [
-    "POST",
-    "/upload/presign",
-    "upload"
-  ],
-  [
-    "POST",
-    "/upload/presign/batch",
-    "upload"
-  ],
-  [
-    "POST",
-    "/user/ban/{userId}",
-    "login"
-  ],
-  [
-    "POST",
-    "/user/bindMobile",
-    "login"
-  ],
-  [
-    "GET",
-    "/user/blocks",
-    "login"
-  ],
-  [
-    "PUT",
-    "/user/blocks/{userId}",
-    "login"
-  ],
-  [
-    "GET",
-    "/user/blocks/{userId}",
-    "login"
-  ],
-  [
-    "DELETE",
-    "/user/blocks/{userId}",
-    "login"
-  ],
-  [
     "POST",
     "/user/cancellation",
     "login"
@@ -813,52 +778,7 @@ export const requestAccessRules = [
   ],
   [
     "POST",
-    "/user/changePrivacy",
-    "login"
-  ],
-  [
-    "POST",
-    "/user/follow",
-    "verified"
-  ],
-  [
-    "GET",
-    "/user/followers",
-    "login"
-  ],
-  [
-    "GET",
-    "/user/followings",
-    "login"
-  ],
-  [
-    "POST",
-    "/user/getCode",
-    "verified"
-  ],
-  [
-    "GET",
-    "/user/info",
-    "login"
-  ],
-  [
-    "GET",
-    "/user/list",
-    "login"
-  ],
-  [
-    "POST",
     "/user/mobile/commands",
-    "login"
-  ],
-  [
-    "POST",
-    "/user/mobile/commands/{commandId}/recovery-status",
-    "login"
-  ],
-  [
-    "POST",
-    "/user/mobile/commands/{commandId}/resume",
     "login"
   ],
   [
@@ -877,48 +797,33 @@ export const requestAccessRules = [
     "login"
   ],
   [
-    "DELETE",
-    "/user/recommendation-profile/preferences",
-    "login"
-  ],
-  [
-    "PUT",
-    "/user/recommendation-profile/preferences",
-    "login"
-  ],
-  [
-    "GET",
-    "/user/recommendation-profile/preferences",
-    "login"
-  ],
-  [
-    "GET",
-    "/user/recommendation-settings",
-    "login"
-  ],
-  [
-    "PUT",
-    "/user/recommendation-settings",
+    "POST",
+    "/user/mobile/commands/{commandId}/recovery-status",
     "login"
   ],
   [
     "POST",
-    "/user/unban/{userId}",
-    "login"
-  ],
-  [
-    "POST",
-    "/user/unfollow",
-    "login"
-  ],
-  [
-    "PUT",
-    "/user/updateInfo",
+    "/user/mobile/commands/{commandId}/resume",
     "login"
   ],
   [
     "GET",
-    "/user/userInfo",
+    "/admin/engagement/stats",
+    "login"
+  ],
+  [
+    "POST",
+    "/user/activity",
+    "login"
+  ],
+  [
+    "GET",
+    "/user/growth",
+    "login"
+  ],
+  [
+    "GET",
+    "/user/growth/ledger",
     "login"
   ]
 ] as const;

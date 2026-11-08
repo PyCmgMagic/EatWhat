@@ -299,36 +299,6 @@
   border-radius: 50%;
   transform: rotate(-13deg);
 }
-.pc-location {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 38px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font-size: 14px;
-  font-weight: 700;
-  color: inherit;
-  cursor: pointer;
-}
-.pc-location > span {
-  font-size: 13px;
-  font-weight: 400;
-  opacity: 0.8;
-}
-.pc-location.light {
-  border-radius: 22px;
-  background: #f4efeb;
-  padding: 0 16px;
-  color: #231c18;
-}
-.pc-hero > .pc-location {
-  position: absolute;
-  left: 44px;
-  top: 27px;
-  z-index: 3;
-}
 .pc-hero-counter {
   position: absolute;
   right: 40px;

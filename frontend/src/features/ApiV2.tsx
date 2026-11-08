@@ -1,5 +1,5 @@
 import { Select } from "../components/Select";
-import { isDemo } from "../app/runtime";
+import { isDemo, readSession, sameSession } from "../app/runtime";
 import { authNext, useReturnTo } from "../app/navigation";
 import { historyEntry, historyTime } from "../desktop/history";
 import { emptyHistoryCache, historyCacheFilters } from "./history-cache";
@@ -559,7 +559,8 @@ export function ClearHistory({
   );
 }
 export function UsernameSetup() {
-  const { api, user, clearLocalSession } = useApp(),
+  const { api, user, clearLocalSession, toast } = useApp(),
+    qc = useQueryClient(),
     nav = useNavigate(),
     first = new URLSearchParams(useLocation().search).has("first"),
     getSignal = useSendSignal();
@@ -580,7 +581,7 @@ export function UsernameSetup() {
       <div className="ew-v2-card ew-v2-account">
         <h2>给账号设置一个登录名</h2>
         <p className="ew-note">
-          登录名与展示昵称分开。设置后需重新登录，可使用手机验证码或新的登录名。
+          登录名与展示昵称分开。设置后保持登录，下次可用手机验证码或新的登录名登录。
         </p>
         {user?.hasUsername !== false ? (
           <p>当前登录名：{user?.userName || "正在读取账号信息…"}</p>
@@ -593,6 +594,7 @@ export function UsernameSetup() {
               const form = e.currentTarget,
                 d = new FormData(form);
               save.run(async () => {
+                const requestSession = readSession();
                 const newPassword = String(d.get("newPassword") || "");
                 if (
                   (newPassword || d.get("confirm")) &&
@@ -604,12 +606,34 @@ export function UsernameSetup() {
                   code: String(d.get("code")),
                   ...(!user.hasPassword && newPassword ? { newPassword } : {}),
                 });
+                if (!sameSession(requestSession, readSession())) return;
                 form.reset();
-                await clearLocalSession();
-                nav("/auth/password", {
-                  replace: true,
-                  state: { userName: result.userName, reauthentication: true },
-                });
+                if (result.reauthenticationRequired === true) {
+                  // Navigate while this guarded page is still mounted. Clearing
+                  // the identity cache first can remove its router subscription.
+                  nav("/auth/password", {
+                    replace: true,
+                    state: {
+                      userName: result.userName,
+                      reauthentication: true,
+                    },
+                  });
+                  await clearLocalSession();
+                } else {
+                  // The write already succeeded. A subsequent read failure must
+                  // not leave the first-time setup form available for resubmission.
+                  qc.setQueryData(["me"], {
+                    ...user,
+                    userName: result.userName ?? user.userName,
+                    hasUsername: true,
+                    hasPassword: result.hasPassword ?? user.hasPassword,
+                  });
+                  void qc.invalidateQueries({ queryKey: ["me"] });
+                  toast("登录名已设置，当前登录已保留。");
+                  nav(first ? "/verify" : "/settings/account", {
+                    replace: true,
+                  });
+                }
               });
             }}
           >
@@ -681,7 +705,7 @@ export function UsernameSetup() {
               className="ew-button"
               disabled={save.isPending || send.isPending}
             >
-              {save.isPending ? "正在保存…" : "保存并重新登录"}
+              {save.isPending ? "正在保存…" : "保存登录名"}
             </button>
           </form>
         )}
@@ -1097,7 +1121,7 @@ export function MobileHistory() {
             retry={() => void q.refetch()}
           />
         ) : !q.data.items?.length ? (
-          <FeatureState empty="还没有浏览足迹" />
+          <FeatureState illustration="baozi" empty="还没有浏览足迹" />
         ) : (
           q.data.items.map((item, i) => {
             const entry = historyEntry(item, kind),

@@ -23,6 +23,7 @@ import {
 import { Announcements, FeatureAvailability } from "./Remote";
 import Features from "./Hub";
 import NotificationSettings from "./NotificationSettings";
+const Growth = lazy(() => import("./Growth"));
 const Directory = lazy(() => import("./Directory"));
 const Admin = lazy(() => import("./Admin"));
 export default function V4Routes() {
@@ -65,7 +66,13 @@ export default function V4Routes() {
         </Gate>
       </Suspense>
     );
-  if (path === "/settings/devices") page = <Devices />;
+  if (path === "/me/growth")
+    page = (
+      <Suspense fallback={<ContentSkeleton kind="rows" count={3} />}>
+        <Growth />
+      </Suspense>
+    );
+  else if (path === "/settings/devices") page = <Devices />;
   else if (path === "/settings/phone") page = <MobileChange />;
   else if (path === "/settings/delete") page = <Cancellation />;
   else if (path === "/settings/notifications") page = <NotificationSettings />;

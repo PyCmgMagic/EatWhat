@@ -1,10 +1,12 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { useArea } from "../app/area";
-import { wgsToGcj, type Restaurant } from "../api/models";
+import type { Restaurant } from "../api/models";
+import { isDemo } from "../app/runtime";
 import { mapPoint, type MapPoint } from "./map-geometry";
 import { DesignIcon } from "../mobile/ui";
+import { useDeviceLocation } from "./useDeviceLocation";
 import "./restaurant-map.css";
 
 const BaiduMap = lazy(() => import("./BaiduMap"));
@@ -16,10 +18,12 @@ export type RestaurantMapProps = {
   pickedPoint?: MapPoint;
   onPick?: (point: MapPoint) => void;
   disabled?: boolean;
+  autoLocate?: boolean;
 };
 
 export default function RestaurantMap({
   restaurants = noRestaurants,
+  autoLocate = false,
   ...props
 }: RestaurantMapProps) {
   const { api } = useApp();
@@ -34,50 +38,14 @@ export default function RestaurantMap({
     campuses.data?.find((c) => c.isDefault) ??
     campuses.data?.[0];
   const center = mapPoint(area) ?? mapPoint(campus);
-  const [locating, setLocating] = useState(false),
-    [locationError, setLocationError] = useState(""),
-    [deviceRevision, setDeviceRevision] = useState(0);
-  const mounted = useRef(false);
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-  function locate() {
-    if (!navigator.geolocation) {
-      setLocationError("浏览器不支持定位，请选择区域。");
-      return;
-    }
-    setLocating(true);
-    setLocationError("");
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        if (!mounted.current) return;
-        try {
-          const point = wgsToGcj(
-            position.coords.longitude,
-            position.coords.latitude,
-          );
-          selectArea({ ...point, name: "当前位置", source: "device" });
-          setDeviceRevision((value) => value + 1);
-        } catch (error) {
-          setLocationError(
-            error instanceof Error
-              ? error.message
-              : "无法读取位置，请选择区域。",
-          );
-        }
-        setLocating(false);
-      },
-      () => {
-        if (!mounted.current) return;
-        setLocationError("未获取到位置，请允许浏览器定位或手动选择区域。");
-        setLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
-    );
-  }
+  const { locate, locating, locationError, deviceRevision } = useDeviceLocation(
+    {
+      area,
+      selectArea,
+      autoLocate: autoLocate && !isDemo,
+      disabled: props.disabled,
+    },
+  );
   const missing = restaurants.filter((r) => !mapPoint(r)).length;
   return (
     <div

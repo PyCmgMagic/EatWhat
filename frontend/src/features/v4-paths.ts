@@ -21,6 +21,7 @@ export function isV4Path(path: string) {
       "/submissions",
       "/restaurants/favorites",
       "/features",
+      "/me/growth",
       "/restaurants/directory",
     ].includes(path) ||
     /^\/(feedback\/mine|submissions|topics)\/[^/]+$/.test(path) ||

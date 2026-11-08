@@ -9,7 +9,9 @@ export type DishIllustrationName =
   | "luosifen"
   | "tieguodun"
   | "xiangguo"
-  | "niandoubao";
+  | "niandoubao"
+  | "danchaofan"
+  | "baozi";
 
 /** Prototype artwork for empty states and onboarding, never a food photo fallback. */
 export function DishIllustration({
@@ -19,7 +21,9 @@ export function DishIllustration({
   name: DishIllustrationName;
   className?: string;
 }) {
-  const src = `/prototype/assets/dishes/${name}.svg`;
+  const src = ["danchaofan", "baozi"].includes(name)
+    ? `/assets/dishes/${name}.svg`
+    : `/prototype/assets/dishes/${name}.svg`;
   const [failedSrc, setFailedSrc] = useState<string>();
   return (
     <div className={`dish-illustration ${className}`} aria-hidden="true">

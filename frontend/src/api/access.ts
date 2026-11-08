@@ -54,6 +54,7 @@ export function withActionAccess(
       serverRequired = false,
     ): never => {
       const presented =
+        !options.background &&
         current() &&
         deps.prompt({
           reason,

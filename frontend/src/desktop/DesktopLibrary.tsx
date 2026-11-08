@@ -1,6 +1,10 @@
 import { ClearHistory } from "../features/ApiV2";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
+import {
+  DishIllustration,
+  type DishIllustrationName,
+} from "../components/DishIllustration";
 import { Link } from "react-router-dom";
 import {
   keepPreviousData,
@@ -29,16 +33,22 @@ function Empty({
   title,
   children,
   icon = "bowl",
+  illustration,
 }: {
   title: string;
   children: ReactNode;
   icon?: string;
+  illustration?: DishIllustrationName;
 }) {
   return (
     <div className="pc-library-empty">
-      <span className="pc-library-empty-symbol">
-        <Icon name={icon} size={35} />
-      </span>
+      {illustration ? (
+        <DishIllustration name={illustration} />
+      ) : (
+        <span className="pc-library-empty-symbol">
+          <Icon name={icon} size={35} />
+        </span>
+      )}
       <h2>{title}</h2>
       {children}
     </div>
@@ -531,6 +541,7 @@ export function DesktopHistory() {
         ) : !items.length ? (
           <Empty
             icon="history"
+            illustration="baozi"
             title={
               page > 1
                 ? "这一页没有浏览记录"

@@ -26,7 +26,7 @@ npm run dev
 
 ```powershell
 npm run prototype:generate  # prototype 更新后重新生成，需 Python 3 标准库
-npm run api:generate        # 从 ../docs/EatWhat 业务服务 APIv5.yaml 生成类型
+npm run api:generate        # 从 ../docs/EatWhat 业务服务 APIv6.openapi.json 生成类型
 npm run typecheck
 npm test
 pnpm build                  # 清理旧 dist、构建并生成时间戳 ZIP
@@ -39,11 +39,13 @@ npm run preview             # 生产产物，5174
 
 生成内容在 `src/mobile/generated/`，资源在 `public/prototype/assets/`，业务适配在 `src/mobile/bridge.tsx`，不要直接修改生成文件。画板结构调整后需检查适配层中的节点编号。前端运行和生产构建不依赖 Python 或 Claude Design 服务。
 
+菜品插画沿用原型的俯视餐盘、青花描边和柔和食材配色，统一通过 `DishIllustration` 使用。新增蛋炒饭与小笼包 SVG 放在 `public/assets/dishes/`，用于成长、足迹和帮助等页面；应用位置与补画规则见 [菜品 SVG 使用约定](../docs/菜品SVG使用约定.md)。插画不作为真实菜品照片的替代。
+
 ## 操作权限的统一入口
 
 业务组件直接调用 `useApp().api`。请求层 `src/api/access.ts` 根据统一规则，在受保护的写请求发出前处理登录和学生认证；认证弹窗、返回地址及取消后的焦点恢复由根级 `ActionAccessPrompts` 处理。页面无需逐个添加认证判断。打开编辑器或选择面板前如需提前提示，可用 `useActionAccess({ path, options })` 查询同一规则。
 
-规则来自 APIv5 契约的权限声明，保存为 `src/api/access-rules.generated.ts`。`npm run api:generate` 同步生成类型和权限；`npm run api:access` 单独更新权限，`npm run api:access:check` 检查是否与契约一致，构建也会执行此检查。上传按 `biz` 区分：头像、反馈只需登录，菜品、店铺、活动和评论图片需要学生认证。取消收藏等操作保留契约规定的登录要求。
+规则来自 APIv6 契约的权限声明与公开/可选登录说明，保存为 `src/api/access-rules.generated.ts`。`npm run api:generate` 同步生成类型和权限；`npm run api:access` 单独更新权限，`npm run api:access:check` 检查是否与契约一致，构建也会执行此检查。上传按 `biz` 区分：头像、反馈只需登录，菜品、店铺、活动和评论图片需要学生认证。取消收藏等操作保留契约规定的登录要求。
 
 被拦截的操作抛出 `AccessRequiredError`，不会返回成功或在认证后自动重试。公共任务组件会隐藏已由弹窗处理的重复错误；调用方不要把该异常转换为成功结果。后台读取继续使用页面权限状态，避免刷新数据时主动弹窗。服务端明确返回“用户未验证”时也会统一引导；一般 403、管理员权限、封禁、验证码和其他业务状态错误不归为学生认证。服务端仍负责最终授权。
 
@@ -51,8 +53,11 @@ npm run preview             # 生产产物，5174
 
 ## 当前交付验证（2026-11-08）
 
-- 42 个测试文件、362 项单元与契约测试通过，TypeScript 检查、权限规则与契约一致性检查、生产构建通过。
+- 47 个测试文件、400 项单元与契约测试通过，TypeScript 检查、权限规则与契约一致性检查、生产构建通过。
+- APIv6 成长页、经验流水分页和管理端活跃统计已接入；前台活动统一上报并限频。设置登录名按返回值保留会话，注销默认匿名保留内容并可明确选择删除，菜品作者优先使用新 `user` 对象。`scripts/api-v6.js` 隔离验证手机和桌面流程。
 - 移动端统一浮动导航、登录与个人中心、设置子页；首页、详情、附近列表等面板支持拖动。通知偏好明确显示带菜品 SVG 的「敬请期待」，暂不调用推送接口。
+- 桌面和移动端进入附近页自动发起定位，成功后用当前位置查询店铺；拒绝或超时保留区域选择和手动重试。搜索重绘不重复请求，离开页面或手选新区域后忽略迟到结果；店铺位置编辑器保持手动定位。
+- 地图使用 24px 店铺图钉，选中店铺突出颜色并显示完整店名，普通店名按空间避让；密集店铺显示「N 家」并可点击放大，同坐标或最高缩放仍重叠的店铺展开选择列表。照片保留在店铺卡片中。聚合范围为当前查询结果页；`scripts/map-markers.js` 在 320/390/820/1440px 验证真实地图交互，`map-markers.test.ts` 覆盖聚合与标签避让。
 - 需要登录或学生认证的操作由请求层统一提示；学生认证解释两种方式任选其一，并保留来源页面，认证结果重新查询账号状态。
 - 发布流程修复裁剪预览不一致、餐厅名称未显示、个人标签添加后不可见及输入丢失；本地 R2 上传代理为可选开发配置，生产仍使用直传和存储桶 CORS。
 - 浏览器验证覆盖 320/390/520px 手机布局与桌面、触摸拖动、失败重试及隔离的模拟发布。业务写请求使用模拟接口；地图交互使用真实百度地图只读资源。说明及脚本索引见 [本轮修复与验证](../docs/移动端体验修复与验证-20261108.md)。
@@ -62,7 +67,7 @@ npm run preview             # 生产产物，5174
 
 ## 配置后端
 
-首页推荐 `/foods/recommend` 的线上响应为 `data: [...]`；当前本地 APIv5 契约仍描述为 `data.items` 分页对象。前端适配层兼容这两种响应，演示推荐使用数组格式；无法识别的数据结构会显示错误，不再静默当成空推荐。
+首页推荐 `/foods/recommend` 的线上响应为 `data: [...]`；当前本地 APIv6 契约仍描述为 `data.items` 分页对象。前端适配层兼容这两种响应，演示推荐使用数组格式；无法识别的数据结构会显示错误，不再静默当成空推荐。
 
 推荐回归脚本为 `scripts/home-recommendations.js`（桌面数组/分页格式、分类、刷新和错误恢复）与 `scripts/mobile-home-empty.js`（手机三种宽度的空态、失败重试及数组响应恢复），均使用独立浏览器上下文并拦截业务请求。
 
@@ -70,7 +75,7 @@ npm run preview             # 生产产物，5174
 
 多标签页验收使用 `scripts/session-sync.js`（Playwright CLI `run-code --filename`，运行方式见下文），在独立浏览器上下文中拦截全部业务请求，覆盖迁移、新标签页、账号切换、退出、过期、旧请求竞态及演示隔离。
 
-复制 `.env.example` 为 `.env.local`，配置可用测试环境后重启服务。现行契约为 `../docs/EatWhat 业务服务 APIv5.yaml`，文档版本 `source-contract-20261101`；旧版契约保留作历史差异对照。185 项客户端操作已有封装，APIv4 新增的 68 项对应页面已接入。APIv5 已移除发布请求中的 `removeBackground` 和管理配置中的 `autoCutout`，生成类型和演示数据同步更新。功能导航为 `/?demo=1#/features`，管理页面为 `/?demo=1&persona=admin#/admin/v4`。接入及部署边界见 [APIv4 接入与验收](../docs/APIv4接入与验收-20261102.md)。
+复制 `.env.example` 为 `.env.local`，配置可用测试环境后重启服务。现行契约为 `../docs/EatWhat 业务服务 APIv6.openapi.json`（内部版本号尚未更新，以文件和操作差异识别），旧版契约保留作历史对照。212 项操作中，189 项客户端操作全部已有封装，另有 9 项后端回调和 14 项此前明确排除的活动操作。APIv6 新增成长、经验记录与管理端活跃统计，接入范围和验收见 [APIv6 规划与验收](../docs/APIv6接入规划与验收-20261108.md)。APIv5 已移除发布请求中的 `removeBackground` 和管理配置中的 `autoCutout`，生成类型和演示数据同步更新。功能导航为 `/?demo=1#/features`，管理页面为 `/?demo=1&persona=admin#/admin/v4`。接入及部署边界见 [APIv4 接入与验收](../docs/APIv4接入与验收-20261102.md)。
 
 当前本机已配置 `API_PROXY_TARGET=https://eat.v50to.you/api`，浏览器请求同源 `/api`。例如 `/api/foods/list` 转发为 `https://eat.v50to.you/api/foods/list`，内层控制器前缀继续保留。新域名的连通性记录见 [后端地址与连通性](../docs/后端地址与连通性-20261023.md)。直接跨域部署时需检查 CORS，详见 [APIv2 接入与验收](../docs/APIv2接入与验收-20261026.md)。
 
@@ -99,14 +104,14 @@ Hash 路由支持刷新详情。开发和 Vite preview 均使用同源代理；�
 
 ```powershell
 npm run api:audit           # 全量接口分类及源码消费位置
-npm run api:diff            # APIv4 → APIv5 接口与模型差异
+npm run api:diff            # APIv5 → APIv6 接口与模型差异
 ```
 
-APIv2 历史回归脚本为 `scripts/api-v2-flows.js`、`api-v2-mobile-flows.js`、`api-v2-admin-responsive.js`、`api-v2-live-contract.js`、`api-v2-production.js`，均隔离真实写入。生产检查需先执行 `npm run build` 与 `npm run preview`。历史 `latest-api-*` 和 APIv2 记录继续保留，当前契约为 APIv5，覆盖及差异报告分别为 `../output/api-v5-coverage-20261104.json` 和 `../output/api-v5-diff-20261104.json`。
+APIv2 历史回归脚本为 `scripts/api-v2-flows.js`、`api-v2-mobile-flows.js`、`api-v2-admin-responsive.js`、`api-v2-live-contract.js`、`api-v2-production.js`，均隔离真实写入。生产检查需先执行 `npm run build` 与 `npm run preview`。历史 `latest-api-*` 和 APIv2 记录继续保留，当前契约为 APIv6，覆盖及差异报告分别为 `../output/api-v6-coverage-20261108.json` 和 `../output/api-v6-diff-20261108.json`。
 
-APIv3 的授权状态查询仅返回 `status`、`identityReady`、`policyVersion`，授权面板分别展示授权政策版本与当前政策版本；授权、撤回及登录过程仍保留原进度模型。Mock 查询同样只返回三字段，兼容旧本地记录并保留上传。APIv4 的登录响应 `loginId` 按当前契约支持字符串或数值。APIv3 历史覆盖记录为 `../output/api-coverage-20261102.json`，差异记录为 `../output/api-v3-diff-20261102.json`，浏览器专项为 `scripts/api-v3-consent.js`。
+APIv3 的授权状态查询仅返回 `status`、`identityReady`、`policyVersion`，授权面板分别展示授权政策版本与当前政策版本；授权、撤回及登录过程仍保留原进度模型。Mock 查询同样只返回三字段，兼容旧本地记录并保留上传。历史 APIv4 的 `loginId` 支持字符串或数值，当前 APIv6 已收窄为字符串。APIv3 历史覆盖记录为 `../output/api-coverage-20261102.json`，差异记录为 `../output/api-v3-diff-20261102.json`，浏览器专项为 `scripts/api-v3-consent.js`。
 
-类型生成统一使用 `npm run api:generate`，读取 APIv5 YAML，并兼容历史 `$ref` 的 nullable 标记。
+类型生成统一使用 `npm run api:generate`，读取 APIv6 OpenAPI JSON，并兼容历史 `$ref` 的 nullable 标记。
 
 ## 当前功能
 

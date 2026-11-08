@@ -7,6 +7,7 @@ export type RecoveryCommand = {
   identifier?: string;
   operationId?: string;
   mobile?: string;
+  deletePostsAndComments?: boolean;
   prepared?: {
     commandId?: string | null;
     expiresAt?: string | null;

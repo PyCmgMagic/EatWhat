@@ -10,7 +10,9 @@ import { visualFor } from "../mobile/catalog";
 import { peopleHref } from "./profile-people";
 import { useFoodImageRefresh } from "./media";
 import { AccessWelcome } from "../components/AccessWelcome";
+import { DishIllustration } from "../components/DishIllustration";
 import "./profile-overview.css";
+import "./v4/growth.css";
 
 const mobileLinks = [
   { to: "/me/shares", name: "我的分享", icon: "bowl" },
@@ -190,6 +192,14 @@ export default function ProfileOverview() {
         ))}
       </nav>
 
+      <Link to="/me/growth" className="profile-overview-growth">
+        <DishIllustration name="danchaofan" />
+        <span>
+          <strong>我的成长</strong>
+          <small>看看等级与经验记录</small>
+        </span>
+        <Icon name="chevronRight" size={16} />
+      </Link>
       <div className="profile-overview-columns">
         <section
           className="profile-overview-collection"
@@ -228,7 +238,7 @@ export default function ProfileOverview() {
               </div>
             ) : (
               <div className="profile-overview-empty">
-                <Icon name="bookmark" size={28} />
+                <DishIllustration name="jiaozi" />
                 <h3>把想吃的，先收藏起来</h3>
                 <p>喜欢的菜品会出现在这里，下次不用重新找。</p>
                 <Link to="/search">
@@ -294,7 +304,7 @@ export default function ProfileOverview() {
               </div>
             ) : (
               <div className="profile-overview-empty">
-                <Icon name="bowl" size={28} />
+                <DishIllustration name="yuntun" />
                 <h3>还没有分享过菜品</h3>
                 <p>从最近吃到的一道好菜开始。</p>
               </div>

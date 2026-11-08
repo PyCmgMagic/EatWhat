@@ -1,3 +1,4 @@
+import { demoGrowth, type DemoGrowth } from "./growth";
 import type { Transport, Query } from "../api/client";
 import { ApiError } from "../api/client";
 import type {
@@ -55,6 +56,7 @@ const restaurants: Restaurant[] = demoDishes
     pictureUrl: [`/prototype/assets/dishes/${d.asset}.svg`],
   }));
 type State = {
+  growth?: DemoGrowth;
   v4?: DemoV4;
   sync?: DemoSync;
   syncContractVersion?: number;
@@ -339,6 +341,14 @@ export const demoTransport: Transport = async (path, options) => {
     f.restaurantGcjLat ??= r?.gcjLat;
     f.mealTimes ??= ["breakfast", "lunch", "dinner", "night"];
     f.pictureKeys ??= f.pictureUrl ?? [];
+    if (f.user !== null)
+      f.user = f.accountId
+        ? {
+            id: f.accountId,
+            displayName:
+              f.accountId === s.user.id ? s.user.displayName : f.uploaderName,
+          }
+        : null;
   });
   const proof =
     b.recoveryCapability ??
@@ -357,6 +367,21 @@ export const demoTransport: Transport = async (path, options) => {
           .map((n) => n.toString(16).padStart(2, "0"))
           .join("")
       : undefined;
+  if (
+    [
+      "/user/activity",
+      "/user/growth",
+      "/user/growth/ledger",
+      "/admin/engagement/stats",
+    ].includes(path)
+  ) {
+    if (path.startsWith("/admin/") && s.user.role !== "admin")
+      throw new ApiError("需要管理员身份。", 20004, 403);
+    s.growth ??= { entries: [] };
+    const result = demoGrowth(s.growth, path, q);
+    save();
+    return { code: 0, data: structuredClone(result), msg: "success" };
+  }
   const v4 = handleV4(s, path, options, proofHash);
   if (v4 !== undefined) {
     const restaurantId = path.match(/^\/restaurant\/detail\/(\d+)$/)?.[1];
@@ -442,7 +467,7 @@ export const demoTransport: Transport = async (path, options) => {
       userName: s.user.userName,
       hasUsername: true,
       hasPassword: s.user.hasPassword,
-      reauthenticationRequired: true,
+      reauthenticationRequired: false,
     };
     save();
   } else if (path === "/auth/password-conflict/challenge") {

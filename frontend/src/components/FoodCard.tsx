@@ -1,3 +1,4 @@
+import { foodAuthor } from "../api/models";
 import { Link } from "react-router-dom";
 import {
   useIsMutating,
@@ -109,14 +110,14 @@ export function FoodCard({ food, index = 0 }: { food: Food; index?: number }) {
         </div>
         <div className="food-author">
           <span className="avatar">
-            {food.uploaderName?.slice(0, 1) || "食"}
+            {foodAuthor(food).name?.slice(0, 1) || "食"}
           </span>
-          {food.accountId ? (
-            <Link to={`/users/${food.accountId}`}>
-              {food.uploaderName || "同学"}
+          {foodAuthor(food).id ? (
+            <Link to={`/users/${foodAuthor(food).id}`}>
+              {foodAuthor(food).name || "同学"}
             </Link>
           ) : (
-            <span>{food.uploaderName || "同学"}</span>
+            <span>{foodAuthor(food).name || "同学"}</span>
           )}
           <button
             className={`like-button ${food.isLiked ? "liked" : ""}`}

@@ -58,6 +58,9 @@ function LoginRequired({ canvas = false, footer }: AccessProps) {
   useEffect(() => {
     // Closing the dialog leaves a usable page; re-renders must not reopen it.
     if (openedEntry.current === entry) return;
+    // HashRouter commits navigation in a transition. A synchronous logout can
+    // render this old gate before that commit; do not overwrite the new route.
+    if (window.location.hash.slice(1) !== next) return;
     openedEntry.current = entry;
     openLogin(to, { replace: true, returnTo: "/" });
   }, [entry, openLogin, to]);

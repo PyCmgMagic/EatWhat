@@ -315,6 +315,7 @@ export function FeedbackRecords({ id }: { id?: number }) {
         query={list}
         empty={!list.data?.items?.length}
         emptyTitle="还没有留下反馈"
+        emptyIllustration="yangzhi"
         emptyDetail="有建议或遇到问题时，随时告诉我们。提交后可以在这里查看进度与回复。"
       >
         <Card>
@@ -920,6 +921,7 @@ export function Topics({
           !q.data || (!!q.data && "items" in q.data && !q.data.items?.length)
         }
         emptyTitle="新的校园专题，还在准备中"
+        emptyIllustration="xiangguo"
         emptyDetail="先去发现页看看同学们分享的好味道，下次再来逛逛。"
       >
         {q.data &&
@@ -1003,6 +1005,7 @@ export function FavoriteRestaurants() {
         query={q}
         empty={!q.data?.items?.length}
         emptyTitle="把喜欢的店铺收藏起来"
+        emptyIllustration="jiaozi"
         emptyDetail="从店铺详情收藏一家店，下次想吃时就能在这里找到它。"
       >
         <div className="v4-restaurant-grid">

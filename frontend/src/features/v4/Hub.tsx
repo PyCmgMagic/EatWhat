@@ -78,6 +78,13 @@ const groups = [
     tone: "gold",
     items: [
       {
+        to: "/me/growth",
+        title: "我的成长",
+        detail: "查看等级、经验和每日使用记录",
+        icon: "bowl",
+        keywords: "升级 活跃",
+      },
+      {
         to: "/me/shares",
         title: "我的分享",
         detail: "查看和管理已发布的菜品",

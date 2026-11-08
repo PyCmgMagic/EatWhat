@@ -1,3 +1,4 @@
+import { foodAuthor } from "../api/models";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -116,15 +117,15 @@ function FoodContent({ id }: { id: number }) {
           )}
           <div className="detail-author">
             <span className="avatar">
-              {food.uploaderName?.slice(0, 1) || "食"}
+              {foodAuthor(food).name?.slice(0, 1) || "食"}
             </span>
             <span>
-              {food.accountId ? (
-                <Link to={`/users/${food.accountId}`}>
-                  {food.uploaderName || "同学"}
+              {foodAuthor(food).id ? (
+                <Link to={`/users/${foodAuthor(food).id}`}>
+                  {foodAuthor(food).name || "同学"}
                 </Link>
               ) : (
-                food.uploaderName || "同学"
+                foodAuthor(food).name || "同学"
               )}
               <small>认真分享这一餐</small>
             </span>

@@ -4,7 +4,10 @@ import { parse } from "yaml";
 export async function accessRulesSource() {
   const spec = parse(
     await fs.readFile(
-      new URL("../../docs/EatWhat 业务服务 APIv5.yaml", import.meta.url),
+      new URL(
+        "../../docs/EatWhat 业务服务 APIv6.openapi.json",
+        import.meta.url,
+      ),
       "utf8",
     ),
   );
@@ -16,7 +19,7 @@ export async function accessRulesSource() {
       const secured = operation.security?.some(
         (item) => Object.keys(item).length,
       );
-      if (!secured || summary.startsWith("【公开】")) continue;
+      if (!secured || /^【(?:公开|可选登录)】/.test(summary)) continue;
       const requirement = summary.includes("【需verified】")
         ? "verified"
         : /^\/upload\/presign(?:\/batch)?$/.test(path)
@@ -25,7 +28,7 @@ export async function accessRulesSource() {
       rules.push([method.toUpperCase(), path, requirement]);
     }
   }
-  return `// Generated from docs/EatWhat 业务服务 APIv5.yaml by npm run api:access.\n// Do not add button-specific permission rules here.\nexport const requestAccessRules = ${JSON.stringify(rules, null, 2)} as const;\n`;
+  return `// Generated from docs/EatWhat 业务服务 APIv6.openapi.json by npm run api:access.\n// Do not add button-specific permission rules here.\nexport const requestAccessRules = ${JSON.stringify(rules, null, 2)} as const;\n`;
 }
 
 export async function writeAccessRules() {

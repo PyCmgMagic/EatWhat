@@ -1,3 +1,4 @@
+import { foodAuthor } from "../api/models";
 import ProfileRail from "./ProfileRail";
 import ProfileOverview from "../features/ProfileOverview";
 import ProfileHelp from "../features/ProfileHelp";
@@ -807,7 +808,7 @@ function DesktopHome() {
     batchSize = recommendationBatchSize(remote.data);
   const { api } = useApp(),
     m = useMobile(),
-    { area, campusId } = useArea(),
+    { campusId } = useArea(),
     [n, setN] = useState(0),
     [category, setCategory] = useState(""),
     pointer = useRef<{ id: number; x: number; radius: number } | null>(null),
@@ -888,15 +889,6 @@ function DesktopHome() {
       >
         <div className="pc-round-table" />
         <div className="pc-orbit-line" />
-        <button
-          className="pc-location"
-          onClick={() => m.openPanel("G-PanelPlace")}
-        >
-          <Icon name="nearby" size={18} />
-          {area?.name ?? "选一个地点"}
-          <span>{m.meal}</span>
-          <Icon name="chevronDown" size={16} />
-        </button>
         <div className="pc-hero-counter">
           <span>{String(index + 1).padStart(2, "0")}</span>
           <span>/ {String(list.length).padStart(2, "0")}</span>
@@ -1336,6 +1328,7 @@ function DesktopNearby() {
         <section className="pc-map" aria-label="附近餐厅地图">
           <div className="pc-map-surface">
             <RestaurantMap
+              autoLocate
               restaurants={shops}
               selectedId={current?.id ?? undefined}
               onSelect={(shop) => setSelected(shop.id!)}
@@ -1556,15 +1549,15 @@ function DesktopDish() {
                 </div>
               </div>
               <div className="pc-contributor">
-                {parseId(String(food.accountId)) ? (
-                  <Link to={`/users/${food.accountId}`}>
+                {foodAuthor(food).id ? (
+                  <Link to={`/users/${foodAuthor(food).id}`}>
                     <span className="pc-user-avatar">
-                      {food.uploaderName?.slice(0, 1) ?? "食"}
+                      {foodAuthor(food).name?.slice(0, 1) ?? "食"}
                     </span>
-                    <b>{food.uploaderName ?? "同学"}</b>
+                    <b>{foodAuthor(food).name ?? "同学"}</b>
                   </Link>
                 ) : (
-                  <b>{food.uploaderName ?? "校园食友"}</b>
+                  <b>{foodAuthor(food).name ?? "校园食友"}</b>
                 )}
                 <span>分享了这道菜</span>
               </div>

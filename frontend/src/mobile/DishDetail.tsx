@@ -1,3 +1,4 @@
+import { foodAuthor } from "../api/models";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -50,15 +51,15 @@ export default function DishDetail({
     src = mediaUrl(food.pictureUrl?.[0]);
   const renewImage = useFoodImageRefresh();
   const restaurantId = parseId(String(food.restaurantId));
-  const authorId = parseId(String(food.accountId));
+  const authorId = foodAuthor(food).id;
   const tags = food.systemTags ?? [];
   const author = (
     <>
       <span className="mobile-avatar">
-        {food.uploaderName?.slice(0, 1) || "食"}
+        {foodAuthor(food).name?.slice(0, 1) || "食"}
       </span>
       <span className="dish-author-copy">
-        <strong>{food.uploaderName || "校园食友"}</strong>
+        <strong>{foodAuthor(food).name || "校园食友"}</strong>
         <small>{sharedAt ? `${sharedAt}分享` : "菜品分享者"}</small>
       </span>
       {authorId && <DesignIcon name="chevronRight" size={16} />}

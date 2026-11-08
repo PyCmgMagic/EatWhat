@@ -2650,8 +2650,41 @@
 .v4-page .v4-details dt {
   color: var(--v4-muted);
 }
+.v4-state > .v4-state-dish {
+  --dish-illustration-size: 132px;
+  margin: 0 auto 16px;
+}
+.v4-page .v4-state:has(> .v4-state-dish) {
+  padding: 28px 16px;
+}
 .v4-page input::placeholder,
 .v4-page textarea::placeholder {
   color: var(--v4-muted);
   opacity: 1;
+}
+
+.v4-page fieldset.v6-cancellation-options {
+  display: block;
+  border: 1px solid #e9e0d7;
+  border-radius: 16px;
+  margin: 20px 0;
+  padding: 16px;
+  min-width: 0;
+}
+.v6-cancellation-options legend {
+  padding: 0 6px;
+  font-weight: 700;
+  font-size: 14px;
+}
+.v6-cancellation-options p {
+  padding-left: 27px;
+  font-size: 12px;
+}
+.v4-page .v6-cancellation-options p,
+.mobile-settings-page .mobile-settings-content .v6-cancellation-options p {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+.v4-page .v6-cancellation-options p:last-child {
+  margin-bottom: 0;
 }

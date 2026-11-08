@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <g id="bun">
+      <ellipse cx="2" cy="6" rx="31" ry="28" fill="#000000" fill-opacity=".08"/>
+      <path d="M-31 4c-2-13 2-24 12-30 9-7 21-7 31-3 13 4 21 16 20 29 1 17-12 30-30 31C-16 32-29 22-31 4Z" fill="#FBF6EA" stroke="#E6DBC2" stroke-width="1.5"/>
+      <path d="M-25 7c4 12 14 18 25 18 14 0 24-7 28-18-1 14-12 23-27 24C-15 31-26 21-29 9Z" fill="#F0E5CE"/>
+      <g fill="none" stroke="#E2D4B6" stroke-width="1.8" stroke-linecap="round">
+        <path d="M-24-7C-16-9-9-8-4-5M-16-21C-9-18-4-12-2-6M0-27C3-20 4-12 2-6M18-21C16-13 10-8 5-5M27-6C19-2 12-1 6-3M23 12C17 7 10 5 5 1M9 24C8 15 5 8 2 3M-8 24C-7 16-5 8-1 3M-23 13C-17 5-10 2-4 0"/>
+      </g>
+      <path d="M-5-4C-2-10 6-9 8-4 10 2 4 6-2 4-6 3-7-1-3-3 0-5 3-3 2-1" fill="#F0E5CE" stroke="#D9C7A3" stroke-width="1.4" stroke-linecap="round"/>
+    </g>
+  </defs>
+  <circle cx="103" cy="105" r="92" fill="#000000" fill-opacity=".12"/>
+  <circle cx="100" cy="100" r="92" fill="#FFFFFF"/>
+  <circle cx="100" cy="100" r="91" fill="none" stroke="#E3E6E9" stroke-width="2"/>
+  <circle cx="100" cy="100" r="84" fill="none" stroke="#2F5D9A" stroke-width="2.5"/>
+  <circle cx="100" cy="100" r="79" fill="none" stroke="#2F5D9A" stroke-width="1.2" stroke-dasharray="2 5"/>
+  <g fill="#A6D07A" stroke="#78AF63" stroke-width="1.2" stroke-linejoin="round">
+    <path d="M48 120c-9-13-15-10-15-21 0-8 6-12 12-10-6-16 6-21 14-13 9-10 18-4 15 7 10 3 9 13 0 16-4 10-14 17-26 21Z"/>
+    <path d="M151 124c10-5 19-3 23-12 4-9-2-14-8-14 8-13-1-22-10-16-7-11-18-8-18 3-11 2-12 11-5 18 1 9 8 16 18 21Z"/>
+  </g>
+  <g fill="none" stroke="#D9E6A8" stroke-width="2" stroke-linecap="round"><path d="M48 115c3-11 6-20 10-29m-9 17-9-6m14-2 11-5M150 119c-1-12-3-21-5-29m5 13 12-10"/></g>
+  <use href="#bun" transform="translate(78 70) rotate(-12)"/>
+  <use href="#bun" transform="translate(131 96) rotate(22)"/>
+  <use href="#bun" transform="translate(78 131) rotate(-28)"/>
+  <g fill="#5FA34A"><rect x="109" y="143" width="8" height="5" rx="2" transform="rotate(30 113 145)"/><rect x="52" y="108" width="7" height="4" rx="2" transform="rotate(-20 55 110)"/><rect x="114" y="52" width="7" height="4" rx="2" transform="rotate(20 117 54)"/></g>
+  <g fill="#A6D07A"><rect x="128" y="139" width="6" height="4" rx="2"/><rect x="59" y="46" width="6" height="4" rx="2" transform="rotate(-30 62 48)"/></g>
+</svg>

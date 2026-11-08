@@ -1,0 +1,191 @@
+.growth-summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 20px;
+}
+.growth-dish {
+  --dish-illustration-size: 112px;
+}
+.growth-level > span {
+  font-size: 12px;
+  color: #8c7865;
+}
+.v4-page .growth-summary .growth-level h2 {
+  font:
+    800 40px/1.1 "Bricolage Grotesque Variable",
+    sans-serif;
+  margin: 6px 0;
+}
+.growth-level p {
+  margin: 0;
+}
+.growth-progress {
+  grid-column: 1 / -1;
+}
+.growth-progress strong {
+  font-size: 15px;
+}
+.growth-track {
+  height: 10px;
+  margin: 12px 0 8px;
+  border-radius: 10px;
+  background: #f3eee9;
+  overflow: hidden;
+}
+.growth-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #d79923;
+}
+.growth-progress small,
+.growth-rule {
+  font-size: 12px;
+  color: #8c7865;
+  line-height: 1.8;
+}
+.growth-rule {
+  padding-top: 16px;
+  border-top: 1px solid #f0e9e2;
+  margin: 20px 0 0;
+}
+.growth-ledger {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.growth-ledger li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 0;
+  border-bottom: 1px solid #f0e9e2;
+}
+.growth-ledger li:last-child {
+  border-bottom: 0;
+}
+.growth-ledger-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: #f7f0e3;
+  color: #997b51;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.growth-ledger li > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+.growth-ledger strong {
+  font-size: 14px;
+}
+.growth-ledger li > div > span,
+.growth-ledger small {
+  font-size: 11px;
+  color: #8c7865;
+}
+.growth-ledger li > b {
+  display: grid;
+  gap: 3px;
+  text-align: right;
+  font-size: 20px;
+  color: #86601b;
+}
+.v4-page .growth-stats-filter {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.growth-stats-filter .v4-field {
+  flex: 1;
+  min-width: 180px;
+}
+.growth-stats-filter > button {
+  margin-top: 28px;
+}
+.growth-pagination .v4-pager {
+  gap: 8px;
+  white-space: nowrap;
+}
+.v4-page .growth-pagination button {
+  padding: 10px 12px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.growth-pagination .v4-pager > span {
+  font-size: 12px;
+}
+.growth-stats-date {
+  font-size: 12px;
+  color: #8c7865;
+}
+.growth-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.growth-stats > div {
+  padding: 20px 16px;
+  background: #f8f4ed;
+  border-radius: 18px;
+}
+.growth-stats dt {
+  font-weight: 700;
+  font-size: 13px;
+}
+.growth-stats dd {
+  font:
+    800 36px/1.4 "Bricolage Grotesque Variable",
+    sans-serif;
+  margin: 4px 0;
+  overflow-wrap: anywhere;
+}
+.growth-stats small {
+  color: #8c7865;
+  font-size: 11px;
+}
+.profile-overview-growth {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  margin: 12px 0 24px;
+  background: #faf0d7;
+  border-radius: 18px;
+  color: #6c5022;
+}
+.profile-overview-growth > .dish-illustration {
+  --dish-illustration-size: 48px;
+}
+.profile-overview-growth > span:nth-child(2) {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+}
+.profile-overview-growth strong {
+  font-size: 14px;
+}
+.profile-overview-growth small {
+  font-size: 11px;
+}
+.mobile-profile-sheet-content > .profile-overview-growth {
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .growth-stats-filter > button {
+    margin-top: 0;
+    width: 100%;
+  }
+  .growth-dish {
+    --dish-illustration-size: 88px;
+  }
+  .growth-stats {
+    grid-template-columns: 1fr;
+  }
+}

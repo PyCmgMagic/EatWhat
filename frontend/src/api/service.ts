@@ -106,6 +106,32 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
   };
   return {
     ...createV4Api(request, captcha),
+    recordActivity: (signal?: AbortSignal) =>
+      data<Schema["DailyUseResponse"]>("/user/activity", {
+        method: "POST",
+        signal,
+        background: true,
+      }),
+    growth: () => data<Schema["GrowthProgressResponse"]>("/user/growth"),
+    growthLedger: (page = 1, pageSize = 20) => {
+      if (
+        !Number.isInteger(page) ||
+        page < 1 ||
+        page > 10000 ||
+        !Number.isInteger(pageSize) ||
+        pageSize < 1 ||
+        pageSize > 100
+      )
+        throw new Error("经验记录页码或每页数量无效。");
+      return data<Page<Schema["ExperienceEntryResponse"]>>(
+        "/user/growth/ledger",
+        { query: { page, pageSize } },
+      );
+    },
+    engagementStats: (date?: string) =>
+      data<Schema["EngagementStatsResponse"]>("/admin/engagement/stats", {
+        query: { date },
+      }),
     login: (body: Schema["LoginDTORequest"]) =>
       request<Envelope<Schema["AuthReply"]["data"]>>("/auth/login", {
         method: "POST",

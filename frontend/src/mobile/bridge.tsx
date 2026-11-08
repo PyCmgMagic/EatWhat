@@ -1,4 +1,6 @@
 import { unreadCount } from "../api/notifications";
+import { DishIllustration } from "../components/DishIllustration";
+import "../features/v4/growth.css";
 import {
   useRemoteConfig,
   recommendationBatchSize,
@@ -1209,6 +1211,7 @@ export function useDesignBridge(
           </header>
           <div className="mobile-nearby-map">
             <RestaurantMap
+              autoLocate
               restaurants={restaurants}
               selectedId={selected?.id ?? undefined}
               onSelect={(r) => {
@@ -1345,7 +1348,11 @@ export function useDesignBridge(
           {view.children}
           {!(relevant?.data as any)?.items?.length && (
             <li style={{ listStyle: "none" }}>
-              <MobileEmpty title="这里还没有内容" />
+              <MobileEmpty
+                title={screen === "G-History" ? "还没有浏览足迹" : "这里还没有内容"}
+                illustration={screen === "G-History" ? "baozi" : undefined}
+                detail={screen === "G-History" ? "看过的菜和店会留在这里，方便下次找回来。" : undefined}
+              />
             </li>
           )}
           <li style={{ listStyle: "none", padding: "0 20px" }}>
@@ -2242,7 +2249,19 @@ export function useDesignBridge(
       if (tag === "div" && st.top === "0" && st.height === "400px")
         p.className = "mobile-profile-stage";
       if (tag === "div" && st.top === "372px")
-        return <ProfileSheet>{view.children.slice(1)}</ProfileSheet>;
+        return (
+          <ProfileSheet>
+            <Link to="/me/growth" className="profile-overview-growth">
+              <DishIllustration name="danchaofan" />
+              <span>
+                <strong>我的成长</strong>
+                <small>看看等级与经验记录</small>
+              </span>
+              <DesignIcon name="chevronRight" size={16} />
+            </Link>
+            {view.children.slice(1)}
+          </ProfileSheet>
+        );
       // The application shell owns the same floating navigation as home.
       if (
         n.children.some(

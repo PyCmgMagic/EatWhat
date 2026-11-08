@@ -207,10 +207,10 @@ it("response types preserve array, page and consent status distinctions from v3"
   >();
   expectTypeOf<
     components["schemas"]["SaTokenInfoResponse"]["loginId"]
-  >().toEqualTypeOf<string | number>();
+  >().toEqualTypeOf<string>();
   expectTypeOf<
     components["schemas"]["PhoneLoginDataResponse"]["loginId"]
-  >().toEqualTypeOf<string | number>();
+  >().toEqualTypeOf<string>();
   expectTypeOf<Awaited<ReturnType<typeof api.systemTags>>>().toEqualTypeOf<
     Schema["FoodTagSummaryVOResponse"][]
   >();
