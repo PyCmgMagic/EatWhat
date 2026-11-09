@@ -14,6 +14,7 @@ import CropDialog from "./CropDialog";
 import { useSurfaceDismiss } from "../motion/hooks";
 import { useMemoryDraft, useSessionDraft } from "../app/drafts";
 import { useProfileReturnTo } from "../app/profile-navigation";
+import { readSession, sessionSignal } from "../app/runtime";
 import { PageHead, Section } from "./secondary";
 import "./profile.css";
 
@@ -157,6 +158,11 @@ export default function DesktopProfile() {
       return;
     }
     saving.current = true;
+    const owner = sessionSignal(app.session);
+    const checkOwner = () => {
+      readSession();
+      owner.throwIfAborted();
+    };
     setBusy(true);
     setError("");
     setNotice("");
@@ -176,9 +182,12 @@ export default function DesktopProfile() {
       let user: User = { ...app.user, ...body };
       try {
         user = await app.api.me();
-      } catch {
+      } catch (error) {
+        checkOwner();
+        if (error instanceof Error && error.name === "AbortError") throw error;
         /* Keep acknowledged changes. */
       }
+      checkOwner();
       cache.setQueryData(["me"], user);
       const next = profileForm(user);
       setSaved(next);
@@ -192,7 +201,7 @@ export default function DesktopProfile() {
       app.toast("个人资料已更新");
       void cache.invalidateQueries({ queryKey: ["user"] });
     } catch (e) {
-      setError(errorMessage(e));
+      if (!owner.aborted) setError(errorMessage(e));
     } finally {
       saving.current = false;
       setBusy(false);

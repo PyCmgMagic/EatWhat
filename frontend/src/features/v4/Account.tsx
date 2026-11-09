@@ -6,6 +6,7 @@ import { useApp } from "../../app/state";
 import { useSendSignal } from "../useSendSignal";
 import RecoveryFile from "./RecoveryFile";
 import { recoveryCommands } from "../../api/recovery";
+import { resultUncertain } from "../../api/client";
 import type { Schema } from "../../api/models";
 import type { PushCategory, PushCommand } from "../../api/v4-types";
 import {
@@ -293,7 +294,23 @@ export function MobileChange() {
                   };
                   recoveryCommands.set("mobile", saved);
                   setCommand(saved);
-                  return app.api.prepareMobile({ commandId: id, mobile });
+                  try {
+                    return await app.api.prepareMobile({
+                      commandId: id,
+                      mobile,
+                    });
+                  } catch (error) {
+                    if (
+                      !resultUncertain(error) &&
+                      recoveryCommands.get("mobile") === saved
+                    ) {
+                      recoveryCommands.delete("mobile");
+                      setCommand((current) =>
+                        current === saved ? undefined : current,
+                      );
+                    }
+                    throw error;
+                  }
                 },
                 (r) => {
                   setPrepared(r);
@@ -310,7 +327,7 @@ export function MobileChange() {
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value)}
                 maxLength={11}
-                disabled={!!prepared}
+                disabled={!!prepared || task.busy || task.uncertain}
                 required
               />
             </Field>

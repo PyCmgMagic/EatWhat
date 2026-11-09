@@ -178,7 +178,7 @@ export function useDesignBridge(
     queryFn: () => api.campuses(),
     enabled: !reference,
   });
-  const [busy, setBusy] = useState(false),
+  const [localBusy, setBusy] = useState(false),
     [duplicate, setDuplicate] = useState<number>(),
     [error, setError] = useFeedbackState(),
     [done, setDone] = useState(false),
@@ -192,7 +192,10 @@ export function useDesignBridge(
     ),
     [search, setSearch] = useState("");
   const [mapShopId, setMapShopId] = useState<number>();
-  const tagAdding = useRef(false);
+  const tagAdding = useRef(false),
+    publishLock = useRef(false);
+  const publishUncertain = screen === "G-AddDish" && !!m.draft.publishUncertain;
+  const busy = localBusy || (screen === "G-AddDish" && !!m.draft.publishing);
   const active = !reference && !!session,
     verified = active && user?.verified === true && !user?.banned;
   const browse = !reference;
@@ -595,107 +598,131 @@ export function useDesignBridge(
     }
   }
   async function publish() {
-    if (uncertain || !access(true)) return;
+    if (
+      publishLock.current ||
+      busy ||
+      uncertain ||
+      m.draft.publishing ||
+      m.draft.publishUncertain ||
+      !access(true)
+    )
+      return;
+    publishLock.current = true;
     const publishingLocation = location.key;
     m.setDraft({
       description: String(controller.state.desc ?? m.draft.description),
       category: categoryCodes[controller.state.cat ?? 0],
     });
-    await run(async () => {
-      const draft = {
-        ...m.draft,
-        tags: withDraftTags(m.draft.tags, m.draft.tagInput ?? ""),
-        tagInput: "",
-      };
-      validateFoodDraft({
-        ...draft,
-        description: String(controller.state.desc ?? draft.description),
-      });
-      if (!draft.name.trim()) throw new Error("写一个菜名，再发布。");
-      if (!draft.images.length) throw new Error("先加一张你拍的照片。");
-      if (!shopId) throw new Error("先选一家店。");
-      if (draft.mealTimes?.length === 0)
-        throw new Error("至少选择一个适合的饭点。");
-      const price = draft.price.trim() === "" ? undefined : Number(draft.price);
-      if (
-        price !== undefined &&
-        (!Number.isFinite(price) ||
-          price < 0 ||
-          price > 999 ||
-          Math.abs(price * 10 - Math.round(price * 10)) > 0.000001)
-      )
-        throw new Error("价格为 0 至 999，最多保留一位有效小数。");
-      if (
-        draft.tags.length > 20 ||
-        draft.tags.some(
-          (tag) => !tag.trim() || [...normalizedTag(tag)].length > 10,
+    try {
+      await run(async () => {
+        const draft = {
+          ...m.draft,
+          tags: withDraftTags(m.draft.tags, m.draft.tagInput ?? ""),
+          tagInput: "",
+        };
+        validateFoodDraft({
+          ...draft,
+          description: String(controller.state.desc ?? draft.description),
+        });
+        if (!draft.name.trim()) throw new Error("写一个菜名，再发布。");
+        if (!draft.images.length) throw new Error("先加一张你拍的照片。");
+        if (!shopId) throw new Error("先选一家店。");
+        if (draft.mealTimes?.length === 0)
+          throw new Error("至少选择一个适合的饭点。");
+        const price =
+          draft.price.trim() === "" ? undefined : Number(draft.price);
+        if (
+          price !== undefined &&
+          (!Number.isFinite(price) ||
+            price < 0 ||
+            price > 999 ||
+            Math.abs(price * 10 - Math.round(price * 10)) > 0.000001)
         )
-      )
-        throw new Error("最多添加 20 个个人标签，每个标签不超过 10 字。");
-      m.setDraft({ tags: draft.tags, tagInput: "" });
-      const images = [...draft.images];
-      const pending = images
-        .map((image, index) => ({ image, index }))
-        .filter(({ image }) => !image.key);
-      if (pending.length)
-        await app.uploadMany(
-          pending.map(({ image }) => image.file),
-          "foods",
-          (index, key) => {
-            images[pending[index].index] = {
-              ...images[pending[index].index],
-              key,
-            };
-            m.setDraft({ images: [...images] });
-            saveVisual(key, draft.stage);
-          },
-        );
-      const created = await api.createFood({
-        restaurantId: shopId,
-        name: draft.name.trim(),
-        price,
-        description:
-          String(controller.state.desc ?? draft.description) || undefined,
-        category: categoryCodes[controller.state.cat ?? 0] as Category,
-        pictureUrl: images.map((i) => i.key!),
-        myCustomTagNames: draft.tags.map(normalizedTag),
-        systemTagIds: draft.systemTagIds,
-        ...publishDisplay(
-          draft.stage,
-          draft.candidates,
-          draft.mealTimes ?? [mealCode(m.meal)],
-        ),
-        coverCrop: { centerX: 0.5, centerY: 0.5, diameter: 1 },
+          throw new Error("价格为 0 至 999，最多保留一位有效小数。");
+        if (
+          draft.tags.length > 20 ||
+          draft.tags.some(
+            (tag) => !tag.trim() || [...normalizedTag(tag)].length > 10,
+          )
+        )
+          throw new Error("最多添加 20 个个人标签，每个标签不超过 10 字。");
+        m.setDraft({ tags: draft.tags, tagInput: "", publishing: true });
+        let creating = false;
+        try {
+          const images = [...draft.images];
+          const pending = images
+            .map((image, index) => ({ image, index }))
+            .filter(({ image }) => !image.key);
+          if (pending.length)
+            await app.uploadMany(
+              pending.map(({ image }) => image.file),
+              "foods",
+              (index, key) => {
+                images[pending[index].index] = {
+                  ...images[pending[index].index],
+                  key,
+                };
+                m.setDraft({ images: [...images] });
+                saveVisual(key, draft.stage);
+              },
+            );
+          creating = true;
+          const created = await api.createFood({
+            restaurantId: shopId,
+            name: draft.name.trim(),
+            price,
+            description:
+              String(controller.state.desc ?? draft.description) || undefined,
+            category: categoryCodes[controller.state.cat ?? 0] as Category,
+            pictureUrl: images.map((i) => i.key!),
+            myCustomTagNames: draft.tags.map(normalizedTag),
+            systemTagIds: draft.systemTagIds,
+            ...publishDisplay(
+              draft.stage,
+              draft.candidates,
+              draft.mealTimes ?? [mealCode(m.meal)],
+            ),
+            coverCrop: { centerX: 0.5, centerY: 0.5, diameter: 1 },
+          });
+          setDone(true);
+          for (const image of draft.images) URL.revokeObjectURL(image.url);
+          m.setDraft({
+            name: "",
+            price: "",
+            category: "staple",
+            description: "",
+            images: [],
+            tags: [],
+            tagInput: "",
+            systemTagIds: [],
+            mealTimes: undefined,
+            stage: "#F3C46E",
+            crop: undefined,
+            candidates: undefined,
+            restaurantId: undefined,
+            shopName: undefined,
+            publishing: false,
+            publishUncertain: false,
+          });
+          m.setFoodId(created.id);
+          toast(
+            created.revisionId
+              ? "菜品已提交审核，可在我的提交查看进度。"
+              : "菜已发布，标签与展示设置已同步保存。",
+          );
+          if (activeLocation.current === publishingLocation)
+            nav(submissionPath(created, `/foods/${created.id}`));
+        } catch (error) {
+          if (creating && resultUncertain(error))
+            m.setDraft({ publishUncertain: true });
+          throw error;
+        } finally {
+          m.setDraft({ publishing: false });
+        }
       });
-      setDone(true);
-      for (const image of draft.images) URL.revokeObjectURL(image.url);
-      m.setDraft({
-        name: "",
-        price: "",
-        category: "staple",
-        description: "",
-        images: [],
-        tags: [],
-        tagInput: "",
-        systemTagIds: [],
-        mealTimes: undefined,
-        stage: "#F3C46E",
-        crop: undefined,
-        candidates: undefined,
-        restaurantId: undefined,
-        shopName: undefined,
-        publishing: false,
-        publishUncertain: false,
-      });
-      m.setFoodId(created.id);
-      toast(
-        created.revisionId
-          ? "菜品已提交审核，可在我的提交查看进度。"
-          : "菜已发布，标签与展示设置已同步保存。",
-      );
-      if (activeLocation.current === publishingLocation)
-        nav(submissionPath(created, `/foods/${created.id}`));
-    });
+    } finally {
+      publishLock.current = false;
+    }
   }
 
   if (homeScreens.has(screen) && !reference) {
@@ -3127,8 +3154,7 @@ export function useDesignBridge(
           舞台色与裁剪后的照片将在发布时同步保存
         </span>
       )}
-      {error &&
-        (duplicate || uncertain) &&
+      {((error && (duplicate || uncertain)) || publishUncertain) &&
         !["G-PasswordLogin", "G-PanelTag"].includes(screen) && (
           <div
             className="mobile-error-banner"
@@ -3140,7 +3166,9 @@ export function useDesignBridge(
                 查看已有菜品（草稿已保留） →
               </Link>
             )}
-            {uncertain && <span>结果尚未确认，请先核实，避免重复提交。</span>}
+            {(uncertain || publishUncertain) && (
+              <span>结果尚未确认，请先核实，避免重复提交。</span>
+            )}
             <button onClick={() => setError("")} aria-label="关闭错误提示">
               <DesignIcon name="close" size={18} />
             </button>

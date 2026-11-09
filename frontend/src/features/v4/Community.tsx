@@ -76,6 +76,7 @@ export function FeedbackForm({
     keys: string[];
   }>(draftKey, { files: [], keys: [] });
   const { text, reason } = draft;
+  const textLimit = kind === "feedback" ? 500 : 2000;
   const { files, keys } = attachments;
   useEffect(() => {
     if (!files.length) return;
@@ -147,6 +148,8 @@ export function FeedbackForm({
                 async (command) => {
                   if (kind === "feedback" && !text.trim())
                     throw new Error("请填写反馈内容。");
+                  if ([...text].length > textLimit)
+                    throw new Error(`内容最多填写 ${textLimit} 个字。`);
                   if (kind === "feedback") {
                     let uploaded = keys;
                     if (files.length && keys.length !== files.length) {
@@ -217,7 +220,7 @@ export function FeedbackForm({
                 <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  maxLength={2000}
+                  maxLength={textLimit}
                   placeholder={
                     kind === "feedback"
                       ? "有什么建议，或遇到了什么问题？可以具体说说…"
@@ -227,7 +230,7 @@ export function FeedbackForm({
                 />
               </Field>
               <span className="v4-field-counter">
-                {[...text].length} / 2000
+                {[...text].length} / {textLimit}
               </span>
               {kind === "feedback" && (
                 <Field label="截图（可选）" hint="最多 3 张图片。">
@@ -382,15 +385,22 @@ export function CaseContent({ value }: { value: Schema["CaseViewResponse"] }) {
   );
 }
 
-export function PrivateImages({
-  revisionId,
-  count,
-  admin = false,
-}: {
+type PrivateImageProps = {
   revisionId: string;
   count: number;
   admin?: boolean;
-}) {
+};
+export function PrivateImages(props: PrivateImageProps) {
+  return (
+    <RevisionImages key={`${props.revisionId}:${!!props.admin}`} {...props} />
+  );
+}
+function RevisionImages({
+  revisionId,
+  count,
+  admin = false,
+}: PrivateImageProps) {
+  const active = usePageLifetime();
   const { api } = useApp(),
     task = useCommand(true),
     [images, setImages] = useState<
@@ -417,6 +427,7 @@ export function PrivateImages({
                     ? api.adminSubmissionImage(revisionId, slot)
                     : api.submissionImage(revisionId, slot),
                 (r) => {
+                  if (!active.current) return;
                   const url = mediaUrl(r.url) ?? safeLink(r.url);
                   if (!url) throw new Error("图片地址无效，请重试。");
                   setImages((items) => [

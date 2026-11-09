@@ -47,6 +47,25 @@ export class ApiError extends Error {
   }
 }
 
+export function isSessionExpired(error: {
+  code?: number | string | null;
+  status?: number;
+}) {
+  return (
+    error.status === 401 ||
+    [
+      "20001",
+      "20002",
+      "20003",
+      "20010",
+      "NOT_LOGIN",
+      "TOKEN_INVALID",
+      "TOKEN_EXPIRED",
+      "ACCOUNT_AUTHORIZATION_EXPIRED",
+    ].includes(String(error.code))
+  );
+}
+
 /** A blocked action rejects normally; it must never run success callbacks. */
 export class AccessRequiredError extends ApiError {
   constructor(

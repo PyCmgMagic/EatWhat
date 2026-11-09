@@ -7,6 +7,7 @@ import {
 import {
   ApiError,
   createTransport,
+  isSessionExpired,
   type Session,
   type Transport,
 } from "../api/client";
@@ -59,6 +60,18 @@ function clientForSession(session: Session | null) {
     () => session,
   );
   const transport: Transport = async (path, options) => {
+    const expireIfCurrent = (
+      failure: Parameters<typeof isSessionExpired>[0],
+    ) => {
+      if (
+        isSessionExpired(failure) &&
+        !options.public &&
+        session &&
+        !signal.aborted &&
+        sameSession(session, readSession())
+      )
+        window.dispatchEvent(new Event("eatwhat:expired"));
+    };
     try {
       const send = isDemo
         ? (await import("../demo/transport")).demoTransport
@@ -71,17 +84,10 @@ function clientForSession(session: Session | null) {
           : signal,
       });
       checkOwner();
+      expireIfCurrent(result);
       return result;
     } catch (error) {
-      if (
-        error instanceof ApiError &&
-        error.status === 401 &&
-        !options.public &&
-        session &&
-        !signal.aborted &&
-        sameSession(session, readSession())
-      )
-        window.dispatchEvent(new Event("eatwhat:expired"));
+      if (error instanceof ApiError) expireIfCurrent(error);
       throw error;
     }
   };
@@ -151,7 +157,8 @@ function StateProvider({ children }: { children: ReactNode }) {
   }, [session]);
   useEffect(() => {
     const expire = () => {
-      recoveryCommands.clear();
+      // Revocation and mobile changes deliberately expire the old session.
+      // Keep their in-memory capabilities available to the recovery routes.
       writeSession(null);
       setSession(null);
       queryClient.clear();
@@ -161,29 +168,33 @@ function StateProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("eatwhat:expired", expire);
   }, [toast]);
   const signIn = async (s: Session) => {
+    recoveryCommands.clear();
     await queryClient.cancelQueries();
     // Guest pages must keep their cached content mounted while a login dialog
     // completes (comments, filters and scroll position belong to that page).
     // Logout/expiry already clear private data; replacing an existing identity
     // still requires a full reset to avoid showing another account's data.
     if (readSession()) queryClient.clear();
+    else queryClient.removeQueries({ queryKey: ["me"], exact: true });
     writeSession(s);
     setSession(readSession());
+    const signingIn = clientForSession(s);
     // Finish the identity refresh before a successful login/recovery navigates.
     // Otherwise a later pending transition can unmount the next page's form.
     try {
       await queryClient.fetchQuery({
         queryKey: ["me"],
-        queryFn: () => clientForSession(s).api.me(),
+        queryFn: () => signingIn.api.me(),
+        staleTime: 0,
         retry: false,
       });
     } catch {
       /* The normal account gate displays the identity read error. */
     } finally {
-      recoveryCommands.clear();
-      void queryClient.invalidateQueries({
-        predicate: (query) => query.queryKey[0] !== "me",
-      });
+      if (!signingIn.signal.aborted && sameSession(s, readSession()))
+        void queryClient.invalidateQueries({
+          predicate: (query) => query.queryKey[0] !== "me",
+        });
     }
   };
   const clearLocalSession = async () => {
@@ -203,8 +214,14 @@ function StateProvider({ children }: { children: ReactNode }) {
         signIn,
         signOut: async () => {
           const signingOut = readSession();
-          await api.logout();
-          if (sameSession(signingOut, readSession())) await clearLocalSession();
+          try {
+            await api.logout();
+          } catch (error) {
+            if (!(error instanceof ApiError) || !isSessionExpired(error))
+              throw error;
+          }
+          if (!readSession() || sameSession(signingOut, readSession()))
+            await clearLocalSession();
         },
         clearLocalSession,
         refreshMe: () =>
