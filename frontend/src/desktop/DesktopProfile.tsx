@@ -1,3 +1,4 @@
+import { useFeedbackState } from "../components/feedback";
 import { Select } from "../components/Select";
 import { useContext, useEffect, useRef, useState, type FormEvent } from "react";
 import { ProfileNavigationGuardContext } from "../app/profile-workspace";
@@ -39,7 +40,7 @@ export default function DesktopProfile() {
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false),
     [phase, setPhase] = useState("");
-  const [error, setError] = useState(""),
+  const [error, setError] = useFeedbackState(),
     [notice, setNotice] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
   const [leaving, setLeaving] = useState(false);
@@ -459,12 +460,6 @@ export default function DesktopProfile() {
             )}
           </Section>
         </fieldset>
-        {error && (
-          <div className="pc-profile-feedback is-error" role="alert">
-            <Icon name="info" size={18} />
-            <span>{error} 修改已保留，请调整后重试。</span>
-          </div>
-        )}
         <footer className="pc-profile-savebar">
           <div
             className={`pc-profile-save-status ${notice ? "is-saved" : ""}`}

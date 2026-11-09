@@ -25,15 +25,16 @@ import SheetHandle from "../mobile/SheetHandle";
 import { useFoodImageRefresh } from "./media";
 import "./api-v2.css";
 import "./user-profile.css";
+import { ToastError } from "../components/feedback";
 
 function RequestError({ error }: { error: unknown }) {
-  return error ? (
-    <p role="alert" className="ew-error">
-      {unavailable(error)
-        ? "这项功能正在准备中，敬请期待。"
-        : errorMessage(error)}
-    </p>
-  ) : null;
+  return (
+    <ToastError
+      error={
+        error && (unavailable(error) ? "这项功能正在准备中，敬请期待。" : error)
+      }
+    />
+  );
 }
 function Pages({
   page,

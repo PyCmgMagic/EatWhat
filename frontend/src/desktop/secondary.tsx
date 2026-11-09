@@ -1,4 +1,5 @@
 import { useContext, type ReactNode } from "react";
+import { BRAND_SLOGAN } from "../app/brand";
 import { ProfileWorkspaceContext } from "../app/profile-workspace";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { Link, useLocation } from "react-router-dom";
@@ -6,6 +7,7 @@ import { DesignIcon as Icon } from "../mobile/ui";
 import { errorMessage } from "../api/client";
 import { mediaUrl } from "../api/models";
 import "./secondary.css";
+import { ToastError } from "../components/feedback";
 
 export const secondaryTitles: Record<string, string> = {
   "/me": "个人总览",
@@ -155,8 +157,7 @@ export function SettingsShell({ children }: { children: ReactNode }) {
         ))}
         <div className="pc-secondary-rail-note">
           <Icon name="bowl" size={26} />
-          <b>好好吃饭，认真生活。</b>
-          <span>你的校园美食小档案</span>
+          <b>{BRAND_SLOGAN}</b>
         </div>
       </aside>
       <section className="pc-secondary-body">{children}</section>
@@ -232,11 +233,7 @@ export function State({
   );
 }
 export function TaskError({ error }: { error: unknown }) {
-  return error && errorMessage(error) ? (
-    <p className="pc-secondary-error" role="alert">
-      {errorMessage(error)}
-    </p>
-  ) : null;
+  return <ToastError error={error} />;
 }
 export function Avatar({
   name,

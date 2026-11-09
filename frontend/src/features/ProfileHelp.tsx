@@ -81,7 +81,6 @@ export default function ProfileHelp() {
       <header>
         <span className="profile-page-eyebrow">使用帮助</span>
         <h1>帮助与反馈</h1>
-        <p>遇到问题，或有一个让这里更好的想法，都可以告诉我们。</p>
       </header>
       <ProfileSectionNav section="help" />
       <div className="profile-help-search">

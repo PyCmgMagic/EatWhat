@@ -1,3 +1,4 @@
+import { useFeedbackState } from "../components/feedback";
 import { Select } from "../components/Select";
 import { foodEditBody, submissionPath } from "../api/content-rules";
 import { useEffect, useRef, useState } from "react";
@@ -112,7 +113,7 @@ function EditForm({
     [duplicate, setDuplicate] = useState<number>(),
     [busy, setBusy] = useState(false),
     [uncertain, setUncertain] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useFeedbackState();
   const active = usePageLifetime();
   const draftKey = `food:${user?.id}:${food.id}`;
   const [fields, setFields, clearFields] = useSessionDraft(draftKey, {
@@ -375,11 +376,6 @@ function EditForm({
       </fieldset>
       {duplicate && (
         <Link to={`/foods/${duplicate}`}>查看已有菜品（当前修改仍保留） →</Link>
-      )}
-      {error && (
-        <p className="ew-error" role="alert">
-          {error}
-        </p>
       )}
       {uncertain && (
         <p className="ew-error">保存结果尚未确认，请返回详情核实后再继续。</p>

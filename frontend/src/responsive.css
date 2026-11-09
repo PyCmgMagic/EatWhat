@@ -213,10 +213,7 @@
     display: grid;
   }
 }
-@media (min-width: 768px) and (max-width: 1199px) {
-  .pc-header {
-    height: 80px;
-  }
+@media (min-width: 600px) and (max-width: 1199px) {
   .pc-app {
     --header-height: 80px;
   }
@@ -242,6 +239,8 @@
     font-size: 9px;
     letter-spacing: 1.2px;
   }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
   .pc-food-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 28px 20px;
@@ -253,16 +252,16 @@
     height: auto;
     aspect-ratio: 1.4;
   }
-  .pc-food-card-image > .pc-plate {
-    width: 85%;
-    max-width: 230px;
+  .pc-food-card-image {
+    --food-art-width: 85%;
+    --food-art-max-width: 230px;
   }
   .pc-profile-content .pc-food-card-image {
     height: auto;
     aspect-ratio: 1.4;
   }
-  .pc-profile-content .pc-food-card-image > .pc-plate {
-    width: 85%;
+  .pc-profile-content .pc-food-card-image {
+    --food-art-width: 85%;
   }
   .pc-settings-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -604,12 +603,10 @@
     gap: 24px 18px;
   }
   .ew-food-photo {
+    --food-art-width: 90%;
+    --food-art-height: 95%;
     height: auto;
     aspect-ratio: 1.25;
-  }
-  .ew-food-photo > img {
-    width: 90%;
-    height: 95%;
   }
   .ew-edit-columns {
     grid-template-columns: minmax(0, 1fr);
@@ -617,11 +614,39 @@
   }
 }
 
-/* Phones: also usable when a shared link explicitly requests desktop view. */
+/* Compact header actions leave room for navigation in narrow desktop windows. */
 @media (max-width: 767px) {
+  .pc-header-actions {
+    gap: 4px;
+  }
+  .pc-header-search,
+  .pc-header-actions > .pc-user-avatar {
+    display: none;
+  }
+  .pc-header-actions .pc-compact-search {
+    display: grid;
+  }
+  .pc-header-actions > .pc-publish-button {
+    flex: none;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+  }
+  .pc-publish-button > span:not(.design-icon) {
+    display: none;
+  }
+  .pc-header-actions > .pc-icon-button {
+    width: 44px;
+    height: 44px;
+  }
+}
+/* Match the application's 600px desktop breakpoint; smaller forced previews
+   retain two rows so every destination stays reachable. */
+@media (max-width: 599px) {
   .pc-app {
-    --page-gutter: 16px;
-    --header-height: 124px;
+    --header-height: calc(117px + max(12px, env(safe-area-inset-top)));
   }
   .pc-header {
     height: auto;
@@ -655,23 +680,18 @@
     min-width: 0;
     height: 40px;
   }
-  .pc-header-actions {
-    gap: 4px;
-  }
-  .pc-header-search,
-  .pc-header-actions > .pc-user-avatar {
-    display: none;
-  }
-  .pc-header-actions .pc-compact-search {
+}
+@media (min-width: 600px) and (max-width: 767px) {
+  .pc-header-inner {
     display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 12px;
   }
-  .pc-publish-button {
-    width: 40px;
-    min-height: 40px;
-    padding: 0;
-  }
-  .pc-publish-button > span:not(.design-icon) {
-    display: none;
+}
+/* Phones: also usable when a shared link explicitly requests desktop view. */
+@media (max-width: 767px) {
+  .pc-app {
+    --page-gutter: 16px;
   }
   .pc-icon-button {
     width: 40px;
@@ -778,9 +798,9 @@
     aspect-ratio: 1.1;
     border-radius: 18px;
   }
-  .pc-food-card-image > .pc-plate,
-  .pc-profile-content .pc-food-card-image > .pc-plate {
-    width: 95%;
+  .pc-food-card-image,
+  .pc-profile-content .pc-food-card-image {
+    --food-art-width: 95%;
   }
   .pc-food-card-title {
     flex-wrap: wrap;

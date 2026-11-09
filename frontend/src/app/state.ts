@@ -3,12 +3,13 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import type { Session } from "../api/client";
 import type { Api } from "../api/service";
 import type { User } from "../api/models";
+import type { ToastOptions } from "./toast";
 export type AppState = {
   api: Api;
   session: Session | null;
   user?: User;
   me: UseQueryResult<User, Error>;
-  toast: (message: string) => void;
+  toast: (message: string, options?: ToastOptions) => void;
   signIn: (session: Session) => Promise<void>;
   signOut: () => Promise<void>;
   clearLocalSession: () => Promise<void>;

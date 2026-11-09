@@ -1,3 +1,5 @@
+import { useFeedbackState } from "../components/feedback";
+import { BRAND_SLOGAN } from "../app/brand";
 import { foodAuthor } from "../api/models";
 import ProfileRail from "./ProfileRail";
 import ProfileOverview from "../features/ProfileOverview";
@@ -155,7 +157,7 @@ const protectedScreens = new Set(["G-MyTags"]);
 function useTask() {
   const cache = useQueryClient(),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useFeedbackState();
   return {
     busy,
     error,
@@ -269,7 +271,7 @@ function DesktopHeader() {
             <b>
               山软<span>今天吃什么</span>
             </b>
-            <small>好好吃饭，认真生活</small>
+            <small>{BRAND_SLOGAN}</small>
           </span>
         </Link>
         <SlidingTabs label="桌面主导航" active={active} navigation>
@@ -352,7 +354,7 @@ function DesktopFooter() {
     <footer className="pc-footer">
       <span>
         山软今天吃什么 <span className="pc-footer-separator" />
-        好好吃饭，认真生活
+        {BRAND_SLOGAN}
       </span>
       <div>
         {isDemo && (
@@ -622,16 +624,7 @@ function DesktopSource({
       {auth && (
         <aside className="pc-auth-stage">
           <span className="pc-eyebrow">山软今天吃什么</span>
-          <h1>
-            同校的你，
-            <br />
-            一起好好吃饭。
-          </h1>
-          <p>
-            发现一份好味道，
-            <br />
-            也分享你的私藏。
-          </p>
+          <h1>{BRAND_SLOGAN}</h1>
           <img src="/prototype/assets/dishes/yuntun.svg" alt="一碗鲜虾云吞" />
         </aside>
       )}
@@ -1557,11 +1550,6 @@ function DesktopDish() {
                 </Link>
                 <Link to={`/reports/new?type=FOOD&id=${id}`}>举报</Link>
               </div>
-              {task.error && (
-                <p className="pc-error" role="alert">
-                  {task.error}
-                </p>
-              )}
             </section>
           </div>
           <Suspense fallback={<ContentSkeleton kind="rows" count={3} />}>

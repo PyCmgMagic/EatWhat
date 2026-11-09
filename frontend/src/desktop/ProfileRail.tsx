@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { BRAND_SLOGAN } from "../app/brand";
 import { Link } from "react-router-dom";
 import { useApp } from "../app/state";
 import { ProfileEditLink } from "../app/profile-navigation";
@@ -86,7 +87,7 @@ export default function ProfileRail({
             管理工作台
           </Link>
         )}
-        <span>好好吃饭，认真生活。</span>
+        <span>{BRAND_SLOGAN}</span>
       </div>
     </aside>
   );

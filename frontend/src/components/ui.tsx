@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { BRAND_SLOGAN } from "../app/brand";
 import { Link } from "react-router-dom";
 import { ContentSkeleton } from "./LoadingSkeleton";
 import { AccessWelcome } from "./AccessWelcome";
@@ -40,6 +41,7 @@ import { duplicateFoodId, errorMessage } from "../api/client";
 import { useApp } from "../app/state";
 import { mediaUrl } from "../api/models";
 import { useSurfaceDismiss } from "../motion/hooks";
+import { ToastError } from "./feedback";
 const icons = {
   discover: LayoutGrid,
   bowl: Soup,
@@ -89,17 +91,17 @@ export function Intro({
   subtitle,
 }: {
   title: string;
-  subtitle: string;
+  subtitle?: string;
 }) {
   return (
     <div className="page-intro">
       <div>
         <h1>{title}</h1>
-        <p>{subtitle}</p>
+        {subtitle && <p>{subtitle}</p>}
       </div>
       <span className="date-note">
         <Icon name="leaf" />
-        今天，也要记得好好吃饭
+        {BRAND_SLOGAN}
       </span>
     </div>
   );
@@ -133,6 +135,17 @@ export function ErrorState({
   retry?: () => void;
 }) {
   const duplicate = duplicateFoodId(error);
+  if (!retry)
+    return (
+      <>
+        <ToastError error={error} />
+        {duplicate && (
+          <Link className="text-link" to={`/foods/${duplicate}`}>
+            查看已有菜品（输入已保留） →
+          </Link>
+        )}
+      </>
+    );
   return (
     <div className="error-state" role="alert">
       <Icon name="info" />

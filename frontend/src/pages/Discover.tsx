@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BRAND_SLOGAN } from "../app/brand";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
@@ -22,13 +23,7 @@ export function Hero() {
         <div className="welcome-copy">
           <div className="eyebrow">校园里的美味日常</div>
           <h2>
-            <span className="hero-underline">好好吃饭，</span>
-            <br />
-            是今天的
-            <span className="mobile-title-break">
-              <br />
-            </span>
-            正经事。
+            <span className="hero-underline">{BRAND_SLOGAN}</span>
           </h2>
           <p>
             食堂里的隐藏菜单，校门口的新发现。
@@ -47,7 +42,7 @@ export function Hero() {
             width="400"
             height="350"
           />
-          <span className="ticket-sticker">认真吃饭俱乐部</span>
+          <span className="ticket-sticker">{BRAND_SLOGAN}</span>
           <div className="ticket-caption">
             <strong>热乎的一碗 · 午餐灵感</strong>
             <span>✳</span>
@@ -236,12 +231,7 @@ function RecommendContent() {
           </div>
         </article>
         <div className="recommend-copy">
-          <span className="eyebrow">好好吃饭计划</span>
-          <h2>
-            生活再忙，
-            <br />
-            也要好好吃饭。
-          </h2>
+          <h2>{BRAND_SLOGAN}</h2>
           <p>
             从这一组好味道里，找一个心动的选择。
             <br />

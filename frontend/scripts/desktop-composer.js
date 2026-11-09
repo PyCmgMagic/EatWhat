@@ -20,7 +20,7 @@ async(page)=>{
  await page.getByRole('button',{name:'设为封面',exact:true}).click();if(await page.getByRole('button',{name:'选择照片 1',exact:true}).getAttribute('aria-pressed')!=='true')throw new Error('更换封面失败');
  await page.getByRole('button',{name:'选择照片 2',exact:true}).click();await page.getByRole('button',{name:'移除照片',exact:true}).click();if(await page.getByRole('button',{name:/^选择照片 /}).count()!==1)throw new Error('删除照片失败');
  await page.getByRole('button',{name:'舞台色 8',exact:true}).click();checks.push('照片拖放、多图管理、设为封面、删除和舞台色');
- await page.getByRole('textbox',{name:'搜索发布餐厅',exact:true}).fill('小碗');await page.getByRole('radio',{name:/小碗菜/}).click();await page.locator('.pc-composer-selected strong').getByText('小碗菜',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'更换餐厅',exact:true}).click();await page.getByRole('textbox',{name:'搜索发布餐厅',exact:true}).fill('小碗');await page.getByRole('radio',{name:/小碗菜/}).click();await page.locator('.pc-composer-selected strong').getByText('小碗菜',{exact:true}).waitFor();
  if(await page.getByRole('textbox',{name:'菜名',exact:true}).inputValue()!=='验收测试菜')throw new Error('改选店丢失草稿');
  await page.getByRole('button',{name:'暂存并离开',exact:true}).click();await page.getByRole('link',{name:'发布一道菜',exact:true}).click();
  await page.getByRole('textbox',{name:'菜名',exact:true}).waitFor();if(await page.getByRole('textbox',{name:'菜名',exact:true}).inputValue()!=='验收测试菜'||await page.getByRole('spinbutton',{name:'价格',exact:true}).inputValue()!=='0')throw new Error('暂存返回丢失草稿');

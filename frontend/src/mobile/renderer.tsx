@@ -16,6 +16,7 @@ import type { DesignNode, Values, NodeView, Bridge } from "./types";
 import { useDesignBridge } from "./bridge";
 import { DesignNav, DesignIcon, DesignRegistryContext, useMobile } from "./ui";
 import { readDraft, writeDraft } from "../app/drafts";
+import { profileForm } from "../desktop/profile";
 
 export class DesignController extends Component<any, any> {
   state: Values = {};
@@ -49,15 +50,21 @@ export class DesignController extends Component<any, any> {
           user: "",
           old: "",
         });
-      if (props.screen === "G-EditProfile")
+      if (props.screen === "G-EditProfile") {
+        const saved = profileForm(props.user);
         Object.assign(
           patch,
           readDraft(`profile-mobile:${props.user?.id}`, {
             nick: props.user?.displayName ?? "",
             sign: props.user?.signature ?? "",
+            gender: saved.gender,
+            birthday: saved.birthday,
+            province: saved.province,
+            city: saved.city,
           }),
           { __draftOwner: props.user?.id },
         );
+      }
       if (props.screen === "G-AddDish" && props.draft)
         Object.assign(patch, {
           desc: props.draft.description ?? "",
@@ -98,12 +105,17 @@ export class DesignController extends Component<any, any> {
       !this.props.reference &&
       this.props.screen === "G-EditProfile" &&
       this.props.user?.id &&
-      (previousState.nick !== this.state.nick ||
-        previousState.sign !== this.state.sign)
+      ["nick", "sign", "gender", "birthday", "province", "city"].some(
+        (field) => previousState[field] !== this.state[field],
+      )
     ) {
       writeDraft(`profile-mobile:${this.props.user.id}`, {
         nick: String(this.state.nick ?? ""),
         sign: String(this.state.sign ?? ""),
+        gender: this.state.gender,
+        birthday: this.state.birthday,
+        province: this.state.province,
+        city: this.state.city,
       });
     }
   }

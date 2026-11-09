@@ -1,3 +1,4 @@
+import { useFeedbackState } from "../components/feedback";
 import {
   createContext,
   useContext,
@@ -124,7 +125,7 @@ function AreaPicker({ onSelect }: { onSelect: (area: Area) => void }) {
     [locating, setLocating] = useState(false),
     [selecting, setSelecting] = useState<number>(),
     [deviceArea, setDeviceArea] = useState<Area>(),
-    [error, setError] = useState("");
+    [error, setError] = useFeedbackState();
   const active = useRef(true);
   useEffect(() => {
     active.current = true;
@@ -190,11 +191,7 @@ function AreaPicker({ onSelect }: { onSelect: (area: Area) => void }) {
         <Icon name="pin" />
         {locating ? "正在定位并识别所属区域…" : "使用我的位置"}
       </button>
-      {error && (
-        <p role="alert" className="inline-error">
-          {error}
-        </p>
-      )}
+
       {error && deviceArea && (
         <button
           type="button"

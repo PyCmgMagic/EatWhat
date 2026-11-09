@@ -1,3 +1,4 @@
+import { useFeedbackState } from "../components/feedback";
 import { Select } from "../components/Select";
 import { useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -42,7 +43,7 @@ function PublishForm() {
     [images, setImages] = useState<UploadImage[]>([]),
     [done, setDone] = useState(false),
     [pending, setPending] = useState(false),
-    [error, setError] = useState(""),
+    [error, setError] = useFeedbackState(),
     [uncertain, setUncertain] = useState(false);
   const restaurant = useQuery({
     queryKey: ["restaurants", "detail", restaurantId],
@@ -250,11 +251,7 @@ function PublishForm() {
                 disabled={pending}
               />
             </div>
-            {error && (
-              <div role="alert" className="error-state">
-                <p>{error}</p>
-              </div>
-            )}
+
             {uncertain && (
               <div className="info-strip">
                 <p>

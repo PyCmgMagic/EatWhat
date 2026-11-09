@@ -71,7 +71,6 @@ export function DesktopNotifications() {
     >
       <PageHead
         title="消息通知"
-        detail="食友的互动、分享的进展，在这里一起查看。"
         action={
           <button
             className="pc-button light"
@@ -238,10 +237,7 @@ export function DesktopUser() {
     self = id === user?.id;
   return (
     <div className="pc-secondary-user" data-pc-secondary="user">
-      <PageHead
-        title={self ? "我的公开主页" : "食友主页"}
-        detail="同校的你，也在认真记录每一餐。"
-      />
+      <PageHead title={self ? "我的公开主页" : "食友主页"} />
       <div className="pc-secondary-user-layout">
         <aside className="pc-secondary-user-card">
           <img
@@ -396,7 +392,6 @@ export function DesktopNewShop() {
     <div className="pc-secondary-new-shop" data-pc-secondary="new-shop">
       <PageHead
         title={draft.done ? "新店已提交" : "添加一家店"}
-        detail="把店名和准确位置一起补充好，接着分享你的拿手推荐。"
         back="/publish"
         crumb="发布一道菜"
       />

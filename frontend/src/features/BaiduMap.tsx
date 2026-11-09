@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useFeedbackState } from "../components/feedback";
 import {
   loadBaiduMap,
   acquireBaiduMap,
@@ -34,7 +35,7 @@ export default function BaiduMap(props: Props) {
     [attempt, setAttempt] = useState(0),
     [loading, setLoading] = useState(true),
     [error, setError] = useState("");
-  const [pickError, setPickError] = useState("");
+  const [pickError, setPickError] = useFeedbackState();
   useEffect(() => {
     let active = true,
       instance: BMap.Map | undefined,
@@ -314,11 +315,6 @@ export default function BaiduMap(props: Props) {
             重新加载地图
           </button>
         </div>
-      )}
-      {pickError && (
-        <span className="restaurant-map-location-error" role="status">
-          {pickError}
-        </span>
       )}
     </>
   );

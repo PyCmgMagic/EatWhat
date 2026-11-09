@@ -27,10 +27,7 @@ function ProfileContent() {
     [tab, setTab] = useState("posts");
   return (
     <>
-      <Intro
-        title="把喜欢的味道，写进日常。"
-        subtitle="认真生活，也认真记下每一份小小的满足。"
-      />
+      <Intro title="我的主页" />
       <section className="profile-cover">
         <span className="profile-cover-flower">✳</span>
         <div className="profile-avatar">
@@ -305,10 +302,7 @@ function OtherContent({ id }: { id: number }) {
   const u = q.data;
   return (
     <>
-      <Intro
-        title="因为好味道，相遇在这里。"
-        subtitle="认识和你一样认真吃饭的同学。"
-      />
+      <Intro title="同学主页" />
       <div className="public-profile settings-card">
         <span className="avatar public-avatar">
           {u.displayName?.slice(0, 1) || "食"}

@@ -1,4 +1,5 @@
 import { useSendSignal } from "../features/useSendSignal";
+import { BRAND_SLOGAN } from "../app/brand";
 import { PersonalizedRecommendation } from "../features/ApiV2";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -112,12 +113,7 @@ function Account() {
   const { user } = useApp();
   return (
     <>
-      <PageHead
-        title="账号与安全"
-        detail="账号信息、登录方式与安全设置，在这里管理。"
-        back="/settings"
-        crumb="设置"
-      />
+      <PageHead title="账号与安全" back="/settings" crumb="设置" />
       <div className="pc-secondary-columns">
         <Section title="你的账号">
           <div className="pc-secondary-identity">
@@ -194,7 +190,7 @@ function Account() {
             action="了解"
           />
         </Section>
-        <Note title="安心分享每一顿" icon="lock">
+        <Note title={BRAND_SLOGAN} icon="lock">
           <p>请勿向他人透露密码或验证码。在公用电脑使用后，记得退出登录。</p>
           <Link to="/settings/privacy">管理我的公开范围 →</Link>
         </Note>
@@ -619,9 +615,7 @@ function About({ data }: { data: boolean }) {
     <>
       <PageHead
         title={data ? "数据存放说明" : "关于山软今天吃什么"}
-        detail={
-          data ? "了解账号信息与分享内容的保存方式。" : "好好吃饭，认真生活。"
-        }
+        detail={data ? "了解账号信息与分享内容的保存方式。" : BRAND_SLOGAN}
         back="/settings"
         crumb="设置"
       />
@@ -712,18 +706,8 @@ export function DesktopAuth() {
           回到发现
         </Link>
         <span className="pc-eyebrow">山软 · 今天吃什么</span>
-        <h1>
-          同校的你，
-          <br />
-          一起好好吃饭。
-        </h1>
-        <p>
-          发现一份好味道，
-          <br />
-          也分享你的私藏。
-        </p>
+        <h1>{BRAND_SLOGAN}</h1>
         <DishCarousel />
-        <small>好好吃饭，认真生活。</small>
       </aside>
       <section className="pc-secondary-auth-content" key={path}>
         {path === "/auth/forgot" ? (
@@ -774,11 +758,7 @@ export function AuthForm({
     return (
       <>
         <span className="pc-secondary-badge">已登录</span>
-        <h2>
-          欢迎回来，
-          <br />
-          记得好好吃饭。
-        </h2>
+        <h2>欢迎回来</h2>
         <p className="pc-secondary-copy">你已经登录，可以继续浏览和分享。</p>
         <Link className="pc-button" to="/me">
           进入我的主页

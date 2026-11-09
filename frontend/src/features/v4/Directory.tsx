@@ -88,11 +88,7 @@ export default function Directory() {
     Boolean,
   ).length;
   return (
-    <Shell
-      title="找一家店"
-      detail="选一份预算，挑一种心情，去找到合你口味的那一家。"
-      back={returnTo}
-    >
+    <Shell title="找一家店" back={returnTo}>
       <div className="v4-directory-layout">
         <aside
           className="v4-directory-filters"

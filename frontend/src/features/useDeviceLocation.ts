@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Area } from "../app/area";
 import { wgsToGcj } from "../api/models";
+import { useFeedbackState } from "../components/feedback";
 
 type Options = {
   area: Area | null;
@@ -16,7 +17,7 @@ export function useDeviceLocation(options: Options) {
     requestId = useRef(0),
     pending = useRef(false);
   const [locating, setLocating] = useState(false),
-    [locationError, setLocationError] = useState(""),
+    [locationError, setLocationError] = useFeedbackState(),
     [deviceRevision, setDeviceRevision] = useState(0);
 
   useEffect(() => {

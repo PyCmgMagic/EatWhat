@@ -17,11 +17,6 @@ export default function AuthDialogContent({ path }: { path: string }) {
           {register ? "加入食友圈" : "欢迎回来"}
           <span aria-hidden="true">。</span>
         </h2>
-        <p>
-          {register
-            ? "记下喜欢的菜，分享你的这一餐。"
-            : "登录，接着发现和收藏好味道。"}
-        </p>
       </div>
       {!register && (
         <nav className="ew-auth-methods" aria-label="登录方式">

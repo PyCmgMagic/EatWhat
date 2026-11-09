@@ -1,3 +1,4 @@
+import { useFeedbackState } from "../components/feedback";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -63,8 +64,8 @@ export default function FoodDiscussion({ food }: { food: Food }) {
   const [text, setText] = useState(""),
     [photos, setPhotos] = useState<string[]>([]);
   const [busy, setBusy] = useState(false),
-    [error, setError] = useState(""),
-    [notice, setNotice] = useState("");
+    [error, setError] = useFeedbackState(),
+    [notice, setNotice] = useFeedbackState("success");
   const [viewPhoto, setViewPhoto] = useState<string | null>(null);
   const textarea = useRef<HTMLTextAreaElement>(null),
     input = useRef<HTMLInputElement>(null),
@@ -458,17 +459,7 @@ export default function FoodDiscussion({ food }: { food: Food }) {
                 event.target.value = "";
               }}
             />
-            {error && (
-              <p className="food-comment-error" role="alert">
-                {error}
-              </p>
-            )}
-            {notice && (
-              <p className="food-comment-success" role="status">
-                <Icon name="check" size={15} />
-                {notice}
-              </p>
-            )}
+
             <button
               type="submit"
               className="pc-button"

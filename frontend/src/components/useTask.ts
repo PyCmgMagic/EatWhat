@@ -16,9 +16,10 @@ export function useTask(
       await Promise.all(
         keys.map((key) => cache.invalidateQueries({ queryKey: [key] })),
       );
-      if (message) toast(message);
+      if (message) toast(message, { tone: "success" });
       after?.();
     },
+    onError: (error) => toast(errorMessage(error), { tone: "error" }),
     onSettled: () => {
       locked.current = false;
     },

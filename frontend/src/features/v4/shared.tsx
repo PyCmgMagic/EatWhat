@@ -1,3 +1,5 @@
+import { useFeedbackState } from "../../components/feedback";
+import { BRAND_SLOGAN } from "../../app/brand";
 import {
   useRef,
   useContext,
@@ -129,61 +131,50 @@ export function Shell({
                       : path.startsWith("/me/tags/")
                         ? "tags"
                         : "hub";
-  const meta: Record<string, { name: string; icon: string; detail: string }> = {
+  const meta: Record<string, { name: string; icon: string }> = {
     growth: {
       name: "个人成长",
       icon: "bowl",
-      detail: "好好吃饭的日常，也在一点点积累。",
     },
     hub: {
       name: "个人中心",
       icon: "tool",
-      detail: "找餐厅、查进度、管账号，都在这里。",
     },
     account: {
       name: "账号与偏好",
       icon: "shield",
-      detail: "把账号照顾好，安心记录每一顿。",
     },
     feedback: {
       name: "反馈与帮助",
       icon: "feedback",
-      detail: "认真对待你的每一条建议。",
     },
     topics: {
       name: "校园专题",
       icon: "topic",
-      detail: "跟着校园专题，发现下一口好味道。",
     },
     restaurants: {
       name: "发现好店",
       icon: "store",
-      detail: "喜欢的味道，留给下一次好胃口。",
     },
     submissions: {
       name: "我的分享",
       icon: "document",
-      detail: "每一份分享，都能在这里找到后续。",
     },
     notifications: {
       name: "消息与互动",
       icon: "bell",
-      detail: "看看校园食友和你的分享有了哪些新动态。",
     },
     announcements: {
       name: "站点消息",
       icon: "announce",
-      detail: "及时了解站点公告与服务安排。",
     },
     tags: {
       name: "我的标签",
       icon: "tag",
-      detail: "用自己的方式，收好喜欢的味道。",
     },
     admin: {
       name: "管理工作台",
       icon: "tool",
-      detail: "认真维护内容，让校园的好味道被看见。",
     },
   };
   const aside =
@@ -213,7 +204,7 @@ export function Shell({
           </span>
           <div>
             <h1>{title}</h1>
-            <p>{detail || meta[section].detail}</p>
+            {detail && <p>{detail}</p>}
           </div>
           {!embedded && path !== "/features" && featuresReturnTo && (
             <Link to={featuresReturnTo} className="v4-heading-home">
@@ -257,18 +248,7 @@ function PageAdvice({ section, path }: { section: string; path: string }) {
           <Icon name={feedback ? "comment" : "check"} size={20} />
         </i>
       </div>
-      <span className="v4-kicker">
-        {feedback ? "每一条建议，都有回音" : "安心分享每一顿"}
-      </span>
-      <h2>
-        {feedback
-          ? "把想法，认真留下。"
-          : danger
-            ? "决定离开前，先了解清楚。"
-            : privacy
-              ? "你的偏好，由你做主。"
-              : "重要的操作，多一份安心。"}
-      </h2>
+      <h2>{BRAND_SLOGAN}</h2>
       <p>
         {feedback
           ? "描述遇到的问题或你的建议，附上清晰截图，会更方便我们了解情况。"
@@ -462,9 +442,9 @@ export function useCommand(readOnly = false) {
   const lock = useRef(false),
     id = useRef<string | null>(null),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState(""),
+    [error, setError] = useFeedbackState(),
     [uncertain, setUncertain] = useState(false),
-    [message, setMessage] = useState("");
+    [message, setMessage] = useFeedbackState("info");
   return {
     busy,
     error,
@@ -506,24 +486,12 @@ export function useCommand(readOnly = false) {
   };
 }
 export function CommandState({
-  task,
+  task: _task,
 }: {
   task: { error: string; message: string };
 }) {
-  return (
-    <>
-      {task.error && (
-        <p className="v4-error" role="alert">
-          {task.error}
-        </p>
-      )}
-      {task.message && (
-        <p className="v4-message" role="status">
-          {task.message}
-        </p>
-      )}
-    </>
-  );
+  // useCommand emits feedback at action time, even when the page navigates away.
+  return null;
 }
 export function capability() {
   const bytes = crypto.getRandomValues(new Uint8Array(32));

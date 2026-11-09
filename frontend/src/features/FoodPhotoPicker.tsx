@@ -1,3 +1,4 @@
+import { useFeedbackState } from "../components/feedback";
 import { useRef, useState, type DragEvent } from "react";
 import { createPortal } from "react-dom";
 import { errorMessage } from "../api/client";
@@ -22,7 +23,7 @@ export function FoodPhotoPicker({
   const input = useRef<HTMLInputElement>(null);
   const depth = useRef(0);
   const [dragging, setDragging] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useFeedbackState();
   const [preview, setPreview] = useState<number>();
   const remaining = Math.max(0, 9 - photos.length);
   function add(files: File[]) {
@@ -159,12 +160,6 @@ export function FoodPhotoPicker({
           {remaining ? "支持拖入多张图片" : "已添加 9 张，可移除后再添加"} ·
           JPG、PNG、WebP · 单张不超过 10 MB
         </p>
-        {error && (
-          <p className="food-photo-error" role="alert">
-            <Icon name="info" size={16} />
-            {error}
-          </p>
-        )}
       </div>
       {preview !== undefined &&
         photos[preview] &&

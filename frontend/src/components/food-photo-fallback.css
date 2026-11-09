@@ -31,7 +31,34 @@
   line-height: 1.5;
   white-space: nowrap;
 }
-/* Keep the category chip clear while the artwork and disclosure stay centered. */
-:is(.ew-food-photo, .pc-food-card-image) > .food-photo-fallback {
-  padding-top: 36px;
+/* Card artwork uses the same geometry as its photo, including cropped edges. */
+:is(.ew-food-photo, .pc-food-card-image, .design-tile-image)
+  > .food-photo-fallback {
+  display: block;
+  padding: 0;
+}
+:is(.ew-food-photo, .pc-food-card-image, .design-tile-image)
+  > .food-photo-fallback
+  > .dish-illustration {
+  position: absolute;
+  width: var(--food-art-width);
+  max-width: var(--food-art-max-width, none);
+  height: var(--food-art-height, auto);
+  aspect-ratio: 1;
+  top: var(--food-art-top, auto);
+  right: var(--food-art-right, auto);
+  bottom: var(--food-art-bottom, auto);
+  left: var(--food-art-left, auto);
+}
+:is(.ew-food-photo, .pc-food-card-image, .design-tile-image)
+  > .food-photo-fallback
+  > .food-photo-fallback-label {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  max-width: calc(100% - 20px);
+  gap: 3px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 10px;
 }

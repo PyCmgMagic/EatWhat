@@ -1,3 +1,4 @@
+import { useFeedbackState } from "../components/feedback";
 import { Select } from "../components/Select";
 import {
   useEffect,
@@ -34,7 +35,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useArea } from "../app/area";
 import { isV4Path } from "../features/v4-paths";
 import { boundedText, submissionPath } from "../api/content-rules";
-const DetailExtras = lazy(() => import("../features/v4/DetailExtras"));
 import { RemoteBanner, FeatureAvailability } from "../features/v4/Remote";
 const V4Routes = lazy(() => import("../features/v4/Routes"));
 const ApiV2Routes = lazy(() => import("../features/ApiV2Routes"));
@@ -42,7 +42,6 @@ const Admin = lazy(() => import("../pages/Admin"));
 const MobileLogin = lazy(() => import("./Login"));
 const MobileAccountSettings = lazy(() => import("./AccountSettings"));
 const MobileSettingsPages = lazy(() => import("./SettingsPages"));
-import { ProfileExtras } from "../pages/ProfileExtras";
 import { Gate } from "../components/ui";
 import "@fontsource-variable/noto-sans-sc";
 import "@fontsource-variable/bricolage-grotesque";
@@ -83,6 +82,7 @@ const emptyDraft: Draft = {
   images: [],
   stage: "#F3C46E",
   tags: [],
+  tagInput: "",
 };
 export default function MobileApp() {
   const profileReturnTo = useProfileReturnTo();
@@ -210,8 +210,9 @@ export default function MobileApp() {
       ? Math.min(1, viewport.width / 390)
       : Math.min(520, viewport.width) / 390;
   const height = Math.max(640, viewport.height / scale);
-  const navigationSection =
-    loc.pathname === "/" || loc.pathname === "/home-photo"
+  const navigationSection = ["/me/edit", "/me/details"].includes(loc.pathname)
+    ? null
+    : loc.pathname === "/" || loc.pathname === "/home-photo"
       ? "home"
       : loc.pathname === "/nearby"
         ? "nearby"
@@ -249,8 +250,7 @@ export default function MobileApp() {
     openPanel: (name: string) => setPanel(name),
     closePanel: () => setPanel(null),
     notice: (text: string) => {
-      setConfirmation(null);
-      setMessage(text);
+      app.toast(text);
     },
     confirm: (
       message: string,
@@ -398,19 +398,11 @@ export default function MobileApp() {
                 <Admin />
               </div>
             ) : loc.pathname === "/me/details" ? (
-              <div className="mobile-page-native">
-                <Link
-                  to="/me/edit"
-                  state={{ returnTo: profileReturnTo }}
-                  aria-label="返回"
-                >
-                  <DesignIcon name="back" />
-                </Link>
-                <h1>更多资料</h1>
-                <Gate verified={false}>
-                  <ProfileExtras />
-                </Gate>
-              </div>
+              <Navigate
+                to="/me/edit"
+                replace
+                state={{ returnTo: profileReturnTo }}
+              />
             ) : showIndex ? (
               <div className="reference-index">
                 <h1 style={{ width: "100%" }}>移动端设计画板</h1>
@@ -437,10 +429,14 @@ export default function MobileApp() {
               </div>
             ) : (
               <div
-                className={`mobile-viewport${!reference && ["G2-Home", "G-HomePhoto"].includes(screen) ? " mobile-fluid-home" : ""}${!reference && screen === "G-Dish" ? " mobile-fluid-detail" : ""}${!reference && screen === "G-Me" ? " mobile-fluid-profile" : ""}`}
+                className={`mobile-viewport${!reference && ["G2-Home", "G-HomePhoto"].includes(screen) ? " mobile-fluid-home" : ""}${!reference && screen === "G-Dish" ? " mobile-fluid-detail" : ""}${!reference && screen === "G-Detail" ? " mobile-fluid-restaurant" : ""}${!reference && screen === "G-EditProfile" ? " mobile-fluid-profile-edit" : ""}${!reference && screen === "G-Me" ? " mobile-fluid-profile" : ""}`}
                 style={
                   {
-                    minHeight: height * scale,
+                    minHeight:
+                      !reference &&
+                      ["G-Detail", "G-EditProfile"].includes(screen)
+                        ? viewport.height
+                        : height * scale,
                     maxWidth: reference ? 390 : 520,
                     "--mobile-scale": scale,
                   } as any
@@ -495,13 +491,6 @@ export default function MobileApp() {
             <DesignNav active={navigationSection} />
           </div>
         )}
-        {!desktop &&
-          !reference &&
-          /^\/restaurants\/\d+$/.test(loc.pathname) && (
-            <Suspense fallback={<ContentSkeleton kind="rows" count={1} />}>
-              <DetailExtras key={loc.pathname} path={loc.pathname} />
-            </Suspense>
-          )}
         <ProfilePeopleDialog />
         {Panel && (
           <div
@@ -575,12 +564,14 @@ export default function MobileApp() {
                         setMessage("");
                       } catch (error) {
                         setConfirmation(null);
-                        setMessage(
+                        app.toast(
                           errorMessage(error) +
                             (resultUncertain(error)
                               ? " 请先刷新列表核实操作结果。"
                               : ""),
+                          { tone: "error" },
                         );
+                        setMessage("");
                       } finally {
                         confirmationLock.current = false;
                         setConfirmBusy(false);
@@ -638,7 +629,7 @@ function NewShopDetailsForm({
     m = useMobile(),
     nav = useNavigate(),
     { area } = useArea(),
-    [error, setError] = useState(""),
+    [error, setError] = useFeedbackState(),
     [busy, setBusy] = useState(false),
     [uncertain, setUncertain] = useState(false),
     [position, setPosition] = useState<MapPoint>(),
@@ -707,7 +698,6 @@ function NewShopDetailsForm({
           onAddressChange={setAddress}
           disabled={busy || uncertain}
         />
-        {error && <p className="mobile-error">{error}</p>}
         {uncertain && (
           <p className="mobile-error">
             提交结果尚未确认，请返回列表核实，避免重复创建。

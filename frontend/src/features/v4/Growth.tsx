@@ -10,6 +10,7 @@ import {
 } from "../../api/growth";
 import { Card, Shell, QueryView, Pager, Field, timeText } from "./shared";
 import "./growth.css";
+import { useFeedbackState } from "../../components/feedback";
 
 export default function Growth() {
   const { api, user } = useApp();
@@ -27,11 +28,7 @@ export default function Growth() {
   const g = progress.data,
     percent = growthPercent(g);
   return (
-    <Shell
-      title="我的成长"
-      detail="好好吃饭的日常，也在一点点积累。"
-      advice={false}
-    >
+    <Shell title="我的成长" advice={false}>
       <Card>
         <QueryView query={progress}>
           <section className="growth-summary" aria-label="等级与经验">
@@ -125,7 +122,7 @@ export function EngagementStats() {
   const { api } = useApp();
   const [input, setInput] = useState(""),
     [date, setDate] = useState<string>(),
-    [error, setError] = useState("");
+    [error, setError] = useFeedbackState();
   const q = useQuery({
     queryKey: ["admin", "engagement", date],
     queryFn: () => api.engagementStats(date),
@@ -158,11 +155,6 @@ export function EngagementStats() {
           查询统计
         </button>
       </form>
-      {error && (
-        <p role="alert" className="v4-error">
-          {error}
-        </p>
-      )}
       <QueryView query={q}>
         <p className="growth-stats-date">
           统计日：{data?.date ?? "—"} · 北京时间

@@ -80,11 +80,6 @@ export default function RestaurantMap({
         <DesignIcon name="locate" size={20} />
         <span>{locating ? "正在定位…" : "我的位置"}</span>
       </button>
-      {locationError && (
-        <div className="restaurant-map-location-error" role="status">
-          {locationError}
-        </div>
-      )}
       {missing > 0 && (
         <span className="restaurant-map-missing">
           {missing} 家店暂缺坐标，可在列表中查看

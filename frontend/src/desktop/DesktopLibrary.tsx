@@ -1,3 +1,4 @@
+import { useFeedbackState } from "../components/feedback";
 import { ClearHistory } from "../features/ApiV2";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
@@ -120,7 +121,7 @@ export function DesktopTags() {
     [name, setName] = useState("");
   const [deleting, setDeleting] = useState<CustomTag | null>(null),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useFeedbackState();
   const lock = useRef(false),
     dialog = useRef<HTMLDialogElement>(null),
     renameInput = useRef<HTMLInputElement>(null);
@@ -300,7 +301,6 @@ export function DesktopTags() {
                       <Icon name="check" size={15} />
                     </button>
                   </div>
-                  {error && !deleting && <p role="alert">{error}</p>}
                 </form>
               ) : (
                 <div className="pc-tag-card-actions">
@@ -384,11 +384,7 @@ export function DesktopTags() {
           <p>
             该标签会从关联菜品上移除，菜品和收藏会保留。删除后无法恢复这个标签。
           </p>
-          {error && (
-            <p className="pc-library-dialog-error" role="alert">
-              {error}
-            </p>
-          )}
+
           <div>
             <button
               type="button"

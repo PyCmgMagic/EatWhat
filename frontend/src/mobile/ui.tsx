@@ -48,6 +48,7 @@ export type Draft = {
   }[];
   stage: string;
   tags: string[];
+  tagInput?: string;
   systemTagIds?: number[];
   mealTimes?: string[];
   crop?: { x: number; y: number; zoom: number };

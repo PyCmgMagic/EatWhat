@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   QueryClient,
   QueryClientProvider,
@@ -30,7 +24,7 @@ import {
   writeSession,
 } from "./runtime";
 import { recoveryCommands } from "../api/recovery";
-import { useExitPresence } from "../motion/hooks";
+import { ToastViewport, useToasts } from "./toast";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,9 +47,8 @@ function useMe(api: Api, session: Session | null) {
   });
 }
 function StateProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState(readSession),
-    [message, setMessage] = useState("");
-  const toastPresence = useExitPresence(message || null);
+  const [session, setSession] = useState(readSession);
+  const { items, toast, dismiss } = useToasts();
   const api = useMemo(() => {
     const live = createTransport(
       import.meta.env.VITE_API_BASE_URL || "/api",
@@ -116,7 +109,6 @@ function StateProvider({ children }: { children: ReactNode }) {
     return client;
   }, []);
   const me = useMe(api, session);
-  const toast = useCallback((message: string) => setMessage(message), []);
   useEffect(() => {
     const syncSession = (next: Session | null) => {
       if (sameSession(session, next)) return;
@@ -130,12 +122,6 @@ function StateProvider({ children }: { children: ReactNode }) {
     syncSession(readSession());
     return unsubscribe;
   }, [session]);
-  useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => setMessage(""), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
   useEffect(() => {
     const expire = () => {
       recoveryCommands.clear();
@@ -215,13 +201,7 @@ function StateProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-      <div
-        className={`toast ${message ? "visible" : ""}`}
-        role="status"
-        aria-live="polite"
-      >
-        {toastPresence.value}
-      </div>
+      <ToastViewport items={items} dismiss={dismiss} />
     </AppContext.Provider>
   );
 }

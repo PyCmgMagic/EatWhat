@@ -57,8 +57,25 @@ export function FoodExtras({
     </Card>
   );
 }
-export default function DetailExtras({ path }: { path: string }) {
+export default function DetailExtras({
+  path,
+  inline = false,
+}: {
+  path: string;
+  inline?: boolean;
+}) {
   const id = Number(path.split("/").pop());
+  if (inline)
+    return (
+      <section
+        className="mobile-restaurant-feedback"
+        id="restaurant-evaluation"
+        tabIndex={-1}
+      >
+        <h2>店铺评价与反馈</h2>
+        <RestaurantActions id={id} hideFavorite />
+      </section>
+    );
   return (
     <div className="v4-mobile-extras" id="restaurant-evaluation" tabIndex={-1}>
       {/^\/foods\/\d+$/.test(path) ? (

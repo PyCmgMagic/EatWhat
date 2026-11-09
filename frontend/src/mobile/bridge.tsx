@@ -1,3 +1,5 @@
+import { useFeedbackState } from "../components/feedback";
+import { BRAND_SLOGAN } from "../app/brand";
 import { unreadCount } from "../api/notifications";
 import { DishIllustration } from "../components/DishIllustration";
 import {
@@ -72,7 +74,15 @@ import ProfileGrowth from "../features/ProfileGrowth";
 import SheetHandle from "./SheetHandle";
 import HomeOrbit from "./HomeOrbit";
 import TagPanel from "./TagPanel";
-import { withDraftTag } from "./draft-tags";
+import AvatarSourceSheet from "./AvatarSourceSheet";
+import ProfileEditor from "./ProfileEditor";
+import {
+  profileChanges,
+  profileClearError,
+  profileForm,
+  type ProfileForm,
+} from "../desktop/profile";
+import { withDraftTag, withDraftTags } from "./draft-tags";
 import { useActionAccess } from "../features/access";
 import { useContentMotion } from "../motion/hooks";
 import { instantMotion } from "../motion/runtime";
@@ -83,11 +93,15 @@ import { baiduMarkerUrl } from "../features/map-geometry";
 import { RestaurantHeaderFavorite } from "../features/v4/RestaurantHeaderFavorite";
 import { useReturnTo } from "../app/navigation";
 import { useProfileReturnTo } from "../app/profile-navigation";
+import "./restaurant-detail.css";
 
 const FoodExtras = React.lazy(() =>
   import("../features/v4/DetailExtras").then((module) => ({
     default: module.FoodExtras,
   })),
+);
+const RestaurantExtras = React.lazy(
+  () => import("../features/v4/DetailExtras"),
 );
 
 const needsVerification = new Set([
@@ -166,7 +180,7 @@ export function useDesignBridge(
   });
   const [busy, setBusy] = useState(false),
     [duplicate, setDuplicate] = useState<number>(),
-    [error, setError] = useState(""),
+    [error, setError] = useFeedbackState(),
     [done, setDone] = useState(false),
     [uncertain, setUncertain] = useState(false),
     [page, setPage] = useState(1),
@@ -451,6 +465,16 @@ export function useDesignBridge(
     !recommendations.isPending &&
     carouselFoods.length === 0;
   const liveFood = detail.data;
+  function profileDraft(): ProfileForm {
+    return {
+      name: String(controller.state.nick ?? ""),
+      signature: String(controller.state.sign ?? ""),
+      gender: String(controller.state.gender ?? ""),
+      birthday: controller.state.birthday,
+      province: controller.state.province ?? null,
+      city: controller.state.city ?? null,
+    };
+  }
   async function run(fn: () => Promise<unknown>, success?: string) {
     if (busy) return;
     setBusy(true);
@@ -578,7 +602,11 @@ export function useDesignBridge(
       category: categoryCodes[controller.state.cat ?? 0],
     });
     await run(async () => {
-      const draft = m.draft;
+      const draft = {
+        ...m.draft,
+        tags: withDraftTags(m.draft.tags, m.draft.tagInput ?? ""),
+        tagInput: "",
+      };
       validateFoodDraft({
         ...draft,
         description: String(controller.state.desc ?? draft.description),
@@ -604,6 +632,7 @@ export function useDesignBridge(
         )
       )
         throw new Error("最多添加 20 个个人标签，每个标签不超过 10 字。");
+      m.setDraft({ tags: draft.tags, tagInput: "" });
       const images = [...draft.images];
       const pending = images
         .map((image, index) => ({ image, index }))
@@ -647,6 +676,7 @@ export function useDesignBridge(
         description: "",
         images: [],
         tags: [],
+        tagInput: "",
         systemTagIds: [],
         mealTimes: undefined,
         stage: "#F3C46E",
@@ -692,13 +722,15 @@ export function useDesignBridge(
   }
   if (screen === "G-PasswordLogin" && !reference) {
     values.msg = error;
-    values.hasMsg = !!error;
+    values.hasMsg = false;
     values.invalid = !!error;
     values.line = error ? "#A8321C" : "#E6DED8";
     values.locked = busy;
     values.canLogin = !busy;
   }
   if (screen === "G-EditProfile" && !reference) {
+    // The live chooser opens above the scaled canvas as a native modal.
+    values.sheet = false;
     const invalid =
       String(controller.state.nick ?? "").trim().length < 2 ||
       String(controller.state.nick ?? "").trim().length > 12;
@@ -1105,6 +1137,7 @@ export function useDesignBridge(
       );
     }
     if (tag === "span" && st.width === "36px" && st.height === "4px") {
+      if (screen === "G-Detail") return null;
       if (panelScreens.has(screen))
         return (
           <SheetHandle
@@ -1135,7 +1168,6 @@ export function useDesignBridge(
       const labels: Record<string, string> = {
         "G2-Home": "推荐内容",
         "G-HomePhoto": "推荐内容",
-        "G-Detail": "店铺菜单",
         "G-AddDish": "发布表单",
         "G-UserProfile": "食友分享",
       };
@@ -1701,28 +1733,80 @@ export function useDesignBridge(
     if (screen === "G-Detail" && restaurant.data) {
       const r = restaurant.data;
       if (id === 1)
-        p.className = `${p.className ?? ""} mobile-detail-flow mobile-restaurant-flow`;
-      if (id === 23) p.className = `${p.className ?? ""} mobile-detail-sheet`;
+        return (
+          <div
+            {...p}
+            className={`${p.className ?? ""} mobile-restaurant-screen`}
+            style={{
+              ...p.style,
+              width: "100%",
+              height: "auto",
+              minHeight: "100dvh",
+              overflow: "clip",
+            }}
+          >
+            <div className="mobile-restaurant-hero">
+              {view.children[2]}
+              <div className="mobile-restaurant-summary">
+                {view.children[3]}
+                {view.children[1]}
+              </div>
+            </div>
+            {view.children[4]}
+          </div>
+        );
+      if (id === 3) {
+        p.className = "mobile-restaurant-art";
+        p.style = undefined;
+      }
+      if (id === 4)
+        return (
+          <header
+            {...p}
+            className="mobile-restaurant-toolbar"
+            style={undefined}
+          >
+            {view.children}
+          </header>
+        );
+      if (id === 10)
+        p.onClick = () =>
+          void shareCurrent(r.name ?? "山软今天吃什么", m.notice);
+      if (id === 12)
+        return (
+          <section {...p} className="mobile-restaurant-copy" style={undefined}>
+            {view.children}
+          </section>
+        );
+      if (id === 17) {
+        p.className = "mobile-restaurant-stats";
+        p.style = undefined;
+      }
+      if (id === 23)
+        return (
+          <div {...p} className="mobile-restaurant-sheet" style={undefined}>
+            {view.children}
+          </div>
+        );
+      if (id === 25)
+        return (
+          <div {...p} className="mobile-restaurant-actions" style={undefined}>
+            {view.children}
+          </div>
+        );
       if (id === 21)
         return (
           <button
             type="button"
             aria-label="查看店铺评价与评分"
-            style={{
-              ...p.style,
-              border: 0,
-              background: "none",
-              padding: 0,
-              minHeight: 44,
-              textAlign: "left",
-            }}
+            className="mobile-restaurant-rating-link"
             onClick={() => {
               const panel = document.getElementById("restaurant-evaluation");
               panel?.scrollIntoView({
                 block: "center",
                 behavior: instantMotion() ? "instant" : "smooth",
               });
-              (panel?.querySelector("select") as HTMLElement | null)?.focus({
+              (panel?.querySelector("select") ?? panel)?.focus({
                 preventScroll: true,
               });
             }}
@@ -1732,8 +1816,6 @@ export function useDesignBridge(
               : "查看评价"}
           </button>
         );
-      if (id === 12 && (r.name?.length ?? 0) > 8)
-        p.style = { ...p.style, top: 108, gap: 8 };
       if (id === 19)
         return <span {...p}>{restaurantFoods.data?.totalItems ?? "—"}</span>;
       if (id === 16)
@@ -1742,59 +1824,29 @@ export function useDesignBridge(
             距你 {demoDishes.find((d) => d.restaurantId === r.id)?.dist ?? "—"}
           </span>
         ) : null;
-      if (id === 46 && !isDemo)
+      if (id === 46)
         return (
-          <section {...p}>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900 }}>
-              大家怎么说 <Pending />
-            </h2>
-            <p style={{ fontSize: 13, color: "#6e625b" }}>
-              更多口味评价敬请期待，你可以先看看具体菜品的标签。
-            </p>
-          </section>
+          <React.Suspense fallback={<ContentSkeleton kind="rows" count={1} />}>
+            <RestaurantExtras path={location.pathname} inline />
+          </React.Suspense>
         );
       if (tag === "h1")
         return (
-          <h1
-            {...p}
-            style={{
-              ...p.style,
-              ...((r.name?.length ?? 0) > 8
-                ? { fontSize: 30, lineHeight: "36px", overflowWrap: "anywhere" }
-                : {}),
-            }}
-          >
+          <h1 {...p} className="mobile-restaurant-name" style={undefined}>
             {r.name}
           </h1>
         );
       if (tag === "span" && clean(text) === "万达金街 1 层")
         return (
-          <span {...p} className="mobile-store-address">
+          <span {...p} className="mobile-restaurant-address">
             {r.address ?? "地址待补充"}
           </span>
         );
-      if (id === 23 && (r.address?.length ?? 0) > 20)
-        return (
-          <div {...p}>
-            {view.children[0]}
-            <p className="mobile-full-store-address">{r.address}</p>
-            {view.children.slice(1)}
-          </div>
-        );
       if (tag === "section" && id === 29)
         return (
-          <section {...p}>
-            <h2
-              style={{
-                margin: 0,
-                padding: "0 20px",
-                fontSize: 20,
-                fontWeight: 900,
-              }}
-            >
-              招牌
-            </h2>
-            <div className="mobile-food-carousel">
+          <section {...p} className="mobile-restaurant-menu">
+            <h2>菜品</h2>
+            <div className="design-food-grid mobile-restaurant-food-grid">
               {restaurantFoods.isPending && <ContentSkeleton count={2} />}
               {restaurantFoods.data?.items?.map((f) => (
                 <FoodTile
@@ -1823,7 +1875,30 @@ export function useDesignBridge(
               !restaurantFoods.data?.items?.length && (
                 <MobileEmpty title="这家店还没有分享的菜" />
               )}
-            <More />
+            {(page > 1 || restaurantFoods.data?.hasNext) && (
+              <nav
+                className="mobile-restaurant-pagination"
+                aria-label="菜品翻页"
+              >
+                <button
+                  type="button"
+                  disabled={page === 1 || restaurantFoods.isFetching}
+                  onClick={() => setPage((current) => current - 1)}
+                >
+                  上一页
+                </button>
+                <span>第 {page} 页</span>
+                <button
+                  type="button"
+                  disabled={
+                    !restaurantFoods.data?.hasNext || restaurantFoods.isFetching
+                  }
+                  onClick={() => setPage((current) => current + 1)}
+                >
+                  下一页
+                </button>
+              </nav>
+            )}
           </section>
         );
       if (tag === "button" && clean(text) === "导航去店里")
@@ -2063,36 +2138,26 @@ export function useDesignBridge(
         p.onChange = (e: any) => m.setDraft({ price: e.target.value });
       }
     }
-    if (screen === "G-EditProfile") {
-      if (tag === "a" && ["取消", "保存"].includes(clean(text)))
-        p.href = "#" + profileReturnTo;
-      if (tag === "input" && p.id === "nick") p.maxLength = 12;
-      if (tag === "label" && p.htmlFor === "nick")
-        return (
-          <label {...p}>
-            昵称<span>{String(controller.state.nick ?? "").length} / 12</span>
-          </label>
-        );
-      if (tag === "button" && ["拍一张", "从相册选"].includes(clean(text)))
-        p.onClick = () => void pickAvatar();
-      if (id === 11) {
-        const avatar = mediaUrl(user?.avatar);
-        p.style = { ...st, overflow: "hidden" };
-        return (
-          <button {...p} onClick={() => void pickAvatar()}>
-            {avatar ? (
-              <img
-                src={avatar}
-                alt="头像"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              user?.displayName?.slice(0, 1) || "食"
-            )}
-          </button>
-        );
-      }
-    }
+    if (screen === "G-EditProfile" && id === 1 && user)
+      return (
+        <ProfileEditor
+          form={profileDraft()}
+          avatar={mediaUrl(user.avatar)}
+          avatarOpen={Boolean(controller.state.sheet)}
+          busy={busy}
+          onChange={(patch) => {
+            const { name, signature, ...other } = patch;
+            controller.setState({
+              ...other,
+              ...(name !== undefined ? { nick: name } : {}),
+              ...(signature !== undefined ? { sign: signature } : {}),
+            });
+          }}
+          onAvatar={() => controller.setState({ sheet: true })}
+          onSave={() => navigateDesign("G-Me.dc.html", "保存")}
+          onCancel={() => navigateDesign("G-Me.dc.html", "取消")}
+        />
+      );
     if (screen === "G-Settings") {
       if (tag === "a" && n.attrs.href === "G-EditProfile.dc.html") {
         const avatar = mediaUrl(user?.avatar);
@@ -2246,7 +2311,7 @@ export function useDesignBridge(
       if (tag === "p" && clean(text) === "只吃好吃的，也只推荐好吃的")
         return (
           <p {...p} className="mobile-profile-signature">
-            {user?.signature || "认真吃饭，认真生活。"}
+            {user?.signature || BRAND_SLOGAN}
           </p>
         );
       if (tag === "span" && clean(text) === "天" && st.borderRadius === "50%") {
@@ -2713,8 +2778,11 @@ export function useDesignBridge(
       m.closePanel();
     });
   }
-  async function pickAvatar() {
-    const files = await pickFiles(false);
+  async function pickAvatar(source: "camera" | "library") {
+    const files = await pickFiles(
+      false,
+      source === "camera" ? "user" : undefined,
+    );
     if (!files.length) return;
     await run(async () => {
       validateFiles(files, 0);
@@ -2767,18 +2835,29 @@ export function useDesignBridge(
       return;
     }
     if (screen === "G-EditProfile" && label === "保存") {
+      if (busy || !user) return;
       void run(async () => {
-        const name = String(controller.state.nick ?? "").trim();
-        if (name.length < 2 || name.length > 12)
+        const form = profileDraft();
+        const name = form.name.trim();
+        if (name.length < 2 || name.length > 12) {
+          document.getElementById("nick")?.focus();
           throw new Error("昵称需要 2–12 个字。");
-        await api.updateProfile({
-          displayName: name,
-          signature: String(controller.state.sign ?? ""),
-        });
+        }
+        if (form.signature.length > 30)
+          throw new Error("个性签名最多填写 30 个字。");
+        const saved = profileForm(user);
+        const clearError = profileClearError(form, saved);
+        if (clearError) throw new Error(clearError);
+        const today = new Date();
+        const maxDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+        if (form.birthday && form.birthday > maxDate)
+          throw new Error("生日不能晚于今天。");
+        const changes = profileChanges(form, saved);
+        if (Object.keys(changes).length) await api.updateProfile(changes);
         removeDraft(`profile-mobile:${user?.id}`);
         await app.me.refetch();
         nav(profileReturnTo);
-      });
+      }, "个人资料已更新");
       return;
     }
     if (screen === "G-EditProfile" && label === "取消") {
@@ -3011,6 +3090,13 @@ export function useDesignBridge(
     );
   const after = (
     <>
+      {!denied && screen === "G-EditProfile" && controller.state.sheet && (
+        <AvatarSourceSheet
+          busy={busy}
+          onPick={(source) => void pickAvatar(source)}
+          onClose={() => controller.setState({ sheet: false })}
+        />
+      )}
       {isDemo && ["G-Login", "G-PasswordLogin"].includes(screen) && (
         <div
           className="mobile-mock-login"
@@ -3025,25 +3111,6 @@ export function useDesignBridge(
           </button>
           <p>本地模拟数据，无需账号和密码</p>
         </div>
-      )}
-      {screen === "G-EditProfile" && (
-        <Link
-          style={{
-            position: "absolute",
-            left: 20,
-            bottom:
-              "calc(var(--mobile-nav-clearance) / var(--mobile-scale, 1))",
-            minHeight: "calc(44px / var(--mobile-scale, 1))",
-            display: "inline-flex",
-            alignItems: "center",
-            fontSize: 14,
-            fontWeight: 600,
-          }}
-          to="/me/details"
-          state={{ returnTo: profileReturnTo }}
-        >
-          性别、生日和家乡
-        </Link>
       )}
       {screen === "G-Crop" && (
         <span
@@ -3060,18 +3127,25 @@ export function useDesignBridge(
           舞台色与裁剪后的照片将在发布时同步保存
         </span>
       )}
-      {error && !["G-PasswordLogin", "G-PanelTag"].includes(screen) && (
-        <div className="mobile-error-banner" data-screen={screen} role="alert">
-          {error}
-          {duplicate && (
-            <Link to={`/foods/${duplicate}`}>查看已有菜品（草稿已保留） →</Link>
-          )}
-          {uncertain && <span>结果尚未确认，请先核实，避免重复提交。</span>}
-          <button onClick={() => setError("")} aria-label="关闭错误提示">
-            <DesignIcon name="close" size={18} />
-          </button>
-        </div>
-      )}
+      {error &&
+        (duplicate || uncertain) &&
+        !["G-PasswordLogin", "G-PanelTag"].includes(screen) && (
+          <div
+            className="mobile-error-banner"
+            data-screen={screen}
+            role="alert"
+          >
+            {duplicate && (
+              <Link to={`/foods/${duplicate}`}>
+                查看已有菜品（草稿已保留） →
+              </Link>
+            )}
+            {uncertain && <span>结果尚未确认，请先核实，避免重复提交。</span>}
+            <button onClick={() => setError("")} aria-label="关闭错误提示">
+              <DesignIcon name="close" size={18} />
+            </button>
+          </div>
+        )}
       {denied && <div className="mobile-denied-curtain" />}
       {screen === "G-PhoneLogin" && (
         <div className="mobile-supported-register">
@@ -3142,12 +3216,13 @@ function referenceNode(
   }
   return undefined;
 }
-async function pickFiles(multiple = true): Promise<File[]> {
+async function pickFiles(multiple = true, capture?: "user"): Promise<File[]> {
   return new Promise((resolve) => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/jpeg,image/png,image/webp";
     input.multiple = multiple;
+    if (capture) input.setAttribute("capture", capture);
     input.onchange = () => resolve(Array.from(input.files ?? []));
     input.addEventListener("cancel", () => resolve([]), { once: true });
     input.click();

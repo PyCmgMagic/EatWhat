@@ -1,3 +1,4 @@
+import { useFeedbackState } from "../components/feedback";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   validateFoodDraft,
@@ -20,6 +21,7 @@ import { validateFiles } from "../api/validation";
 import { DesignIcon as Icon, useMobile } from "../mobile/ui";
 import { stageColors } from "../mobile/catalog";
 import { adjustPhoto, saveVisual } from "../mobile/photos";
+import { withDraftTags } from "../mobile/draft-tags";
 import CropDialog from "./CropDialog";
 import "./publish.css";
 import { publishDisplay, mealOptions, mealCode } from "../api/food-display";
@@ -53,7 +55,11 @@ export default function DesktopPublish() {
   draftRef.current = draft;
   const input = useRef<HTMLInputElement>(null),
     searchInput = useRef<HTMLInputElement>(null),
+    shopPickerToggle = useRef<HTMLButtonElement>(null),
+    tagInput = useRef<HTMLInputElement>(null),
+    tagComposing = useRef(false),
     photoLock = useRef(false);
+  const [shopPickerExpanded, setShopPickerExpanded] = useState(false);
   const [keyword, setKeyword] = useState(""),
     [search, setSearch] = useState(""),
     [page, setPage] = useState(1);
@@ -62,7 +68,7 @@ export default function DesktopPublish() {
     [photoBusy, setPhotoBusy] = useState(false),
     [dragging, setDragging] = useState(false);
   const [duplicate, setDuplicate] = useState<number>(),
-    [error, setError] = useState(""),
+    [error, setError] = useFeedbackState(),
     [progress, setProgress] = useState(""),
     [checked, setChecked] = useState(false);
   const selectedId =
@@ -98,6 +104,20 @@ export default function DesktopPublish() {
   });
   const shop = restaurant.data,
     image = draft.images[photo] ?? draft.images[0];
+  const selectedShop =
+    shop ?? shops.data?.items?.find((item) => item.id === selectedId);
+  const shopPickerOpen = !selectedId || shopPickerExpanded;
+  useEffect(() => {
+    if (restaurant.isError) setShopPickerExpanded(true);
+  }, [restaurant.isError]);
+  function toggleShopPicker(open: boolean) {
+    setShopPickerExpanded(open);
+    requestAnimationFrame(() =>
+      (open ? searchInput.current : shopPickerToggle.current)?.focus({
+        preventScroll: true,
+      }),
+    );
+  }
   const hasShop = !!shop?.id,
     hasPhoto = !!draft.images.length,
     hasName = !!draft.name.trim(),
@@ -166,12 +186,39 @@ export default function DesktopPublish() {
       setPhotoBusy(false);
     }
   }
+  function addTags() {
+    if (locked || draft.publishUncertain || tagComposing.current) return;
+    const current = draftRef.current;
+    if (!current.tagInput?.trim()) return;
+    try {
+      const tags = withDraftTags(current.tags, current.tagInput);
+      m.setDraft({ tags, tagInput: "" });
+      if (tags.length === current.tags.length)
+        app.toast("这些标签已经添加过了。");
+    } catch (error) {
+      setError(errorMessage(error));
+    }
+    requestAnimationFrame(() =>
+      tagInput.current?.focus({ preventScroll: true }),
+    );
+  }
   async function publish(event: FormEvent) {
     event.preventDefault();
-    if (submissionInFlight || locked || draft.publishUncertain) return;
-    const snapshot = draftRef.current;
+    if (
+      submissionInFlight ||
+      locked ||
+      draft.publishUncertain ||
+      tagComposing.current
+    )
+      return;
+    let snapshot = draftRef.current;
     const startedAtRoute = routeKey.current;
     try {
+      snapshot = {
+        ...snapshot,
+        tags: withDraftTags(snapshot.tags, snapshot.tagInput ?? ""),
+        tagInput: "",
+      };
       validateFoodDraft(snapshot);
     } catch (error) {
       setError(errorMessage(error));
@@ -185,7 +232,7 @@ export default function DesktopPublish() {
       snapshot.price.trim() === "" ? undefined : Number(snapshot.price);
     if (!shop?.id) {
       setError("先在左侧选一家店。");
-      searchInput.current?.focus();
+      toggleShopPicker(true);
       return;
     }
     if (!snapshot.name.trim() || !snapshot.images.length) {
@@ -197,7 +244,7 @@ export default function DesktopPublish() {
       return;
     }
     submissionInFlight = true;
-    m.setDraft({ publishing: true });
+    m.setDraft({ publishing: true, tags: snapshot.tags, tagInput: "" });
     setError("");
     let creating = false;
     try {
@@ -247,6 +294,7 @@ export default function DesktopPublish() {
         images: [],
         stage: stageColors[0],
         tags: [],
+        tagInput: "",
         systemTagIds: [],
         crop: undefined,
         candidates: undefined,
@@ -288,7 +336,6 @@ export default function DesktopPublish() {
             <span>分享一道菜</span>
           </div>
           <h1>把这一口，分享出去。</h1>
-          <p>选好店，放上照片，再说说为什么值得一吃。</p>
         </div>
         <span className="pc-composer-draft">
           <i />
@@ -302,133 +349,189 @@ export default function DesktopPublish() {
         >
           <div className="pc-composer-section-title">
             <h2 id="pc-composer-shop-title">这道菜来自</h2>
-            <span className="pc-required">必选</span>
+            <span className={`pc-required${shop?.id ? " is-selected" : ""}`}>
+              {shop?.id ? "已选择" : "必选"}
+            </span>
           </div>
-          <button
-            type="button"
-            className="pc-composer-area"
-            disabled={locked}
-            onClick={() => m.openPanel("G-PanelPlace")}
-          >
-            <Icon name="nearby" size={15} />
-            {area?.name ?? "先选择所在区域"}
-            <Icon name="chevronDown" size={14} />
-          </button>
-          <div className="pc-composer-search">
-            <Icon name="search" size={17} />
-            <input
-              ref={searchInput}
-              aria-label="搜索发布餐厅"
-              placeholder="搜索店名"
-              value={keyword}
-              disabled={locked || draft.publishUncertain}
-              onChange={(e) => setKeyword(e.target.value)}
-            />
-            {keyword && (
-              <button
-                type="button"
-                aria-label="清空店名搜索"
-                onClick={() => setKeyword("")}
-              >
-                <Icon name="close" size={16} />
-              </button>
-            )}
-          </div>
-          <div
-            className="pc-composer-shop-list"
-            role="radiogroup"
-            aria-label="选择发布餐厅"
-            aria-busy={shops.isFetching}
-          >
-            {shops.isPending ? (
-              <ContentSkeleton kind="rows" count={4} />
-            ) : shops.error ? (
-              <div className="pc-composer-list-message" role="alert">
-                {errorMessage(shops.error)}
-                <button type="button" onClick={() => void shops.refetch()}>
-                  重新加载
-                </button>
+          {selectedId && (
+            <div className="pc-composer-selected">
+              <span className="pc-composer-shop-photo">
+                <Icon name="store" size={21} />
+              </span>
+              <div className="pc-composer-selected-copy">
+                <strong>
+                  {selectedShop?.name?.trim() ||
+                    draft.shopName?.trim() ||
+                    (restaurant.isError ? "餐厅暂时无法读取" : "正在读取餐厅…")}
+                </strong>
+                {selectedShop?.address && <small>{selectedShop.address}</small>}
               </div>
-            ) : (
-              <>
-                {shops.data?.items?.map((item) => (
-                  <button
-                    type="button"
-                    key={item.id}
-                    className="pc-composer-shop"
-                    role="radio"
-                    aria-checked={selectedId === item.id}
+              <button
+                ref={shopPickerToggle}
+                type="button"
+                className="pc-composer-shop-toggle"
+                aria-label={shopPickerOpen ? "收起餐厅列表" : "更换餐厅"}
+                aria-expanded={shopPickerOpen}
+                aria-controls="pc-composer-shop-picker"
+                disabled={locked || draft.publishUncertain}
+                onClick={() => toggleShopPicker(!shopPickerOpen)}
+              >
+                {shopPickerOpen ? "收起" : "更换"}
+                <Icon name="chevronDown" size={13} />
+              </button>
+            </div>
+          )}
+          <div
+            id="pc-composer-shop-picker"
+            className="pc-composer-shop-picker"
+            data-open={shopPickerOpen}
+            aria-hidden={!shopPickerOpen}
+            inert={!shopPickerOpen || undefined}
+            onKeyDown={(event) => {
+              if (event.key === "Escape" && selectedId) {
+                event.stopPropagation();
+                toggleShopPicker(false);
+              }
+            }}
+          >
+            <div className="pc-composer-shop-picker-inner">
+              <div className="pc-composer-shop-picker-content">
+                <button
+                  type="button"
+                  className="pc-composer-area"
+                  disabled={locked}
+                  onClick={() => m.openPanel("G-PanelPlace")}
+                >
+                  <Icon name="nearby" size={15} />
+                  {area?.name ?? "先选择所在区域"}
+                  <Icon name="chevronDown" size={14} />
+                </button>
+                <div className="pc-composer-search">
+                  <Icon name="search" size={17} />
+                  <input
+                    ref={searchInput}
+                    aria-label="搜索发布餐厅"
+                    placeholder="搜索店名"
+                    value={keyword}
                     disabled={locked || draft.publishUncertain}
-                    onClick={() => {
-                      m.setShopId(item.id!);
-                      m.setDraft({
-                        restaurantId: item.id!,
-                        shopName: item.name ?? "",
-                      });
-                      setError("");
-                    }}
-                  >
-                    <span className="pc-composer-shop-photo">
-                      {mediaUrl(item.pictureUrl?.[0]) ? (
-                        <img src={mediaUrl(item.pictureUrl?.[0])} alt="" />
-                      ) : (
-                        <Icon name="store" size={22} />
-                      )}
-                    </span>
-                    <span>
-                      <strong>{item.name}</strong>
-                      <small>{item.address ?? "地址待补充"}</small>
-                    </span>
-                    <span className="pc-composer-radio">
-                      {selectedId === item.id && (
-                        <Icon name="check" size={12} />
-                      )}
-                    </span>
-                  </button>
-                ))}
-                {!shops.data?.items?.length && (
-                  <div className="pc-composer-list-message">
-                    没有找到这家店，试试其他店名。
-                  </div>
-                )}
-                {(page > 1 || shops.data?.hasNext) && (
-                  <div className="pc-composer-shop-pages">
+                    onChange={(e) => setKeyword(e.target.value)}
+                  />
+                  {keyword && (
                     <button
                       type="button"
-                      disabled={page === 1 || locked || shops.isFetching}
-                      onClick={() => setPage((p) => p - 1)}
+                      aria-label="清空店名搜索"
+                      onClick={() => setKeyword("")}
                     >
-                      上一页
+                      <Icon name="close" size={16} />
                     </button>
-                    <span>{page}</span>
+                  )}
+                </div>
+                <div
+                  className="pc-composer-shop-list"
+                  role="radiogroup"
+                  aria-label="选择发布餐厅"
+                  aria-busy={shops.isFetching}
+                >
+                  {shops.isPending ? (
+                    <ContentSkeleton kind="rows" count={4} />
+                  ) : shops.error ? (
+                    <div className="pc-composer-list-message" role="alert">
+                      {errorMessage(shops.error)}
+                      <button
+                        type="button"
+                        onClick={() => void shops.refetch()}
+                      >
+                        重新加载
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {shops.data?.items?.map((item) => (
+                        <button
+                          type="button"
+                          key={item.id}
+                          className="pc-composer-shop"
+                          role="radio"
+                          aria-checked={selectedId === item.id}
+                          disabled={locked || draft.publishUncertain}
+                          onClick={() => {
+                            m.setShopId(item.id!);
+                            m.setDraft({
+                              restaurantId: item.id!,
+                              shopName: item.name ?? "",
+                            });
+                            setError("");
+                            toggleShopPicker(false);
+                          }}
+                        >
+                          <span className="pc-composer-shop-photo">
+                            {mediaUrl(item.pictureUrl?.[0]) ? (
+                              <img
+                                src={mediaUrl(item.pictureUrl?.[0])}
+                                alt=""
+                              />
+                            ) : (
+                              <Icon name="store" size={22} />
+                            )}
+                          </span>
+                          <span>
+                            <strong>{item.name}</strong>
+                            <small>{item.address ?? "地址待补充"}</small>
+                          </span>
+                          <span className="pc-composer-radio">
+                            {selectedId === item.id && (
+                              <Icon name="check" size={12} />
+                            )}
+                          </span>
+                        </button>
+                      ))}
+                      {!shops.data?.items?.length && (
+                        <div className="pc-composer-list-message">
+                          没有找到这家店，试试其他店名。
+                        </div>
+                      )}
+                      {(page > 1 || shops.data?.hasNext) && (
+                        <div className="pc-composer-shop-pages">
+                          <button
+                            type="button"
+                            disabled={page === 1 || locked || shops.isFetching}
+                            onClick={() => setPage((p) => p - 1)}
+                          >
+                            上一页
+                          </button>
+                          <span>{page}</span>
+                          <button
+                            type="button"
+                            disabled={
+                              !shops.data?.hasNext || locked || shops.isFetching
+                            }
+                            onClick={() => setPage((p) => p + 1)}
+                          >
+                            下一页
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+                {restaurant.error && (
+                  <div className="pc-composer-list-message" role="alert">
+                    {errorMessage(restaurant.error)}
                     <button
                       type="button"
-                      disabled={
-                        !shops.data?.hasNext || locked || shops.isFetching
-                      }
-                      onClick={() => setPage((p) => p + 1)}
+                      onClick={() => void restaurant.refetch()}
                     >
-                      下一页
+                      重新读取所选餐厅
                     </button>
                   </div>
                 )}
-              </>
-            )}
+                <Link className="pc-composer-new-shop" to="/restaurants/new">
+                  <Icon name="add" size={15} />
+                  没有找到？添加一家新店
+                </Link>
+              </div>
+            </div>
           </div>
-          <div className="pc-composer-selected">
-            <span>当前餐厅</span>
-            <strong>
-              {shop?.name ??
-                (restaurant.isPending && selectedId ? "读取中…" : "还没有选择")}
-            </strong>
-            {restaurant.error && (
-              <small role="alert">{errorMessage(restaurant.error)}</small>
-            )}
-          </div>
-          <Link className="pc-composer-new-shop" to="/restaurants/new">
-            <Icon name="add" size={15} />
-            没有找到？添加一家新店
-          </Link>
         </aside>
         <form
           className="pc-composer-editor"
@@ -703,28 +806,99 @@ export default function DesktopPublish() {
                 </label>
               ))}
             </div>
-            <label>
-              个人标签（最多 20 个）
-              <input
-                aria-label="发布个人标签"
-                defaultValue={draft.tags.join("、")}
-                placeholder="用逗号分隔，例如：午饭、考试周"
-                onChange={(e) =>
-                  m.setDraft({
-                    tags: [
-                      ...new Set(
-                        e.target.value
-                          .split(/[,，、]/)
-                          .map((t) => t.trim())
-                          .filter(Boolean),
-                      ),
-                    ],
-                  })
-                }
-              />
-            </label>
+            <div className="pc-composer-tags">
+              <div className="pc-composer-tags-heading">
+                <label htmlFor="pc-publish-tag-input">个人标签</label>
+                <span aria-live="polite">已添加 {draft.tags.length} / 20</span>
+              </div>
+              {draft.tags.length > 0 && (
+                <ul
+                  className="pc-composer-tag-list"
+                  aria-label="已添加的个人标签"
+                >
+                  {draft.tags.map((name) => (
+                    <li key={name}>
+                      <Icon name="tag" size={13} />
+                      <span>{name}</span>
+                      <button
+                        type="button"
+                        aria-label={`移除标签 ${name}`}
+                        disabled={locked || draft.publishUncertain}
+                        onClick={() => {
+                          m.setDraft({
+                            tags: draftRef.current.tags.filter(
+                              (tag) => tag !== name,
+                            ),
+                          });
+                          requestAnimationFrame(() =>
+                            tagInput.current?.focus({ preventScroll: true }),
+                          );
+                        }}
+                      >
+                        <Icon name="close" size={13} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="pc-composer-tag-entry">
+                <input
+                  ref={tagInput}
+                  id="pc-publish-tag-input"
+                  aria-label="发布个人标签"
+                  value={draft.tagInput ?? ""}
+                  placeholder="输入标签，例如：包子"
+                  aria-describedby="pc-publish-tag-help"
+                  enterKeyHint="done"
+                  autoComplete="off"
+                  disabled={locked || draft.publishUncertain}
+                  onChange={(event) =>
+                    m.setDraft({ tagInput: event.target.value })
+                  }
+                  onCompositionStart={() => {
+                    tagComposing.current = true;
+                  }}
+                  onCompositionEnd={() => {
+                    tagComposing.current = false;
+                  }}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key !== "Enter" ||
+                      event.nativeEvent.isComposing ||
+                      event.nativeEvent.keyCode === 229
+                    )
+                      return;
+                    event.preventDefault();
+                    addTags();
+                  }}
+                />
+                <button
+                  type="button"
+                  className="pc-composer-tag-add"
+                  aria-label="添加个人标签"
+                  disabled={
+                    locked || draft.publishUncertain || !draft.tagInput?.trim()
+                  }
+                  onClick={addTags}
+                >
+                  <Icon name="add" size={15} />
+                  添加
+                </button>
+              </div>
+              <p id="pc-publish-tag-help">
+                回车或点「添加」，每个标签最多 10 个字。
+              </p>
+            </div>
             <div className="ew-feature ew-meals">
               <b>公共口味标签</b>
+              {systemTags.isPending && <small>正在读取公共标签…</small>}
+              {!systemTags.isPending &&
+                !systemTags.isError &&
+                !systemTags.data?.length && (
+                  <small className="pc-composer-tags-empty">
+                    暂无可选公共标签，个人标签仍可自由添加。
+                  </small>
+                )}
               {systemTags.data?.map((t) => (
                 <label key={t.id}>
                   <input
@@ -753,13 +927,6 @@ export default function DesktopPublish() {
                 </button>
               )}
             </div>
-            <div className="pc-composer-tip">
-              <Icon name="tag" size={19} />
-              <div>
-                <strong>好味道，也留给下一位同学</strong>
-                <p>初始标签与菜品一起保存，发布后也可以继续补充。</p>
-              </div>
-            </div>
             <div className="pc-composer-recap">
               <span>本次分享</span>
               <strong>{shop?.name ?? "选择一家店"}</strong>
@@ -787,7 +954,7 @@ export default function DesktopPublish() {
                 {draft.publishing
                   ? progress
                   : ready
-                    ? "准备好了，分享给同校的你。"
+                    ? "可以发布"
                     : `还需${missing.join("、")}`}
               </small>
             </div>
@@ -813,9 +980,8 @@ export default function DesktopPublish() {
               </button>
             </div>
           </footer>
-          {(error || draft.publishUncertain) && (
+          {(duplicate || draft.publishUncertain) && (
             <div className="pc-composer-error" role="alert">
-              {error && <p>{error}</p>}
               {duplicate && (
                 <Link to={`/foods/${duplicate}`}>
                   查看已有菜品 →（当前草稿已保留）

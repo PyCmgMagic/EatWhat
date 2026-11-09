@@ -298,11 +298,7 @@ export default function Features() {
   }
 
   return (
-    <Shell
-      title="功能搜索"
-      detail="输入你想做的事，快速找到对应入口。"
-      back="/me"
-    >
+    <Shell title="功能搜索" back="/me">
       <div className="feature-center profile-function-search">
         <section
           className="feature-directory"

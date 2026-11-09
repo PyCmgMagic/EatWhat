@@ -5,13 +5,16 @@ import { errorMessage, unavailable } from "../api/client";
 import { FeatureState } from "../features/Catalog";
 import { useMobile } from "../mobile/ui";
 import "../features/api-v2.css";
+import { ToastError } from "../components/feedback";
 
 function Failure({ error }: { error: unknown }) {
-  return error ? (
-    <p className="ew-error" role="alert">
-      {unavailable(error) ? "当前站点未开启此管理功能。" : errorMessage(error)}
-    </p>
-  ) : null;
+  return (
+    <ToastError
+      error={
+        error && (unavailable(error) ? "当前站点未开启此管理功能。" : error)
+      }
+    />
+  );
 }
 export function AccountReviews() {
   const { api } = useApp(),

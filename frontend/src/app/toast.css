@@ -1,0 +1,96 @@
+.app-toast-viewport {
+  position: fixed;
+  inset: max(20px, env(safe-area-inset-top)) 16px auto;
+  margin: 0 auto;
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100dvh - 40px);
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fffaf1;
+  pointer-events: none;
+  z-index: 2147483647;
+}
+.app-toast-viewport:empty {
+  display: none;
+}
+.app-toast-viewport::backdrop {
+  background: transparent;
+  pointer-events: none;
+}
+.app-toast-viewport .toast.app-toast {
+  position: relative;
+  inset: auto;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 28px;
+  align-items: start;
+  gap: 12px;
+  width: 100%;
+  max-width: none;
+  margin: 0 0 10px;
+  padding: 16px 14px 16px 18px;
+  border: 1px solid #ffffff26;
+  border-radius: 18px;
+  background: #332820;
+  color: #fffaf1;
+  box-shadow:
+    0 12px 36px #2e221e30,
+    0 2px 6px #2e221e14;
+  font:
+    500 14px/1.65 "Noto Sans SC Variable",
+    sans-serif;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  animation: app-toast-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.app-toast .app-toast-icon {
+  margin-top: 2px;
+  color: #f3c46e;
+}
+.app-toast[data-tone="error"] .app-toast-icon {
+  color: #ffb39e;
+}
+.app-toast[data-tone="success"] .app-toast-icon {
+  color: #c6d6ad;
+}
+.app-toast button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: -2px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: #ffffff0c;
+  color: #fffaf1;
+  cursor: pointer;
+}
+.app-toast button:hover {
+  background: #ffffff1f;
+}
+.app-toast button:focus-visible {
+  outline: 2px solid #f3c46e;
+  outline-offset: 2px;
+}
+@keyframes app-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-toast-viewport .toast.app-toast {
+    animation: none;
+    transition: none;
+  }
+}

@@ -1,4 +1,5 @@
 import { Component, createRef, type ReactNode, type ErrorInfo } from "react";
+import { BRAND_SLOGAN } from "../app/brand";
 import "@fontsource-variable/noto-sans-sc";
 import "../mobile/generated/tokens.css";
 import "./error-boundary.css";
@@ -120,7 +121,7 @@ export class ErrorBoundary extends Component<
             <p className="fatal-error-note">未提交的内容可能需要重新填写。</p>
           </div>
         </main>
-        <footer className="fatal-error-footer">好好吃饭，认真生活</footer>
+        <footer className="fatal-error-footer">{BRAND_SLOGAN}</footer>
       </div>
     ) : (
       this.props.children

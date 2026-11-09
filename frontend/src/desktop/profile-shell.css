@@ -511,8 +511,8 @@ html:has(.pc-profile-workspace) {
     flex-wrap: wrap;
     gap: 5px;
   }
-  .profile-shares .profile-share-card .pc-food-card-image > .pc-plate {
-    width: 145px;
+  .profile-shares .profile-share-card .pc-food-card-image {
+    --food-art-width: 145px;
   }
   .pc-app .pc-profile-layout.pc-profile-workspace {
     grid-template-columns: minmax(0, 1fr);

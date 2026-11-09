@@ -163,7 +163,6 @@ function CollectionAction({ food }: { food: Food }) {
       >
         {task.isPending ? "正在取消…" : "取消收藏"}
       </button>
-      {task.errorText && <p role="alert">{task.errorText}</p>}
     </div>
   );
 }

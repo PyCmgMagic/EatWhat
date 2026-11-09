@@ -161,11 +161,6 @@ export default function TagPanel({
               每个最多 10 个字 <span>{[...value.trim()].length} / 10</span>
             </small>
           </form>
-          {error && (
-            <p className="mobile-tag-error" role="alert">
-              {error}
-            </p>
-          )}
           <p className="mobile-tag-status" role="status">
             {status || "点亮标签即可选中，再点一次移除。"}
           </p>

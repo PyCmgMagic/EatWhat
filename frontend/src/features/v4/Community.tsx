@@ -657,7 +657,7 @@ export function NotificationCards() {
     return paths[t.domain ?? ""] ? `/${paths[t.domain ?? ""]}/${t.id}` : null;
   };
   return (
-    <Shell title="消息通知" detail="食友的互动、分享的进展，在这里一起查看。">
+    <Shell title="消息通知">
       <ProfileSectionNav section="messages" />
       <div className="profile-message-tools">
         <div className="profile-message-filters" aria-label="通知分类">
@@ -896,11 +896,7 @@ export function Topics({
       </Shell>
     );
   return (
-    <Shell
-      title="校园专题"
-      detail="跟着一个主题，发现校园里的另一种好味道。"
-      back="/features"
-    >
+    <Shell title="校园专题" back="/features">
       <div className="v4-tabs">
         <Link
           className={current ? "v4-button primary" : "v4-button"}
@@ -989,10 +985,7 @@ export function FavoriteRestaurants() {
       queryFn: () => api.favoriteRestaurants({ page, pageSize: 12 }),
     });
   return (
-    <Shell
-      title="我的收藏"
-      detail="把喜欢的店留好，下次想吃的时候，一眼就能找到。"
-    >
+    <Shell title="我的收藏">
       <ProfileSectionNav section="collections" />
       <div className="v4-list-toolbar">
         <span>想去的、常去的，都值得留一份位置。</span>

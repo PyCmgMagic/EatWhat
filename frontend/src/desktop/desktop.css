@@ -24,7 +24,7 @@
   display: none;
 }
 .pc-header {
-  height: 94px;
+  height: var(--header-height, 94px);
   background: #fff;
   border-bottom: 1px solid var(--pc-line);
   position: sticky;
@@ -649,6 +649,9 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   transform: translateY(-4px);
 }
 .pc-food-card-image {
+  --food-art-width: 205px;
+  --food-art-right: -6px;
+  --food-art-bottom: -23px;
   height: 207px;
   position: relative;
   border-radius: 24px;
@@ -657,9 +660,10 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
 }
 .pc-food-card-image > .pc-plate {
   position: absolute;
-  width: 205px;
-  right: -6px;
-  bottom: -23px;
+  width: var(--food-art-width);
+  max-width: var(--food-art-max-width, none);
+  right: var(--food-art-right);
+  bottom: var(--food-art-bottom);
   transition: transform 350ms cubic-bezier(0.2, 0.9, 0.25, 1.1);
 }
 .pc-food-card-image > .pc-plate.is-photo {
@@ -1400,10 +1404,8 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   border-bottom: 1px solid #efe9e4;
 }
 .pc-profile-content .pc-food-card-image {
+  --food-art-width: 170px;
   height: 172px;
-}
-.pc-profile-content .pc-food-card-image > .pc-plate {
-  width: 170px;
 }
 .pc-profile-content .pc-food-card-title h3 {
   font-size: 13px;
@@ -1902,10 +1904,8 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
     bottom: 28px;
   }
   .pc-food-card-image {
+    --food-art-width: 233px;
     height: 228px;
-  }
-  .pc-food-card-image > .pc-plate {
-    width: 233px;
   }
 }
 @media (min-width: 1024px) and (max-width: 1250px) {
@@ -1956,10 +1956,8 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
     padding: 0 20px;
   }
   .pc-food-card-image {
+    --food-art-width: 175px;
     height: 175px;
-  }
-  .pc-food-card-image > .pc-plate {
-    width: 175px;
   }
   .pc-food-grid {
     gap: 26px 18px;
@@ -1984,10 +1982,8 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
     padding: 25px;
   }
   .pc-profile-content .pc-food-card-image {
+    --food-art-width: 150px;
     height: 150px;
-  }
-  .pc-profile-content .pc-food-card-image > .pc-plate {
-    width: 150px;
   }
   .pc-food-grid.three {
     gap: 24px 16px;

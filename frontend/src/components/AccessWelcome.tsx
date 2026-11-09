@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { BRAND_SLOGAN } from "../app/brand";
 import { Link, useLocation } from "react-router-dom";
 import { LoginLink, useLoginDialog } from "../app/auth-dialog";
 import {
@@ -93,11 +94,11 @@ function VerificationWelcome({ canvas = false, footer }: AccessProps) {
   const location = useLocation();
   const titleId = useId();
   const copy = {
-    title: ["同校的你，", "一起好好吃饭。"],
+    title: [BRAND_SLOGAN],
     description: "用学生身份打个招呼，\n把校园里的好味道分享给彼此。",
     heading: "再认识一下，同校的你",
     detail: "完成学生认证，就能发布菜品、点赞和管理标签。",
-    note: "同校的好味道",
+    note: BRAND_SLOGAN,
   };
   return (
     <section

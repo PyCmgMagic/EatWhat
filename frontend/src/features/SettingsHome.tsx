@@ -201,7 +201,6 @@ export default function SettingsHome({
         <div>
           <div>
             <h1 id="settings-home-title">账号设置</h1>
-            <p>管理你的账号，调整自己的使用习惯。</p>
           </div>
           {featuresReturnTo && (
             <Link className="settings-home-all" to={featuresReturnTo}>
@@ -352,11 +351,7 @@ export default function SettingsHome({
           onClose={() => setConfirmLogout(false)}
         >
           <p>退出后需要重新登录。你的收藏、分享和账号设置会保留。</p>
-          {logout.errorText && (
-            <p className="settings-home-error" role="alert">
-              {logout.errorText}
-            </p>
-          )}
+
           <div className="settings-home-dialog-actions">
             <button
               type="button"

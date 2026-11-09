@@ -1,3 +1,4 @@
+import { useFeedbackState } from "../components/feedback";
 import { useEffect, useRef, useState } from "react";
 import { DesignIcon as Icon, type Draft } from "../mobile/ui";
 import { adjustPhoto } from "../mobile/photos";
@@ -32,7 +33,7 @@ export default function CropDialog({
     [url, setUrl] = useState(""),
     [frameSize, setFrameSize] = useState(300);
   const [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useFeedbackState();
   const source = image.original ?? image.file;
   const dismiss = useSurfaceDismiss(dialog, onClose);
   useEffect(() => {
@@ -218,11 +219,6 @@ export default function CropDialog({
               ? "确认取景只会更新预览，保存资料后才会更换头像。"
               : "调整仅应用到这次分享，原文件会保留。"}
           </small>
-          {error && (
-            <p className="pc-error" role="alert">
-              {error}
-            </p>
-          )}
         </div>
       </div>
       <footer>

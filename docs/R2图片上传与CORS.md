@@ -2,6 +2,8 @@
 
 2026-11-08 检查 `eatwhat` 桶的上传预检：本地 `http://127.0.0.1:5173`、`http://localhost:5173` 和线上 `https://eat.v50to.you` 均返回 HTTP 403，错误为 `CORS not configured for this bucket`。
 
+2026-11-09 再次以本地 `http://127.0.0.1:5173`、预期 `PUT` 和 `Content-Type` 向已配置桶发送只读 OPTIONS 预检，仍返回 403、`CORS not configured for this bucket`，没有 `Access-Control-Allow-Origin`。本地开发服务已启用固定桶上传代理；这项检查确认存储跨域问题仍存在，不等同于已抓取用户本次签名 PUT 的完整失败链路。此次未上传真实文件、未更改存储桶设置。上传及其他操作失败的前端反馈已统一为顶部 toast。
+
 `presign` 返回 200 只表示业务服务签发了临时上传地址。浏览器接下来会向 R2 预检 `PUT` 和 `Content-Type`；预检未通过时，图片没有上传，也不能继续 `complete` 和发布菜品。重新点击发布或刷新登录不能补齐存储桶配置。
 
 ## R2 上需要应用的配置

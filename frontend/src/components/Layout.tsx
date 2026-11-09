@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { BRAND_SLOGAN } from "../app/brand";
 import {
   Link,
   NavLink,
@@ -109,11 +110,7 @@ export default function Layout() {
         </nav>
         <div className="sidebar-note">
           <span className="mini-spark">✳</span>
-          <p>
-            好的日常，
-            <br />
-            从好好吃饭开始。
-          </p>
+          <p>{BRAND_SLOGAN}</p>
           <span>SHANRUAN FOOD CLUB</span>
         </div>
         <Link to={session ? "/me" : "/auth"} className="sidebar-user">
@@ -187,7 +184,8 @@ export default function Layout() {
         </main>
         <footer className="app-footer">
           <span>
-            好好吃饭，认真生活。<span className="footer-flower">✳</span>
+            {BRAND_SLOGAN}
+            <span className="footer-flower">✳</span>
           </span>
           <div>
             <Link to="/restaurants">找餐厅</Link>

@@ -14,7 +14,7 @@ async (page) => {
     await page.goto(`http://127.0.0.1:5173/?demo=1${mode ? '&view=' + mode : ''}#${path}`);
     await page.locator('.pc-app, .mobile-viewport, .ew-mobile-feature, .mobile-page-native').first().waitFor();
     if (path === '/search' || path === '/favorites') await page.locator('.ew-food-card').first().waitFor();
-    if (path === '/publish' && (mode === 'desktop' || width >= 600)) await page.locator('.pc-composer-shop').first().waitFor();
+    if (path === '/publish' && (mode === 'desktop' || width >= 600)) await page.locator('.pc-composer-shops').waitFor();
     if (path === '/foods/1') await page.locator('.pc-dish-layout').waitFor();
     if (path === '/me/tags') await page.locator('.pc-tag-card').first().waitFor();
     await settle();

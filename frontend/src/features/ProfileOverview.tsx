@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { BRAND_SLOGAN } from "../app/brand";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
@@ -138,7 +139,7 @@ export default function ProfileOverview() {
         <div className="profile-overview-intro">
           <span className="profile-overview-eyebrow">个人总览</span>
           <h1>{user?.displayName || "我的"}</h1>
-          <p>{user?.signature || "认真吃饭，认真生活。"}</p>
+          <p>{user?.signature || BRAND_SLOGAN}</p>
           <ProfileGrowth />
         </div>
         <ProfileEditLink className="profile-overview-edit">

@@ -1,4 +1,5 @@
 import { Select } from "../components/Select";
+import { BRAND_SLOGAN } from "../app/brand";
 import { MapPin, Utensils } from "lucide-react";
 import { useSendSignal } from "./useSendSignal";
 import { PasswordConflictRequest } from "./ApiV2";
@@ -62,7 +63,7 @@ export function RecommendationControls() {
         饭点
         <Select
           aria-label="推荐饭点"
-          menuLabel="好好吃饭，按时开饭"
+          menuLabel={BRAND_SLOGAN}
           icon={<Utensils size={16} />}
           value={m.meal}
           onChange={(e) => m.setMeal(e.target.value)}
@@ -200,11 +201,7 @@ export function PhoneLoginForm({
         {isDemo && (
           <p className="ew-note">本地演示不发送短信，获取后输入 123456。</p>
         )}
-        {(send.errorText || login.errorText) && (
-          <p className="ew-error" role="alert">
-            {send.errorText || login.errorText}
-          </p>
-        )}
+
         <button
           className={compact ? "ew-auth-submit" : "ew-button"}
           disabled={login.isPending || !sentTo}
@@ -339,11 +336,7 @@ export function PasswordByCode() {
               required
             />
           </label>
-          {(send.errorText || save.errorText) && (
-            <p className="ew-error" role="alert">
-              {send.errorText || save.errorText}
-            </p>
-          )}
+
           <button className="ew-button" disabled={save.isPending}>
             {save.isPending ? "正在保存…" : "保存新密码"}
           </button>
@@ -453,11 +446,7 @@ function PreferencesForm({
             placeholder="例如：太甜、重油"
           />
         </label>
-        {task.errorText && (
-          <p className="ew-error" role="alert">
-            {task.errorText}
-          </p>
-        )}
+
         <div className="ew-inline">
           <button className="ew-button" disabled={task.isPending}>
             保存口味偏好
@@ -529,11 +518,7 @@ export function SsoStart({
           前往学校认证页面 ↗
         </a>
       )}
-      {task.errorText && (
-        <p className="ew-error" role="alert">
-          {task.errorText}
-        </p>
-      )}
+
       <p className="ew-note">
         {isDemo
           ? "演示模式不会发起真实学校认证。"

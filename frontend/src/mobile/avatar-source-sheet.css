@@ -1,0 +1,77 @@
+.mobile-avatar-sheet {
+  position: fixed;
+  inset: auto 0
+    max(
+      0px,
+      calc(100dvh - var(--visible-top, 0px) - var(--visible-height, 100dvh))
+    );
+  width: min(100%, 520px);
+  max-width: 100%;
+  max-height: calc(var(--visible-height, 100dvh) - 24px);
+  margin: 0 auto;
+  padding: 10px 20px max(24px, env(safe-area-inset-bottom));
+  border: 0;
+  border-radius: 28px 28px 0 0;
+  background: #fff;
+  color: #231c18;
+  box-shadow: 0 -12px 36px #231c181a;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.mobile-avatar-sheet[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mobile-avatar-sheet::backdrop {
+  background: #231c1873;
+}
+.mobile-avatar-sheet-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.mobile-avatar-sheet-heading h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+.mobile-avatar-sheet-heading > button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+}
+.mobile-avatar-source {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 56px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font-size: 16px;
+}
+.mobile-avatar-source:not(:disabled):hover,
+.mobile-avatar-source:not(:disabled):active {
+  background: #f4efeb;
+}
+.mobile-avatar-sheet > p {
+  margin: 8px 4px 0;
+  color: #8a7e76;
+  font-size: 12px;
+  line-height: 1.6;
+}
