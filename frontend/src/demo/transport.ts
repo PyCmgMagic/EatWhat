@@ -1155,11 +1155,13 @@ export const demoTransport: Transport = async (path, options) => {
 };
 
 export async function demoUpload(file: File, biz = "foods") {
+  const { compressImage } = await import("../api/image-compression");
+  const prepared = await compressImage(file, biz);
   const data = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
     reader.onerror = () => reject(new Error("图片读取失败。"));
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(prepared);
   });
   const key = `${biz}/${crypto.randomUUID()}`;
   try {

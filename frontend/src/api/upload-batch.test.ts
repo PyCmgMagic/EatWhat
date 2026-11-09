@@ -1,6 +1,16 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApi, uploadFiles } from "./service";
 import { createTransport } from "./client";
+import { compressImage } from "./image-compression";
+
+vi.mock("./image-compression", () => ({
+  compressImage: vi.fn(async (file: File) => file),
+}));
+beforeEach(() => {
+  vi.mocked(compressImage)
+    .mockReset()
+    .mockImplementation(async (file) => file);
+});
 const files = [
   new File(["png"], "a.png", { type: "image/png" }),
   new File(["jpeg"], "b.jpg", { type: "image/jpeg" }),
@@ -19,6 +29,72 @@ const makeApi = () => ({
   complete: vi.fn(async (key: string) => ({ key, revision: 1, size: 3 })),
 });
 describe("batch image uploading", () => {
+  it.each([
+    "foods",
+    "avatar",
+    "restaurants",
+    "feedback",
+    "comments",
+    "activity",
+  ] as const)(
+    "compresses every %s image before signing a batch and uploads the prepared files in order",
+    async (biz) => {
+      const api = makeApi();
+      const prepared = [
+        new File(["a"], "a.webp", { type: "image/webp" }),
+        new File(["b"], "b.jpg", { type: "image/jpeg" }),
+      ];
+      vi.mocked(compressImage)
+        .mockResolvedValueOnce(prepared[0])
+        .mockResolvedValueOnce(prepared[1]);
+      const fetcher = vi.fn(async () => new Response(null, { status: 200 }));
+      const completed = vi.fn();
+      await uploadFiles(api, files, biz, undefined, fetcher, completed);
+      expect(vi.mocked(compressImage).mock.calls).toEqual([
+        [files[0], biz, undefined],
+        [files[1], biz, undefined],
+      ]);
+      expect(api.presignBatch).toHaveBeenCalledWith({
+        biz,
+        files: prepared.map((file) => ({
+          fileName: file.name,
+          contentType: file.type,
+          fileSize: file.size,
+        })),
+      });
+      expect(fetcher).toHaveBeenNthCalledWith(
+        1,
+        "https://storage.test/a",
+        expect.objectContaining({
+          body: prepared[0],
+          headers: { "Content-Type": "image/webp" },
+        }),
+      );
+      expect(fetcher).toHaveBeenNthCalledWith(
+        2,
+        "https://storage.test/b",
+        expect.objectContaining({
+          body: prepared[1],
+          headers: { "Content-Type": "image/jpeg" },
+        }),
+      );
+      expect(completed.mock.calls).toEqual([
+        [0, "foods/a"],
+        [1, "foods/b"],
+      ]);
+    },
+  );
+  it("does not request signatures or upload originals when compression fails", async () => {
+    const api = makeApi(),
+      fetcher = vi.fn();
+    vi.mocked(compressImage).mockRejectedValueOnce(new Error("图片读取失败"));
+    await expect(
+      uploadFiles(api, files, "foods", undefined, fetcher),
+    ).rejects.toThrow("图片读取失败");
+    expect(api.presign).not.toHaveBeenCalled();
+    expect(api.presignBatch).not.toHaveBeenCalled();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
   it("requests one batch, sends each raw file without application credentials, and confirms ordered keys", async () => {
     const api = makeApi(),
       fetcher = vi.fn(

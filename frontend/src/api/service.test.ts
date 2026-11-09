@@ -3,6 +3,11 @@ import { classifyAuth, createApi, uploadFile } from "./service";
 import { createTransport } from "./client";
 import type { Schema, Page, Food } from "./models";
 import type { components } from "./schema";
+import { compressImage } from "./image-compression";
+
+vi.mock("./image-compression", () => ({
+  compressImage: vi.fn(async (file: File) => file),
+}));
 type ResponseData<T> = T extends {
   responses: { 200: { content: { "application/json": { data?: infer D } } } };
 }
@@ -134,7 +139,7 @@ describe("authentication states", () => {
   });
 });
 describe("three-step storage upload", () => {
-  it("uploads raw bytes without app headers and completes the same key", async () => {
+  it("compresses before signing, sends matching bytes without app headers, and completes the same key", async () => {
     const events: string[] = [],
       api = {
         presign: vi.fn(async () => {
@@ -154,15 +159,27 @@ describe("three-step storage upload", () => {
       return new Response(null, { status: 200 });
     });
     const file = new File(["raw"], "photo.jpg", { type: "image/jpeg" });
+    const compressed = new File(["c"], "photo.webp", { type: "image/webp" });
+    vi.mocked(compressImage).mockImplementationOnce(async () => {
+      events.push("compress");
+      return compressed;
+    });
     await expect(
       uploadFile(api, file, "foods", undefined, fetcher),
     ).resolves.toBe("foods/key.jpg");
-    expect(events).toEqual(["presign", "PUT", "complete"]);
+    expect(events).toEqual(["compress", "presign", "PUT", "complete"]);
+    expect(compressImage).toHaveBeenCalledWith(file, "foods", undefined);
+    expect(api.presign).toHaveBeenCalledWith({
+      fileName: compressed.name,
+      contentType: compressed.type,
+      fileSize: compressed.size,
+      biz: "foods",
+    });
     expect(fetcher.mock.calls[0][1]).toMatchObject({
       method: "PUT",
       credentials: "omit",
-      body: file,
-      headers: { "Content-Type": "image/jpeg" },
+      body: compressed,
+      headers: { "Content-Type": "image/webp" },
     });
     expect(Object.keys(fetcher.mock.calls[0][1]?.headers || {})).toEqual([
       "Content-Type",

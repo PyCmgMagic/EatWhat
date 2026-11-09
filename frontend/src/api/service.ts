@@ -1,6 +1,7 @@
 import type { operations } from "./schema";
 import { boundedText, normalizedTag } from "./content-rules";
 import { putImage } from "./storage-upload";
+import { compressImage } from "./image-compression";
 export type RestaurantFilters = NonNullable<
   operations["RestaurantController_browseRestaurants_get"]["parameters"]["query"]
 >;
@@ -567,9 +568,13 @@ export async function uploadFiles(
     onComplete?.(0, key);
     return [key];
   }
+  // Decode one original at a time to limit memory use on mobile devices.
+  const prepared: File[] = [];
+  for (const file of files)
+    prepared.push(await compressImage(file, biz, signal));
   const signed = await api.presignBatch({
     biz,
-    files: files.map((file) => ({
+    files: prepared.map((file) => ({
       fileName: file.name,
       contentType: file.type,
       fileSize: file.size,
@@ -595,7 +600,7 @@ export async function uploadFiles(
     const item = credentials[index]!;
     await putImage(
       item.putUrl!,
-      files[index],
+      prepared[index],
       signal,
       fetcher,
       `第 ${index + 1} 张图片`,
@@ -662,15 +667,16 @@ export async function uploadFile(
   onPhase?: (phase: "uploading" | "confirming") => void,
 ) {
   onPhase?.("uploading");
+  const prepared = await compressImage(file, biz, signal);
   const signed = await api.presign({
-    fileName: file.name,
-    contentType: file.type,
-    fileSize: file.size,
+    fileName: prepared.name,
+    contentType: prepared.type,
+    fileSize: prepared.size,
     biz,
   });
   if (!signed.putUrl || !signed.key)
     throw new Error("上传凭证不完整，请重新选择图片。");
-  await putImage(signed.putUrl, file, signal, fetcher);
+  await putImage(signed.putUrl, prepared, signal, fetcher);
   onPhase?.("confirming");
   const completed = await api.complete(signed.key);
   if (!completed.key || completed.key !== signed.key)

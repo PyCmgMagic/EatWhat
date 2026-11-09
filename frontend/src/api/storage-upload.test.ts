@@ -2,6 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { uploadRequestUrl, UPLOAD_PROXY_PREFIX } from "./upload-target";
 import { uploadFile, uploadFiles } from "./service";
 
+vi.mock("./image-compression", () => ({
+  compressImage: vi.fn(async (file: File) => file),
+}));
+
 const bucket =
   "https://" + "a".repeat(32) + ".r2.cloudflarestorage.com/eatwhat";
 const path =

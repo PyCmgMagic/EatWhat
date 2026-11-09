@@ -381,6 +381,9 @@
   aspect-ratio: 1;
 }
 .pc-plate > img {
+  /* Intrinsic photo dimensions must not enlarge the aspect-ratio grid in Safari. */
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -999,7 +1002,7 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   gap: 10px;
   color: #8a7e76;
   font-size: 11px;
-  margin: 0 2px 22px;
+  margin: 0 2px 16px;
   line-height: 1.8;
 }
 .pc-breadcrumb > span {
@@ -1009,36 +1012,43 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   color: #231c18;
 }
 .pc-dish-layout {
+  --dish-stage-height: clamp(
+    400px,
+    calc(100svh - var(--header-height, 80px) - 144px),
+    560px
+  );
+  --dish-padding: clamp(20px, 3svh, 30px);
+  --dish-gap: clamp(14px, 2.2svh, 22px);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.94fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.04fr);
   gap: 0;
   background: #fff;
   border-radius: 30px;
   overflow: hidden;
-  min-height: 680px;
+  min-height: var(--dish-stage-height);
 }
 .pc-dish-stage {
   background: var(--stage);
   color: var(--stage-on);
   position: relative;
   overflow: hidden;
-  min-height: 680px;
+  min-height: var(--dish-stage-height);
 }
 .pc-dish-stage-table {
   position: absolute;
-  width: 700px;
-  height: 700px;
-  left: 50px;
-  top: 120px;
+  width: 125%;
+  aspect-ratio: 1;
+  left: 8%;
+  top: 22%;
   background: #ffffff26;
   border-radius: 50%;
 }
 .pc-dish-plate {
   position: absolute;
-  width: 490px;
-  top: 110px;
+  width: min(82%, calc(var(--dish-stage-height) - 128px), 420px);
+  top: calc(var(--dish-stage-height) / 2 - 12px);
   right: -32px;
-  transform: rotate(-10deg);
+  transform: translateY(-50%) rotate(-10deg);
 }
 .pc-dish-stage-category {
   position: absolute;
@@ -1053,17 +1063,17 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
 }
 .pc-photo-thumbnails {
   position: absolute;
-  bottom: 30px;
-  left: 32px;
-  right: 32px;
+  top: calc(var(--dish-stage-height) - 76px);
+  left: var(--dish-padding);
+  right: var(--dish-padding);
   display: flex;
   gap: 10px;
   overflow: auto;
   padding: 4px;
 }
 .pc-photo-thumbnails button {
-  height: 54px;
-  width: 54px;
+  height: 48px;
+  width: 48px;
   padding: 0;
   background: #fff;
   border: 2px solid #fff;
@@ -1083,7 +1093,7 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   object-fit: cover;
 }
 .pc-dish-info {
-  padding: 32px 36px 36px;
+  padding: var(--dish-padding);
 }
 .pc-dish-heading {
   display: flex;
@@ -1092,28 +1102,29 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   color: #8a7e76;
 }
 .pc-dish-info h1 {
-  font-size: 38px;
+  font-size: clamp(28px, 3.8svh, 36px);
   font-weight: 900;
-  letter-spacing: -1.8px;
+  letter-spacing: -1px;
   line-height: 1.4;
-  margin: 8px 0 4px;
+  margin: 4px 0;
   overflow-wrap: anywhere;
 }
 .pc-detail-price {
-  font: 800 46px "Bricolage Grotesque Variable";
+  font: 800 clamp(34px, 4.6svh, 42px)/1.15 "Bricolage Grotesque Variable";
   letter-spacing: -2px;
-  margin-bottom: 28px;
+  margin-bottom: var(--dish-gap);
 }
 .pc-dish-shop {
   display: flex;
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid #efe9e4;
-  padding-bottom: 22px;
+  padding-bottom: var(--dish-gap);
 }
 .pc-detail-store-icon {
-  height: 44px;
-  width: 44px;
+  height: 40px;
+  width: 40px;
+  flex-shrink: 0;
   display: grid;
   place-items: center;
   background: #f4efeb;
@@ -1135,7 +1146,10 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
 .pc-dish-actions {
   display: flex;
   gap: 12px;
-  margin: 23px 0 29px;
+  margin: var(--dish-gap) 0;
+}
+.pc-dish-actions > .pc-button {
+  min-height: 44px;
 }
 .pc-dish-actions > .pc-button:last-child {
   flex: 1;
@@ -1150,7 +1164,7 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   align-items: baseline;
   gap: 8px 16px;
   flex-wrap: wrap;
-  margin-bottom: 25px;
+  margin-bottom: var(--dish-gap);
 }
 .pc-taste-cloud > button {
   border: 0;
@@ -1196,9 +1210,9 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
 }
 .pc-dish-description {
   font-size: 13px;
-  line-height: 1.95;
+  line-height: 1.7;
   white-space: pre-wrap;
-  margin: 14px 0 20px;
+  margin: 12px 0 var(--dish-gap);
   color: #4a3c31;
 }
 .pc-detail-secondary {
@@ -1987,20 +2001,6 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   }
   .pc-food-grid.three {
     gap: 24px 16px;
-  }
-  .pc-dish-info {
-    padding: 26px 28px;
-  }
-  .pc-dish-info h1 {
-    font-size: 32px;
-  }
-  .pc-dish-plate {
-    width: 420px;
-    right: -35px;
-    top: 130px;
-  }
-  .pc-dish-stage {
-    min-height: 700px;
   }
   .pc-auth-layout {
     grid-template-columns: minmax(0, 1fr) 480px;
