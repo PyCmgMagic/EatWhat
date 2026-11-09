@@ -167,22 +167,49 @@ def current_target(base):
     return target
 
 
+def build_assets(release):
+    manifest = release / ".vite/manifest.json"
+    if manifest.is_file():
+        names = set()
+        for chunk in json.loads(manifest.read_bytes()).values():
+            names.update([chunk["file"], *chunk.get("css", []), *chunk.get("assets", [])])
+    else:
+        # A manually initialized bootstrap may have just an HTML entrypoint.
+        index = release / "index.html"
+        names = set(re.findall(r'(?:src|href)=["\']/([^"\']+)["\']', index.read_text())) if index.is_file() else set()
+    retained = release / ".vite/retained-assets.json"
+    if retained.is_file():
+        names.update(json.loads(retained.read_bytes()))
+    return {n for n in names if n.startswith("assets/") and re.search(r"-[A-Za-z0-9_-]{8}\.[^/]+$", n)}
+
+
 def retain_assets(previous, candidate):
     # Already-open pages can still lazy-load chunks from earlier releases.
+    generated = build_assets(previous)
+    if previous.parent.name == "releases" and not (previous / ".vite/retained-assets.json").exists():
+        # Older deployers copied chunks forward without recording their origin.
+        # Recover only names attested by an existing release's build manifest.
+        for release in previous.parent.iterdir():
+            if not release.is_symlink() and (release / ".vite/manifest.json").is_file():
+                generated.update(build_assets(release))
+    carried = set()
     for path in (previous / "assets").rglob("*"):
         require(not path.is_symlink(), "Symlink in previous assets")
-        if path.is_file():
-            target = candidate / path.relative_to(previous)
+        name = path.relative_to(previous).as_posix()
+        if path.is_file() and name in generated:
+            target = candidate / name
             if target.exists():
-                # Vite also copies public/assets verbatim (e.g. sources.json).
-                # Mutable public files use the verified candidate; only generated
-                # fingerprinted URLs must retain identical bytes for old pages.
-                if re.search(r"-[A-Za-z0-9_-]{8,}\.[^/]+$", path.name):
-                    require(digest(target.read_bytes()) == digest(path.read_bytes()), "Asset filename collision")
+                require(digest(target.read_bytes()) == digest(path.read_bytes()), "Asset filename collision")
             else:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(path, target)
                 target.chmod(0o644)
+                carried.add(name)
+    metadata = candidate / ".vite/retained-assets.json"
+    metadata.parent.mkdir(exist_ok=True)
+    if metadata.exists():  # A rollback target may already carry older chunks.
+        carried.update(json.loads(metadata.read_bytes()))
+    metadata.write_bytes(json_bytes(sorted(carried)))
     for directory in (candidate / "assets").rglob("*"):
         if directory.is_dir():
             directory.chmod(0o755)

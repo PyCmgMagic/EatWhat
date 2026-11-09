@@ -104,22 +104,40 @@ describe("v2 transport boundaries", () => {
     expect(() => requiredData(null)).toThrow("未返回所需数据");
     expect(requiredData(false)).toBe(false);
   });
+  it("treats a lost response body after successful POST headers as uncertain", async () => {
+    const transport = createTransport(
+      "/api",
+      () => null,
+      async () =>
+        new Response(
+          new ReadableStream({
+            start(stream) {
+              stream.error(new TypeError("connection reset"));
+            },
+          }),
+          { status: 200 },
+        ),
+    );
+    const error = await transport("/foods/upload", { method: "POST" }).catch(
+      (e) => e,
+    );
+    expect(error).toMatchObject({ code: "NETWORK" });
+    expect(resultUncertain(error)).toBe(true);
+  });
   it.each([200, 500])(
     "handles UNKNOWN_ERROR as an uncertain server failure even with HTTP %s",
     async (status) => {
-      const fetcher = vi
-        .fn<typeof fetch>()
-        .mockResolvedValue(
-          new Response(
-            JSON.stringify({
-              code: 90004,
-              data: null,
-              msg: "未捕获异常",
-              timestamp: 1794153014570,
-            }),
-            { status },
-          ),
-        );
+      const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            code: 90004,
+            data: null,
+            msg: "未捕获异常",
+            timestamp: 1794153014570,
+          }),
+          { status },
+        ),
+      );
       const request = createRequester(
         createTransport("/api", () => null, fetcher),
       );

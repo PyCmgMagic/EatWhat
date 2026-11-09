@@ -44,9 +44,9 @@ export function FoodExtras({
         </Link>
       </footer>
     );
+  if (!q.isError && !q.data?.length) return null;
   return (
-    <Card title="发现与反馈">
-      <Link to={`/reports/new?type=FOOD&id=${id}`}>举报这道菜 →</Link>
+    <Card title="相关专题">
       <QueryView query={q}>
         {q.data?.map((t) => (
           <Link className="v4-row" key={t.id} to={`/topics/${t.id}`}>

@@ -81,6 +81,8 @@ class DeploymentTest(unittest.TestCase):
 
     def test_asset_name_collision_keeps_current_release(self):
         (self.old / "assets/new-ijklmnop.js").write_text("different bytes")
+        (self.old / ".vite").mkdir()
+        (self.old / ".vite/manifest.json").write_text(json.dumps({"a": {"file": "assets/new-ijklmnop.js"}}))
         with patch.object(deploy, "check_api"), self.assertRaisesRegex(ValueError, "collision"):
             self.apply()
         self.assertEqual((self.base / "current").resolve(), self.old)
@@ -99,6 +101,18 @@ class DeploymentTest(unittest.TestCase):
                 deploy.retain_assets(self.old, candidate)
                 self.assertEqual((candidate / 'assets/sources.json').read_bytes(), new_bytes)
                 self.assertEqual((candidate / 'assets/old-abcdefgh.js').read_text(), 'old chunk')
+
+    def test_only_known_build_assets_survive_multiple_releases(self):
+        (self.old / "assets/withdrawn.png").write_bytes(b"withdrawn")
+        (self.old / "assets/withdrawn-abcdefgh.png").write_bytes(b"withdrawn")
+        for name in ("second", "third"):
+            candidate = self.root / name
+            candidate.mkdir()
+            deploy.retain_assets(self.old, candidate)
+            self.assertEqual((candidate / "assets/old-abcdefgh.js").read_text(), "old chunk")
+            self.assertFalse((candidate / "assets/withdrawn.png").exists())
+            self.assertFalse((candidate / "assets/withdrawn-abcdefgh.png").exists())
+            self.old = candidate
 
     def malicious_bundle(self, name, kind=None):
         with tarfile.open(self.bundle, "w:gz") as archive:

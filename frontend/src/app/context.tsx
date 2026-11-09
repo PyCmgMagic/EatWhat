@@ -20,6 +20,7 @@ import {
   isDemo,
   readSession,
   sameSession,
+  sessionSignal,
   subscribeSession,
   writeSession,
 } from "./runtime";
@@ -46,72 +47,98 @@ function useMe(api: Api, session: Session | null) {
     enabled: !!session,
   });
 }
-function StateProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState(readSession);
-  const { items, toast, dismiss } = useToasts();
-  const api = useMemo(() => {
-    const live = createTransport(
-      import.meta.env.VITE_API_BASE_URL || "/api",
-      readSession,
-    );
-    const transport: Transport = async (path, options) => {
-      const requestSession = readSession();
-      try {
-        const send = isDemo
-          ? (await import("../demo/transport")).demoTransport
-          : live;
-        return await send(path, options);
-      } catch (error) {
-        if (
-          error instanceof ApiError &&
-          error.status === 401 &&
-          !options.public &&
-          requestSession &&
-          sameSession(requestSession, readSession())
-        )
-          window.dispatchEvent(new Event("eatwhat:expired"));
-        throw error;
-      }
-    };
-    const guarded = withActionAccess(transport, {
-      session: readSession,
-      user: () => queryClient.getQueryData<User>(["me"]),
-      loadUser: () =>
-        queryClient.fetchQuery({
-          queryKey: ["me"],
-          queryFn: () => client.me(),
-          retry: false,
-        }),
-      context: () => window.location.hash,
-      prompt: showAccessPrompt,
-      activeElement: () => document.activeElement as HTMLElement | null,
-      unavailable: (path) => {
-        // Keep account/security recovery available during content maintenance.
-        if (
-          !/^\/(foods|restaurant|activity|upload)\//.test(path) &&
-          !/^\/user\/(un)?follow$/.test(path)
-        )
-          return;
-        const remote = queryClient
-          .getQueryCache()
-          .findAll({ queryKey: ["remote-config"], type: "active" })
-          .sort((a, b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt)[0]
-          ?.state.data as Schema["ClientConfigResponse"] | undefined;
-        return actionUnavailable(remote, path);
-      },
-    });
-    const client = createApi(guarded, async (...args) => {
+function clientForSession(session: Session | null) {
+  const signal = sessionSignal(session);
+  const checkOwner = () => {
+    // Read shared storage too: another tab can switch before its event is delivered.
+    readSession();
+    signal.throwIfAborted();
+  };
+  const live = createTransport(
+    import.meta.env.VITE_API_BASE_URL || "/api",
+    () => session,
+  );
+  const transport: Transport = async (path, options) => {
+    try {
+      const send = isDemo
+        ? (await import("../demo/transport")).demoTransport
+        : live;
+      checkOwner();
+      const result = await send(path, {
+        ...options,
+        signal: options.signal
+          ? AbortSignal.any([signal, options.signal])
+          : signal,
+      });
+      checkOwner();
+      return result;
+    } catch (error) {
+      if (
+        error instanceof ApiError &&
+        error.status === 401 &&
+        !options.public &&
+        session &&
+        !signal.aborted &&
+        sameSession(session, readSession())
+      )
+        window.dispatchEvent(new Event("eatwhat:expired"));
+      throw error;
+    }
+  };
+  const guarded = withActionAccess(transport, {
+    session: readSession,
+    user: () => queryClient.getQueryData<User>(["me"]),
+    loadUser: () =>
+      queryClient.fetchQuery({
+        queryKey: ["me"],
+        queryFn: () => client.me(),
+        retry: false,
+      }),
+    context: () => window.location.hash,
+    prompt: showAccessPrompt,
+    activeElement: () => document.activeElement as HTMLElement | null,
+    unavailable: (path) => {
+      // Keep account/security recovery available during content maintenance.
+      if (
+        !/^\/(foods|restaurant|activity|upload)\//.test(path) &&
+        !/^\/user\/(un)?follow$/.test(path)
+      )
+        return;
+      const remote = queryClient
+        .getQueryCache()
+        .findAll({ queryKey: ["remote-config"], type: "active" })
+        .sort((a, b) => b.state.dataUpdatedAt - a.state.dataUpdatedAt)[0]?.state
+        .data as Schema["ClientConfigResponse"] | undefined;
+      return actionUnavailable(remote, path);
+    },
+  });
+  const client = createApi(
+    async (path, options) => {
+      checkOwner();
+      return guarded(path, options);
+    },
+    async (...args) => {
       const captcha = await import("../api/captcha");
       return (isDemo ? captcha.runDemoCaptcha : captcha.runBrowserCaptcha)(
         ...args,
       );
-    });
-    return client;
-  }, []);
+    },
+  );
+  return { api: client, signal, checkOwner };
+}
+function StateProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState(readSession);
+  const { items, toast, dismiss } = useToasts();
+  const { api, signal, checkOwner } = useMemo(
+    () => clientForSession(session),
+    [session],
+  );
   const me = useMe(api, session);
   useEffect(() => {
+    let observed = session;
     const syncSession = (next: Session | null) => {
-      if (sameSession(session, next)) return;
+      if (observed === next) return;
+      observed = next;
       recoveryCommands.clear();
       // clear() also cancels pending queries, so data from the previous account
       // cannot repopulate this tab after another tab changes the shared login.
@@ -141,13 +168,13 @@ function StateProvider({ children }: { children: ReactNode }) {
     // still requires a full reset to avoid showing another account's data.
     if (readSession()) queryClient.clear();
     writeSession(s);
-    setSession(s);
+    setSession(readSession());
     // Finish the identity refresh before a successful login/recovery navigates.
     // Otherwise a later pending transition can unmount the next page's form.
     try {
       await queryClient.fetchQuery({
         queryKey: ["me"],
-        queryFn: () => api.me(),
+        queryFn: () => clientForSession(s).api.me(),
         retry: false,
       });
     } catch {
@@ -182,17 +209,24 @@ function StateProvider({ children }: { children: ReactNode }) {
         clearLocalSession,
         refreshMe: () =>
           void queryClient.invalidateQueries({ queryKey: ["me"] }),
-        upload: async (file, biz, onPhase) =>
-          isDemo
-            ? (await import("../demo/transport")).demoUpload(file, biz)
-            : uploadFile(api, file, biz, undefined, fetch, onPhase),
+        upload: async (file, biz, onPhase) => {
+          checkOwner();
+          const key = isDemo
+            ? await (await import("../demo/transport")).demoUpload(file, biz)
+            : await uploadFile(api, file, biz, signal, fetch, onPhase);
+          checkOwner();
+          return key;
+        },
         uploadMany: async (files, biz, onComplete) => {
+          checkOwner();
           if (!isDemo)
-            return uploadFiles(api, files, biz, undefined, fetch, onComplete);
+            return uploadFiles(api, files, biz, signal, fetch, onComplete);
           const keys: string[] = [];
           const { demoUpload } = await import("../demo/transport");
           for (let i = 0; i < files.length; i++) {
+            checkOwner();
             const key = await demoUpload(files[i], biz);
+            checkOwner();
             keys.push(key);
             onComplete?.(i, key);
           }

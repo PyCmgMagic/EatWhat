@@ -114,7 +114,7 @@ export function createTransport(
     if (session) headers.set(session.tokenName, `Bearer ${session.tokenValue}`);
     if (options.body !== undefined)
       headers.set("Content-Type", "application/json");
-    let response: Response;
+    let response: Response, text: string;
     try {
       response = await fetcher(buildUrl(base, path, options.query), {
         method: options.method ?? "GET",
@@ -126,6 +126,7 @@ export function createTransport(
         redirect: "error",
         cache: options.cache,
       });
+      text = await response.text();
     } catch (error) {
       if (options.signal?.aborted) throw error;
       throw new ApiError(
@@ -135,7 +136,6 @@ export function createTransport(
         "NETWORK",
       );
     }
-    const text = await response.text();
     let result: Envelope<unknown>;
     try {
       result = safeJson(text) as Envelope<unknown>;

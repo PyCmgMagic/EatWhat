@@ -380,7 +380,7 @@
   place-items: center;
   aspect-ratio: 1;
 }
-.pc-plate > img {
+.pc-plate > :is(img, .food-cover-frame) {
   /* Intrinsic photo dimensions must not enlarge the aspect-ratio grid in Safari. */
   position: absolute;
   inset: 0;

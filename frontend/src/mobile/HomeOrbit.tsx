@@ -1,4 +1,5 @@
 import { mediaUrl, type Food } from "../api/models";
+import { FoodCover } from "../components/FoodCover";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
 import { useFoodPhoto } from "../features/media";
 import {
@@ -15,7 +16,8 @@ function OrbitPlate({ food, demo }: { food: Food; demo: boolean }) {
   return photo.unavailable ? (
     <FoodPhotoFallback category={food.category} failed={photo.failed} />
   ) : (
-    <img
+    <FoodCover
+      crop={food.coverCrop}
       src={src}
       alt=""
       draggable={false}

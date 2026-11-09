@@ -105,6 +105,7 @@ import { useActionAccess } from "../features/access";
 import { guestDeviceId, mealCode } from "../api/food-display";
 import { useFoodImageRefresh, useFoodPhoto } from "../features/media";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
+import { FoodCover } from "../components/FoodCover";
 import RestaurantMap from "../features/RestaurantMap";
 import { baiduMarkerUrl } from "../features/map-geometry";
 const DesktopAuth = lazy(() =>
@@ -759,7 +760,8 @@ function Plate({
       data-orbit-offset={orbitOffset}
     >
       {src ? (
-        <img
+        <FoodCover
+          crop={food.coverCrop}
           src={src}
           alt={food.name ?? "菜品"}
           onError={onImageError ?? (() => renew(src))}
@@ -1399,6 +1401,7 @@ function DesktopDish() {
                   priority
                   food={{
                     ...food,
+                    coverCrop: image === 0 ? food.coverCrop : null,
                     pictureUrl: food.pictureUrl?.[image]
                       ? [food.pictureUrl[image]]
                       : food.pictureUrl,

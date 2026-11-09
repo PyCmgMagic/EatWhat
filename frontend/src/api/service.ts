@@ -573,6 +573,7 @@ export async function uploadFiles(
   const prepared: File[] = [];
   for (const file of files)
     prepared.push(await compressImage(file, biz, signal));
+  signal?.throwIfAborted();
   const signed = await api.presignBatch({
     biz,
     files: prepared.map((file) => ({
@@ -606,7 +607,9 @@ export async function uploadFiles(
       fetcher,
       `第 ${index + 1} 张图片`,
     );
+    signal?.throwIfAborted();
     const completed = await api.complete(item.key!);
+    signal?.throwIfAborted();
     if (completed.key !== item.key)
       throw new Error("图片确认结果不一致，请重试。");
     keys.push(item.key!);
@@ -669,6 +672,7 @@ export async function uploadFile(
 ) {
   onPhase?.("uploading");
   const prepared = await compressImage(file, biz, signal);
+  signal?.throwIfAborted();
   const signed = await api.presign({
     fileName: prepared.name,
     contentType: prepared.type,
@@ -678,8 +682,10 @@ export async function uploadFile(
   if (!signed.putUrl || !signed.key)
     throw new Error("上传凭证不完整，请重新选择图片。");
   await putImage(signed.putUrl, prepared, signal, fetcher);
+  signal?.throwIfAborted();
   onPhase?.("confirming");
   const completed = await api.complete(signed.key);
+  signal?.throwIfAborted();
   if (!completed.key || completed.key !== signed.key)
     throw new Error("图片确认结果不一致，请重新上传。");
   return completed.key;

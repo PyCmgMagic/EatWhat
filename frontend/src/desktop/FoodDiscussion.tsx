@@ -6,6 +6,7 @@ import { useApp } from "../app/state";
 import { isDemo } from "../app/runtime";
 import { errorMessage } from "../api/client";
 import { mediaUrl, type Food } from "../api/models";
+import { FoodCover } from "../components/FoodCover";
 import { validateFiles } from "../api/validation";
 import {
   addMessage,
@@ -340,7 +341,11 @@ export default function FoodDiscussion({ food }: { food: Food }) {
         <aside className="food-comment-composer" aria-label="评论当前菜品">
           <div className="food-comment-dish">
             {mediaUrl(food.pictureUrl?.[0]) && (
-              <img src={mediaUrl(food.pictureUrl?.[0])} alt="当前讨论的菜品" />
+              <FoodCover
+                crop={food.coverCrop}
+                src={mediaUrl(food.pictureUrl?.[0])}
+                alt="当前讨论的菜品"
+              />
             )}
             <div>
               <small>正在聊这道菜</small>

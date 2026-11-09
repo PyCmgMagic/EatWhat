@@ -8,6 +8,7 @@ export async function putImage(
   fetcher: typeof fetch,
   label = "图片",
 ) {
+  signal?.throwIfAborted();
   const target = uploadRequestUrl(signedUrl);
   let response: Response;
   try {
@@ -17,7 +18,9 @@ export async function putImage(
       body: file,
       credentials: "omit",
       redirect: "error",
-      signal: signal ?? AbortSignal.timeout(60_000),
+      signal: signal
+        ? AbortSignal.any([signal, AbortSignal.timeout(60_000)])
+        : AbortSignal.timeout(60_000),
     });
   } catch (cause) {
     if (cause instanceof Error && cause.name === "AbortError") throw cause;

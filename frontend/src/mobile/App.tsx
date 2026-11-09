@@ -85,6 +85,19 @@ const emptyDraft: Draft = {
   tagInput: "",
 };
 export default function MobileApp() {
+  const { session } = useApp();
+  const [workspace, setWorkspace] = useState({ owner: session, version: 0 });
+  if (workspace.owner !== session) {
+    // Keep guest navigation mounted through login. Once an authenticated
+    // session ends, discard its draft, editor state and pending confirmations.
+    setWorkspace({
+      owner: session,
+      version: workspace.version + (workspace.owner ? 1 : 0),
+    });
+  }
+  return <MobileWorkspace key={workspace.version} />;
+}
+function MobileWorkspace() {
   const profileReturnTo = useProfileReturnTo();
   useVisibleViewport();
   useLegacyPeopleRedirect();
@@ -107,6 +120,16 @@ export default function MobileApp() {
       width: innerWidth,
       height: innerHeight,
     }));
+  const images = useRef(draft.images);
+  images.current = draft.images;
+  useEffect(
+    () => () => {
+      for (const image of images.current) {
+        if (image.url.startsWith("blob:")) URL.revokeObjectURL(image.url);
+      }
+    },
+    [],
+  );
   const previousFocus = useRef<HTMLElement | null>(null);
   const confirmationLock = useRef(false),
     [confirmBusy, setConfirmBusy] = useState(false);

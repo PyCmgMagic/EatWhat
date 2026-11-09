@@ -34,6 +34,7 @@ import { useActionAccess } from "./access";
 import "./latest.css";
 import { useFoodPhoto } from "./media";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
+import { FoodCover } from "../components/FoodCover";
 import { useContentMotion } from "../motion/hooks";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { AccessWelcome } from "../components/AccessWelcome";
@@ -191,7 +192,8 @@ export function CatalogCard({
       <Link to={`/foods/${food.id}`}>
         <div className="ew-food-photo" style={{ background: v.tile }}>
           {!photo.unavailable ? (
-            <img
+            <FoodCover
+              crop={food.coverCrop}
               className={v.asset ? "illustration" : "photo"}
               src={src}
               alt={food.name ?? "菜品"}

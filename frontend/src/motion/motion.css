@@ -73,7 +73,7 @@ button.pc-map-pin:active {
   transform: none;
 }
 .pc-food-card-image > .pc-plate,
-.design-tile-image > img,
+.design-tile-image > :is(img, .food-cover-frame),
 .food-comment-images img {
   transition: transform var(--motion-content) var(--ease-enter);
 }
@@ -81,7 +81,7 @@ button.pc-map-pin:active {
   .pc-food-card:hover .pc-plate {
     transform: translateY(-3px) rotate(-3deg) scale(1.02);
   }
-  .design-food-tile:hover .design-tile-image > img {
+  .design-food-tile:hover .design-tile-image > :is(img, .food-cover-frame) {
     transform: scale(1.02);
   }
   .food-comment-images > button:hover img {

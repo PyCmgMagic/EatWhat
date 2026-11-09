@@ -8,6 +8,22 @@ export const isDemo = demoEnabled(
 const storageKey = isDemo ? "eatwhat-demo-session" : "eatwhat-session";
 let memorySession: Session | null = null;
 let storageWriteFailed = false;
+let lifetime = new AbortController();
+
+function rememberSession(next: Session | null) {
+  if (!sameSession(memorySession, next)) {
+    const previous = lifetime;
+    lifetime = new AbortController();
+    memorySession = next;
+    previous.abort(new DOMException("登录身份已变化。", "AbortError"));
+  }
+}
+
+export function sessionSignal(owner: Session | null) {
+  return sameSession(owner, readSession())
+    ? lifetime.signal
+    : AbortSignal.abort();
+}
 function parseSession(raw: string | null): Session | null {
   try {
     const s = JSON.parse(raw || "null");
@@ -38,14 +54,13 @@ try {
 export function readSession(): Session | null {
   if (storageWriteFailed) return memorySession;
   try {
-    memorySession = parseSession(localStorage.getItem(storageKey));
+    rememberSession(parseSession(localStorage.getItem(storageKey)));
   } catch {
     /* session memory fallback */
   }
   return memorySession;
 }
 export function writeSession(session: Session | null) {
-  memorySession = session;
   try {
     localStorage.setItem(storageKey, JSON.stringify(session));
     storageWriteFailed = false;
@@ -53,6 +68,7 @@ export function writeSession(session: Session | null) {
     /* memory-only session */
     storageWriteFailed = true;
   }
+  rememberSession(session);
 }
 export function sameSession(a: Session | null, b: Session | null) {
   return a?.tokenName === b?.tokenName && a?.tokenValue === b?.tokenValue;

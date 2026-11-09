@@ -8,6 +8,7 @@ async (page) => {
     restaurantId: 1, restaurantName: "滨寿司", accountId: 21,
     user: { id: 21, displayName: "PyCmg" },
     stageColor: "matcha", likesCount: 0, isLiked: false, isFavorite: false,
+    coverCrop: {centerX:0.25, centerY:0.5, diameter:0.5},
     systemTags: [], pictureUrl: ["/prototype/assets/photos/sq_luosi.png", "/prototype/assets/photos/sq_tieguo.png"],
   };
   let current = food, holdDetail;
@@ -76,7 +77,13 @@ async (page) => {
       checks.push({ width, height, cardHeight: Math.round(m.card.height), cardBottom: Math.round(m.card.bottom), photoDiameter: m.photo.width, stacked: m.stacked });
       if ([1536,1440,2560,820].includes(width)) await p.screenshot({ path: `output/playwright/dish-responsive-${engine}-${width}x${height}.png` });
     }
+    const cover = p.locator(".pc-dish-plate .food-cover-frame img");
+    const framing = await cover.evaluate(img => ({w:parseFloat(img.style.width),left:parseFloat(img.style.left),top:parseFloat(img.style.top)}));
+    assert(Math.abs(framing.w-200)<1 && Math.abs(framing.left)<1 && Math.abs(framing.top+50)<1, "Off-center crop did not match the stored source rectangle");
+    await p.locator("#food-discussion").waitFor();
+    assert(await p.locator('a[href="#/reports/new?type=FOOD&id=91"]').count() === 1, "Duplicate desktop report entry");
     await p.getByRole("button", { name: "查看第 2 张照片", exact: true }).click();
+    assert(await cover.count() === 0, "Secondary photo inherited the cover crop");
     assert((await p.locator(".pc-dish-plate img").getAttribute("src")).endsWith("sq_tieguo.png"), "Gallery selection stopped working");
     assert(await p.getByRole("button", { name: "查看第 2 张照片", exact: true }).getAttribute("aria-pressed") === "true", "Gallery selection state was lost");
     const shop = p.locator(".pc-dish-actions").getByRole("link", { name: "去这家店", exact: true });
@@ -134,6 +141,11 @@ async (page) => {
       await p.getByRole("link", {name:"食友讨论",exact:true}).click();
       await p.waitForFunction(() => window.scrollY>0 && document.getElementById("food-discussion").getBoundingClientRect().top < innerHeight/2);
     }
+    await p.setViewportSize({width:390,height:844});
+    await p.goto(base + "/?demo=0&view=mobile#/foods/91");
+    await p.waitForFunction(() => parseFloat(document.querySelector(".dish-plate .food-cover-frame img")?.style.width) === 200);
+    await p.locator(".mobile-food-footer").waitFor();
+    assert(await p.locator('a[href="#/reports/new?type=FOOD&id=91"]').count() === 1, "Mobile lost its report entry");
     assert(errors.length === 0 && writes.length === 0, JSON.stringify({errors,writes}));
     return {engine, checks, loadingHeight, longContentPhotoDiameter:long.photo.width, realBackendRequests:0};
   } catch (error) {

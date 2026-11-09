@@ -218,7 +218,7 @@
   border-bottom: 1px solid #e9e1d9;
   margin-bottom: 18px;
 }
-.food-comment-dish > img {
+.food-comment-dish > :is(img, .food-cover-frame) {
   width: 54px;
   height: 54px;
   object-fit: cover;

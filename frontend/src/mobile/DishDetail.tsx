@@ -1,4 +1,5 @@
 import { foodAuthor } from "../api/models";
+import { FoodCover } from "../components/FoodCover";
 import type { CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -138,7 +139,8 @@ export default function DishDetail({
             className={`dish-plate${visual.asset ? " is-illustration" : ""}`}
           >
             {src ? (
-              <img
+              <FoodCover
+                crop={food.coverCrop}
                 src={src}
                 alt={food.name || "菜品照片"}
                 onError={() => renewImage(src)}

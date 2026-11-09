@@ -54,6 +54,28 @@ describe("upload failure feedback", () => {
     })),
     complete: vi.fn(async (key: string) => ({ key })),
   });
+  it.each([1, 2])(
+    "does not confirm a completed PUT after cancellation (%i files)",
+    async (count) => {
+      const controller = new AbortController();
+      const methods = api();
+      const put = vi.fn(async () => {
+        controller.abort();
+        return new Response(null, { status: 200 });
+      });
+      await expect(
+        uploadFiles(
+          methods,
+          Array(count).fill(file),
+          "foods",
+          controller.signal,
+          put,
+        ),
+      ).rejects.toMatchObject({ name: "AbortError" });
+      expect(put).toHaveBeenCalledOnce();
+      expect(methods.complete).not.toHaveBeenCalled();
+    },
+  );
   it("explains a blocked connection without confirming a missing file", async () => {
     const methods = api();
     const cause = new TypeError("Failed to fetch");

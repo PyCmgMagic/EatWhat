@@ -8,7 +8,6 @@ async (page) => {
     p.setDefaultTimeout(10000);
     p.on("pageerror", error => { if (!error.message.includes("ResizeObserver loop")) errors.push(error.message); });
     const user = { id: 21, displayName: "测试食友", userName: null, hasUsername: false, hasPassword: false, mobile: "13800000000", verified: false, banned: false, role: "user" };
-    await context.addInitScript(() => { window.TencentCaptcha = class {}; });
     await context.route(url => url.origin !== base, route => route.abort());
     await context.route(url => url.origin === base && url.pathname.startsWith("/api/"), route => {
       const request = route.request(), path = new URL(request.url()).pathname;

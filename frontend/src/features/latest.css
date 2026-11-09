@@ -195,7 +195,7 @@
   position: relative;
   overflow: hidden;
 }
-.ew-food-photo > img {
+.ew-food-photo > :is(img, .food-cover-frame) {
   position: absolute;
   width: var(--food-art-width);
   height: var(--food-art-height);
@@ -203,13 +203,13 @@
   bottom: var(--food-art-bottom);
   object-fit: contain;
 }
-.ew-food-photo > img.photo {
+.ew-food-photo > .photo {
   border-radius: 50%;
   border: 6px solid #fff;
   object-fit: cover;
   box-shadow: 0 8px 20px #231c181a;
 }
-.ew-food-photo > span {
+.ew-food-photo > span:not(.food-cover-frame) {
   position: absolute;
   top: 12px;
   left: 12px;

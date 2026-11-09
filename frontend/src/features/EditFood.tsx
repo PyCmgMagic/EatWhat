@@ -19,7 +19,6 @@ import { FoodPhotoPicker, type EditableFoodPhoto } from "./FoodPhotoPicker";
 import {
   mealOptions,
   stagePalette,
-  stageCode,
   publishDisplay,
   type Stage,
 } from "../api/food-display";
@@ -120,19 +119,42 @@ function EditForm({
     name: food.name ?? "",
     description: food.description ?? "",
     price: food.price == null ? "" : String(food.price),
-    category: food.category ?? "other",
-    stage: food.stageColor ?? "broth",
-    meals: food.mealTimes?.length ? food.mealTimes : ["dinner"],
+    category: food.category ?? null,
+    stage: food.stageColor ?? null,
+    meals: food.mealTimes ?? [],
+    editVersion: 0,
   });
-  const { name, description, price, category, stage, meals } = fields;
-  const setName = (name: string) => setFields((f) => ({ ...f, name }));
-  const setDescription = (description: string) =>
-    setFields((f) => ({ ...f, description }));
-  const setPrice = (price: string) => setFields((f) => ({ ...f, price }));
+  // Older drafts stored display defaults even when the author edited only text.
+  const legacy = fields.editVersion === 0;
+  const { name, description, price } = fields;
+  const category =
+    legacy && !food.category && fields.category === "other"
+      ? null
+      : fields.category;
+  const stage =
+    legacy && !food.stageColor && fields.stage === "broth"
+      ? null
+      : fields.stage;
+  const meals =
+    legacy && !food.mealTimes?.length && fields.meals.join() === "dinner"
+      ? []
+      : fields.meals;
+  const updateFields = (patch: Partial<typeof fields>) =>
+    setFields((f) => ({
+      ...f,
+      category,
+      stage,
+      meals,
+      editVersion: 1,
+      ...patch,
+    }));
+  const setName = (name: string) => updateFields({ name });
+  const setDescription = (description: string) => updateFields({ description });
+  const setPrice = (price: string) => updateFields({ price });
   const setCategory = (category: typeof fields.category) =>
-    setFields((f) => ({ ...f, category }));
-  const setStage = (stage: Stage) => setFields((f) => ({ ...f, stage }));
-  const setMeals = (meals: string[]) => setFields((f) => ({ ...f, meals }));
+    updateFields({ category });
+  const setStage = (stage: Stage | null) => updateFields({ stage });
+  const setMeals = (meals: typeof fields.meals) => updateFields({ meals });
   const [photoDraft, setPhotoDraft, clearPhotos] = useMemoryDraft<{
     photos: EditableFoodPhoto[];
     changed: boolean;
@@ -147,14 +169,17 @@ function EditForm({
   const { photos, changed: photosChanged } = photoDraft;
   const setPhotos = (photos: typeof photoDraft.photos) =>
     setPhotoDraft((p) => ({ ...p, photos }));
+  const mealsChanged =
+    meals.length !== (food.mealTimes?.length ?? 0) ||
+    meals.some((meal) => !food.mealTimes?.includes(meal));
+  const stageChanged = stage !== (food.stageColor ?? null);
   const dirty =
     name !== food.name ||
     description !== (food.description ?? "") ||
     price !== (food.price == null ? "" : String(food.price)) ||
-    category !== food.category ||
-    stage !== (food.stageColor ?? "broth") ||
-    meals.join() !==
-      (food.mealTimes?.length ? food.mealTimes : ["dinner"]).join() ||
+    category !== (food.category ?? null) ||
+    stageChanged ||
+    mealsChanged ||
     photosChanged;
   useEffect(() => {
     if (!dirty) return;
@@ -175,21 +200,29 @@ function EditForm({
         setBusy(true);
         setError("");
         try {
-          if (!name.trim() || !meals.length)
+          if (!name.trim() || (mealsChanged && !meals.length))
             throw new Error("请填写菜名，并选择至少一个饭点。");
           if (food.price != null && price === "")
             throw new Error("价格不能为空，请填写有效价格。");
           const body: Schema["EditFoodDTORequest"] = {
             name: name.trim(),
-            description,
-            category,
+            description:
+              description !== (food.description ?? "")
+                ? description
+                : undefined,
+            category:
+              category && category !== food.category ? category : undefined,
             price: price === "" ? undefined : Number(price),
-            ...publishDisplay(
+            mealTimes: mealsChanged ? meals : undefined,
+          };
+          if (stageChanged && stage) {
+            const palette = publishDisplay(
               stagePalette[stage],
               food.stageAlternates?.map((x) => stagePalette[x]),
-              meals,
-            ),
-          };
+            );
+            body.stageColor = palette.stageColor;
+            body.stageAlternates = palette.stageAlternates;
+          }
           if (photosChanged) {
             if (!photos.length) throw new Error("至少保留一张照片。");
             const next = [...photos];
@@ -278,11 +311,10 @@ function EditForm({
             <label>
               舞台色
               <Select
-                value={stage}
-                onChange={(e) =>
-                  setStage(stageCode(stagePalette[e.target.value as Stage]))
-                }
+                value={stage ?? ""}
+                onChange={(e) => setStage((e.target.value as Stage) || null)}
               >
+                {!food.stageColor && <option value="">分类默认色</option>}
                 {Object.entries(stagePalette).map(([key, color]) => (
                   <option key={key} value={key} data-color={color}>
                     {
@@ -329,11 +361,12 @@ function EditForm({
               <label>
                 分类
                 <Select
-                  value={category}
+                  value={category ?? ""}
                   onChange={(e) =>
-                    setCategory(e.target.value as typeof category)
+                    setCategory((e.target.value as typeof category) || null)
                   }
                 >
+                  {!food.category && <option value="">未设置</option>}
                   {categories
                     .filter((c) => c.id)
                     .map((c) => (

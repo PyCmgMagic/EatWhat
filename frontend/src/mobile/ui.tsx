@@ -4,6 +4,7 @@ import type { Food, Restaurant } from "../api/models";
 import { mediaUrl, money } from "../api/models";
 import { useFoodPhoto } from "../features/media";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
+import { FoodCover } from "../components/FoodCover";
 import { useApp } from "../app/state";
 import { useLoginDialog } from "../app/auth-dialog";
 import { useActionAccess } from "../features/access";
@@ -206,7 +207,8 @@ export function FoodTile({
         style={{ background: visual?.tile ?? "#F4EFEB" }}
       >
         {!photo.unavailable ? (
-          <img
+          <FoodCover
+            crop={food.coverCrop}
             src={src}
             loading="lazy"
             decoding="async"

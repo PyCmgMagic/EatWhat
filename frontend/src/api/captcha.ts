@@ -154,7 +154,6 @@ export const runBrowserCaptcha: CaptchaRunner = async (
   container.className = "ew-captcha-container";
   try {
     flow.signal.throwIfAborted();
-    await abortable(loadSdk(), flow.signal);
     const config = await abortable(getConfig(flow.signal), flow.signal);
     flow.signal.throwIfAborted();
     if (config.enabled === false) {
@@ -173,6 +172,9 @@ export const runBrowserCaptcha: CaptchaRunner = async (
       config.expiresAt * 1000 <= Date.now()
     )
       throw new Error("验证配置暂不可用，请稍后重试。");
+    await abortable(loadSdk(), flow.signal);
+    if (config.expiresAt * 1000 <= Date.now())
+      throw new Error("验证配置已过期，请重试。");
     surface.element.append(container);
     surface.show();
     const proof = await abortable(

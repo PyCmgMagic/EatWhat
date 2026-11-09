@@ -58,6 +58,15 @@ const ready = () =>
   vi.waitFor(() => expect(callbacks.length).toBeGreaterThan(0));
 
 describe("single-use human verification", () => {
+  it("sends without loading the SDK when verification is disabled", async () => {
+    delete window.TencentCaptcha;
+    const send = vi.fn();
+    await runBrowserCaptcha(async () => ({ enabled: false }), send);
+    expect(
+      document.querySelector('script[src*="captcha.qcloud.com"]'),
+    ).toBeNull();
+    expect(send).toHaveBeenCalledWith(undefined, expect.any(AbortSignal));
+  });
   it("never shares configurations, instances or tickets across attempts, even after a business failure", async () => {
     const read = vi.fn(async () => config()),
       send = vi
