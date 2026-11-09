@@ -19,13 +19,13 @@ import {
   type Location,
 } from "react-router-dom";
 import { desktopLayout } from "./layout";
+import { normalizeAuthRoute } from "./auth-routes";
 import "./auth-dialog.css";
 
 const AuthDialogContent = lazy(() => import("../components/AuthDialogContent"));
 const dialogPaths = new Set([
   "/auth",
   "/auth/password",
-  "/auth/username-register",
   "/auth/register",
   "/auth/register/confirm",
   "/auth/forgot",
@@ -78,7 +78,7 @@ export function useAuthFlow() {
     flow ?? {
       location,
       navigate: (to: string) => {
-        void navigate(to);
+        void navigate(normalizeAuthRoute(to));
       },
       finish: (fallback: string) => {
         void navigate(
@@ -104,8 +104,9 @@ export function useAuthBusy(busy: boolean) {
 export function LoginLink({ to, onClick, ...props }: LinkProps) {
   const { openLogin } = useLoginDialog();
   const location = useLocation();
-  const path =
-    typeof to === "string" ? to : (to.pathname ?? "") + (to.search ?? "");
+  const path = normalizeAuthRoute(
+    typeof to === "string" ? to : (to.pathname ?? "") + (to.search ?? ""),
+  );
   return (
     <Link
       {...props}
@@ -146,8 +147,9 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
     setRequest(null);
   }, []);
   const openLogin = useCallback(
-    (to = "/auth", options?: LoginOptions) => {
+    (requested = "/auth", options?: LoginOptions) => {
       if (active.current) return;
+      const to = normalizeAuthRoute(requested);
       const next =
         safeLoginNext(new URLSearchParams(to.split("?")[1]).get("next")) ??
         location.pathname + location.search + location.hash;
@@ -232,7 +234,7 @@ function LoginDialog({
       new URLSearchParams(to.split("?")[1]).get("next"),
     );
     if (requestedNext) next.current = requestedNext;
-    setRoute(to);
+    setRoute(normalizeAuthRoute(to));
   };
   useEffect(() => {
     const dialog = ref.current!;
@@ -294,7 +296,7 @@ function LoginDialog({
           (anchor.target && anchor.target !== "_self")
         )
           return;
-        const to = anchor.hash.slice(1);
+        const to = normalizeAuthRoute(anchor.hash.slice(1));
         if (!dialogPaths.has(to.split("?")[0])) return;
         event.preventDefault();
         if (!busy) navigate(to);

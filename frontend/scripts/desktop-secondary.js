@@ -35,7 +35,7 @@ async (page) => {
    await page.goto(base+'/?demo=1&view=desktop#'+path);await page.locator(selector).waitFor();await page.screenshot({path:'output/playwright/pc-secondary-'+name+'.png'});
   }
   await page.evaluate(()=>localStorage.setItem('eatwhat-demo-session','null'));await page.reload();
-  for(const [path,name,selector] of [['/auth/password','login','input[name=username]'],['/auth/username-register','register','input[name=confirm]'],['/auth/forgot','forgot','.pc-secondary-availability']]){
+  for(const [path,name,selector] of [['/auth/password','login','input[name=username]'],['/auth/username-register','register','input[aria-label="登录手机号"]'],['/auth/forgot','forgot','.pc-secondary-availability']]){
    await page.goto(base+'/?demo=1&view=desktop#'+path);await page.locator(selector).waitFor();await page.screenshot({path:'output/playwright/pc-secondary-'+name+'.png'});
   }
   await page.goto(base+'/?demo=1&view=desktop#/auth/password');await page.getByRole('button',{name:'使用演示账号登录',exact:true}).click();await page.locator('.pc-hero').waitFor();

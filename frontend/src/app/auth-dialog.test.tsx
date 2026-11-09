@@ -330,7 +330,7 @@ describe("login dialog preserves the active page", () => {
     const hash = window.location.hash;
     await click(element("open-login"));
     await click(element("register"));
-    expect(authPath()).toBe("/auth/username-register");
+    expect(authPath()).toBe("/auth/register");
     await click(element("forgot"));
     expect(authPath()).toBe("/auth/forgot");
     await click(element("password"));
@@ -384,6 +384,21 @@ describe("login dialog preserves the active page", () => {
     await click(element("finish"));
     expect(dialog()).toBeNull();
     expect(route()).toBe("/favorites?category=staple");
+  });
+
+  it("opens obsolete username registration links as phone registration and retains next", async () => {
+    await render(
+      "/foods/7",
+      "/auth/username-register?next=%2Fsettings%2Fpassword",
+    );
+    await click(element("open-login"));
+    expect(authPath()).toBe("/auth/register");
+    expect(element("auth-search").textContent).toBe(
+      "?next=%2Fsettings%2Fpassword",
+    );
+    expect(route()).toBe("/foods/7");
+    await click(element("finish"));
+    expect(route()).toBe("/settings/password");
   });
 
   it("allows password recovery to replace the return destination while keeping the page until login", async () => {
@@ -452,7 +467,7 @@ describe("login dialog request lifecycle", () => {
     await click(element("busy"));
     expect(closeButton().disabled).toBe(false);
     await click(element("register"));
-    expect(authPath()).toBe("/auth/username-register");
+    expect(authPath()).toBe("/auth/register");
     await click(closeButton());
     expect(dialog()).toBeNull();
   });

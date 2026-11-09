@@ -89,7 +89,7 @@ export default function FoodDiscussion({ food }: { food: Food }) {
         textarea.current?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
-  }, [location.search, food.id]);
+  }, [location.search, location.key, food.id]);
   useEffect(() => {
     if (viewPhoto) photoDialog.current?.showModal();
   }, [viewPhoto]);

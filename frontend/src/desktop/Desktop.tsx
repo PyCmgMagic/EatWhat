@@ -98,6 +98,7 @@ const DesktopHistory = lazy(() =>
   import("./DesktopLibrary").then((m) => ({ default: m.DesktopHistory })),
 );
 import { Catalog, FoodManage } from "../features/Catalog";
+import { DishMoreActions } from "./DishMoreActions";
 import { RecommendationControls, Preferences } from "../features/Account";
 import { EditFood } from "../features/EditFood";
 import { useActionAccess } from "../features/access";
@@ -1426,27 +1427,30 @@ function DesktopDish() {
                 <span className="pc-eyebrow">
                   {categoryNames[food.category ?? "other"]}
                 </span>
-                <button
-                  className="pc-icon-button"
-                  aria-label={food.isFavorite ? "取消收藏" : "收藏"}
-                  aria-pressed={food.isFavorite === true}
-                  disabled={
-                    task.busy ||
-                    (!!session &&
-                      user?.verified === true &&
-                      food.isFavorite == null)
-                  }
-                  onClick={() =>
-                    void task.run(() =>
-                      api.favorite(id, food.isFavorite === true),
-                    )
-                  }
-                >
-                  <Icon
-                    name={food.isFavorite ? "bookmarkOn" : "bookmark"}
-                    size={25}
-                  />
-                </button>
+                <div className="pc-dish-tools">
+                  <button
+                    className="pc-icon-button"
+                    aria-label={food.isFavorite ? "取消收藏" : "收藏"}
+                    aria-pressed={food.isFavorite === true}
+                    disabled={
+                      task.busy ||
+                      (!!session &&
+                        user?.verified === true &&
+                        food.isFavorite == null)
+                    }
+                    onClick={() =>
+                      void task.run(() =>
+                        api.favorite(id, food.isFavorite === true),
+                      )
+                    }
+                  >
+                    <Icon
+                      name={food.isFavorite ? "bookmarkOn" : "bookmark"}
+                      size={20}
+                    />
+                  </button>
+                  <DishMoreActions key={id} food={food} id={id} />
+                </div>
               </div>
               <h1>{food.name}</h1>
               <div className="pc-detail-price">{money(food.price)}</div>
@@ -1496,7 +1500,16 @@ function DesktopDish() {
                 </Link>
               </div>
               <div className="pc-taste-section">
-                <h2>大家怎么说</h2>
+                <div className="pc-taste-heading">
+                  <h2>大家怎么说</h2>
+                  <Link
+                    className="pc-discussion-jump"
+                    to={`/foods/${id}?section=comments`}
+                  >
+                    <Icon name="comment" size={15} /> 食友讨论
+                    <Icon name="chevronDown" size={13} />
+                  </Link>
+                </div>
                 <div className="pc-taste-cloud">
                   {food.systemTags?.map((tag, i) => (
                     <button
@@ -1527,29 +1540,24 @@ function DesktopDish() {
                   </button>
                 </div>
               </div>
-              <div className="pc-contributor">
-                {foodAuthor(food).id ? (
-                  <Link to={`/users/${foodAuthor(food).id}`}>
-                    <span className="pc-user-avatar">
-                      {foodAuthor(food).name?.slice(0, 1) ?? "食"}
-                    </span>
-                    <b>{foodAuthor(food).name ?? "同学"}</b>
-                  </Link>
-                ) : (
-                  <b>{foodAuthor(food).name ?? "校园食友"}</b>
+              <footer className="pc-dish-attribution">
+                <div className="pc-contributor">
+                  {foodAuthor(food).id ? (
+                    <Link to={`/users/${foodAuthor(food).id}`}>
+                      <span className="pc-user-avatar">
+                        {foodAuthor(food).name?.slice(0, 1) ?? "食"}
+                      </span>
+                      <b>{foodAuthor(food).name ?? "同学"}</b>
+                    </Link>
+                  ) : (
+                    <b>{foodAuthor(food).name ?? "校园食友"}</b>
+                  )}
+                  <span>分享了这道菜</span>
+                </div>
+                {food.description?.trim() && (
+                  <p className="pc-dish-description">{food.description}</p>
                 )}
-                <span>分享了这道菜</span>
-              </div>
-              <p className="pc-dish-description">
-                {food.description ?? "分享者还没有留下描述。"}
-              </p>
-              <FoodManage food={food} />
-              <div className="pc-detail-secondary">
-                <Link to={`/foods/${id}?section=comments`}>
-                  <Icon name="comment" size={15} /> 食友讨论
-                </Link>
-                <Link to={`/reports/new?type=FOOD&id=${id}`}>举报</Link>
-              </div>
+              </footer>
             </section>
           </div>
           <Suspense fallback={<ContentSkeleton kind="rows" count={3} />}>

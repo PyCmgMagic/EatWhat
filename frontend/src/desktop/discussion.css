@@ -5,11 +5,6 @@
   margin-top: 24px;
   scroll-margin-top: 114px;
 }
-.pc-detail-secondary > a {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
 .food-discussion-heading {
   display: flex;
   align-items: center;

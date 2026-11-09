@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { ProfileEditLink } from "../app/profile-navigation";
 import { useAuthBusy, useAuthFlow } from "../app/auth-dialog";
+import { isPhoneAuthPath } from "../app/auth-routes";
 import { localDestination } from "../app/navigation";
 import { isDemo } from "../app/runtime";
 import { classifyAuth } from "../api/service";
@@ -712,46 +713,35 @@ export function DesktopAuth() {
       <section className="pc-secondary-auth-content" key={path}>
         {path === "/auth/forgot" ? (
           <RecoverPassword />
-        ) : ["/auth/register", "/auth/register/confirm"].includes(path) ? (
+        ) : isPhoneAuthPath(path) ? (
           <PhoneLoginForm embedded />
         ) : pendingPages[path] ? (
           <PendingPage path={path} />
         ) : (
-          <AuthForm register={path === "/auth/username-register"} />
+          <AuthForm />
         )}
       </section>
     </div>
   );
 }
-export function AuthForm({
-  register,
-  compact = false,
-}: {
-  register: boolean;
-  compact?: boolean;
-}) {
+export function AuthForm({ compact = false }: { compact?: boolean }) {
   const { location: loc, finish } = useAuthFlow();
   const { api, signIn, session } = useApp(),
     task = useTask(),
-    check = useTask("这个用户名可以使用"),
-    [checked, setChecked] = useState(false),
     [showPassword, setShowPassword] = useState(false);
-  useAuthBusy(task.isPending || check.isPending);
+  useAuthBusy(task.isPending);
   const next = new URLSearchParams(loc.search).get("next"),
     suffix = next ? "?next=" + encodeURIComponent(next) : "";
   async function authenticate(username: string, password: string) {
-    if (register) await api.checkUsername(username);
-    const reply = register
-      ? await api.register({
-          userName: username,
-          password,
-          device: "WEB",
-        })
-      : await api.login({ userName: username, password, device: "WEB" });
+    const reply = await api.login({
+      userName: username,
+      password,
+      device: "WEB",
+    });
     const result = classifyAuth(reply);
     if (result.kind === "session") {
       await signIn(result.session);
-      finish(register ? "/verify" : "/");
+      finish("/");
     } else throw new Error(result.message);
   }
   if (session)
@@ -770,24 +760,14 @@ export function AuthForm({
       {!compact && (
         <>
           <nav className="pc-secondary-auth-tabs" aria-label="登录与注册">
-            <Link
-              aria-current={!register ? "page" : undefined}
-              to={"/auth" + suffix}
-            >
+            <Link aria-current="page" to={"/auth" + suffix}>
               欢迎回来
             </Link>
-            <Link
-              aria-current={register ? "page" : undefined}
-              to={"/auth/username-register" + suffix}
-            >
-              加入食友圈
-            </Link>
+            <Link to={"/auth/register" + suffix}>加入食友圈</Link>
           </nav>
-          <h2>{register ? "创建你的账号" : "登录，开启今日份美味"}</h2>
+          <h2>登录，开启今日份美味</h2>
           <p className="pc-secondary-copy">
-            {register
-              ? "注册后，完成学生认证就能参与分享。"
-              : "用用户名、邮箱或手机号与密码登录。"}
+            用用户名、邮箱或手机号与密码登录。
           </p>
         </>
       )}
@@ -799,18 +779,11 @@ export function AuthForm({
             username = String(d.get("username") || "").trim(),
             password = String(d.get("password") || "");
           task.run(async () => {
-            if (register) {
-              if (password !== d.get("confirm"))
-                throw new Error("两次输入的密码不一致。");
-            }
             await authenticate(username, password);
           });
         }}
       >
-        <Field
-          label={register ? "用户名" : "账号"}
-          hint={register ? "3–10 位字母、数字或下划线" : undefined}
-        >
+        <Field label="账号">
           <input
             id="pc-auth-username"
             name="username"
@@ -818,42 +791,16 @@ export function AuthForm({
               (loc.state as { userName?: string } | null)?.userName ?? ""
             }
             autoComplete="username"
-            minLength={register ? 3 : 1}
-            maxLength={register ? 10 : 64}
-            pattern={
-              register ? "(?!.*@)(?![0-9]{11}$)[a-zA-Z0-9_]{3,10}" : undefined
-            }
+            minLength={1}
+            maxLength={64}
             required
-            onChange={() => setChecked(false)}
-            placeholder={
-              register ? "为自己起个账号名" : "用户名 / 邮箱 / 手机号"
-            }
+            placeholder="用户名 / 邮箱 / 手机号"
           />
         </Field>
-        {register && (
-          <button
-            type="button"
-            className="pc-secondary-text-link"
-            disabled={check.isPending || task.isPending}
-            onClick={() => {
-              const input = document.getElementById(
-                "pc-auth-username",
-              ) as HTMLInputElement;
-              if (input.reportValidity())
-                check.run(async () => {
-                  await api.checkUsername(input.value.trim());
-                  setChecked(true);
-                });
-            }}
-          >
-            {checked ? "用户名可用" : "检查用户名是否可用"}
-          </button>
-        )}
         <Field
           label="密码"
-          hint={register ? "6–64 个字符" : undefined}
           action={
-            compact && !register ? (
+            compact ? (
               <Link to={"/auth/forgot" + suffix}>忘记密码？</Link>
             ) : undefined
           }
@@ -863,17 +810,10 @@ export function AuthForm({
               name="password"
               aria-label="密码"
               type={showPassword ? "text" : "password"}
-              autoComplete={register ? "new-password" : "current-password"}
-              minLength={register ? 6 : 1}
-              maxLength={register ? 64 : undefined}
+              autoComplete="current-password"
+              minLength={1}
               required
-              placeholder={
-                compact
-                  ? register
-                    ? "设置你的密码"
-                    : "输入登录密码"
-                  : undefined
-              }
+              placeholder={compact ? "输入登录密码" : undefined}
             />
             <button
               type="button"
@@ -885,37 +825,24 @@ export function AuthForm({
             </button>
           </span>
         </Field>
-        {register ? (
-          <Field label="再次输入密码">
-            <input
-              name="confirm"
-              type="password"
-              autoComplete="new-password"
-              minLength={6}
-              maxLength={64}
-              required
-            />
-          </Field>
-        ) : (
-          !compact && (
-            <Link
-              className="pc-secondary-text-link pc-secondary-auth-forgot"
-              to={"/auth/forgot" + suffix}
-            >
-              忘记密码？
-            </Link>
-          )
+        {!compact && (
+          <Link
+            className="pc-secondary-text-link pc-secondary-auth-forgot"
+            to={"/auth/forgot" + suffix}
+          >
+            忘记密码？
+          </Link>
         )}
-        <TaskError error={task.error || check.error} />
+        <TaskError error={task.error} />
         <button
           className={compact ? "ew-auth-submit" : "pc-button"}
           disabled={task.isPending}
         >
-          {task.isPending ? "正在处理…" : register ? "注册账号" : "登录"}
+          {task.isPending ? "正在处理…" : "登录"}
           <Icon name="chevronRight" size={17} />
         </button>
       </form>
-      {isDemo && !register && (
+      {isDemo && (
         <button
           className={
             compact
@@ -939,17 +866,8 @@ export function AuthForm({
             使用手机验证码登录 / 注册 →
           </Link>
           <p className="pc-secondary-auth-footnote">
-            {register ? (
-              <>
-                手机验证码也可直接登录或注册。
-                <Link to={"/auth" + suffix}>已有账号，去登录</Link>
-              </>
-            ) : (
-              <>
-                还没有账号？
-                <Link to={"/auth/username-register" + suffix}>注册一个</Link>
-              </>
-            )}
+            还没有账号？
+            <Link to={"/auth/register" + suffix}>手机号注册</Link>
           </p>
         </>
       )}

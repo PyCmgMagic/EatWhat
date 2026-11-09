@@ -16,9 +16,14 @@ async (page) => {
   await context.route(url => url.origin !== base, route => route.abort());
   await context.route(url => url.origin === base && url.pathname.startsWith("/api/"), async route => {
     const path = new URL(route.request().url()).pathname;
+    if (path === "/api/user/activity" && route.request().method() === "POST") {
+      return route.fulfill({json:{code:0,data:null}});
+    }
     if (route.request().method() !== "GET") { writes.push(path); return route.abort(); }
     let data = [];
     if (path === "/api/foods/detail/91") { if (holdDetail) await holdDetail; data = current; }
+    else if (path === "/api/user/info") data = { id:21, userName:"PyCmg", verified:true, role:"user" };
+    else if (path === "/api/notification/unread/count") data = 0;
     else if (path === "/api/restaurant/detail/1") data = { id: 1, name: "滨寿司", address: "高新万达4F" };
     else if (path === "/api/campus/list") data = [{ id: 1, name: "软件园", open: true, isDefault: true }];
     else if (path === "/api/remote-config") data = { configVersion: 1, flags: {}, params: {}, maintenance: { mode: "NONE" }, announcements: [], versions: {} };
@@ -88,8 +93,14 @@ async (page) => {
     const long = await measure();
     assert(!long.clippedInfo && !long.overflow && long.photo.width<=420, "Long content broke the detail layout");
     assert(await p.locator(".pc-dish-description").textContent() === current.description, "Description was truncated");
-    await p.locator(".pc-detail-secondary").scrollIntoViewIfNeeded();
-    await p.locator(".pc-detail-secondary").getByRole("link", { name: "举报", exact: true }).click({ trial: true });
+    const more = p.locator(".pc-dish-more summary");
+    await more.click();
+    const report = p.getByRole("link", { name: "举报菜品", exact: true });
+    assert(await report.getAttribute("href") === "#/reports/new?type=FOOD&id=91", "Report target changed");
+    await report.click({ trial: true });
+    assert(!(await p.getByRole("link", {name:"编辑菜品"}).count()), "Guests can see owner actions");
+    await p.keyboard.press("Escape");
+    assert(await more.evaluate(el => document.activeElement === el && !el.parentElement.open), "Escape did not dismiss and restore focus");
 
     // Loading uses the same height budget instead of briefly restoring a 690px panel.
     current = food;
@@ -101,6 +112,28 @@ async (page) => {
     release(); holdDetail = undefined;
     await p.getByRole("heading", { name: food.name, exact: true }).waitFor();
     assert(loadingHeight < 610, "Loading restored the oversized detail card: " + loadingHeight);
+
+    await p.evaluate(() => localStorage.setItem("eatwhat-session", JSON.stringify({tokenName:"x-dish-test",tokenValue:"local-only"})));
+    await p.setViewportSize({width:1440,height:900});
+    await p.reload();
+    await more.click();
+    const edit = p.getByRole("link", {name:"编辑菜品",exact:true});
+    await edit.waitFor();
+    assert(await edit.getAttribute("href") === "#/foods/91/edit", "Owner edit destination changed");
+    await p.locator("#food-discussion").waitFor();
+    await settle();
+    await p.screenshot({path:`output/playwright/dish-action-menu-${engine}.png`});
+    await p.getByRole("button", {name:"删除菜品",exact:true}).click();
+    const confirmation = p.getByRole("dialog");
+    await confirmation.getByText(/删除「PyCmgMagic」/).waitFor();
+    await confirmation.getByRole("button", {name:"取消",exact:true}).click();
+    await confirmation.waitFor({state:"hidden"});
+    assert(!(await more.evaluate(el => el.parentElement.open)), "Management menu stayed open after deletion was cancelled");
+    for (let attempt=0; attempt<2; attempt++) {
+      await p.evaluate(() => window.scrollTo(0,0));
+      await p.getByRole("link", {name:"食友讨论",exact:true}).click();
+      await p.waitForFunction(() => window.scrollY>0 && document.getElementById("food-discussion").getBoundingClientRect().top < innerHeight/2);
+    }
     assert(errors.length === 0 && writes.length === 0, JSON.stringify({errors,writes}));
     return {engine, checks, loadingHeight, longContentPhotoDiameter:long.photo.width, realBackendRequests:0};
   } catch (error) {

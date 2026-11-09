@@ -52,7 +52,6 @@ async function validateSingleSiteAuth(page) {
         if (
           [
             "/api/auth/login",
-            "/api/auth/register",
             "/api/auth/phone/login",
           ].includes(path)
         ) {
@@ -161,20 +160,12 @@ async function validateSingleSiteAuth(page) {
 
       await signedOut();
       await visit("/auth/username-register");
-      await p.locator('input[name="username"]').fill("Student11");
-      await p.locator('input[name="password"]').fill("test-password");
-      await p.locator('input[name="confirm"]').fill("test-password");
-      await p
-        .locator("form")
-        .getByRole("button", { name: "注册账号", exact: true })
-        .click();
-      await p.waitForFunction(
-        () =>
-          !!JSON.parse(localStorage.getItem("eatwhat-session") || "null")
-            ?.tokenValue,
-      );
+      await p.waitForURL(/#\/auth\/register$/);
+      await p.getByLabel("登录手机号", { exact: true }).waitFor();
+      assert(await p.locator('input[name="confirm"]').count() === 0, "Obsolete username registration form remains");
+      assert(!requests.some(request => request.path === "/api/auth/register"), "Obsolete registration endpoint was called");
       checks.push(
-        `${width}px: username registration sends credentials without invented consent`,
+        `${width}px: old username registration bookmarks redirect to SMS registration`,
       );
 
       await signedOut();

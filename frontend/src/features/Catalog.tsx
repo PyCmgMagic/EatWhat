@@ -102,7 +102,13 @@ export function FeatureState({
     </div>
   );
 }
-export function FoodManage({ food }: { food: Food }) {
+export function FoodManage({
+  food,
+  inMenu = false,
+}: {
+  food: Food;
+  inMenu?: boolean;
+}) {
   const { user, api, toast } = useApp(),
     m = useMobile(),
     access = useActionAccess(),
@@ -111,8 +117,11 @@ export function FoodManage({ food }: { food: Food }) {
     nav = useNavigate();
   if (!user?.verified || user.id !== food.accountId || !food.id) return null;
   return (
-    <div className="ew-food-manage">
-      <Link to={`/foods/${food.id}/edit`}>编辑菜品</Link>
+    <div className={inMenu ? "pc-dish-owner-actions" : "ew-food-manage"}>
+      <Link to={`/foods/${food.id}/edit`}>
+        {inMenu && <Icon name="edit" size={16} />}
+        编辑菜品
+      </Link>
       <button
         onClick={() => {
           if (access(true))
@@ -135,7 +144,8 @@ export function FoodManage({ food }: { food: Food }) {
             );
         }}
       >
-        删除
+        {inMenu && <Icon name="delete" size={16} />}
+        {inMenu ? "删除菜品" : "删除"}
       </button>
     </div>
   );

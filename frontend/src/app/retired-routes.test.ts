@@ -1,6 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { retiredRouteDestination } from "./retired-routes";
 
+it.each([false, true])(
+  "redirects legacy username registration to SMS registration, signed in: %s",
+  (signedIn) => {
+    for (const path of [
+      "/auth/username-register",
+      "/auth/username-register/",
+    ]) {
+      expect(
+        retiredRouteDestination(path, "?next=%2Fsettings%2Fpassword", signedIn),
+      ).toBe("/auth/register?next=%2Fsettings%2Fpassword");
+    }
+  },
+);
+
 describe("retired cross-site bookmarks", () => {
   it.each(["/auth/consent", "/auth/consent-offer", "/auth/withdraw-consent/"])(
     "returns %s to login or account settings without reopening authorization",

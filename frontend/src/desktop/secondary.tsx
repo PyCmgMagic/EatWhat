@@ -27,7 +27,7 @@ export const secondaryTitles: Record<string, string> = {
   "/restaurants/new/details": "添加一家店",
   "/auth": "欢迎回来",
   "/auth/password": "密码登录",
-  "/auth/username-register": "注册账号",
+  "/auth/username-register": "手机登录 / 注册",
   "/auth/register": "手机登录 / 注册",
   "/auth/register/confirm": "注册确认",
   "/auth/forgot": "找回密码",

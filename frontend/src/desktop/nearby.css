@@ -18,7 +18,8 @@
 .pc-nearby-layout {
   display: grid;
   grid-template-columns: clamp(310px, 25vw, 360px) minmax(0, 1fr);
-  height: clamp(340px, calc(100svh - var(--header-height) - 112px), 580px);
+  /* Reserve the header, heading and footer; let the map use the rest. */
+  height: max(340px, calc(100svh - var(--header-height) - 176px));
   background: #fff;
   border: 1px solid #e9e1d9;
   border-radius: 22px;
@@ -201,6 +202,11 @@
 }
 .pc-nearby .restaurant-map-cluster-list {
   max-height: calc(100% - 184px);
+}
+@media (min-width: 1600px) {
+  .pc-nearby-layout {
+    grid-template-columns: clamp(360px, 20vw, 440px) minmax(0, 1fr);
+  }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   .pc-nearby-layout {

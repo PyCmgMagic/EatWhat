@@ -7,7 +7,7 @@
   overflow: clip;
 }
 .pc-app {
-  --page-max-width: 1360px;
+  --page-max-width: clamp(1360px, 94vw, 2304px);
   --page-gutter: clamp(20px, 3.2vw, 48px);
   --header-height: 80px;
 }
@@ -19,8 +19,13 @@
   padding-right: max(var(--page-gutter), env(safe-area-inset-right));
 }
 .pc-main {
+  /* Reading and editing pages retain a comfortable line length. */
+  max-width: 1360px;
   padding-top: clamp(20px, 3svh, 32px);
   min-height: calc(100dvh - var(--header-height) - 90px);
+}
+.pc-main:has(.pc-home, .pc-nearby) {
+  max-width: var(--page-max-width);
 }
 /* The detail image follows available window height, independently of long copy. */
 @media (max-width: 899px) {
@@ -129,6 +134,27 @@
   .pc-home .pc-hero-distance,
   .pc-home .pc-drag-hint {
     display: none;
+  }
+}
+/* Browse wider on large displays; keep artwork anchored and size it separately. */
+@media (min-width: 1600px) {
+  .pc-home {
+    --home-card-height: clamp(228px, min(14vw, 26svh), 320px);
+  }
+  .pc-home .pc-food-card-image {
+    --food-art-width: calc(var(--home-card-height) + 5px);
+    height: var(--home-card-height);
+  }
+}
+@media (min-width: 1600px) and (min-height: 900px) {
+  .pc-home {
+    --home-hero-height: clamp(440px, calc(100svh - 760px), 560px);
+  }
+  .pc-home .pc-hero-copy h1 {
+    font-size: clamp(55px, calc(var(--home-hero-height) * 0.12), 64px);
+  }
+  .pc-home .pc-hero-price {
+    font-size: clamp(56px, calc(var(--home-hero-height) * 0.12), 64px);
   }
 }
 .pc-app :is(main, section, article, aside, fieldset, form) {

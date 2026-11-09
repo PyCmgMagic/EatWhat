@@ -2819,7 +2819,7 @@ export function useDesignBridge(
       (screen === "G-PhoneLogin" && target === "G-RegisterConfirm.dc.html") ||
       (screen === "G-RegisterConfirm" && target === "G-Verify.dc.html")
     ) {
-      unavailable("手机号验证码注册");
+      nav("/auth/register");
       return;
     }
     if (
@@ -3149,13 +3149,12 @@ export function useDesignBridge(
       {denied && <div className="mobile-denied-curtain" />}
       {screen === "G-PhoneLogin" && (
         <div className="mobile-supported-register">
-          <Pending />
-          <p>手机验证码注册正在准备中，敬请期待。</p>
+          <p>使用手机验证码登录或注册。</p>
           <button
             className="mobile-inline-link"
-            onClick={() => nav("/auth/username-register")}
+            onClick={() => nav("/auth/register")}
           >
-            使用用户名和密码注册
+            手机登录 / 注册
           </button>
         </div>
       )}

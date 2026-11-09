@@ -140,6 +140,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         raw: true,
         public: true,
       }),
+    /** @deprecated New accounts register through phoneCode and phoneLogin. */
     register: (body: Schema["RegisterDTORequest"]) =>
       request<Envelope<Schema["AuthReply"]["data"]>>("/auth/register", {
         method: "POST",

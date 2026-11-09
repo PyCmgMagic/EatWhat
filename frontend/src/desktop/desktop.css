@@ -1093,6 +1093,8 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   object-fit: cover;
 }
 .pc-dish-info {
+  display: flex;
+  flex-direction: column;
   padding: var(--dish-padding);
 }
 .pc-dish-heading {
@@ -1100,6 +1102,69 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   align-items: center;
   justify-content: space-between;
   color: #8a7e76;
+}
+.pc-dish-tools {
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 24px;
+  background: #f7f4f1;
+}
+.pc-dish-tools .pc-icon-button {
+  width: 38px;
+  height: 36px;
+  color: #64564c;
+}
+.pc-dish-tools .pc-icon-button:is(:hover, [aria-pressed="true"]),
+.pc-dish-more[open] summary {
+  background: #eae3da;
+  color: var(--pc-ink);
+}
+.pc-dish-more {
+  position: relative;
+}
+.pc-dish-more summary {
+  list-style: none;
+  cursor: pointer;
+}
+.pc-dish-more summary::-webkit-details-marker {
+  display: none;
+}
+.pc-dish-more-panel {
+  position: absolute;
+  z-index: 5;
+  inset: calc(100% + 6px) 0 auto auto;
+  width: 160px;
+  padding: 5px;
+  border: 1px solid #e8e0d8;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 8px 24px #3927141a;
+}
+.pc-dish-more-panel :is(a, button) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  color: #44382f;
+  font: inherit;
+  font-size: 14px;
+}
+.pc-dish-more-panel :is(a, button):is(:hover, :focus-visible) {
+  background: #f7f4f1;
+}
+.pc-dish-owner-actions {
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #eee8e2;
+}
+.pc-dish-owner-actions button {
+  color: #9c422d;
 }
 .pc-dish-info h1 {
   font-size: clamp(28px, 3.8svh, 36px);
@@ -1154,10 +1219,31 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
 .pc-dish-actions > .pc-button:last-child {
   flex: 1;
 }
-.pc-taste-section h2 {
+.pc-taste-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-bottom: 8px;
+}
+.pc-taste-heading h2 {
   font-size: 19px;
   font-weight: 900;
-  margin: 0 0 6px;
+  margin: 0;
+}
+.pc-discussion-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  color: #6e5e51;
+  font-size: 13px;
+}
+.pc-discussion-jump:is(:hover, :focus-visible) {
+  color: var(--pc-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .pc-taste-cloud {
   display: flex;
@@ -1193,6 +1279,11 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   font-size: 11px;
   color: #8a7e76;
 }
+.pc-dish-attribution {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid #efe9e4;
+}
 .pc-contributor > a {
   display: flex;
   align-items: center;
@@ -1212,24 +1303,8 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   font-size: 13px;
   line-height: 1.7;
   white-space: pre-wrap;
-  margin: 12px 0 var(--dish-gap);
+  margin: 10px 0 0;
   color: #4a3c31;
-}
-.pc-detail-secondary {
-  display: flex;
-  align-items: center;
-  gap: 25px;
-  font-size: 11px;
-  color: #8a7e76;
-}
-.pc-detail-secondary > button {
-  padding: 0;
-  background: transparent;
-  border: 0;
-  font-size: 11px;
-}
-.pc-detail-secondary .design-pending {
-  margin-left: 5px;
 }
 .pc-restaurant-hero {
   height: 400px;
