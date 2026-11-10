@@ -1,0 +1,43 @@
+.workspace-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 9px 14px;
+  box-sizing: border-box;
+  border: 1px solid #e6ded8;
+  border-radius: 999px;
+  background: #fff;
+  color: #231c18;
+  font:
+    650 13px "Noto Sans SC Variable",
+    sans-serif;
+  text-decoration: none;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+.workspace-switch:hover {
+  background: #f4efeb;
+}
+.workspace-switch:focus-visible {
+  outline: 2px solid #231c18;
+  outline-offset: 3px;
+}
+.workspace-switch svg {
+  flex-shrink: 0;
+}
+.mobile-admin-entry {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0 16px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #efe9e4;
+}
+@media (max-width: 1100px) {
+  .pc-header-actions .workspace-switch {
+    padding-inline: 10px;
+    font-size: 12px;
+    gap: 5px;
+  }
+}

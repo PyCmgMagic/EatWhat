@@ -7,6 +7,7 @@ export type RestaurantFilters = NonNullable<
 >;
 import type { CaptchaRunner } from "./captcha";
 import { createV4Api } from "./v4";
+import { createCommentsApi } from "./comments";
 import {
   createRequester,
   ApiError,
@@ -107,6 +108,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
   };
   return {
     ...createV4Api(request, captcha),
+    ...createCommentsApi(request),
     recordActivity: (signal?: AbortSignal) =>
       data<Schema["DailyUseResponse"]>("/user/activity", {
         method: "POST",
@@ -213,7 +215,9 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         public: true,
         signal,
       }),
-    passwordConflictReset: (body: Schema["ResetRequest"]) =>
+    passwordConflictReset: (
+      body: Schema["AccountPasswordRecoveryResetRequest"],
+    ) =>
       request<void>("/auth/password-conflict/reset", {
         method: "POST",
         body,
@@ -275,14 +279,16 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         public: true,
       }),
     consent: () => data<Schema["ConsentStatusViewResponse"]>("/auth/consent"),
-    grantConsent: (body: Schema["GrantRequestRequest"]) =>
+    grantConsent: (body: Schema["AccountConsentGrantRequestRequest"]) =>
       request<void>("/auth/consent/grant", {
         method: "POST",
         body,
         public: !!body.proof,
       }),
     withdrawConsent: () => post("/auth/consent/withdraw"),
-    withdrawConsentWithPassword: (body: Schema["WithdrawalRequestRequest"]) =>
+    withdrawConsentWithPassword: (
+      body: Schema["AccountConsentWithdrawalRequestRequest"],
+    ) =>
       request<Schema["ConsentViewResponse"] | null>(
         "/auth/consent/withdraw-with-password",
         {
@@ -490,7 +496,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       ),
     resolveObjectConflict: (
       id: string,
-      body: Schema["ResolveHeadRequestRequest"],
+      body: Schema["CatalogConflictResolveHeadRequestRequest"],
     ) =>
       data<Schema["ResolutionResultResponse"]>(
         `/admin/sync/catalog/conflicts/objects/${encodeURIComponent(id)}/resolve`,
@@ -506,7 +512,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       ),
     resolveCatalogConflict: (
       id: string,
-      body: Schema["ResolveRequestRequest"],
+      body: Schema["CatalogConflictResolveRequestRequest"],
     ) =>
       data<Schema["ResolutionResultResponse"]>(
         `/admin/sync/catalog/conflicts/${encodeURIComponent(id)}/resolve`,
@@ -514,7 +520,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       ),
     resolveCatalogDecision: (
       id: string,
-      body: Schema["ResolveDecisionRequestRequest"],
+      body: Schema["CatalogConflictResolveDecisionRequestRequest"],
     ) =>
       data<Schema["ResolutionResultResponse"]>(
         `/admin/sync/catalog/conflicts/decisions/${encodeURIComponent(id)}/resolve`,
@@ -533,7 +539,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       data<Schema["ConflictResponse"][]>("/admin/sync/profile-conflicts"),
     resolveProfileConflict: (
       id: string,
-      body: Schema["ProfileConflictControllerResolveRequestRequest"],
+      body: Schema["ResolveRequestRequest"],
     ) =>
       post(
         `/admin/sync/profile-conflicts/${encodeURIComponent(id)}/resolve`,
@@ -543,10 +549,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       data<Schema["AuthorizationReviewResponse"][]>(
         "/admin/sync/profile-conflicts/authorization-reviews",
       ),
-    resolveProfileReview: (
-      id: string,
-      body: Schema["ProfileConflictControllerResolveRequestRequest"],
-    ) =>
+    resolveProfileReview: (id: string, body: Schema["ResolveRequestRequest"]) =>
       post(
         `/admin/sync/profile-conflicts/authorization-reviews/${encodeURIComponent(id)}/resolve`,
         body,

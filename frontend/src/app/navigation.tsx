@@ -62,7 +62,11 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
         windowY: 0,
         panelY: 0,
       };
-      if (action === "POP" || previous?.back === address) {
+      if (
+        action === "POP" ||
+        previous?.back === address ||
+        (loc.state as { workspaceSwitch?: boolean } | null)?.workspaceSwitch
+      ) {
         const saved = positions.current.get(address);
         if (saved) entry = { ...saved, back: saved.back };
       }

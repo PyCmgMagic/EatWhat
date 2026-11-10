@@ -27,6 +27,7 @@ import {
 } from "./runtime";
 import { recoveryCommands } from "../api/recovery";
 import { ToastViewport, useToasts } from "./toast";
+import { clearCommentDrafts } from "./drafts";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -146,6 +147,7 @@ function StateProvider({ children }: { children: ReactNode }) {
       if (observed === next) return;
       observed = next;
       recoveryCommands.clear();
+      clearCommentDrafts();
       // clear() also cancels pending queries, so data from the previous account
       // cannot repopulate this tab after another tab changes the shared login.
       queryClient.clear();
@@ -160,6 +162,7 @@ function StateProvider({ children }: { children: ReactNode }) {
       // Revocation and mobile changes deliberately expire the old session.
       // Keep their in-memory capabilities available to the recovery routes.
       writeSession(null);
+      clearCommentDrafts();
       setSession(null);
       queryClient.clear();
       toast("登录已过期，请重新登录。");
@@ -174,8 +177,10 @@ function StateProvider({ children }: { children: ReactNode }) {
     // completes (comments, filters and scroll position belong to that page).
     // Logout/expiry already clear private data; replacing an existing identity
     // still requires a full reset to avoid showing another account's data.
-    if (readSession()) queryClient.clear();
-    else queryClient.removeQueries({ queryKey: ["me"], exact: true });
+    if (readSession()) {
+      queryClient.clear();
+      clearCommentDrafts();
+    } else queryClient.removeQueries({ queryKey: ["me"], exact: true });
     writeSession(s);
     setSession(readSession());
     const signingIn = clientForSession(s);
@@ -198,6 +203,7 @@ function StateProvider({ children }: { children: ReactNode }) {
     }
   };
   const clearLocalSession = async () => {
+    clearCommentDrafts();
     recoveryCommands.clear();
     writeSession(null);
     queryClient.clear();

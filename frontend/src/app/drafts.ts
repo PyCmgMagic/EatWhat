@@ -54,6 +54,27 @@ export function removeDraft(key: string) {
   }
 }
 
+/** Comment drafts and uncertain commands belong to one authenticated lifetime. */
+export function clearCommentDrafts() {
+  for (const [key, value] of memory) {
+    if (!key.startsWith(prefix + "comments:")) continue;
+    if (Array.isArray(value))
+      for (const item of value) {
+        if (typeof item?.url === "string" && item.url.startsWith("blob:"))
+          URL.revokeObjectURL(item.url);
+      }
+    memory.delete(key);
+  }
+  try {
+    for (let i = sessionStorage.length - 1; i >= 0; i--) {
+      const key = sessionStorage.key(i);
+      if (key?.startsWith(prefix + "comments:")) sessionStorage.removeItem(key);
+    }
+  } catch {
+    /* Storage can be unavailable. */
+  }
+}
+
 export function useSessionDraft<T>(key: string, initial: T) {
   return useDraftState(key, initial, true);
 }

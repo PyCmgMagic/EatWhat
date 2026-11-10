@@ -68,7 +68,7 @@ export function createV4Api(
       ),
     resolveFeedback: (
       id: number,
-      body: Schema["ResolveInputRequest"],
+      body: Schema["FeedbackResolveInputRequest"],
       idempotencyKey: string,
     ) =>
       data<Reply<"Result_ResolvedResponse">>(
@@ -106,12 +106,15 @@ export function createV4Api(
         `/admin/remote-config/announcements`,
         { query: query as Query },
       ),
-    createAnnouncement: (body: Schema["SaveAnnouncementRequest"]) =>
+    createAnnouncement: (body: Schema["RemoteConfigSaveAnnouncementRequest"]) =>
       data<Reply<"Result_AdminAnnouncementResponse">>(
         `/admin/remote-config/announcements`,
         { method: "POST", body },
       ),
-    editAnnouncement: (id: number, body: Schema["SaveAnnouncementRequest"]) =>
+    editAnnouncement: (
+      id: number,
+      body: Schema["RemoteConfigSaveAnnouncementRequest"],
+    ) =>
       data<Reply<"Result_AdminAnnouncementResponse">>(
         `/admin/remote-config/announcements/${encodeURIComponent(id)}`,
         { method: "PUT", body },
@@ -126,25 +129,27 @@ export function createV4Api(
         `/admin/remote-config/audit`,
         { query: query as Query },
       ),
-    saveRemoteSettings: (body: Schema["SaveSettingsRequest"]) =>
+    saveRemoteSettings: (body: Schema["RemoteConfigSaveSettingsRequest"]) =>
       data<Reply<"Result_SettingsResponse">>(`/admin/remote-config/settings`, {
         method: "PUT",
         body,
       }),
     saveVersionLine: (
       platform: string,
-      body: Schema["SaveVersionLineRequest"],
+      body: Schema["RemoteConfigSaveVersionLineRequest"],
     ) =>
       data<Reply<"Result_AdminVersionLineResponse">>(
         `/admin/remote-config/versions/${encodeURIComponent(platform)}`,
         { method: "PUT", body },
       ),
-    topicCommand: (body: Schema["CommandRequest"]) =>
+    topicCommand: (body: Schema["TopicCommandRequest"]) =>
       data<Reply<"Result_TopicModelsAcceptedResponse">>(
         `/admin/topics/commands`,
         { method: "POST", body },
       ),
-    consentOfferWithPassword: (body: Schema["WithdrawalRequestRequest"]) =>
+    consentOfferWithPassword: (
+      body: Schema["AccountConsentWithdrawalRequestRequest"],
+    ) =>
       request<Envelope<Schema["ConsentChallengeResponse"]>>(
         `/auth/consent/offer-with-password`,
         { method: "POST", body, public: true, raw: true },
@@ -182,7 +187,7 @@ export function createV4Api(
         { method: "DELETE" },
       ),
     createCatalogError: (
-      body: Schema["CatalogErrorInputRequest"],
+      body: Schema["FeedbackCatalogErrorInputRequest"],
       idempotencyKey: string,
     ) =>
       data<Reply<"Result_FeedbackAcceptedResponse">>(
@@ -218,7 +223,7 @@ export function createV4Api(
         {},
       ),
     createReport: (
-      body: Schema["ReportInputRequest"],
+      body: Schema["FeedbackReportInputRequest"],
       idempotencyKey: string,
     ) =>
       data<Reply<"Result_FeedbackAcceptedResponse">>(`/feedback/reports`, {
@@ -448,9 +453,7 @@ export function createV4Api(
         `/topics/${encodeURIComponent(id)}`,
         {},
       ),
-    requestCancellation: (
-      body: Schema["LifecycleCancellationControllerRequestRequest"],
-    ) =>
+    requestCancellation: (body: Schema["RequestRequest"]) =>
       data<Reply<"Result_LifecycleRequestStatusResponse">>(
         `/user/cancellation`,
         { method: "POST", body },
@@ -522,7 +525,7 @@ export function createV4Api(
         },
       ),
     mobileStatus: (command: string) =>
-      data<Reply<"Result_StatusResponse">>(
+      data<Reply<"Result_CredentialMobileCommandsStatusResponse">>(
         `/user/mobile/commands/${encodeURIComponent(command)}`,
         {},
       ),

@@ -1,5 +1,4 @@
 import { Link, useLocation } from "react-router-dom";
-import { isDemo } from "../app/runtime";
 import "./profile-section-nav.css";
 
 const sections = {
@@ -46,9 +45,7 @@ export function ProfileSectionNav({
   const location = useLocation();
   const { pathname, search } = location;
   const config = sections[section];
-  const items = config.items.filter(
-    (item) => isDemo || item.to !== "/me/shares?tab=comments",
-  );
+  const items = config.items;
   const current =
     section === "shares" && pathname === "/me/shares"
       ? pathname +

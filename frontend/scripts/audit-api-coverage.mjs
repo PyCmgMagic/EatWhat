@@ -8,7 +8,10 @@ const root = fileURLToPath(new URL("../../", import.meta.url));
 const sourceRoot = path.join(root, "frontend/src");
 const read = (file) => fs.readFileSync(file, "utf8");
 const relative = (file) => path.relative(root, file).replaceAll("\\", "/");
-const contractPath = path.join(root, "docs/EatWhat 业务服务 APIv6.openapi.json");
+const contractPath = path.join(
+  root,
+  "docs/EatWhat 业务服务 APIv7.openapi.json",
+);
 const spec = parse(read(contractPath));
 const verbs = ["get", "post", "put", "patch", "delete", "head", "options"];
 const operations = Object.entries(spec.paths).flatMap(([template, item]) =>
@@ -278,7 +281,7 @@ const report = {
   operations: rows,
 };
 fs.writeFileSync(
-  path.join(root, "output/api-v6-coverage-20261108.json"),
+  path.join(root, "output/api-v7-coverage-20261110.json"),
   JSON.stringify(report, null, 2) + "\n",
 );
 console.log(

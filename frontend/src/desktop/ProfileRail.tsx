@@ -1,3 +1,4 @@
+import WorkspaceSwitch from "../admin/WorkspaceSwitch";
 import { Fragment } from "react";
 import { BRAND_SLOGAN } from "../app/brand";
 import { Link } from "react-router-dom";
@@ -81,12 +82,7 @@ export default function ProfileRail({
         ))}
       </nav>
       <div className="profile-rail-tools">
-        {user?.role === "admin" && (
-          <Link to="/admin/v4">
-            <Icon name="tool" size={17} />
-            管理工作台
-          </Link>
-        )}
+        <WorkspaceSwitch />
         <span>{BRAND_SLOGAN}</span>
       </div>
     </aside>

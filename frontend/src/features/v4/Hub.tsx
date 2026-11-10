@@ -422,13 +422,13 @@ export default function Features() {
         {user?.role === "admin" && (
           <Link
             className="feature-admin"
-            to="/admin/v4"
+            to="/admin"
             state={{ featuresReturnTo }}
           >
             <Icon name="tool" size={21} />
             <span>
-              <strong>内容与运营管理</strong>
-              <small>审核分享、处理反馈与维护专题</small>
+              <strong>管理后台</strong>
+              <small>内容、账号与站点运营</small>
             </span>
             <span>
               进入工作台

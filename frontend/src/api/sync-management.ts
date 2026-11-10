@@ -49,7 +49,7 @@ function winner(value: string, options: string[], decision: ResolutionChoice) {
 }
 export function candidateVersions(
   value: unknown,
-): Schema["CandidateVersionRequest"][] {
+): Schema["CatalogConflictCandidateVersionRequest"][] {
   const rows = recordList(value);
   if (!rows.length) throw new Error("当前没有可核对的候选版本，请重新读取。");
   const versions = rows.map((row) => ({
@@ -66,7 +66,7 @@ export function catalogResolution(
   selected: string,
   selectedWinner: string,
   reason: string,
-): Schema["ResolveRequestRequest"] {
+): Schema["CatalogConflictResolveRequestRequest"] {
   const decision = choice(selected),
     candidates = candidateVersions(row.candidates);
   return {
@@ -87,7 +87,7 @@ export function objectResolution(
   selected: string,
   selectedWinner: string,
   reason: string,
-): Schema["ResolveHeadRequestRequest"] {
+): Schema["CatalogConflictResolveHeadRequestRequest"] {
   const decision = choice(selected),
     heads = recordList(row.heads).map((head) => ({
       operationId: uuid(head.operationId, "操作编号"),
@@ -116,7 +116,7 @@ export function decisionResolution(
   selected: string,
   selectedWinner: string,
   reason: string,
-): Schema["ResolveDecisionRequestRequest"] {
+): Schema["CatalogConflictResolveDecisionRequestRequest"] {
   const decision = choice(selected);
   if (
     !Array.isArray(row.candidateOperations) ||
@@ -141,7 +141,7 @@ export function profileResolution(
   selected: string,
   selectedWinner: string,
   reason: string,
-): Schema["ResolveRequestRequest"] {
+): Schema["CatalogConflictResolveRequestRequest"] {
   const candidates = candidateVersions(parseJson(candidateJson, "候选版本")),
     decision = choice(selected);
   return {

@@ -11,7 +11,7 @@
     "typecheck": "tsc -b",
     "prototype:generate": "python scripts/compile-prototype.py",
     "api:audit": "node scripts/audit-api-coverage.mjs",
-    "api:diff": "node scripts/audit-api-v4.mjs \"docs/EatWhat 业务服务 APIv5.yaml\" \"docs/EatWhat 业务服务 APIv6.openapi.json\" output/api-v6-diff-20261108.json",
+    "api:diff": "node scripts/audit-api-v4.mjs \"docs/EatWhat 业务服务 APIv6.openapi.json\" \"docs/EatWhat 业务服务 APIv7.openapi.json\" output/api-v7-diff-20261110.json",
     "api:generate": "node scripts/generate-api.mjs",
     "api:access": "node scripts/generate-access-rules.mjs",
     "api:access:check": "node scripts/generate-access-rules.mjs --check"

@@ -1,4 +1,11 @@
-import { demoGrowth, type DemoGrowth } from "./growth";
+import { readSession } from "../app/runtime";
+import {
+  handleComments,
+  isCommentPath,
+  seedComments,
+  type DemoComments,
+} from "./comments-v7";
+import { demoGrowth, demoGrowthProgress, type DemoGrowth } from "./growth";
 import type { Transport, Query } from "../api/client";
 import { ApiError } from "../api/client";
 import type {
@@ -57,6 +64,7 @@ const restaurants: Restaurant[] = demoDishes
   }));
 type State = {
   growth?: DemoGrowth;
+  commentsV7?: DemoComments;
   v4?: DemoV4;
   sync?: DemoSync;
   syncContractVersion?: number;
@@ -375,12 +383,32 @@ export const demoTransport: Transport = async (path, options) => {
       "/admin/engagement/stats",
     ].includes(path)
   ) {
-    if (path.startsWith("/admin/") && s.user.role !== "admin")
+    if (
+      path.startsWith("/admin/") &&
+      new URLSearchParams(location.search).get("persona") !== "admin"
+    )
       throw new ApiError("需要管理员身份。", 20004, 403);
     s.growth ??= { entries: [] };
     const result = demoGrowth(s.growth, path, q);
     save();
     return { code: 0, data: structuredClone(result), msg: "success" };
+  }
+  if (isCommentPath(path)) {
+    s.commentsV7 ??= seedComments(s.foods, s.user);
+    const persona = new URLSearchParams(location.search).get("persona");
+    const data = handleComments(
+      s.commentsV7,
+      path,
+      options,
+      {
+        user: { ...s.user, verified: persona !== "unverified" },
+        authenticated: !!readSession(),
+        admin: persona === "admin",
+      },
+      s.foods,
+    );
+    save();
+    return structuredClone({ code: 0, data, msg: "ok", timestamp: Date.now() });
   }
   const v4 = handleV4(s, path, options, proofHash);
   if (v4 !== undefined) {
@@ -647,6 +675,8 @@ export const demoTransport: Transport = async (path, options) => {
     const persona = new URLSearchParams(location.search).get("persona");
     result = {
       ...s.user,
+      level: demoGrowthProgress((s.growth ??= { entries: [] })).level,
+      totalExperience: demoGrowthProgress(s.growth).totalExperience,
       hasPassword: s.user.hasPassword ?? true,
       role: persona === "admin" ? "admin" : "user",
       verified: persona !== "unverified",
@@ -1098,6 +1128,10 @@ export const demoTransport: Transport = async (path, options) => {
     result = {
       displayName:
         Number(q.userId) === 10 ? s.user.displayName : "阿圆不想早八",
+      level:
+        Number(q.userId) === s.user.id
+          ? demoGrowthProgress((s.growth ??= { entries: [] })).level
+          : 3,
       fansCount: 3,
       followingsCount: 6,
       earnedLikes: 96,

@@ -43,11 +43,11 @@ function setup() {
   };
 }
 describe("shared request permissions", () => {
-  it("keeps APIv6 public and optional-login operations accessible despite security export conflicts", () => {
+  it("keeps APIv7 public and optional-login operations accessible despite security export conflicts", () => {
     const spec = JSON.parse(
       readFileSync(
         new URL(
-          "../../../docs/EatWhat 业务服务 APIv6.openapi.json",
+          "../../../docs/EatWhat 业务服务 APIv7.openapi.json",
           import.meta.url,
         ),
         "utf8",
@@ -64,7 +64,7 @@ describe("shared request permissions", () => {
         );
         if (op.summary?.includes("可选登录")) optional++;
       }
-    expect(optional).toBe(23);
+    expect(optional).toBe(30);
   });
   it("rejects passive activity for guests without opening a login dialog", async () => {
     const s = setup();
@@ -79,7 +79,7 @@ describe("shared request permissions", () => {
     const spec = parse(
       readFileSync(
         new URL(
-          "../../../docs/EatWhat 业务服务 APIv6.openapi.json",
+          "../../../docs/EatWhat 业务服务 APIv7.openapi.json",
           import.meta.url,
         ),
         "utf8",

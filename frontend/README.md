@@ -38,7 +38,7 @@ npm run dev
 
 ```powershell
 npm run prototype:generate  # prototype 更新后重新生成，需 Python 3 标准库
-npm run api:generate        # 从 ../docs/EatWhat 业务服务 APIv6.openapi.json 生成类型
+npm run api:generate        # 从 ../docs/EatWhat 业务服务 APIv7.openapi.json 生成类型
 npm run typecheck
 npm test
 pnpm build                  # 清理旧 dist、构建并生成时间戳 ZIP
@@ -61,13 +61,20 @@ npm run preview             # 生产产物，5174
 
 业务组件直接调用 `useApp().api`。请求层 `src/api/access.ts` 根据统一规则，在受保护的写请求发出前处理登录和学生认证；认证弹窗、返回地址及取消后的焦点恢复由根级 `ActionAccessPrompts` 处理。页面无需逐个添加认证判断。打开编辑器或选择面板前如需提前提示，可用 `useActionAccess({ path, options })` 查询同一规则。
 
-规则来自 APIv6 契约的权限声明与公开/可选登录说明，保存为 `src/api/access-rules.generated.ts`。`npm run api:generate` 同步生成类型和权限；`npm run api:access` 单独更新权限，`npm run api:access:check` 检查是否与契约一致，构建也会执行此检查。上传按 `biz` 区分：头像、反馈只需登录，菜品、店铺、活动和评论图片需要学生认证。取消收藏等操作保留契约规定的登录要求。
+规则来自 APIv7 契约的权限声明与公开/可选登录说明，保存为 `src/api/access-rules.generated.ts`。`npm run api:generate` 同步生成类型和权限；`npm run api:access` 单独更新权限，`npm run api:access:check` 检查是否与契约一致，构建也会执行此检查。上传按 `biz` 区分：头像、反馈只需登录，菜品、店铺、活动和评论图片需要学生认证。取消收藏等操作保留契约规定的登录要求。
 
 被拦截的操作抛出 `AccessRequiredError`，不会返回成功或在认证后自动重试。公共任务组件会隐藏已由弹窗处理的重复错误；调用方不要把该异常转换为成功结果。后台读取继续使用页面权限状态，避免刷新数据时主动弹窗。服务端明确返回“用户未验证”时也会统一引导；一般 403、管理员权限、封禁、验证码和其他业务状态错误不归为学生认证。服务端仍负责最终授权。
 
 网页学生认证的服务端回调固定为 `/home?result=success|failure&code=...`。应用启动前统一转换为 `/#/verify?result=...&code=...`，显示认证结果并重新查询 `/user/info`，不凭 URL 判定认证成功。发起认证时短期保存账号 ID 和站内来源地址，支持 `noopener` 新标签页回调及结果页刷新；成功后可返回原页面，无来源时返回账号与安全。来源记录不含令牌或学校凭据，30 分钟过期，账号不匹配时不恢复。原认证页面重新获得焦点时也会刷新状态。
 
-## 当前交付验证（2026-11-09）
+## 当前交付验证（2026-11-10）
+
+- 61 个测试文件、515 项测试通过；TypeScript、权限规则、201 项客户端 API 覆盖检查与生产构建通过。
+- `/admin` 使用独立后台布局，16 个管理模块统一导航；桌面显示侧栏，手机使用抽屉。前台桌面页头和手机个人中心提供管理员专属入口，后台页头可返回前台，保留会话和两侧位置。旧 `/admin?tab=…`、`/admin/v4?tab=…` 链接自动迁移并保留查询条件。
+- `scripts/admin-workspace.js` 验证 360/390/768/1280/1440px、16 个模块、切换与状态保留、抽屉键盘操作、旧链接及游客/普通用户拒绝访问；`scripts/api-v7.js` 回归评论、回复、点赞、审核公开和本人删除。均使用隔离演示，零真实业务请求。细节见 [独立后台与前后台切换](../docs/独立后台与前后台切换-20261110.md)。
+- APIv7 评论、晒图、我的评论及等级字段接入见 [APIv7 接入与验收](../docs/APIv7接入与验收-20261110.md)。真实账号与后端写入流程仍需测试环境联调。
+
+## 前次交付验证（2026-11-09）
 
 - 50 个测试文件、431 项单元与契约测试通过，TypeScript 检查、权限规则与契约一致性检查、生产构建通过。
 - 首页恢复移动端圆盘绕圈切换，展示完整推荐结果，桌面舞台高度随窗口适配；缺失或加载失败的菜品图片使用明确标注的 SVG 兜底。移动端底栏使用玻璃质感，成长信息并入个人页头部，浏览器标题使用产品名称。
@@ -83,7 +90,7 @@ npm run preview             # 生产产物，5174
 - 浏览器验证覆盖 320/390/520px 手机布局与桌面、触摸拖动、失败重试及隔离的模拟发布。业务写请求使用模拟接口；地图交互使用真实百度地图只读资源。说明及脚本索引见 [本轮修复与验证](../docs/移动端体验修复与验证-20261108.md)。
 - 本地环境文件、浏览器会话、截图、日志和构建 ZIP 不提交到 Git。完整真实账号业务流程和生产部署仍需在目标环境验收。
 
-`../output/`、`output/` 和 `dist/` 为本地产物目录，不纳入 Git；下文引用的报告、截图及日志是运行验收脚本后生成的本地记录。`scripts/` 中的可复用验收脚本及 `src/` 中的测试继续纳入版本管理。后续各日期段落保留当时的测试数量与边界，以本节为本次交付结果。
+`../output/`、`output/` 和 `dist/` 为本地产物目录，不纳入 Git；下文引用的报告、截图及日志是运行验收脚本后生成的本地记录。`scripts/` 中的可复用验收脚本及 `src/` 中的测试继续纳入版本管理。历史日期段落保留当时的测试数量与边界，以最新交付验证为准。
 
 ## 配置后端
 
@@ -95,7 +102,7 @@ npm run preview             # 生产产物，5174
 
 多标签页验收使用 `scripts/session-sync.js`（Playwright CLI `run-code --filename`，运行方式见下文），在独立浏览器上下文中拦截全部业务请求，覆盖迁移、新标签页、账号切换、退出、过期、旧请求竞态及演示隔离。
 
-复制 `.env.example` 为 `.env.local`，配置可用测试环境后重启服务。现行契约为 `../docs/EatWhat 业务服务 APIv6.openapi.json`（内部版本号尚未更新，以文件和操作差异识别），旧版契约保留作历史对照。212 项操作中，189 项客户端操作全部已有封装，另有 9 项后端回调和 14 项此前明确排除的活动操作。APIv6 新增成长、经验记录与管理端活跃统计，接入范围和验收见 [APIv6 规划与验收](../docs/APIv6接入规划与验收-20261108.md)。APIv5 已移除发布请求中的 `removeBackground` 和管理配置中的 `autoCutout`，生成类型和演示数据同步更新。功能导航为 `/?demo=1#/features`，管理页面为 `/?demo=1&persona=admin#/admin/v4`。接入及部署边界见 [APIv4 接入与验收](../docs/APIv4接入与验收-20261102.md)。
+复制 `.env.example` 为 `.env.local`，配置可用测试环境后重启服务。现行契约为 `../docs/EatWhat 业务服务 APIv7.openapi.json`（内部版本号尚未更新，以文件和操作差异识别），旧版契约保留作历史对照。224 项操作中，201 项客户端操作全部已有封装，另有 9 项后端回调和 14 项此前明确排除的活动操作。APIv7 新增评论、回复、晒图、个人提交、点赞及评论审核，并在用户资料返回等级与经验，详见 [APIv7 接入与验收](../docs/APIv7接入与验收-20261110.md)。APIv6 已接入成长、经验记录与管理端活跃统计，接入范围和验收见 [APIv6 规划与验收](../docs/APIv6接入规划与验收-20261108.md)。APIv5 已移除发布请求中的 `removeBackground` 和管理配置中的 `autoCutout`，生成类型和演示数据同步更新。功能导航为 `/?demo=1#/features`，管理页面为 `/?demo=1&persona=admin#/admin`，旧管理链接继续兼容。接入及部署边界见 [APIv4 接入与验收](../docs/APIv4接入与验收-20261102.md)。
 
 当前本机已配置 `API_PROXY_TARGET=https://eat.v50to.you/api`，浏览器请求同源 `/api`。例如 `/api/foods/list` 转发为 `https://eat.v50to.you/api/foods/list`，内层控制器前缀继续保留。新域名的连通性记录见 [后端地址与连通性](../docs/后端地址与连通性-20261023.md)。直接跨域部署时需检查 CORS，详见 [APIv2 接入与验收](../docs/APIv2接入与验收-20261026.md)。
 
@@ -103,14 +110,14 @@ npm run preview             # 生产产物，5174
 
 所有图片在申请上传凭证之前统一压缩（包括批量上传和演示模式）：普通图片最长边 1920px、最大 1MiB，头像最长边 768px、最大 256KiB，保持宽高比且不放大。JPEG 保持 JPEG，PNG/WebP 优先输出保留透明区域的 WebP，不支持 WebP 编码时使用 PNG。尺寸符合限制且小于 128KiB 的图片直接保留；压缩失败时提示重试。签名的文件名、类型、大小与实际上传的压缩文件一致。现有 JPG/PNG/WebP 和单张原图 10MB 的选择限制继续适用。
 
-| 变量                  | 含义                                                                 |
-| --------------------- | -------------------------------------------------------------------- |
-| `VITE_API_BASE_URL`   | API 前缀，默认 `/api`                                                |
+| 变量                  | 含义                                                                     |
+| --------------------- | ------------------------------------------------------------------------ |
+| `VITE_API_BASE_URL`   | API 前缀，默认 `/api`                                                    |
 | `API_PROXY_TARGET`    | Vite 开发/预览代理，支持完整网关路径，当前为 `https://eat.v50to.you/api` |
-| `VITE_MEDIA_BASE_URL` | 图片 key 永久读取前缀，不能用上传签名地址代替                        |
-| 学校认证地址          | 由 POST `/auth/sdu` 返回，无需固定入口配置，不拼入应用 token         |
-| `VITE_ENABLE_DEMO`    | 生产演示包开关                                                       |
-| `VITE_BAIDU_MAP_AK`   | 百度地图 JavaScript API 浏览器端 AK，存放在 `.env.local` |
+| `VITE_MEDIA_BASE_URL` | 图片 key 永久读取前缀，不能用上传签名地址代替                            |
+| 学校认证地址          | 由 POST `/auth/sdu` 返回，无需固定入口配置，不拼入应用 token             |
+| `VITE_ENABLE_DEMO`    | 生产演示包开关                                                           |
+| `VITE_BAIDU_MAP_AK`   | 百度地图 JavaScript API 浏览器端 AK，存放在 `.env.local`                 |
 
 Hash 路由支持刷新详情。开发和 Vite preview 均使用同源代理；生产静态托管仍需配置同源 API 反向代理及存储 CORS。控制器 `/api/location/...` 的内层前缀必须保留。
 
@@ -126,14 +133,14 @@ Hash 路由支持刷新详情。开发和 Vite preview 均使用同源代理；�
 
 ```powershell
 npm run api:audit           # 全量接口分类及源码消费位置
-npm run api:diff            # APIv5 → APIv6 接口与模型差异
+npm run api:diff            # APIv6 → APIv7 接口与模型差异
 ```
 
-APIv2 历史回归脚本为 `scripts/api-v2-flows.js`、`api-v2-mobile-flows.js`、`api-v2-admin-responsive.js`、`api-v2-live-contract.js`、`api-v2-production.js`，均隔离真实写入。生产检查需先执行 `npm run build` 与 `npm run preview`。历史 `latest-api-*` 和 APIv2 记录继续保留，当前契约为 APIv6，覆盖及差异报告分别为 `../output/api-v6-coverage-20261108.json` 和 `../output/api-v6-diff-20261108.json`。
+APIv2 历史回归脚本为 `scripts/api-v2-flows.js`、`api-v2-mobile-flows.js`、`api-v2-admin-responsive.js`、`api-v2-live-contract.js`、`api-v2-production.js`，均隔离真实写入。生产检查需先执行 `npm run build` 与 `npm run preview`。历史 `latest-api-*` 和 APIv2 记录继续保留，当前契约为 APIv7，覆盖及差异报告分别为 `../output/api-v7-coverage-20261110.json` 和 `../output/api-v7-diff-20261110.json`。
 
-APIv3 的授权状态查询仅返回 `status`、`identityReady`、`policyVersion`，该旧授权面板与恢复流程已于单站清理时移除，协议适配仅用于历史契约核对。Mock 查询同样只返回三字段，兼容旧本地记录并保留上传。历史 APIv4 的 `loginId` 支持字符串或数值，当前 APIv6 已收窄为字符串。APIv3 历史覆盖记录为 `../output/api-coverage-20261102.json`，差异记录为 `../output/api-v3-diff-20261102.json`，浏览器专项为 `scripts/api-v3-consent.js`。
+APIv3 的授权状态查询仅返回 `status`、`identityReady`、`policyVersion`，该旧授权面板与恢复流程已于单站清理时移除，协议适配仅用于历史契约核对。Mock 查询同样只返回三字段，兼容旧本地记录并保留上传。历史 APIv4 的 `loginId` 支持字符串或数值，当前 APIv7 已收窄为字符串。APIv3 历史覆盖记录为 `../output/api-coverage-20261102.json`，差异记录为 `../output/api-v3-diff-20261102.json`，浏览器专项为 `scripts/api-v3-consent.js`。
 
-类型生成统一使用 `npm run api:generate`，读取 APIv6 OpenAPI JSON，并兼容历史 `$ref` 的 nullable 标记。
+类型生成统一使用 `npm run api:generate`，读取 APIv7 OpenAPI JSON，并兼容历史 `$ref` 的 nullable 标记。
 
 ## 当前功能
 
@@ -144,7 +151,7 @@ APIv3 的授权状态查询仅返回 `status`、`identityReady`、`policyVersion
 - 密码与手机验证码登录、手机自动注册、用户名注册、邮箱及学校认证、资料头像、补充资料、密码首次设置/修改、手机绑定、关注粉丝、历史、隐私、消息。
 - 保留管理员维护页面。管理操作遵守服务端 admin 与对应认证要求；游客可浏览公开内容，收藏要求登录，写入标签/点赞/发布仍要求学生认证。
 
-举报、反馈、设备、换绑、注销、通知偏好和专题已按现行协议接入，真实可用性依赖后端部署及账号联调。评论 CRUD 仍待后端提供接口。常规找回密码支持先手机登录再设置密码；密码冲突恢复另有邮件申请与令牌重置入口。地图已接入百度地图官方 JSAPI 4.0，支持拖动缩放、设备定位、按后端坐标展示店铺及新店选点；缺失坐标的店铺只保留在列表中。手机裁剪页已移除自动去背景入口，普通照片按圆盘样式展示。舞台色读取优先使用云端字段，兼容旧本地记录。地图配置、坐标处理与验收见 [真实地图接入](../docs/真实地图接入-20261030.md)。
+举报、反馈、设备、换绑、注销、通知偏好和专题已按现行协议接入，真实可用性依赖后端部署及账号联调。评论、回复、晒图、点赞、提交记录、删除与审核已按 APIv7 接入。常规找回密码支持先手机登录再设置密码；密码冲突恢复另有邮件申请与令牌重置入口。地图已接入百度地图官方 JSAPI 4.0，支持拖动缩放、设备定位、按后端坐标展示店铺及新店选点；缺失坐标的店铺只保留在列表中。手机裁剪页已移除自动去背景入口，普通照片按圆盘样式展示。舞台色读取优先使用云端字段，兼容旧本地记录。地图配置、坐标处理与验收见 [真实地图接入](../docs/真实地图接入-20261030.md)。
 
 详见 [还原说明](../docs/移动端原型还原与实现.md)。尚未使用真实后端账号完成端到端联调。
 

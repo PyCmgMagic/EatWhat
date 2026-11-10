@@ -4,7 +4,7 @@ import { parse } from "yaml";
 import { writeAccessRules } from "./access-rules.mjs";
 
 const source = new URL(
-  "../../docs/EatWhat 业务服务 APIv6.openapi.json",
+  "../../docs/EatWhat 业务服务 APIv7.openapi.json",
   import.meta.url,
 );
 const output = new URL("../src/api/schema.d.ts", import.meta.url);

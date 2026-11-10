@@ -1,3 +1,4 @@
+import WorkspaceSwitch from "../admin/WorkspaceSwitch";
 import { useFeedbackState } from "../components/feedback";
 import { BRAND_SLOGAN } from "../app/brand";
 import { foodAuthor } from "../api/models";
@@ -293,6 +294,7 @@ function DesktopHeader() {
           ))}
         </SlidingTabs>
         <div className="pc-header-actions">
+          <WorkspaceSwitch />
           <form
             className="pc-header-search"
             role="search"
@@ -544,12 +546,6 @@ function DesktopPage({
         </FeatureAvailability>
       </DesktopGate>
     );
-  if (loc.pathname === "/admin")
-    return (
-      <DesktopSource screen={screen} auth={loc.pathname.startsWith("/auth/")}>
-        {children}
-      </DesktopSource>
-    );
   let content: ReactNode;
   if (screen === "G-NotFound") return <NotFound />;
   if (screen === "G2-Home" || screen === "G-HomePhoto")
@@ -603,10 +599,16 @@ function DiscussionRedirect() {
     // Do not let that route's deferred redirect replace a newer navigation.
     if (window.location.hash.slice(1).split("?")[0] !== loc.pathname) return;
     nav(
-      `/foods/${id}?section=comments${loc.pathname.endsWith("/write") ? "&compose=1" : ""}`,
+      (() => {
+        const search = new URLSearchParams(loc.search);
+        search.delete("foodId");
+        search.set("section", "comments");
+        if (loc.pathname.endsWith("/write")) search.set("compose", "1");
+        return `/foods/${id}?${search}`;
+      })(),
       { replace: true },
     );
-  }, [id, loc.pathname, nav]);
+  }, [id, loc.pathname, loc.search, nav]);
   return <ContentSkeleton kind="rows" count={3} />;
 }
 function DesktopSource({
@@ -1722,12 +1724,6 @@ export function DesktopShares() {
       return next;
     });
   const { api, user } = useApp(),
-    myComments = useQuery({
-      queryKey: ["demo-my-comments", user?.id],
-      queryFn: async () =>
-        (await import("../demo/comments")).myCommentEntries(user!.id!),
-      enabled: isDemo && !!user?.id,
-    }),
     query = useQuery({
       queryKey: ["foods", "mine", page],
       queryFn: () => api.myFoods(page),
@@ -1760,7 +1756,7 @@ export function DesktopShares() {
       <MotionRegion
         changeKey={
           tab === "comments"
-            ? `comments:${myComments.dataUpdatedAt}`
+            ? `comments:${page}`
             : query.isPlaceholderData
               ? undefined
               : `${tab}:${page}:${query.dataUpdatedAt}`
@@ -1769,18 +1765,9 @@ export function DesktopShares() {
         aria-busy={tab !== "comments" && query.isPlaceholderData}
         className="pc-profile-tab-content"
       >
-        {tab === "comments" && !isDemo ? (
-          <div className="profile-comments-unavailable" role="status">
-            <Icon name="comment" size={28} />
-            <h2>评论记录暂未开放</h2>
-            <p>你可以在对应菜品的详情页查看评论。</p>
-            <Link to="/me/shares" replace>
-              查看已发布的菜品
-            </Link>
-          </div>
-        ) : tab === "comments" ? (
+        {tab === "comments" ? (
           <Suspense fallback={<ContentSkeleton kind="rows" count={3} />}>
-            <MyFoodComments entries={myComments.data ?? []} />
+            <MyFoodComments />
           </Suspense>
         ) : (
           <>

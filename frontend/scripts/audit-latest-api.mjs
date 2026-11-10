@@ -9,7 +9,7 @@ const old = parse(
 );
 const latest = parse(
   fs.readFileSync(
-    new URL("../../docs/EatWhat 业务服务 APIv6.openapi.json", import.meta.url),
+    new URL("../../docs/EatWhat 业务服务 APIv7.openapi.json", import.meta.url),
     "utf8",
   ),
 );

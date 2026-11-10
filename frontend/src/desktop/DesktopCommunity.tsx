@@ -1,3 +1,4 @@
+import "../features/user-level.css";
 import { boundedText, submissionPath } from "../api/content-rules";
 import { BlockControl, UserFoods } from "../features/ApiV2";
 import { useEffect, useRef, useState } from "react";
@@ -246,7 +247,12 @@ export function DesktopUser() {
             alt=""
           />
           <Avatar large name={u.displayName} src={u.avatar} />
-          <h2>{u.displayName || "校园食友"}</h2>
+          <h2>
+            {u.displayName || "校园食友"}
+            {u.level != null && (
+              <span className="user-level-badge">Lv.{u.level}</span>
+            )}
+          </h2>
           <p>{self ? "这是其他同学眼中的你。" : "山软校园食友"}</p>
           {u.isFollowingMe && (
             <span className="pc-secondary-badge">关注了你</span>

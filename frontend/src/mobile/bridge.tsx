@@ -1,3 +1,4 @@
+import WorkspaceSwitch from "../admin/WorkspaceSwitch";
 import { useFeedbackState } from "../components/feedback";
 import { BRAND_SLOGAN } from "../app/brand";
 import { unreadCount } from "../api/notifications";
@@ -2308,7 +2309,16 @@ export function useDesignBridge(
       if (tag === "div" && st.top === "0" && st.height === "400px")
         p.className = "mobile-profile-stage";
       if (tag === "div" && st.top === "372px")
-        return <ProfileSheet>{view.children.slice(1)}</ProfileSheet>;
+        return (
+          <ProfileSheet>
+            {user?.role === "admin" && (
+              <div className="mobile-admin-entry">
+                <WorkspaceSwitch />
+              </div>
+            )}
+            {view.children.slice(1)}
+          </ProfileSheet>
+        );
       if (tag === "section" && st.top === "100px")
         return (
           <section {...p} className="mobile-profile-identity">
@@ -2397,7 +2407,7 @@ export function useDesignBridge(
         n.attrs.role === "tab"
       ) {
         p.onClick = () => {
-          if (id === 43) unavailable("评论");
+          if (id === 43) nav("/me/shares?tab=comments");
           else {
             setCategory(id === 41 ? "收藏" : "上传");
             setPage(1);

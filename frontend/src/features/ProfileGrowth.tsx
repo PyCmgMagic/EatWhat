@@ -15,8 +15,8 @@ export default function ProfileGrowth() {
   });
   const growth = progress.data;
   const percent = growthPercent(growth);
-  const level = growth?.level;
-  const experience = growth?.totalExperience;
+  const level = growth?.level ?? user?.level;
+  const experience = growth?.totalExperience ?? user?.totalExperience;
   const next = growth?.maxLevel
     ? "已达最高等级"
     : growth?.experienceToNextLevel != null

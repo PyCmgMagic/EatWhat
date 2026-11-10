@@ -14,6 +14,7 @@ import { useFoodImageRefresh } from "../features/media";
 import { DesignIcon } from "./ui";
 import { visualFor } from "./catalog";
 import "./dish-detail.css";
+import { FoodCommentPreview } from "../features/comments/Comments";
 
 type Props = {
   food: Food;
@@ -231,6 +232,7 @@ export default function DishDetail({
             </button>
           )}
         </section>
+        {food.id && <FoodCommentPreview foodId={food.id} />}
         {management}
         {footer}
       </div>

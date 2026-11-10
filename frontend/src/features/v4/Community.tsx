@@ -172,7 +172,7 @@ export function FeedbackForm({
                       {
                         restaurantId: targetId,
                         errorType:
-                          reason as Schema["CatalogErrorInputRequest"]["errorType"],
+                          reason as Schema["FeedbackCatalogErrorInputRequest"]["errorType"],
                         note: text.trim(),
                       },
                       command,
@@ -181,7 +181,8 @@ export function FeedbackForm({
                     {
                       targetType,
                       targetId,
-                      reason: reason as Schema["ReportInputRequest"]["reason"],
+                      reason:
+                        reason as Schema["FeedbackReportInputRequest"]["reason"],
                       note: text.trim(),
                     },
                     command,

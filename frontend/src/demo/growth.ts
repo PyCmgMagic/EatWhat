@@ -82,3 +82,5 @@ export function demoGrowth(
     hasNext: page * size < state.entries.length,
   };
 }
+
+export { progress as demoGrowthProgress };

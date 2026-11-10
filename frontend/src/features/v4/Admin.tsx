@@ -1,13 +1,12 @@
 import { DesignIcon as Icon } from "../../mobile/ui";
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import { useArea } from "../../app/area";
 import type { Schema } from "../../api/models";
 import {
   Card,
-  Shell,
   Field,
   Badge,
   QueryView,
@@ -18,79 +17,42 @@ import {
   timeText,
 } from "./shared";
 import { CaseContent, SubmissionContent } from "./Community";
-import { useAdminReturnTo, useAdminState } from "../../app/admin-state";
+import { useAdminState } from "../../app/admin-state";
 
+import { CommentModeration } from "../comments/Comments";
 import { EngagementStats } from "./Growth";
 
-export default function V4Admin() {
-  const { user } = useApp(),
-    [params, setParams] = useSearchParams();
-  const tab = params.get("tab") ?? "feedback";
-  const directoryReturnTo = useAdminReturnTo("/admin");
-  const setTab = (value: string) => setParams({ tab: value });
-  if (user?.role !== "admin")
-    return (
-      <Shell title="内容管理">
-        <Card>此页面需要管理员身份。</Card>
-      </Shell>
-    );
-  return (
-    <Shell title="内容与运营管理" back={directoryReturnTo}>
-      <div className="v4-admin-layout">
-        <aside className="v4-admin-sidebar">
-          <div className="v4-admin-nav-heading">
-            <Icon name="tool" size={22} />
-            <span>
-              管理导航<small>维护校园好味道</small>
-            </span>
-          </div>
-          <nav className="v4-admin-nav" aria-label="管理模块">
-            {[
-              ["feedback", "反馈举报", "feedback"],
-              ["engagement", "活跃统计", "history"],
-              ["moderation", "提交审核", "shield"],
-              ["topics", "校园专题", "topic"],
-              ["config", "远程配置", "settings"],
-              ["announcements", "公告管理", "announce"],
-              ["versions", "版本管理", "download"],
-              ["audit", "配置审计", "history"],
-            ].map(([id, label, icon]) => (
-              <button
-                key={id}
-                aria-pressed={tab === id}
-                onClick={() => setTab(id)}
-              >
-                <Icon name={icon} size={19} />
-                <span>{label}</span>
-                <Icon name="chevronRight" size={15} />
-              </button>
-            ))}
-          </nav>
-          <Link className="v4-admin-directory" to={directoryReturnTo}>
-            <Icon name="store" size={17} />
-            目录与账号管理
-            <Icon name="chevronRight" size={14} />
-          </Link>
-        </aside>
-        <div className="v4-admin-main">
-          {tab === "engagement" ? (
-            <EngagementStats />
-          ) : tab === "feedback" ? (
-            <FeedbackAdmin />
-          ) : tab === "moderation" ? (
-            <ModerationAdmin />
-          ) : tab === "topics" ? (
-            <TopicAdmin />
-          ) : tab === "announcements" ? (
-            <AnnouncementsAdmin />
-          ) : tab === "audit" ? (
-            <ConfigAudit />
-          ) : (
-            <RemoteAdmin versions={tab === "versions"} />
-          )}
-        </div>
-      </div>
-    </Shell>
+export type OperationsTab =
+  | "comments"
+  | "engagement"
+  | "feedback"
+  | "moderation"
+  | "topics"
+  | "announcements"
+  | "audit"
+  | "config"
+  | "versions";
+export default function AdminOperationsContent({
+  tab = "feedback",
+}: {
+  tab?: OperationsTab;
+}) {
+  return tab === "comments" ? (
+    <CommentModeration />
+  ) : tab === "engagement" ? (
+    <EngagementStats />
+  ) : tab === "feedback" ? (
+    <FeedbackAdmin />
+  ) : tab === "moderation" ? (
+    <ModerationAdmin />
+  ) : tab === "topics" ? (
+    <TopicAdmin />
+  ) : tab === "announcements" ? (
+    <AnnouncementsAdmin />
+  ) : tab === "audit" ? (
+    <ConfigAudit />
+  ) : (
+    <RemoteAdmin versions={tab === "versions"} />
   );
 }
 
@@ -165,7 +127,7 @@ function FeedbackAdmin() {
                 <p>
                   此案件还需通过餐厅维护更新目录。
                   <Link
-                    to={`/admin?tab=restaurants&keyword=${encodeURIComponent(detail.data.targetName ?? "")}`}
+                    to={`/admin/restaurants?keyword=${encodeURIComponent(detail.data.targetName ?? "")}`}
                   >
                     进入目录维护 →
                   </Link>
@@ -751,7 +713,7 @@ function AnnouncementsAdmin() {
             void task.run(
               () => {
                 const filter = JSON.parse(audience) as Pick<
-                  Schema["SaveAnnouncementRequest"],
+                  Schema["RemoteConfigSaveAnnouncementRequest"],
                   | "platforms"
                   | "campusIds"
                   | "minBuild"
@@ -776,7 +738,7 @@ function AnnouncementsAdmin() {
                   )
                 )
                   throw new Error("公告范围包含未知设置。");
-                const body: Schema["SaveAnnouncementRequest"] = {
+                const body: Schema["RemoteConfigSaveAnnouncementRequest"] = {
                   level,
                   title: title || undefined,
                   content,
@@ -873,17 +835,28 @@ function AnnouncementsAdmin() {
 function TopicAdmin() {
   const { api } = useApp(),
     { campusId } = useArea(),
-    [topicId, setTopicId] = useState<string>(() => crypto.randomUUID()),
-    [revision, setRevision] = useState(0),
-    [name, setName] = useState(""),
-    [intro, setIntro] = useState(""),
-    [start, setStart] = useState(""),
-    [end, setEnd] = useState(""),
-    [foodIds, setFoodIds] = useState<number[]>([]),
-    [cover, setCover] = useState<number>(),
-    [page, setPage] = useState(1),
+    [topicId, setTopicId] = useAdminState<string>(`topic:${campusId}:id`, () =>
+      crypto.randomUUID(),
+    ),
+    [revision, setRevision] = useAdminState(`topic:${campusId}:revision`, 0),
+    [name, setName] = useAdminState(`topic:${campusId}:name`, ""),
+    [intro, setIntro] = useAdminState(`topic:${campusId}:intro`, ""),
+    [start, setStart] = useAdminState(`topic:${campusId}:start`, ""),
+    [end, setEnd] = useAdminState(`topic:${campusId}:end`, ""),
+    [foodIds, setFoodIds] = useAdminState<number[]>(
+      `topic:${campusId}:foodIds`,
+      [],
+    ),
+    [cover, setCover] = useAdminState<number | undefined>(
+      `topic:${campusId}:cover`,
+      undefined,
+    ),
+    [page, setPage] = useAdminState(`topic:${campusId}:page`, 1),
     task = useCommand(),
     lookup = useCommand(true);
+  useEffect(() => {
+    setTopicId((current) => current);
+  }, [campusId]);
   const history = useQuery({
       queryKey: ["admin", "topic-history", campusId],
       queryFn: () =>
@@ -896,7 +869,6 @@ function TopicAdmin() {
     });
   return (
     <Card title="专题编辑">
-      <p>专题按校区管理，保存草稿、发布与撤回均使用独立命令和当前修订号。</p>
       <Field label="编辑已有专题">
         <select
           value=""

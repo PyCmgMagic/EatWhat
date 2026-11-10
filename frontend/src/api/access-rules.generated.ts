@@ -1,4 +1,4 @@
-// Generated from docs/EatWhat 业务服务 APIv6.openapi.json by npm run api:access.
+// Generated from docs/EatWhat 业务服务 APIv7.openapi.json by npm run api:access.
 // Do not add button-specific permission rules here.
 export const requestAccessRules = [
   [
@@ -824,6 +824,51 @@ export const requestAccessRules = [
   [
     "GET",
     "/user/growth/ledger",
+    "login"
+  ],
+  [
+    "GET",
+    "/admin/comments/moderation/queue",
+    "login"
+  ],
+  [
+    "POST",
+    "/admin/comments/moderation/review",
+    "login"
+  ],
+  [
+    "GET",
+    "/comments/submissions/my",
+    "login"
+  ],
+  [
+    "DELETE",
+    "/comments/{commentId}",
+    "login"
+  ],
+  [
+    "POST",
+    "/foods/{foodId}/comments",
+    "login"
+  ],
+  [
+    "POST",
+    "/foods/{foodId}/comments/{commentId}/replies",
+    "login"
+  ],
+  [
+    "PUT",
+    "/comments/{id}/like",
+    "login"
+  ],
+  [
+    "GET",
+    "/comments/{id}/like",
+    "login"
+  ],
+  [
+    "DELETE",
+    "/comments/{id}/like",
     "login"
   ]
 ] as const;

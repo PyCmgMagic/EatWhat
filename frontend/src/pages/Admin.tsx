@@ -2,7 +2,7 @@ import { Select } from "../components/Select";
 import { lazy, Suspense, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useAdminReturnTo, useAdminState } from "../app/admin-state";
+import { useAdminState } from "../app/admin-state";
 import {
   foodEditBody,
   restaurantEditBody,
@@ -18,16 +18,7 @@ import {
   type Restaurant,
   type Schema,
 } from "../api/models";
-import {
-  Empty,
-  ErrorState,
-  Gate,
-  Icon,
-  Intro,
-  Loading,
-  Modal,
-  Pagination,
-} from "../components/ui";
+import { ErrorState, Icon, Loading, Modal, Pagination } from "../components/ui";
 import { useTask } from "../components/useTask";
 const AccountReviews = lazy(() =>
   import("./AdminApiV2").then((m) => ({ default: m.AccountReviews })),
@@ -35,94 +26,28 @@ const AccountReviews = lazy(() =>
 const AdminPasswordReset = lazy(() =>
   import("./AdminApiV2").then((m) => ({ default: m.AdminPasswordReset })),
 );
-type AdminTab =
+export type AdminTab =
   "summary" | "restaurants" | "foods" | "tags" | "users" | "hubs" | "security";
-export default function Admin() {
-  const { user } = useApp(),
-    [params, setParams] = useSearchParams();
-  const operationsReturnTo = useAdminReturnTo("/admin/v4");
-  const requested = params.get("tab");
-  const tab = (
-    [
-      "summary",
-      "restaurants",
-      "foods",
-      "tags",
-      "users",
-      "hubs",
-      "security",
-    ].includes(requested ?? "")
-      ? requested
-      : "summary"
-  ) as AdminTab;
-  const setTab = (tab: AdminTab) => setParams({ tab });
-  return (
-    <>
-      <Intro
-        title="让校园的好味道，井井有条。"
-        subtitle="维护公共内容与账号秩序，认真对待每一份分享。"
-      />
-      <Gate verified={false}>
-        {user?.role === "admin" ? (
-          <>
-            <Link className="button" to={operationsReturnTo}>
-              反馈、提交审核与运营管理 →
-            </Link>
-            <div className="admin-tabs chips">
-              {(
-                [
-                  { id: "summary", name: "概览" },
-                  { id: "restaurants", name: "餐厅维护" },
-                  { id: "foods", name: "菜品维护" },
-                  { id: "tags", name: "公共标签" },
-                  { id: "users", name: "用户管理" },
-                  { id: "hubs", name: "区域维护" },
-                  { id: "security", name: "账号安全复核" },
-                ] as { id: AdminTab; name: string }[]
-              ).map((t) => (
-                <button
-                  className={`chip ${tab === t.id ? "active" : ""}`}
-                  key={t.id}
-                  onClick={() => setTab(t.id)}
-                >
-                  {t.name}
-                </button>
-              ))}
-            </div>
-            {tab === "summary" ? (
-              <Summary />
-            ) : tab === "restaurants" ? (
-              <AdminRestaurants />
-            ) : tab === "foods" ? (
-              <AdminFoods />
-            ) : tab === "tags" ? (
-              <AdminTags />
-            ) : tab === "users" ? (
-              <AdminUsers />
-            ) : tab === "security" ? (
-              <Suspense fallback={<Loading />}>
-                <AccountReviews />
-              </Suspense>
-            ) : (
-              <AdminHubs />
-            )}
-          </>
-        ) : (
-          <Empty
-            title="这里需要管理员身份"
-            action={
-              <Link to="/" className="btn btn-primary">
-                返回发现
-              </Link>
-            }
-          >
-            当前服务端账号没有管理员角色。
-          </Empty>
-        )}
-      </Gate>
-    </>
+export default function AdminContent({ tab = "summary" }: { tab?: AdminTab }) {
+  return tab === "summary" ? (
+    <Summary />
+  ) : tab === "restaurants" ? (
+    <AdminRestaurants />
+  ) : tab === "foods" ? (
+    <AdminFoods />
+  ) : tab === "tags" ? (
+    <AdminTags />
+  ) : tab === "users" ? (
+    <AdminUsers />
+  ) : tab === "security" ? (
+    <Suspense fallback={<Loading />}>
+      <AccountReviews />
+    </Suspense>
+  ) : (
+    <AdminHubs />
   );
 }
+
 function Summary() {
   const { api } = useApp(),
     q = useQuery({
@@ -164,11 +89,17 @@ function Summary() {
           </article>
         ))}
       </div>
-      <div className="info-strip">
-        <p>
-          认证比例原始值：{s.verifiedRate}
-          。比例单位待联调确认，暂不转换为百分数。
-        </p>
+      <div className="admin-summary-ratio">
+        <span>认证比例</span>
+        <strong>{s.verifiedRate ?? "—"}</strong>
+        <span
+          role="note"
+          tabIndex={0}
+          title="接口尚未明确比例单位，当前按原值展示。"
+          aria-label="接口尚未明确比例单位，当前按原值展示。"
+        >
+          i
+        </span>
       </div>
     </>
   );

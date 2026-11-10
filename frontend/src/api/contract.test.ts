@@ -7,13 +7,13 @@ import { parse } from "yaml";
 const spec = parse(
   readFileSync(
     new URL(
-      "../../../docs/EatWhat 业务服务 APIv6.openapi.json",
+      "../../../docs/EatWhat 业务服务 APIv7.openapi.json",
       import.meta.url,
     ),
     "utf8",
   ),
 );
-it("every implemented service operation exists in the latest APIv6 contract and supplies its required parameters", async () => {
+it("every implemented service operation exists in the latest APIv7 contract and supplies its required parameters", async () => {
   const calls: { path: string; options: RequestOptions }[] = [];
   const api = createApi(
     async (path, options) => {
@@ -33,6 +33,31 @@ it("every implemented service operation exists in the latest APIv6 contract and 
     },
   );
   await Promise.all([
+    api.foodComments(1),
+    api.createFoodComment(
+      1,
+      { text: "用餐感受" },
+      "11111111-1111-4111-8111-111111111111",
+    ),
+    api.replyToComment(
+      1,
+      2,
+      { text: "回复", replyToId: 3 },
+      "11111111-1111-4111-8111-111111111111",
+    ),
+    api.commentReplies(2),
+    api.foodCommentGallery(1),
+    api.myCommentSubmissions(),
+    api.deleteComment(2, "11111111-1111-4111-8111-111111111111"),
+    api.commentLike(2),
+    api.likeComment(2, "11111111-1111-4111-8111-111111111111"),
+    api.unlikeComment(2, "11111111-1111-4111-8111-111111111111"),
+    api.commentModerationQueue(),
+    api.reviewComment({
+      decisionId: "11111111-1111-4111-8111-111111111111",
+      revisionId: "11111111-1111-4111-8111-111111111111",
+      verdict: "APPROVE",
+    }),
     api.recordActivity(),
     api.growth(),
     api.growthLedger(1, 20),
@@ -373,7 +398,7 @@ it("every implemented service operation exists in the latest APIv6 contract and 
     expect(matched, `undefined endpoint ${path}`).toBeTruthy();
     const method = (options.method ?? "GET").toLowerCase();
     const op = spec.paths[matched!][method];
-    expect(op, `${method} ${path} missing from v6`).toBeTruthy();
+    expect(op, `${method} ${path} missing from v7`).toBeTruthy();
     for (const param of op.parameters ?? [])
       if (param.required && param.in === "query")
         expect(
@@ -439,5 +464,5 @@ it("every implemented service operation exists in the latest APIv6 contract and 
     }
   expect(missing).toEqual([]);
   expect(excluded).toHaveLength(14);
-  expect(implemented.size).toBe(189);
+  expect(implemented.size).toBe(201);
 });

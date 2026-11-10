@@ -138,8 +138,7 @@ export const pendingScreens: Record<string, string> = {
   "G-Feedback": "意见反馈",
   "G-WrongInfo": "信息纠错",
   "G-PanelReport": "内容举报",
-  "G-Comments": "评论列表",
-  "G-WriteComment": "发表评论",
+
   "G-TopicArchive": "往期专题目录",
 };
 

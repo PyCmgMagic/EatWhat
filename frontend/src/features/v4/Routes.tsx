@@ -24,7 +24,6 @@ import Features from "./Hub";
 import NotificationSettings from "./NotificationSettings";
 const Growth = lazy(() => import("./Growth"));
 const Directory = lazy(() => import("./Directory"));
-const Admin = lazy(() => import("./Admin"));
 export default function V4Routes() {
   const path = useLocation().pathname;
   let page;
@@ -55,14 +54,6 @@ export default function V4Routes() {
           current={path.endsWith("current")}
         />
       </FeatureAvailability>
-    );
-  if (path === "/admin/v4")
-    return (
-      <Suspense fallback={<ContentSkeleton kind="form" count={3} />}>
-        <Gate verified={false}>
-          <Admin />
-        </Gate>
-      </Suspense>
     );
   if (path === "/me/growth")
     page = (
