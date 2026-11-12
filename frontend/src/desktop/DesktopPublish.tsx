@@ -1,10 +1,6 @@
 import { useFeedbackState } from "../components/feedback";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import {
-  validateFoodDraft,
-  normalizedTag,
-  submissionPath,
-} from "../api/content-rules";
+import { validateFoodDraft, submissionPath } from "../api/content-rules";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -21,23 +17,12 @@ import { validateFiles } from "../api/validation";
 import { DesignIcon as Icon, useMobile } from "../mobile/ui";
 import { stageColors } from "../mobile/catalog";
 import { adjustPhoto, saveVisual } from "../mobile/photos";
-import { withDraftTags } from "../mobile/draft-tags";
 import CropDialog from "./CropDialog";
 import "./publish.css";
-import { publishDisplay, mealOptions, mealCode } from "../api/food-display";
+import { publishDisplay, mealCode } from "../api/food-display";
+import { foodCategories, MAX_DISH_TAGS } from "../api/v2-vocab";
 
-const kinds: { id: Category; name: string }[] = [
-  { id: "staple", name: "主食" },
-  { id: "snack", name: "小吃" },
-  { id: "drink", name: "饮品" },
-  { id: "dessert", name: "甜品" },
-  { id: "soup", name: "汤" },
-  { id: "hot_pot", name: "火锅" },
-  { id: "grill", name: "烧烤" },
-  { id: "cold_dish", name: "凉菜" },
-  { id: "side_dish", name: "配菜" },
-  { id: "other", name: "其他" },
-];
+const kinds = foodCategories;
 let submissionInFlight = false;
 
 export default function DesktopPublish() {
@@ -56,8 +41,6 @@ export default function DesktopPublish() {
   const input = useRef<HTMLInputElement>(null),
     searchInput = useRef<HTMLInputElement>(null),
     shopPickerToggle = useRef<HTMLButtonElement>(null),
-    tagInput = useRef<HTMLInputElement>(null),
-    tagComposing = useRef(false),
     photoLock = useRef(false);
   const [shopPickerExpanded, setShopPickerExpanded] = useState(false);
   const [keyword, setKeyword] = useState(""),
@@ -186,46 +169,20 @@ export default function DesktopPublish() {
       setPhotoBusy(false);
     }
   }
-  function addTags() {
-    if (locked || draft.publishUncertain || tagComposing.current) return;
-    const current = draftRef.current;
-    if (!current.tagInput?.trim()) return;
-    try {
-      const tags = withDraftTags(current.tags, current.tagInput);
-      m.setDraft({ tags, tagInput: "" });
-      if (tags.length === current.tags.length)
-        app.toast("这些标签已经添加过了。");
-    } catch (error) {
-      setError(errorMessage(error));
-    }
-    requestAnimationFrame(() =>
-      tagInput.current?.focus({ preventScroll: true }),
-    );
-  }
   async function publish(event: FormEvent) {
     event.preventDefault();
-    if (
-      submissionInFlight ||
-      locked ||
-      draft.publishUncertain ||
-      tagComposing.current
-    )
-      return;
+    if (submissionInFlight || locked || draft.publishUncertain || false) return;
     let snapshot = draftRef.current;
     const startedAtRoute = routeKey.current;
     try {
       snapshot = {
         ...snapshot,
-        tags: withDraftTags(snapshot.tags, snapshot.tagInput ?? ""),
+        tags: [],
         tagInput: "",
       };
       validateFoodDraft(snapshot);
     } catch (error) {
       setError(errorMessage(error));
-      return;
-    }
-    if (snapshot.mealTimes?.length === 0) {
-      setError("至少选择一个饭点。");
       return;
     }
     const price =
@@ -275,13 +232,11 @@ export default function DesktopPublish() {
         category: snapshot.category as Category,
         description: snapshot.description.trim() || undefined,
         pictureUrl: images.map((item) => item.key!),
-        myCustomTagNames: snapshot.tags.map(normalizedTag),
         systemTagIds: snapshot.systemTagIds,
-        ...publishDisplay(
-          snapshot.stage,
-          snapshot.candidates,
-          snapshot.mealTimes ?? [mealCode(m.meal)],
-        ),
+        signature: !!snapshot.signature,
+        ...publishDisplay(snapshot.stage, snapshot.candidates, [
+          mealCode(m.meal),
+        ]),
         coverCrop: { centerX: 0.5, centerY: 0.5, diameter: 1 },
       });
       for (const item of images)
@@ -296,6 +251,7 @@ export default function DesktopPublish() {
         tags: [],
         tagInput: "",
         systemTagIds: [],
+        signature: false,
         crop: undefined,
         candidates: undefined,
         shopName: undefined,
@@ -785,118 +741,25 @@ export default function DesktopPublish() {
               />
             </label>
             <div className="ew-feature ew-meals">
-              <b>适合的饭点</b>
-              {mealOptions.map((item) => (
-                <label key={item.id}>
-                  <input
-                    type="checkbox"
-                    checked={(draft.mealTimes ?? [mealCode(m.meal)]).includes(
-                      item.id,
-                    )}
-                    onChange={(e) => {
-                      const current = draft.mealTimes ?? [mealCode(m.meal)];
-                      m.setDraft({
-                        mealTimes: e.target.checked
-                          ? [...current, item.id]
-                          : current.filter((x) => x !== item.id),
-                      });
-                    }}
-                  />
-                  {item.name}
-                </label>
-              ))}
-            </div>
-            <div className="pc-composer-tags">
-              <div className="pc-composer-tags-heading">
-                <label htmlFor="pc-publish-tag-input">个人标签</label>
-                <span aria-live="polite">已添加 {draft.tags.length} / 20</span>
-              </div>
-              {draft.tags.length > 0 && (
-                <ul
-                  className="pc-composer-tag-list"
-                  aria-label="已添加的个人标签"
-                >
-                  {draft.tags.map((name) => (
-                    <li key={name}>
-                      <Icon name="tag" size={13} />
-                      <span>{name}</span>
-                      <button
-                        type="button"
-                        aria-label={`移除标签 ${name}`}
-                        disabled={locked || draft.publishUncertain}
-                        onClick={() => {
-                          m.setDraft({
-                            tags: draftRef.current.tags.filter(
-                              (tag) => tag !== name,
-                            ),
-                          });
-                          requestAnimationFrame(() =>
-                            tagInput.current?.focus({ preventScroll: true }),
-                          );
-                        }}
-                      >
-                        <Icon name="close" size={13} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <div className="pc-composer-tag-entry">
+              <b>招牌菜</b>
+              <label>
                 <input
-                  ref={tagInput}
-                  id="pc-publish-tag-input"
-                  aria-label="发布个人标签"
-                  value={draft.tagInput ?? ""}
-                  placeholder="输入标签，例如：包子"
-                  aria-describedby="pc-publish-tag-help"
-                  enterKeyHint="done"
-                  autoComplete="off"
+                  type="checkbox"
+                  checked={!!draft.signature}
                   disabled={locked || draft.publishUncertain}
-                  onChange={(event) =>
-                    m.setDraft({ tagInput: event.target.value })
-                  }
-                  onCompositionStart={() => {
-                    tagComposing.current = true;
-                  }}
-                  onCompositionEnd={() => {
-                    tagComposing.current = false;
-                  }}
-                  onKeyDown={(event) => {
-                    if (
-                      event.key !== "Enter" ||
-                      event.nativeEvent.isComposing ||
-                      event.nativeEvent.keyCode === 229
-                    )
-                      return;
-                    event.preventDefault();
-                    addTags();
-                  }}
+                  onChange={(e) => m.setDraft({ signature: e.target.checked })}
                 />
-                <button
-                  type="button"
-                  className="pc-composer-tag-add"
-                  aria-label="添加个人标签"
-                  disabled={
-                    locked || draft.publishUncertain || !draft.tagInput?.trim()
-                  }
-                  onClick={addTags}
-                >
-                  <Icon name="add" size={15} />
-                  添加
-                </button>
-              </div>
-              <p id="pc-publish-tag-help">
-                回车或点「添加」，每个标签最多 10 个字。
-              </p>
+                这是这家店的招牌
+              </label>
             </div>
             <div className="ew-feature ew-meals">
-              <b>公共口味标签</b>
+              <b>口味标签（最多 {MAX_DISH_TAGS} 个）</b>
               {systemTags.isPending && <small>正在读取公共标签…</small>}
               {!systemTags.isPending &&
                 !systemTags.isError &&
                 !systemTags.data?.length && (
                   <small className="pc-composer-tags-empty">
-                    暂无可选公共标签，个人标签仍可自由添加。
+                    暂无可选口味标签。
                   </small>
                 )}
               {systemTags.data?.map((t) => (
@@ -906,7 +769,7 @@ export default function DesktopPublish() {
                     checked={draft.systemTagIds?.includes(t.id!) ?? false}
                     disabled={
                       !draft.systemTagIds?.includes(t.id!) &&
-                      (draft.systemTagIds?.length ?? 0) >= 20
+                      (draft.systemTagIds?.length ?? 0) >= MAX_DISH_TAGS
                     }
                     onChange={(e) =>
                       m.setDraft({

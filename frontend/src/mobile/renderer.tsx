@@ -14,6 +14,7 @@ import {
 } from "../components/LoadingSkeleton";
 import type { DesignNode, Values, NodeView, Bridge } from "./types";
 import { useDesignBridge } from "./bridge";
+import { foodCategories } from "../api/v2-vocab";
 import { DesignNav, DesignIcon, DesignRegistryContext, useMobile } from "./ui";
 import { readDraft, writeDraft } from "../app/drafts";
 import { profileForm } from "../desktop/profile";
@@ -68,18 +69,12 @@ export class DesignController extends Component<any, any> {
       if (props.screen === "G-AddDish" && props.draft)
         Object.assign(patch, {
           desc: props.draft.description ?? "",
-          cat: [
-            "staple",
-            "snack",
-            "drink",
-            "dessert",
-            "soup",
-            "hot_pot",
-            "grill",
-            "cold_dish",
-            "side_dish",
-            "other",
-          ].indexOf(props.draft.category ?? "staple"),
+          cat: Math.max(
+            0,
+            foodCategories.findIndex(
+              (c) => c.id === (props.draft.category ?? "staple"),
+            ),
+          ),
         });
       if (props.screen === "G-Search")
         Object.assign(patch, { q: "", tab: "shop" });

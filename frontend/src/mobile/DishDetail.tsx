@@ -128,6 +128,8 @@ export default function DishDetail({
           <div className="dish-hero-copy">
             <span className="dish-category">
               {categories.find((c) => c.id === food.category)?.label || "菜品"}
+              {(food as typeof food & { signature?: boolean | null })
+                .signature && " · 招牌菜"}
             </span>
             <h1>{food.name || "这道菜"}</h1>
             <p
@@ -207,31 +209,19 @@ export default function DishDetail({
             <div className="mobile-contributor">{author}</div>
           )}
         </section>
-        <section className="dish-tastes" aria-label="食友印象">
-          {tags.length > 0 ? (
-            <>
-              <div className="dish-section-heading">
-                <h2>食友印象</h2>
-                <button type="button" onClick={onTags}>
-                  添加标签
-                </button>
-              </div>
-              <div className="dish-tag-list">
-                {tags.map((tag) => (
-                  <button type="button" key={tag.id} onClick={onTags}>
-                    {tag.name}
-                    <span>{tag.count ?? "—"}</span>
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <button type="button" className="dish-add-taste" onClick={onTags}>
-              <DesignIcon name="add" size={16} />
-              添加口味标签
-            </button>
-          )}
-        </section>
+        {/* v2: the author picks the taste tags when posting. */}
+        {tags.length > 0 && (
+          <section className="dish-tastes" aria-label="口味">
+            <div className="dish-section-heading">
+              <h2>口味</h2>
+            </div>
+            <div className="dish-tag-list">
+              {tags.map((tag) => (
+                <span key={tag.id}>{tag.name}</span>
+              ))}
+            </div>
+          </section>
+        )}
         {food.id && <FoodCommentPreview foodId={food.id} />}
         {management}
         {footer}

@@ -16,12 +16,7 @@ import {
 } from "../api/models";
 import { duplicateFoodId, errorMessage, resultUncertain } from "../api/client";
 import { FoodPhotoPicker, type EditableFoodPhoto } from "./FoodPhotoPicker";
-import {
-  mealOptions,
-  stagePalette,
-  publishDisplay,
-  type Stage,
-} from "../api/food-display";
+import { MAX_DISH_TAGS, tasteTags, type V2Food } from "../api/v2-vocab";
 import { isDemo } from "../app/runtime";
 import {
   useMemoryDraft,
@@ -114,47 +109,28 @@ function EditForm({
     [uncertain, setUncertain] = useState(false),
     [error, setError] = useFeedbackState();
   const active = usePageLifetime();
-  const draftKey = `food:${user?.id}:${food.id}`;
+  const draftKey = `food:${user?.id}:${food.id}:v2`;
+  const originalTags = ((food as Food & V2Food).tags ?? []).filter((t) =>
+      tasteTags.includes(t),
+    ),
+    originalSignature = !!(food as Food & V2Food).signature;
   const [fields, setFields, clearFields] = useSessionDraft(draftKey, {
     name: food.name ?? "",
     description: food.description ?? "",
     price: food.price == null ? "" : String(food.price),
     category: food.category ?? null,
-    stage: food.stageColor ?? null,
-    meals: food.mealTimes ?? [],
-    editVersion: 0,
+    tags: originalTags,
+    signature: originalSignature,
+    editVersion: 1,
   });
-  // Older drafts stored display defaults even when the author edited only text.
-  const legacy = fields.editVersion === 0;
-  const { name, description, price } = fields;
-  const category =
-    legacy && !food.category && fields.category === "other"
-      ? null
-      : fields.category;
-  const stage =
-    legacy && !food.stageColor && fields.stage === "broth"
-      ? null
-      : fields.stage;
-  const meals =
-    legacy && !food.mealTimes?.length && fields.meals.join() === "dinner"
-      ? []
-      : fields.meals;
+  const { name, description, price, category, tags, signature } = fields;
   const updateFields = (patch: Partial<typeof fields>) =>
-    setFields((f) => ({
-      ...f,
-      category,
-      stage,
-      meals,
-      editVersion: 1,
-      ...patch,
-    }));
+    setFields((f) => ({ ...f, ...patch }));
   const setName = (name: string) => updateFields({ name });
   const setDescription = (description: string) => updateFields({ description });
   const setPrice = (price: string) => updateFields({ price });
   const setCategory = (category: typeof fields.category) =>
     updateFields({ category });
-  const setStage = (stage: Stage | null) => updateFields({ stage });
-  const setMeals = (meals: typeof fields.meals) => updateFields({ meals });
   const [photoDraft, setPhotoDraft, clearPhotos] = useMemoryDraft<{
     photos: EditableFoodPhoto[];
     changed: boolean;
@@ -169,17 +145,17 @@ function EditForm({
   const { photos, changed: photosChanged } = photoDraft;
   const setPhotos = (photos: typeof photoDraft.photos) =>
     setPhotoDraft((p) => ({ ...p, photos }));
-  const mealsChanged =
-    meals.length !== (food.mealTimes?.length ?? 0) ||
-    meals.some((meal) => !food.mealTimes?.includes(meal));
-  const stageChanged = stage !== (food.stageColor ?? null);
+  const tagsChanged =
+    tags.length !== originalTags.length ||
+    tags.some((tag) => !originalTags.includes(tag));
+  const signatureChanged = signature !== originalSignature;
   const dirty =
     name !== food.name ||
     description !== (food.description ?? "") ||
     price !== (food.price == null ? "" : String(food.price)) ||
     category !== (food.category ?? null) ||
-    stageChanged ||
-    mealsChanged ||
+    tagsChanged ||
+    signatureChanged ||
     photosChanged;
   useEffect(() => {
     if (!dirty) return;
@@ -200,11 +176,13 @@ function EditForm({
         setBusy(true);
         setError("");
         try {
-          if (!name.trim() || (mealsChanged && !meals.length))
-            throw new Error("请填写菜名，并选择至少一个饭点。");
+          if (!name.trim()) throw new Error("请填写菜名。");
           if (food.price != null && price === "")
             throw new Error("价格不能为空，请填写有效价格。");
-          const body: Schema["EditFoodDTORequest"] = {
+          const body: Schema["EditFoodDTORequest"] & {
+            systemTagIds?: number[];
+            signature?: boolean;
+          } = {
             name: name.trim(),
             description:
               description !== (food.description ?? "")
@@ -213,16 +191,11 @@ function EditForm({
             category:
               category && category !== food.category ? category : undefined,
             price: price === "" ? undefined : Number(price),
-            mealTimes: mealsChanged ? meals : undefined,
+            systemTagIds: tagsChanged
+              ? tags.map((tag) => tasteTags.indexOf(tag) + 1)
+              : undefined,
+            signature: signatureChanged ? signature : undefined,
           };
-          if (stageChanged && stage) {
-            const palette = publishDisplay(
-              stagePalette[stage],
-              food.stageAlternates?.map((x) => stagePalette[x]),
-            );
-            body.stageColor = palette.stageColor;
-            body.stageAlternates = palette.stageAlternates;
-          }
           if (photosChanged) {
             if (!photos.length) throw new Error("至少保留一张照片。");
             const next = [...photos];
@@ -308,34 +281,6 @@ function EditForm({
                 }));
               }}
             />
-            <label>
-              舞台色
-              <Select
-                value={stage ?? ""}
-                onChange={(e) => setStage((e.target.value as Stage) || null)}
-              >
-                {!food.stageColor && <option value="">分类默认色</option>}
-                {Object.entries(stagePalette).map(([key, color]) => (
-                  <option key={key} value={key} data-color={color}>
-                    {
-                      (
-                        {
-                          broth: "暖汤",
-                          mango: "芒果",
-                          bamboo: "竹色",
-                          chili: "辣橙",
-                          tomato: "番茄",
-                          redoil: "红油",
-                          soy: "酱色",
-                          porcelain: "瓷蓝",
-                          matcha: "抹茶",
-                        } as Record<string, string>
-                      )[key]
-                    }
-                  </option>
-                ))}
-              </Select>
-            </label>
           </section>
           <section>
             <label>
@@ -386,23 +331,39 @@ function EditForm({
               />
             </label>
             <div className="ew-meals">
-              <b>适合的饭点</b>
-              {mealOptions.map((m) => (
-                <label key={m.id}>
+              <b>口味标签（最多 {MAX_DISH_TAGS} 个）</b>
+              {tasteTags.map((tag) => (
+                <label key={tag}>
                   <input
                     type="checkbox"
-                    checked={meals.includes(m.id)}
+                    checked={tags.includes(tag)}
+                    disabled={
+                      !tags.includes(tag) && tags.length >= MAX_DISH_TAGS
+                    }
                     onChange={(e) =>
-                      setMeals(
-                        e.target.checked
-                          ? [...meals, m.id]
-                          : meals.filter((x) => x !== m.id),
-                      )
+                      updateFields({
+                        tags: e.target.checked
+                          ? [...tags, tag]
+                          : tags.filter((x) => x !== tag),
+                      })
                     }
                   />
-                  {m.name}
+                  {tag}
                 </label>
               ))}
+            </div>
+            <div className="ew-meals">
+              <b>招牌菜</b>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={signature}
+                  onChange={(e) =>
+                    updateFields({ signature: e.target.checked })
+                  }
+                />
+                这是这家店的招牌
+              </label>
             </div>
           </section>
         </div>

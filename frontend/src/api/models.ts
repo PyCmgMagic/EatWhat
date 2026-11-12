@@ -57,19 +57,16 @@ export type Page<T> = {
   hasNext?: boolean | null;
 };
 export type Category = NonNullable<Schema["CreateFoodDTORequest"]["category"]>;
+// Backend v2 has six dish categories; ids stay the old ones (see v2-vocab).
 export const categories: { id: Category | ""; label: string; icon: string }[] =
   [
     { id: "", label: "全部", icon: "discover" },
-    { id: "staple", label: "米面主食", icon: "bowl" },
-    { id: "snack", label: "小吃时间", icon: "snack" },
-    { id: "dessert", label: "甜一点", icon: "cake" },
-    { id: "drink", label: "来杯喝的", icon: "cup" },
-    { id: "cold_dish", label: "清爽轻食", icon: "leaf" },
-    { id: "soup", label: "热汤", icon: "bowl" },
-    { id: "hot_pot", label: "火锅", icon: "bowl" },
-    { id: "grill", label: "烧烤", icon: "snack" },
-    { id: "side_dish", label: "配菜", icon: "leaf" },
-    { id: "other", label: "其他", icon: "bowl" },
+    { id: "staple", label: "主食", icon: "bowl" },
+    { id: "side_dish", label: "菜", icon: "leaf" },
+    { id: "snack", label: "小吃", icon: "snack" },
+    { id: "soup", label: "汤", icon: "bowl" },
+    { id: "drink", label: "饮品甜品", icon: "cup" },
+    { id: "other", label: "特色", icon: "bowl" },
   ];
 export function idOf(id: number | null | undefined): number {
   if (!Number.isSafeInteger(id) || (id ?? 0) < 1)

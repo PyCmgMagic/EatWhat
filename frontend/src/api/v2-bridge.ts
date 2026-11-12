@@ -375,7 +375,11 @@ function foodBody(body: Json, create: boolean) {
     description: body.description ?? (create ? "" : undefined),
     pictures: keys(body.pictureUrl),
     ...(tags ? { tags } : create ? { tags: [] } : {}),
-    ...(create ? { signature: false } : {}),
+    ...(typeof body.signature === "boolean"
+      ? { signature: body.signature }
+      : create
+        ? { signature: false }
+        : {}),
   };
 }
 function restaurantBody(body: Json, current?: Json | null) {

@@ -1258,6 +1258,15 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   padding: 0;
   min-height: 40px;
 }
+.pc-taste-cloud > .pc-taste-tag {
+  display: inline-flex;
+  align-items: baseline;
+  min-height: 40px;
+}
+.pc-taste-cloud > .pc-taste-empty {
+  color: #8a7e76;
+  font-size: 13px;
+}
 .pc-taste-cloud sup {
   font: 800 12px "Bricolage Grotesque Variable";
   margin-left: 3px;

@@ -43,6 +43,7 @@ import {
   type Restaurant,
 } from "../api/models";
 import { validateFiles } from "../api/validation";
+import { foodCategories, MAX_DISH_TAGS } from "../api/v2-vocab";
 import type { Bridge, Controller, NodeView, Values } from "./types";
 import {
   useMobile,
@@ -676,8 +677,8 @@ export function useDesignBridge(
               String(controller.state.desc ?? draft.description) || undefined,
             category: categoryCodes[controller.state.cat ?? 0] as Category,
             pictureUrl: images.map((i) => i.key!),
-            myCustomTagNames: draft.tags.map(normalizedTag),
             systemTagIds: draft.systemTagIds,
+            signature: !!draft.signature,
             ...publishDisplay(
               draft.stage,
               draft.candidates,
@@ -696,6 +697,7 @@ export function useDesignBridge(
             tags: [],
             tagInput: "",
             systemTagIds: [],
+            signature: false,
             mealTimes: undefined,
             stage: "#F3C46E",
             crop: undefined,
@@ -709,7 +711,7 @@ export function useDesignBridge(
           toast(
             created.revisionId
               ? "菜品已提交审核，可在我的提交查看进度。"
-              : "菜已发布，标签与展示设置已同步保存。",
+              : "菜已发布。",
           );
           if (activeLocation.current === publishingLocation)
             nav(submissionPath(created, `/foods/${created.id}`));
@@ -905,13 +907,21 @@ export function useDesignBridge(
     });
   }
   if (screen === "G-AddDish" && !reference) {
-    values.cats = (original.cats ?? []).map((c: any, i: number) => ({
-      ...c,
-      pick: () => {
-        controller.setState({ cat: i });
-        m.setDraft({ category: categoryCodes[i] });
-      },
-    }));
+    const picked = Math.max(0, categoryCodes.indexOf(m.draft.category));
+    values.cats = foodCategories.map((c, i) => {
+      const on = i === picked;
+      return {
+        label: c.name,
+        on: on ? "true" : "false",
+        bg: on ? "#231C18" : "#F4EFEB",
+        fg: on ? "#FFFFFF" : "#231C18",
+        w: on ? 600 : 400,
+        pick: () => {
+          controller.setState({ cat: i });
+          m.setDraft({ category: categoryCodes[i] });
+        },
+      };
+    });
     values.desc = m.draft.description;
     values.descLen = m.draft.description.length;
     values.setDesc = (e: any) => {
@@ -1687,23 +1697,24 @@ export function useDesignBridge(
         );
       }
       if (n.attrs.role === "tab") {
-        const key = (
-          {
-            今日推荐: "",
-            主食: "staple",
-            小吃: "snack",
-            饮品: "drink",
-            甜品: "dessert",
-          } as Record<string, string>
-        )[clean(text)];
-        p.onClick = () => setCategory(key);
-        p["aria-selected"] = category === key;
-        p.style = {
-          ...st,
-          fontWeight: category === key ? 900 : 400,
-          fontSize: "15px",
-          color: category === key ? "#231C18" : "#6E625B",
-        };
+        // The prototype draws five tabs; show v2's categories in those slots.
+        const slot = ["今日推荐", "主食", "小吃", "饮品", "甜品"].indexOf(
+          clean(text),
+        );
+        const tab = homeTabs[slot];
+        if (tab) {
+          const key = tab.key;
+          p.onClick = () => setCategory(key);
+          p["aria-selected"] = category === key;
+          p.style = {
+            ...st,
+            fontWeight: category === key ? 900 : 400,
+            fontSize: "15px",
+            color: category === key ? "#231C18" : "#6E625B",
+            whiteSpace: "nowrap",
+          };
+          return React.createElement(tag, p, tab.name);
+        }
       }
       if (tag === "a" && String(n.attrs["aria-label"]).startsWith("通知"))
         p["aria-label"] = `通知，${unread.data ?? 0} 条未读`;
@@ -1938,52 +1949,48 @@ export function useDesignBridge(
     if (screen === "G-AddDish") {
       if (id === 45)
         return (
-          <fieldset className="mobile-publish-tags">
-            <legend>标签，可选</legend>
-            <div>
-              {(systemTags.data ?? [])
-                .filter((t) => m.draft.systemTagIds?.includes(t.id!))
-                .map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    aria-label={`移除口味标签 ${t.name}`}
-                    onClick={() =>
-                      m.setDraft({
-                        systemTagIds: m.draft.systemTagIds?.filter(
-                          (id) => id !== t.id,
-                        ),
-                      })
-                    }
-                  >
-                    {t.name}
-                    <DesignIcon name="close" size={14} />
-                  </button>
-                ))}
-              {m.draft.tags.map((name) => (
+          <div className="mobile-publish-tag-groups">
+            <fieldset className="mobile-publish-tags">
+              <legend>口味，最多 {MAX_DISH_TAGS} 个，可选</legend>
+              <div>
+                {(systemTags.data ?? []).map((t) => {
+                  const on = !!m.draft.systemTagIds?.includes(t.id!);
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      aria-pressed={on}
+                      disabled={
+                        !on &&
+                        (m.draft.systemTagIds?.length ?? 0) >= MAX_DISH_TAGS
+                      }
+                      onClick={() =>
+                        m.setDraft({
+                          systemTagIds: on
+                            ? m.draft.systemTagIds?.filter((id) => id !== t.id)
+                            : [...(m.draft.systemTagIds ?? []), t.id!],
+                        })
+                      }
+                    >
+                      {t.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+            <fieldset className="mobile-publish-tags">
+              <legend>招牌菜</legend>
+              <div>
                 <button
-                  key={name}
                   type="button"
-                  className="personal"
-                  aria-label={`移除个人标签 ${name}`}
-                  onClick={() =>
-                    m.setDraft({ tags: m.draft.tags.filter((t) => t !== name) })
-                  }
+                  aria-pressed={!!m.draft.signature}
+                  onClick={() => m.setDraft({ signature: !m.draft.signature })}
                 >
-                  <DesignIcon name="lock" size={13} />
-                  {name}
-                  <DesignIcon name="close" size={14} />
+                  这是这家店的招牌
                 </button>
-              ))}
-              <button
-                type="button"
-                className="add"
-                onClick={() => m.openPanel("G-PanelTag")}
-              >
-                + 添加标签
-              </button>
-            </div>
-          </fieldset>
+              </div>
+            </fieldset>
+          </div>
         );
       if (id === 21)
         return (
@@ -3215,17 +3222,14 @@ export function useDesignBridge(
       (screen === "G-Crop" && !m.draft.images.length),
   };
 }
-const categoryCodes = [
-  "staple",
-  "snack",
-  "drink",
-  "dessert",
-  "soup",
-  "hot_pot",
-  "grill",
-  "cold_dish",
-  "side_dish",
-  "other",
+// v2 dish categories, in the order of the publish chips.
+const categoryCodes = foodCategories.map((c) => c.id as string);
+const homeTabs = [
+  { key: "", name: "今日推荐" },
+  // Four slots: the prototype's staple / snack / drink picks, plus v2's 菜.
+  ...foodCategories
+    .filter((c) => ["staple", "side_dish", "snack", "drink"].includes(c.id))
+    .map((c) => ({ key: c.id as string, name: c.name })),
 ];
 function resolveHref(
   target: string,

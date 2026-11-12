@@ -289,7 +289,8 @@
   gap: 8px;
   margin-top: 12px;
 }
-.dish-tag-list > button {
+.dish-tag-list > button,
+.dish-tag-list > span {
   display: flex;
   align-items: center;
   gap: 8px;

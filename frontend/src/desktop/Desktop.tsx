@@ -104,6 +104,7 @@ import { RecommendationControls, Preferences } from "../features/Account";
 import { EditFood } from "../features/EditFood";
 import { useActionAccess } from "../features/access";
 import { guestDeviceId, mealCode } from "../api/food-display";
+import { foodCategories, type V2Food } from "../api/v2-vocab";
 import { useFoodImageRefresh, useFoodPhoto } from "../features/media";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
 import { FoodCover } from "../components/FoodCover";
@@ -137,24 +138,14 @@ import {
 } from "../components/LoadingSkeleton";
 import { PendingPage, pendingPages, secondaryTitles } from "./secondary";
 
-const categoryNames: Record<string, string> = {
-  staple: "主食",
-  snack: "小吃",
-  drink: "饮品",
-  dessert: "甜品",
-  soup: "汤",
-  hot_pot: "火锅",
-  grill: "烧烤",
-  cold_dish: "凉菜",
-  side_dish: "配菜",
-  other: "其他",
-};
+const categoryNames: Record<string, string> = Object.fromEntries(
+  foodCategories.map((c) => [c.id, c.name]),
+);
 const categories = [
   { key: "", name: "今日推荐" },
-  { key: "staple", name: "主食" },
-  { key: "snack", name: "小吃" },
-  { key: "drink", name: "饮品" },
-  { key: "dessert", name: "甜品" },
+  ...foodCategories
+    .filter((c) => c.id !== "other")
+    .map((c) => ({ key: c.id, name: c.name })),
 ];
 const protectedScreens = new Set(["G-MyTags"]);
 function useTask() {
@@ -1431,6 +1422,7 @@ function DesktopDish() {
               <div className="pc-dish-heading">
                 <span className="pc-eyebrow">
                   {categoryNames[food.category ?? "other"]}
+                  {(food as typeof food & V2Food).signature && " · 招牌菜"}
                 </span>
                 <div className="pc-dish-tools">
                   <button
@@ -1506,7 +1498,7 @@ function DesktopDish() {
               </div>
               <div className="pc-taste-section">
                 <div className="pc-taste-heading">
-                  <h2>大家怎么说</h2>
+                  <h2>口味</h2>
                   <Link
                     className="pc-discussion-jump"
                     to={`/foods/${id}?section=comments`}
@@ -1515,34 +1507,24 @@ function DesktopDish() {
                     <Icon name="chevronDown" size={13} />
                   </Link>
                 </div>
+                {/* v2: taste tags are chosen by the author when posting. */}
                 <div className="pc-taste-cloud">
-                  {food.systemTags?.map((tag, i) => (
-                    <button
-                      key={tag.id}
-                      style={{
-                        fontSize: [30, 24, 20, 17][Math.min(i, 3)],
-                        fontWeight: i === 0 ? 900 : 600,
-                      }}
-                      onClick={() => {
-                        if (!access(true)) return;
-                        m.setFoodId(id);
-                        m.openPanel("G-PanelTag");
-                      }}
-                    >
-                      {tag.name}
-                      <sup>{tag.count ?? "—"}</sup>
-                    </button>
-                  ))}
-                  <button
-                    className="pc-dashed-button"
-                    onClick={() => {
-                      if (!access(true)) return;
-                      m.setFoodId(id);
-                      m.openPanel("G-PanelTag");
-                    }}
-                  >
-                    + 加标签
-                  </button>
+                  {food.systemTags?.length ? (
+                    food.systemTags.map((tag, i) => (
+                      <span
+                        key={tag.id}
+                        className="pc-taste-tag"
+                        style={{
+                          fontSize: [30, 24, 20, 17][Math.min(i, 3)],
+                          fontWeight: i === 0 ? 900 : 600,
+                        }}
+                      >
+                        {tag.name}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="pc-taste-empty">发布者还没有标注口味</span>
+                  )}
                 </div>
               </div>
               <footer className="pc-dish-attribution">

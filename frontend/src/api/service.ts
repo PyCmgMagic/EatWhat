@@ -355,8 +355,9 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       }),
     deleteTag: (tagId: number) =>
       request<void>(`/foods/tags/my/${tagId}`, { method: "DELETE" }),
-    createFood: (body: Schema["CreateFoodDTORequest"]) =>
-      created("/foods/upload", body),
+    createFood: (
+      body: Schema["CreateFoodDTORequest"] & { signature?: boolean },
+    ) => created("/foods/upload", body),
     editMyFood: (id: number, body: Schema["EditFoodDTORequest"]) =>
       request<Schema["CreatedResourceVOResponse"] | null>(`/foods/my/${id}`, {
         method: "PUT",

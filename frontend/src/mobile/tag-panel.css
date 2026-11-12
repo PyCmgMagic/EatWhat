@@ -221,3 +221,19 @@
   background: #fff;
   border: 1px dashed #9a8b80;
 }
+
+/* v2 publish: taste tags and the signature flag are toggles. */
+.mobile-publish-tag-groups {
+  display: grid;
+  gap: 16px;
+}
+.mobile-publish-tags button[aria-pressed="false"] {
+  background: #fff;
+}
+.mobile-publish-tags button[aria-pressed="true"] {
+  border-color: #231c18;
+  font-weight: 600;
+}
+.mobile-publish-tags button:disabled {
+  opacity: 0.45;
+}
