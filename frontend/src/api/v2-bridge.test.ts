@@ -217,6 +217,70 @@ describe("v2 bridge", () => {
     ]);
   });
 
+  it("serves a category tab from the dish list without using up recommendations", async () => {
+    const { request, sent } = backend(({ path }) =>
+      path === "/foods/list"
+        ? ok({
+            items: [{ id: 1, category: "饮品甜品", pictureUrls: [], tags: [] }],
+          })
+        : ok({ items: [] }),
+    );
+    const dishes = await request<any[]>("/foods/recommend", {
+      query: { size: 8, campusId: 1, mealTime: "dinner", category: "dessert" },
+    });
+    expect(sent.map((s) => s.path)).toEqual(["/foods/list"]);
+    expect(sent[0].query).toMatchObject({ category: "饮品甜品" });
+    expect(dishes[0]).toMatchObject({
+      id: 1,
+      category: "dessert",
+      categoryLabel: "饮品甜品",
+    });
+  });
+
+  it("builds the main recommendation from recommended shops' signature dishes", async () => {
+    const { request, sent } = backend(({ path }) =>
+      path === "/recommend"
+        ? ok({
+            items: [
+              {
+                id: 9,
+                name: "一口面馆",
+                signatureFoods: [
+                  { id: 2, name: "牛肉面", price: 22, pictureUrl: PIC },
+                ],
+              },
+            ],
+          })
+        : ok({
+            items: [
+              {
+                id: 2,
+                category: "主食",
+                likeCount: 5,
+                pictureUrls: [],
+                tags: ["辣"],
+              },
+              { id: 3, category: "汤", pictureUrls: [], tags: [] },
+            ],
+          }),
+    );
+    const dishes = await request<any[]>("/foods/recommend", {
+      query: { size: 2, campusId: 1, mealTime: "lunch", deviceId: "abcdefgh" },
+    });
+    expect(sent.find((s) => s.path === "/recommend")?.query).toEqual({
+      campusId: 1,
+      mealTime: "lunch",
+    });
+    expect(dishes.map((d) => d.id)).toEqual([2, 3]);
+    expect(dishes[0]).toMatchObject({
+      restaurantId: 9,
+      restaurantName: "一口面馆",
+      category: "staple",
+      likesCount: 5,
+      pictureUrl: [PIC],
+    });
+  });
+
   it("reports retired features as unavailable", async () => {
     const { request, sent } = backend(() => undefined);
     const error = await request("/user/growth").catch((e) => e);

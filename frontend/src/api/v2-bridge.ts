@@ -410,6 +410,19 @@ function foodQuery(query: Query) {
   return q;
 }
 
+/**
+ * v2 merges several old categories (e.g. drink and dessert). When the old page
+ * asked for one of them, label the matching dishes with the category it asked
+ * for, because the pages filter the reply by that exact value again.
+ */
+function asCategory(dish: Json, asked: unknown) {
+  return typeof asked === "string" &&
+    asked &&
+    toV2Category(asked) === dish.categoryLabel
+    ? { ...dish, category: asked }
+    : dish;
+}
+
 // ------------------------------------------------------------ routes
 
 const pass: Handler = ({ match, options, call }) =>
@@ -769,7 +782,10 @@ const routes: [string, RegExp, Handler][] = [
               ? foodQuery(query)
               : omit(query, ["page", "pageSize"]),
         }),
-        food,
+        (dish: Json) =>
+          match[1] === "list"
+            ? asCategory(food(dish)!, query.category)
+            : food(dish),
       ),
   ],
   [
@@ -786,6 +802,21 @@ const routes: [string, RegExp, Handler][] = [
     /^\/foods\/recommend$/,
     async ({ query, call }) => {
       const size = Number(query.size ?? 8);
+      // A category tab lists dishes of that category. It must not call
+      // /recommend: v2 marks every shop it returns as seen for today, so an
+      // extra call would use up the next batch of the main recommendation.
+      if (typeof query.category === "string" && query.category) {
+        const list = await call("/foods/list", {
+          query: {
+            category: toV2Category(query.category),
+            page: 1,
+            pageSize: Math.max(size, 20),
+          },
+        });
+        return (list?.items ?? [])
+          .slice(0, size)
+          .map((dish: Json) => asCategory(food(dish)!, query.category));
+      }
       const [feed, latest] = await Promise.all([
         call("/recommend", {
           query: omit(query, ["campusId", "mealTime"]),
