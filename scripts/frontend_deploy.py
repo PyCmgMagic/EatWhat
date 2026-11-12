@@ -23,7 +23,7 @@ from urllib.request import Request, urlopen
 HOST = "51.79.204.39"
 DEFAULT_BASE = "/www/wwwroot/eatwhat-frontend"
 DEFAULT_PUBLIC = "https://eat.v50to.you"
-DEFAULT_API = "https://eat.v50to.you/api/foods/list?page=1&pageSize=1"
+DEFAULT_API = "https://eat.v50to.you/api/recommend/tags"
 MARKER = "deployment.json"
 RELEASE = re.compile(r"[0-9a-f]{40}-[0-9]+-[0-9]+\Z")
 MAX_BYTES = 512 * 1024 * 1024
@@ -128,7 +128,15 @@ def fetch(url):
 
 
 def check_api(url):
-    require(json.loads(fetch(url)).get("code") == 0, "API smoke check failed")
+    response = json.loads(fetch(url))
+    require(isinstance(response, dict) and response.get("code") == 0, "API smoke check failed")
+    data = response.get("data")
+    require(
+        isinstance(data, dict)
+        and all(isinstance(data.get(key), list) and all(isinstance(item, str) for item in data[key])
+                for key in ("categories", "tags", "dislikableTags")),
+        "API smoke check expected the backend v2 recommendation tags",
+    )
 
 
 def check_site(public, target):

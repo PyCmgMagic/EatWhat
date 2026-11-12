@@ -15,6 +15,17 @@ deploy = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(deploy)
 
 
+class ApiSmokeTest(unittest.TestCase):
+    def test_requires_backend_v2_recommendation_tags(self):
+        good = {"code": 0, "data": {"categories": ["粉面"], "tags": ["辣"], "dislikableTags": ["辣"]}}
+        for payload in ({"code": 0, "data": {"items": []}}, {"code": 0, "data": {**good["data"], "tags": [1]}}):
+            with patch.object(deploy, "fetch", return_value=json.dumps(payload).encode()):
+                with self.assertRaisesRegex(ValueError, "backend v2 recommendation tags"):
+                    deploy.check_api(deploy.DEFAULT_API)
+        with patch.object(deploy, "fetch", return_value=json.dumps(good).encode()):
+            deploy.check_api(deploy.DEFAULT_API)
+
+
 class DeploymentTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -214,7 +225,7 @@ class DeploymentTest(unittest.TestCase):
             "FRONTEND_SSH_USER": "eatwhat-web", "FRONTEND_SSH_PORT": "2222",
             "FRONTEND_SSH_PRIVATE_KEY": "fake test key", "FRONTEND_SSH_KNOWN_HOSTS": "fake test host",
             "FRONTEND_DEPLOY_PATH": str(self.base),
-            "FRONTEND_API_SMOKE_URL": "https://api.invalid/foods/list?page=1&pageSize=1",
+            "FRONTEND_API_SMOKE_URL": "https://api.invalid/recommend/tags",
         }
         with patch.dict(os.environ, environment, clear=True), patch.object(deploy.subprocess, "run") as run:
             deploy.ship(self.bundle)

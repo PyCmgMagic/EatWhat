@@ -4,11 +4,14 @@ scripts/prototype-*.js
 scripts/desktop-*.js
 scripts/mock-*.js
 scripts/latest-api-*.js
+scripts/backend-v2-flows.js
 scripts/api-v2-*.js
 scripts/api-v3-*.js
 src/mobile/generated/**
 src/api/schema.d.ts
 src/api/access-rules.generated.ts
+src/api/backend-v2-endpoints.ts
+src/api/backend-v2-schema.d.ts
 dist/
 scripts/api-v4-*.js
 scripts/baidu-map-lifecycle.js

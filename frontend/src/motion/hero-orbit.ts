@@ -24,11 +24,14 @@ export function nearestHeroPosition(
 }
 
 /** Update the moving plates directly; pointer movement does not re-render the page. */
-export function dragHeroOrbit(element: HTMLElement, angle = 0) {
+export function dragHeroOrbit(element: HTMLElement, angle = 0, tilt = 0) {
   for (const plate of element.querySelectorAll<HTMLElement>(
     "[data-orbit-offset]",
   )) {
     const offset = Number(plate.dataset.orbitOffset);
-    plate.style.transform = heroPlateTransform(offset * heroOrbitStep + angle);
+    plate.style.transform = heroPlateTransform(
+      offset * heroOrbitStep + angle,
+      tilt,
+    );
   }
 }

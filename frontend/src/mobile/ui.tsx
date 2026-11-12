@@ -92,8 +92,43 @@ export function DesignNav({ active }: { active: string }) {
   const { session } = useApp();
   const { openLogin } = useLoginDialog();
   const access = useActionAccess();
+  return (
+    <DesignNavigation
+      active={active}
+      action={
+        <button
+          className="design-fab"
+          aria-label="发布一道菜"
+          onClick={() => {
+            if (!session) openLogin("/auth?next=%2Fpublish");
+            else if (access(true)) void nav("/publish");
+          }}
+        >
+          <DesignIcon name="add" size={26} />
+        </button>
+      }
+    />
+  );
+}
+
+export const mainDestinations = [
+  { key: "home", path: "/", icon: "discover", label: "发现" },
+  { key: "nearby", path: "/nearby", icon: "nearby", label: "附近" },
+  { key: "me", path: "/me", icon: "me", label: "我的" },
+] as const;
+
+export function DesignNavigation({
+  active,
+  action,
+}: {
+  active: string;
+  action: ReactNode;
+}) {
   const [instant, setInstant] = useState(false);
-  const selected = Math.max(0, ["home", "nearby", "me"].indexOf(active));
+  const selected = Math.max(
+    0,
+    mainDestinations.findIndex(({ key }) => key === active),
+  );
   return (
     <div className="design-navigation">
       <nav
@@ -108,11 +143,7 @@ export function DesignNav({ active }: { active: string }) {
             transform: `translateX(calc(${selected * 100}% + ${selected * 2}px))`,
           }}
         />
-        {[
-          { key: "home", path: "/", icon: "discover", label: "发现" },
-          { key: "nearby", path: "/nearby", icon: "nearby", label: "附近" },
-          { key: "me", path: "/me", icon: "me", label: "我的" },
-        ].map((n) => (
+        {mainDestinations.map((n) => (
           <Link
             key={n.key}
             to={n.path}
@@ -123,16 +154,7 @@ export function DesignNav({ active }: { active: string }) {
           </Link>
         ))}
       </nav>
-      <button
-        className="design-fab"
-        aria-label="发布一道菜"
-        onClick={() => {
-          if (!session) openLogin("/auth?next=%2Fpublish");
-          else if (access(true)) void nav("/publish");
-        }}
-      >
-        <DesignIcon name="add" size={26} />
-      </button>
+      {action}
     </div>
   );
 }

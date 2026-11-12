@@ -42,7 +42,7 @@
 | `FRONTEND_SSH_PORT` | `22` | production 或仓库级 |
 | `FRONTEND_DEPLOY_PATH` | `/www/wwwroot/eatwhat-frontend` | production 或仓库级 |
 | `FRONTEND_PUBLIC_URL` | `https://eat.v50to.you`；仅网站根地址 | production 或仓库级 |
-| `FRONTEND_API_SMOKE_URL` | `https://eat.v50to.you/api/foods/list?page=1&pageSize=1`；GET 必须返回 JSON `code: 0` | production 或仓库级 |
+| `FRONTEND_API_SMOKE_URL` | `https://eat.v50to.you/api/recommend/tags`，返回 `code: 0` 及品类、口味和忌口数组 | production 或仓库级 |
 
 构建变量必须在仓库级配置，因为构建任务不使用 production Environment。所有 `VITE_` 值会进入浏览器代码，只能放公开配置。
 

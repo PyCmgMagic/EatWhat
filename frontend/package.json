@@ -10,11 +10,11 @@
     "test": "vitest run",
     "typecheck": "tsc -b",
     "prototype:generate": "python scripts/compile-prototype.py",
-    "api:audit": "node scripts/audit-api-coverage.mjs",
-    "api:diff": "node scripts/audit-api-v4.mjs \"docs/EatWhat 业务服务 APIv6.openapi.json\" \"docs/EatWhat 业务服务 APIv7.openapi.json\" output/api-v7-diff-20261110.json",
-    "api:generate": "node scripts/generate-api.mjs",
-    "api:access": "node scripts/generate-access-rules.mjs",
-    "api:access:check": "node scripts/generate-access-rules.mjs --check"
+    "api:audit": "node scripts/backend-v2.mjs",
+    "api:diff": "node scripts/audit-api-v4.mjs \"docs/EatWhat 业务服务 APIv7.openapi.json\" \"docs/EatWhat 业务服务 后端v2.openapi.json\" output/backend-v2-vs-apiv7-20261111.json",
+    "api:generate": "node scripts/backend-v2.mjs --write",
+    "api:access": "node scripts/backend-v2.mjs --write",
+    "api:access:check": "node scripts/backend-v2.mjs"
   },
   "dependencies": {
     "@baidumap/jsapi-loader": "^1.0.0",

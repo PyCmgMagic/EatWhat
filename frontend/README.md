@@ -1,4 +1,27 @@
-# 山软今天吃什么 · 前端
+# EatWhat 前端
+
+## 后端 v2
+
+正式入口使用 [后端 v2 OpenAPI](../docs/EatWhat%20业务服务%20后端v2.openapi.json)，对应 `EatWhat-backend` 的 `8a89c8a`。契约含 139 项客户端操作和 8 项学校认证回跳，前端入口覆盖店铺推荐、附近、评价、收藏、账号及管理后台。
+
+在 `frontend/` 下运行 `npm ci` 和 `npm run dev`。本地默认访问同源 `/api`。复制 `.env.example` 到 `.env.local`，将 `API_PROXY_TARGET` 设为包含 `/api` 的 v2 网关地址。生产静态部署使用同源 `/api`，也可通过 `VITE_API_BASE_URL` 指向已配置 CORS 的 v2 网关。
+
+学校认证的前端回跳可设为站点的 /home。邮箱验证页可将后端 APP_EMAIL_VERIFY_URL 设为站点的 /verify/email。两个路径都需要站点的静态路由回退，前端启动时会读取并移除地址栏票据。对象存储允许前端域名 PUT，并按签名指定的 Content-Type 发送文件。
+
+演示入口为 /?demo=1。新的浏览器上下文可用 /?demo=1&persona=admin#/admin 或 /?demo=1&persona=unverified 切换初始身份。演示手机号为 13800000001（认证）、13800000002（管理员）、13800000003（未认证），验证码和初始密码均为 123456。正式和演示会话分开存储。历史画板入口为 /#/design。
+
+`npm run api:generate` 生成客户端类型、操作和权限规则。`npm run api:audit` 校验生成结果。`npm test` 运行测试，`npm run build` 检查类型并输出前端 ZIP。
+
+从仓库根目录运行以下命令。脚本拦截业务网络，使用本地演示和模拟响应检查请求参数。
+
+```powershell
+npx --yes --package @playwright/cli playwright-cli -s=eatwhat-v2 open "http://127.0.0.1:5173/?demo=1"
+npx --yes --package @playwright/cli playwright-cli -s=eatwhat-v2 run-code --filename frontend/scripts/backend-v2-flows.js
+```
+
+## APIv7 历史记录
+
+以下保留前一版前端和旧接口的开发记录。
 
 React 19、TypeScript、Vite、React Router、TanStack Query。当前移动端以 `../prototype/` 的本地画板为设计来源；旧 `design/` 不再作为移动端基准。51 张 HTML 画板编译为 React 页面，复用原始 CSS、SVG 插画、MingCute 图标、九种舞台色，以及本地托管的 Noto Sans SC 和 Bricolage Grotesque 字体。
 
