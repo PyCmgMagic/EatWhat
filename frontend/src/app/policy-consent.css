@@ -1,0 +1,71 @@
+/* Policy consent asked by backend v2; follows the old login dialog. */
+.ew-policy-dialog .ew-login-dialog-mark {
+  font-size: 15px;
+  font-weight: 750;
+}
+.ew-policy-text {
+  margin: 0 0 10px;
+  border: 1px solid var(--pc-line);
+  border-radius: 12px;
+  background: #fff;
+}
+.ew-policy-text summary {
+  padding: 11px 14px;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.ew-policy-text > div {
+  max-height: 34dvh;
+  padding: 0 14px 12px;
+  overflow-y: auto;
+  color: var(--pc-muted);
+  font-size: 12px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+.ew-policy-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  color: #51443a;
+  font-size: 13px;
+  cursor: pointer;
+}
+.ew-policy-check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #30251f;
+}
+.ew-policy-actions {
+  display: flex;
+  gap: 10px;
+}
+.ew-policy-actions button {
+  flex: 1;
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 1px solid var(--pc-line);
+  border-radius: 11px;
+  background: #fffdf9;
+  color: var(--pc-ink);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.ew-policy-actions .ew-auth-submit {
+  border-color: #30251f;
+  background: #30251f;
+  color: #fffdf9;
+}
+.ew-policy-actions .ew-auth-submit:hover:not(:disabled) {
+  background: #4a3a2d;
+}
+.ew-policy-actions .ew-auth-submit:disabled {
+  border-color: #e9decc;
+  background: #eee5d7;
+  color: #9a8971;
+  cursor: not-allowed;
+}

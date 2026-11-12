@@ -12,6 +12,7 @@ import {
   type Transport,
 } from "../api/client";
 import { createApi, uploadFile, uploadFiles, type Api } from "../api/service";
+import { bridgeToV2 } from "../api/v2-bridge";
 import { AppContext } from "./state";
 import { withActionAccess } from "../api/access";
 import { showAccessPrompt } from "./access-prompt";
@@ -49,6 +50,9 @@ function useMe(api: Api, session: Session | null) {
     enabled: !!session,
   });
 }
+const v2Mock =
+  import.meta.env.DEV &&
+  new URLSearchParams(window.location.search).get("demo") === "v2";
 function clientForSession(session: Session | null) {
   const signal = sessionSignal(session);
   const checkOwner = () => {
@@ -56,9 +60,20 @@ function clientForSession(session: Session | null) {
     readSession();
     signal.throwIfAborted();
   };
-  const live = createTransport(
-    import.meta.env.VITE_API_BASE_URL || "/api",
-    () => session,
+  // The old pages speak APIv7; the bridge maps them onto backend v2.
+  // ?demo=v2 (development only) runs the bridge against the v2 mock backend.
+  const live = bridgeToV2(
+    v2Mock
+      ? async (path, options) =>
+          (await import("../v2/demo")).demoTransport(
+            path,
+            options,
+            options.public ? undefined : session?.tokenValue,
+          )
+      : createTransport(
+          import.meta.env.VITE_API_BASE_URL || "/api",
+          () => session,
+        ),
   );
   const transport: Transport = async (path, options) => {
     const expireIfCurrent = (

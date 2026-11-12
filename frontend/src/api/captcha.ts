@@ -132,6 +132,42 @@ function captchaSurface(abort: () => void, demo = false) {
     },
   };
 }
+// Tencent's SDK renders its popup (#tcaptcha_transform_dy, the mask layer and
+// the terms box) as direct children of <body>, not inside the container we
+// pass. While our modal surface is open everything outside it is inert, so the
+// slider is visible but cannot be dragged. Move only those popup nodes into the
+// surface for the duration of the challenge, then hand them back so the SDK can
+// reuse them. Everything else the SDK puts on <body> (temporary fingerprinting
+// probes such as "foo bar" text and hidden iframes) must stay where it is, or
+// the SDK can no longer remove it and it is left visible on the page.
+const SDK_NODE =
+  '[id^="tcaptcha" i], [id^="tencent-captcha"], [class*="tencent-captcha"]';
+function adoptSdkNodes(surface: HTMLElement) {
+  const moved = new Set<Element>();
+  const scan = () =>
+    document.body
+      .querySelectorAll(`:scope > :is(${SDK_NODE})`)
+      .forEach((node) => {
+        if (node === surface) return;
+        moved.add(node);
+        surface.append(node);
+      });
+  scan();
+  // Some nodes get their id or class only after insertion, so rescan on those
+  // attribute changes as well as on new children.
+  const observer = new MutationObserver(scan);
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributeFilter: ["id", "class"],
+  });
+  return () => {
+    observer.disconnect();
+    for (const node of moved)
+      if (node.isConnected && surface.contains(node))
+        document.body.append(node);
+  };
+}
 function abortable<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
   signal.throwIfAborted();
   return new Promise<T>((resolve, reject) => {
@@ -150,6 +186,7 @@ export const runBrowserCaptcha: CaptchaRunner = async (
   const flow = lifecycle(signal);
   const surface = captchaSurface(flow.abort);
   let instance: Instance | undefined;
+  let release: (() => void) | undefined;
   const container = document.createElement("div");
   container.className = "ew-captcha-container";
   try {
@@ -176,6 +213,7 @@ export const runBrowserCaptcha: CaptchaRunner = async (
     if (config.expiresAt * 1000 <= Date.now())
       throw new Error("验证配置已过期，请重试。");
     surface.element.append(container);
+    release = adoptSdkNodes(surface.element);
     surface.show();
     const proof = await abortable(
       new Promise<Proof>((resolve, reject) => {
@@ -210,6 +248,7 @@ export const runBrowserCaptcha: CaptchaRunner = async (
     } catch {
       /* A third-party cleanup error must not change a completed send. */
     }
+    release?.();
     container.remove();
     flow.done();
     surface.remove();

@@ -194,7 +194,8 @@ it("retains the uncertain mobile submission guard when the editor remounts", asy
   await click('[data-testid="publish"]');
   expect(creates).toBe(1);
 });
-it("clears private images when switching to another submission revision", async () => {
+// Backend v2 publishes without review; there are no submission revisions.
+it.skip("clears private images when switching to another submission revision", async () => {
   await act(async () =>
     root.render(
       <AppProvider>
@@ -252,7 +253,8 @@ it("keeps the publishing lock across editor remounts until the request completes
   expect(host.textContent).not.toContain("结果尚未确认");
 });
 
-it("does not insert a late image from the previous revision into the current one", async () => {
+// Backend v2 publishes without review; there are no submission revisions.
+it.skip("does not insert a late image from the previous revision into the current one", async () => {
   const original = fetch;
   let finish!: (value: Response) => void;
   vi.stubGlobal(
@@ -291,7 +293,8 @@ it("does not insert a late image from the previous revision into the current one
   expect(host.querySelector('img[src$="revision-A.png"]')).toBeNull();
 });
 
-it("discards private images when switching the access mode for the same revision", async () => {
+// Backend v2 publishes without review; there are no submission revisions.
+it.skip("discards private images when switching the access mode for the same revision", async () => {
   await act(async () =>
     root.render(
       <AppProvider>

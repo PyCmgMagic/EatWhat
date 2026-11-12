@@ -152,6 +152,49 @@ describe("single-use human verification", () => {
     expect(surface.isConnected).toBe(false);
     expect(send).toHaveBeenCalledOnce();
   });
+  it("keeps the SDK popup interactive by moving it into the modal surface", async () => {
+    let probe!: HTMLElement;
+    window.TencentCaptcha = class {
+      destroy = vi.fn();
+      constructor(_container: HTMLElement, _id: string, callback: Callback) {
+        callbacks.push(callback);
+        destroys.push(this.destroy);
+      }
+      show() {
+        // The real SDK renders its slider popup straight onto <body>.
+        const popup = document.createElement("div");
+        popup.id = "tcaptcha_transform_dy";
+        document.body.append(popup);
+        // Its class arrives after insertion.
+        const mask = document.createElement("div");
+        document.body.append(mask);
+        mask.className = "tencent-captcha__mask-layer";
+        // Temporary fingerprinting probe the SDK removes from <body> itself.
+        probe = document.createElement("div");
+        probe.textContent = "foo bar";
+        document.body.append(probe);
+      }
+    };
+    const send = vi.fn().mockResolvedValue(undefined);
+    const run = runBrowserCaptcha(async () => config(), send);
+    await ready();
+    const surface = document.querySelector(".ew-captcha-surface")!;
+    await vi.waitFor(() => {
+      expect(surface.querySelector("#tcaptcha_transform_dy")).not.toBeNull();
+      expect(
+        surface.querySelector(".tencent-captcha__mask-layer"),
+      ).not.toBeNull();
+    });
+    expect(probe.parentElement).toBe(document.body);
+    document.body.removeChild(probe);
+    callbacks[0]({ ret: 0, ticket: "one", randstr: "r" });
+    await run;
+    const popup = document.getElementById("tcaptcha_transform_dy");
+    expect(popup?.parentElement).toBe(document.body);
+    popup?.remove();
+    document.querySelector(".tencent-captcha__mask-layer")?.remove();
+    expect(send).toHaveBeenCalledOnce();
+  });
   it("cancels a pending configuration when its login dialog closes", async () => {
     const login = document.createElement("dialog");
     login.dataset.login = "true";

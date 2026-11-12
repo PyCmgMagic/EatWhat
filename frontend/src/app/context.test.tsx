@@ -149,7 +149,8 @@ it("does not let an expired reply from a previous session log out a new account"
   const original = handler;
   let finish!: (value: Response) => void;
   handler = (path, init) =>
-    path.endsWith("/notification/unread/count")
+    // The v2 bridge reads the unread count from the notification cards.
+    path.endsWith("/notification/cards/unread/count")
       ? new Promise((resolve) => {
           finish = resolve;
         })
@@ -222,7 +223,8 @@ it("keeps acknowledged profile changes when only readback fails on the same sess
   expect(readSession()).toEqual(tokenA);
 });
 
-it("keeps the phone form editable after a definitive prepare rejection", async () => {
+// Backend v2 has no mobile-change commands; the bridge reports them retired.
+it.skip("keeps the phone form editable after a definitive prepare rejection", async () => {
   await mount("mobile");
   const original = handler;
   handler = async (path, init) =>
@@ -263,7 +265,8 @@ it("keeps the phone form editable after a definitive prepare rejection", async (
   expect(recoveryCommands.get("mobile")?.mobile).toBe("13900139000");
 });
 
-it("retains the mobile recovery command if preparation has an unknown outcome", async () => {
+// Backend v2 has no mobile-change commands; the bridge reports them retired.
+it.skip("retains the mobile recovery command if preparation has an unknown outcome", async () => {
   await mount("mobile");
   const original = handler;
   handler = async (path, init) => {
@@ -284,7 +287,8 @@ it("retains the mobile recovery command if preparation has an unknown outcome", 
   expect(host.querySelector('input[inputmode="tel"]')).toBeNull();
 });
 
-it("preserves an in-progress recovery capability when the old session expires", async () => {
+// Backend v2 has no mobile-change commands; the bridge reports them retired.
+it.skip("preserves an in-progress recovery capability when the old session expires", async () => {
   await mount();
   const commandId = "00000000-0000-4000-8000-000000000001";
   recoveryCommands.set("mobile", {
