@@ -471,6 +471,9 @@ export function Catalog({ favorites = false }: { favorites?: boolean }) {
                   <p>
                     {"address" in s ? String(s.address ?? "地址待补充") : ""}
                   </p>
+                  {matchedDish(s) && (
+                    <p className="ew-shop-match">有 {matchedDish(s)}</p>
+                  )}
                   <span>查看店铺 →</span>
                 </Link>
               ))}
@@ -503,4 +506,13 @@ export function Catalog({ favorites = false }: { favorites?: boolean }) {
       )}
     </div>
   );
+}
+
+/** Shop search also matches dish names; v2 returns the dish that matched. */
+function matchedDish(shop: object) {
+  const dish = (
+    shop as { matchedFoods?: { name?: string; price?: number | null }[] }
+  ).matchedFoods?.[0];
+  if (!dish?.name) return null;
+  return dish.price == null ? dish.name : `${dish.name} · ¥${dish.price}`;
 }

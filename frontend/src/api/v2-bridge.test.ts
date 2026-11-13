@@ -8,6 +8,16 @@ import {
 import { bridgeToV2, pictureKey } from "./v2-bridge";
 
 const consent = vi.hoisted(() => ({ answer: true, asked: [] as string[] }));
+const duplicate = vi.hoisted(() => ({
+  answer: null as { id: number } | "new" | null,
+  shown: [] as unknown[],
+}));
+vi.mock("../app/duplicate-shop", () => ({
+  askDuplicateShop: async (shops: unknown[]) => {
+    duplicate.shown.push(shops);
+    return duplicate.answer;
+  },
+}));
 vi.mock("../app/policy-consent", () => ({
   askPolicyConsent: async (_policy: unknown, reason: string) => {
     consent.asked.push(reason);
@@ -435,5 +445,112 @@ describe("v2 bridge", () => {
     }).catch((e) => e);
     expect(error).toBeInstanceOf(ApiError);
     expect(error).toMatchObject({ code: 40016, data: { id: 3 } });
+  });
+
+  describe("possible duplicate shops (40017)", () => {
+    const shop = { name: "一口面馆", address: "南门", gcjLng: 117, gcjLat: 36 };
+    const reply = (sent: Sent) =>
+      sent.path === "/restaurant/add" && !sent.body.force
+        ? {
+            code: 40017,
+            msg: "这家店可能已经有了",
+            data: { duplicates: [{ id: 5, name: "一口面馆", closed: false }] },
+          }
+        : sent.path === "/restaurant/add"
+          ? ok({ id: 9 })
+          : undefined;
+
+    it("uses the shop the person picked", async () => {
+      duplicate.answer = { id: 5 };
+      duplicate.shown = [];
+      const { request, sent } = backend(reply);
+      const result: any = await request("/restaurant/add", {
+        method: "POST",
+        body: shop,
+      });
+      expect(result.id).toBe(5);
+      expect(duplicate.shown[0]).toMatchObject([
+        { id: 5, permanentlyClosed: false },
+      ]);
+      expect(sent.filter((s) => s.path === "/restaurant/add")).toHaveLength(1);
+    });
+
+    it("adds anyway with force when the person insists", async () => {
+      duplicate.answer = "new";
+      const { request, sent } = backend(reply);
+      const result: any = await request("/restaurant/add", {
+        method: "POST",
+        body: shop,
+      });
+      expect(result.id).toBe(9);
+      expect(sent.at(-1)?.body).toMatchObject({
+        name: "一口面馆",
+        force: true,
+      });
+    });
+
+    it("stops when the person goes back", async () => {
+      duplicate.answer = null;
+      const { request } = backend(reply);
+      const error = await request("/restaurant/add", {
+        method: "POST",
+        body: shop,
+      }).catch((e) => e);
+      expect(error).toMatchObject({ code: "DUPLICATE_DECLINED" });
+    });
+  });
+
+  it("lists the dish that matched a shop search", async () => {
+    const { request } = backend(() =>
+      ok({
+        items: [
+          {
+            id: 2,
+            name: "一口面馆",
+            matchedFood: { id: 7, name: "牛肉面", price: 22 },
+          },
+        ],
+      }),
+    );
+    const page: any = await request("/restaurant/search", {
+      query: { keyword: "牛肉" },
+    });
+    expect(page.items[0].matchedFoods).toEqual([
+      { id: 7, restaurantId: 2, name: "牛肉面", price: 22 },
+    ]);
+  });
+
+  it("names signed-in devices and keeps the last-use time", async () => {
+    const { request } = backend(() =>
+      ok({
+        devices: [
+          {
+            sessionId: "a",
+            device: "WEB",
+            name: "Chrome · macOS",
+            lastActiveAt: "2026-11-14T02:00:00Z",
+          },
+        ],
+        nextCursor: null,
+      }),
+    );
+    const v: any = await request("/auth/sessions");
+    expect(v.devices[0]).toMatchObject({
+      name: "Chrome · macOS",
+      lastSeenAt: "2026-11-14T02:00:00Z",
+    });
+  });
+
+  it("sends the admin's delete reason", async () => {
+    const { request, sent } = backend(() => undefined);
+    await request("/foods/delete/7", {
+      method: "DELETE",
+      body: { reason: "图片与菜品不符" },
+    });
+    expect(sent[0]).toMatchObject({
+      path: "/foods/delete/7",
+      method: "DELETE",
+      body: { reason: "图片与菜品不符" },
+    });
   });
 });

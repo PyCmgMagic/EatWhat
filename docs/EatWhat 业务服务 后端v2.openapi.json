@@ -3768,6 +3768,56 @@
         } ]
       }
     },
+    "/restaurant/duplicates" : {
+      "get" : {
+        "tags" : [ "店铺 · Restaurant" ],
+        "operationId" : "duplicates",
+        "parameters" : [ {
+          "name" : "name",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "gcjLng",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "number",
+            "format" : "double"
+          }
+        }, {
+          "name" : "gcjLat",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "number",
+            "format" : "double"
+          }
+        }, {
+          "name" : "poi",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultListDuplicate"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "新建店铺前查重"
+      }
+    },
     "/restaurant/detail/{id}" : {
       "get" : {
         "tags" : [ "店铺 · Restaurant" ],
@@ -5517,6 +5567,15 @@
             "format" : "int64"
           }
         } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeleteRequest"
+              }
+            }
+          }
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -5548,6 +5607,15 @@
             "format" : "int64"
           }
         } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeleteRequest"
+              }
+            }
+          }
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -6589,6 +6657,9 @@
           },
           "deliveryEnabled" : {
             "type" : "boolean"
+          },
+          "force" : {
+            "type" : "boolean"
           }
         }
       },
@@ -6930,6 +7001,9 @@
           },
           "policyVersion" : {
             "type" : "string"
+          },
+          "deviceName" : {
+            "type" : "string"
           }
         },
         "required" : [ "device", "password" ]
@@ -7015,6 +7089,9 @@
           },
           "deletionKey" : {
             "type" : "string"
+          },
+          "deviceName" : {
+            "type" : "string"
           }
         },
         "required" : [ "code", "device", "mobile" ]
@@ -7064,6 +7141,9 @@
             "type" : "string"
           },
           "deletionKey" : {
+            "type" : "string"
+          },
+          "deviceName" : {
             "type" : "string"
           }
         },
@@ -8037,6 +8117,21 @@
           }
         }
       },
+      "MatchedFood" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "price" : {
+            "type" : "number"
+          }
+        }
+      },
       "PageResultRestaurant" : {
         "type" : "object",
         "properties" : {
@@ -8158,6 +8253,9 @@
           "updatedAt" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "matchedFood" : {
+            "$ref" : "#/components/schemas/MatchedFood"
           }
         }
       },
@@ -8188,6 +8286,53 @@
             "format" : "double"
           },
           "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "Duplicate" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "distanceMeters" : {
+            "type" : "number",
+            "format" : "double"
+          },
+          "permanentlyClosed" : {
+            "type" : "boolean"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ResultListDuplicate" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Duplicate"
+            }
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
             "type" : "integer",
             "format" : "int64"
           }
@@ -9316,7 +9461,14 @@
           "device" : {
             "type" : "string"
           },
+          "name" : {
+            "type" : "string"
+          },
           "issuedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "lastActiveAt" : {
             "type" : "string",
             "format" : "date-time"
           },
@@ -9801,6 +9953,14 @@
           "timestamp" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }
+      },
+      "DeleteRequest" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string"
           }
         }
       }

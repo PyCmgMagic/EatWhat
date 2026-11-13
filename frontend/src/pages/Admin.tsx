@@ -114,13 +114,17 @@ function DeleteDialog({
   description,
   run,
   onClose,
+  reason: askReason,
 }: {
   title: string;
   description: string;
-  run: () => Promise<unknown>;
+  run: (reason?: string) => Promise<unknown>;
   onClose: () => void;
+  /** Shows an optional reason field; backend v2 sends it to the author. */
+  reason?: boolean;
 }) {
   const { toast } = useApp();
+  const [reason, setReason] = useState("");
   const task = useTask(undefined, onClose, [
     "admin",
     "restaurants",
@@ -131,6 +135,22 @@ function DeleteDialog({
   return (
     <Modal title={title} onClose={onClose}>
       <p className="modal-description">{description}</p>
+      {askReason && (
+        <>
+          <label className="form-label" htmlFor="admin-delete-reason">
+            删除原因（选填，会通知作者）
+          </label>
+          <textarea
+            className="field"
+            id="admin-delete-reason"
+            rows={3}
+            maxLength={200}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="例如：图片与菜品不符"
+          />
+        </>
+      )}
       {task.error && <ErrorState error={task.error} />}
       <div className="modal-actions">
         <button
@@ -145,7 +165,7 @@ function DeleteDialog({
           disabled={task.isPending}
           onClick={() =>
             task.run(async () => {
-              const result = await run();
+              const result = await run(reason.trim() || undefined);
               toast(
                 typeof result === "number"
                   ? `已重算，影响 ${result} 家餐厅`
@@ -460,7 +480,8 @@ function AdminFoods() {
         <DeleteDialog
           title={`删除「${del.name}」？`}
           description="删除会影响公共内容、收藏和浏览记录，请确认该条目确实需要删除。"
-          run={() => api.deleteFood(del.id!)}
+          reason
+          run={(reason) => api.deleteFood(del.id!, reason)}
           onClose={() => setDel(null)}
         />
       )}

@@ -1571,6 +1571,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/restaurant/duplicates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 新建店铺前查重 */
+        get: operations["getRestaurantDuplicates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/restaurant/detail/{id}": {
         parameters: {
             query?: never;
@@ -2694,6 +2711,7 @@ export interface components {
             categories?: string[];
             tags?: string[];
             deliveryEnabled?: boolean;
+            force?: boolean;
         };
         Created: {
             /** Format: int64 */
@@ -2813,6 +2831,7 @@ export interface components {
             /** @enum {string} */
             device: "WEB" | "APP";
             policyVersion?: string;
+            deviceName?: string;
         };
         ResultSaTokenInfo: {
             /** Format: int32 */
@@ -2846,6 +2865,7 @@ export interface components {
             device: "WEB" | "APP";
             policyVersion?: string;
             deletionKey?: string;
+            deviceName?: string;
         };
         SendLoginCode: {
             mobile: string;
@@ -2861,6 +2881,7 @@ export interface components {
             device: "WEB" | "APP";
             policyVersion?: string;
             deletionKey?: string;
+            deviceName?: string;
         };
         ConsentStatus: {
             agreedVersion?: string | null;
@@ -3237,6 +3258,12 @@ export interface components {
             /** Format: int64 */
             createdAt?: number;
         };
+        MatchedFood: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            price?: number;
+        };
         PageResultRestaurant: {
             /** Format: int64 */
             currentPage?: number;
@@ -3279,6 +3306,7 @@ export interface components {
             createdAt?: number;
             /** Format: int64 */
             updatedAt?: number;
+            matchedFood?: components["schemas"]["MatchedFood"];
         };
         ResultPageResultRestaurant: {
             /** Format: int32 */
@@ -3292,6 +3320,24 @@ export interface components {
             rate?: number | null;
             /** Format: int64 */
             count?: number;
+        };
+        Duplicate: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            address?: string;
+            /** Format: double */
+            distanceMeters?: number;
+            permanentlyClosed?: boolean;
+            reason?: string;
+        };
+        ResultListDuplicate: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["Duplicate"][];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
         };
         ResultRestaurant: {
             /** Format: int32 */
@@ -3735,8 +3781,11 @@ export interface components {
             /** Format: uuid */
             sessionId?: string;
             device?: string;
+            name?: string;
             /** Format: date-time */
             issuedAt?: string;
+            /** Format: date-time */
+            lastActiveAt?: string;
             /** Format: date-time */
             expiresAt?: string;
             current?: boolean;
@@ -3933,6 +3982,9 @@ export interface components {
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
+        };
+        DeleteRequest: {
+            reason?: string;
         };
         AdminResetPassword: {
             password: string;
@@ -6814,6 +6866,31 @@ export interface operations {
             };
         };
     };
+    getRestaurantDuplicates: {
+        parameters: {
+            query: {
+                name?: string;
+                gcjLng: number;
+                gcjLat: number;
+                poi?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultListDuplicate"];
+                };
+            };
+        };
+    };
     restaurant: {
         parameters: {
             query?: never;
@@ -7808,7 +7885,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DeleteRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -7830,7 +7911,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DeleteRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

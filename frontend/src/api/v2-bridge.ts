@@ -196,7 +196,17 @@ export function restaurant(v: Json | null | undefined): Json | null {
       stageColor: f.stageColor ?? null,
       likesCount: f.likeCount ?? 0,
     })),
-    matchedFoods: [],
+    // v2 search by dish name returns the one dish that matched.
+    matchedFoods: v.matchedFood
+      ? [
+          {
+            id: v.matchedFood.id,
+            restaurantId: v.id,
+            name: v.matchedFood.name,
+            price: v.matchedFood.price ?? null,
+          },
+        ]
+      : [],
     publicTastes: (v.tags ?? []).map((name: string) => ({
       restaurantId: v.id,
       tagId: tagId(name),
@@ -684,6 +694,23 @@ const routes: [string, RegExp, Handler][] = [
       status: "COMPLETED",
     }),
   ],
+  [
+    "GET",
+    /^\/auth\/sessions$/,
+    async ({ query, call }) => {
+      const v = await call("/auth/sessions", { query });
+      return {
+        ...v,
+        devices: (v?.devices ?? []).map((d: Json) => ({
+          ...d,
+          // v2 names the device (e.g. "Chrome · macOS"); null → show the type.
+          name: d.name ?? null,
+          lastSeenAt: d.lastActiveAt ?? d.issuedAt ?? null,
+        })),
+        nextCursor: v?.nextCursor ?? null,
+      };
+    },
+  ],
   ["GET", /^\/user\/info$/, async ({ call }) => me(await call("/user/info"))],
   [
     "PUT",
@@ -963,8 +990,12 @@ const routes: [string, RegExp, Handler][] = [
   [
     "DELETE",
     /^\/foods\/(?:delete|my)\/(\d+)$/,
-    ({ match, call }) =>
-      call(`/foods/delete/${match[1]}`, { method: "DELETE" }),
+    ({ match, body, call }) =>
+      call(`/foods/delete/${match[1]}`, {
+        method: "DELETE",
+        // Admins may give a reason; v2 forwards it to the author.
+        body: body.reason ? { reason: body.reason } : undefined,
+      }),
   ],
   ["POST", /^\/foods\/(\d+)\/(like|unlike|favorite|unfavorite)$/, pass],
   [
@@ -1141,8 +1172,16 @@ const routes: [string, RegExp, Handler][] = [
   [
     "POST",
     /^\/restaurant\/add$/,
-    async ({ body, call }) =>
-      created(await call("/restaurant/add", { body: restaurantBody(body) })),
+    async ({ body, call }) => {
+      const draft = restaurantBody(body);
+      try {
+        return created(await call("/restaurant/add", { body: draft }));
+      } catch (error) {
+        if (!(error instanceof ApiError) || String(error.code) !== "40017")
+          throw error;
+        return created(await chooseDuplicate(call, draft, error));
+      }
+    },
   ],
   [
     "PUT",
@@ -1538,6 +1577,36 @@ const currentPolicy = (call: Call) =>
     public: true,
     cache: "no-store",
   });
+
+/**
+ * Adding a shop answers 40017 when the map place or a same-named shop nearby
+ * already exists. Let the person pick that shop (the pages then continue with
+ * it as if it was just added) or add the new shop anyway.
+ */
+async function chooseDuplicate(call: Call, draft: Json, error: ApiError) {
+  const fromError = (error.data as Json | null)?.duplicates;
+  const shops: Json[] = Array.isArray(fromError)
+    ? fromError.map((d: Json) => ({
+        ...d,
+        permanentlyClosed: d.permanentlyClosed ?? d.closed ?? false,
+      }))
+    : ((await call("/restaurant/duplicates", {
+        query: {
+          name: draft.name,
+          gcjLng: draft.gcjLng,
+          gcjLat: draft.gcjLat,
+          poi: draft.poi ?? undefined,
+        },
+      })) ?? []);
+  const { askDuplicateShop } = await import("../app/duplicate-shop");
+  const choice = shops.length
+    ? await askDuplicateShop(shops as never, error.message)
+    : "new";
+  if (choice === "new")
+    return call("/restaurant/add", { body: { ...draft, force: true } });
+  if (choice) return { id: choice.id };
+  throw new ApiError("已返回修改店铺信息。", "DUPLICATE_DECLINED");
+}
 
 /** Sign-in asks for the current policy version when it was never agreed. */
 async function withLoginConsent<T>(

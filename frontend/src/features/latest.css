@@ -276,6 +276,11 @@
   font-size: 12px;
   font-weight: 700;
 }
+.ew-shop-card .ew-shop-match {
+  margin: -4px 0 10px;
+  color: #9c422d;
+  font-weight: 650;
+}
 .ew-state {
   padding: 45px 20px;
   display: flex;

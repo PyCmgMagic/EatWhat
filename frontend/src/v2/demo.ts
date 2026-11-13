@@ -481,12 +481,71 @@ export function demoTransport(
     agreedVersion: state.agreed[user] ?? null,
     required: state.agreed[user] !== current?.version,
   });
+  // Search also finds shops by one of their dishes (v2 matchedFood).
+  const dishMatch = (shop: Shop) =>
+    keyword && !matches(shop.name) && !matches(shop.address)
+      ? state.foods.find(
+          (food) => food.restaurantId === shop.id && matches(food.name),
+        )
+      : undefined;
+  const duplicatesOf = (shopName: unknown, lng: unknown, lat: unknown) => {
+    const wanted = String(shopName ?? "")
+      .trim()
+      .toLowerCase();
+    return state.shops
+      .map((shop) => {
+        const meters =
+          lng != null &&
+          lat != null &&
+          shop.gcjLng != null &&
+          shop.gcjLat != null
+            ? Math.hypot(
+                (Number(lng) - shop.gcjLng) *
+                  111320 *
+                  Math.cos((Number(lat) * Math.PI) / 180),
+                (Number(lat) - shop.gcjLat) * 110540,
+              )
+            : 0;
+        return { shop, meters };
+      })
+      .filter(
+        ({ shop, meters }) =>
+          !!wanted &&
+          shop.name.trim().toLowerCase() === wanted &&
+          meters <= 300,
+      )
+      .map(({ shop, meters }) => ({
+        id: shop.id,
+        name: shop.name,
+        address: shop.address,
+        distanceMeters: Math.round(meters),
+        permanentlyClosed: !!shop.permanentlyClosed,
+        reason: "name",
+      }));
+  };
   const candidateList = () => {
     let list = state.shops
-      .map(withViewer)
+      .map((shop) => {
+        const dish = dishMatch(shop);
+        return {
+          ...withViewer(shop),
+          ...(dish
+            ? {
+                matchedFood: {
+                  id: dish.id,
+                  name: dish.name,
+                  price: dish.price ?? null,
+                },
+              }
+            : {}),
+        };
+      })
       .filter(
         (shop) =>
-          (!q.keyword || matches(shop.name) || matches(shop.address)) &&
+          (!q.keyword ||
+            matches(shop.name) ||
+            matches(shop.address) ||
+            !!shop.matchedFood) &&
           (!q.campusId || shop.campusId === Number(q.campusId)) &&
           (!q.hubId || shop.hubId === Number(q.hubId)) &&
           (!q.kind || shop.kind === q.kind) &&
@@ -681,11 +740,21 @@ export function demoTransport(
           {
             sessionId: "demo-current",
             current: true,
-            device: "当前浏览器",
+            device: "WEB",
+            name: "Chrome · macOS",
             issuedAt: new Date().toISOString(),
+            lastActiveAt: new Date().toISOString(),
           },
           ...(!state.revokedDevices.includes(user)
-            ? [{ sessionId: "demo-other", current: false, device: "演示设备" }]
+            ? [
+                {
+                  sessionId: "demo-other",
+                  current: false,
+                  device: "IOS",
+                  name: null,
+                  lastActiveAt: new Date(Date.now() - 864e5).toISOString(),
+                },
+              ]
             : []),
         ],
         nextCursor: null,
@@ -895,8 +964,19 @@ export function demoTransport(
       else delete state.ratings[key];
       return write(viewerRating(id));
     }
+    case "getRestaurantDuplicates":
+      return ok(duplicatesOf(q.name, q.gcjLng, q.gcjLat));
     case "editRestaurant":
     case "addRestaurant": {
+      if (name === "addRestaurant" && !body.force) {
+        const duplicates = duplicatesOf(body.name, body.gcjLng, body.gcjLat);
+        if (duplicates.length)
+          return {
+            code: 40017,
+            msg: "这家店可能已经有了",
+            data: { duplicates },
+          };
+      }
       const shopId =
         shop?.id ?? Math.max(0, ...state.shops.map((item) => item.id)) + 1;
       const updated = {

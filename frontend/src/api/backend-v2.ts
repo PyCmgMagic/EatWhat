@@ -26,7 +26,10 @@ type BodyOptions<K extends Operation> = [
   Body<operations[K]["requestBody"]>,
 ] extends [never]
   ? {}
-  : { body: Body<operations[K]["requestBody"]> };
+  : // springdoc marks a body optional when the controller allows none.
+    undefined extends operations[K]["requestBody"]
+    ? { body?: Body<NonNullable<operations[K]["requestBody"]>> }
+    : { body: Body<operations[K]["requestBody"]> };
 export type V2Options<K extends Operation> = QueryOptions<Params<K>> &
   PathOptions<Params<K>> &
   BodyOptions<K> &

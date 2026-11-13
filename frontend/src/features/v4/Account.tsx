@@ -81,7 +81,7 @@ export function Devices() {
                 </span>
                 <div>
                   <strong>
-                    {device.device} {device.current && "· 当前设备"}
+                    {deviceName(device)} {device.current && "· 当前设备"}
                   </strong>
                   <p>最近使用：{timeText(device.lastSeenAt)}</p>
                   <small>到期：{timeText(device.expiresAt)}</small>
@@ -1217,5 +1217,21 @@ export function TelemetrySettings() {
         </Card>
       </QueryView>
     </Shell>
+  );
+}
+
+const deviceTypes: Record<string, string> = {
+  WEB: "网页浏览器",
+  IOS: "iPhone / iPad",
+  ANDROID: "安卓手机",
+  APP: "手机 App",
+};
+/** v2 names the device (e.g. "Chrome · macOS"); fall back to its type. */
+function deviceName(device: { device?: string | null; name?: string | null }) {
+  return (
+    device.name?.trim() ||
+    deviceTypes[device.device ?? ""] ||
+    device.device ||
+    "未知设备"
   );
 }

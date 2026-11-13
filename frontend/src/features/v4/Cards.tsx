@@ -86,7 +86,13 @@ export function RestaurantCard({ shop }: { shop: Restaurant }) {
         </div>
         {!!shop.matchedFoods?.length && (
           <p className="v4-shop-match">
-            找到：{shop.matchedFoods.map((f) => f.name).join("、")}
+            找到：
+            {shop.matchedFoods
+              .map((f) => {
+                const price = (f as { price?: number | null }).price;
+                return price == null ? f.name : `${f.name} ¥${price}`;
+              })
+              .join("、")}
           </p>
         )}
       </div>

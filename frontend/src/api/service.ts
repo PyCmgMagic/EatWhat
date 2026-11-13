@@ -499,8 +499,11 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         method: "PUT",
         body,
       }),
-    deleteFood: (id: number) =>
-      request<void>(`/foods/delete/${id}`, { method: "DELETE" }),
+    deleteFood: (id: number, reason?: string) =>
+      request<void>(`/foods/delete/${id}`, {
+        method: "DELETE",
+        ...(reason ? { body: { reason } } : {}),
+      }),
     adminTags: (page = 1) =>
       data<Page<Schema["AdminFoodTagVOResponse"]>>("/admin/food-tags", {
         query: { page, pageSize: 20 },

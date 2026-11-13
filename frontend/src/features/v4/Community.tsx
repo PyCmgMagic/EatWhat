@@ -643,6 +643,19 @@ export function Submissions({ revisionId }: { revisionId?: string }) {
   );
 }
 
+/** Detail of the system cards backend v2 added (data.type). */
+type SystemDetail = {
+  type?: string | null;
+  device?: string | null;
+  deviceName?: string | null;
+  loginAt?: number | null;
+  contentType?: string | null;
+  title?: string | null;
+  reason?: string | null;
+  banUntil?: number | null;
+  content?: string | null;
+};
+
 export function NotificationCards() {
   const { api } = useApp(),
     cache = useQueryClient(),
@@ -665,6 +678,10 @@ export function NotificationCards() {
       return `/feedback/mine/${d.caseId}`;
     if (d?.type === "moderation_result" && d.revisionId)
       return `/submissions/${d.revisionId}`;
+    // The removed dish or comment is gone; a new sign-in links to devices.
+    const extra = (d as SystemDetail | null | undefined)?.type;
+    if (extra === "content_removed" || extra === "account_banned") return null;
+    if (extra === "new_device_login") return "/settings/devices";
     const t = item.target;
     if (t?.unavailable || !t?.id) return null;
     const paths: Record<string, string> = {
@@ -721,6 +738,7 @@ export function NotificationCards() {
             {q.data?.items?.map((item) => {
               const link = targetLink(item),
                 detail = item.data?.detail,
+                extra = detail as SystemDetail | null | undefined,
                 systemTitle =
                   item.kind === "moderation_result"
                     ? "审核结果"
@@ -728,7 +746,15 @@ export function NotificationCards() {
                       ? "反馈回复"
                       : item.kind === "topic_included"
                         ? "专题收录"
-                        : "系统通知";
+                        : item.kind === "new_device_login"
+                          ? "新设备登录"
+                          : item.kind === "content_removed"
+                            ? "内容已删除"
+                            : item.kind === "account_banned"
+                              ? "账号处理通知"
+                              : item.kind === "announcement"
+                                ? (extra?.title ?? "公告")
+                                : "系统通知";
               return (
                 <article
                   className="profile-message-row"
@@ -747,7 +773,10 @@ export function NotificationCards() {
                             ? "bookmark"
                             : item.kind === "case_result"
                               ? "feedback"
-                              : item.kind === "moderation_result"
+                              : item.kind === "moderation_result" ||
+                                  item.kind === "new_device_login" ||
+                                  item.kind === "content_removed" ||
+                                  item.kind === "account_banned"
                                 ? "shield"
                                 : item.kind === "follow"
                                   ? "follow"
@@ -795,6 +824,35 @@ export function NotificationCards() {
                             : statusText(detail.verdict)}{" "}
                         {detail.reasonCode}
                       </p>
+                    )}
+                    {extra?.type === "new_device_login" && (
+                      <p>
+                        你的账号在
+                        {extra.deviceName ??
+                          (extra.device === "WEB" ? "网页浏览器" : "新设备")}
+                        上登录
+                        {extra.loginAt ? `（${timeText(extra.loginAt)}）` : ""}
+                        。如果不是你本人，请到登录设备里将它下线并修改密码。
+                      </p>
+                    )}
+                    {extra?.type === "content_removed" && (
+                      <p>
+                        你发布的{extra.contentType === "food" ? "菜品" : "评论"}
+                        「{extra.title ?? "内容"}」已被管理员删除
+                        {extra.reason ? `，原因：${extra.reason}` : "。"}
+                      </p>
+                    )}
+                    {extra?.type === "account_banned" && (
+                      <p>
+                        账号已被限制使用
+                        {extra.reason ? `，原因：${extra.reason}` : ""}；
+                        {extra.banUntil
+                          ? `将于 ${timeText(extra.banUntil)} 解除。`
+                          : "暂无解除时间。"}
+                      </p>
+                    )}
+                    {extra?.type === "announcement" && extra.content && (
+                      <p>{extra.content}</p>
                     )}
                     {detail?.type === "topic_included" && (
                       <p>
