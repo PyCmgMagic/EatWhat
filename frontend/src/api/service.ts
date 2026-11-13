@@ -450,6 +450,18 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         body: { mobile, scene: "bind" },
         signal,
       }),
+    // Backend v2 account deletion: phone code (or password), then a 7-day wait.
+    accountDeleteCode: (signal?: AbortSignal) =>
+      sendVerified("/auth/account/delete/code", { method: "POST", signal }),
+    deleteAccount: (body: {
+      code?: string;
+      password?: string;
+      deleteComments: boolean;
+    }) =>
+      data<{ deleteAt: number; deletionKey: string }>("/auth/account/delete", {
+        method: "POST",
+        body,
+      }),
     // Backend v2 phone change: old-phone code, new-phone code, then commit.
     mobileChangeOldCode: (signal?: AbortSignal) =>
       sendVerified("/user/mobile/change/old-code", { method: "POST", signal }),

@@ -212,19 +212,25 @@ function Users() {
                     <button
                       disabled={task.busy}
                       onClick={() => {
-                        if (
-                          !target.banned &&
-                          !confirm(
-                            "封禁后该用户将退出登录，直到管理员解封。继续？",
-                          )
-                        )
-                          return;
+                        const reason = target.banned
+                          ? ""
+                          : (
+                              prompt("封禁原因（会通过系统消息告诉本人）") ?? ""
+                            ).trim();
+                        if (!target.banned && !reason) return;
                         void task.run(
                           async (signal) => {
-                            await call(target.banned ? "unban" : "ban", {
-                              path: { userId: target.id! },
-                              signal,
-                            });
+                            if (target.banned)
+                              await call("unban", {
+                                path: { userId: target.id! },
+                                signal,
+                              });
+                            else
+                              await call("ban", {
+                                path: { userId: target.id! },
+                                body: { reason },
+                                signal,
+                              });
                             await Promise.all([
                               query.refetch(),
                               cache.invalidateQueries({

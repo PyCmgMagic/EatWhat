@@ -338,11 +338,63 @@
         } ]
       }
     },
+    "/user/recommendation-settings" : {
+      "get" : {
+        "tags" : [ "推荐 · RecommendSettings" ],
+        "summary" : "【需登录】获取本人个性化推荐开关",
+        "operationId" : "get",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultSettings"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "推荐 · RecommendSettings" ],
+        "summary" : "【需登录】设置本人个性化推荐开关",
+        "operationId" : "put",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Settings"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultSettings"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
     "/user/recommendation-profile/preferences" : {
       "get" : {
         "tags" : [ "推荐 · Preference" ],
         "summary" : "【需登录】获取本人推荐偏好",
-        "operationId" : "get",
+        "operationId" : "get_1",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -362,7 +414,7 @@
       "put" : {
         "tags" : [ "推荐 · Preference" ],
         "summary" : "【需登录】修改本人推荐偏好",
-        "operationId" : "put",
+        "operationId" : "put_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -489,6 +541,68 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
+    "/telemetry/consent" : {
+      "get" : {
+        "tags" : [ "telemetry · Telemetry" ],
+        "summary" : "【需登录】获取本人使用统计开关",
+        "operationId" : "consent",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultConsent"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "telemetry · Telemetry" ],
+        "summary" : "【需登录】开启使用统计",
+        "operationId" : "enable",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultConsent"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "telemetry · Telemetry" ],
+        "summary" : "【需登录】关闭使用统计并删除已收集的事件",
+        "operationId" : "disable",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultConsent"
                 }
               }
             }
@@ -973,7 +1087,7 @@
       "get" : {
         "tags" : [ "ai · AdminAi" ],
         "summary" : "【需角色：admin】获取 AI 提供商配置（API Key 只显示后 4 位）",
-        "operationId" : "get_1",
+        "operationId" : "get_2",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -993,7 +1107,7 @@
       "put" : {
         "tags" : [ "ai · AdminAi" ],
         "summary" : "【需角色：admin】修改 AI 提供商配置（OpenAI 兼容端点）",
-        "operationId" : "put_1",
+        "operationId" : "put_2",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1355,6 +1469,16 @@
             "format" : "int64"
           }
         } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Ban"
+              }
+            }
+          },
+          "required" : true
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1606,7 +1730,7 @@
       "post" : {
         "tags" : [ "push · Push" ],
         "summary" : "【需登录】开启推送栏目",
-        "operationId" : "enable",
+        "operationId" : "enable_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1638,7 +1762,7 @@
       "post" : {
         "tags" : [ "push · Push" ],
         "summary" : "【需登录】关闭推送栏目",
-        "operationId" : "disable",
+        "operationId" : "disable_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2818,6 +2942,75 @@
         } ]
       }
     },
+    "/auth/account/delete" : {
+      "post" : {
+        "tags" : [ "账号 · Contact" ],
+        "summary" : "【需登录，同意前可用】注销账号（手机验证码或密码确认，立即生效、不可恢复）",
+        "operationId" : "deleteAccount",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeleteAccount"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultDeletionRequested"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
+    "/auth/account/delete/code" : {
+      "post" : {
+        "tags" : [ "账号 · Contact" ],
+        "summary" : "【需登录，同意前可用】发送注销账号验证码（发到本人手机号）",
+        "operationId" : "deleteAccountCode",
+        "parameters" : [ {
+          "name" : "X-Captcha-Ticket",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "X-Captcha-Randstr",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
     "/admin/users/{userId}/password" : {
       "post" : {
         "tags" : [ "账号 · AdminUser" ],
@@ -3104,7 +3297,7 @@
       "get" : {
         "tags" : [ "推荐 · Taste" ],
         "summary" : "【需登录】获取本人的隐式口味（从点赞、收藏、评价统计）",
-        "operationId" : "get_2",
+        "operationId" : "get_3",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -3158,6 +3351,67 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResultPageResultUserListItem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
+    "/user/level" : {
+      "get" : {
+        "tags" : [ "用户 · User" ],
+        "summary" : "【需登录】获取本人等级与经验进度",
+        "operationId" : "level",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultLevel"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
+    "/user/level/logs" : {
+      "get" : {
+        "tags" : [ "用户 · User" ],
+        "summary" : "【需登录】获取本人经验明细",
+        "operationId" : "levelLogs",
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultPageResultExperienceLog"
                 }
               }
             }
@@ -3835,7 +4089,7 @@
     "/remote-config" : {
       "get" : {
         "tags" : [ "remoteconfig · RemoteConfig" ],
-        "operationId" : "get_3",
+        "operationId" : "get_4",
         "parameters" : [ {
           "name" : "platform",
           "in" : "query",
@@ -4985,7 +5239,7 @@
       "get" : {
         "tags" : [ "remoteconfig · AdminRemoteConfig" ],
         "summary" : "【需角色：admin】获取远程配置管理视图",
-        "operationId" : "get_4",
+        "operationId" : "get_5",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -5413,6 +5667,33 @@
           }
         }
       },
+      "Settings" : {
+        "type" : "object",
+        "properties" : {
+          "personalized" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "ResultSettings" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/Settings"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "PreferencesRequest" : {
         "type" : "object",
         "properties" : {
@@ -5486,6 +5767,37 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/Preferences"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "Consent" : {
+        "type" : "object",
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "retentionDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "ResultConsent" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/Consent"
           },
           "msg" : {
             "type" : "string"
@@ -5647,6 +5959,20 @@
           }
         }
       },
+      "CoverCrop" : {
+        "type" : "object",
+        "properties" : {
+          "centerX" : {
+            "type" : "number"
+          },
+          "centerY" : {
+            "type" : "number"
+          },
+          "diameter" : {
+            "type" : "number"
+          }
+        }
+      },
       "VersionRequest" : {
         "type" : "object",
         "properties" : {
@@ -5774,55 +6100,6 @@
           "expectedRevision" : {
             "type" : "integer",
             "format" : "int32"
-          }
-        }
-      },
-      "ResultSettings" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "data" : {
-            "$ref" : "#/components/schemas/Settings"
-          },
-          "msg" : {
-            "type" : "string"
-          },
-          "timestamp" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }
-      },
-      "Settings" : {
-        "type" : "object",
-        "properties" : {
-          "revision" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "flags" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "$ref" : "#/components/schemas/Flag"
-            }
-          },
-          "params" : {
-            "type" : "object",
-            "additionalProperties" : { }
-          },
-          "maintenance" : {
-            "$ref" : "#/components/schemas/Maintenance"
-          },
-          "updatedAt" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "updatedBy" : {
-            "type" : "integer",
-            "format" : "int64"
           }
         }
       },
@@ -6026,6 +6303,18 @@
           }
         }
       },
+      "Ban" : {
+        "type" : "object",
+        "properties" : {
+          "reason" : {
+            "type" : "string"
+          },
+          "banUntil" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "Presign" : {
         "type" : "object",
         "properties" : {
@@ -6226,6 +6515,9 @@
           "duplicates" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "enabled" : {
+            "type" : "boolean"
           }
         }
       },
@@ -6441,6 +6733,18 @@
           },
           "signature" : {
             "type" : "boolean"
+          },
+          "stageColor" : {
+            "type" : "string"
+          },
+          "stageAlternates" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "coverCrop" : {
+            "$ref" : "#/components/schemas/CoverCrop"
           }
         }
       },
@@ -6708,6 +7012,9 @@
           },
           "policyVersion" : {
             "type" : "string"
+          },
+          "deletionKey" : {
+            "type" : "string"
           }
         },
         "required" : [ "code", "device", "mobile" ]
@@ -6755,17 +7062,12 @@
           },
           "policyVersion" : {
             "type" : "string"
+          },
+          "deletionKey" : {
+            "type" : "string"
           }
         },
         "required" : [ "device", "password" ]
-      },
-      "Consent" : {
-        "type" : "object",
-        "properties" : {
-          "policyVersion" : {
-            "type" : "string"
-          }
-        }
       },
       "ConsentStatus" : {
         "type" : "object",
@@ -6826,6 +7128,52 @@
           }
         },
         "required" : [ "newPassword", "oldPassword" ]
+      },
+      "DeleteAccount" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "pattern" : "^\\d{6}$"
+          },
+          "password" : {
+            "type" : "string"
+          },
+          "deleteComments" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "DeletionRequested" : {
+        "type" : "object",
+        "properties" : {
+          "deleteAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "deletionKey" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ResultDeletionRequested" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/DeletionRequested"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
       },
       "ResolutionRequest" : {
         "type" : "object",
@@ -6999,6 +7347,10 @@
           },
           "avatar" : {
             "type" : "string"
+          },
+          "level" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "gender" : {
             "type" : "string"
@@ -7183,6 +7535,13 @@
           "banned" : {
             "type" : "boolean"
           },
+          "banReason" : {
+            "type" : "string"
+          },
+          "banUntil" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "verified" : {
             "type" : "boolean"
           },
@@ -7196,6 +7555,132 @@
             "type" : "string"
           },
           "createdAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "Level" : {
+        "type" : "object",
+        "properties" : {
+          "level" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "experience" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "levelExperience" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nextLevel" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "nextLevelExperience" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "toNextLevel" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "maxLevel" : {
+            "type" : "boolean"
+          },
+          "dailyUseExperience" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "ResultLevel" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/Level"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ExperienceLog" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "source" : {
+            "type" : "string"
+          },
+          "sourceName" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "day" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "PageResultExperienceLog" : {
+        "type" : "object",
+        "properties" : {
+          "currentPage" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ExperienceLog"
+            }
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalItems" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "hasNext" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "ResultPageResultExperienceLog" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResultExperienceLog"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
             "type" : "integer",
             "format" : "int64"
           }
@@ -7246,6 +7731,20 @@
           },
           "verifiedEmail" : {
             "type" : "string"
+          },
+          "level" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "banned" : {
+            "type" : "boolean"
+          },
+          "banReason" : {
+            "type" : "string"
+          },
+          "banUntil" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "gender" : {
             "type" : "string"
@@ -7997,6 +8496,12 @@
           },
           "pictureUrl" : {
             "type" : "string"
+          },
+          "stageColor" : {
+            "type" : "string"
+          },
+          "coverCrop" : {
+            "$ref" : "#/components/schemas/CoverCrop"
           }
         }
       },

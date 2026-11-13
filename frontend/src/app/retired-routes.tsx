@@ -15,12 +15,9 @@ const retired = new Set([
  * still exists, and menus use isRetiredV2 to leave the entries out.
  */
 const v2Retired: [RegExp, string][] = [
-  [/^\/me\/growth$/, "/me"],
   [/^\/me\/tags(\/.*)?$/, "/me"],
   [/^\/topics(\/.*)?$/, "/"],
   [/^\/submissions(\/.*)?$/, "/me"],
-  [/^\/settings\/delete$/, "/settings/account"],
-  [/^\/settings\/telemetry$/, "/settings"],
   [/^\/settings\/notifications$/, "/settings"],
   [/^\/auth\/(account|mobile|device)-recovery$/, "/settings/account"],
 ];

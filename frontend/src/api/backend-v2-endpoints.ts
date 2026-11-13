@@ -15,6 +15,16 @@ export const endpoints = {
     "path": "/user/updateInfo",
     "access": "login"
   },
+  "getUserRecommendationSettings": {
+    "method": "GET",
+    "path": "/user/recommendation-settings",
+    "access": "login"
+  },
+  "putUserRecommendationSettings": {
+    "method": "PUT",
+    "path": "/user/recommendation-settings",
+    "access": "login"
+  },
   "preferences": {
     "method": "GET",
     "path": "/user/recommendation-profile/preferences",
@@ -43,6 +53,21 @@ export const endpoints = {
   "unblock": {
     "method": "DELETE",
     "path": "/user/blocks/{userId}",
+    "access": "login"
+  },
+  "getTelemetryConsent": {
+    "method": "GET",
+    "path": "/telemetry/consent",
+    "access": "login"
+  },
+  "putTelemetryConsent": {
+    "method": "PUT",
+    "path": "/telemetry/consent",
+    "access": "login"
+  },
+  "deleteTelemetryConsent": {
+    "method": "DELETE",
+    "path": "/telemetry/consent",
     "access": "login"
   },
   "rate": {
@@ -394,6 +419,19 @@ export const endpoints = {
     "path": "/auth/changePassword",
     "access": "login"
   },
+  "postAuthAccountDelete": {
+    "method": "POST",
+    "path": "/auth/account/delete",
+    "access": "login",
+    "consentExempt": true
+  },
+  "postAuthAccountDeleteCode": {
+    "method": "POST",
+    "path": "/auth/account/delete/code",
+    "access": "login",
+    "consentExempt": true,
+    "captcha": "required"
+  },
   "adminResetPassword": {
     "method": "POST",
     "path": "/admin/users/{userId}/password",
@@ -443,6 +481,16 @@ export const endpoints = {
     "method": "GET",
     "path": "/user/list",
     "access": "admin"
+  },
+  "getUserLevel": {
+    "method": "GET",
+    "path": "/user/level",
+    "access": "login"
+  },
+  "getUserLevelLogs": {
+    "method": "GET",
+    "path": "/user/level/logs",
+    "access": "login"
   },
   "me": {
     "method": "GET",

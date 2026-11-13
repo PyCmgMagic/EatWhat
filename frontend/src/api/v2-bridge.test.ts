@@ -281,9 +281,98 @@ describe("v2 bridge", () => {
     });
   });
 
+  it("maps levels, bans, telemetry and stage colours added in backend v2", async () => {
+    const { request, sent } = backend(({ path }) => {
+      if (path === "/user/level")
+        return ok({
+          level: 3,
+          experience: 120,
+          levelExperience: 100,
+          nextLevel: 4,
+          nextLevelExperience: 250,
+          toNextLevel: 130,
+          maxLevel: false,
+          dailyUseExperience: 5,
+        });
+      if (path === "/telemetry/consent")
+        return ok({ enabled: true, retentionDays: 90 });
+      if (path === "/user/info")
+        return ok({
+          id: 1,
+          level: 3,
+          banned: true,
+          banReason: "刷屏",
+          banUntil: 0,
+        });
+      return ok({ id: 9 });
+    });
+    expect(await request("/user/growth")).toMatchObject({
+      totalExperience: 120,
+      level: 3,
+      experienceInLevel: 20,
+      experienceToNextLevel: 130,
+      dailyExperience: 5,
+    });
+    expect(await request("/telemetry/consent")).toMatchObject({
+      enabled: true,
+      retentionDays: 90,
+    });
+    expect(await request("/user/info")).toMatchObject({
+      level: 3,
+      banned: true,
+      banReason: "刷屏",
+      banUntil: "1970-01-01T00:00:00.000Z",
+    });
+    await request("/user/ban/5", {
+      method: "POST",
+      body: { reason: "广告", banUntil: "2030-01-01T00:00:00.000Z" },
+    });
+    expect(sent.at(-1)?.body).toEqual({
+      reason: "广告",
+      banUntil: Date.parse("2030-01-01T00:00:00.000Z"),
+    });
+    await request("/foods/upload", {
+      method: "POST",
+      body: {
+        restaurantId: 1,
+        name: "面",
+        category: "staple",
+        pictureUrl: ["foods/2026/11/a.png"],
+        stageColor: "chili",
+        stageAlternates: ["mango", "soy"],
+        coverCrop: { centerX: 0.4, centerY: 0.5, diameter: 0.9 },
+      },
+    });
+    expect(sent.at(-1)?.body).toMatchObject({
+      stageColor: "chili",
+      stageAlternates: ["mango", "soy"],
+      coverCrop: { centerX: 0.4, centerY: 0.5, diameter: 0.9 },
+    });
+  });
+
+  it("sends this device's deletion key when signing in", async () => {
+    const store = new Map([["eatwhat-deletion-key", "undo-me"]]);
+    vi.stubGlobal("localStorage", {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => store.set(k, v),
+      removeItem: (k: string) => store.delete(k),
+    });
+    const { transport, sent } = backend(() =>
+      ok({ tokenName: "satoken", tokenValue: "t" }),
+    );
+    await transport("/auth/login", {
+      method: "POST",
+      body: { userName: "a", password: "p", device: "WEB" },
+    });
+    expect(sent[0].body).toMatchObject({ deletionKey: "undo-me" });
+    vi.unstubAllGlobals();
+  });
+
   it("reports retired features as unavailable", async () => {
     const { request, sent } = backend(() => undefined);
-    const error = await request("/user/growth").catch((e) => e);
+    const error = await request("/user/cancellation", { method: "POST" }).catch(
+      (e) => e,
+    );
     expect(unavailable(error)).toBe(true);
     expect(await request("/topics/by-food/1")).toEqual([]);
     expect(sent).toHaveLength(0);

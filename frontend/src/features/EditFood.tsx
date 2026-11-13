@@ -17,6 +17,7 @@ import {
 import { duplicateFoodId, errorMessage, resultUncertain } from "../api/client";
 import { FoodPhotoPicker, type EditableFoodPhoto } from "./FoodPhotoPicker";
 import { MAX_DISH_TAGS, tasteTags, type V2Food } from "../api/v2-vocab";
+import { stagePalette, publishDisplay, type Stage } from "../api/food-display";
 import { isDemo } from "../app/runtime";
 import {
   useMemoryDraft,
@@ -109,7 +110,7 @@ function EditForm({
     [uncertain, setUncertain] = useState(false),
     [error, setError] = useFeedbackState();
   const active = usePageLifetime();
-  const draftKey = `food:${user?.id}:${food.id}:v2`;
+  const draftKey = `food:${user?.id}:${food.id}:v2s`;
   const originalTags = ((food as Food & V2Food).tags ?? []).filter((t) =>
       tasteTags.includes(t),
     ),
@@ -121,9 +122,11 @@ function EditForm({
     category: food.category ?? null,
     tags: originalTags,
     signature: originalSignature,
+    stage: (food.stageColor ?? null) as Stage | null,
     editVersion: 1,
   });
-  const { name, description, price, category, tags, signature } = fields;
+  const { name, description, price, category, tags, signature, stage } = fields;
+  const stageChanged = stage !== (food.stageColor ?? null);
   const updateFields = (patch: Partial<typeof fields>) =>
     setFields((f) => ({ ...f, ...patch }));
   const setName = (name: string) => updateFields({ name });
@@ -156,6 +159,7 @@ function EditForm({
     category !== (food.category ?? null) ||
     tagsChanged ||
     signatureChanged ||
+    stageChanged ||
     photosChanged;
   useEffect(() => {
     if (!dirty) return;
@@ -196,6 +200,15 @@ function EditForm({
               : undefined,
             signature: signatureChanged ? signature : undefined,
           };
+          // v2 saves the stage colour together with its two alternates.
+          if (stageChanged && stage) {
+            const palette = publishDisplay(
+              stagePalette[stage],
+              food.stageAlternates?.map((x) => stagePalette[x]),
+            );
+            body.stageColor = palette.stageColor;
+            body.stageAlternates = palette.stageAlternates;
+          }
           if (photosChanged) {
             if (!photos.length) throw new Error("至少保留一张照片。");
             const next = [...photos];
@@ -281,6 +294,36 @@ function EditForm({
                 }));
               }}
             />
+            <label>
+              舞台色
+              <Select
+                value={stage ?? ""}
+                onChange={(e) =>
+                  updateFields({ stage: (e.target.value as Stage) || null })
+                }
+              >
+                {!food.stageColor && <option value="">分类默认色</option>}
+                {Object.entries(stagePalette).map(([key, color]) => (
+                  <option key={key} value={key} data-color={color}>
+                    {
+                      (
+                        {
+                          broth: "暖汤",
+                          mango: "芒果",
+                          bamboo: "竹色",
+                          chili: "辣橙",
+                          tomato: "番茄",
+                          redoil: "红油",
+                          soy: "酱色",
+                          porcelain: "瓷蓝",
+                          matcha: "抹茶",
+                        } as Record<string, string>
+                      )[key]
+                    }
+                  </option>
+                ))}
+              </Select>
+            </label>
           </section>
           <section>
             <label>

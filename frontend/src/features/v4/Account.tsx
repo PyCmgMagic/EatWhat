@@ -7,6 +7,7 @@ import { useSendSignal } from "../useSendSignal";
 import RecoveryFile from "./RecoveryFile";
 import { recoveryCommands } from "../../api/recovery";
 import { resultUncertain } from "../../api/client";
+import { saveDeletionKey } from "../../api/v2-bridge";
 import type { Schema } from "../../api/models";
 import type { PushCategory, PushCommand } from "../../api/v4-types";
 import {
@@ -397,18 +398,45 @@ export function MobileChange() {
 }
 
 export function Cancellation() {
+  const sendSignal = useSendSignal();
   const app = useApp(),
+    hasPhone = !!app.user?.phone,
+    [code, setCode] = useState(""),
+    [password, setPassword] = useState(""),
+    [deleteComments, setDeleteComments] = useState(false),
     [ack, setAck] = useState(false),
-    [deleteContent, setDeleteContent] = useState(
-      () =>
-        recoveryCommands.get("cancellation")?.deletePostsAndComments === true,
-    ),
-    [progress, setProgress] =
-      useState<Schema["LifecycleRequestStatusResponse"]>(),
-    [command, setCommand] = useState(() =>
-      recoveryCommands.get("cancellation"),
-    ),
-    task = useCommand();
+    [cooldown, setCooldown] = useState(0),
+    [deleteAt, setDeleteAt] = useState<number>(),
+    task = useCommand(),
+    send = useCommand();
+  useEffect(() => {
+    const timer = setInterval(
+      () => setCooldown((c) => Math.max(0, c - 1)),
+      1000,
+    );
+    return () => clearInterval(timer);
+  }, []);
+  if (deleteAt)
+    return (
+      <Shell title="注销账号" back="/">
+        <Card title="已申请注销">
+          <p>
+            账号已进入 7 天冷静期，将在 {timeText(deleteAt)}{" "}
+            彻底删除。冷静期内账号不能使用，所有设备都已退出登录。
+          </p>
+          <p>改变主意的话，在冷静期内用这台设备重新登录，即可撤销注销。</p>
+          <div className="v4-actions">
+            {/* Every session already ended on the server; clear this one. */}
+            <button
+              className="primary"
+              onClick={() => void app.signOut().catch(() => undefined)}
+            >
+              退出并返回
+            </button>
+          </div>
+        </Card>
+      </Shell>
+    );
   return (
     <Shell title="注销账号" back="/settings/account">
       <Card>
@@ -417,114 +445,112 @@ export function Cancellation() {
         </div>
         <h2>离开前，请了解注销的影响</h2>
         <p>
-          提交后账号会进入注销流程。处理进度、撤销期限与最终状态由服务端返回；受理不代表清理已经完成。
+          提交后账号进入 7
+          天冷静期：期间账号不能使用、所有设备退出登录，冷静期结束后彻底删除。冷静期内在这台设备重新登录可以撤销。
         </p>
         <fieldset
           className="v6-cancellation-options"
-          disabled={task.busy || task.uncertain || !!progress || !!command}
+          disabled={task.busy || task.uncertain}
         >
-          <legend>已发布的帖子和评论如何处理？</legend>
+          <legend>你发布的评论和回复如何处理？</legend>
           <label className="v4-check">
             <input
               type="radio"
-              name="deleteContent"
-              checked={!deleteContent}
-              onChange={() => setDeleteContent(false)}
+              name="deleteComments"
+              checked={!deleteComments}
+              onChange={() => setDeleteComments(false)}
             />
-            匿名保留正文和图片（默认）
+            匿名保留（默认）
           </label>
-          <p>内容不再关联你的个人资料，其他用户仍可点赞和回复。</p>
+          <p>显示为“已注销用户”，其他同学仍可看到和回复。</p>
           <label className="v4-check">
             <input
               type="radio"
-              name="deleteContent"
-              checked={deleteContent}
-              onChange={() => setDeleteContent(true)}
+              name="deleteComments"
+              checked={deleteComments}
+              onChange={() => setDeleteComments(true)}
             />
-            删除我发布的帖子、评论及其图片
+            彻底删除时一并删除
           </label>
-          <p>此选择会绑定本次注销申请。提交后不能通过重试改变。</p>
         </fieldset>
+        {hasPhone ? (
+          <>
+            <Field label={`手机号 ${app.user?.phone ?? ""} 收到的验证码`}>
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+              />
+            </Field>
+            <button
+              type="button"
+              disabled={send.busy || send.uncertain || cooldown > 0}
+              onClick={() =>
+                void send.run(
+                  () => app.api.accountDeleteCode(sendSignal()),
+                  () => {
+                    setCooldown(60);
+                    send.say("验证码已发送。");
+                  },
+                )
+              }
+            >
+              {cooldown > 0 ? `${cooldown} 秒后可重发` : "发送验证码"}
+            </button>
+            <CommandState task={send} />
+          </>
+        ) : (
+          <Field label="登录密码">
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+            />
+          </Field>
+        )}
         <label className="v4-check">
           <input
             type="checkbox"
             checked={ack}
             onChange={(e) => setAck(e.target.checked)}
           />
-          我已了解注销会限制账号使用，并可能清理相关数据。
+          我已了解注销的影响，确认申请注销。
         </label>
         <div className="v4-actions">
           <button
             className="danger"
             disabled={
-              !ack || task.busy || task.uncertain || !!progress || !!command
+              !ack ||
+              task.busy ||
+              task.uncertain ||
+              (hasPhone ? !/^\d{6}$/.test(code) : !password)
             }
             onClick={() =>
               void task.run(
-                (id) => {
-                  const saved = {
-                    commandId: id,
-                    capability: capability(),
-                    deletePostsAndComments: deleteContent,
-                    identifier:
-                      app.user?.userName ??
-                      app.user?.phone ??
-                      app.user?.email ??
-                      undefined,
-                  };
-                  recoveryCommands.set("cancellation", saved);
-                  setCommand(saved);
-                  return app.api.requestCancellation({
-                    requestId: id,
-                    recoveryCapability: saved.capability,
-                    deletePostsAndComments: saved.deletePostsAndComments,
-                  });
-                },
-                (r) => {
-                  setProgress(r);
-                  task.say(
-                    r.complete
-                      ? "注销已完成。"
-                      : "注销申请已受理，请查看阶段与撤销期限。",
-                  );
+                () =>
+                  app.api.deleteAccount({
+                    ...(hasPhone ? { code } : { password }),
+                    deleteComments,
+                  }),
+                async (r) => {
+                  saveDeletionKey(r.deletionKey);
+                  setDeleteAt(r.deleteAt);
                 },
               )
             }
           >
-            提交注销申请
+            申请注销
           </button>
         </div>
         <CommandState task={task} />
       </Card>
-      {progress && (
-        <Card title="注销进度">
-          <Badge value={progress.phase} />
-          <p>撤销期限：{timeText(progress.deadline)}</p>
-          <p>
-            {progress.complete
-              ? "服务端已确认注销完成。"
-              : "当前流程尚未全部完成。"}
-          </p>
-        </Card>
-      )}
-      {command && (
-        <Card>
-          <RecoveryFile kind="cancellation" value={command} />
-          <Link
-            className="v4-button"
-            aria-disabled={task.busy || task.uncertain}
-            onClick={(e) => {
-              if (task.busy) e.preventDefault();
-            }}
-            to="/auth/account-recovery"
-          >
-            验证身份并撤销注销 →
-          </Link>
-        </Card>
-      )}
     </Shell>
   );
 }
+
 export function AccountRecovery() {
   const app = useApp(),
     [saved, setSaved] = useState(() => recoveryCommands.get("cancellation")),
@@ -1136,10 +1162,9 @@ export function TelemetrySettings() {
             </div>
           </div>
           <p>
-            仅在你明确开启后上报预设事件，不采集自由文本、网址或用户标识。保留时间：
+            默认开启，可以随时关闭。只上报预设事件，不采集自由文本、网址或用户标识。保留时间：
             {q.data?.retentionDays ?? "待确认"} 天。
           </p>
-          <p>政策版本：{q.data?.policyVersion}</p>
           <label className="v4-check">
             <input
               type="checkbox"

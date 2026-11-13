@@ -361,6 +361,7 @@ export async function storeDemoImage(
   return key;
 }
 
+const demoToggles = { telemetry: true, personalized: true };
 const routes = Object.entries(endpoints).map(([name, rule]) => ({
   name: name as Operation,
   rule,
@@ -1313,7 +1314,56 @@ export function demoTransport(
     case "postPushBindingsByIdUnbind":
       return ok();
     case "postTelemetryEvents":
-      return ok({ accepted: list("events").length, duplicates: 0 });
+      return ok({
+        accepted: list("events").length,
+        duplicates: 0,
+        enabled: demoToggles.telemetry,
+      });
+    // Endpoints added to backend v2 later; enough state for the pages.
+    case "getTelemetryConsent":
+    case "putTelemetryConsent":
+    case "deleteTelemetryConsent":
+      if (name !== "getTelemetryConsent")
+        demoToggles.telemetry = name === "putTelemetryConsent";
+      return ok({ enabled: demoToggles.telemetry, retentionDays: 90 });
+    case "getUserRecommendationSettings":
+    case "putUserRecommendationSettings":
+      if (name === "putUserRecommendationSettings")
+        demoToggles.personalized = payload.personalized !== false;
+      return ok({ personalized: demoToggles.personalized });
+    case "getUserLevel":
+      return ok({
+        level: 3,
+        experience: 125,
+        levelExperience: 100,
+        nextLevel: 4,
+        nextLevelExperience: 250,
+        toNextLevel: 125,
+        maxLevel: false,
+        dailyUseExperience: 5,
+      });
+    case "getUserLevelLogs":
+      return ok(
+        paged(
+          [0, 1, 2].map((i) => ({
+            id: i + 1,
+            source: "daily_use",
+            sourceName: "每日使用",
+            amount: 5,
+            day: new Date(Date.now() - i * 86400000).toISOString().slice(0, 10),
+            createdAt: Date.now() - i * 86400000,
+          })),
+        ),
+      );
+    case "postAuthAccountDeleteCode":
+      return ok();
+    case "postAuthAccountDelete":
+      if (person?.phone && body.code !== "123456")
+        return fail(30005, "验证码不正确。");
+      return ok({
+        deleteAt: Date.now() + 7 * 86400000,
+        deletionKey: "demo-deletion-key",
+      });
     case "getRemoteConfig":
       return ok({
         configVersion: 1,

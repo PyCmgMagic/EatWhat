@@ -174,6 +174,9 @@ export async function readBackendV2() {
     pictureUrls: array(string),
     tags: array(string),
     signature: bool,
+    stageColor: nullable(string),
+    stageAlternates: array(string),
+    coverCrop: nullable(ref("CoverCrop")),
     likeCount: int64,
     favoriteCount: int64,
     isLiked: nullable(bool),
@@ -189,10 +192,14 @@ export async function readBackendV2() {
     pictures: array(string),
     tags: array(string),
     signature: bool,
+    stageColor: string,
+    stageAlternates: array(string),
+    coverCrop: ref("CoverCrop"),
   });
   schemas.FoodOptions = object({
     categories: array(string),
     tags: array(string),
+    stageColors: array(string),
     maxPictures: int32,
     maxTags: int32,
     maxSignatures: int32,
@@ -258,6 +265,48 @@ export async function readBackendV2() {
   response("/admin/ai/settings", "get", "ResultAiSettings");
   response("/admin/ai/settings", "put", "ResultAiSettings");
 
+  // Records named Settings / Consent / Accepted in different modules are merged
+  // by springdoc; give each operation its own source-accurate schema.
+  schemas.RemoteSettings = {
+    type: "object",
+    properties: {
+      revision: { type: "integer", format: "int32" },
+      flags: {
+        type: "object",
+        additionalProperties: { $ref: "#/components/schemas/Flag" },
+      },
+      params: { type: "object", additionalProperties: {} },
+      maintenance: { $ref: "#/components/schemas/Maintenance" },
+      updatedAt: { type: "integer", format: "int64" },
+      updatedBy: { type: "integer", format: "int64" },
+    },
+  };
+  schemas.ResultRemoteSettings = result(ref("RemoteSettings"));
+  schemas.AdminView.properties.settings = ref("RemoteSettings");
+  response("/admin/remote-config/settings", "put", "ResultRemoteSettings");
+  schemas.RecommendationSettings = object({ personalized: bool });
+  schemas.ResultRecommendationSettings = result(ref("RecommendationSettings"));
+  request("/user/recommendation-settings", "put", "RecommendationSettings");
+  for (const method of ["get", "put"])
+    response(
+      "/user/recommendation-settings",
+      method,
+      "ResultRecommendationSettings",
+    );
+  schemas.ConsentGrant = object({ policyVersion: string });
+  request("/auth/consent/grant", "post", "ConsentGrant");
+  schemas.TelemetryConsent = object({ enabled: bool, retentionDays: int32 });
+  schemas.ResultTelemetryConsent = result(ref("TelemetryConsent"));
+  for (const method of ["get", "put", "delete"])
+    response("/telemetry/consent", method, "ResultTelemetryConsent");
+  schemas.TelemetryAccepted = object({
+    accepted: int32,
+    duplicates: int32,
+    enabled: bool,
+  });
+  schemas.ResultTelemetryAccepted = result(ref("TelemetryAccepted"));
+  response("/telemetry/events", "post", "ResultTelemetryAccepted");
+
   schemas.PushSettings = object({
     categories: { type: "object", additionalProperties: bool },
   });
@@ -316,7 +365,9 @@ export async function readBackendV2() {
       "hubId",
       "hubName",
     ],
-    SignatureFood: ["price", "pictureUrl"],
+    SignatureFood: ["price", "pictureUrl", "stageColor", "coverCrop"],
+    MyInfo: ["banReason", "banUntil"],
+    UserListItem: ["banReason", "banUntil"],
     DeviceSessionPage: ["nextCursor"],
     Edited: ["revisionId"],
     OtherInfo: ["fansCount", "followingsCount"],
@@ -380,6 +431,7 @@ export async function readBackendV2() {
           "changeOldCode",
           "changeNewCode",
           "sendEmail",
+          "postAuthAccountDeleteCode",
         ].includes(name)
           ? { captcha: "required" }
           : name === "login"
@@ -393,7 +445,7 @@ export async function readBackendV2() {
 }
 
 const { spec, endpoints, callbacks } = await readBackendV2();
-if (Object.keys(endpoints).length !== 139 || callbacks.length !== 8) {
+if (Object.keys(endpoints).length !== 148 || callbacks.length !== 8) {
   throw new Error(
     "Backend v2 operation count changed; review the client coverage.",
   );

@@ -111,6 +111,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/user/recommendation-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 【需登录】获取本人个性化推荐开关 */
+        get: operations["getUserRecommendationSettings"];
+        /** 【需登录】设置本人个性化推荐开关 */
+        put: operations["putUserRecommendationSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/user/recommendation-profile/preferences": {
         parameters: {
             query?: never;
@@ -144,6 +162,25 @@ export interface paths {
         post?: never;
         /** 【需登录】解除屏蔽 */
         delete: operations["unblock"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/telemetry/consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 【需登录】获取本人使用统计开关 */
+        get: operations["getTelemetryConsent"];
+        /** 【需登录】开启使用统计 */
+        put: operations["putTelemetryConsent"];
+        post?: never;
+        /** 【需登录】关闭使用统计并删除已收集的事件 */
+        delete: operations["deleteTelemetryConsent"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1209,6 +1246,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/account/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 【需登录，同意前可用】注销账号（手机验证码或密码确认，立即生效、不可恢复） */
+        post: operations["postAuthAccountDelete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/account/delete/code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 【需登录，同意前可用】发送注销账号验证码（发到本人手机号） */
+        post: operations["postAuthAccountDeleteCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/users/{userId}/password": {
         parameters: {
             query?: never;
@@ -1339,6 +1410,40 @@ export interface paths {
         };
         /** 【需角色：admin】获取用户管理列表 */
         get: operations["users"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/level": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 【需登录】获取本人等级与经验进度 */
+        get: operations["getUserLevel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/level/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 【需登录】获取本人经验明细 */
+        get: operations["getUserLevelLogs"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2247,6 +2352,17 @@ export interface components {
             /** Format: int64 */
             timestamp?: number;
         };
+        Settings: {
+            personalized?: boolean;
+        };
+        ResultSettings: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["Settings"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
         PreferencesRequest: {
             likedCategories?: string[];
             likedTags?: string[];
@@ -2269,6 +2385,19 @@ export interface components {
             /** Format: int32 */
             code?: number;
             data?: components["schemas"]["Preferences"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        Consent: {
+            enabled?: boolean;
+            /** Format: int32 */
+            retentionDays?: number;
+        };
+        ResultConsent: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["Consent"];
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
@@ -2329,6 +2458,11 @@ export interface components {
             /** Format: int64 */
             campusId?: number | null;
         };
+        CoverCrop: {
+            centerX?: number;
+            centerY?: number;
+            diameter?: number;
+        };
         VersionRequest: {
             /** Format: int32 */
             minBuild?: number;
@@ -2384,29 +2518,6 @@ export interface components {
             maintenance?: components["schemas"]["Maintenance"];
             /** Format: int32 */
             expectedRevision?: number;
-        };
-        ResultSettings: {
-            /** Format: int32 */
-            code?: number;
-            data?: components["schemas"]["Settings"];
-            msg?: string;
-            /** Format: int64 */
-            timestamp?: number;
-        };
-        Settings: {
-            /** Format: int32 */
-            revision?: number;
-            flags?: {
-                [key: string]: components["schemas"]["Flag"];
-            };
-            params?: {
-                [key: string]: unknown;
-            };
-            maintenance?: components["schemas"]["Maintenance"];
-            /** Format: int64 */
-            updatedAt?: number;
-            /** Format: int64 */
-            updatedBy?: number;
         };
         AnnouncementRequest: {
             level?: string;
@@ -2478,6 +2589,11 @@ export interface components {
         Privacy: {
             following?: boolean;
             follower?: boolean;
+        };
+        Ban: {
+            reason?: string;
+            /** Format: int64 */
+            banUntil?: number;
         };
         Presign: {
             fileName?: string;
@@ -2553,6 +2669,7 @@ export interface components {
             accepted?: number;
             /** Format: int32 */
             duplicates?: number;
+            enabled?: boolean;
         };
         ResultAccepted: {
             /** Format: int32 */
@@ -2630,6 +2747,9 @@ export interface components {
             pictures?: string[];
             tags?: string[];
             signature?: boolean;
+            stageColor?: string;
+            stageAlternates?: string[];
+            coverCrop?: components["schemas"]["CoverCrop"];
         };
         SuggestRequest: {
             /** Format: int64 */
@@ -2725,6 +2845,7 @@ export interface components {
             /** @enum {string} */
             device: "WEB" | "APP";
             policyVersion?: string;
+            deletionKey?: string;
         };
         SendLoginCode: {
             mobile: string;
@@ -2739,9 +2860,7 @@ export interface components {
             /** @enum {string} */
             device: "WEB" | "APP";
             policyVersion?: string;
-        };
-        Consent: {
-            policyVersion?: string;
+            deletionKey?: string;
         };
         ConsentStatus: {
             agreedVersion?: string | null;
@@ -2763,6 +2882,24 @@ export interface components {
         ChangePassword: {
             oldPassword: string;
             newPassword: string;
+        };
+        DeleteAccount: {
+            code?: string;
+            password?: string;
+            deleteComments?: boolean;
+        };
+        DeletionRequested: {
+            /** Format: int64 */
+            deleteAt?: number;
+            deletionKey?: string;
+        };
+        ResultDeletionRequested: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["DeletionRequested"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
         };
         ResolutionRequest: {
             outcome?: string;
@@ -2831,6 +2968,8 @@ export interface components {
             id?: number;
             displayName?: string;
             avatar?: string;
+            /** Format: int32 */
+            level?: number;
             gender?: string;
             signature?: string;
             fansCount?: number | null;
@@ -2896,12 +3035,68 @@ export interface components {
             phone?: string;
             email?: string;
             banned?: boolean;
+            banReason?: string | null;
+            banUntil?: number | null;
             verified?: boolean;
             method?: string;
             studentId?: string;
             realName?: string;
             /** Format: int64 */
             createdAt?: number;
+        };
+        Level: {
+            /** Format: int32 */
+            level?: number;
+            /** Format: int64 */
+            experience?: number;
+            /** Format: int64 */
+            levelExperience?: number;
+            /** Format: int32 */
+            nextLevel?: number;
+            /** Format: int64 */
+            nextLevelExperience?: number;
+            /** Format: int64 */
+            toNextLevel?: number;
+            maxLevel?: boolean;
+            /** Format: int32 */
+            dailyUseExperience?: number;
+        };
+        ResultLevel: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["Level"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        ExperienceLog: {
+            /** Format: int64 */
+            id?: number;
+            source?: string;
+            sourceName?: string;
+            /** Format: int32 */
+            amount?: number;
+            day?: string;
+            /** Format: int64 */
+            createdAt?: number;
+        };
+        PageResultExperienceLog: {
+            /** Format: int64 */
+            currentPage?: number;
+            items?: components["schemas"]["ExperienceLog"][];
+            /** Format: int64 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalItems?: number;
+            hasNext?: boolean;
+        };
+        ResultPageResultExperienceLog: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["PageResultExperienceLog"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
         };
         MyInfo: {
             /** Format: int64 */
@@ -2919,6 +3114,11 @@ export interface components {
             studentId?: string;
             realName?: string;
             verifiedEmail?: string;
+            /** Format: int32 */
+            level?: number;
+            banned?: boolean;
+            banReason?: string | null;
+            banUntil?: number | null;
             gender?: string;
             birthday?: string;
             signature?: string;
@@ -3209,6 +3409,8 @@ export interface components {
             name?: string;
             price?: number | null;
             pictureUrl?: string | null;
+            stageColor?: string | null;
+            coverCrop?: components["schemas"]["CoverCrop"] | null;
         };
         Options: {
             categories?: string[];
@@ -3590,7 +3792,7 @@ export interface components {
         AdminView: {
             /** Format: int64 */
             configVersion?: number;
-            settings?: components["schemas"]["Settings"];
+            settings?: components["schemas"]["RemoteSettings"];
             versions?: components["schemas"]["VersionLine"][];
         };
         ResultAdminView: {
@@ -3763,6 +3965,9 @@ export interface components {
             pictureUrls?: string[];
             tags?: string[];
             signature?: boolean;
+            stageColor?: string | null;
+            stageAlternates?: string[];
+            coverCrop?: components["schemas"]["CoverCrop"] | null;
             /** Format: int64 */
             likeCount?: number;
             /** Format: int64 */
@@ -3782,10 +3987,14 @@ export interface components {
             pictures?: string[];
             tags?: string[];
             signature?: boolean;
+            stageColor?: string;
+            stageAlternates?: string[];
+            coverCrop?: components["schemas"]["CoverCrop"];
         };
         FoodOptions: {
             categories?: string[];
             tags?: string[];
+            stageColors?: string[];
             /** Format: int32 */
             maxPictures?: number;
             /** Format: int32 */
@@ -3893,6 +4102,71 @@ export interface components {
             /** Format: int32 */
             code?: number;
             data?: components["schemas"]["AiSettings"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        RemoteSettings: {
+            /** Format: int32 */
+            revision?: number;
+            flags?: {
+                [key: string]: components["schemas"]["Flag"];
+            };
+            params?: {
+                [key: string]: unknown;
+            };
+            maintenance?: components["schemas"]["Maintenance"];
+            /** Format: int64 */
+            updatedAt?: number;
+            /** Format: int64 */
+            updatedBy?: number;
+        };
+        ResultRemoteSettings: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["RemoteSettings"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        RecommendationSettings: {
+            personalized?: boolean;
+        };
+        ResultRecommendationSettings: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["RecommendationSettings"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        ConsentGrant: {
+            policyVersion?: string;
+        };
+        TelemetryConsent: {
+            enabled?: boolean;
+            /** Format: int32 */
+            retentionDays?: number;
+        };
+        ResultTelemetryConsent: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["TelemetryConsent"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        TelemetryAccepted: {
+            /** Format: int32 */
+            accepted?: number;
+            /** Format: int32 */
+            duplicates?: number;
+            enabled?: boolean;
+        };
+        ResultTelemetryAccepted: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["TelemetryAccepted"];
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
@@ -4185,6 +4459,50 @@ export interface operations {
             };
         };
     };
+    getUserRecommendationSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultRecommendationSettings"];
+                };
+            };
+        };
+    };
+    putUserRecommendationSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecommendationSettings"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultRecommendationSettings"];
+                };
+            };
+        };
+    };
     preferences: {
         parameters: {
             query?: never;
@@ -4311,6 +4629,66 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultVoid"];
+                };
+            };
+        };
+    };
+    getTelemetryConsent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultTelemetryConsent"];
+                };
+            };
+        };
+    };
+    putTelemetryConsent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultTelemetryConsent"];
+                };
+            };
+        };
+    };
+    deleteTelemetryConsent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultTelemetryConsent"];
                 };
             };
         };
@@ -4576,7 +4954,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ResultSettings"];
+                    "application/json": components["schemas"]["ResultRemoteSettings"];
                 };
             };
         };
@@ -4899,7 +5277,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Ban"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -5003,7 +5385,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ResultAccepted"];
+                    "application/json": components["schemas"]["ResultTelemetryAccepted"];
                 };
             };
         };
@@ -5872,7 +6254,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Consent"];
+                "application/json": components["schemas"]["ConsentGrant"];
             };
         };
         responses: {
@@ -5923,6 +6305,53 @@ export interface operations {
                 "application/json": components["schemas"]["ChangePassword"];
             };
         };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultVoid"];
+                };
+            };
+        };
+    };
+    postAuthAccountDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeleteAccount"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultDeletionRequested"];
+                };
+            };
+        };
+    };
+    postAuthAccountDeleteCode: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Captcha-Ticket"?: string;
+                "X-Captcha-Randstr"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
@@ -6167,6 +6596,49 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultPageResultUserListItem"];
+                };
+            };
+        };
+    };
+    getUserLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultLevel"];
+                };
+            };
+        };
+    };
+    getUserLevelLogs: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultPageResultExperienceLog"];
                 };
             };
         };

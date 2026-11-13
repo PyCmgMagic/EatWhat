@@ -153,9 +153,9 @@ export function food(v: Json | null | undefined): Json | null {
     isFavorite: v.isFavorite ?? null,
     likesCount: v.likeCount ?? 0,
     mealTimes: [],
-    stageColor: null,
-    stageAlternates: [],
-    coverCrop: null,
+    stageColor: v.stageColor ?? null,
+    stageAlternates: v.stageAlternates ?? [],
+    coverCrop: v.coverCrop ?? null,
   };
 }
 
@@ -193,7 +193,7 @@ export function restaurant(v: Json | null | undefined): Json | null {
       name: f.name,
       price: f.price ?? null,
       coverUrl: f.pictureUrl ?? null,
-      stageColor: null,
+      stageColor: f.stageColor ?? null,
       likesCount: f.likeCount ?? 0,
     })),
     matchedFoods: [],
@@ -314,16 +314,57 @@ function legacyNotification(v: Json) {
 function me(v: Json | null) {
   if (!v) return v;
   return {
-    level: null,
     totalExperience: null,
-    banned: false,
-    banReason: null,
     bannedAt: null,
-    banUntil: null,
     hometownProvinceId: null,
     hometownCityId: null,
     ...v,
+    level: v.level ?? null,
+    banned: v.banned === true,
+    banReason: v.banReason ?? null,
+    // APIv7 sent the ban end as an ISO string; null means permanent.
+    banUntil: iso(v.banUntil ?? null),
   };
+}
+
+/** /user/level → APIv7 GrowthProgress. */
+function growth(v: Json | null) {
+  if (!v) return v;
+  return {
+    totalExperience: v.experience,
+    level: v.level,
+    levelStartExperience: v.levelExperience,
+    nextLevelExperience: v.nextLevelExperience ?? null,
+    experienceInLevel: (v.experience ?? 0) - (v.levelExperience ?? 0),
+    experienceToNextLevel: v.toNextLevel ?? 0,
+    maxLevel: v.maxLevel === true,
+    levelRuleVersion: "v2",
+    dailyExperience: v.dailyUseExperience ?? null,
+  };
+}
+/** /telemetry/consent → APIv7 telemetry consent (no revisions in v2). */
+const telemetry = (v: Json | null) => ({
+  enabled: v?.enabled === true,
+  retentionDays: v?.retentionDays ?? null,
+  policyVersion: "v2",
+  revision: 0,
+});
+const DELETION_KEY = "eatwhat-deletion-key";
+/** Saved on this device when the account asked to be deleted (v2). */
+export function deletionKey(): string | undefined {
+  try {
+    return localStorage.getItem(DELETION_KEY) || undefined;
+  } catch {
+    return undefined;
+  }
+}
+export function saveDeletionKey(key: string | null) {
+  try {
+    if (key) localStorage.setItem(DELETION_KEY, key);
+    else localStorage.removeItem(DELETION_KEY);
+  } catch {
+    /* the key only helps undo the deletion from this device */
+  }
 }
 
 function announcementOut(v: Json) {
@@ -380,6 +421,11 @@ function foodBody(body: Json, create: boolean) {
       : create
         ? { signature: false }
         : {}),
+    // v2 stores the stage colour (with exactly two alternates) and cover crop.
+    ...(body.stageColor && body.stageAlternates?.length === 2
+      ? { stageColor: body.stageColor, stageAlternates: body.stageAlternates }
+      : {}),
+    ...(body.coverCrop ? { coverCrop: body.coverCrop } : {}),
   };
 }
 function restaurantBody(body: Json, current?: Json | null) {
@@ -457,6 +503,7 @@ const routes: [string, RegExp, Handler][] = [
             password: body.password,
             device: body.device ?? "WEB",
             policyVersion,
+            deletionKey: deletionKey(),
           },
           options,
         ),
@@ -496,6 +543,7 @@ const routes: [string, RegExp, Handler][] = [
               code: body.code,
               device: body.device ?? "WEB",
               policyVersion,
+              deletionKey: deletionKey(),
             },
           }),
       )),
@@ -681,7 +729,15 @@ const routes: [string, RegExp, Handler][] = [
   [
     "POST",
     /^\/user\/ban\/(\d+)$/,
-    ({ match, call }) => call(match.input!, { method: "POST" }),
+    // v2 needs a reason; banUntil is a millisecond timestamp (absent = permanent).
+    ({ match, body, call }) =>
+      call(match.input!, {
+        method: "POST",
+        body: {
+          reason: body.reason,
+          banUntil: body.banUntil ? millis(body.banUntil) : undefined,
+        },
+      }),
   ],
   [
     "PUT",
@@ -710,8 +766,8 @@ const routes: [string, RegExp, Handler][] = [
         accountStatus: {
           accountStatus: u.banned ? "BANNED" : "NORMAL",
           bannedAt: null,
-          banReason: null,
-          banExpireAt: null,
+          banReason: u.banReason ?? null,
+          banExpireAt: iso(u.banUntil ?? null),
         },
       })),
   ],
@@ -755,14 +811,26 @@ const routes: [string, RegExp, Handler][] = [
       return { likedTags: [], dislikedTags: [], updatedAt: Date.now() };
     },
   ],
+  // v2 records daily use on any signed-in request.
+  ["POST", /^\/user\/activity$/, async () => null],
   [
     "GET",
-    /^\/user\/recommendation-settings$/,
-    async () => ({ personalized: true }),
+    /^\/user\/growth$/,
+    async ({ call }) => growth(await call("/user/level")),
   ],
-  ["PUT", /^\/user\/recommendation-settings$/, gone("关闭个性化推荐")],
-  ["POST", /^\/user\/activity$/, async () => null],
-  ["GET", /^\/user\/growth(\/ledger)?$/, gone("等级与经验")],
+  [
+    "GET",
+    /^\/user\/growth\/ledger$/,
+    async ({ query, call }) =>
+      page(await call("/user/level/logs", { query }), (l: Json) => ({
+        entryId: String(l.id),
+        businessDate: l.day,
+        sourceType: l.sourceName ?? l.source,
+        experience: l.amount,
+        ruleVersion: "v2",
+        createdAt: iso(l.createdAt),
+      })),
+  ],
   ["POST", /^\/user\/cancellation/, gone("注销账号")],
   [".*", /^\/user\/mobile\/commands/, gone("此版本的换绑手机号流程")],
   ["GET", /^\/api\/location\//, emptyList],
@@ -863,6 +931,10 @@ const routes: [string, RegExp, Handler][] = [
               hubId: shop.hubId,
               hubName: shop.hubName,
               distanceMeters: shop.distanceMeters,
+              stageColor:
+                dish.stageColor ?? known.get(dish.id)?.stageColor ?? null,
+              coverCrop:
+                dish.coverCrop ?? known.get(dish.id)?.coverCrop ?? null,
             })!,
           );
       for (const dish of known.values())
@@ -1437,7 +1509,26 @@ const routes: [string, RegExp, Handler][] = [
   ["GET", /^\/topics\/history$/, empty],
   [".*", /^\/(admin\/)?topics(\/|$)/, gone("专题")],
   [".*", /^\/(admin\/)?activit(y|ies)(\/|$)/, gone("活动")],
-  [".*", /^\/telemetry\/consent$/, async () => ({ granted: false })],
+  [
+    "POST",
+    /^\/telemetry\/events$/,
+    async ({ body, call }) =>
+      call("/telemetry/events", {
+        method: "POST",
+        body: { events: body.events ?? [] },
+      }),
+  ],
+  [
+    "(GET|PUT|DELETE)",
+    /^\/telemetry\/consent$/,
+    async ({ options, call }) =>
+      telemetry(
+        await call("/telemetry/consent", {
+          method: options.method,
+          body: undefined,
+        }),
+      ),
+  ],
 ];
 
 const CONSENT_CODES = ["20005", "20009"];
@@ -1589,7 +1680,10 @@ export function bridgeToV2(live: Transport): Transport {
       if (error instanceof ApiError && error.status === undefined)
         return {
           code: error.code ?? -1,
-          msg: error.message,
+          msg:
+            String(error.code) === "30017"
+              ? "账号正在注销冷静期中。请在申请注销的那台设备上登录，即可撤销注销。"
+              : error.message,
           data: (error.data ?? null) as never,
           timestamp: Date.now(),
         } satisfies Envelope<never>;
