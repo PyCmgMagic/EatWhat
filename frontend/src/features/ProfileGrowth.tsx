@@ -7,6 +7,10 @@ import "./profile-growth.css";
 
 /** Part of the profile identity, sharing the growth page's live cache. */
 export default function ProfileGrowth() {
+  // Backend v2 has no levels or experience; keep the slot empty.
+  return null;
+}
+export function LegacyProfileGrowth() {
   const { api, user, session } = useApp();
   const progress = useQuery({
     queryKey: ["growth", user?.id, "progress"],

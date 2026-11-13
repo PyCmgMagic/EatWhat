@@ -8,6 +8,7 @@ import { Modal } from "../components/ui";
 import { useTask } from "../components/useTask";
 import { DesignIcon as Icon } from "../mobile/ui";
 import "./settings-home.css";
+import { isRetiredV2 } from "../app/retired-routes";
 import "./profile-section-nav.css";
 
 type Setting = {
@@ -296,18 +297,23 @@ export default function SettingsHome({
             </header>
             <div className="settings-home-group-content">
               <div className="settings-home-group-items">
-                {group.items.map((item) => (
-                  <SettingLink key={item.title} item={item} />
-                ))}
-              </div>
-              {group.title === "账号与安全" && (
-                <details className="settings-home-recovery">
-                  <summary>账号恢复</summary>
-                  {recovery.map((item) => (
-                    <SettingLink key={item.to} item={item} />
+                {group.items
+                  .filter((item) => !isRetiredV2(item.to))
+                  .map((item) => (
+                    <SettingLink key={item.title} item={item} />
                   ))}
-                </details>
-              )}
+              </div>
+              {group.title === "账号与安全" &&
+                recovery.some((item) => !isRetiredV2(item.to)) && (
+                  <details className="settings-home-recovery">
+                    <summary>账号恢复</summary>
+                    {recovery
+                      .filter((item) => !isRetiredV2(item.to))
+                      .map((item) => (
+                        <SettingLink key={item.to} item={item} />
+                      ))}
+                  </details>
+                )}
             </div>
           </section>
         ))}

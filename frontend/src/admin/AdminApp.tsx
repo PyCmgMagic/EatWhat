@@ -233,7 +233,6 @@ export default function AdminApp() {
                 {module?.title ?? "页面不存在"}
               </h1>
             </div>
-            {module?.id === "topics" && <CampusSelector />}
           </header>
           {module ? (
             <div
@@ -247,14 +246,7 @@ export default function AdminApp() {
                     <Directory key={module.id} tab={module.id} />
                   </div>
                 ) : (
-                  <Operations
-                    key={
-                      module.id === "topics"
-                        ? `${module.id}:${campusId}`
-                        : module.id
-                    }
-                    tab={module.id}
-                  />
+                  <Operations key={module.id} tab={module.id} />
                 )}
               </Suspense>
             </div>
@@ -275,7 +267,7 @@ export default function AdminApp() {
               <div>
                 {adminModules
                   .filter((item) =>
-                    ["moderation", "comments", "feedback", "topics"].includes(
+                    ["feedback", "users", "foods", "restaurants"].includes(
                       item.id,
                     ),
                   )

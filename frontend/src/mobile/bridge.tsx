@@ -1137,6 +1137,12 @@ export function useDesignBridge(
       st = p.style ?? {},
       tag = n.tag,
       id = n.id;
+    // Entries for features backend v2 does not have (personal tags, push).
+    if (
+      (screen === "G-Me" && id === 28) ||
+      (screen === "G-Settings" && id === 25)
+    )
+      return null;
     if (screen === "G-PanelTag" && id === 5) {
       const close = () => (m.panel ? m.closePanel() : nav(`/foods/${foodId}`));
       return (

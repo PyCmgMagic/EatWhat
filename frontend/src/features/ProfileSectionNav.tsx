@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import "./profile-section-nav.css";
+import { isRetiredV2 } from "../app/retired-routes";
 
 const sections = {
   collections: {
@@ -45,7 +46,7 @@ export function ProfileSectionNav({
   const location = useLocation();
   const { pathname, search } = location;
   const config = sections[section];
-  const items = config.items;
+  const items = config.items.filter((item) => !isRetiredV2(item.to));
   const current =
     section === "shares" && pathname === "/me/shares"
       ? pathname +

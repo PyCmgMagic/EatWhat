@@ -1,3 +1,4 @@
+// Modules for features backend v2 has (no review queues, topics or tag editing).
 export const adminModules = [
   {
     id: "summary",
@@ -32,44 +33,12 @@ export const adminModules = [
     source: "directory",
   },
   {
-    id: "tags",
-    title: "公共标签",
-    path: "/admin/tags",
-    icon: "tag",
-    group: "内容管理",
-    source: "directory",
-  },
-  {
     id: "hubs",
     title: "区域管理",
     path: "/admin/hubs",
     icon: "nearby",
     group: "内容管理",
     source: "directory",
-  },
-  {
-    id: "topics",
-    title: "校园专题",
-    path: "/admin/topics",
-    icon: "topic",
-    group: "内容管理",
-    source: "operations",
-  },
-  {
-    id: "moderation",
-    title: "内容审核",
-    path: "/admin/moderation",
-    icon: "shield",
-    group: "审核与反馈",
-    source: "operations",
-  },
-  {
-    id: "comments",
-    title: "评论审核",
-    path: "/admin/comments",
-    icon: "comment",
-    group: "审核与反馈",
-    source: "operations",
   },
   {
     id: "feedback",
@@ -84,14 +53,6 @@ export const adminModules = [
     title: "用户管理",
     path: "/admin/users",
     icon: "me",
-    group: "账号管理",
-    source: "directory",
-  },
-  {
-    id: "security",
-    title: "账号安全复核",
-    path: "/admin/security",
-    icon: "lock",
     group: "账号管理",
     source: "directory",
   },

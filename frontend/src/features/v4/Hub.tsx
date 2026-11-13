@@ -5,6 +5,7 @@ import { useApp } from "../../app/state";
 import { DesignIcon as Icon } from "../../mobile/ui";
 import { Shell } from "./shared";
 import "./hub.css";
+import { isRetiredV2 } from "../../app/retired-routes";
 
 type Feature = {
   to: string;
@@ -215,7 +216,12 @@ const groups = [
   tone: string;
   items: Feature[];
 }[];
-const allFeatures: Feature[] = groups.flatMap((group) => group.items);
+// Leave out features backend v2 does not have.
+const visibleGroups = groups.map((group) => ({
+  ...group,
+  items: group.items.filter((item: Feature) => !isRetiredV2(item.to)),
+}));
+const allFeatures: Feature[] = visibleGroups.flatMap((group) => group.items);
 
 export default function Features() {
   const { user, api, session } = useApp();
@@ -229,12 +235,14 @@ export default function Features() {
   const search = params.get("q") ?? "";
   const featuresReturnTo =
     "/features" + (params.size ? "?" + params.toString() : "");
-  const category = groups.some((group) => group.id === params.get("category"))
+  const category = visibleGroups.some(
+    (group) => group.id === params.get("category"),
+  )
     ? params.get("category")!
     : "all";
   const terms = search.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
   const searching = terms.length > 0;
-  const filteredGroups = groups
+  const filteredGroups = visibleGroups
     .filter((group) => category === "all" || category === group.id)
     .map((group) => ({
       ...group,
@@ -337,20 +345,21 @@ export default function Features() {
             </div>
           </div>
           <div className="feature-filters" role="group" aria-label="功能分类">
-            {[{ id: "all", title: "全部", items: allFeatures }, ...groups].map(
-              (group) => (
-                <button
-                  type="button"
-                  key={group.id}
-                  aria-pressed={category === group.id}
-                  aria-controls="feature-results"
-                  onClick={() => selectCategory(group.id)}
-                >
-                  {group.title}
-                  <span>{group.items.length}</span>
-                </button>
-              ),
-            )}
+            {[
+              { id: "all", title: "全部", items: allFeatures },
+              ...visibleGroups,
+            ].map((group) => (
+              <button
+                type="button"
+                key={group.id}
+                aria-pressed={category === group.id}
+                aria-controls="feature-results"
+                onClick={() => selectCategory(group.id)}
+              >
+                {group.title}
+                <span>{group.items.length}</span>
+              </button>
+            ))}
           </div>
           <p className="feature-result-status" role="status" aria-live="polite">
             {searching

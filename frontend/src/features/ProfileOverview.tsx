@@ -309,10 +309,6 @@ export default function ProfileOverview() {
               <Icon name="add" size={17} />
               分享一道菜
             </Link>
-            <Link to="/submissions">
-              查看审核进度
-              <Icon name="chevronRight" size={14} />
-            </Link>
           </div>
         </section>
       </div>

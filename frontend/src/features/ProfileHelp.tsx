@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { DesignIcon as Icon } from "../mobile/ui";
 import ProfileSectionNav from "./ProfileSectionNav";
 import { DishIllustration } from "../components/DishIllustration";
+import { isRetiredV2 } from "../app/retired-routes";
 import "./profile-help.css";
 
 const questions = [
@@ -69,6 +70,7 @@ export default function ProfileHelp() {
   const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
   const filtered = questions.filter(
     (question) =>
+      !isRetiredV2(question.to) &&
       (category === "全部" || category === question.category) &&
       terms.every((term) =>
         `${question.title} ${question.answer} ${question.category}`

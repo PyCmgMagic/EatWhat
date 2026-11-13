@@ -8,9 +8,10 @@ import {
 } from "./admin-routes";
 
 describe("independent admin routes", () => {
-  it("gives all sixteen modules a unique canonical destination", () => {
-    expect(adminModules).toHaveLength(16);
-    expect(new Set(adminModules.map((m) => m.path)).size).toBe(16);
+  // Backend v2 has no review queues, topics, tag editing or security reviews.
+  it("gives all eleven v2 modules a unique canonical destination", () => {
+    expect(adminModules).toHaveLength(11);
+    expect(new Set(adminModules.map((m) => m.path)).size).toBe(11);
     for (const m of adminModules)
       expect(resolveAdminRoute(m.path).module?.id).toBe(m.id);
   });
@@ -19,17 +20,18 @@ describe("independent admin routes", () => {
       resolveAdminRoute("/admin", "?tab=restaurants&keyword=%E4%BA%91%E9%A5%BA")
         .redirect,
     ).toBe("/admin/restaurants?keyword=%E4%BA%91%E9%A5%BA");
-    expect(resolveAdminRoute("/admin", "?tab=security").redirect).toBe(
-      "/admin/security",
+    expect(resolveAdminRoute("/admin", "?tab=users").redirect).toBe(
+      "/admin/users",
     );
   });
   it("migrates old operations bookmarks without exposing the internal version route", () => {
-    expect(resolveAdminRoute("/admin/v4", "?tab=comments").redirect).toBe(
-      "/admin/comments",
+    expect(resolveAdminRoute("/admin/v4", "?tab=config").redirect).toBe(
+      "/admin/config",
     );
     expect(resolveAdminRoute("/admin/v4").redirect).toBe("/admin/feedback");
+    // Retired modules fall back to the overview.
     expect(resolveAdminRoute("/admin/v4", "?tab=topics").redirect).toBe(
-      "/admin/topics",
+      "/admin",
     );
   });
   it("does not mistake front paths for backend routes", () => {
@@ -48,8 +50,8 @@ describe("independent admin routes", () => {
       "/auth",
     ])
       expect(safeAdminWorkspace(value)).toBeUndefined();
-    expect(safeAdminWorkspace("/admin/v4?tab=comments")).toBe(
-      "/admin/comments",
+    expect(safeAdminWorkspace("/admin/v4?tab=feedback")).toBe(
+      "/admin/feedback",
     );
     expect(safeAdminWorkspace("/admin/foods?keyword=面&page=2")).toBe(
       "/admin/foods?keyword=面&page=2",

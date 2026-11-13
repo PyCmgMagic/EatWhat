@@ -43,12 +43,16 @@ describe("retired cross-site bookmarks", () => {
       ),
     ).toBe("/auth/password"),
   );
+  it.each(["/auth/password", "/verify", "/settings/privacy"])(
+    "leaves independent flows intact: %s",
+    (path) => expect(retiredRouteDestination(path, "", true)).toBeNull(),
+  );
   it.each([
-    "/auth/password",
-    "/verify",
-    "/settings/telemetry",
-    "/settings/privacy",
-  ])("leaves independent flows intact: %s", (path) =>
-    expect(retiredRouteDestination(path, "", true)).toBeNull(),
+    ["/settings/telemetry", "/settings"],
+    ["/me/growth", "/me"],
+    ["/topics/current", "/"],
+    ["/submissions/abc", "/me"],
+  ])("sends features backend v2 lacks elsewhere: %s", (path, target) =>
+    expect(retiredRouteDestination(path, "", true)).toBe(target),
   );
 });

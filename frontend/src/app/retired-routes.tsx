@@ -10,6 +10,25 @@ const retired = new Set([
   "/auth/withdraw-consent",
 ]);
 
+/**
+ * Features backend v2 does not have. Old links land on the closest page that
+ * still exists, and menus use isRetiredV2 to leave the entries out.
+ */
+const v2Retired: [RegExp, string][] = [
+  [/^\/me\/growth$/, "/me"],
+  [/^\/me\/tags(\/.*)?$/, "/me"],
+  [/^\/topics(\/.*)?$/, "/"],
+  [/^\/submissions(\/.*)?$/, "/me"],
+  [/^\/settings\/delete$/, "/settings/account"],
+  [/^\/settings\/telemetry$/, "/settings"],
+  [/^\/settings\/notifications$/, "/settings"],
+  [/^\/auth\/(account|mobile|device)-recovery$/, "/settings/account"],
+];
+export function isRetiredV2(to: string | null | undefined) {
+  const path = (to ?? "").split(/[?#]/)[0].replace(/\/+$/, "");
+  return v2Retired.some(([pattern]) => pattern.test(path));
+}
+
 /** Old bookmarks must not reopen retired registration or authorization flows. */
 export function retiredRouteDestination(
   path: string,
@@ -18,6 +37,10 @@ export function retiredRouteDestination(
 ) {
   const current = normalizeAuthRoute(path);
   if (current !== path) return current + search;
+  const gone = v2Retired.find(([pattern]) =>
+    pattern.test(path.replace(/\/+$/, "")),
+  );
+  if (gone) return gone[1];
   if (!retired.has(path.replace(/\/+$/, ""))) return null;
   const next = safeLoginNext(new URLSearchParams(search).get("next"));
   return signedIn

@@ -51,7 +51,7 @@ function Tracker() {
     <>
       <WorkspaceSwitch mode="admin" />
       <WorkspaceSwitch mode="front" />
-      <Link to="/admin/comments?page=2">进入评论</Link>
+      <Link to="/admin/feedback?page=2">进入评论</Link>
     </>
   );
 }
@@ -73,7 +73,7 @@ it("remembers each workspace without changing the login session", async () => {
       .find((a) => a.textContent === "进入评论")!
       .click(),
   );
-  expect(workspaceDestination(10, "admin")).toBe("/admin/comments?page=2");
+  expect(workspaceDestination(10, "admin")).toBe("/admin/feedback?page=2");
   expect(
     host.querySelector('a[aria-label="切换到前台"]')?.getAttribute("href"),
   ).toBe("/foods/7?section=comments");
