@@ -383,6 +383,9 @@ function foodBody(body: Json, create: boolean) {
   };
 }
 function restaurantBody(body: Json, current?: Json | null) {
+  // Pages updated for v2 send the shop traits; otherwise keep what the shop has.
+  const pick = <T>(key: string, fallback: T): T =>
+    body[key] !== undefined ? body[key] : (current?.[key] ?? fallback);
   return {
     name: body.name,
     address: body.address,
@@ -393,12 +396,12 @@ function restaurantBody(body: Json, current?: Json | null) {
     ...(body.permanentlyClosed === undefined
       ? {}
       : { permanentlyClosed: body.permanentlyClosed }),
-    kind: current?.kind ?? "food",
-    mealTimes: current?.mealTimes ?? ["lunch", "dinner"],
-    priceBand: current?.priceBand ?? "FROM_15_TO_30",
-    categories: current?.categories ?? [],
-    tags: current?.tags ?? [],
-    deliveryEnabled: current?.deliveryEnabled ?? false,
+    kind: pick("kind", "food"),
+    mealTimes: pick("mealTimes", ["lunch", "dinner"]),
+    priceBand: pick("priceBand", "FROM_15_TO_30"),
+    categories: pick("categories", []),
+    tags: pick("tags", []),
+    deliveryEnabled: pick("deliveryEnabled", false),
   };
 }
 const created = (v: Json | null) => ({
@@ -1080,6 +1083,12 @@ const routes: [string, RegExp, Handler][] = [
     "PUT",
     /^\/restaurant\/(\d+)\/rating$/,
     async ({ match, body, call }) => {
+      // Pages updated for v2 send {scene, rating}; reply with MyRatings.
+      if (body.scene)
+        return call(match.input!, {
+          method: "PUT",
+          body: { scene: body.scene, rating: body.rating },
+        });
       const v = await call(match.input!, {
         method: "PUT",
         body: {
@@ -1096,7 +1105,12 @@ const routes: [string, RegExp, Handler][] = [
   [
     "DELETE",
     /^\/restaurant\/(\d+)\/rating$/,
-    async ({ match, call }) => {
+    async ({ match, query, call }) => {
+      if (query.scene)
+        return call(match.input!, {
+          method: "DELETE",
+          query: { scene: query.scene },
+        });
       const v = await call(match.input!, {
         method: "DELETE",
         query: { scene: "dine_in" },

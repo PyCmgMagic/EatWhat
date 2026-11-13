@@ -19,6 +19,11 @@ import {
   type Schema,
 } from "../api/models";
 import { ErrorState, Icon, Loading, Modal, Pagination } from "../components/ui";
+import {
+  ShopTraitsFields,
+  shopTraitsOf,
+  type ShopTraits,
+} from "../features/ShopTraits";
 import { useTask } from "../components/useTask";
 const AccountReviews = lazy(() =>
   import("./AdminApiV2").then((m) => ({ default: m.AccountReviews })),
@@ -262,22 +267,27 @@ function RestaurantEditor({
 }) {
   const { api, toast } = useApp(),
     nav = useNavigate(),
-    task = useTask(undefined, onClose, ["admin", "restaurants"]);
+    task = useTask(undefined, onClose, ["admin", "restaurants"]),
+    [traits, setTraits] = useState(() =>
+      shopTraitsOf(r as Restaurant & Partial<ShopTraits>),
+    );
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
         const d = new FormData(e.currentTarget);
         task.run(async () => {
-          const result = await api.editRestaurant(
-            r.id!,
-            restaurantEditBody(r, {
+          if (!traits.mealTimes.length)
+            throw new Error("请至少选择一个营业饭点。");
+          const result = await api.editRestaurant(r.id!, {
+            ...restaurantEditBody(r, {
               name: String(d.get("name")).trim(),
               address: String(d.get("address")).trim(),
               gcjLng: Number(d.get("lng")),
               gcjLat: Number(d.get("lat")),
             }),
-          );
+            ...traits,
+          });
           toast(result?.revisionId ? "修改已提交审核。" : "餐厅资料已更新。");
           if (result?.revisionId) nav(submissionPath(result, "/admin"));
         });
@@ -304,6 +314,11 @@ function RestaurantEditor({
         required
       />
       <Coordinates lng={r.gcjLng} lat={r.gcjLat} />
+      <ShopTraitsFields
+        value={traits}
+        onChange={setTraits}
+        disabled={task.isPending}
+      />
       {task.error && <ErrorState error={task.error} />}
       <button className="btn btn-primary" disabled={task.isPending}>
         保存餐厅资料

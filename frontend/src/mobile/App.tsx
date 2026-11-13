@@ -75,6 +75,7 @@ import RestaurantLocationField, {
 } from "../features/RestaurantLocationField";
 import SheetHandle from "./SheetHandle";
 import type { MapPoint } from "../features/map-geometry";
+import { ShopTraitsFields, defaultShopTraits } from "../features/ShopTraits";
 import {
   ProfilePeopleDialog,
   useLegacyPeopleRedirect,
@@ -696,7 +697,8 @@ function NewShopDetailsForm({
     [uncertain, setUncertain] = useState(false),
     [position, setPosition] = useState<MapPoint>(),
     [name, setName] = useState(nameHint),
-    [address, setAddress] = useState("");
+    [address, setAddress] = useState(""),
+    [traits, setTraits] = useState(defaultShopTraits);
   return (
     <div className="mobile-page-native">
       <Link to="/publish" aria-label="返回">
@@ -711,11 +713,14 @@ function NewShopDetailsForm({
           setBusy(true);
           try {
             const point = requireShopLocation(position);
+            if (!traits.mealTimes.length)
+              throw new Error("请至少选择一个营业饭点。");
             const created = await api.createRestaurant({
               name: boundedText(String(d.get("name")), 20, "店名"),
               address: boundedText(address, 30, "地址"),
               ...point,
               hubId: area?.hubId,
+              ...traits,
             });
             if (!active.current) return;
             if (created.revisionId) {
@@ -758,6 +763,11 @@ function NewShopDetailsForm({
           }}
           address={address}
           onAddressChange={setAddress}
+          disabled={busy || uncertain}
+        />
+        <ShopTraitsFields
+          value={traits}
+          onChange={setTraits}
           disabled={busy || uncertain}
         />
         {uncertain && (

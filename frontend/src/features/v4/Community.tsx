@@ -17,6 +17,13 @@ import {
 import { LoginLink } from "../../app/auth-dialog";
 import { useArea } from "../../app/area";
 import { type Schema, money, mediaUrl } from "../../api/models";
+import {
+  priceBands,
+  ratingScenes,
+  rateText,
+  type RatingValue,
+  type V2Shop,
+} from "../../api/v2-vocab";
 import { CatalogCard } from "../Catalog";
 import { ProfileSectionNav } from "../ProfileSectionNav";
 import "../profile-activity.css";
@@ -1059,7 +1066,8 @@ export function RestaurantActions({
       queryKey: ["restaurants", "detail", id],
       queryFn: () => api.restaurant(id),
     }),
-    shop = q.data;
+    shop = q.data,
+    v2Shop = shop as (typeof shop & V2Shop) | undefined;
   const refresh = async () => {
     await cache.invalidateQueries({ queryKey: ["restaurants"] });
   };
@@ -1089,37 +1097,30 @@ export function RestaurantActions({
                 {shop?.isFavorite ? "取消收藏店铺" : "收藏店铺"}
               </button>
             )}
-            <select
-              aria-label="我的店铺评分"
-              value={shop?.myRating ?? ""}
-              disabled={
-                !shop ||
-                task.busy ||
-                task.uncertain ||
-                shop?.personalState === "SYNC_PENDING"
-              }
-              onChange={(e) => {
-                const rating = e.target.value;
-                void task.run(
-                  () =>
-                    rating
-                      ? api.rateRestaurant(id, {
-                          rating: rating as NonNullable<
-                            Schema["RestaurantRatingDTORequest"]["rating"]
-                          >,
-                        })
-                      : api.unrateRestaurant(id),
-                  refresh,
-                );
-              }}
-            >
-              <option value="">未评分</option>
-              {["RECOMMEND", "GOOD", "AVERAGE", "NOT_RECOMMEND"].map((r) => (
-                <option key={r} value={r}>
-                  {statusText(r)}
-                </option>
+            {ratingScenes
+              .filter(
+                (scene) => scene.id === "dine_in" || v2Shop?.deliveryEnabled,
+              )
+              .map((scene) => (
+                <select
+                  key={scene.id}
+                  aria-label={`我的${scene.name}评价`}
+                  value={v2Shop?.myRatings?.[scene.key] ?? ""}
+                  disabled={!shop || task.busy || task.uncertain}
+                  onChange={(e) => {
+                    const value = (e.target.value ||
+                      null) as RatingValue | null;
+                    void task.run(
+                      () => api.rateRestaurantScene(id, scene.id, value),
+                      refresh,
+                    );
+                  }}
+                >
+                  <option value="">{scene.name}：未评价</option>
+                  <option value="RECOMMEND">{scene.name}：推荐</option>
+                  <option value="NOT_RECOMMEND">{scene.name}：不推荐</option>
+                </select>
               ))}
-            </select>
           </>
         ) : (
           <LoginLink to="/auth/password">登录后收藏与评分</LoginLink>
@@ -1127,24 +1128,28 @@ export function RestaurantActions({
         <Link to={`/restaurants/correction?id=${id}`}>店铺信息有误</Link>
         <Link to={`/reports/new?type=RESTAURANT&id=${id}`}>举报</Link>
       </div>
-      {shop?.ratingSummaryState === "READY" ? (
+      {shop && (
         <p>
-          {shop.ratingCount ?? 0} 人评价 ·{" "}
-          {shop.recommendationRate == null
-            ? "评价人数不足，暂无推荐率"
-            : `推荐率 ${shop.recommendationRate}%`}
+          {ratingScenes
+            .filter(
+              (scene) => scene.id === "dine_in" || v2Shop?.deliveryEnabled,
+            )
+            .map((scene) => `${scene.name} ${rateText(v2Shop?.[scene.key])}`)
+            .join(" · ")}
         </p>
-      ) : (
-        shop?.ratingSummaryState && <p>评分汇总仍在同步。</p>
       )}
-      {shop?.publicTastesState === "READY" && (
+      {shop && (
         <p>
-          {shop.publicTastes
-            ?.map((t) => t.name)
+          {[
+            ...(v2Shop?.categories ?? []),
+            priceBands.find((p) => p.id === shop.priceBand)?.name,
+            v2Shop?.deliveryEnabled ? "可外卖" : "仅堂食",
+          ]
             .filter(Boolean)
-            .join(" · ") || "暂无公开口味"}
+            .join(" · ")}
         </p>
       )}
+      {!!v2Shop?.tags?.length && <p>口味：{v2Shop.tags.join(" · ")}</p>}
       <CommandState task={task} />
     </div>
   );

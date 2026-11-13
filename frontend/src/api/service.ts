@@ -6,6 +6,7 @@ export type RestaurantFilters = NonNullable<
   operations["RestaurantController_browseRestaurants_get"]["parameters"]["query"]
 >;
 import type { CaptchaRunner } from "./captcha";
+import type { ShopTraits } from "../features/ShopTraits";
 import { createV4Api } from "./v4";
 import { createCommentsApi } from "./comments";
 import {
@@ -385,7 +386,9 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       data<Page<Restaurant>>("/restaurant/browse", {
         query: { page: 1, pageSize: 12, ...query },
       }),
-    createRestaurant: (body: Schema["RestaurantDTORequest"]) =>
+    createRestaurant: (
+      body: Schema["RestaurantDTORequest"] & Partial<ShopTraits>,
+    ) =>
       created("/restaurant/add", {
         ...body,
         name: boundedText(body.name, 20, "店名"),
@@ -449,7 +452,10 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       data<Page<Restaurant>>("/restaurant/list", {
         query: { page, pageSize: 12, keyword },
       }),
-    editRestaurant: (id: number, body: Schema["EditRestaurantDTORequest"]) =>
+    editRestaurant: (
+      id: number,
+      body: Schema["EditRestaurantDTORequest"] & Partial<ShopTraits>,
+    ) =>
       request<Schema["CreatedResourceVOResponse"] | null>(
         `/restaurant/edit/${id}`,
         { method: "PUT", body },

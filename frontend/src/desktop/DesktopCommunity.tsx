@@ -24,6 +24,11 @@ import { PageSkeleton } from "../components/LoadingSkeleton";
 import { ProfileSectionNav } from "../features/ProfileSectionNav";
 import "../features/profile-activity.css";
 import {
+  ShopTraitsFields,
+  defaultShopTraits,
+  type ShopTraits,
+} from "../features/ShopTraits";
+import {
   Avatar,
   Note,
   PageHead,
@@ -355,6 +360,7 @@ export function DesktopUser() {
 type ShopDraft = {
   name: string;
   address: string;
+  traits: ShopTraits;
   point?: MapPoint;
   uncertain: boolean;
   done: boolean;
@@ -371,6 +377,7 @@ export function DesktopNewShop() {
         shopDrafts.get(key) ?? {
           name: m.draft.restaurantId ? "" : (m.draft.shopName ?? ""),
           address: "",
+          traits: defaultShopTraits(),
           uncertain: false,
           done: false,
         },
@@ -435,11 +442,14 @@ export function DesktopNewShop() {
                     if (!name || !address)
                       throw new Error("请填写店名和详细地址。");
                     const point = requireShopLocation(draft.point);
+                    if (!draft.traits.mealTimes.length)
+                      throw new Error("请至少选择一个营业饭点。");
                     const created = await api.createRestaurant({
                       name,
                       address,
                       ...point,
                       hubId: area?.hubId,
+                      ...draft.traits,
                     });
                     update({ done: true });
                     if (created.revisionId) {
@@ -482,6 +492,11 @@ export function DesktopNewShop() {
                 }}
                 address={draft.address}
                 onAddressChange={(address) => update({ address })}
+                disabled={task.isPending || draft.uncertain}
+              />
+              <ShopTraitsFields
+                value={draft.traits}
+                onChange={(traits) => update({ traits })}
                 disabled={task.isPending || draft.uncertain}
               />
               <TaskError error={task.error} />

@@ -409,6 +409,18 @@ export function createV4Api(
         `/restaurant/${encodeURIComponent(id)}/rating`,
         { method: "PUT", body },
       ),
+    /** v2: rate one scene (dine_in / delivery) as RECOMMEND or NOT_RECOMMEND. */
+    rateRestaurantScene: (
+      id: number,
+      scene: "dine_in" | "delivery",
+      rating: "RECOMMEND" | "NOT_RECOMMEND" | null,
+    ) =>
+      request<{ dineIn?: string | null; delivery?: string | null } | null>(
+        `/restaurant/${encodeURIComponent(id)}/rating`,
+        rating
+          ? { method: "PUT", body: { scene, rating } }
+          : { method: "DELETE", query: { scene } },
+      ),
     unrateRestaurant: (id: number) =>
       data<Reply<"Result_RestaurantRatingViewResponse">>(
         `/restaurant/${encodeURIComponent(id)}/rating`,
