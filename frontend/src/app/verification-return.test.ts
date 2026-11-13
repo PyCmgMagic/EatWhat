@@ -115,3 +115,17 @@ it("expires recovery context and tolerates unavailable browser storage", () => {
   expect(() => rememberVerificationReturn(10, "/foods/71")).not.toThrow();
   expect(verificationReturn(10).intent).toBeUndefined();
 });
+it("carries backend v2's one-time ticket on success only", () => {
+  const ticket = "A".repeat(40) + "_-9";
+  expect(
+    verificationCallbackUrl(
+      `https://eat.v50to.you/home?result=success&code=0&ticket=${ticket}`,
+    ),
+  ).toBe(`/#/verify?result=success&code=0&ticket=${ticket}`);
+  expect(
+    readVerificationCallback(`?result=failure&code=30012&ticket=${ticket}`),
+  ).toEqual({ result: "failure", code: "30012" });
+  expect(
+    readVerificationCallback("?result=success&code=0&ticket=bad ticket"),
+  ).toEqual({ result: "success", code: "0" });
+});

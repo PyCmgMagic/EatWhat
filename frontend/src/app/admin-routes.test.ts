@@ -9,9 +9,9 @@ import {
 
 describe("independent admin routes", () => {
   // Backend v2 has no review queues, topics, tag editing or security reviews.
-  it("gives all eleven v2 modules a unique canonical destination", () => {
-    expect(adminModules).toHaveLength(11);
-    expect(new Set(adminModules.map((m) => m.path)).size).toBe(11);
+  it("gives all twelve v2 modules a unique canonical destination", () => {
+    expect(adminModules).toHaveLength(12);
+    expect(new Set(adminModules.map((m) => m.path)).size).toBe(12);
     for (const m of adminModules)
       expect(resolveAdminRoute(m.path).module?.id).toBe(m.id);
   });

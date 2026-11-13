@@ -1315,6 +1315,7 @@ export function demoTransport(
         reply: "",
         createdAt: Date.now(),
         closedAt: null,
+        submitterId: user,
       } as V2Schema["CaseView"];
       state.feedback.unshift(record);
       return write({
@@ -1481,17 +1482,70 @@ export function demoTransport(
     case "postAdminAiSettingsTest":
       return ok({ ok: true, category: "特色", tags: ["清淡"], failure: null });
     case "getAdminFeedbackCases":
-      return ok(paged([]));
-    case "getAdminFeedbackCasesById":
-      return fail(10001, "演示中暂无反馈案件。");
-    case "postAdminFeedbackCasesByIdResolution":
-      return ok({
+    case "getAdminFeedbackCasesById": {
+      const adminCase = (view: V2Schema["CaseView"]) => {
+        const submitterId =
+          (view as { submitterId?: number }).submitterId ?? user;
+        const submitter = state.people.find((p) => p.id === submitterId);
+        const targetId = view.target?.id;
+        const targetName =
+          view.target?.type === "RESTAURANT"
+            ? state.shops.find((shop) => shop.id === targetId)?.name
+            : view.target?.type === "FOOD"
+              ? state.foods.find((food) => food.id === targetId)?.name
+              : view.target?.type === "USER"
+                ? state.people.find((p) => p.id === targetId)?.displayName
+                : view.target?.type === "COMMENT"
+                  ? state.comments.find((c) => c.id === targetId)?.text
+                  : undefined;
+        return {
+          view,
+          submitterId,
+          submitterName: submitter?.displayName ?? "演示用户",
+          targetName: targetName ?? "",
+          targetUnavailable: !!view.target && !targetName,
+          internalNote: (view as { internalNote?: string }).internalNote ?? "",
+          resolvedBy: view.status === "CLOSED" ? user : null,
+          catalogChangeRequired:
+            view.kind === "CATALOG_ERROR" && view.outcome === "ACCEPTED",
+        };
+      };
+      if (name === "getAdminFeedbackCasesById") {
+        const found = state.feedback.find((item) => item.id === id);
+        return found ? ok(adminCase(found)) : fail(10001, "记录不存在");
+      }
+      const wanted = String(q.status ?? "OPEN");
+      const kind = q.kind ? String(q.kind) : "";
+      const items = state.feedback.filter(
+        (item) => item.status === wanted && (!kind || item.kind === kind),
+      );
+      if (wanted === "OPEN")
+        items.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+      return ok(paged(items.map(adminCase)));
+    }
+    case "postAdminFeedbackCasesByIdResolution": {
+      const found = state.feedback.find((item) => item.id === id);
+      if (!found) return fail(10001, "记录不存在");
+      if (found.status === "CLOSED") return fail(40002, "这条记录已经处理过了");
+      const outcome = text("outcome");
+      if (outcome === "RESOLVED" && found.kind !== "FEEDBACK")
+        return fail(10001, "RESOLVED 只用于意见反馈");
+      Object.assign(found, {
+        status: "CLOSED",
+        outcome,
+        reply: text("reply"),
+        internalNote: text("internalNote"),
+        closedAt: Date.now(),
+      });
+      return write({
         id,
         status: "CLOSED",
-        outcome: text("outcome"),
+        outcome,
         notified: true,
-        catalogChangeRequired: false,
+        catalogChangeRequired:
+          found.kind === "CATALOG_ERROR" && outcome === "ACCEPTED",
       });
+    }
     case "getAdminRemoteConfig":
       return ok({
         configVersion: 1,

@@ -65,7 +65,7 @@ function clientForSession(session: Session | null) {
   const live = bridgeToV2(
     v2Mock
       ? async (path, options) =>
-          (await import("../v2/demo")).demoTransport(
+          (await import("../demo/backend-v2")).demoTransport(
             path,
             options,
             options.public ? undefined : session?.tokenValue,

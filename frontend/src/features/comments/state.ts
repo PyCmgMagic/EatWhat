@@ -95,7 +95,7 @@ export function commentTime(value?: string | null) {
 export const commentStatus = (value?: string | null) =>
   ({
     PENDING: "待审核",
-    APPROVED: "已通过",
+    APPROVED: "已发布",
     REJECTED: "未通过",
     SUPERSEDED: "已被新提交替代",
     DELETED: "已删除",

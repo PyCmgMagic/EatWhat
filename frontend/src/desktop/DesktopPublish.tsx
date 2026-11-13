@@ -21,6 +21,7 @@ import CropDialog from "./CropDialog";
 import "./publish.css";
 import { publishDisplay, mealCode } from "../api/food-display";
 import { foodCategories, MAX_DISH_TAGS } from "../api/v2-vocab";
+import { AiTagSuggest } from "../features/AiTagSuggest";
 
 const kinds = foodCategories;
 let submissionInFlight = false;
@@ -740,6 +741,19 @@ export default function DesktopPublish() {
                 }
               />
             </label>
+            <AiTagSuggest
+              restaurantId={shop?.id}
+              name={draft.name}
+              description={draft.description}
+              tagOptions={systemTags.data ?? []}
+              disabled={locked || draft.publishUncertain}
+              onApply={(category, tagIds) =>
+                m.setDraft({
+                  ...(category ? { category } : {}),
+                  ...(tagIds.length ? { systemTagIds: tagIds } : {}),
+                })
+              }
+            />
             <div className="ew-feature ew-meals">
               <b>招牌菜</b>
               <label>

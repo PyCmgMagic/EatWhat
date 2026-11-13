@@ -553,4 +553,33 @@ describe("v2 bridge", () => {
       body: { reason: "图片与菜品不符" },
     });
   });
+
+  it("lists my comments from v2 /comments/my as published", async () => {
+    const { request, sent } = backend(() =>
+      ok({
+        items: [
+          {
+            id: 4,
+            foodId: 7,
+            rootId: 2,
+            text: "好吃",
+            pictureUrls: [PIC],
+            createdAt: 0,
+          },
+        ],
+      }),
+    );
+    const v: any = await request("/comments/submissions/my", {
+      query: { page: 1, pageSize: 20 },
+    });
+    expect(sent[0].path).toBe("/comments/my");
+    expect(v.items[0]).toMatchObject({
+      id: 4,
+      foodId: 7,
+      kind: "REPLY",
+      moderationStatus: "APPROVED",
+      text: "好吃",
+      imageCount: 1,
+    });
+  });
 });

@@ -1112,7 +1112,26 @@ const routes: [string, RegExp, Handler][] = [
       };
     },
   ],
-  ["GET", /^\/(comments\/submissions|moderation\/submissions)\/my$/, empty],
+  [
+    "GET",
+    /^\/comments\/submissions\/my$/,
+    // v2 publishes comments at once; list them as published submissions.
+    async ({ query, call }) =>
+      page(await call("/comments/my", { query }), (v: Json) => ({
+        id: v.id,
+        gid: `comment-${v.id}`,
+        revisionId: `comment-${v.id}`,
+        kind: v.rootId ? "REPLY" : "ROOT",
+        foodId: v.foodId,
+        moderationStatus: "APPROVED",
+        reasonCode: null,
+        reasonMessage: null,
+        text: v.text ?? null,
+        imageCount: v.pictureUrls?.length ?? 0,
+        createdAt: iso(v.createdAt),
+      })),
+  ],
+  ["GET", /^\/moderation\/submissions\/my$/, empty],
   ["GET", /^\/admin\/(comments\/moderation|moderation)\/queue$/, empty],
   [".*", /^\/(admin\/)?(comments\/)?moderation\//, gone("内容审核")],
 

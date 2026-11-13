@@ -83,6 +83,11 @@ const RestaurantActions = lazy(() =>
     default: m.RestaurantActions,
   })),
 );
+const ShopHistory = lazy(() =>
+  import("../features/v4/EditHistory").then((m) => ({
+    default: m.EditHistory,
+  })),
+);
 const FoodExtras = lazy(() =>
   import("../features/v4/DetailExtras").then((m) => ({
     default: m.FoodExtras,
@@ -771,7 +776,9 @@ function Plate({
 function DesktopHome() {
   const remote = useRemoteConfig(),
     batchSize = recommendationBatchSize(remote.data);
-  const { api } = useApp(),
+  const { api, session, toast } = useApp(),
+    [dismissed, setDismissed] = useState<number[]>([]),
+    [dismissing, setDismissing] = useState(false),
     m = useMobile(),
     { campusId } = useArea(),
     [n, setN] = useState(0),
@@ -788,7 +795,10 @@ function DesktopHome() {
         }),
       placeholderData: keepPreviousData,
     }),
-    list = query.data ?? [],
+    // "不想吃这家": v2 skips the shop for 30 days; hide its dishes right away.
+    list = (query.data ?? []).filter(
+      (f) => !dismissed.includes(Number(f.restaurantId)),
+    ),
     index = list.length ? ((n % list.length) + list.length) % list.length : 0,
     food = list[index],
     visual = food ? visualFor(food, isDemo) : null;
@@ -870,6 +880,30 @@ function DesktopHome() {
             {food.restaurantName}
             <Icon name="chevronRight" size={16} />
           </Link>
+          {session && food.restaurantId && (
+            <button
+              type="button"
+              className="pc-hero-dismiss"
+              disabled={dismissing}
+              onClick={async () => {
+                const shopId = Number(food.restaurantId);
+                setDismissing(true);
+                try {
+                  await api.dismissRecommendation(shopId);
+                  setDismissed((ids) => [...ids, shopId]);
+                  toast(
+                    `30 天内不再推荐「${food.restaurantName ?? "这家店"}」`,
+                  );
+                } catch (error) {
+                  toast(errorMessage(error));
+                } finally {
+                  setDismissing(false);
+                }
+              }}
+            >
+              不想吃这家
+            </button>
+          )}
           {visual.dist && (
             <span className="pc-hero-distance">{visual.dist}</span>
           )}
@@ -1659,6 +1693,7 @@ function DesktopRestaurant() {
           </section>
           <Suspense fallback={<ContentSkeleton kind="rows" count={1} />}>
             <RestaurantActions id={id} />
+            <ShopHistory kind="restaurant" id={id} />
           </Suspense>
           <section className="pc-content-sheet">
             <div className="pc-sheet-handle" />

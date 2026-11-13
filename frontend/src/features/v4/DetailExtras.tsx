@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import { RestaurantActions } from "./Community";
 import { Card, QueryView } from "./shared";
+import { EditHistory } from "./EditHistory";
 export function FoodExtras({
   id,
   inline = false,
@@ -36,6 +37,7 @@ export function FoodExtras({
             </button>
           </p>
         )}
+        <EditHistory kind="food" id={id} />
         <Link
           className="mobile-food-report"
           to={`/reports/new?type=FOOD&id=${id}`}
@@ -44,17 +46,20 @@ export function FoodExtras({
         </Link>
       </footer>
     );
-  if (!q.isError && !q.data?.length) return null;
+  if (!q.isError && !q.data?.length) return <EditHistory kind="food" id={id} />;
   return (
-    <Card title="相关专题">
-      <QueryView query={q}>
-        {q.data?.map((t) => (
-          <Link className="v4-row" key={t.id} to={`/topics/${t.id}`}>
-            已入选：{t.name} →
-          </Link>
-        ))}
-      </QueryView>
-    </Card>
+    <>
+      <EditHistory kind="food" id={id} />
+      <Card title="相关专题">
+        <QueryView query={q}>
+          {q.data?.map((t) => (
+            <Link className="v4-row" key={t.id} to={`/topics/${t.id}`}>
+              已入选：{t.name} →
+            </Link>
+          ))}
+        </QueryView>
+      </Card>
+    </>
   );
 }
 export default function DetailExtras({
@@ -74,6 +79,7 @@ export default function DetailExtras({
       >
         <h2>店铺评价与反馈</h2>
         <RestaurantActions id={id} hideFavorite />
+        <EditHistory kind="restaurant" id={id} />
       </section>
     );
   return (
@@ -81,9 +87,12 @@ export default function DetailExtras({
       {/^\/foods\/\d+$/.test(path) ? (
         <FoodExtras id={id} />
       ) : (
-        <Card title="店铺评价与反馈">
-          <RestaurantActions id={id} hideFavorite />
-        </Card>
+        <>
+          <Card title="店铺评价与反馈">
+            <RestaurantActions id={id} hideFavorite />
+          </Card>
+          <EditHistory kind="restaurant" id={id} />
+        </>
       )}
     </div>
   );

@@ -1,0 +1,119 @@
+/* Edit history under dishes and shops (backend v2 revisions). */
+.edit-history {
+  margin: 16px 0;
+  border: 1px solid #eae3d9;
+  border-radius: 18px;
+  background: #fff;
+  color: #231c18;
+  font-family: "Noto Sans SC Variable", sans-serif;
+}
+.edit-history summary {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 16px 20px;
+  font-size: 15px;
+  font-weight: 750;
+  cursor: pointer;
+  list-style: none;
+}
+.edit-history summary::-webkit-details-marker {
+  display: none;
+}
+.edit-history summary::after {
+  content: "›";
+  margin-left: auto;
+  color: #9a8971;
+  font-size: 18px;
+  transition: transform 0.18s;
+}
+.edit-history[open] summary::after {
+  transform: rotate(90deg);
+}
+.edit-history summary small {
+  color: #76695e;
+  font-size: 12px;
+  font-weight: 500;
+}
+.edit-history-list {
+  margin: 0;
+  padding: 0 20px;
+  list-style: none;
+}
+.edit-history-list > li {
+  padding: 14px 0;
+  border-top: 1px solid #f1ebe3;
+}
+.edit-history-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  font-size: 13px;
+}
+.edit-history-head span,
+.edit-history-head time {
+  color: #76695e;
+}
+.edit-history-head em {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #fbefd9;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 650;
+}
+.edit-history-list ul {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  color: #51443a;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.edit-history-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+.edit-history button {
+  padding: 6px 14px;
+  border: 1px solid #e6ddd3;
+  border-radius: 999px;
+  background: #fffdf9;
+  color: #231c18;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+.edit-history button.is-primary {
+  border-color: #231c18;
+  background: #231c18;
+  color: #fffdf9;
+}
+.edit-history button:disabled {
+  color: #9a8971;
+  cursor: not-allowed;
+}
+.edit-history-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 4px 20px 16px;
+  color: #76695e;
+  font-size: 12px;
+}
+.edit-history-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 20px 16px;
+  color: #76695e;
+  font-size: 12px;
+}

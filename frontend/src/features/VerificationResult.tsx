@@ -23,8 +23,29 @@ export default function VerificationResult({
   const origin = useMemo(() => verificationReturn(user?.id), [user?.id]);
   const returnTo = origin.intent?.returnTo ?? "/settings/account";
   const query = useQuery({
-    queryKey: ["verification-result", user?.id, callback.result, callback.code],
-    queryFn: () => api.me(),
+    queryKey: [
+      "verification-result",
+      user?.id,
+      callback.result,
+      callback.code,
+      callback.ticket,
+    ],
+    queryFn: async () => {
+      if (callback.ticket && !origin.accountChanged) {
+        const ticket = callback.ticket;
+        // The ticket works once; drop it so a refresh does not resend it.
+        forgetTicket();
+        try {
+          await confirmed(ticket, () => api.ssoConfirm(ticket));
+        } catch (error) {
+          const me = await api.me();
+          // Already bound (e.g. confirmed in another tab): show the result.
+          if (me?.verified) return me;
+          throw error;
+        }
+      }
+      return api.me();
+    },
     staleTime: 0,
     retry: false,
     refetchOnMount: "always",
@@ -116,5 +137,30 @@ export default function VerificationResult({
         </Section>
       </div>
     </>
+  );
+}
+
+/** One request per ticket even if React runs the query twice. */
+const confirming = new Map<string, Promise<unknown>>();
+function confirmed(ticket: string, send: () => Promise<unknown>) {
+  let pending = confirming.get(ticket);
+  if (!pending) confirming.set(ticket, (pending = send()));
+  return pending;
+}
+function forgetTicket() {
+  const hash = window.location.hash,
+    at = hash.indexOf("?");
+  if (at < 0) return;
+  const params = new URLSearchParams(hash.slice(at + 1));
+  if (!params.has("ticket")) return;
+  params.delete("ticket");
+  window.history.replaceState(
+    window.history.state,
+    "",
+    window.location.pathname +
+      window.location.search +
+      hash.slice(0, at) +
+      "?" +
+      params,
   );
 }

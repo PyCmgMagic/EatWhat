@@ -387,7 +387,32 @@ export function Preferences() {
           initial={q.data as unknown as V2Preferences}
         />
       )}
+      <ImplicitTaste />
     </FeaturePage>
+  );
+}
+/** v2 also infers tastes from likes, favorites and ratings (read only). */
+function ImplicitTaste() {
+  const { api } = useApp(),
+    q = useQuery({
+      queryKey: ["preferences", "taste"],
+      queryFn: () => api.implicitTaste(),
+      retry: false,
+    });
+  const names = [
+    ...(q.data?.inferredCategories ?? []),
+    ...(q.data?.inferredTags ?? []),
+  ];
+  if (!q.data) return null;
+  return (
+    <div className="ew-form-panel ew-implicit-taste">
+      <b>从你的点赞和收藏看出</b>
+      <p className="ew-note">
+        {names.length
+          ? `你可能偏爱：${names.join("、")}。推荐会同时参考这里和上面的设置。`
+          : "多点赞、收藏几道菜后，这里会显示推测出的口味。"}
+      </p>
+    </div>
   );
 }
 type V2Preferences = {

@@ -99,6 +99,14 @@ export function createV4Api(
         `/admin/moderation/revisions/${encodeURIComponent(revisionId)}/images/${encodeURIComponent(slot)}`,
         {},
       ),
+    adminAiSettings: () => data<AiSettings>(`/admin/ai/settings`, {}),
+    saveAdminAiSettings: (body: AiSettingsInput) =>
+      data<AiSettings>(`/admin/ai/settings`, { method: "PUT", body }),
+    testAdminAi: (imageUrl?: string) =>
+      data<AiTestResult>(`/admin/ai/settings/test`, {
+        method: "POST",
+        body: imageUrl ? { imageUrl } : {},
+      }),
     adminRemoteConfig: () =>
       data<Reply<"Result_AdminConfigResponse">>(`/admin/remote-config`, {}),
     adminAnnouncements: (query: { page?: number; pageSize?: number } = {}) =>
@@ -558,3 +566,31 @@ export function createV4Api(
       ),
   };
 }
+
+/** Backend v2 AI provider (OpenAI-compatible); the key is only shown by its last 4 characters. */
+export type AiSettings = {
+  configured?: boolean;
+  enabled?: boolean;
+  baseUrl?: string | null;
+  apiKeyHint?: string | null;
+  model?: string | null;
+  responseFormat?: "json_schema" | "json_object" | string | null;
+  imageCheck?: boolean;
+  updatedBy?: number | null;
+  updatedAt?: number | null;
+};
+export type AiSettingsInput = {
+  enabled?: boolean;
+  baseUrl?: string;
+  /** Empty keeps the saved key (required the first time). */
+  apiKey?: string;
+  model?: string;
+  responseFormat?: string;
+  imageCheck?: boolean;
+};
+export type AiTestResult = {
+  ok?: boolean;
+  category?: string | null;
+  tags?: string[] | null;
+  failure?: string | null;
+};

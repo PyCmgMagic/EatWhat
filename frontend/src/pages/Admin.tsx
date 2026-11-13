@@ -28,9 +28,6 @@ import { useTask } from "../components/useTask";
 const AccountReviews = lazy(() =>
   import("./AdminApiV2").then((m) => ({ default: m.AccountReviews })),
 );
-const AdminPasswordReset = lazy(() =>
-  import("./AdminApiV2").then((m) => ({ default: m.AdminPasswordReset })),
-);
 export type AdminTab =
   "summary" | "restaurants" | "foods" | "tags" | "users" | "hubs" | "security";
 export default function AdminContent({ tab = "summary" }: { tab?: AdminTab }) {
@@ -761,7 +758,7 @@ function AdminUsers() {
                       onClick={() => setReset(u)}
                       disabled={!u.id}
                     >
-                      重置密码冲突
+                      设置临时密码
                     </button>
                   </td>
                 </tr>
@@ -777,14 +774,12 @@ function AdminUsers() {
         onPage={setPage}
       />
       {reset?.id && (
-        <Modal title="重置账号密码冲突" onClose={() => setReset(null)}>
-          <Suspense fallback={<Loading />}>
-            <AdminPasswordReset
-              userId={reset.id}
-              displayName={reset.displayName || reset.userName || "校园食友"}
-              onDone={() => setReset(null)}
-            />
-          </Suspense>
+        <Modal title="设置临时密码" onClose={() => setReset(null)}>
+          <TemporaryPassword
+            userId={reset.id}
+            displayName={reset.displayName || reset.userName || "校园食友"}
+            onClose={() => setReset(null)}
+          />
         </Modal>
       )}
       {edit && (
@@ -796,6 +791,78 @@ function AdminUsers() {
         </Modal>
       )}
     </>
+  );
+}
+/** Backend v2: an admin sets a temporary password; every device signs out. */
+function TemporaryPassword({
+  userId,
+  displayName,
+  onClose,
+}: {
+  userId: number;
+  displayName: string;
+  onClose: () => void;
+}) {
+  const { api } = useApp(),
+    task = useTask("临时密码已设置，对方所有设备已下线", onClose, ["admin"]);
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const d = new FormData(e.currentTarget),
+          password = String(d.get("password") ?? ""),
+          again = String(d.get("again") ?? "");
+        task.run(async () => {
+          if (password !== again) throw new Error("两次输入的密码不一致。");
+          await api.adminSetPassword(userId, password);
+        });
+      }}
+    >
+      <p className="modal-description">
+        为「{displayName}」设置一个临时密码。设置后对方的所有设备都会下线，
+        请通过可靠渠道告知对方，并提醒登录后尽快修改。
+      </p>
+      <label className="form-label" htmlFor="temp-password">
+        临时密码（6–64 位）
+      </label>
+      <input
+        className="field"
+        id="temp-password"
+        name="password"
+        type="password"
+        autoComplete="new-password"
+        minLength={6}
+        maxLength={64}
+        required
+      />
+      <label className="form-label" htmlFor="temp-password-again">
+        再输入一次
+      </label>
+      <input
+        className="field"
+        id="temp-password-again"
+        name="again"
+        type="password"
+        autoComplete="new-password"
+        minLength={6}
+        maxLength={64}
+        required
+      />
+      {task.error && <ErrorState error={task.error} />}
+      <div className="modal-actions">
+        <button
+          className="btn btn-secondary"
+          type="button"
+          disabled={task.isPending}
+          onClick={onClose}
+        >
+          取消
+        </button>
+        <button className="btn btn-primary" disabled={task.isPending}>
+          确认设置
+        </button>
+      </div>
+    </form>
   );
 }
 function BanEditor({

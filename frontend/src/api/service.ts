@@ -2,6 +2,7 @@ import type { operations } from "./schema";
 import { boundedText, normalizedTag } from "./content-rules";
 import { putImage } from "./storage-upload";
 import { compressImage } from "./image-compression";
+import type { Revision } from "../features/v4/EditHistory";
 export type RestaurantFilters = NonNullable<
   operations["RestaurantController_browseRestaurants_get"]["parameters"]["query"]
 >;
@@ -181,6 +182,9 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
     ssoStart: () =>
       data<Schema["SsoStartVOResponse"]>("/auth/sdu", { method: "POST" }),
     ssoStartAlias: () => data<Schema["SsoStartVOResponse"]>("/auth/sdu"),
+    /** Backend v2 binds the school result only after this one-time ticket is confirmed. */
+    ssoConfirm: (ticket: string) =>
+      request<void>("/auth/sdu/confirm", { method: "POST", body: { ticket } }),
     setUsername: (body: Schema["SetLoginUsernameDTORequest"]) =>
       data<Schema["LoginUsernameVOResponse"]>("/auth/username/set", {
         method: "POST",
@@ -516,6 +520,46 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       }),
     deleteSystemTag: (id: number) =>
       request<void>(`/admin/food-tags/${id}`, { method: "DELETE" }),
+    /** v2 tastes inferred from likes, favorites and ratings. */
+    implicitTaste: () =>
+      data<{
+        inferredTags?: string[] | null;
+        inferredCategories?: string[] | null;
+      }>("/user/recommendation-profile/taste"),
+    /** v2 keeps every version of a dish or shop; anyone may read them. */
+    editHistory: (kind: "food" | "restaurant", id: number, page = 1) =>
+      data<Page<Revision>>(
+        kind === "food" ? `/foods/${id}/history` : `/restaurant/${id}/history`,
+        { query: { page, pageSize: 10 } },
+      ),
+    restoreRevision: (
+      kind: "food" | "restaurant",
+      id: number,
+      revisionId: number,
+    ) =>
+      data<{ id?: number; revisionId?: number }>(
+        `${kind === "food" ? "/foods" : "/restaurant"}/${id}/history/${revisionId}/restore`,
+        { method: "POST" },
+      ),
+    /** v2 AI suggestion for a dish's category and tastes; nothing is saved. */
+    suggestDishTags: (body: {
+      restaurantId?: number;
+      name: string;
+      description?: string;
+      pictures?: string[];
+    }) =>
+      data<{ category?: string | null; tags?: string[] | null }>(
+        "/foods/suggest-tags",
+        { method: "POST", body },
+      ),
+    /** v2: skip this shop in recommendations for 30 days. */
+    dismissRecommendation: (restaurantId: number) =>
+      request<void>(`/recommend/dismiss/${restaurantId}`, { method: "POST" }),
+    adminSetPassword: (userId: number, password: string) =>
+      request<void>(`/admin/users/${userId}/password`, {
+        method: "POST",
+        body: { password },
+      }),
     adminUsers: (page = 1) =>
       data<Page<Schema["UserListItemVOResponse"]>>("/user/list", {
         query: { page, pageSize: 20 },

@@ -81,6 +81,14 @@ export const adminModules = [
     source: "operations",
   },
   {
+    id: "ai",
+    title: "AI 设置",
+    path: "/admin/ai",
+    icon: "settings",
+    group: "站点运营",
+    source: "operations",
+  },
+  {
     id: "audit",
     title: "配置审计",
     path: "/admin/audit",

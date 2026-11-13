@@ -18,6 +18,7 @@ import {
 } from "./shared";
 import { CaseContent, SubmissionContent } from "./Community";
 import { useAdminState } from "../../app/admin-state";
+import type { AiSettings, AiTestResult } from "../../api/v4";
 
 import { CommentModeration } from "../comments/Comments";
 import { EngagementStats } from "./Growth";
@@ -31,7 +32,8 @@ export type OperationsTab =
   | "announcements"
   | "audit"
   | "config"
-  | "versions";
+  | "versions"
+  | "ai";
 export default function AdminOperationsContent({
   tab = "feedback",
 }: {
@@ -51,6 +53,8 @@ export default function AdminOperationsContent({
     <AnnouncementsAdmin />
   ) : tab === "audit" ? (
     <ConfigAudit />
+  ) : tab === "ai" ? (
+    <AiAdmin />
   ) : (
     <RemoteAdmin versions={tab === "versions"} />
   );
@@ -338,6 +342,186 @@ const flagNames: Record<string, string> = {
   push: "推送",
   topic: "专题",
 };
+/** OpenAI-compatible provider for dish tag suggestions and photo checks. */
+function AiAdmin() {
+  const { api } = useApp(),
+    q = useQuery({
+      queryKey: ["admin", "ai-settings"],
+      queryFn: () => api.adminAiSettings(),
+    });
+  return (
+    <QueryView query={q}>
+      {q.data && (
+        <>
+          <AiSettingsEditor
+            key={q.data.updatedAt ?? 0}
+            value={q.data}
+            refresh={() => q.refetch()}
+          />
+          <AiTest />
+        </>
+      )}
+    </QueryView>
+  );
+}
+function AiSettingsEditor({
+  value,
+  refresh,
+}: {
+  value: AiSettings;
+  refresh: () => Promise<unknown>;
+}) {
+  const { api } = useApp(),
+    [enabled, setEnabled] = useState(value.enabled === true),
+    [imageCheck, setImageCheck] = useState(value.imageCheck !== false),
+    [baseUrl, setBaseUrl] = useState(value.baseUrl ?? ""),
+    [apiKey, setApiKey] = useState(""),
+    [model, setModel] = useState(value.model ?? ""),
+    [format, setFormat] = useState(value.responseFormat || "json_schema"),
+    task = useCommand();
+  return (
+    <Card title="AI 提供商">
+      <p>
+        {value.configured
+          ? `${value.enabled ? "已启用" : "已停用"}${
+              value.apiKeyHint ? ` · API Key 尾号 ${value.apiKeyHint}` : ""
+            }${value.updatedAt ? ` · 更新于 ${timeText(value.updatedAt)}` : ""}`
+          : "尚未配置。保存后，发布菜品时可以用 AI 建议分类和口味。"}
+      </p>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void task.run(
+            () => {
+              if (!/^https:\/\//i.test(baseUrl.trim()))
+                throw new Error("接口地址需为公网 https 地址。");
+              if (!value.configured && !apiKey.trim())
+                throw new Error("首次配置需要填写 API Key。");
+              if (!model.trim()) throw new Error("请填写模型名称。");
+              return api.saveAdminAiSettings({
+                enabled,
+                baseUrl: baseUrl.trim(),
+                apiKey: apiKey.trim() || undefined,
+                model: model.trim(),
+                responseFormat: format,
+                imageCheck,
+              });
+            },
+            async () => {
+              setApiKey("");
+              task.say("AI 配置已保存。");
+              await refresh();
+            },
+          );
+        }}
+      >
+        <label className="v4-check">
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => setEnabled(e.target.checked)}
+          />
+          启用 AI 建议
+        </label>
+        <Field
+          label="接口地址"
+          hint="OpenAI 兼容端点，例如 https://api.openai.com/v1"
+        >
+          <input
+            value={baseUrl}
+            onChange={(e) => setBaseUrl(e.target.value)}
+            placeholder="https://api.openai.com/v1"
+            inputMode="url"
+          />
+        </Field>
+        <Field
+          label="API Key"
+          hint={
+            value.configured ? "留空则沿用已保存的 Key。" : "首次配置必填。"
+          }
+        >
+          <input
+            type="password"
+            autoComplete="off"
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder={value.apiKeyHint ? `••••${value.apiKeyHint}` : ""}
+          />
+        </Field>
+        <Field label="模型" hint="需要支持图片输入。">
+          <input value={model} onChange={(e) => setModel(e.target.value)} />
+        </Field>
+        <Field
+          label="返回格式"
+          hint="服务不支持 json_schema 时改用 json_object。"
+        >
+          <select value={format} onChange={(e) => setFormat(e.target.value)}>
+            <option value="json_schema">json_schema（推荐）</option>
+            <option value="json_object">json_object</option>
+          </select>
+        </Field>
+        <label className="v4-check">
+          <input
+            type="checkbox"
+            checked={imageCheck}
+            onChange={(e) => setImageCheck(e.target.checked)}
+          />
+          用模型检查公开照片里的联系方式和广告（二维码始终在本地识别）
+        </label>
+        <button className="primary" disabled={task.busy || task.uncertain}>
+          保存 AI 配置
+        </button>
+        <CommandState task={task} />
+      </form>
+    </Card>
+  );
+}
+function AiTest() {
+  const { api } = useApp(),
+    [imageUrl, setImageUrl] = useState(""),
+    [result, setResult] = useState<AiTestResult | null>(null),
+    task = useCommand(true);
+  return (
+    <Card title="测试配置">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setResult(null);
+          void task.run(
+            () => api.testAdminAi(imageUrl.trim() || undefined),
+            async (value) => setResult(value),
+          );
+        }}
+      >
+        <Field
+          label="示例图片地址（可选）"
+          hint="填写一张可公开访问的菜品图，确认模型能识别图片。"
+        >
+          <input
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            inputMode="url"
+          />
+        </Field>
+        <button disabled={task.busy}>用示例菜测试</button>
+        <CommandState task={task} />
+      </form>
+      {result && (
+        <div className="v4-message" role="status">
+          {result.ok ? (
+            <p>
+              测试通过：分类「{result.category ?? "—"}」
+              {result.tags?.length ? `，口味 ${result.tags.join("、")}` : ""}
+            </p>
+          ) : (
+            <p>测试未通过：{result.failure ?? "模型没有返回可用结果。"}</p>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 function RemoteAdmin({ versions = false }: { versions?: boolean }) {
   const cache = useQueryClient();
   const { api } = useApp(),

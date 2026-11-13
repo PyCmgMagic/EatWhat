@@ -11,6 +11,8 @@ export type VerificationReturn = {
 export type VerificationCallback = {
   result: "success" | "failure";
   code: string;
+  /** One-time ticket backend v2 adds on success; confirmed with /auth/sdu/confirm. */
+  ticket?: string;
 };
 
 export function verificationDestination(value: unknown) {
@@ -25,8 +27,15 @@ export function readVerificationCallback(
   const params = new URLSearchParams(search),
     result = params.get("result");
   if (result !== "success" && result !== "failure") return;
-  const code = params.get("code") ?? "";
-  return { result, code: /^\d{1,8}$/.test(code) ? code : "" };
+  const code = params.get("code") ?? "",
+    ticket = params.get("ticket") ?? "";
+  return {
+    result,
+    code: /^\d{1,8}$/.test(code) ? code : "",
+    ...(result === "success" && /^[A-Za-z0-9_-]{43}$/.test(ticket)
+      ? { ticket }
+      : {}),
+  };
 }
 
 /** Bridge the server's fixed web redirect into our hash router before rendering. */
@@ -44,6 +53,7 @@ export function verificationCallbackUrl(address: string) {
   const query = new URLSearchParams({
     result: callback.result,
     code: callback.code,
+    ...(callback.ticket ? { ticket: callback.ticket } : {}),
   });
   const display = new URLSearchParams();
   for (const key of ["demo", "view"]) {

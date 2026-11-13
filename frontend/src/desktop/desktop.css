@@ -349,6 +349,26 @@
   pointer-events: auto;
   width: fit-content;
 }
+.pc-hero-dismiss {
+  margin: 6px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.62;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.pc-hero-dismiss:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.pc-hero-dismiss:disabled {
+  cursor: wait;
+}
 .pc-hero-distance {
   display: block;
   font: 500 14px "Bricolage Grotesque Variable";
