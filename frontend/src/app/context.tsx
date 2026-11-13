@@ -141,9 +141,9 @@ function clientForSession(session: Session | null) {
     },
     async (...args) => {
       const captcha = await import("../api/captcha");
-      return (isDemo ? captcha.runDemoCaptcha : captcha.runBrowserCaptcha)(
-        ...args,
-      );
+      return (
+        isDemo || v2Mock ? captcha.runDemoCaptcha : captcha.runBrowserCaptcha
+      )(...args);
     },
   );
   return { api: client, signal, checkOwner };

@@ -18,6 +18,12 @@ import { useArea } from "../app/area";
 import { useMobile } from "../mobile/ui";
 import { mealOptions } from "../api/food-display";
 import "./latest.css";
+import {
+  dislikableTags,
+  priceBands,
+  shopCategories,
+  tasteTags,
+} from "../api/v2-vocab";
 import { rememberVerificationReturn } from "../app/verification-return";
 
 export function RecommendationControls() {
@@ -378,75 +384,148 @@ export function Preferences() {
       ) : (
         <PreferencesForm
           key={q.dataUpdatedAt}
-          liked={q.data.likedTags ?? []}
-          disliked={q.data.dislikedTags ?? []}
+          initial={q.data as unknown as V2Preferences}
         />
       )}
     </FeaturePage>
   );
 }
-function PreferencesForm({
-  liked,
-  disliked,
-}: {
-  liked: string[];
-  disliked: string[];
-}) {
+type V2Preferences = {
+  likedCategories?: string[] | null;
+  likedTags?: string[] | null;
+  dislikedTags?: string[] | null;
+  priceBand?: string | null;
+  maxDistance?: number | null;
+};
+const distances = [
+  { value: "", name: "不限" },
+  { value: "1000", name: "1 公里内" },
+  { value: "2000", name: "2 公里内" },
+  { value: "3000", name: "3 公里内" },
+  { value: "5000", name: "5 公里内" },
+];
+/** Backend v2 preferences: fixed choices, used by the recommendations. */
+function PreferencesForm({ initial }: { initial: V2Preferences }) {
   const { api, user } = useApp(),
-    [draft, setDraft, clearDraft] = useSessionDraft(`preferences:${user?.id}`, {
-      likes: liked.join("、"),
-      dislikes: disliked.join("、"),
-    }),
-    task = useTask("口味偏好已更新", undefined, ["preferences", "foods"]);
-  const { likes, dislikes } = draft;
-  const setLikes = (likes: string) => setDraft((d) => ({ ...d, likes }));
-  const setDislikes = (dislikes: string) =>
-    setDraft((d) => ({ ...d, dislikes }));
-  const parse = (v: string) => [
-    ...new Set(
-      v
-        .split(/[,，、\n]/)
-        .map((x) => x.trim())
-        .filter(Boolean),
+    [draft, setDraft, clearDraft] = useSessionDraft(
+      `preferences:v2:${user?.id}`,
+      {
+        likedCategories: initial.likedCategories ?? [],
+        likedTags: initial.likedTags ?? [],
+        dislikedTags: initial.dislikedTags ?? [],
+        priceBand: initial.priceBand ?? "",
+        maxDistance:
+          initial.maxDistance == null ? "" : String(initial.maxDistance),
+      },
     ),
-  ];
+    task = useTask("口味偏好已更新", undefined, ["preferences", "foods"]);
+  const toggle = (
+    key: "likedCategories" | "likedTags" | "dislikedTags",
+    value: string,
+    on: boolean,
+  ) =>
+    setDraft((d) => ({
+      ...d,
+      [key]: on ? [...d[key], value] : d[key].filter((x) => x !== value),
+    }));
+  const empty = {
+    likedCategories: [],
+    likedTags: [],
+    dislikedTags: [],
+    priceBand: "",
+    maxDistance: "",
+  };
   return (
     <div className="ew-form-panel">
-      <p>
-        填写你喜欢或不喜欢的口味，帮助推荐更懂你。每组最多 20 项，用逗号分隔。
-      </p>
+      <p>选择你的偏好，推荐会优先给你合口味的店。</p>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           task.run(async () => {
-            const likedTags = parse(likes),
-              dislikedTags = parse(dislikes);
-            if (likedTags.length > 20 || dislikedTags.length > 20)
-              throw new Error("每组最多填写 20 个标签。");
-            if (likedTags.some((x) => dislikedTags.includes(x)))
-              throw new Error("同一口味不能同时出现在喜欢和不喜欢中。");
-            await api.savePreferences({ likedTags, dislikedTags });
+            if (draft.likedTags.some((x) => draft.dislikedTags.includes(x)))
+              throw new Error("同一口味不能既喜欢又忌口。");
+            await api.savePreferences({
+              likedCategories: draft.likedCategories,
+              likedTags: draft.likedTags,
+              dislikedTags: draft.dislikedTags,
+              priceBand: draft.priceBand || undefined,
+              maxDistance: draft.maxDistance
+                ? Number(draft.maxDistance)
+                : undefined,
+            } as never);
             clearDraft();
           });
         }}
       >
-        <label>
-          喜欢的口味
-          <textarea
-            value={likes}
-            onChange={(e) => setLikes(e.target.value)}
-            placeholder="例如：清淡、鲜香"
-          />
-        </label>
-        <label>
-          不喜欢的口味
-          <textarea
-            value={dislikes}
-            onChange={(e) => setDislikes(e.target.value)}
-            placeholder="例如：太甜、重油"
-          />
-        </label>
-
+        <div className="ew-meals">
+          <b>喜欢的店铺分类</b>
+          {shopCategories.map((c) => (
+            <label key={c}>
+              <input
+                type="checkbox"
+                checked={draft.likedCategories.includes(c)}
+                onChange={(e) => toggle("likedCategories", c, e.target.checked)}
+              />
+              {c}
+            </label>
+          ))}
+        </div>
+        <div className="ew-meals">
+          <b>喜欢的口味</b>
+          {tasteTags.map((t) => (
+            <label key={t}>
+              <input
+                type="checkbox"
+                checked={draft.likedTags.includes(t)}
+                onChange={(e) => toggle("likedTags", t, e.target.checked)}
+              />
+              {t}
+            </label>
+          ))}
+        </div>
+        <div className="ew-meals">
+          <b>忌口</b>
+          {dislikableTags.map((t) => (
+            <label key={t}>
+              <input
+                type="checkbox"
+                checked={draft.dislikedTags.includes(t)}
+                onChange={(e) => toggle("dislikedTags", t, e.target.checked)}
+              />
+              不吃{t}
+            </label>
+          ))}
+        </div>
+        <div className="ew-meals" role="radiogroup" aria-label="人均价位">
+          <b>人均价位</b>
+          {[{ id: "", name: "不限" }, ...priceBands].map((p) => (
+            <label key={p.id}>
+              <input
+                type="radio"
+                name="preference-price"
+                checked={draft.priceBand === p.id}
+                onChange={() => setDraft((d) => ({ ...d, priceBand: p.id }))}
+              />
+              {p.name}
+            </label>
+          ))}
+        </div>
+        <div className="ew-meals" role="radiogroup" aria-label="堂食距离">
+          <b>堂食距离</b>
+          {distances.map((d) => (
+            <label key={d.value}>
+              <input
+                type="radio"
+                name="preference-distance"
+                checked={draft.maxDistance === d.value}
+                onChange={() =>
+                  setDraft((x) => ({ ...x, maxDistance: d.value }))
+                }
+              />
+              {d.name}
+            </label>
+          ))}
+        </div>
         <div className="ew-inline">
           <button className="ew-button" disabled={task.isPending}>
             保存口味偏好
@@ -458,12 +537,12 @@ function PreferencesForm({
             onClick={() =>
               task.run(async () => {
                 await api.clearPreferences();
-                setDraft({ likes: "", dislikes: "" });
+                setDraft(empty);
                 clearDraft();
               })
             }
           >
-            清空手动偏好
+            清空偏好
           </button>
         </div>
       </form>

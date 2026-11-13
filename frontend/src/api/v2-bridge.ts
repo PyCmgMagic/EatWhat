@@ -724,6 +724,12 @@ const routes: [string, RegExp, Handler][] = [
     "PUT",
     /^\/user\/recommendation-profile\/preferences$/,
     async ({ body, call }) => {
+      // Pages updated for v2 send the full preference set.
+      if ("likedCategories" in body)
+        return call("/user/recommendation-profile/preferences", {
+          method: "PUT",
+          body,
+        });
       const current = await call("/user/recommendation-profile/preferences", {
         method: "GET",
       });

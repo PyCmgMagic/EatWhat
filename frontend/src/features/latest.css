@@ -657,3 +657,12 @@
 .ew-shop-traits .ew-meals > b {
   min-width: 56px;
 }
+/* Radio choices in the v2 option rows keep their compact checkbox look. */
+.ew-meals label {
+  white-space: nowrap;
+}
+.ew-meals input[type="radio"] {
+  width: auto;
+  min-height: 0;
+  margin: 0 4px 0 0;
+}

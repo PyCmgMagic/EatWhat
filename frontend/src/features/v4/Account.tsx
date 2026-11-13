@@ -220,57 +220,46 @@ export function Devices() {
 export function MobileChange() {
   const sendSignal = useSendSignal();
   const app = useApp(),
-    [mobile, setMobile] = useState(
-      () => recoveryCommands.get("mobile")?.mobile ?? "",
-    ),
-    [prepared, setPrepared] = useState<Schema["PreparedResponse"] | undefined>(
-      () => recoveryCommands.get("mobile")?.prepared,
-    ),
-    [command, setCommand] = useState(() => recoveryCommands.get("mobile")),
-    [proof, setProof] = useState<"PASSWORD" | "OLD_PHONE">("PASSWORD"),
-    [password, setPassword] = useState(""),
+    hasPhone = !!app.user?.phone,
+    [oldSent, setOldSent] = useState(false),
     [oldCode, setOldCode] = useState(""),
+    [mobile, setMobile] = useState(""),
+    [newSent, setNewSent] = useState(false),
     [newCode, setNewCode] = useState(""),
-    [cooldown, setCooldown] = useState({ NEW_PHONE: 0, OLD_PHONE: 0 }),
-    [progress, setProgress] = useState<Schema["CommittedResponse"]>(),
+    [done, setDone] = useState(false),
+    [cooldown, setCooldown] = useState({ old: 0, next: 0 }),
     task = useCommand(),
-    send = useCommand(),
-    lookup = useCommand(true);
+    send = useCommand();
   useEffect(() => {
     const timer = setInterval(
       () =>
         setCooldown((c) => ({
-          NEW_PHONE: Math.max(0, c.NEW_PHONE - 1),
-          OLD_PHONE: Math.max(0, c.OLD_PHONE - 1),
+          old: Math.max(0, c.old - 1),
+          next: Math.max(0, c.next - 1),
         })),
       1000,
     );
     return () => clearInterval(timer);
   }, []);
+  const step = done ? 2 : newSent ? 1 : 0;
   return (
     <Shell
       title="更换手机号"
       back="/settings/account"
-      detail="验证新号码与原账号，让每一次更换都安心。"
+      detail="先验证原手机号，再验证新号码。"
     >
       <ol className="v4-steps" aria-label="换绑流程">
         {[
-          ["输入手机号", "填写新的常用号码"],
-          ["验证身份", "核对新号码与原账号"],
-          ["查看结果", "确认本次换绑进度"],
+          ["验证原手机号", "接收原号码的验证码"],
+          ["验证新手机号", "填写新号码并接收验证码"],
+          ["完成", "新号码立即生效"],
         ].map(([name, desc], i) => (
           <li
             key={name}
-            data-active={i === (progress ? 2 : prepared ? 1 : 0) || undefined}
-            data-done={i < (progress ? 2 : prepared ? 1 : 0) || undefined}
+            data-active={i === step || undefined}
+            data-done={i < step || undefined}
           >
-            <span>
-              {i < (progress ? 2 : prepared ? 1 : 0) ? (
-                <Icon name="check" size={16} />
-              ) : (
-                i + 1
-              )}
-            </span>
+            <span>{i < step ? <Icon name="check" size={16} /> : i + 1}</span>
             <div>
               <b>{name}</b>
               <small>{desc}</small>
@@ -278,48 +267,69 @@ export function MobileChange() {
           </li>
         ))}
       </ol>
-      {app.session && (!command || prepared) && (
+      {!app.session ? null : done ? (
+        <Card title="手机号已更换">
+          <p>以后请用新的手机号 {mobile} 登录和接收验证码。</p>
+        </Card>
+      ) : !hasPhone ? (
         <Card>
+          <p>当前账号还没有绑定手机号，请先绑定。</p>
+          <div className="v4-actions">
+            <Link to="/settings/bind-phone">去绑定手机号</Link>
+          </div>
+        </Card>
+      ) : (
+        <Card title="验证手机号">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               void task.run(
-                async (id) => {
-                  if (!/^1[3-9]\d{9}$/.test(mobile))
-                    throw new Error("请输入有效的 11 位手机号。");
-                  const saved = {
-                    commandId: id,
-                    capability: capability(),
-                    mobile,
-                  };
-                  recoveryCommands.set("mobile", saved);
-                  setCommand(saved);
-                  try {
-                    return await app.api.prepareMobile({
-                      commandId: id,
-                      mobile,
-                    });
-                  } catch (error) {
-                    if (
-                      !resultUncertain(error) &&
-                      recoveryCommands.get("mobile") === saved
-                    ) {
-                      recoveryCommands.delete("mobile");
-                      setCommand((current) =>
-                        current === saved ? undefined : current,
-                      );
-                    }
-                    throw error;
-                  }
+                async () => {
+                  if (!/^\d{6}$/.test(newCode))
+                    throw new Error("请输入新手机号收到的 6 位验证码。");
+                  await app.api.mobileChangeCommit(mobile, newCode);
                 },
-                (r) => {
-                  setPrepared(r);
-                  const saved = recoveryCommands.get("mobile");
-                  if (saved) saved.prepared = r;
+                () => {
+                  setDone(true);
+                  app.refreshMe();
+                  task.say("手机号已更新。");
                 },
               );
             }}
           >
+            <Field label={`原手机号 ${app.user?.phone ?? ""} 的验证码`}>
+              <input
+                value={oldCode}
+                onChange={(e) => setOldCode(e.target.value)}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                disabled={newSent}
+                required
+              />
+            </Field>
+            {!newSent && (
+              <button
+                type="button"
+                disabled={send.busy || send.uncertain || cooldown.old > 0}
+                onClick={() =>
+                  void send.run(
+                    () => app.api.mobileChangeOldCode(sendSignal()),
+                    () => {
+                      setOldSent(true);
+                      setCooldown((c) => ({ ...c, old: 60 }));
+                      send.say("验证码已发送到原手机号。");
+                    },
+                  )
+                }
+              >
+                {cooldown.old > 0
+                  ? `${cooldown.old} 秒后可重发`
+                  : oldSent
+                    ? "重新发送原手机号验证码"
+                    : "发送原手机号验证码"}
+              </button>
+            )}
             <Field label="新的手机号">
               <input
                 inputMode="tel"
@@ -327,217 +337,59 @@ export function MobileChange() {
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value)}
                 maxLength={11}
-                disabled={!!prepared || task.busy || task.uncertain}
-                required
-              />
-            </Field>
-            {!prepared && (
-              <button
-                className="primary"
-                disabled={task.busy || task.uncertain}
-              >
-                继续验证
-              </button>
-            )}
-          </form>
-          <CommandState task={task} />
-        </Card>
-      )}
-      {prepared && command && !progress && (
-        <Card title="验证手机号">
-          <p>本次验证有效至 {timeText(prepared.expiresAt)}。</p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void task.run(
-                () =>
-                  app.api.commitMobile(command.commandId, {
-                    newCode,
-                    oldCode: proof === "OLD_PHONE" ? oldCode : undefined,
-                    password: proof === "PASSWORD" ? password : undefined,
-                    recoveryCapability: command.capability,
-                  }),
-                async (r) => {
-                  setPassword("");
-                  setOldCode("");
-                  setNewCode("");
-                  setProgress(r);
-                  if (await acceptReplacement(app, r.replacement)) {
-                    recoveryCommands.delete("mobile");
-                    app.refreshMe();
-                    task.say("手机号已更新，当前设备会话已恢复。");
-                  } else
-                    task.say(
-                      `换绑请求已受理，凭据${statusText(r.credentialPropagation)}，当前设备${statusText(r.currentDevice)}。`,
-                    );
-                },
-              );
-            }}
-          >
-            <Field label="新手机号验证码">
-              <input
-                value={newCode}
-                onChange={(e) => setNewCode(e.target.value)}
-                autoComplete="one-time-code"
-                maxLength={6}
+                disabled={newSent}
                 required
               />
             </Field>
             <button
               type="button"
-              disabled={send.busy || send.uncertain || cooldown.NEW_PHONE > 0}
+              disabled={
+                send.busy ||
+                send.uncertain ||
+                cooldown.next > 0 ||
+                !/^\d{6}$/.test(oldCode)
+              }
               onClick={() =>
                 void send.run(
                   () =>
-                    app.api.mobileCode(
-                      command.commandId,
-                      {
-                        type: "NEW_PHONE",
-                      },
-                      sendSignal(),
-                    ),
-                  (r) => {
-                    setCooldown((c) => ({ ...c, NEW_PHONE: 60 }));
-                    send.say(
-                      r.attempted
-                        ? "验证码已发送，请查看新手机号。"
-                        : "已有有效验证码，请使用已收到的验证码。",
-                    );
+                    app.api.mobileChangeNewCode(mobile, oldCode, sendSignal()),
+                  () => {
+                    setNewSent(true);
+                    setCooldown((c) => ({ ...c, next: 60 }));
+                    send.say("验证码已发送到新手机号。");
                   },
                 )
               }
             >
-              {cooldown.NEW_PHONE > 0
-                ? `${cooldown.NEW_PHONE} 秒后可重发`
-                : "发送新手机号验证码"}
+              {cooldown.next > 0
+                ? `${cooldown.next} 秒后可重发`
+                : newSent
+                  ? "重新发送新手机号验证码"
+                  : "发送新手机号验证码"}
             </button>
-            {prepared.oldProofRequired && (
+            {newSent && (
               <>
-                <Field label="原账号验证方式">
-                  <select
-                    value={proof}
-                    onChange={(e) => setProof(e.target.value as typeof proof)}
-                  >
-                    <option value="PASSWORD">登录密码</option>
-                    <option value="OLD_PHONE">旧手机号验证码</option>
-                  </select>
+                <Field label="新手机号验证码">
+                  <input
+                    value={newCode}
+                    onChange={(e) => setNewCode(e.target.value)}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    required
+                  />
                 </Field>
-                {proof === "PASSWORD" ? (
-                  <Field label="登录密码">
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      autoComplete="current-password"
-                      required
-                    />
-                  </Field>
-                ) : (
-                  <>
-                    <Field label="旧手机号验证码">
-                      <input
-                        value={oldCode}
-                        onChange={(e) => setOldCode(e.target.value)}
-                        autoComplete="one-time-code"
-                        required
-                      />
-                    </Field>
-                    <button
-                      type="button"
-                      disabled={
-                        send.busy || send.uncertain || cooldown.OLD_PHONE > 0
-                      }
-                      onClick={() =>
-                        void send.run(
-                          () =>
-                            app.api.mobileCode(
-                              command.commandId,
-                              {
-                                type: "OLD_PHONE",
-                              },
-                              sendSignal(),
-                            ),
-                          () => {
-                            setCooldown((c) => ({ ...c, OLD_PHONE: 60 }));
-                            send.say("请查看旧手机号收到的验证码。");
-                          },
-                        )
-                      }
-                    >
-                      {cooldown.OLD_PHONE > 0
-                        ? `${cooldown.OLD_PHONE} 秒后可重发`
-                        : "发送旧手机号验证码"}
-                    </button>
-                  </>
-                )}
+                <button
+                  className="primary"
+                  disabled={task.busy || task.uncertain}
+                >
+                  确认更换手机号
+                </button>
               </>
             )}
-            <button className="primary" disabled={task.busy || task.uncertain}>
-              确认更换手机号
-            </button>
             <CommandState task={send} />
             <CommandState task={task} />
           </form>
-        </Card>
-      )}
-      {command && (
-        <Card title="换绑处理进度">
-          <RecoveryFile kind="mobile" value={command} />
-          {progress && (
-            <p>
-              凭据：{statusText(progress.credentialPropagation)} · 会话：
-              {statusText(progress.currentDevice)}
-            </p>
-          )}
-          <div className="v4-actions">
-            <button
-              disabled={lookup.busy}
-              onClick={() =>
-                void lookup.run(
-                  () => app.api.mobileStatus(command.commandId),
-                  (r) => lookup.say(`换绑${statusText(r.status)}。`),
-                )
-              }
-            >
-              查询换绑状态
-            </button>
-            <button
-              disabled={lookup.busy}
-              onClick={() =>
-                void lookup.run(
-                  () =>
-                    app.api.mobileRecoveryStatus(
-                      command.commandId,
-                      command.capability,
-                    ),
-                  (r) => setProgress(r),
-                )
-              }
-            >
-              查询当前设备恢复
-            </button>
-            <button
-              disabled={lookup.busy}
-              onClick={() =>
-                void lookup.run(
-                  () =>
-                    app.api.resumeMobile(command.commandId, command.capability),
-                  async (r) => {
-                    if (await acceptReplacement(app, r)) {
-                      recoveryCommands.delete("mobile");
-                      setCommand(undefined);
-                      setPrepared(undefined);
-                      setProgress(undefined);
-                      app.toast("当前设备会话已恢复。");
-                    } else lookup.say(`当前设备${statusText(r.status)}。`);
-                  },
-                )
-              }
-            >
-              恢复当前设备会话
-            </button>
-          </div>
-          <CommandState task={lookup} />
         </Card>
       )}
     </Shell>

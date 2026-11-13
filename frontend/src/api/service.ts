@@ -54,7 +54,12 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
     options.signal?.throwIfAborted();
     const body = (options.body ?? {}) as Record<string, unknown>;
     if (
-      ["/auth/phone/code", "/user/getCode", "/auth/getCode"].includes(path) &&
+      [
+        "/auth/phone/code",
+        "/user/getCode",
+        "/auth/getCode",
+        "/user/mobile/change/new-code",
+      ].includes(path) &&
       !/^1[3-9][0-9]{9}$/.test(
         String(body.mobile ?? options.query?.mobile ?? ""),
       )
@@ -445,6 +450,21 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         body: { mobile, scene: "bind" },
         signal,
       }),
+    // Backend v2 phone change: old-phone code, new-phone code, then commit.
+    mobileChangeOldCode: (signal?: AbortSignal) =>
+      sendVerified("/user/mobile/change/old-code", { method: "POST", signal }),
+    mobileChangeNewCode: (
+      mobile: string,
+      oldCode: string,
+      signal?: AbortSignal,
+    ) =>
+      sendVerified("/user/mobile/change/new-code", {
+        method: "POST",
+        body: { mobile, oldCode },
+        signal,
+      }),
+    mobileChangeCommit: (mobile: string, code: string) =>
+      post("/user/mobile/change/commit", { mobile, code }),
     bindMobile: (mobile: string, code: string) =>
       post("/user/bindMobile", { mobile, code }),
     summary: () => data<Schema["SummaryVOResponse"]>("/admin/summary"),
