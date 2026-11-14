@@ -247,6 +247,18 @@ describe("v2 bridge", () => {
     });
   });
 
+  it("shows earned likes from v2 and counts shared dishes", async () => {
+    const { request } = backend(({ path }) =>
+      path === "/user/userInfo"
+        ? ok({ id: 7, displayName: "食友", level: 2, earnedLikes: 4 })
+        : ok({ items: [], totalItems: 3 }),
+    );
+    const user = await request<any>("/user/userInfo", {
+      query: { userId: 7 },
+    });
+    expect(user).toMatchObject({ earnedLikes: 4, uploadedFoodsCount: 3 });
+  });
+
   it("asks for delivery recommendations without padding them with other shops' dishes", async () => {
     const { request, sent } = backend(({ path }) =>
       path === "/recommend"

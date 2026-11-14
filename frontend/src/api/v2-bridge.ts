@@ -739,6 +739,7 @@ const routes: [string, RegExp, Handler][] = [
       return (
         v && {
           level: null,
+          // v2 returns earnedLikes; null only shows "—" against an older server.
           earnedLikes: null,
           uploadedRestaurantsCount: null,
           uploadedFoodsCount: dishes?.totalItems ?? null,

@@ -2995,6 +2995,8 @@ export interface components {
             level?: number;
             gender?: string;
             signature?: string;
+            /** Format: int64 */
+            earnedLikes?: number;
             fansCount?: number | null;
             followingsCount?: number | null;
             fansVisible?: boolean;

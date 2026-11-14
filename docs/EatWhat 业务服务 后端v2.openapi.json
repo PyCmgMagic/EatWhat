@@ -7442,6 +7442,10 @@
           "signature" : {
             "type" : "string"
           },
+          "earnedLikes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "fansCount" : {
             "type" : "integer",
             "format" : "int64"
