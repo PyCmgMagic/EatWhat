@@ -210,12 +210,23 @@ export function Modal({
     const dialog = ref.current;
     const previousFocus =
       returnFocus ?? (document.activeElement as HTMLElement | null);
+    // Lock scrolling on <html>. Browsers that keep the reserved scrollbar
+    // gutter (scrollbar-gutter: stable) keep the page width; others (Safari)
+    // drop the scrollbar, so measure what was lost and pad it back.
+    const root = document.documentElement,
+      body = document.body,
+      gutter = () => window.innerWidth - root.clientWidth;
+    const scrollbar = gutter();
     dialog?.showModal();
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const prev = root.style.overflow,
+      prevPadding = body.style.paddingRight;
+    root.style.overflow = "hidden";
+    const lost = scrollbar - gutter();
+    if (lost > 0) body.style.paddingRight = `${lost}px`;
     return () => {
       dialog?.close();
-      document.body.style.overflow = prev;
+      root.style.overflow = prev;
+      body.style.paddingRight = prevPadding;
       if (previousFocus?.isConnected)
         previousFocus.focus({ preventScroll: true });
     };

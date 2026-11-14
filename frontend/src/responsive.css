@@ -122,9 +122,6 @@
     left: clamp(28px, 3.2vw, 44px);
     bottom: 24px;
   }
-  .pc-home .pc-sheet-handle {
-    margin-bottom: 14px;
-  }
   .pc-home .pc-section-toolbar {
     margin-bottom: 18px;
   }
@@ -809,7 +806,7 @@
   }
   .pc-discovery-sheet,
   .pc-content-sheet {
-    padding: 12px 16px 24px;
+    padding: 24px 16px 24px;
     border-radius: 24px;
   }
   .pc-section-toolbar {

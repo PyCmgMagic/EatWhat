@@ -418,3 +418,8 @@
     scroll-margin-top: calc(var(--header-height, 72px) + 88px);
   }
 }
+/* Focused by script after navigation so screen readers land on the new
+   section; it is not a control, so it should not draw a focus ring. */
+.pc-profile-workspace-content:focus {
+  outline: none;
+}

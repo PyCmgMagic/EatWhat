@@ -1,4 +1,5 @@
 import WorkspaceSwitch from "../admin/WorkspaceSwitch";
+import { RecommendShopList } from "../features/RecommendShops";
 import { useFeedbackState } from "../components/feedback";
 import { BRAND_SLOGAN } from "../app/brand";
 import { foodAuthor } from "../api/models";
@@ -808,14 +809,19 @@ function DesktopHome() {
         });
         // Automatic: show the slot the backend actually used.
         if (!m.mealTime) m.noteServedMeal(feed.mealTime);
-        return feed.items;
+        return { items: feed.items, shops: feed.shops };
       },
       placeholderData: keepPreviousData,
     }),
     // "不想吃这家": v2 skips the shop for 30 days; hide its dishes right away.
-    list = (query.data ?? []).filter(
+    list = (query.data?.items ?? []).filter(
       (f) => !dismissed.includes(Number(f.restaurantId)),
     ),
+    // Dine-in lists the recommended shops; the carousel shows their dishes.
+    shops =
+      query.data?.shops?.filter(
+        (shop) => !dismissed.includes(Number(shop.id)),
+      ) ?? null,
     index = list.length ? ((n % list.length) + list.length) % list.length : 0,
     food = list[index],
     visual = food ? visualFor(food, isDemo) : null;
@@ -859,6 +865,104 @@ function DesktopHome() {
   useEffect(() => {
     document.title = "发现 · 山软今天吃什么";
   }, []);
+  const shopList = !category && shops;
+  const sheet = (
+    <section
+      className={`pc-discovery-sheet${food && visual ? "" : " is-standalone"}`}
+    >
+      <div className="pc-section-toolbar">
+        <SlidingTabs label="推荐分类" active={category}>
+          {categories.map((c) => (
+            <button
+              key={c.key}
+              role="tab"
+              aria-selected={c.key === category}
+              tabIndex={c.key === category ? 0 : -1}
+              onClick={() => setCategory(c.key)}
+            >
+              {c.name}
+            </button>
+          ))}
+        </SlidingTabs>
+        <span className="pc-small-note">
+          {shopList ? "这几家今天值得一试。" : "这一组好味道，慢慢挑。"}
+        </span>
+      </div>
+      <MotionRegion
+        changeKey={category}
+        order={categories.findIndex((c) => c.key === category)}
+        className="pc-category-content"
+        aria-busy={!!category && categoryQuery.isFetching}
+        reserveSpace
+      >
+        {shopList ? (
+          shopList.length ? (
+            <RecommendShopList
+              shops={shopList}
+              onOpenShop={(shop) => shop.id && m.setShopId(shop.id)}
+              onOpenFood={(dish) => {
+                if (dish.id) m.setFoodId(dish.id);
+                if (dish.restaurantId) m.setShopId(dish.restaurantId);
+              }}
+            />
+          ) : (
+            <Status title="暂时没有推荐" detail="换个饭点或地点再看看。">
+              <button
+                className="pc-button light"
+                disabled={query.isFetching}
+                onClick={() => void query.refetch()}
+              >
+                刷新推荐
+              </button>
+            </Status>
+          )
+        ) : (
+          <>
+            {category && categoryQuery.isFetching && !selection.length && (
+              <ContentSkeleton count={4} />
+            )}
+            <div className="pc-food-grid">
+              {selection.map((f) => (
+                <FoodCard key={f.id} food={f} />
+              ))}
+            </div>
+            {category && categoryQuery.isError ? (
+              <Status
+                title="这一组暂时没端上来"
+                detail={errorMessage(categoryQuery.error)}
+              >
+                <button
+                  className="pc-button light"
+                  onClick={() => void categoryQuery.refetch()}
+                >
+                  重新加载
+                </button>
+              </Status>
+            ) : (
+              !selection.length &&
+              !categoryQuery.isFetching && (
+                <Status
+                  title={
+                    category && categoryQuery.isFetching
+                      ? "正在端上这一组好味道"
+                      : "这一组里，还没有这个口味"
+                  }
+                />
+              )
+            )}
+          </>
+        )}
+      </MotionRegion>
+    </section>
+  );
+  // Shops without signature dishes have nothing for the carousel; list them.
+  if ((!food || !visual) && shops?.length)
+    return (
+      <div className="pc-home">
+        <RecommendationControls />
+        {sheet}
+      </div>
+    );
   if (!food || !visual)
     return (
       <div className="pc-home">
@@ -1065,65 +1169,7 @@ function DesktopHome() {
           左右拖动，换一道
         </span>
       </section>
-      <section className="pc-discovery-sheet">
-        <div className="pc-sheet-handle" />
-        <div className="pc-section-toolbar">
-          <SlidingTabs label="推荐分类" active={category}>
-            {categories.map((c) => (
-              <button
-                key={c.key}
-                role="tab"
-                aria-selected={c.key === category}
-                tabIndex={c.key === category ? 0 : -1}
-                onClick={() => setCategory(c.key)}
-              >
-                {c.name}
-              </button>
-            ))}
-          </SlidingTabs>
-          <span className="pc-small-note">这一组好味道，慢慢挑。</span>
-        </div>
-        <MotionRegion
-          changeKey={category}
-          order={categories.findIndex((c) => c.key === category)}
-          className="pc-category-content"
-          aria-busy={!!category && categoryQuery.isFetching}
-          reserveSpace
-        >
-          {category && categoryQuery.isFetching && !selection.length && (
-            <ContentSkeleton count={4} />
-          )}
-          <div className="pc-food-grid">
-            {selection.map((f) => (
-              <FoodCard key={f.id} food={f} />
-            ))}
-          </div>
-          {category && categoryQuery.isError ? (
-            <Status
-              title="这一组暂时没端上来"
-              detail={errorMessage(categoryQuery.error)}
-            >
-              <button
-                className="pc-button light"
-                onClick={() => void categoryQuery.refetch()}
-              >
-                重新加载
-              </button>
-            </Status>
-          ) : (
-            !selection.length &&
-            !categoryQuery.isFetching && (
-              <Status
-                title={
-                  category && categoryQuery.isFetching
-                    ? "正在端上这一组好味道"
-                    : "这一组里，还没有这个口味"
-                }
-              />
-            )
-          )}
-        </MotionRegion>
-      </section>
+      {sheet}
     </div>
   );
 }
@@ -1559,6 +1605,17 @@ function DesktopDish() {
                   <Link
                     className="pc-discussion-jump"
                     to={`/foods/${id}?section=comments`}
+                    onClick={(e) => {
+                      // Scroll on every click: after the first one the URL no
+                      // longer changes, so the discussion would not react.
+                      const target = document.getElementById("food-discussion");
+                      if (!target) return; // not loaded yet: let the link do it
+                      e.preventDefault();
+                      target.scrollIntoView({
+                        block: "start",
+                        behavior: instantMotion() ? "instant" : "smooth",
+                      });
+                    }}
                   >
                     <Icon name="comment" size={15} /> 食友讨论
                     <Icon name="chevronDown" size={13} />
@@ -1718,8 +1775,7 @@ function DesktopRestaurant() {
             <RestaurantActions id={id} />
             <ShopHistory kind="restaurant" id={id} />
           </Suspense>
-          <section className="pc-content-sheet">
-            <div className="pc-sheet-handle" />
+          <section className="pc-content-sheet is-standalone">
             <div className="pc-section-toolbar">
               <h2>这家店的好味道</h2>
               <Link

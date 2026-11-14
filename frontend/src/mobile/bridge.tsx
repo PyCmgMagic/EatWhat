@@ -100,6 +100,7 @@ import { RestaurantHeaderFavorite } from "../features/v4/RestaurantHeaderFavorit
 import { useReturnTo } from "../app/navigation";
 import { useProfileReturnTo } from "../app/profile-navigation";
 import "./restaurant-detail.css";
+import { RecommendShopList } from "../features/RecommendShops";
 
 const FoodExtras = React.lazy(() =>
   import("../features/v4/DetailExtras").then((module) => ({
@@ -248,10 +249,13 @@ export function useDesignBridge(
       });
       // Automatic: show the slot the backend actually used.
       if (!m.mealTime) m.noteServedMeal(feed.mealTime);
-      return feed.items;
+      return { items: feed.items, shops: feed.shops };
     },
     enabled: browse && homeScreens.has(screen),
   });
+  // Dine-in lists the recommended shops; the carousel shows their dishes.
+  const recommendedFoods = recommendations.data?.items,
+    recommendedShops = recommendations.data?.shops ?? null;
   const categoryRecommendations = useQuery({
     queryKey: [
       "foods",
@@ -279,16 +283,16 @@ export function useDesignBridge(
   });
   const recommendationCopy = useRef<HTMLElement>(null),
     categoryContent = useRef<HTMLDivElement>(null);
-  const recommendationIndex = recommendations.data?.length
-    ? (((controller.state.n ?? 0) % recommendations.data.length) +
-        recommendations.data.length) %
-      recommendations.data.length
+  const recommendationIndex = recommendedFoods?.length
+    ? (((controller.state.n ?? 0) % recommendedFoods.length) +
+        recommendedFoods.length) %
+      recommendedFoods.length
     : 0;
   useContentMotion(
     recommendationCopy,
     reference
       ? undefined
-      : (recommendations.data?.[recommendationIndex]?.id ?? undefined),
+      : (recommendedFoods?.[recommendationIndex]?.id ?? undefined),
     0,
     "y",
   );
@@ -493,12 +497,16 @@ export function useDesignBridge(
   const values: Values = { ...original };
   const carouselFoods =
     screen === "G-HomePhoto"
-      ? (recommendations.data?.slice(0, 5) ?? [])
-      : (recommendations.data ?? []);
-  const homeWithoutRecommendations =
+      ? (recommendedFoods?.slice(0, 5) ?? [])
+      : (recommendedFoods ?? []);
+  const heroWithoutDish =
     homeScreens.has(screen) &&
     !recommendations.isPending &&
     carouselFoods.length === 0;
+  // Shops without signature dishes are still listed below the empty plate.
+  const homeWithoutRecommendations =
+      heroWithoutDish && !recommendedShops?.length,
+    shopsWithoutDish = heroWithoutDish && !!recommendedShops?.length;
   const liveFood = detail.data;
   function profileDraft(): ProfileForm {
     return {
@@ -1601,7 +1609,7 @@ export function useDesignBridge(
       if (
         tag === "section" &&
         n.attrs["aria-label"] === "今天吃什么" &&
-        !homeWithoutRecommendations
+        !heroWithoutDish
       ) {
         const index =
           (((controller.state.n ?? 0) % carouselFoods.length) +
@@ -1624,6 +1632,37 @@ export function useDesignBridge(
             </p>
           </section>
         );
+      }
+      if (shopsWithoutDish) {
+        if (tag === "div" && st.top === "0" && st.height === "520px")
+          return (
+            <div {...p} className="mobile-home-art mobile-home-resting-stage">
+              <span className="mobile-home-empty-plate" aria-hidden="true">
+                <DesignIcon name="bowl" size={66} />
+              </span>
+            </div>
+          );
+        if (n.attrs.role === "group") return null;
+        if (tag === "section" && n.attrs["aria-label"] === "今天吃什么")
+          return (
+            <section
+              className="mobile-home-resting-copy"
+              aria-label="今天吃什么"
+            >
+              <h1>
+                今天
+                <br />
+                吃点什么？
+              </h1>
+              <p>
+                下面这些店值得一试，
+                <br />
+                进店看看菜单吧。
+              </p>
+            </section>
+          );
+        if (tag === "div" && (st.top === "392px" || st.top === "414px"))
+          return null;
       }
       if (homeWithoutRecommendations) {
         if (tag === "div" && st.top === "0" && st.height === "520px")
@@ -1718,8 +1757,43 @@ export function useDesignBridge(
           </div>
         );
       if (tag === "div" && st.gridTemplateColumns?.includes("repeat(2")) {
+        if (!category && recommendedShops)
+          return (
+            <div
+              {...p}
+              ref={categoryContent}
+              className="mobile-shop-feed"
+              style={undefined}
+              aria-busy={recommendations.isFetching}
+            >
+              <RecommendShopList
+                shops={recommendedShops}
+                onOpenShop={(shop) => shop.id && m.setShopId(shop.id)}
+                onOpenFood={(dish) => {
+                  if (dish.id) m.setFoodId(dish.id);
+                  if (dish.restaurantId) m.setShopId(dish.restaurantId);
+                }}
+              />
+              {!recommendedShops.length && (
+                <MobileEmpty
+                  title="暂时没有推荐"
+                  detail="换个饭点或地点，也可以逛逛附近。"
+                  action={
+                    <button
+                      className="mobile-inline-link"
+                      disabled={recommendations.isFetching}
+                      onClick={() => void recommendations.refetch()}
+                    >
+                      <DesignIcon name="shuffle" size={16} /> 刷新推荐
+                    </button>
+                  }
+                />
+              )}
+            </div>
+          );
         const listQuery = category ? categoryRecommendations : recommendations;
-        const list = listQuery.data ?? [],
+        const list =
+            (category ? categoryRecommendations.data : recommendedFoods) ?? [],
           shown = category
             ? list.filter((f) => f.category === category)
             : isDemo

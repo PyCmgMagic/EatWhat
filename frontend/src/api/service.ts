@@ -101,11 +101,17 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
   const recommendFeed = async (
     limit = 8,
     filters: RecommendFilters = {},
-  ): Promise<{ items: Food[]; mealTime: string | null }> => {
+  ): Promise<{
+    items: Food[];
+    mealTime: string | null;
+    /** Dine-in only: the recommended shops, each with its signature dishes. */
+    shops: Restaurant[] | null;
+  }> => {
     // Deployed servers return data as an array; the checked-in API contract
     // still describes a page. Normalize both here for desktop and mobile.
     const result = await data<
-      Food[] | (Page<Food> & { mealTime?: string | null })
+      | Food[]
+      | (Page<Food> & { mealTime?: string | null; shops?: Restaurant[] })
     >("/foods/recommend", { query: { size: limit, ...filters } });
     const items = Array.isArray(result) ? result : result.items;
     if (!Array.isArray(items))
@@ -116,6 +122,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
     return {
       items,
       mealTime: Array.isArray(result) ? null : (result.mealTime ?? null),
+      shops: Array.isArray(result) ? null : (result.shops ?? null),
     };
   };
   const post = (

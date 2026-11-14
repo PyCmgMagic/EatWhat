@@ -5,7 +5,7 @@ import {
   unavailable,
   type Envelope,
 } from "./client";
-import { bridgeToV2, pictureKey } from "./v2-bridge";
+import { bridgeToV2, DINE_IN_SHOPS, pictureKey } from "./v2-bridge";
 
 const consent = vi.hoisted(() => ({ answer: true, asked: [] as string[] }));
 const duplicate = vi.hoisted(() => ({
@@ -297,7 +297,72 @@ describe("v2 bridge", () => {
     expect(feed.mealTime).toBe("night");
   });
 
-  it("builds the main recommendation from recommended shops' signature dishes", async () => {
+  it("lists recommended dine-in shops and puts one signature dish per shop in the carousel", async () => {
+    const { request, sent } = backend(({ path }) =>
+      path === "/recommend"
+        ? ok({
+            mealTime: "lunch",
+            items: [
+              {
+                id: 9,
+                name: "一口面馆",
+                dineIn: { rate: 0.9, count: 8 },
+                signatureFoods: [
+                  { id: 2, name: "牛肉面", price: 22, pictureUrl: PIC },
+                  { id: 4, name: "炸酱面", price: 18, pictureUrl: PIC },
+                ],
+              },
+              // No signature dish yet: listed, but nothing for the carousel.
+              { id: 10, name: "南门砂锅", signatureFoods: [] },
+            ],
+          })
+        : ok({ items: [{ id: 3, category: "汤", pictureUrls: [], tags: [] }] }),
+    );
+    const feed = await request<{ items: any[]; shops: any[]; mealTime: string }>(
+      "/foods/recommend",
+      {
+        query: {
+          size: 8,
+          campusId: 1,
+          mealTime: "lunch",
+          scene: "dine_in",
+          deviceId: "abcdefgh",
+          gcjLng: 117.134,
+          gcjLat: 36.667,
+        },
+      },
+    );
+    // Scene, the selected area's point and meal go along; the device id stays behind.
+    expect(sent.find((s) => s.path === "/recommend")?.query).toEqual({
+      scene: "dine_in",
+      campusId: 1,
+      mealTime: "lunch",
+      gcjLng: 117.134,
+      gcjLat: 36.667,
+      page: 1,
+      pageSize: DINE_IN_SHOPS,
+    });
+    // Every shop the ranking returned is listed, with its signature dishes.
+    expect(feed.shops.map((s) => s.id)).toEqual([9, 10]);
+    expect(feed.shops[0]).toMatchObject({
+      dineIn: { rate: 0.9, count: 8 },
+      signatureFoods: [
+        { id: 2, name: "牛肉面", coverUrl: PIC },
+        { id: 4, name: "炸酱面" },
+      ],
+    });
+    // Carousel: the first signature dish of each shop, no newest-dish filler.
+    expect(feed.items.map((d) => d.id)).toEqual([2]);
+    expect(feed.items[0]).toMatchObject({
+      restaurantId: 9,
+      restaurantName: "一口面馆",
+      pictureUrl: [PIC],
+    });
+    expect(sent.some((s) => s.path === "/foods/list")).toBe(false);
+    expect(feed.mealTime).toBe("lunch");
+  });
+
+  it("keeps the delivery recommendation as signature dishes without shops", async () => {
     const { request, sent } = backend(({ path }) =>
       path === "/recommend"
         ? ok({
@@ -311,47 +376,19 @@ describe("v2 bridge", () => {
               },
             ],
           })
-        : ok({
-            items: [
-              {
-                id: 2,
-                category: "主食",
-                likeCount: 5,
-                pictureUrls: [],
-                tags: ["辣"],
-              },
-              { id: 3, category: "汤", pictureUrls: [], tags: [] },
-            ],
-          }),
+        : ok({ items: [] }),
     );
-    const { items: dishes } = await request<{ items: any[] }>(
+    const feed = await request<{ items: any[]; shops?: any[] }>(
       "/foods/recommend",
-      {
-        query: {
-          size: 2,
-          campusId: 1,
-          mealTime: "lunch",
-          deviceId: "abcdefgh",
-          gcjLng: 117.134,
-          gcjLat: 36.667,
-        },
-      },
+      { query: { size: 2, scene: "delivery", gcjLng: 117.1, gcjLat: 36.6 } },
     );
-    // The selected area's point goes along; the device id stays behind.
     expect(sent.find((s) => s.path === "/recommend")?.query).toEqual({
-      campusId: 1,
-      mealTime: "lunch",
-      gcjLng: 117.134,
-      gcjLat: 36.667,
+      scene: "delivery",
+      gcjLng: 117.1,
+      gcjLat: 36.6,
     });
-    expect(dishes.map((d) => d.id)).toEqual([2, 3]);
-    expect(dishes[0]).toMatchObject({
-      restaurantId: 9,
-      restaurantName: "一口面馆",
-      category: "staple",
-      likesCount: 5,
-      pictureUrl: [PIC],
-    });
+    expect(feed.items.map((d) => d.id)).toEqual([2]);
+    expect(feed.shops).toBeUndefined();
   });
 
   it("maps levels, bans, telemetry and stage colours added in backend v2", async () => {

@@ -530,15 +530,15 @@
   margin-top: -17px;
   background: #fff;
   border-radius: 28px;
-  padding: 10px 32px 32px;
+  /* No drag handle on desktop: the sheet cannot be dragged with a mouse. */
+  padding: 32px 32px 32px;
   z-index: 5;
 }
-.pc-sheet-handle {
-  width: 36px;
-  height: 4px;
-  background: #e6ded8;
-  border-radius: 3px;
-  margin: 0 auto 21px;
+/* Without a hero right above (no carousel on the home page; the edit history
+   card on a shop page), the sheet sits below instead of overlapping. */
+.pc-discovery-sheet.is-standalone,
+.pc-content-sheet.is-standalone {
+  margin-top: 16px;
 }
 .pc-section-toolbar {
   display: flex;

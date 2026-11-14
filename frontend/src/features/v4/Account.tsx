@@ -1,10 +1,11 @@
 import { DesignIcon as Icon } from "../../mobile/ui";
 import { useState, useEffect } from "react";
+import { Modal } from "../../components/ui";
+import "./confirm-dialog.css";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import { useSendSignal } from "../useSendSignal";
-import RecoveryFile from "./RecoveryFile";
 import { recoveryCommands } from "../../api/recovery";
 import { resultUncertain } from "../../api/client";
 import { saveDeletionKey } from "../../api/v2-bridge";
@@ -23,39 +24,81 @@ import {
   capability,
 } from "./shared";
 
-async function acceptReplacement(
-  app: ReturnType<typeof useApp>,
-  result: Schema["OutcomeResponse"] | null | undefined,
-) {
-  if (result?.status !== "READY") return false;
-  if (!result.tokenName || !result.tokenValue)
-    throw new Error("会话恢复结果不完整，请重新查询恢复状态。");
-  await app.signIn({
-    tokenName: result.tokenName,
-    tokenValue: result.tokenValue,
-  });
-  return true;
-}
 export function Devices() {
   const app = useApp(),
     cache = useQueryClient(),
     [cursor, setCursor] = useState<string>(),
-    [command, setCommand] = useState(() => recoveryCommands.get("devices")),
-    [progress, setProgress] =
-      useState<Schema["DeviceSessionRecoveryStatusResponse"]>(),
     task = useCommand(),
-    lookup = useCommand(true),
-    [confirm, setConfirm] = useState<string | null>(null);
+    [confirm, setConfirm] = useState<string | null>(null),
+    // Safari does not focus a clicked button; return focus to it explicitly
+    // instead of to the focused page container (which then shows a ring).
+    [trigger, setTrigger] = useState<HTMLElement | null>(null);
   const q = useQuery({
     queryKey: ["devices", cursor],
     queryFn: () => app.api.deviceSessions({ cursor, size: 20 }),
     enabled: !!app.session,
   });
+  const target =
+    confirm && confirm !== "others"
+      ? q.data?.devices?.find((device) => device.sessionId === confirm)
+      : undefined;
+  const confirmDialog = confirm && (
+    <Modal
+      title={confirm === "others" ? "下线其他设备？" : "下线这台设备？"}
+      className="v4-confirm-dialog"
+      dismissible={!task.busy}
+      returnFocus={trigger}
+      onClose={() => setConfirm(null)}
+    >
+      <p>
+        {confirm === "others"
+          ? "除了这台设备，其他登录中的设备都会退出登录，这台设备不受影响。"
+          : `${target ? `「${deviceName(target)}」` : "这台设备"}将退出登录，需要重新登录才能使用。`}
+      </p>
+      <div className="v4-confirm-actions">
+        <button
+          type="button"
+          disabled={task.busy}
+          onClick={() => setConfirm(null)}
+        >
+          取消
+        </button>
+        <button
+          type="button"
+          className="is-danger"
+          disabled={task.busy || task.uncertain}
+          onClick={() =>
+            void task.run(
+              (id) =>
+                confirm === "others"
+                  ? // The v4 contract still asks for these; backend v2 ignores them.
+                    app.api.revokeOtherSessions({
+                      commandId: id,
+                      recoveryCapability: capability(),
+                    })
+                  : app.api.revokeSession(confirm),
+              async () => {
+                // Backend v2 signs devices out at once; say what happened.
+                const name = target ? `「${deviceName(target)}」` : "这台设备";
+                setConfirm(null);
+                app.toast(
+                  confirm === "others" ? "已下线其他设备" : `已下线${name}`,
+                );
+                await cache.invalidateQueries({ queryKey: ["devices"] });
+              },
+            )
+          }
+        >
+          {task.busy ? "正在下线…" : "确认下线"}
+        </button>
+      </div>
+    </Modal>
+  );
   return (
     <Shell
       title="登录设备"
       back="/settings/account"
-      detail="查看有效会话，发现陌生设备时可以申请下线。"
+      detail="查看登录中的设备，发现陌生设备时可以把它下线。"
     >
       {app.session && (
         <QueryView
@@ -88,7 +131,10 @@ export function Devices() {
                 </div>
                 <button
                   disabled={task.busy || task.uncertain}
-                  onClick={() => setConfirm(device.sessionId!)}
+                  onClick={(e) => {
+                    setTrigger(e.currentTarget);
+                    setConfirm(device.sessionId!);
+                  }}
                 >
                   下线此设备
                 </button>
@@ -105,115 +151,17 @@ export function Devices() {
       <Card>
         <button
           className="danger"
-          disabled={!app.session || !!command || task.busy || task.uncertain}
-          onClick={() => setConfirm("others")}
+          disabled={!app.session || task.busy || task.uncertain}
+          onClick={(e) => {
+            setTrigger(e.currentTarget);
+            setConfirm("others");
+          }}
         >
           下线其他设备
         </button>
-        {confirm && (
-          <div className="v4-message">
-            <p>
-              {confirm === "others"
-                ? "其他设备将收到下线请求，当前设备可能需要换发会话。确认继续？"
-                : "此设备的登录会话将被撤销。确认下线？"}
-            </p>
-            <div className="v4-actions">
-              <button
-                disabled={task.busy || task.uncertain}
-                onClick={() =>
-                  void task.run(
-                    async (id) => {
-                      if (confirm === "others") {
-                        const saved = {
-                          commandId: id,
-                          capability: capability(),
-                        };
-                        recoveryCommands.set("devices", saved);
-                        setCommand(saved);
-                        return app.api.revokeOtherSessions({
-                          commandId: id,
-                          recoveryCapability: saved.capability,
-                        });
-                      }
-                      return app.api.revokeSession(confirm);
-                    },
-                    async (result) => {
-                      setConfirm(null);
-                      task.say(
-                        `下线请求已受理，${statusText(result.status)}。`,
-                      );
-                      await cache.invalidateQueries({ queryKey: ["devices"] });
-                    },
-                  )
-                }
-              >
-                确认下线
-              </button>
-              <button
-                disabled={task.busy || task.uncertain}
-                onClick={() => setConfirm(null)}
-              >
-                取消
-              </button>
-            </div>
-          </div>
-        )}
+        {confirmDialog}
         <CommandState task={task} />
       </Card>
-      {command && (
-        <Card title="当前设备恢复">
-          <RecoveryFile kind="devices" value={command} />
-          <p>下线请求可能需要时间处理，请以查询结果为准。</p>
-          {progress && (
-            <p>
-              当前设备：{statusText(progress.currentDevice)} · 其他设备：
-              {statusText(progress.propagation)}
-            </p>
-          )}
-          <div className="v4-actions">
-            <button
-              disabled={lookup.busy}
-              onClick={() =>
-                void lookup.run(
-                  () =>
-                    app.api.deviceSessionStatus(
-                      command.commandId,
-                      command.capability,
-                    ),
-                  (r) => setProgress(r),
-                )
-              }
-            >
-              查询恢复状态
-            </button>
-            <button
-              disabled={lookup.busy || progress?.currentDevice !== "READY"}
-              onClick={() =>
-                void lookup.run(
-                  () =>
-                    app.api.resumeDeviceSessions(
-                      command.commandId,
-                      command.capability,
-                    ),
-                  async (r) => {
-                    if (await acceptReplacement(app, r)) {
-                      recoveryCommands.delete("devices");
-                      setCommand(undefined);
-                      app.toast("当前设备会话已恢复。");
-                    } else
-                      lookup.say(
-                        `当前设备${statusText(r.status)}，请稍后查询。`,
-                      );
-                  },
-                )
-              }
-            >
-              恢复当前设备会话
-            </button>
-          </div>
-          <CommandState task={lookup} />
-        </Card>
-      )}
     </Shell>
   );
 }

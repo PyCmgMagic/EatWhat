@@ -108,6 +108,32 @@ const page = <T, U>(value: Page<T> | null | undefined, map: (item: T) => U) =>
         items: [],
       };
 const emptyPage = () => page<never, never>(null, (x) => x);
+/** Shops asked for on the dine-in home (the backend allows up to 30). */
+export const DINE_IN_SHOPS = 20;
+/** A shop's signature dish as a dish card, filled in from the full dish when known. */
+const signatureDish = (shop: Json, dish: Json, known?: Json) =>
+  food({
+    category: "特色",
+    tags: [],
+    likeCount: 0,
+    ...known,
+    id: dish.id,
+    name: dish.name,
+    price: dish.price,
+    pictureUrls: dish.pictureUrl
+      ? [dish.pictureUrl]
+      : (known?.pictureUrls ?? []),
+    restaurantId: shop.id,
+    restaurantName: shop.name,
+    restaurantAddress: shop.address,
+    restaurantGcjLng: shop.gcjLng,
+    restaurantGcjLat: shop.gcjLat,
+    hubId: shop.hubId,
+    hubName: shop.hubName,
+    distanceMeters: shop.distanceMeters,
+    stageColor: dish.stageColor ?? known?.stageColor ?? null,
+    coverCrop: dish.coverCrop ?? known?.coverCrop ?? null,
+  })!;
 const omit = (query: Query, allowed: string[]) =>
   Object.fromEntries(
     Object.entries(query).filter(([key]) => allowed.includes(key)),
@@ -194,6 +220,7 @@ export function restaurant(v: Json | null | undefined): Json | null {
       price: f.price ?? null,
       coverUrl: f.pictureUrl ?? null,
       stageColor: f.stageColor ?? null,
+      coverCrop: f.coverCrop ?? null,
       likesCount: f.likeCount ?? 0,
     })),
     // v2 search by dish name returns the one dish that matched.
@@ -928,6 +955,31 @@ const routes: [string, RegExp, Handler][] = [
           .map((dish: Json) => asCategory(food(dish)!, query.category));
       }
       const delivery = query.scene === "delivery";
+      // Dine-in: the list is the recommended shops themselves, each with its
+      // signature dishes; the carousel shows the first signature dish of each
+      // shop. No newest-dish filler, so every item went through the ranking.
+      if (!delivery) {
+        const feed = await call("/recommend", {
+          query: {
+            scene: "dine_in",
+            campusId: query.campusId,
+            mealTime: query.mealTime,
+            gcjLng: query.gcjLng,
+            gcjLat: query.gcjLat,
+            page: 1,
+            pageSize: DINE_IN_SHOPS,
+          },
+        });
+        const shops: Json[] = feed?.items ?? [];
+        return {
+          items: shops
+            .filter((shop) => shop.signatureFoods?.length)
+            .map((shop) => signatureDish(shop, shop.signatureFoods[0]))
+            .slice(0, size),
+          shops: shops.map((shop) => restaurant(shop)),
+          mealTime: feed?.mealTime ?? null,
+        };
+      }
       const [feed, latest] = await Promise.all([
         call("/recommend", {
           query: omit(query, [
@@ -951,32 +1003,7 @@ const routes: [string, RegExp, Handler][] = [
       // Signature dishes of the recommended shops come first, then new dishes.
       for (const shop of feed?.items ?? [])
         for (const dish of shop.signatureFoods ?? [])
-          items.push(
-            food({
-              category: "特色",
-              tags: [],
-              likeCount: 0,
-              ...known.get(dish.id),
-              id: dish.id,
-              name: dish.name,
-              price: dish.price,
-              pictureUrls: dish.pictureUrl
-                ? [dish.pictureUrl]
-                : (known.get(dish.id)?.pictureUrls ?? []),
-              restaurantId: shop.id,
-              restaurantName: shop.name,
-              restaurantAddress: shop.address,
-              restaurantGcjLng: shop.gcjLng,
-              restaurantGcjLat: shop.gcjLat,
-              hubId: shop.hubId,
-              hubName: shop.hubName,
-              distanceMeters: shop.distanceMeters,
-              stageColor:
-                dish.stageColor ?? known.get(dish.id)?.stageColor ?? null,
-              coverCrop:
-                dish.coverCrop ?? known.get(dish.id)?.coverCrop ?? null,
-            })!,
-          );
+          items.push(signatureDish(shop, dish, known.get(dish.id)));
       for (const dish of known.values())
         if (items.length < size && !items.some((item) => item.id === dish.id))
           items.push(food(dish)!);
