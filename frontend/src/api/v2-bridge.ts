@@ -928,7 +928,13 @@ const routes: [string, RegExp, Handler][] = [
       const delivery = query.scene === "delivery";
       const [feed, latest] = await Promise.all([
         call("/recommend", {
-          query: omit(query, ["campusId", "mealTime", "scene"]),
+          query: omit(query, [
+            "campusId",
+            "mealTime",
+            "scene",
+            "gcjLng",
+            "gcjLat",
+          ]),
         }).catch(() => null),
         // Delivery shows only recommended shops: the newest dishes may come
         // from shops that do not deliver, so they are not used as filler.

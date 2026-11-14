@@ -307,12 +307,17 @@ describe("v2 bridge", () => {
           campusId: 1,
           mealTime: "lunch",
           deviceId: "abcdefgh",
+          gcjLng: 117.134,
+          gcjLat: 36.667,
         },
       },
     );
+    // The selected area's point goes along; the device id stays behind.
     expect(sent.find((s) => s.path === "/recommend")?.query).toEqual({
       campusId: 1,
       mealTime: "lunch",
+      gcjLng: 117.134,
+      gcjLat: 36.667,
     });
     expect(dishes.map((d) => d.id)).toEqual([2, 3]);
     expect(dishes[0]).toMatchObject({

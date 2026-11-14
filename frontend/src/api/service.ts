@@ -45,6 +45,9 @@ export type RecommendFilters = {
   campusId?: number;
   /** Omit to let the backend pick the slot by Beijing time. */
   mealTime?: string;
+  /** GCJ-02 point to recommend around (dine-in ranks and limits by distance). */
+  gcjLng?: number;
+  gcjLat?: number;
   /** v2 scene: dine_in (default) or delivery. */
   scene?: "dine_in" | "delivery";
   category?: string;
