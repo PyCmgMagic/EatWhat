@@ -1,6 +1,6 @@
 import { useFeedbackState } from "../components/feedback";
 import { Select } from "../components/Select";
-import { foodEditBody, submissionPath } from "../api/content-rules";
+import { foodEditBody } from "../api/content-rules";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -60,7 +60,7 @@ export function EditFood() {
   if (!user?.verified || user.banned)
     return (
       <FeaturePage title="编辑菜品">
-        <FeatureState empty="完成学生认证后，可管理自己的菜品" />
+        <FeatureState empty="完成学生认证后，可以修改菜品" />
         <Link className="ew-button" to="/verify">
           查看认证状态
         </Link>
@@ -80,8 +80,6 @@ export function EditFood() {
           error={q.error}
           retry={() => void q.refetch()}
         />
-      ) : q.data.accountId !== user.id ? (
-        <FeatureState empty="只能编辑你自己分享的菜品" />
       ) : (
         <EditForm
           key={id}
@@ -240,7 +238,7 @@ function EditForm({
             if (next[0].key !== food.pictureKeys?.[0])
               body.coverCrop = { centerX: 0.5, centerY: 0.5, diameter: 1 };
           }
-          const result = await api.editMyFood(
+          await api.editMyFood(
             food.id!,
             foodEditBody(food, body),
           );
@@ -250,10 +248,10 @@ function EditForm({
             if (p.url.startsWith("blob:")) URL.revokeObjectURL(p.url);
           });
           await cache.invalidateQueries({ queryKey: ["foods"] });
-          toast(
-            result?.revisionId ? "修改已提交，请查看审核进度。" : "菜品已更新",
-          );
-          if (active.current) nav(submissionPath(result ?? {}, detailReturn));
+          // Backend v2 publishes edits at once (the revision id is only the
+          // edit-history entry), so go back to the dish.
+          toast("菜品已更新");
+          if (active.current) nav(detailReturn);
         } catch (err) {
           setError(errorMessage(err));
           setDuplicate(duplicateFoodId(err));

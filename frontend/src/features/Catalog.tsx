@@ -106,9 +106,12 @@ export function FeatureState({
 export function FoodManage({
   food,
   inMenu = false,
+  anyone = false,
 }: {
   food: Food;
   inMenu?: boolean;
+  /** On the dish page any verified user may edit; lists offer it on your own. */
+  anyone?: boolean;
 }) {
   const { user, api, toast } = useApp(),
     m = useMobile(),
@@ -116,38 +119,49 @@ export function FoodManage({
     loc = useLocation(),
     cache = useQueryClient(),
     nav = useNavigate();
-  if (!user?.verified || user.id !== food.accountId || !food.id) return null;
+  // Dishes are edited openly: any verified user may fix one. Only admins may
+  // delete (backend v2 refuses everyone else).
+  const canEdit =
+      !!user?.verified &&
+      !user.banned &&
+      (anyone || user.id === food.accountId),
+    canDelete = user?.role === "admin";
+  if (!food.id || (!canEdit && !canDelete)) return null;
   return (
     <div className={inMenu ? "pc-dish-owner-actions" : "ew-food-manage"}>
-      <Link to={`/foods/${food.id}/edit`}>
-        {inMenu && <Icon name="edit" size={16} />}
-        编辑菜品
-      </Link>
-      <button
-        onClick={() => {
-          if (access(true))
-            m.confirm(
-              `删除「${food.name ?? "这道菜"}」？删除后无法从前台恢复。`,
-              async () => {
-                await api.deleteMyFood(food.id!);
-                toast("菜品已删除");
-                if (loc.pathname === `/foods/${food.id}`) nav("/me/shares");
-                cache.removeQueries({
-                  queryKey: ["foods", "detail", food.id],
-                  exact: true,
-                });
-                await Promise.all(
-                  ["foods", "user", "my-tags", "history"].map((key) =>
-                    cache.invalidateQueries({ queryKey: [key] }),
-                  ),
-                );
-              },
-            );
-        }}
-      >
-        {inMenu && <Icon name="delete" size={16} />}
-        {inMenu ? "删除菜品" : "删除"}
-      </button>
+      {canEdit && (
+        <Link to={`/foods/${food.id}/edit`}>
+          {inMenu && <Icon name="edit" size={16} />}
+          编辑菜品
+        </Link>
+      )}
+      {canDelete && (
+        <button
+          onClick={() => {
+            if (access(true))
+              m.confirm(
+                `删除「${food.name ?? "这道菜"}」？删除后无法从前台恢复。`,
+                async () => {
+                  await api.deleteMyFood(food.id!);
+                  toast("菜品已删除");
+                  if (loc.pathname === `/foods/${food.id}`) nav("/me/shares");
+                  cache.removeQueries({
+                    queryKey: ["foods", "detail", food.id],
+                    exact: true,
+                  });
+                  await Promise.all(
+                    ["foods", "user", "my-tags", "history"].map((key) =>
+                      cache.invalidateQueries({ queryKey: [key] }),
+                    ),
+                  );
+                },
+              );
+          }}
+        >
+          {inMenu && <Icon name="delete" size={16} />}
+          {inMenu ? "删除菜品" : "删除"}
+        </button>
+      )}
     </div>
   );
 }

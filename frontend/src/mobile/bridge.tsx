@@ -1891,7 +1891,7 @@ export function useDesignBridge(
               m.openPanel("G-PanelTag");
           }}
           onRestaurant={() => m.setShopId(liveFood.restaurantId!)}
-          management={<FoodManage food={liveFood} />}
+          management={<FoodManage food={liveFood} anyone />}
           footer={
             <React.Suspense fallback={null}>
               <FoodExtras id={foodId} inline />

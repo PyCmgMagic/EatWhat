@@ -61,7 +61,7 @@ export function DishMoreActions({ food, id }: { food: Food; id: number }) {
           if ((event.target as Element).closest("a, button")) dismiss();
         }}
       >
-        <FoodManage food={food} inMenu />
+        <FoodManage food={food} inMenu anyone />
         <Link to={`/reports/new?type=FOOD&id=${id}`}>
           <DesignIcon name="report" size={16} />
           举报菜品
