@@ -71,6 +71,7 @@ import {
   RecoverPassword,
 } from "../features/Account";
 import { EditFood } from "../features/EditFood";
+import { EditRestaurant, isShopEditPath } from "../features/EditRestaurant";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { idOf } from "../api/models";
 import { useContentMotion, useExitPresence } from "../motion/hooks";
@@ -523,6 +524,7 @@ function MobileWorkspace() {
                   (loc.pathname === "/search" ||
                     loc.pathname === "/favorites" ||
                     /^\/foods\/\d+\/edit$/.test(loc.pathname) ||
+                    isShopEditPath(loc.pathname) ||
                     loc.pathname === "/auth/forgot") ? (
                   <div className="ew-mobile-feature">
                     {loc.pathname === "/search" ? (
@@ -531,6 +533,8 @@ function MobileWorkspace() {
                       <Catalog favorites />
                     ) : /^\/foods\/\d+\/edit$/.test(loc.pathname) ? (
                       <EditFood />
+                    ) : isShopEditPath(loc.pathname) ? (
+                      <EditRestaurant />
                     ) : loc.pathname === "/auth/forgot" ? (
                       <RecoverPassword />
                     ) : null}

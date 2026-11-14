@@ -15,6 +15,7 @@ import {
   useSessionDraft,
 } from "../../app/drafts";
 import { LoginLink } from "../../app/auth-dialog";
+import { shopEditPath } from "../EditRestaurant";
 import { useArea } from "../../app/area";
 import { type Schema, money, mediaUrl } from "../../api/models";
 import {
@@ -1183,6 +1184,8 @@ export function RestaurantActions({
         ) : (
           <LoginLink to="/auth/password">登录后收藏与评分</LoginLink>
         )}
+        {/* Open editing, like dishes: verified users fix it themselves. */}
+        <Link to={shopEditPath(id)}>修改店铺</Link>
         <Link to={`/restaurants/correction?id=${id}`}>店铺信息有误</Link>
         <Link to={`/reports/new?type=RESTAURANT&id=${id}`}>举报</Link>
       </div>

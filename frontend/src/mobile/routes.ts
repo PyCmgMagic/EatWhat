@@ -234,15 +234,17 @@ export function browserTitle(path: string) {
   }
   const dynamic = /^\/foods\/\d+\/edit$/.test(path)
     ? "编辑菜品"
-    : /^\/me\/tags\/\d+\/foods$/.test(path)
-      ? "标签下的菜品"
-      : /^\/feedback\/mine\/[^/]+$/.test(path)
-        ? "反馈详情"
-        : /^\/submissions\/[^/]+$/.test(path)
-          ? "贡献详情"
-          : /^\/topics\/[^/]+$/.test(path)
-            ? "专题详情"
-            : undefined;
+    : /^\/restaurants\/\d+\/edit$/.test(path)
+      ? "修改店铺"
+      : /^\/me\/tags\/\d+\/foods$/.test(path)
+        ? "标签下的菜品"
+        : /^\/feedback\/mine\/[^/]+$/.test(path)
+          ? "反馈详情"
+          : /^\/submissions\/[^/]+$/.test(path)
+            ? "贡献详情"
+            : /^\/topics\/[^/]+$/.test(path)
+              ? "专题详情"
+              : undefined;
   const title =
     nativeTitles[path] ??
     mobileSettingsPages[path]?.title ??

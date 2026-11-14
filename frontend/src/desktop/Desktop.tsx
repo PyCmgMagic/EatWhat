@@ -109,6 +109,7 @@ import { Catalog, FoodManage } from "../features/Catalog";
 import { DishMoreActions } from "./DishMoreActions";
 import { RecommendationControls, Preferences } from "../features/Account";
 import { EditFood } from "../features/EditFood";
+import { EditRestaurant, isShopEditPath } from "../features/EditRestaurant";
 import { useActionAccess } from "../features/access";
 import { guestDeviceId, mealCode } from "../api/food-display";
 import { foodCategories, type V2Food } from "../api/v2-vocab";
@@ -451,6 +452,7 @@ function DesktopPage({
   if (loc.pathname === "/help") return <ProfileHelp />;
   if (isV4Path(loc.pathname)) return <V4Routes key={loc.pathname} />;
   if (/^\/foods\/\d+\/edit$/.test(loc.pathname)) return <EditFood />;
+  if (isShopEditPath(loc.pathname)) return <EditRestaurant />;
   if (
     [
       "/settings/username",
