@@ -108,20 +108,26 @@ export function AiTagSuggest({
               setNote("AI 没有给出可用的建议。");
               return;
             }
-            // No tastes in the reply means the model could not tell, not
-            // "none": leave the chosen tastes alone and say so plainly.
+            // The model is told to leave tastes empty when the dish has no
+            // obvious one, so an empty list means "no need to pick". Never
+            // clear tastes the user chose: photos cannot show spiciness.
             const sameCategory = !category || category === current.category;
             if (!tagIds.length) {
               const name = foodCategories.find((c) => c.id === category)?.name;
-              if (sameCategory) {
-                setNote(
-                  `AI 看过了：分类${name ? `「${name}」` : ""}不用改；没看出明显的口味，请按实际选择。`,
-                );
-                return;
-              }
-              onApply(category, []);
+              const chosen = current.tagIds
+                .map((id) => tagOptions.find((o) => o.id === id)?.name)
+                .filter(Boolean)
+                .join("、");
+              const prefix = sameCategory
+                ? name
+                  ? `分类是「${name}」没错啦，`
+                  : ""
+                : `已按建议把分类改为「${name}」，`;
+              if (!sameCategory) onApply(category, []);
               setNote(
-                `已按建议把分类改为「${name}」；没看出明显的口味，请按实际选择。`,
+                chosen
+                  ? `💡 ${prefix}AI 没识别出明显口味，不过如果你吃着觉得「${chosen}」，按你的感觉来就好！`
+                  : `💡 ${prefix}口味不用刻意选哦～`,
               );
               return;
             }

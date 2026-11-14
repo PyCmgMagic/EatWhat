@@ -66,20 +66,28 @@ it("confirms the current category and tastes without changing them", async () =>
   expect(apply).not.toHaveBeenCalled();
 });
 
-it("says plainly when the model cannot tell the tastes and keeps the chosen ones", async () => {
+it("says tastes need not be picked when the model gives none, keeping the chosen ones", async () => {
   suggest.mockResolvedValue({ category: "小吃", tags: [] });
-  // Same category: nothing changes, but the note must not claim the tastes are fine.
-  const same = await click({ category: "snack", tagIds: [1] });
-  expect(same).toContain("分类「小吃」不用改");
-  expect(same).toContain("没看出明显的口味");
-  expect(same).not.toContain("分类和口味不用改");
+  // Same category, no tastes chosen.
+  expect(await click({ category: "snack", tagIds: [] })).toContain(
+    "💡 分类是「小吃」没错啦，口味不用刻意选哦～",
+  );
+  // Same category, tastes chosen: keep them and defer to the user.
+  const kept = await click({ category: "snack", tagIds: [1, 2] });
+  expect(kept).toContain(
+    "💡 分类是「小吃」没错啦，AI 没识别出明显口味，不过如果你吃着觉得「辣、麻」，按你的感觉来就好！",
+  );
+  expect(kept).not.toContain("分类和口味不用改");
   expect(apply).not.toHaveBeenCalled();
 
   // Different category: apply only the category, tastes untouched.
-  const changed = await click({ category: "staple", tagIds: [] });
-  expect(changed).toContain("分类改为「小吃」");
-  expect(changed).toContain("没看出明显的口味");
+  expect(await click({ category: "staple", tagIds: [] })).toContain(
+    "💡 已按建议把分类改为「小吃」，口味不用刻意选哦～",
+  );
   expect(apply).toHaveBeenCalledWith("snack", []);
+  expect(await click({ category: "staple", tagIds: [1] })).toContain(
+    "💡 已按建议把分类改为「小吃」，AI 没识别出明显口味，不过如果你吃着觉得「辣」，按你的感觉来就好！",
+  );
 });
 
 it("sends photo keys and the dish being edited", async () => {
