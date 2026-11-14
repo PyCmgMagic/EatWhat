@@ -177,6 +177,19 @@ describe("v2 bridge", () => {
     });
   });
 
+  it("never invents a price band for a shop that has none", async () => {
+    const { request, sent } = backend(({ method }) =>
+      method === "GET"
+        ? ok({ id: 4, kind: "food", priceBand: null, mealTimes: ["lunch"] })
+        : ok({ id: 4 }),
+    );
+    await request("/restaurant/edit/4", {
+      method: "PUT",
+      body: { name: "店", address: "路 2 号", gcjLng: 1, gcjLat: 2 },
+    });
+    expect(sent[1].body.priceBand).toBeNull();
+  });
+
   it("answers comment like state from the list and tracks changes", async () => {
     const { request } = backend(({ path }) =>
       path.endsWith("/comments")

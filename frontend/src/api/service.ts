@@ -570,6 +570,13 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         "/foods/suggest-tags",
         { method: "POST", body },
       ),
+    /** v2 shop categories, tastes and tastes that can be avoided. */
+    shopOptions: () =>
+      data<{
+        categories?: string[] | null;
+        tags?: string[] | null;
+        dislikableTags?: string[] | null;
+      }>("/recommend/tags", { public: true }),
     /** v2: skip this shop in recommendations for 30 days. */
     dismissRecommendation: (restaurantId: number) =>
       request<void>(`/recommend/dismiss/${restaurantId}`, { method: "POST" }),

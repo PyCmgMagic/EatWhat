@@ -1,4 +1,5 @@
 import "../features/user-level.css";
+import { FieldMark } from "../features/FieldMark";
 import { boundedText, submissionPath } from "../api/content-rules";
 import { BlockControl, UserFoods } from "../features/ApiV2";
 import { useEffect, useRef, useState } from "react";
@@ -471,7 +472,10 @@ export function DesktopNewShop() {
               }}
             >
               <label className="pc-secondary-field">
-                <span>店铺名称</span>
+                <span>
+                  店铺名称
+                  <FieldMark required />
+                </span>
                 <input
                   aria-label="店铺名称"
                   value={draft.name}

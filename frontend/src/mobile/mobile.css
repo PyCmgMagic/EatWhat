@@ -1762,3 +1762,44 @@ body:has(
   text-underline-offset: 4px;
   text-decoration-color: #c8bbb1;
 }
+
+/* Shop traits on the phone forms: a title row, then compact option chips.
+   The page-wide label/input rules (block, 48px tall) are meant for text
+   fields and must not stretch these. */
+.mobile-page-native .ew-shop-traits {
+  border: 0;
+  padding: 0;
+  margin: 8px 0 0;
+  min-width: 0;
+  display: grid;
+  gap: 20px;
+}
+.mobile-page-native .ew-shop-traits .ew-meals {
+  gap: 0 18px;
+}
+.mobile-page-native .ew-shop-traits .ew-meals > b {
+  flex-basis: 100%;
+  margin-bottom: 2px;
+  font-size: 13px;
+  color: #231c18;
+}
+.mobile-page-native .ew-shop-traits .ew-meals label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  min-height: 44px;
+  font-size: 15px;
+  color: #231c18;
+}
+.mobile-page-native .ew-shop-traits .ew-meals input {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  margin: 0;
+  accent-color: #231c18;
+}
+.mobile-page-native .ew-shop-traits .ew-meals label:has(input:disabled) {
+  color: #b5a79c;
+}

@@ -4,6 +4,7 @@ import RestaurantMap from "./RestaurantMap";
 import { mapPoint, type MapPoint } from "./map-geometry";
 import type { MapPlace } from "../api/baidu-places";
 import "./restaurant-location.css";
+import { FieldMark } from "./FieldMark";
 
 export function requireShopLocation(value?: MapPoint) {
   const point = mapPoint(value);
@@ -161,6 +162,7 @@ export default function RestaurantLocationField(props: {
         <h2 id={`${id}-title`}>
           <DesignIcon name="nearby" size={18} />
           店铺位置
+          <FieldMark required />
         </h2>
         <span
           className={`restaurant-location-status${props.point ? " is-selected" : ""}`}
@@ -280,7 +282,10 @@ export default function RestaurantLocationField(props: {
         />
       </div>
       <label className="restaurant-location-address" htmlFor={`${id}-address`}>
-        详细地址
+        <span>
+          详细地址
+          <FieldMark required />
+        </span>
         <input
           id={`${id}-address`}
           name="address"

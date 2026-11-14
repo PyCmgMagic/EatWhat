@@ -89,6 +89,7 @@ import {
   ProfilePeopleDialog,
   useLegacyPeopleRedirect,
 } from "../features/ProfilePeople";
+import { FieldMark } from "../features/FieldMark";
 
 const SCENE_KEY = "eatwhat.recommend-scene";
 /** Dine-in or delivery, remembered on this device. */
@@ -825,7 +826,10 @@ function NewShopDetailsForm({
         }}
       >
         <label>
-          店名
+          <span>
+            店名
+            <FieldMark required />
+          </span>
           <input
             name="name"
             value={name}

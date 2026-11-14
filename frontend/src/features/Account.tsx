@@ -19,12 +19,8 @@ import { useMobile } from "../mobile/ui";
 import { mealOptions } from "../api/food-display";
 import "./latest.css";
 import { SceneToggle } from "./SceneToggle";
-import {
-  dislikableTags,
-  priceBands,
-  shopCategories,
-  tasteTags,
-} from "../api/v2-vocab";
+import { priceBands } from "../api/v2-vocab";
+import { useShopOptions } from "./shop-options";
 import { rememberVerificationReturn } from "../app/verification-return";
 
 const AUTO_MEAL = "auto";
@@ -454,6 +450,7 @@ function PreferencesForm({ initial }: { initial: V2Preferences }) {
       },
     ),
     task = useTask("口味偏好已更新", undefined, ["preferences", "foods"]);
+  const options = useShopOptions();
   const toggle = (
     key: "likedCategories" | "likedTags" | "dislikedTags",
     value: string,
@@ -494,7 +491,7 @@ function PreferencesForm({ initial }: { initial: V2Preferences }) {
       >
         <div className="ew-meals">
           <b>喜欢的店铺分类</b>
-          {shopCategories.map((c) => (
+          {options.categories.map((c) => (
             <label key={c}>
               <input
                 type="checkbox"
@@ -507,7 +504,7 @@ function PreferencesForm({ initial }: { initial: V2Preferences }) {
         </div>
         <div className="ew-meals">
           <b>喜欢的口味</b>
-          {tasteTags.map((t) => (
+          {options.tags.map((t) => (
             <label key={t}>
               <input
                 type="checkbox"
@@ -520,7 +517,7 @@ function PreferencesForm({ initial }: { initial: V2Preferences }) {
         </div>
         <div className="ew-meals">
           <b>忌口</b>
-          {dislikableTags.map((t) => (
+          {options.dislikableTags.map((t) => (
             <label key={t}>
               <input
                 type="checkbox"

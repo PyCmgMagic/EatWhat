@@ -28,6 +28,7 @@ export const shopKinds = [
   { id: "food", name: "吃饭" },
   { id: "drink", name: "饮品" },
 ];
+/** Fallback only: pages read the live list with useShopOptions(). */
 export const shopCategories = [
   "米饭炒菜",
   "粉面",
@@ -35,7 +36,10 @@ export const shopCategories = [
   "烧烤炸串",
   "汤粥",
   "面点快餐",
+  "日韩料理",
 ];
+export const MAX_SHOP_CATEGORIES = 2;
+export const MAX_SHOP_TAGS = 3;
 export const mealTimes = [
   { id: "breakfast", name: "早饭" },
   { id: "lunch", name: "午饭" },

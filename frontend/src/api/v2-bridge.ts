@@ -454,7 +454,8 @@ function restaurantBody(body: Json, current?: Json | null) {
       : { permanentlyClosed: body.permanentlyClosed }),
     kind: pick("kind", "food"),
     mealTimes: pick("mealTimes", ["lunch", "dinner"]),
-    priceBand: pick("priceBand", "FROM_15_TO_30"),
+    // Optional in v2: never invent a price band for a shop that has none.
+    priceBand: pick<string | null>("priceBand", null),
     categories: pick("categories", []),
     tags: pick("tags", []),
     deliveryEnabled: pick("deliveryEnabled", false),

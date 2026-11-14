@@ -1187,6 +1187,19 @@ export function useDesignBridge(
       (screen === "G-Settings" && id === 25)
     )
       return null;
+    // With 我的标签 gone, 足迹 stands alone: drop the divider that separated
+    // the two entries and let it take the whole row.
+    if (
+      screen === "G-Me" &&
+      tag === "a" &&
+      n.attrs.href === "G-History.dc.html"
+    )
+      p.style = {
+        ...st,
+        boxShadow: "none",
+        paddingLeft: 0,
+        gridColumn: "1 / -1",
+      };
     if (screen === "G-PanelTag" && id === 5) {
       const close = () => (m.panel ? m.closePanel() : nav(`/foods/${foodId}`));
       return (

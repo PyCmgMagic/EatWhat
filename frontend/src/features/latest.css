@@ -696,3 +696,16 @@
 .ew-implicit-taste b {
   font-size: 14px;
 }
+/* 必填 / 选填 next to form labels. */
+.ew-field-mark {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 400;
+  color: #8a7d74;
+  white-space: nowrap;
+}
+.ew-field-mark.is-required {
+  color: #a8321c;
+  font-weight: 600;
+}
