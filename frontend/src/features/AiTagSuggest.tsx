@@ -108,12 +108,26 @@ export function AiTagSuggest({
               setNote("AI 没有给出可用的建议。");
               return;
             }
-            // No tastes in the reply means no opinion on them, not "none".
-            const sameCategory = !category || category === current.category,
-              sameTags =
-                !tagIds.length ||
-                (tagIds.length === current.tagIds.length &&
-                  tagIds.every((id) => current.tagIds.includes(id)));
+            // No tastes in the reply means the model could not tell, not
+            // "none": leave the chosen tastes alone and say so plainly.
+            const sameCategory = !category || category === current.category;
+            if (!tagIds.length) {
+              const name = foodCategories.find((c) => c.id === category)?.name;
+              if (sameCategory) {
+                setNote(
+                  `AI 看过了：分类${name ? `「${name}」` : ""}不用改；没看出明显的口味，请按实际选择。`,
+                );
+                return;
+              }
+              onApply(category, []);
+              setNote(
+                `已按建议把分类改为「${name}」；没看出明显的口味，请按实际选择。`,
+              );
+              return;
+            }
+            const sameTags =
+              tagIds.length === current.tagIds.length &&
+              tagIds.every((id) => current.tagIds.includes(id));
             if (sameCategory && sameTags) {
               setNote("AI 看过了：现在的分类和口味不用改。");
               return;
