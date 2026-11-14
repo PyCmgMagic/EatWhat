@@ -61,12 +61,12 @@ import {
 } from "../components/LoadingSkeleton";
 import { demoDishes, visualFor, stageColors } from "./catalog";
 import { SceneToggle } from "../features/SceneToggle";
+import { AiTagSuggest, draftPictureKeys } from "../features/AiTagSuggest";
 import { screenRoutes, panelScreens, pendingScreens } from "./routes";
 import { adjustPhoto, saveVisual } from "./photos";
 import { photoFraming, type PhotoFraming } from "./photo-framing";
 import {
   guestDeviceId,
-  mealCode,
   mealHours,
   mealName,
   mealOptions,
@@ -167,6 +167,9 @@ export function useDesignBridge(
     location = useLocation(),
     cache = useQueryClient(),
     { area, selectArea, campusId, selectCampus } = useArea();
+  // Latest draft, for callbacks that finish after later edits (photo uploads).
+  const draftRef = useRef(m.draft);
+  draftRef.current = m.draft;
   const access = useActionAccess();
   const profileReturnTo = useProfileReturnTo();
   const foodBack = useReturnTo("/"),
@@ -656,8 +659,6 @@ export function useDesignBridge(
         if (!draft.name.trim()) throw new Error("写一个菜名，再发布。");
         if (!draft.images.length) throw new Error("先加一张你拍的照片。");
         if (!shopId) throw new Error("先选一家店。");
-        if (draft.mealTimes?.length === 0)
-          throw new Error("至少选择一个适合的饭点。");
         const price =
           draft.price.trim() === "" ? undefined : Number(draft.price);
         if (
@@ -692,9 +693,11 @@ export function useDesignBridge(
                   key,
                 };
                 m.setDraft({ images: [...images] });
-                saveVisual(key, draft.stage);
               },
             );
+          // Photos uploaded earlier (for the AI suggestion) need it as well.
+          for (const image of images)
+            if (image.key) saveVisual(image.key, draft.stage);
           creating = true;
           const created = await api.createFood({
             restaurantId: shopId,
@@ -706,11 +709,7 @@ export function useDesignBridge(
             pictureUrl: images.map((i) => i.key!),
             systemTagIds: draft.systemTagIds,
             signature: !!draft.signature,
-            ...publishDisplay(
-              draft.stage,
-              draft.candidates,
-              draft.mealTimes ?? [mealCode(m.meal)],
-            ),
+            ...publishDisplay(draft.stage, draft.candidates),
             coverCrop: { centerX: 0.5, centerY: 0.5, diameter: 1 },
           });
           setDone(true);
@@ -725,7 +724,6 @@ export function useDesignBridge(
             tagInput: "",
             systemTagIds: [],
             signature: false,
-            mealTimes: undefined,
             stage: "#F3C46E",
             crop: undefined,
             candidates: undefined,
@@ -2019,6 +2017,38 @@ export function useDesignBridge(
       if (id === 45)
         return (
           <div className="mobile-publish-tag-groups">
+            <AiTagSuggest
+              className="mobile-publish-ai"
+              restaurantId={shopId}
+              name={m.draft.name}
+              description={String(controller.state.desc ?? m.draft.description)}
+              tagOptions={systemTags.data ?? []}
+              pictures={() =>
+                draftPictureKeys(m.draft.images, app.uploadMany, (keys) =>
+                  m.setDraft({
+                    images: draftRef.current.images.map((image) =>
+                      !image.key && keys.has(image.file)
+                        ? { ...image, key: keys.get(image.file) }
+                        : image,
+                    ),
+                  }),
+                )
+              }
+              current={{
+                category: categoryCodes[controller.state.cat ?? 0],
+                tagIds: m.draft.systemTagIds ?? [],
+              }}
+              disabled={busy || publishUncertain}
+              onApply={(category, tagIds) => {
+                if (category) {
+                  controller.setState({
+                    cat: Math.max(0, categoryCodes.indexOf(category)),
+                  });
+                  m.setDraft({ category });
+                }
+                if (tagIds.length) m.setDraft({ systemTagIds: tagIds });
+              }}
+            />
             <fieldset className="mobile-publish-tags">
               <legend>口味，最多 {MAX_DISH_TAGS} 个，可选</legend>
               <div>
@@ -2095,28 +2125,6 @@ export function useDesignBridge(
             style={{ ...st, bottom: 96, overflowY: "auto", paddingBottom: 24 }}
           >
             {view.children}
-            <fieldset className="mobile-publish-meals">
-              <legend>适合的饭点</legend>
-              {mealOptions.map((meal) => {
-                const current = m.draft.mealTimes ?? [mealCode(m.meal)];
-                return (
-                  <label key={meal.id}>
-                    <input
-                      type="checkbox"
-                      checked={current.includes(meal.id)}
-                      onChange={(e) =>
-                        m.setDraft({
-                          mealTimes: e.target.checked
-                            ? [...current, meal.id]
-                            : current.filter((x) => x !== meal.id),
-                        })
-                      }
-                    />
-                    {meal.name}
-                  </label>
-                );
-              })}
-            </fieldset>
           </div>
         );
       if (id === 2) {

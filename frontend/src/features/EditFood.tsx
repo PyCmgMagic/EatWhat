@@ -26,6 +26,7 @@ import {
 } from "../app/drafts";
 import { FeaturePage, FeatureState } from "./Catalog";
 import "./latest.css";
+import { AiTagSuggest, draftPictureKeys } from "./AiTagSuggest";
 
 export function EditFood() {
   const { api, session, user } = useApp(),
@@ -395,6 +396,39 @@ function EditForm({
                 </label>
               ))}
             </div>
+            <AiTagSuggest
+              className="ew-meals ew-ai-suggest"
+              foodId={food.id ?? undefined}
+              restaurantId={food.restaurantId}
+              name={name}
+              description={description}
+              tagOptions={tasteTags.map((tag, i) => ({ id: i + 1, name: tag }))}
+              pictures={() =>
+                draftPictureKeys(photos, uploadMany, (keys) =>
+                  setPhotoDraft((d) => ({
+                    ...d,
+                    photos: d.photos.map((photo) =>
+                      !photo.key && photo.file && keys.has(photo.file)
+                        ? { ...photo, key: keys.get(photo.file) }
+                        : photo,
+                    ),
+                  })),
+                )
+              }
+              current={{
+                category,
+                tagIds: tags.map((tag) => tasteTags.indexOf(tag) + 1),
+              }}
+              disabled={busy || uncertain}
+              onApply={(next, tagIds) =>
+                updateFields({
+                  ...(next ? { category: next } : {}),
+                  ...(tagIds.length
+                    ? { tags: tagIds.map((id) => tasteTags[id - 1]) }
+                    : {}),
+                })
+              }
+            />
             <div className="ew-meals">
               <b>招牌菜</b>
               <label>

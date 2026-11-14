@@ -2772,6 +2772,8 @@ export interface components {
         SuggestRequest: {
             /** Format: int64 */
             restaurantId?: number;
+            /** Format: int64 */
+            foodId?: number;
             name?: string;
             description?: string;
             pictures?: string[];

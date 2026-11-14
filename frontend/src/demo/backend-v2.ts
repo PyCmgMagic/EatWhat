@@ -886,9 +886,9 @@ export function demoTransport(
         q.mealTime ??
         (hour >= 5 && hour < 10
           ? "breakfast"
-          : hour >= 10 && hour < 14
+          : hour >= 10 && hour < 15
             ? "lunch"
-            : hour >= 14 && hour < 21
+            : hour >= 15 && hour < 21
               ? "dinner"
               : "night");
       const seenKey =

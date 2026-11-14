@@ -68,7 +68,6 @@ export type Draft = {
   systemTagIds?: number[];
   /** v2: marks the dish as the shop's signature. */
   signature?: boolean;
-  mealTimes?: string[];
   crop?: { x: number; y: number; zoom: number };
   candidates?: string[];
   shopName?: string;

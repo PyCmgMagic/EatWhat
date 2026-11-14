@@ -96,15 +96,12 @@ describe("latest business contract", () => {
     ).toBe("error");
   });
   it("maps display choices to cloud tokens and prioritizes server stage metadata", () => {
-    const metadata = publishDisplay(
+    const metadata = publishDisplay(stagePalette.tomato, [
       stagePalette.tomato,
-      [stagePalette.tomato, stagePalette.broth],
-      ["lunch"],
-    );
-    expect(metadata).toMatchObject({
-      stageColor: "tomato",
-      mealTimes: ["lunch"],
-    });
+      stagePalette.broth,
+    ]);
+    expect(metadata).toMatchObject({ stageColor: "tomato" });
+    expect(metadata).not.toHaveProperty("mealTimes");
     expect(metadata.stageAlternates).toHaveLength(2);
     expect(new Set(metadata.stageAlternates).size).toBe(2);
     expect(visualFor({ name: "面", stageColor: "tomato" }).stage).toBe(

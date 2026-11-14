@@ -1,4 +1,4 @@
-import type { Food, Schema } from "./models";
+import type { Schema } from "./models";
 export const stagePalette = {
   broth: "#F3C46E",
   mango: "#FFCB45",
@@ -40,8 +40,8 @@ export function mealName(code: string | undefined) {
  */
 export const mealHours: Record<MealSlot, string> = {
   breakfast: "05:00–10:00",
-  lunch: "10:00–14:00",
-  dinner: "14:00–21:00",
+  lunch: "10:00–15:00",
+  dinner: "15:00–21:00",
   night: "21:00–05:00",
 };
 const HOUR = 3_600_000;
@@ -49,9 +49,9 @@ export function mealSlotAt(at: number): MealSlot {
   const h = new Date(at + 8 * HOUR).getUTCHours();
   return h >= 5 && h < 10
     ? "breakfast"
-    : h >= 10 && h < 14
+    : h >= 10 && h < 15
       ? "lunch"
-      : h >= 14 && h < 21
+      : h >= 15 && h < 21
         ? "dinner"
         : "night";
 }
@@ -75,14 +75,11 @@ export function guestDeviceId() {
     return undefined;
   }
 }
+/** Dishes have no meal times in backend v2; only shops do. */
 export function publishDisplay(
   stage: string,
   candidates?: string[],
-  meals?: string[],
-): Pick<
-  Schema["CreateFoodDTORequest"],
-  "stageColor" | "stageAlternates" | "mealTimes"
-> {
+): Pick<Schema["CreateFoodDTORequest"], "stageColor" | "stageAlternates"> {
   const alternatives = [
     ...new Set([
       ...(candidates ?? []).map(stageCode),
@@ -94,8 +91,5 @@ export function publishDisplay(
   return {
     stageColor: stageCode(stage),
     stageAlternates: alternatives,
-    mealTimes: (meals?.length ? meals : ["dinner"]) as NonNullable<
-      Food["mealTimes"]
-    >,
   };
 }

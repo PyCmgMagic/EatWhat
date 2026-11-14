@@ -237,3 +237,34 @@
 .mobile-publish-tags button:disabled {
   opacity: 0.45;
 }
+
+/* v2 publish and edit: AI suggestion for category and tastes. */
+.mobile-publish-ai {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.mobile-publish-ai b {
+  font-size: 13px;
+  font-weight: 400;
+  color: #6e625b;
+}
+.mobile-publish-ai button {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid #231c18;
+  border-radius: 22px;
+  background: #fff;
+  color: #231c18;
+  font: inherit;
+  font-weight: 600;
+}
+.mobile-publish-ai button:disabled {
+  border-color: #e6ded8;
+  color: #9a8b80;
+}
+.mobile-publish-ai small {
+  font-size: 12px;
+  line-height: 18px;
+  color: #6e625b;
+}

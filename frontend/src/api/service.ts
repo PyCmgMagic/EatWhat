@@ -560,6 +560,8 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
     /** v2 AI suggestion for a dish's category and tastes; nothing is saved. */
     suggestDishTags: (body: {
       restaurantId?: number;
+      /** Editing: the dish whose current photos may be sent as well. */
+      foodId?: number;
       name: string;
       description?: string;
       pictures?: string[];

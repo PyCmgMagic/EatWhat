@@ -19,9 +19,9 @@ import { stageColors } from "../mobile/catalog";
 import { adjustPhoto, saveVisual } from "../mobile/photos";
 import CropDialog from "./CropDialog";
 import "./publish.css";
-import { publishDisplay, mealCode } from "../api/food-display";
+import { publishDisplay } from "../api/food-display";
 import { foodCategories, MAX_DISH_TAGS } from "../api/v2-vocab";
-import { AiTagSuggest } from "../features/AiTagSuggest";
+import { AiTagSuggest, draftPictureKeys } from "../features/AiTagSuggest";
 
 const kinds = foodCategories;
 let submissionInFlight = false;
@@ -235,9 +235,7 @@ export default function DesktopPublish() {
         pictureUrl: images.map((item) => item.key!),
         systemTagIds: snapshot.systemTagIds,
         signature: !!snapshot.signature,
-        ...publishDisplay(snapshot.stage, snapshot.candidates, [
-          mealCode(m.meal),
-        ]),
+        ...publishDisplay(snapshot.stage, snapshot.candidates),
         coverCrop: { centerX: 0.5, centerY: 0.5, diameter: 1 },
       });
       for (const item of images)
@@ -259,7 +257,6 @@ export default function DesktopPublish() {
         restaurantId: undefined,
         publishUncertain: false,
         publishing: false,
-        mealTimes: undefined,
       });
       void cache.invalidateQueries({ queryKey: ["foods"] });
       void cache.invalidateQueries({ queryKey: ["user"] });
@@ -746,6 +743,21 @@ export default function DesktopPublish() {
               name={draft.name}
               description={draft.description}
               tagOptions={systemTags.data ?? []}
+              pictures={() =>
+                draftPictureKeys(draft.images, app.uploadMany, (keys) =>
+                  m.setDraft({
+                    images: draftRef.current.images.map((image) =>
+                      !image.key && keys.has(image.file)
+                        ? { ...image, key: keys.get(image.file) }
+                        : image,
+                    ),
+                  }),
+                )
+              }
+              current={{
+                category: draft.category,
+                tagIds: draft.systemTagIds ?? [],
+              }}
               disabled={locked || draft.publishUncertain}
               onApply={(category, tagIds) =>
                 m.setDraft({

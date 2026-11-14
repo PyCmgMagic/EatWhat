@@ -6826,6 +6826,10 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "foodId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "name" : {
             "type" : "string"
           },
