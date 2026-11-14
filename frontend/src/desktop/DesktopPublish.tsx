@@ -691,7 +691,7 @@ export default function DesktopPublish() {
                 />
               </label>
               <label>
-                价格 <span>选填，不确定可以不填</span>
+                价格 <span>选填</span>
                 <div className="pc-composer-price">
                   <span>¥</span>
                   <input
@@ -701,7 +701,7 @@ export default function DesktopPublish() {
                     min="0"
                     max="999"
                     step="0.1"
-                    placeholder="不确定可不填"
+                    placeholder="如 18"
                     value={draft.price}
                     onChange={(event) =>
                       m.setDraft({ price: event.target.value })
