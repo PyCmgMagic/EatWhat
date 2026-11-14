@@ -124,14 +124,23 @@ export function ToastViewport({
     return () => observer.disconnect();
   }, []);
   const latest = items.at(-1)?.id;
+  // A dialog can leave the document in the same commit that adds a toast
+  // (e.g. confirming a crop); the observer only catches up afterwards, so
+  // never render into a detached host.
+  const host = container.isConnected ? container : document.body;
   useLayoutEffect(() => {
     const node = viewport.current;
-    if (!node || typeof node.showPopover !== "function") return;
+    if (!node || typeof node.showPopover !== "function" || !node.isConnected)
+      return;
     // A manual popover shares the browser top layer with native dialogs, so
     // feedback stays visible inside login, cropping and confirmation dialogs.
-    if (node.matches(":popover-open")) node.hidePopover();
-    if (latest !== undefined) node.showPopover();
-  }, [latest, container]);
+    try {
+      if (node.matches(":popover-open")) node.hidePopover();
+      if (latest !== undefined) node.showPopover();
+    } catch {
+      // Feedback must never take the page down; the toast still renders inline.
+    }
+  }, [latest, host]);
   return createPortal(
     <div
       ref={viewport}
@@ -143,6 +152,6 @@ export function ToastViewport({
         <ToastItem key={item.id} item={item} dismiss={dismiss} />
       ))}
     </div>,
-    container,
+    host,
   );
 }

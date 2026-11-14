@@ -228,7 +228,13 @@ export function Select({
     const panel = popup.current,
       button = trigger.current;
     // The top layer avoids clipping by scroll containers and transformed pages.
-    if (typeof panel.showPopover === "function") panel.showPopover();
+    if (typeof panel.showPopover === "function" && panel.isConnected) {
+      try {
+        panel.showPopover();
+      } catch {
+        // Already open or detached mid-update: keep the inline panel instead of crashing.
+      }
+    }
     const update = () => {
       const rect = button.getBoundingClientRect(),
         viewport = window.visualViewport;
