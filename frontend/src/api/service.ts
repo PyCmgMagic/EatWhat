@@ -43,7 +43,10 @@ export type FoodFilters = {
 };
 export type RecommendFilters = {
   campusId?: number;
+  /** Omit to let the backend pick the slot by Beijing time. */
   mealTime?: string;
+  /** v2 scene: dine_in (default) or delivery. */
+  scene?: "dine_in" | "delivery";
   category?: string;
   size?: number;
   deviceId?: string;
@@ -92,6 +95,26 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
   };
   const data = async <T>(path: string, options?: RequestOptions) =>
     requiredData(await request<T | null>(path, options));
+  const recommendFeed = async (
+    limit = 8,
+    filters: RecommendFilters = {},
+  ): Promise<{ items: Food[]; mealTime: string | null }> => {
+    // Deployed servers return data as an array; the checked-in API contract
+    // still describes a page. Normalize both here for desktop and mobile.
+    const result = await data<
+      Food[] | (Page<Food> & { mealTime?: string | null })
+    >("/foods/recommend", { query: { size: limit, ...filters } });
+    const items = Array.isArray(result) ? result : result.items;
+    if (!Array.isArray(items))
+      throw new ApiError(
+        "推荐数据格式不正确，请稍后重试。",
+        "INVALID_RESPONSE",
+      );
+    return {
+      items,
+      mealTime: Array.isArray(result) ? null : (result.mealTime ?? null),
+    };
+  };
   const post = (
     path: string,
     body?: unknown,
@@ -307,20 +330,10 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
           public: true,
         },
       ),
-    recommend: async (limit = 8, filters: RecommendFilters = {}) => {
-      // Deployed servers return data as an array; the checked-in API contract
-      // still describes a page. Normalize both here for desktop and mobile.
-      const result = await data<Food[] | Page<Food>>("/foods/recommend", {
-        query: { size: limit, ...filters },
-      });
-      const items = Array.isArray(result) ? result : result.items;
-      if (!Array.isArray(items))
-        throw new ApiError(
-          "推荐数据格式不正确，请稍后重试。",
-          "INVALID_RESPONSE",
-        );
-      return items;
-    },
+    recommend: async (limit = 8, filters: RecommendFilters = {}) =>
+      (await recommendFeed(limit, filters)).items,
+    /** Dishes plus the meal slot the backend used (null when unknown). */
+    recommendFeed,
     food: (id: number) => data<Food>(`/foods/detail/${id}`),
     foods: (
       restaurantId: number | undefined,

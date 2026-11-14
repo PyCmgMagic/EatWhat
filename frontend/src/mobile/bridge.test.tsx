@@ -80,7 +80,13 @@ function BridgeDraftHost() {
     setDraft: (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch })),
     setTagId: noop,
     meal: "晚饭",
+    mealAuto: true,
+    mealKey: "auto:dinner",
     setMeal: noop,
+    setMealAuto: noop,
+    noteServedMeal: noop,
+    scene: "dine_in",
+    setScene: noop,
   } as MobileState;
   return (
     <MobileContext.Provider value={mobile}>

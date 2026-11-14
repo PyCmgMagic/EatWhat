@@ -29,6 +29,40 @@ export function mealCode(name: string) {
     mealOptions.find((m) => m.name === name || m.id === name)?.id ?? "dinner"
   );
 }
+export type MealSlot = (typeof mealOptions)[number]["id"];
+export function mealName(code: string | undefined) {
+  return mealOptions.find((m) => m.id === code)?.name;
+}
+/**
+ * Meal slots in Beijing time. The backend picks the slot itself when a
+ * request has no mealTime (RecommendService.slotAt); these copies only label
+ * the slot before its answer arrives and end a manual pick when its slot ends.
+ */
+export const mealHours: Record<MealSlot, string> = {
+  breakfast: "05:00–10:00",
+  lunch: "10:00–14:00",
+  dinner: "14:00–21:00",
+  night: "21:00–05:00",
+};
+const HOUR = 3_600_000;
+export function mealSlotAt(at: number): MealSlot {
+  const h = new Date(at + 8 * HOUR).getUTCHours();
+  return h >= 5 && h < 10
+    ? "breakfast"
+    : h >= 10 && h < 14
+      ? "lunch"
+      : h >= 14 && h < 21
+        ? "dinner"
+        : "night";
+}
+/** When the Beijing meal slot containing `at` ends. */
+export function mealSlotEnd(at: number) {
+  const slot = mealSlotAt(at);
+  // Beijing is a whole number of hours ahead of UTC, so slots end on the hour.
+  let end = Math.floor(at / HOUR) * HOUR + HOUR;
+  while (mealSlotAt(end) === slot) end += HOUR;
+  return end;
+}
 export function guestDeviceId() {
   try {
     let id = localStorage.getItem("eatwhat-recommend-device");

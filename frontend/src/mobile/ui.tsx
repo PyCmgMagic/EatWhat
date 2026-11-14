@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { Food, Restaurant } from "../api/models";
+import type { RecommendScene } from "../api/v2-vocab";
+import type { MealSlot } from "../api/food-display";
 import { mediaUrl, money } from "../api/models";
 import { useFoodPhoto } from "../features/media";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
@@ -32,8 +34,21 @@ export type MobileState = {
   setDraft: (patch: Partial<Draft>) => void;
   tagId?: number;
   setTagId: (id?: number) => void;
+  /** Name of the meal slot in use, e.g. 晚饭. */
   meal: string;
+  /** True while following the clock rather than a manual pick. */
+  mealAuto: boolean;
+  /** mealTime to send: the manual pick, or undefined to let the backend decide. */
+  mealTime?: MealSlot;
+  /** Changes when the slot in use changes; part of recommendation query keys. */
+  mealKey: string;
+  /** Manual pick by name (早饭…夜宵); lasts until the current slot ends. */
   setMeal: (name: string) => void;
+  setMealAuto: () => void;
+  /** Slot the backend used for an automatic recommendation. */
+  noteServedMeal: (mealTime: string | null | undefined) => void;
+  scene: RecommendScene;
+  setScene: (scene: RecommendScene) => void;
 };
 export type Draft = {
   name: string;

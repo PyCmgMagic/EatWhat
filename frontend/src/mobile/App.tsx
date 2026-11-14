@@ -36,6 +36,15 @@ import { isDemo } from "../app/runtime";
 import { errorMessage, resultUncertain } from "../api/client";
 import { useQuery } from "@tanstack/react-query";
 import { useArea } from "../app/area";
+import type { RecommendScene } from "../api/v2-vocab";
+import {
+  mealName,
+  mealOptions,
+  mealSlotAt,
+  mealSlotEnd,
+  type MealSlot,
+} from "../api/food-display";
+
 import { isV4Path } from "../features/v4-paths";
 import { boundedText, submissionPath } from "../api/content-rules";
 import { RemoteBanner, FeatureAvailability } from "../features/v4/Remote";
@@ -81,6 +90,18 @@ import {
   useLegacyPeopleRedirect,
 } from "../features/ProfilePeople";
 
+const SCENE_KEY = "eatwhat.recommend-scene";
+/** Dine-in or delivery, remembered on this device. */
+function savedScene(): RecommendScene {
+  try {
+    return localStorage.getItem(SCENE_KEY) === "delivery"
+      ? "delivery"
+      : "dine_in";
+  } catch {
+    return "dine_in";
+  }
+}
+
 const emptyDraft: Draft = {
   name: "",
   price: "",
@@ -123,11 +144,39 @@ function MobileWorkspace() {
     } | null>(null),
     [draft, setDraftState] = useState<Draft>(emptyDraft),
     [tagId, setTagId] = useState<number>(),
-    [meal, setMeal] = useState("晚饭"),
+    // A manual meal pick lasts until the slot it was made in ends.
+    [mealPick, setMealPick] = useState<{
+      slot: MealSlot;
+      until: number;
+    } | null>(null),
+    [servedMeal, setServedMeal] = useState<{
+      slot: MealSlot;
+      used: MealSlot;
+    }>(),
+    [clock, setClock] = useState(() => Date.now()),
+    [scene, setSceneState] = useState<RecommendScene>(savedScene),
     [viewport, setViewport] = useState(() => ({
       width: innerWidth,
       height: innerHeight,
     }));
+  const autoMeal = mealSlotAt(clock),
+    manualMeal = mealPick && clock < mealPick.until ? mealPick.slot : undefined,
+    // Automatic: what the backend said it used for this slot, else the clock.
+    mealSlot =
+      manualMeal ??
+      (servedMeal?.slot === autoMeal ? servedMeal.used : autoMeal);
+  useEffect(() => {
+    // Re-render when the slot ends (a manual pick then returns to automatic),
+    // and when the page comes back after timers may have been paused.
+    const tick = () => setClock(Date.now());
+    const timer = setTimeout(tick, mealSlotEnd(clock) - Date.now() + 1000);
+    const wake = () => document.visibilityState === "visible" && tick();
+    document.addEventListener("visibilitychange", wake);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", wake);
+    };
+  }, [clock]);
   const images = useRef(draft.images);
   images.current = draft.images;
   useEffect(
@@ -303,8 +352,41 @@ function MobileWorkspace() {
       setDraftState((d) => ({ ...d, ...patch })),
     tagId,
     setTagId,
-    meal,
-    setMeal,
+    meal: mealName(mealSlot) ?? "晚饭",
+    mealAuto: !manualMeal,
+    mealTime: manualMeal,
+    mealKey: manualMeal ?? "auto:" + autoMeal,
+    setMeal: (name: string) => {
+      const slot = mealOptions.find(
+        (x) => x.name === name || x.id === name,
+      )?.id;
+      if (!slot) return;
+      const now = Date.now();
+      setClock(now);
+      setMealPick({ slot, until: mealSlotEnd(now) });
+    },
+    setMealAuto: () => {
+      setClock(Date.now());
+      setMealPick(null);
+    },
+    noteServedMeal: (used: string | null | undefined) => {
+      const slot = mealOptions.find((x) => x.id === used)?.id;
+      if (slot && !manualMeal)
+        setServedMeal((last) =>
+          last?.slot === autoMeal && last.used === slot
+            ? last
+            : { slot: autoMeal, used: slot },
+        );
+    },
+    scene,
+    setScene: (next: RecommendScene) => {
+      setSceneState(next);
+      try {
+        localStorage.setItem(SCENE_KEY, next);
+      } catch {
+        // Private mode or blocked storage: the choice lasts for this visit.
+      }
+    },
   };
   if (
     (desktop || new URLSearchParams(loc.search).get("tab") === "comments") &&

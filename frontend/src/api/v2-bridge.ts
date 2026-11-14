@@ -925,11 +925,16 @@ const routes: [string, RegExp, Handler][] = [
           .slice(0, size)
           .map((dish: Json) => asCategory(food(dish)!, query.category));
       }
+      const delivery = query.scene === "delivery";
       const [feed, latest] = await Promise.all([
         call("/recommend", {
-          query: omit(query, ["campusId", "mealTime"]),
+          query: omit(query, ["campusId", "mealTime", "scene"]),
         }).catch(() => null),
-        call("/foods/list", { query: { page: 1, pageSize: 50 } }),
+        // Delivery shows only recommended shops: the newest dishes may come
+        // from shops that do not deliver, so they are not used as filler.
+        delivery
+          ? null
+          : call("/foods/list", { query: { page: 1, pageSize: 50 } }),
       ]);
       const known = new Map<number, Json>(
         (latest?.items ?? []).map((dish: Json) => [dish.id, dish]),
@@ -967,7 +972,8 @@ const routes: [string, RegExp, Handler][] = [
       for (const dish of known.values())
         if (items.length < size && !items.some((item) => item.id === dish.id))
           items.push(food(dish)!);
-      return items.slice(0, size);
+      // mealTime: the slot v2 used (it picks one when the request has none).
+      return { items: items.slice(0, size), mealTime: feed?.mealTime ?? null };
     },
   ],
   [

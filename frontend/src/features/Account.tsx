@@ -18,6 +18,7 @@ import { useArea } from "../app/area";
 import { useMobile } from "../mobile/ui";
 import { mealOptions } from "../api/food-display";
 import "./latest.css";
+import { SceneToggle } from "./SceneToggle";
 import {
   dislikableTags,
   priceBands,
@@ -26,6 +27,7 @@ import {
 } from "../api/v2-vocab";
 import { rememberVerificationReturn } from "../app/verification-return";
 
+const AUTO_MEAL = "auto";
 export function RecommendationControls() {
   const cache = useQueryClient(),
     fetching = useIsFetching({ queryKey: ["foods", "mobile-recommend"] });
@@ -71,9 +73,16 @@ export function RecommendationControls() {
           aria-label="推荐饭点"
           menuLabel={BRAND_SLOGAN}
           icon={<Utensils size={16} />}
-          value={m.meal}
-          onChange={(e) => m.setMeal(e.target.value)}
+          value={m.mealAuto ? AUTO_MEAL : m.meal}
+          onChange={(e) =>
+            e.target.value === AUTO_MEAL
+              ? m.setMealAuto()
+              : m.setMeal(e.target.value)
+          }
         >
+          <option value={AUTO_MEAL}>
+            {m.mealAuto ? `按现在的时间 · ${m.meal}` : "按现在的时间"}
+          </option>
           {mealOptions.map((x) => (
             <option key={x.id} value={x.name}>
               {x.name}
@@ -81,6 +90,7 @@ export function RecommendationControls() {
           ))}
         </Select>
       </label>
+      <SceneToggle value={m.scene} onChange={m.setScene} />
       {q.isError && <button onClick={() => void q.refetch()}>重试校区</button>}
       <button
         disabled={fetching > 0}

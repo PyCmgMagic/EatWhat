@@ -51,6 +51,12 @@ export const ratingScenes = [
   { id: "dine_in", key: "dineIn", name: "堂食" },
   { id: "delivery", key: "delivery", name: "外卖" },
 ] as const;
+/** Recommendation scenes, in the order the toggle shows them. */
+export type RecommendScene = (typeof ratingScenes)[number]["id"];
+export const recommendScenes = ratingScenes.map(({ id, name }) => ({
+  id,
+  name,
+}));
 export type RatingValue = "RECOMMEND" | "NOT_RECOMMEND";
 export type SceneStat = { rate?: number | null; count?: number | null };
 

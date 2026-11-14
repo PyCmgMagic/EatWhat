@@ -60,13 +60,17 @@ import {
   Skeleton,
 } from "../components/LoadingSkeleton";
 import { demoDishes, visualFor, stageColors } from "./catalog";
+import { SceneToggle } from "../features/SceneToggle";
 import { screenRoutes, panelScreens, pendingScreens } from "./routes";
 import { adjustPhoto, saveVisual } from "./photos";
 import { photoFraming, type PhotoFraming } from "./photo-framing";
 import {
   guestDeviceId,
   mealCode,
+  mealHours,
+  mealName,
   mealOptions,
+  mealSlotAt,
   publishDisplay,
 } from "../api/food-display";
 import { FoodManage } from "../features/Catalog";
@@ -219,13 +223,26 @@ export function useDesignBridge(
   const remote = useRemoteConfig(),
     batchSize = recommendationBatchSize(remote.data);
   const recommendations = useQuery({
-    queryKey: ["foods", "mobile-recommend", campusId, m.meal, "", batchSize],
-    queryFn: () =>
-      api.recommend(batchSize, {
+    queryKey: [
+      "foods",
+      "mobile-recommend",
+      campusId,
+      m.mealKey,
+      m.scene,
+      "",
+      batchSize,
+    ],
+    queryFn: async () => {
+      const feed = await api.recommendFeed(batchSize, {
         campusId,
-        mealTime: mealCode(m.meal),
+        mealTime: m.mealTime,
+        scene: m.scene,
         deviceId: guestDeviceId(),
-      }),
+      });
+      // Automatic: show the slot the backend actually used.
+      if (!m.mealTime) m.noteServedMeal(feed.mealTime);
+      return feed.items;
+    },
     enabled: browse && homeScreens.has(screen),
   });
   const categoryRecommendations = useQuery({
@@ -233,14 +250,16 @@ export function useDesignBridge(
       "foods",
       "mobile-recommend",
       campusId,
-      m.meal,
+      m.mealKey,
+      m.scene,
       category,
       batchSize,
     ],
     queryFn: () =>
       api.recommend(batchSize, {
         campusId,
-        mealTime: mealCode(m.meal),
+        mealTime: m.mealTime,
+        scene: m.scene,
         category: category || undefined,
         deviceId: guestDeviceId(),
       }),
@@ -728,6 +747,25 @@ export function useDesignBridge(
     }
   }
 
+  if (screen === "G-PanelPlace" && !reference) {
+    // Selection comes from the shared meal state, hours from the backend slots.
+    const look = (on: boolean) => ({
+      on: on ? "true" : "false",
+      bg: on ? "#F4EFEB" : "transparent",
+      w: on ? 700 : 500,
+      ring: on ? "#231C18" : "#D9D0C9",
+      fill: on ? "#231C18" : "transparent",
+      check: on ? 1 : 0,
+    });
+    values.auto = { ...look(m.mealAuto), pick: () => {} };
+    values.meals = mealOptions.map((meal) => ({
+      key: meal.id,
+      name: meal.name,
+      time: mealHours[meal.id],
+      ...look(!m.mealAuto && m.mealTime === meal.id),
+      pick: () => {},
+    }));
+  }
   if (homeScreens.has(screen) && !reference) {
     values.tr =
       instantMotion() || controller.state.dragging
@@ -1636,12 +1674,29 @@ export function useDesignBridge(
       }
       if (tag === "a" && n.attrs.href === "G-PanelPlace.dc.html")
         return (
-          <a {...p}>
-            <DesignIcon name="nearby" size={16} />
-            {isDemo && area?.hubId === 1 ? "软件园" : (area?.name ?? "选地点")}
-            <span style={{ fontWeight: 400, opacity: 0.8 }}>{m.meal}</span>
-            <DesignIcon name="chevronDown" size={14} />
-          </a>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              minWidth: 0,
+            }}
+          >
+            <a {...p} style={{ ...p.style, minWidth: 0 }}>
+              <DesignIcon name="nearby" size={16} />
+              {isDemo && area?.hubId === 1
+                ? "软件园"
+                : (area?.name ?? "选地点")}
+              <span style={{ fontWeight: 400, opacity: 0.8 }}>{m.meal}</span>
+              <DesignIcon name="chevronDown" size={14} />
+            </a>
+            <SceneToggle
+              tone="stage"
+              stage={values.s?.stage}
+              value={m.scene}
+              onChange={m.setScene}
+            />
+          </div>
         );
       if (tag === "div" && st.gridTemplateColumns?.includes("repeat(2")) {
         const listQuery = category ? categoryRecommendations : recommendations;
@@ -2681,10 +2736,20 @@ export function useDesignBridge(
       clean(text).startsWith("按现在的时间")
     )
       p.onClick = () => {
-        const h = new Date().getHours();
-        m.setMeal(h < 10 ? "早饭" : h < 14 ? "午饭" : h < 20 ? "晚饭" : "夜宵");
+        m.setMealAuto();
         m.closePanel();
       };
+    if (
+      screen === "G-PanelPlace" &&
+      tag === "span" &&
+      clean(text).startsWith("现在是")
+    )
+      return (
+        <span {...p}>
+          现在是{m.mealAuto ? m.meal : mealName(mealSlotAt(Date.now()))}
+          ，到点自动换
+        </span>
+      );
     if (
       screen === "G-PanelPlace" &&
       tag === "span" &&

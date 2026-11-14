@@ -247,6 +247,31 @@ describe("v2 bridge", () => {
     });
   });
 
+  it("asks for delivery recommendations without padding them with other shops' dishes", async () => {
+    const { request, sent } = backend(({ path }) =>
+      path === "/recommend"
+        ? ok({
+            items: [
+              {
+                id: 9,
+                name: "一口面馆",
+                signatureFoods: [{ id: 2, name: "牛肉面", price: 22 }],
+              },
+            ],
+            mealTime: "night",
+          })
+        : ok({ items: [{ id: 5, category: "菜", pictureUrls: [], tags: [] }] }),
+    );
+    const feed = await request<any>("/foods/recommend", {
+      query: { size: 4, campusId: 1, scene: "delivery" },
+    });
+    expect(sent.map((s) => s.path)).toEqual(["/recommend"]);
+    // No mealTime: the backend picks the slot and says which one it used.
+    expect(sent[0].query).toEqual({ campusId: 1, scene: "delivery" });
+    expect(feed.items.map((d: any) => d.id)).toEqual([2]);
+    expect(feed.mealTime).toBe("night");
+  });
+
   it("builds the main recommendation from recommended shops' signature dishes", async () => {
     const { request, sent } = backend(({ path }) =>
       path === "/recommend"
@@ -274,9 +299,17 @@ describe("v2 bridge", () => {
             ],
           }),
     );
-    const dishes = await request<any[]>("/foods/recommend", {
-      query: { size: 2, campusId: 1, mealTime: "lunch", deviceId: "abcdefgh" },
-    });
+    const { items: dishes } = await request<{ items: any[] }>(
+      "/foods/recommend",
+      {
+        query: {
+          size: 2,
+          campusId: 1,
+          mealTime: "lunch",
+          deviceId: "abcdefgh",
+        },
+      },
+    );
     expect(sent.find((s) => s.path === "/recommend")?.query).toEqual({
       campusId: 1,
       mealTime: "lunch",

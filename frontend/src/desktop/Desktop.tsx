@@ -786,13 +786,26 @@ function DesktopHome() {
     pointer = useRef<{ id: number; x: number; radius: number } | null>(null),
     copy = useRef<HTMLDivElement>(null);
   const query = useQuery({
-      queryKey: ["foods", "mobile-recommend", campusId, m.meal, "", batchSize],
-      queryFn: () =>
-        api.recommend(batchSize, {
+      queryKey: [
+        "foods",
+        "mobile-recommend",
+        campusId,
+        m.mealKey,
+        m.scene,
+        "",
+        batchSize,
+      ],
+      queryFn: async () => {
+        const feed = await api.recommendFeed(batchSize, {
           campusId,
-          mealTime: mealCode(m.meal),
+          mealTime: m.mealTime,
+          scene: m.scene,
           deviceId: guestDeviceId(),
-        }),
+        });
+        // Automatic: show the slot the backend actually used.
+        if (!m.mealTime) m.noteServedMeal(feed.mealTime);
+        return feed.items;
+      },
       placeholderData: keepPreviousData,
     }),
     // "不想吃这家": v2 skips the shop for 30 days; hide its dishes right away.
@@ -807,14 +820,16 @@ function DesktopHome() {
       "foods",
       "mobile-recommend",
       campusId,
-      m.meal,
+      m.mealKey,
+      m.scene,
       category,
       batchSize,
     ],
     queryFn: () =>
       api.recommend(batchSize, {
         campusId,
-        mealTime: mealCode(m.meal),
+        mealTime: m.mealTime,
+        scene: m.scene,
         category: category || undefined,
         deviceId: guestDeviceId(),
       }),
