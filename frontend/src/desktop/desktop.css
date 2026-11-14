@@ -1199,6 +1199,19 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   letter-spacing: -2px;
   margin-bottom: var(--dish-gap);
 }
+.pc-detail-price.is-unknown {
+  display: flex;
+  align-items: center;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: #6e625b;
+}
+.pc-detail-price.is-unknown .supplement-price-button {
+  background: #f4efeb;
+}
 .pc-dish-shop {
   display: flex;
   align-items: center;

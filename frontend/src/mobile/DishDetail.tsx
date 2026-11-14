@@ -14,6 +14,7 @@ import { useFoodImageRefresh } from "../features/media";
 import { DesignIcon } from "./ui";
 import { visualFor } from "./catalog";
 import "./dish-detail.css";
+import { SupplementPrice } from "../features/SupplementPrice";
 import { FoodCommentPreview } from "../features/comments/Comments";
 
 type Props = {
@@ -136,6 +137,7 @@ export default function DishDetail({
               className={`dish-price${food.price == null ? " is-unknown" : ""}`}
             >
               {money(food.price)}
+              <SupplementPrice food={food} />
             </p>
           </div>
           <div

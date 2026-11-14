@@ -2334,6 +2334,7 @@ export function useDesignBridge(
       if (id === 34) {
         delete p.defaultValue;
         p.value = m.draft.price;
+        p.placeholder = "选填，不确定可不填";
         p.onChange = (e: any) => m.setDraft({ price: e.target.value });
       }
     }

@@ -1,5 +1,6 @@
 import WorkspaceSwitch from "../admin/WorkspaceSwitch";
 import { RecommendShopList } from "../features/RecommendShops";
+import { SupplementPrice } from "../features/SupplementPrice";
 import { useFeedbackState } from "../components/feedback";
 import { BRAND_SLOGAN } from "../app/brand";
 import { foodAuthor } from "../api/models";
@@ -1553,7 +1554,12 @@ function DesktopDish() {
                 </div>
               </div>
               <h1>{food.name}</h1>
-              <div className="pc-detail-price">{money(food.price)}</div>
+              <div
+                className={`pc-detail-price${food.price == null ? " is-unknown" : ""}`}
+              >
+                {money(food.price)}
+                <SupplementPrice food={{ ...food, id }} />
+              </div>
               <Link
                 className="pc-dish-shop"
                 to={`/restaurants/${food.restaurantId}`}

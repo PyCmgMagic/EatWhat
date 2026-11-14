@@ -60,3 +60,12 @@ it("keeps unchanged historical over-limit values and image references out of edi
     restaurantEditBody(old, { pictureUrl: ["restaurants/a", "restaurants/b"] }),
   ).toThrow();
 });
+
+it("lets a dish be shared without a price but still checks one that is given", () => {
+  const draft = { name: "牛肉面", description: "", tags: [] };
+  expect(() => validateFoodDraft({ ...draft, price: "" })).not.toThrow();
+  expect(() => validateFoodDraft({ ...draft, price: "  " })).not.toThrow();
+  expect(() => validateFoodDraft({ ...draft, price: "18.5" })).not.toThrow();
+  expect(() => validateFoodDraft({ ...draft, price: "18.55" })).toThrow();
+  expect(() => validateFoodDraft({ ...draft, price: "-1" })).toThrow();
+});

@@ -36,7 +36,8 @@ export function validateFoodDraft(value: {
   boundedText(value.name, 12, "菜名");
   if (codePoints(value.description) > 300)
     throw new Error("菜品说明最多 300 个字。");
-  foodPrice(value.price);
+  // Optional: whoever shares a dish may not know its price; others can add it.
+  if (String(value.price ?? "").trim() !== "") foodPrice(value.price);
   if (value.tags.length > 20) throw new Error("最多添加 20 个个人标签。");
   for (const tag of value.tags) boundedText(normalizedTag(tag), 10, "个人标签");
 }

@@ -1,0 +1,57 @@
+.supplement-price-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  margin-left: 10px;
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #231c18;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.4;
+  vertical-align: middle;
+  cursor: pointer;
+}
+.supplement-price-button:focus-visible {
+  outline: 2px solid #231c18;
+  outline-offset: 2px;
+}
+.supplement-price-dialog .supplement-price-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 0 14px;
+  min-height: 48px;
+  border: 1.5px solid #e6ded8;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.supplement-price-dialog .supplement-price-field:focus-within {
+  border-color: #231c18;
+}
+.supplement-price-dialog .supplement-price-field input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+}
+.supplement-price-dialog .supplement-price-error {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #fff1eb;
+  color: #a33f2c;
+}
+/* The confirm dialog colours its primary button red; saving is not risky. */
+:root dialog.supplement-price-dialog .v4-confirm-actions button.is-danger {
+  background: #231c18;
+}
