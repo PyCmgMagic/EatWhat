@@ -20,7 +20,7 @@ import time
 from urllib.parse import quote, urlsplit
 from urllib.request import Request, urlopen
 
-HOST = "51.79.204.39"
+HOST = "64.90.4.196"
 DEFAULT_BASE = "/www/wwwroot/eatwhat-frontend"
 DEFAULT_PUBLIC = "https://eat.v50to.you"
 DEFAULT_API = "https://eat.v50to.you/api/recommend/tags"
