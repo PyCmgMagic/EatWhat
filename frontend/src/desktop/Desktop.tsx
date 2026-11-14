@@ -829,7 +829,8 @@ function DesktopHome() {
   const categoryQuery = useQuery({
     queryKey: [
       "foods",
-      "mobile-recommend",
+      // Not the main feed's key: that one now holds dishes and shops.
+      "mobile-recommend-category",
       campusId,
       m.mealKey,
       m.scene,
