@@ -221,6 +221,99 @@ describe("web one-click login", () => {
     ).rejects.toThrow("本机号码一键登录没有完成，请用短信验证码登录。");
   });
 
+  it("preserves carrier subcodes from a real-shaped SDK error without leaking credentials", async () => {
+    const log = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const server = sdk({
+        getLoginToken: (o: any) =>
+          o.error(
+            JSON.stringify({
+              code: 600011,
+              requestId: "private-request",
+              content: [
+                {
+                  vender: "CM",
+                  code: "103211",
+                  msgId: "private-id",
+                  message: "private-phone",
+                  token: "private-token",
+                },
+                { vender: "CU", resultCode: "100001", result: "100001" },
+                { vender: "CT", code: "800001" },
+              ],
+            }),
+          ),
+      });
+      const error = await webOneClickToken(
+        { webOneClickToken: async () => ({ accessToken: "a", jwtToken: "j" }) },
+        server as any,
+      ).catch((e: Error) => e);
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toContain(
+        "600011；CM:103211；CU:100001；CT:800001",
+      );
+      expect(log).toHaveBeenCalledWith(
+        "phone_auth_error",
+        expect.objectContaining({
+          carriers: ["CM:103211", "CU:100001", "CT:800001"],
+        }),
+      );
+      expect(
+        JSON.stringify(log.mock.calls) + (error as Error).message,
+      ).not.toContain("private-");
+    } finally {
+      log.mockRestore();
+    }
+  });
+
+  it.each([
+    [null, ""],
+    [
+      [
+        {
+          vender: "CM",
+          msg: "https://private.example/file?secret=xscript资源加载失败",
+        },
+      ],
+      "CM:SCRIPT_LOAD_FAILED",
+    ],
+    [
+      [{ vender: "CM", msg: "ReferenceError: private-name" }],
+      "CM:SCRIPT_ERROR",
+    ],
+    ["private-message", ""],
+    [[{ vender: "private-vendor", code: "123" }], ""],
+    [
+      [
+        {
+          vender: "CM",
+          code: "13800000000",
+          resultCode: "private-token",
+          msg: "secret",
+        },
+      ],
+      "CM:NO_CODE",
+    ],
+    [
+      [{ vender: "CM", code: { toString: (): string => "secret" } }],
+      "CM:NO_CODE",
+    ],
+  ])(
+    "sanitizes malformed or sensitive carrier details %#",
+    async (content, expected) => {
+      const server = sdk({
+        getLoginToken: (o: any) => o.error({ code: 600011, content }),
+      });
+      const error = await webOneClickToken(
+        { webOneClickToken: async () => ({ accessToken: "a", jwtToken: "j" }) },
+        server as any,
+      ).catch((e: Error) => e);
+      expect((error as Error).message).toBe(
+        `运营商取号失败，可使用短信或密码登录。（错误码 600011${expected ? "；" + expected : ""}）`,
+      );
+    },
+  );
+
   it("only offers it on phones", () => {
     expect(
       looksLikePhone("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)"),

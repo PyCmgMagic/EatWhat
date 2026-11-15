@@ -4,7 +4,12 @@
 /** 600000 is success in every callback of the web SDK. */
 const OK = 600000;
 
-type SdkReply = { code?: number | string; spToken?: string; msg?: string };
+type SdkReply = {
+  code?: number | string;
+  spToken?: string;
+  msg?: string;
+  content?: unknown;
+};
 type SdkCallbacks = {
   success: (reply: SdkReply | string) => void;
   error: (reply: SdkReply | string) => void;
@@ -115,6 +120,34 @@ function parse(reply: SdkReply | string): SdkReply {
   }
 }
 
+/** Only keep bounded numeric status fields from the SDK's carrier replies. */
+function carrierCodes(content: unknown): string[] {
+  if (!Array.isArray(content)) return [];
+  const result: string[] = [];
+  for (const entry of content.slice(0, 3)) {
+    if (!entry || typeof entry !== "object") continue;
+    const vendor = entry.vender;
+    if (vendor !== "CM" && vendor !== "CU" && vendor !== "CT") continue;
+    const codes = [entry.code, entry.resultCode, entry.result]
+      .filter(
+        (value): value is string | number =>
+          typeof value === "string" || typeof value === "number",
+      )
+      .map(String)
+      .filter((value) => /^\d{1,8}$/.test(value));
+    const unique = [...new Set(codes)];
+    const reason =
+      typeof entry.msg === "string" && entry.msg.includes("script资源加载失败")
+        ? "SCRIPT_LOAD_FAILED"
+        : typeof entry.msg === "string" &&
+            /^(TypeError|ReferenceError|SyntaxError):/.test(entry.msg)
+          ? "SCRIPT_ERROR"
+          : "NO_CODE";
+    result.push(`${vendor}:${unique.length ? unique.join("/") : reason}`);
+  }
+  return [...new Set(result)];
+}
+
 function failure(
   reply: SdkReply,
   timing: WebOneClickTiming,
@@ -127,8 +160,7 @@ function failure(
       : undefined;
   const messages: Record<string, string> = {
     "600008": WIFI,
-    "600011":
-      "运营商取号失败，请关闭 Wi-Fi、VPN 或代理后重试，也可使用短信登录。",
+    "600011": "运营商取号失败，可使用短信或密码登录。",
     "600013": "运营商服务暂不可用，请使用短信或密码登录。",
     "600014": "运营商调用次数已达上限，请稍后重试或使用短信登录。",
     "600015": "运营商响应超时，请在移动数据网络下重试或使用短信登录。",
@@ -137,15 +169,18 @@ function failure(
     "600032": "一键登录配置不匹配，请使用短信登录并反馈此错误码。",
     "600034": "一键登录凭证已过期，请重新点击一键登录。",
   };
+  const carriers = carrierCodes(reply?.content);
   console.warn("phone_auth_error", {
     trace: timing.trace,
     stage,
     code: code ?? "unknown",
+    ...(carriers.length ? { carriers } : {}),
   });
   const message =
     (code && messages[code]) ||
     "本机号码一键登录没有完成，请用短信验证码登录。";
-  return new Error(message + (code ? `（错误码 ${code}）` : ""));
+  const detail = [code, ...carriers].filter(Boolean).join("；");
+  return new Error(message + (detail ? `（错误码 ${detail}）` : ""));
 }
 
 /**
