@@ -22,7 +22,6 @@ function SettingRows({ count }: { count: number }) {
       </span>
       <span className="settings-home-copy">
         <Skeleton width="42%" height={21} />
-        <Skeleton width="72%" height={19.2} />
       </span>
       <Skeleton width={17} height={17} />
     </div>
@@ -41,7 +40,6 @@ function SettingsSkeleton() {
       <header className="settings-page-head" aria-hidden="true">
         <div className="settings-page-head-copy">
           <h1>账号设置</h1>
-          <p>管理账号安全、隐私偏好与站点服务。</p>
         </div>
       </header>
       <section className="settings-home-profile" aria-hidden="true">
@@ -60,57 +58,11 @@ function SettingsSkeleton() {
           <Icon name="edit" size={17} />
           编辑资料
         </span>
-        <div className="settings-home-status">
-          <span className="settings-home-loading-status">
-            <Icon name="phone" size={17} />
-            <span>手机号</span>
-            <Skeleton width={90} height={18} />
-          </span>
-          <span className="settings-home-loading-status">
-            <Icon name="lock" size={17} />
-            <span>登录密码</span>
-            <Skeleton width={50} height={18} />
-          </span>
-        </div>
       </section>
-      <div className="settings-home-groups" aria-hidden="true">
-        {[
-          { title: "账号与安全", icon: "shield" },
-          { title: "偏好与隐私", icon: "settings" },
-        ].map((group, i) => (
-          <section className="settings-home-group" key={group.title}>
-            <header>
-              <span>
-                <Icon name={group.icon} size={18} />
-              </span>
-              <h2>{group.title}</h2>
-            </header>
-            <div className="settings-home-group-content">
-              <div className="settings-home-group-items">
-                <SettingRows count={5} />
-              </div>
-              {i === 0 && (
-                <details className="settings-home-recovery" inert>
-                  <summary>账号恢复</summary>
-                </details>
-              )}
-            </div>
-          </section>
-        ))}
+      <div className="settings-home-menu" aria-hidden="true">
+        <SettingRows count={5} />
       </div>
-      <section className="settings-home-support" aria-hidden="true">
-        <header>
-          <h2>帮助与关于</h2>
-        </header>
-        <div>
-          <SettingRows count={3} />
-        </div>
-      </section>
       <footer className="settings-home-session" aria-hidden="true">
-        <div>
-          <strong>当前账号</strong>
-          <p>退出后，收藏和分享会保留在账号中。</p>
-        </div>
         <span className="settings-home-logout">
           <Icon name="logout" size={18} />
           退出登录

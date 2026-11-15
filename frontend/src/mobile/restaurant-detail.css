@@ -10,10 +10,17 @@
   background: #f3c46e;
 }
 .mobile-restaurant-toolbar {
+  position: relative;
+  z-index: 3;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-inline: -12px;
+}
+.mobile-restaurant-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .mobile-restaurant-summary {
   display: grid;

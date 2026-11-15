@@ -80,7 +80,13 @@ export default function ProfileSheet({ children }: { children: ReactNode }) {
     const measure = () => {
       const height = element.parentElement!.clientHeight;
       const top = parseFloat(getComputedStyle(element).top) || 24;
-      const collapsed = Math.min(372, Math.max(top + 120, height - 144));
+      const stage = element.parentElement!.querySelector<HTMLElement>(
+        ".mobile-profile-stage",
+      );
+      const collapsed = Math.min(
+        stage?.offsetHeight ?? 372,
+        Math.max(top + 120, height - 144),
+      );
       metrics.current = { height, top, distance: collapsed - top };
       const active = drag.current;
       drag.current = null;

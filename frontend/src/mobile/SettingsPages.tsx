@@ -53,7 +53,9 @@ export default function MobileSettingsPages() {
             ? "返回账号与安全"
             : page.back === "/settings/privacy"
               ? "返回隐私设置"
-              : "返回设置"
+              : page.back === "/settings/about"
+                ? "返回关于"
+                : "返回设置"
       }
     >
       {content}

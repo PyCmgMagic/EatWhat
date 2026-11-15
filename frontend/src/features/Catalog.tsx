@@ -1,4 +1,5 @@
 import { Select } from "../components/Select";
+import { SearchField } from "../components/SearchField";
 import { useRef, useState, type ReactNode } from "react";
 import {
   Link,
@@ -340,6 +341,11 @@ export function Catalog({ favorites = false }: { favorites?: boolean }) {
               发现
             </Link>
             <h1>搜索结果</h1>
+            <SearchField
+              key={filters.keyword ?? ""}
+              defaultValue={filters.keyword}
+              onSearch={(keyword) => set({ q: keyword })}
+            />
             <p>
               {filters.keyword
                 ? `“${filters.keyword}” 的${mode === "shop" ? "店铺" : "菜品"}结果`

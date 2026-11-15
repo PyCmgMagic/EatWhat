@@ -189,8 +189,16 @@ export const runBrowserCaptcha: CaptchaRunner = async (
   let release: (() => void) | undefined;
   const container = document.createElement("div");
   container.className = "ew-captcha-container";
+  const loading = document.createElement("div");
+  loading.className = "ew-captcha-loading";
+  loading.setAttribute("role", "status");
+  loading.setAttribute("aria-live", "polite");
+  loading.innerHTML =
+    '<span class="ew-captcha-spinner" aria-hidden="true"></span><div><h2>正在加载安全验证</h2><p>腾讯验证码组件加载中，请稍候。</p><small>完成验证后将继续当前操作</small></div>';
   try {
     flow.signal.throwIfAborted();
+    surface.element.append(loading);
+    surface.show();
     const config = await abortable(getConfig(flow.signal), flow.signal);
     flow.signal.throwIfAborted();
     if (config.enabled === false) {
@@ -212,9 +220,9 @@ export const runBrowserCaptcha: CaptchaRunner = async (
     await abortable(loadSdk(), flow.signal);
     if (config.expiresAt * 1000 <= Date.now())
       throw new Error("验证配置已过期，请重试。");
+    loading.remove();
     surface.element.append(container);
     release = adoptSdkNodes(surface.element);
-    surface.show();
     const proof = await abortable(
       new Promise<Proof>((resolve, reject) => {
         let settled = false;

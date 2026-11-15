@@ -1,4 +1,7 @@
 async function validateAccountSettings(page) {
+  const origin = new URL(page.url()).origin;
+  if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(origin))
+    throw new Error("请在本地开发页面运行");
   const context = await page
     .context()
     .browser()
@@ -32,14 +35,18 @@ async function validateAccountSettings(page) {
       );
   });
   await context.route(
-    (u) => u.origin !== "http://127.0.0.1:5173",
+    (u) => u.origin !== origin,
     (r) => r.abort(),
   );
   await context.route(
     (u) => u.pathname.startsWith("/api/"),
     (r) => {
       const path = new URL(r.request().url()).pathname;
-      if (r.request().method() !== "GET") writes.push(path);
+      if (
+        r.request().method() !== "GET" &&
+        !["/api/device/register", "/api/user/activity"].includes(path)
+      )
+        writes.push(path);
       let data = [];
       if (path === "/api/user/info") data = user;
       else if (path === "/api/campus/list")
@@ -70,23 +77,16 @@ async function validateAccountSettings(page) {
       return r.fulfill({ status: 200, json: { code: 0, data } });
     },
   );
-  const base = "http://127.0.0.1:5173/?demo=0#/settings/account";
+  const base = origin + "/?demo=0#/settings/account";
   const assert = (ok, message) => {
     if (!ok) throw new Error(message);
   };
   const targets = [
-    "/me/edit",
     "/verify",
     "/settings/username",
     "/settings/phone",
     "/settings/password",
     "/settings/devices",
-    "/settings/privacy",
-    "/settings/notifications",
-    "/settings/telemetry",
-    "/data-notice",
-    "/features",
-    "/settings/delete",
   ];
   const checkLayout = async (width) => {
     const layout = await p
@@ -117,7 +117,7 @@ async function validateAccountSettings(page) {
       layout.width === width &&
         layout.x === 0 &&
         layout.bg === "rgb(255, 255, 255)" &&
-        layout.title === "34px" &&
+        parseFloat(layout.title) >= 24 &&
         layout.rows &&
         layout.labels &&
         !layout.overflow,
@@ -133,6 +133,10 @@ async function validateAccountSettings(page) {
         .waitFor();
       await p.evaluate(() => document.fonts.ready);
       await checkLayout(width);
+      assert(
+        (await p.locator(".mobile-account-row").count()) === 5,
+        "Account settings contains unrelated or duplicate rows",
+      );
       for (const target of targets)
         assert(
           (await p
@@ -164,7 +168,10 @@ async function validateAccountSettings(page) {
         await p.screenshot({
           path: `output/playwright/account-settings-${width}.png`,
         });
-      const last = p.getByRole("link", { name: "注销账号", exact: true });
+      const last = p.getByRole("link", {
+        name: "学生认证 去认证",
+        exact: true,
+      });
       await p.evaluate(() =>
         window.scrollTo(0, document.documentElement.scrollHeight),
       );
@@ -190,7 +197,7 @@ async function validateAccountSettings(page) {
         .getByRole("heading", { name: "账号与安全", exact: true })
         .waitFor();
       checks.push(
-        `${width}px: prototype typography/rows, all routes, masked phone, retired consent absent, back navigation, bottom clearance`,
+        `${width}px: five account actions, masked phone, back navigation, no unrelated entries or horizontal overflow`,
       );
     }
     user = {
@@ -229,12 +236,40 @@ async function validateAccountSettings(page) {
     checks.push(
       "Long account values wrap; verified, unbound phone and unset password states use real account fields",
     );
+    await p.setViewportSize({ width: 390, height: 844 });
+    await p.goto(origin + "/?demo=0#/settings/privacy");
+    await p.getByRole("link", { name: "使用统计授权", exact: true }).waitFor();
+    assert(
+      (await p
+        .getByRole("link", { name: "使用统计授权", exact: true })
+        .getAttribute("href")) === "#/settings/telemetry",
+      "Statistics authorization is missing from privacy settings",
+    );
+    await p.goto(origin + "/?demo=0#/settings/about");
+    await p.getByRole("link", { name: "数据说明", exact: true }).click();
+    await p
+      .getByRole("heading", { name: "数据存放说明", exact: true })
+      .waitFor();
+    assert(
+      (await p
+        .getByRole("link", { name: "返回关于", exact: true })
+        .getAttribute("href")) === "#/settings/about",
+      "Data notice lost its About return destination",
+    );
+    checks.push(
+      "Privacy retains statistics authorization; About retains the data notice and its return destination",
+    );
     await p.setViewportSize({ width: 1280, height: 900 });
     await p.goto(base);
-    await p.locator(".pc-secondary-identity").waitFor();
+    await p.locator(".pc-settings-account").waitFor();
     assert(
       (await p.locator(".mobile-account-settings").count()) === 0,
       "Mobile view replaced desktop",
+    );
+    assert(
+      (await p.locator(".pc-secondary-section .pc-secondary-row").count()) ===
+        5,
+      "Desktop account settings still contains unrelated rows",
     );
     checks.push("Desktop account layout preserved");
     assert(

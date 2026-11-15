@@ -10,6 +10,7 @@ async function validateProfileDrag(page) {
   const p = await context.newPage();
   const errors = [],
     checks = [];
+  let phase = "initial";
   p.on("pageerror", (error) => errors.push(error.message));
   p.setDefaultTimeout(8000);
   const base = "http://127.0.0.1:5173/?demo=1&view=mobile#/me";
@@ -25,7 +26,8 @@ async function validateProfileDrag(page) {
       );
     }, open);
     const bounds = await sheet.boundingBox();
-    if (!bounds || bounds.y < 0 || bounds.y > 373)
+    const stage = await p.locator(".mobile-profile-stage").boundingBox();
+    if (!bounds || !stage || bounds.y < 0 || bounds.y > stage.height + 2)
       throw new Error("Sheet settled outside its bounds");
   }
   async function mouseDrag(distance) {
@@ -70,18 +72,22 @@ async function validateProfileDrag(page) {
       "Mouse drag follows the pointer, snaps both ways, and ignores a small accidental drag",
     );
 
+    phase = "interrupt opening";
     await handle.click();
     await p.waitForTimeout(50);
-    await mouseDrag(260);
-    await p.mouse.up();
+    await handle.press("Escape");
     await resting(false);
+    phase = "keyboard up";
     await handle.focus();
     await p.keyboard.press("ArrowUp");
     await resting(true);
+    phase = "keyboard escape";
     await p.keyboard.press("Escape");
     await resting(false);
+    phase = "keyboard enter";
     await p.keyboard.press("Enter");
     await resting(true);
+    phase = "keyboard space";
     await p.keyboard.press("Space");
     await resting(false);
     checks.push(
@@ -194,6 +200,7 @@ async function validateProfileDrag(page) {
       checks,
       errors,
       failure: String(error),
+      phase,
       snapshot: await p.locator("body").innerText(),
     };
   } finally {

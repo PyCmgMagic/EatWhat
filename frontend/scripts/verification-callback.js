@@ -69,6 +69,8 @@ async function validateVerificationCallback(page) {
           data = null;
         } else if (path === "/api/user/activity") {
           data = { firstUseToday: false, experienceAdded: 0 };
+        } else if (path === "/api/device/register") {
+          data = null;
         } else if (r.request().method() !== "GET") {
           errors.push("Unexpected mutation: " + path);
           return r.abort();
@@ -99,7 +101,10 @@ async function validateVerificationCallback(page) {
           };
         else if (path === "/api/notification/unread/count") data = 0;
         else if (path === "/api/auth/verify")
-          data = state.verified ? ["verify:sso"] : [];
+          data = {
+            verified: state.verified,
+            method: state.verified ? "sso" : null,
+          };
         else if (path.includes("/tags"))
           data = { systemTags: [], myCustomTags: [] };
         return r.fulfill({ status: 200, json: { code: 0, data } });
@@ -119,20 +124,15 @@ async function validateVerificationCallback(page) {
         base + "/?demo=0#/verify?next=%2Ffoods%2F71%3Ffrom%3Dnearby",
       );
       await p
-        .getByRole("button", { name: "获取学校认证入口", exact: true })
+        .getByRole("button", { name: "前往学校认证页面", exact: true })
         .click();
-      const [resultPage] = await Promise.all([
-        context.waitForEvent("page"),
-        p
-          .getByRole("link", { name: "前往学校认证页面 ↗", exact: true })
-          .click(),
-      ]);
+      const resultPage = p;
       await resultPage
         .getByRole("heading", { name: "隔离的学校认证测试" })
         .waitFor();
       assert(
-        await resultPage.evaluate(() => window.opener === null),
-        "School tab unexpectedly has opener access",
+        context.pages().length === 1,
+        "School authentication unexpectedly opened another tab",
       );
       state.verified = true;
       const reads = state.userReads;
@@ -157,7 +157,7 @@ async function validateVerificationCallback(page) {
         .getByRole("link", { name: "返回原页面", exact: true });
       assert(
         (await back.getAttribute("href")) === "#/foods/71?from=nearby",
-        "Noopener callback lost original page/query",
+        "Same-tab callback lost original page/query",
       );
       assert(
         !(await resultPage.evaluate(
@@ -185,14 +185,8 @@ async function validateVerificationCallback(page) {
         state.writes.length === 1,
         "Returning replayed the original action",
       );
-      await resultPage.close();
-      await p.bringToFront();
-      // Headless Chromium keeps background pages visible and may not emit focus
-      // when bringToFront() runs. Exercise the same event a real tab return emits.
-      await p.evaluate(() => window.dispatchEvent(new Event("focus")));
-      await p.getByText("学生身份已认证", { exact: true }).waitFor();
       checks.push(
-        `${width}px: real /home callback, noopener return/query recovery, server-confirmed success, refresh persistence, no action replay, original tab refreshes`,
+        `${width}px: one-click same-tab SSO, /home callback, return/query recovery, server-confirmed success, refresh persistence, no action replay`,
       );
     } finally {
       await context.close();

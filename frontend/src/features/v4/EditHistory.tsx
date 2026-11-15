@@ -5,6 +5,7 @@ import { useApp } from "../../app/state";
 import { errorMessage } from "../../api/client";
 import { mealTimes, priceBands, shopKinds } from "../../api/v2-vocab";
 import { DesignIcon as Icon } from "../../mobile/ui";
+import { Modal } from "../../components/ui";
 import { timeText } from "./shared";
 import "./edit-history.css";
 
@@ -101,6 +102,22 @@ export function EditHistory({ id }: { id: number }) {
       </summary>
       <RevisionList kind="food" id={id} enabled={open} />
     </details>
+  );
+}
+
+export function FoodEditHistoryDialog({
+  id,
+  onClose,
+}: {
+  id: number;
+  onClose: () => void;
+}) {
+  return (
+    <Modal title="修改记录" className="food-history-modal" onClose={onClose}>
+      <div className="edit-history food-history-content">
+        <RevisionList kind="food" id={id} />
+      </div>
+    </Modal>
   );
 }
 

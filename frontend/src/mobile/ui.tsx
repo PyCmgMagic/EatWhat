@@ -1,4 +1,11 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+  type PointerEvent,
+} from "react";
 import { Link, useNavigate } from "react-router-dom";
 import type { Food, Restaurant } from "../api/models";
 import type { RecommendScene } from "../api/v2-vocab";
@@ -10,6 +17,9 @@ import { FoodCover } from "../components/FoodCover";
 import { useApp } from "../app/state";
 import { useLoginDialog } from "../app/auth-dialog";
 import { useActionAccess } from "../features/access";
+import { LiquidGlass } from "./LiquidGlass";
+import { useLiquidLens } from "./useLiquidLens";
+import { lensDuration, liquidReleaseEasing } from "./liquid-lens-motion";
 import {
   DishIllustration,
   type DishIllustrationName,
@@ -114,13 +124,25 @@ export function DesignNav({ active }: { active: string }) {
       action={
         <button
           className="design-fab"
+          style={
+            {
+              "--glass-release-easing": liquidReleaseEasing,
+              "--glass-release-duration": `${lensDuration}ms`,
+            } as CSSProperties
+          }
+          onPointerDown={pressGlass}
+          onPointerMove={trackGlassLight}
+          onPointerLeave={resetGlassLight}
           aria-label="发布一道菜"
           onClick={() => {
             if (!session) openLogin("/auth?next=%2Fpublish");
             else if (access(true)) void nav("/publish");
           }}
         >
-          <DesignIcon name="add" size={26} />
+          <span className="design-fab-surface" aria-hidden="true">
+            <LiquidGlass />
+            <DesignIcon name="add" size={26} />
+          </span>
         </button>
       }
     />
@@ -132,6 +154,46 @@ export const mainDestinations = [
   { key: "nearby", path: "/nearby", icon: "nearby", label: "附近" },
   { key: "me", path: "/me", icon: "me", label: "我的" },
 ] as const;
+
+function pressGlass(event: PointerEvent<HTMLElement>) {
+  if (
+    event.button !== 0 ||
+    matchMedia("(prefers-reduced-motion: reduce)").matches
+  )
+    return;
+  trackGlassLight(event);
+  const element = event.currentTarget;
+  const bounds = element.getBoundingClientRect();
+  const x = Math.max(
+    -1,
+    Math.min(1, ((event.clientX - bounds.left) / bounds.width) * 2 - 1),
+  );
+  const y = Math.max(
+    -1,
+    Math.min(1, ((event.clientY - bounds.top) / bounds.height) * 2 - 1),
+  );
+  element.style.setProperty("--glass-press-x", `${x * 2}px`);
+  element.style.setProperty("--glass-press-y", `${y * 1.5}px`);
+}
+
+function trackGlassLight(event: PointerEvent<HTMLElement>) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const element = event.currentTarget;
+  const bounds = element.getBoundingClientRect();
+  element.style.setProperty(
+    "--glass-light-x",
+    `${((event.clientX - bounds.left) / bounds.width) * 100}%`,
+  );
+  element.style.setProperty(
+    "--glass-light-y",
+    `${((event.clientY - bounds.top) / bounds.height) * 100}%`,
+  );
+}
+
+function resetGlassLight(event: PointerEvent<HTMLElement>) {
+  event.currentTarget.style.removeProperty("--glass-light-x");
+  event.currentTarget.style.removeProperty("--glass-light-y");
+}
 
 export function DesignNavigation({
   active,
@@ -145,14 +207,19 @@ export function DesignNavigation({
     0,
     mainDestinations.findIndex(({ key }) => key === active),
   );
+  const lens = useLiquidLens(selected, instant, mainDestinations.length);
   return (
     <div className="design-navigation">
       <nav
         aria-label="主导航"
         data-motion={instant ? "instant" : undefined}
         onClickCapture={(event) => setInstant(event.detail === 0)}
+        onPointerMove={trackGlassLight}
+        onPointerLeave={resetGlassLight}
       >
+        <LiquidGlass />
         <span
+          ref={lens}
           className="design-nav-lens"
           aria-hidden="true"
           style={{

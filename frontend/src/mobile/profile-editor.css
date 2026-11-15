@@ -98,7 +98,7 @@
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
-.mobile-profile-editor-field > input {
+.mobile-profile-editor-field > :is(input, textarea) {
   width: 100%;
   min-width: 0;
   min-height: 44px;
@@ -109,6 +109,11 @@
   background: #fff;
   color: inherit;
   font-size: 16px;
+}
+.mobile-profile-editor-field > textarea {
+  min-height: 88px;
+  line-height: 1.7;
+  resize: vertical;
 }
 .mobile-profile-editor-field > #nick {
   border-color: #231c18;

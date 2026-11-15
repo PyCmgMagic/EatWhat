@@ -1,0 +1,117 @@
+.share-sheet {
+  position: fixed;
+  inset: auto 0
+    max(
+      0px,
+      calc(100dvh - var(--visible-top, 0px) - var(--visible-height, 100dvh))
+    );
+  width: min(100%, 520px);
+  max-width: 100%;
+  max-height: calc(var(--visible-height, 100dvh) - 24px);
+  margin: 0 auto;
+  padding: 6px 22px max(28px, env(safe-area-inset-bottom));
+  border: 0;
+  border-radius: 30px 30px 0 0;
+  background: #fff;
+  color: #231c18;
+  box-shadow: 0 -12px 36px #231c181a;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.share-sheet[open] {
+  display: flex;
+  flex-direction: column;
+}
+.share-sheet::backdrop {
+  background: #231c1873;
+}
+.share-sheet-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 10px;
+}
+.share-sheet-heading h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+.share-sheet-heading > button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  margin-right: -8px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+}
+.share-sheet-subject {
+  margin: 10px 0 18px;
+  color: #776e68;
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.share-sheet-actions {
+  display: grid;
+  gap: 8px;
+}
+.share-sheet-actions > button {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 64px;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+.share-sheet-actions > button > span {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #f5f3f1;
+}
+.share-sheet button:not(:disabled):hover {
+  background: #f8f6f4;
+}
+.share-sheet button:focus-visible,
+.share-sheet-manual input:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.share-sheet-actions > button:disabled {
+  opacity: 0.5;
+}
+.share-sheet-manual {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  color: #776e68;
+  font-size: 13px;
+}
+.share-sheet-manual input {
+  min-width: 0;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e6dfda;
+  border-radius: 12px;
+  background: #f8f6f4;
+  color: #231c18;
+  font: inherit;
+}

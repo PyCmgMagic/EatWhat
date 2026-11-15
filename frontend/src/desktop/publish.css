@@ -933,7 +933,7 @@ html[data-motion-input="keyboard"] .pc-composer-shop-toggle .design-icon {
 .pc-crop-frame:active {
   cursor: grabbing;
 }
-.pc-app .pc-crop-frame img {
+.pc-crop-frame img {
   max-width: none;
   position: absolute;
   left: 50%;

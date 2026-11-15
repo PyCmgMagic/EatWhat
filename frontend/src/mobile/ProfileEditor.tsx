@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { Select } from "../components/Select";
-import type { ProfileForm } from "../desktop/profile";
+import { PROFILE_SIGNATURE_LIMIT, type ProfileForm } from "../desktop/profile";
 import "./profile-editor.css";
 
 export default function ProfileEditor({
@@ -106,13 +106,17 @@ export default function ProfileEditor({
           </div>
           <div className="mobile-profile-editor-field">
             <label htmlFor="sign">
-              签名，选填 <span>{form.signature.length} / 30</span>
+              签名，选填{" "}
+              <span>
+                {form.signature.length} / {PROFILE_SIGNATURE_LIMIT}
+              </span>
             </label>
-            <input
+            <textarea
               id="sign"
+              rows={3}
               placeholder="一句话介绍自己"
               value={form.signature}
-              maxLength={30}
+              maxLength={PROFILE_SIGNATURE_LIMIT}
               onChange={(event) => onChange({ signature: event.target.value })}
             />
           </div>

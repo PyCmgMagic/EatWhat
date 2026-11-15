@@ -9,7 +9,6 @@ async function validateVerificationGuide(page) {
     checks = [];
   let verified = false,
     method = "verify:school_email",
-    bothMethods = false,
     methodError = false;
   p.setDefaultTimeout(10000);
   p.on("pageerror", (e) => errors.push(e.message));
@@ -29,6 +28,14 @@ async function validateVerificationGuide(page) {
     (r) => r.abort(),
   );
   await context.route(
+    (u) => u.pathname === "/test-school-auth",
+    (r) =>
+      r.fulfill({
+        contentType: "text/html; charset=utf-8",
+        body: "<h1>隔离的学校认证测试</h1>",
+      }),
+  );
+  await context.route(
     (u) => u.pathname.startsWith("/api/"),
     (r) => {
       const url = new URL(r.request().url()),
@@ -42,18 +49,23 @@ async function validateVerificationGuide(page) {
             status: 503,
             json: { code: 50000, msg: "认证记录暂时无法读取" },
           });
-        data = verified
-          ? bothMethods
-            ? ["verify:sso", "verify:school_email"]
-            : [method]
-          : [];
+        data = {
+          verified,
+          method: verified ? method.replace("verify:", "") : null,
+        };
       } else if (path === "/api/auth/sdu") {
         requests.push(path);
-        data = { url: "https://sso.example.test/verify", expiresIn: 300 };
+        data = {
+          url: "http://127.0.0.1:5173/test-school-auth",
+          expiresIn: 300,
+        };
       } else if (path === "/api/auth/sendEmail") {
         requests.push(path);
         data = null;
       } else if (path === "/api/auth/captcha/config") data = { enabled: false };
+      else if (path === "/api/device/register") data = null;
+      else if (path === "/api/user/activity")
+        data = { firstUseToday: false, experienceAdded: 0 };
       else if (r.request().method() !== "GET") {
         errors.push("Unexpected mutation: " + path);
         return r.abort();
@@ -151,16 +163,15 @@ async function validateVerificationGuide(page) {
     await p.setViewportSize({ width: 390, height: 844 });
     await open();
     await p
-      .getByRole("button", { name: "获取学校认证入口", exact: true })
+      .getByRole("button", { name: "前往学校认证页面", exact: true })
       .click();
-    const sso = p.getByRole("link", {
-      name: "前往学校认证页面 ↗",
-      exact: true,
-    });
-    await sso.waitFor();
+    await p
+      .getByRole("heading", { name: "隔离的学校认证测试", exact: true })
+      .waitFor();
     assert(
-      (await sso.getAttribute("href")) === "https://sso.example.test/verify",
-      "SSO destination incorrect",
+      p.url() === "http://127.0.0.1:5173/test-school-auth" &&
+        context.pages().length === 1,
+      "SSO did not navigate directly in the current tab",
     );
     assert(
       requests.length === 1 && requests[0] === "/api/auth/sdu",
@@ -168,7 +179,7 @@ async function validateVerificationGuide(page) {
     );
     verified = true;
     method = "verify:sso";
-    await p.getByRole("button", { name: "刷新认证状态", exact: true }).click();
+    await p.goto(base);
     await p.getByText("学生身份已认证", { exact: true }).waitFor();
     await p.getByText("山东大学统一认证", { exact: true }).waitFor();
     assert(
@@ -176,7 +187,7 @@ async function validateVerificationGuide(page) {
       "SSO completion still asks for email verification",
     );
     checks.push(
-      "SSO alone completes verification; no email or repeated authentication required",
+      "One click opens SSO in the current tab; SSO alone completes verification",
     );
     verified = false;
     method = "verify:school_email";
@@ -229,7 +240,6 @@ async function validateVerificationGuide(page) {
     );
     method = "verify:sso";
     for (const width of [320, 390, 520, 1280]) {
-      bothMethods = width === 320;
       await p.setViewportSize({ width, height: 844 });
       await p.goto(base);
       await p.reload();
@@ -263,7 +273,7 @@ async function validateVerificationGuide(page) {
         "Records heading overlaps refresh, or touch target is too small",
       );
       assert(
-        (await p.locator(".ew-method-badge").count()) === (bothMethods ? 2 : 1),
+        (await p.locator(".ew-method-badge").count()) === 1,
         "Completed methods missing",
       );
       assert(
@@ -277,7 +287,7 @@ async function validateVerificationGuide(page) {
         fullPage: true,
       });
       checks.push(
-        `${width}px: completed status/actions/records aligned; single and multiple records fit`,
+        `${width}px: completed status/actions/records aligned; verification record fits`,
       );
     }
     await p.setViewportSize({ width: 390, height: 844 });

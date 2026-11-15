@@ -8,6 +8,9 @@
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   gap: 16px;
 }
+.restaurant-hub-grid.is-experience-only {
+  grid-template-columns: minmax(0, 1fr);
+}
 .restaurant-hub-section {
   min-width: 0;
   padding: 24px;

@@ -5,7 +5,6 @@ import "./settings-page-header.css";
 
 const details: Record<string, string> = {
   "/settings": "管理账号安全、隐私偏好与站点服务。",
-  "/settings/account": "管理登录信息、学生认证和账号安全。",
   "/settings/password": "使用新的登录密码，保护你的账号与内容。",
   "/settings/privacy": "决定哪些关注信息可以展示给其他同学。",
   "/settings/preferences": "设置喜欢和不喜欢的口味，让推荐更合心意。",

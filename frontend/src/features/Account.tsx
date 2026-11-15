@@ -590,13 +590,12 @@ export function SsoStart({
   returnTo?: string;
 }) {
   const { api, user } = useApp(),
-    [url, setUrl] = useState(""),
-    [expires, setExpires] = useState(0),
     task = useTask();
   return (
     <div className="ew-feature ew-sso">
       <button
-        className={`ew-button${url ? " light" : ""}`}
+        type="button"
+        className="ew-button"
         disabled={task.isPending || isDemo}
         onClick={() =>
           task.run(async () => {
@@ -605,41 +604,14 @@ export function SsoStart({
             const next = new URL(data.url);
             if (!["https:", "http:"].includes(next.protocol))
               throw new Error("认证地址无效。");
-            setUrl(next.href);
-            setExpires(Date.now() + Number(data.expiresIn ?? 300) * 1000);
+            rememberVerificationReturn(user?.id, returnTo);
+            window.location.assign(next.href);
           })
         }
       >
-        {task.isPending
-          ? "正在获取认证入口…"
-          : url
-            ? "重新获取认证入口"
-            : "获取学校认证入口"}
+        {task.isPending ? "正在跳转…" : "前往学校认证页面"}
       </button>
-      {url && (
-        <a
-          className="ew-button"
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => {
-            if (Date.now() >= expires) {
-              e.preventDefault();
-              setUrl("");
-            } else rememberVerificationReturn(user?.id, returnTo);
-          }}
-        >
-          前往学校认证页面 ↗
-        </a>
-      )}
-
-      <p className="ew-note">
-        {isDemo
-          ? "演示模式不会发起真实学校认证。"
-          : url
-            ? "入口已准备好。将在新页面完成学校认证，结束后显示认证结果，并提供返回原页面的入口。"
-            : "先获取入口，再前往学校页面；每次获取的入口仅可使用一次。"}
-      </p>
+      {isDemo && <p className="ew-note">演示模式不会发起真实学校认证。</p>}
     </div>
   );
 }

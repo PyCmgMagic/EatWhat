@@ -1,7 +1,5 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { FoodReportDialog } from "../FoodReportDialog";
 import { useApp } from "../../app/state";
 import { RestaurantActions } from "./Community";
 import { Card, QueryView } from "./shared";
@@ -14,7 +12,6 @@ export function FoodExtras({
   inline?: boolean;
 }) {
   const { api } = useApp(),
-    [reportOpen, setReportOpen] = useState(false),
     q = useQuery({
       queryKey: ["topics", "food", id],
       queryFn: () => api.topicsForFood(id),
@@ -41,20 +38,7 @@ export function FoodExtras({
               </button>
             </p>
           )}
-          <EditHistory id={id} />
-          <button
-            type="button"
-            className="mobile-food-report"
-            aria-haspopup="dialog"
-            aria-expanded={reportOpen}
-            onClick={() => setReportOpen(true)}
-          >
-            举报这道菜
-          </button>
         </footer>
-        {reportOpen && (
-          <FoodReportDialog foodId={id} onClose={() => setReportOpen(false)} />
-        )}
       </>
     );
   if (!q.isError && !q.data?.length) return <EditHistory id={id} />;
@@ -89,7 +73,7 @@ export default function DetailExtras({
         tabIndex={-1}
       >
         <h2>店铺评价与反馈</h2>
-        <RestaurantActions id={id} hideFavorite />
+        <RestaurantActions id={id} hideFavorite hideMaintenance />
       </section>
     );
   return (
@@ -98,7 +82,7 @@ export default function DetailExtras({
         <FoodExtras id={id} />
       ) : (
         <Card title="店铺评价与反馈">
-          <RestaurantActions id={id} hideFavorite />
+          <RestaurantActions id={id} hideFavorite hideMaintenance />
         </Card>
       )}
     </div>

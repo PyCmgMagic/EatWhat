@@ -1,0 +1,70 @@
+.search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 50px;
+  padding: 4px 5px 4px 16px;
+  border: 1px solid #e8dfd5;
+  border-radius: 28px;
+  background: #fff;
+  color: #231c18;
+}
+.search-field > svg {
+  flex: none;
+  color: #6e625b;
+}
+.search-field:focus-within {
+  border-color: #8a6b39;
+  box-shadow: 0 0 0 3px #b486211a;
+}
+.search-field > input[type="search"],
+.ew-feature form.search-field > input[type="search"] {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  min-height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 16px;
+}
+.search-field > input::placeholder {
+  color: #81756b;
+}
+.search-field > input::-webkit-search-cancel-button {
+  display: none;
+}
+.search-field > button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 24px;
+  font: inherit;
+  cursor: pointer;
+}
+.search-field > .search-field-clear {
+  width: 36px;
+  margin-inline: -6px;
+  background: transparent;
+  color: #81756b;
+}
+.search-field > .search-field-submit {
+  min-width: 64px;
+  padding-inline: 16px;
+  background: #231c18;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 650;
+}

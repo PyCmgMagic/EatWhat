@@ -1,0 +1,186 @@
+.ew-shop-edit {
+  max-width: 760px;
+}
+.ew-shop-edit .shop-edit-fields,
+.ew-shop-edit .shop-edit-basics {
+  display: grid;
+  gap: 24px;
+}
+.ew-shop-edit .shop-edit-basics > label {
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 650;
+}
+.ew-feature .ew-shop-edit .shop-edit-basics > label > :is(input, textarea) {
+  min-height: 48px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fbf9f6;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+.ew-shop-edit .shop-edit-basics textarea {
+  min-height: 76px;
+  resize: vertical;
+}
+.ew-shop-edit .ew-shop-traits {
+  gap: 26px;
+}
+.ew-shop-edit .ew-shop-traits .ew-meals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  align-items: stretch;
+}
+.ew-shop-edit .ew-meals > b {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 2px;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.6;
+}
+.ew-shop-edit .shop-edit-limit {
+  flex: none;
+  color: #8a7d74;
+  font-size: 12px;
+  font-weight: 400;
+}
+.ew-shop-edit .ew-meals > label {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  min-height: 46px;
+  margin: 0;
+  padding: 11px 26px 11px 12px;
+  border: 1px solid #e7dfd7;
+  border-radius: 12px;
+  background: #fff;
+  color: #6e625b;
+  font-size: 14px;
+  font-weight: 450;
+  line-height: 1.5;
+  white-space: normal;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+.ew-feature .ew-shop-edit .ew-meals > label > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.ew-shop-edit .ew-meals > label:has(input:checked) {
+  border-color: #231c18;
+  background: #231c18;
+  color: #fff;
+  font-weight: 600;
+}
+.ew-shop-edit .ew-meals > label:has(input:checked)::after {
+  content: "";
+  position: absolute;
+  top: calc(50% - 5px);
+  right: 13px;
+  width: 5px;
+  height: 9px;
+  border: solid currentColor;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+.ew-shop-edit .ew-meals > label:has(input:focus-visible) {
+  outline: 3px solid #be8d27;
+  outline-offset: 3px;
+}
+.ew-shop-edit .ew-meals > label:has(input:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.ew-shop-edit .shop-edit-delivery > label {
+  grid-column: 1 / -1;
+}
+.ew-shop-edit .shop-edit-notice {
+  border-top: 1px solid #efe9e4;
+  padding-top: 18px;
+  color: #6e625b;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.ew-shop-edit .shop-edit-notice summary {
+  width: fit-content;
+  min-height: 36px;
+  padding: 6px 0;
+  cursor: pointer;
+}
+.ew-shop-edit .shop-edit-notice p {
+  margin: 4px 0 0;
+}
+.ew-shop-edit .shop-edit-actions {
+  gap: 16px;
+  border-top: 1px solid #efe9e4;
+  padding-top: 20px;
+}
+.ew-shop-edit .shop-edit-actions > a {
+  flex: none;
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  color: #6e625b;
+  font-size: 14px;
+}
+.ew-shop-edit .shop-edit-actions > button {
+  flex: 1;
+  min-height: 48px;
+  font-size: 15px;
+}
+.ew-mobile-feature .ew-shop-edit {
+  padding: 20px;
+  margin-bottom: 28px;
+  border-radius: 20px;
+}
+.ew-mobile-feature .ew-shop-edit .shop-edit-basics textarea {
+  resize: none;
+}
+.ew-mobile-feature .ew-shop-edit .shop-edit-actions {
+  position: fixed;
+  z-index: 30;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  margin: 0;
+  padding: 12px max(20px, calc((100vw - 620px) / 2))
+    max(12px, env(safe-area-inset-bottom));
+  background: #fff;
+  box-shadow: 0 -4px 20px rgb(35 28 24 / 4%);
+}
+@media (min-width: 375px) {
+  .ew-shop-edit .ew-shop-traits .shop-edit-meals {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .ew-shop-edit .shop-edit-meals > label {
+    padding-right: 12px;
+  }
+  .ew-shop-edit .shop-edit-meals > label::after {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ew-shop-edit .ew-meals > label {
+    transition: none;
+  }
+}

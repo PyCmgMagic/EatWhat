@@ -30,6 +30,8 @@
   opacity: 0.45;
 }
 .dish-toolbar {
+  position: relative;
+  z-index: 2;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -52,6 +54,50 @@
 }
 .dish-icon-button[aria-pressed="true"] {
   border-color: currentColor;
+}
+.dish-more {
+  position: relative;
+}
+.dish-more summary {
+  cursor: pointer;
+  list-style: none;
+}
+.dish-more summary::-webkit-details-marker {
+  display: none;
+}
+.dish-more[open] summary {
+  border-color: currentColor;
+}
+.dish-more-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 184px;
+  padding: 6px;
+  border: 1px solid #eae3d9;
+  border-radius: 18px;
+  background: #fff;
+  color: #231c18;
+  box-shadow: 0 12px 32px #231c1826;
+}
+.dish-more-panel :is(a, button) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.dish-more-panel :is(a, button):is(:hover, :focus-visible) {
+  background: #f4efeb;
 }
 .dish-hero-content {
   display: grid;
@@ -307,16 +353,6 @@
 .dish-tag-list > button > span {
   color: #8a7e76;
   font-size: 12px;
-}
-.dish-sheet .ew-food-manage {
-  margin: 12px 0 0;
-  gap: 20px;
-}
-.dish-sheet .ew-food-manage :is(a, button) {
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-  font-size: 13px;
 }
 .dish-sheet .mobile-food-footer {
   margin-top: 16px;

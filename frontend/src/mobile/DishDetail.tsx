@@ -12,6 +12,7 @@ import {
 } from "../api/models";
 import { useFoodImageRefresh } from "../features/media";
 import { DesignIcon } from "./ui";
+import { DishMoreActions } from "./DishMoreActions";
 import { visualFor } from "./catalog";
 import "./dish-detail.css";
 import { SupplementPrice } from "../features/SupplementPrice";
@@ -123,6 +124,14 @@ export default function DishDetail({
             >
               <DesignIcon name="share" size={22} />
             </button>
+            {food.id && (
+              <DishMoreActions
+                key={food.id}
+                foodId={food.id}
+                foodName={food.name}
+                management={management}
+              />
+            )}
           </div>
         </header>
         <div className="dish-hero-content">
@@ -225,7 +234,6 @@ export default function DishDetail({
           </section>
         )}
         {food.id && <FoodCommentPreview foodId={food.id} />}
-        {management}
         {footer}
       </div>
     </article>

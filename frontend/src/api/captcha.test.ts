@@ -67,6 +67,21 @@ describe("single-use human verification", () => {
     ).toBeNull();
     expect(send).toHaveBeenCalledWith(undefined, expect.any(AbortSignal));
   });
+  it("shows loading feedback before the Tencent challenge is ready", async () => {
+    const send = vi.fn().mockResolvedValue(undefined),
+      run = runBrowserCaptcha(async () => config(), send);
+    await vi.waitFor(() =>
+      expect(document.querySelector(".ew-captcha-loading")).not.toBeNull(),
+    );
+    expect(
+      document.querySelector(".ew-captcha-loading")!.textContent,
+    ).toContain("正在加载安全验证");
+    await ready();
+    expect(document.querySelector(".ew-captcha-loading")).toBeNull();
+    callbacks[0]({ ret: 0, ticket: "one", randstr: "r" });
+    await run;
+    expect(send).toHaveBeenCalledOnce();
+  });
   it("never shares configurations, instances or tickets across attempts, even after a business failure", async () => {
     const read = vi.fn(async () => config()),
       send = vi

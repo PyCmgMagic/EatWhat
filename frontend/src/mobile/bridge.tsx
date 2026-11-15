@@ -54,6 +54,7 @@ import {
   FoodTile,
   ShopRow,
   MobileEmpty,
+  type Draft,
 } from "./ui";
 import {
   ContentSkeleton,
@@ -66,6 +67,7 @@ import { AiTagSuggest, draftPictureKeys } from "../features/AiTagSuggest";
 import { screenRoutes, panelScreens, pendingScreens } from "./routes";
 import { adjustPhoto, saveVisual } from "./photos";
 import { photoFraming, type PhotoFraming } from "./photo-framing";
+import { createPhotoGesture, MAX_PHOTO_ZOOM } from "./photo-gesture";
 import {
   guestDeviceId,
   mealHours,
@@ -83,7 +85,8 @@ import HomeOrbit from "./HomeOrbit";
 import TagPanel from "./TagPanel";
 import AvatarSourceSheet from "./AvatarSourceSheet";
 import ProfileEditor from "./ProfileEditor";
-import { profileClearError } from "../desktop/profile";
+import CropDialog from "../desktop/CropDialog";
+import { PROFILE_SIGNATURE_LIMIT, profileClearError } from "../desktop/profile";
 import { withDraftTag, withDraftTags } from "./draft-tags";
 import { useActionAccess } from "../features/access";
 import { useContentMotion } from "../motion/hooks";
@@ -94,12 +97,20 @@ import { AccessWelcome } from "../components/AccessWelcome";
 import RestaurantMap from "../features/RestaurantMap";
 import { baiduMarkerUrl } from "../features/map-geometry";
 import { RestaurantHeaderFavorite } from "../features/v4/RestaurantHeaderFavorite";
+import { RestaurantMoreActions } from "../features/RestaurantMoreActions";
 import { useReturnTo } from "../app/navigation";
+import { useDiscoveryCategory } from "../app/discovery-category";
 import { useProfileReturnTo } from "../app/profile-navigation";
 import "./restaurant-detail.css";
 import { RecommendShopList } from "../features/RecommendShops";
 import { FoodReportDialog } from "../features/FoodReportDialog";
 import { RestaurantCorrectionDialog } from "../features/RestaurantCorrectionDialog";
+import { useShareLink } from "../features/useShareLink";
+import { useMyProfileCover } from "../features/useMyProfileCover";
+import { MyFoodComments } from "../features/comments/Comments";
+import { useFoodPhoto } from "../features/media";
+import { FoodCover } from "../components/FoodCover";
+import { SearchField } from "../components/SearchField";
 
 const FoodExtras = React.lazy(() =>
   import("../features/v4/DetailExtras").then((module) => ({
@@ -177,6 +188,7 @@ export function useDesignBridge(
   });
   useEffect(() => () => orbitMotion.current.scheduler.cancel(), []);
   const access = useActionAccess();
+  const sharing = useShareLink();
   const profileReturnTo = useProfileReturnTo();
   const profileDraft = useProfileDraft();
   const profile =
@@ -202,18 +214,36 @@ export function useDesignBridge(
     [done, setDone] = useState(false),
     [uncertain, setUncertain] = useState(false),
     [page, setPage] = useState(1),
-    [category, setCategory] = useState(
+    [listCategory, setListCategory] = useState(
       screen === "G-Me" &&
         new URLSearchParams(location.search).get("tab") === "favorites"
         ? "收藏"
         : "",
     ),
     [search, setSearch] = useState("");
+  const [homeCategory, setHomeCategory] = useDiscoveryCategory();
+  const profileTab = new URLSearchParams(location.search).get("tab");
+  const category = homeScreens.has(screen)
+    ? homeCategory
+    : screen === "G-Me"
+      ? profileTab === "comments"
+        ? "评论"
+        : profileTab === "favorites"
+          ? "收藏"
+          : "上传"
+      : listCategory;
+  const setCategory = homeScreens.has(screen)
+    ? setHomeCategory
+    : setListCategory;
   const [mapShopId, setMapShopId] = useState<number>();
   const [reportOpen, setReportOpen] = useState(false);
   const [correctionOpen, setCorrectionOpen] = useState(false);
+  const [avatarCrop, setAvatarCrop] = useState<Draft["images"][number] | null>(
+    null,
+  );
   const tagAdding = useRef(false),
     publishLock = useRef(false);
+  const cropGesture = useRef(createPhotoGesture());
   const publishUncertain = screen === "G-AddDish" && !!m.draft.publishUncertain;
   const busy =
     localBusy ||
@@ -239,6 +269,7 @@ export function useDesignBridge(
   );
   useEffect(() => setReportOpen(false), [screen, foodId]);
   useEffect(() => setCorrectionOpen(false), [screen, shopId]);
+  useEffect(() => setAvatarCrop(null), [screen]);
   const remote = useRemoteConfig(),
     batchSize = recommendationBatchSize(remote.data);
   const recommendations = useQuery({
@@ -378,6 +409,13 @@ export function useDesignBridge(
     queryFn: () => api.myFoods(page),
     enabled: active && screen === "G-Me",
   });
+  const { cover: profileCover, fallback: defaultProfileCover } =
+    useMyProfileCover(active && screen === "G-Me");
+  const profileCoverSrc = mediaUrl(profileCover.pictureUrl?.[0]);
+  const profilePhoto = useFoodPhoto(profileCoverSrc);
+  const displayedProfileCover = profilePhoto.unavailable
+    ? defaultProfileCover
+    : profileCover;
   const myTags = useQuery({
     queryKey: ["my-tags", page],
     queryFn: () => api.myTags(page),
@@ -1141,29 +1179,60 @@ export function useDesignBridge(
         controller.state.photoHeight ?? 300,
         crop,
       ).crop;
-    const setPosition = (x: number, y: number, zoom: number) => {
-      const crop = position({ x, y, zoom });
+    const setPosition = (crop: PhotoFraming) => {
       controller.setState({ ox: crop.x, oy: crop.y, zoom: crop.zoom });
     };
-    values.down = (event: React.PointerEvent<HTMLElement>) => {
-      if (busy || !event.isPrimary || event.button !== 0) return;
-      original.down?.(event);
+    const point = (event: React.PointerEvent<HTMLElement>) => {
+      const bounds = event.currentTarget.getBoundingClientRect();
+      const scale = bounds.width / 390;
+      return {
+        x: (event.clientX - bounds.left) / scale - 195,
+        y: (event.clientY - bounds.top) / scale - 200,
+      };
     };
-    values.move = (event: any) => {
-      const start = (controller as any).start;
-      if (busy || !controller.state.dragging || !start) return;
-      const scale = event.currentTarget.getBoundingClientRect().width / 390;
-      setPosition(
-        start.ox + (event.clientX - start.x) / scale,
-        start.oy + (event.clientY - start.y) / scale,
-        controller.state.zoom ?? 1,
+    values.down = (event: React.PointerEvent<HTMLElement>) => {
+      if (busy || event.button !== 0) return;
+      if (
+        cropGesture.current.down(event.pointerId, point(event), {
+          x: controller.state.ox ?? 0,
+          y: controller.state.oy ?? 0,
+          zoom: controller.state.zoom ?? 1,
+        })
+      ) {
+        event.preventDefault();
+        try {
+          event.currentTarget.setPointerCapture(event.pointerId);
+        } catch {
+          /* A cancelled native pointer can disappear before capture. */
+        }
+      }
+    };
+    values.move = (event: React.PointerEvent<HTMLElement>) => {
+      if (busy) {
+        cropGesture.current.reset();
+        return;
+      }
+      const crop = cropGesture.current.move(
+        event.pointerId,
+        point(event),
+        position,
       );
+      if (crop) setPosition(crop);
+    };
+    values.up = (event: React.PointerEvent<HTMLElement>) => {
+      cropGesture.current.up(event.pointerId);
     };
     values.zoomTo = (event: any) => {
+      cropGesture.current.reset();
       setPosition(
-        controller.state.ox ?? 0,
-        controller.state.oy ?? 0,
-        Number(event.target.value),
+        position({
+          x: controller.state.ox ?? 0,
+          y: controller.state.oy ?? 0,
+          zoom: Math.max(
+            1,
+            Math.min(MAX_PHOTO_ZOOM, Number(event.target.value)),
+          ),
+        }),
       );
     };
   }
@@ -1570,6 +1639,7 @@ export function useDesignBridge(
         </span>,
       );
     if (homeScreens.has(screen)) {
+      if (tag === "a" && n.attrs.href === "G-Search.dc.html") return null;
       if (id === 1) {
         // Keep the carousel artwork, but let real text and the list set the
         // document height instead of fitting them into the prototype's viewport.
@@ -1620,13 +1690,28 @@ export function useDesignBridge(
         const food = carouselFoods[index];
         if (food?.id) p.href = `#/foods/${food.id}`;
       }
-      if (n.attrs.role === "group")
+      if (n.attrs.role === "group") {
+        p.style = { ...p.style, top: "162px" };
         p.onPointerCancel = () => {
           orbitMotion.current.scheduler.cancel();
           orbitMotion.current.angle = 0;
           controller.setState({ drag: 0, dragging: false });
         };
-      if (tag === "header") p.className = "mobile-home-toolbar";
+      }
+      if (tag === "header")
+        return (
+          <>
+            <header {...p} className="mobile-home-toolbar">
+              {view.children}
+            </header>
+            <SearchField
+              className="mobile-home-search"
+              onSearch={(keyword) =>
+                nav(keyword ? `/search?q=${encodeURIComponent(keyword)}` : "/search")
+              }
+            />
+          </>
+        );
       if (tag === "div" && st.top === "392px") p.className = "mobile-home-dots";
       if (tag === "div" && st.top === "414px")
         p.className = "mobile-home-actions";
@@ -1770,14 +1855,39 @@ export function useDesignBridge(
               alignItems: "center",
               gap: 8,
               minWidth: 0,
+              flex: "1 1 0",
+              flexWrap: "wrap",
+              rowGap: 0,
             }}
           >
-            <a {...p} style={{ ...p.style, minWidth: 0 }}>
+            <a
+              {...p}
+              title={area?.name}
+              style={{
+                ...p.style,
+                minWidth: 0,
+                flex: "1 1 120px",
+                whiteSpace: "nowrap",
+              }}
+            >
               <DesignIcon name="nearby" size={16} />
-              {isDemo && area?.hubId === 1
-                ? "软件园"
-                : (area?.name ?? "选地点")}
-              <span style={{ fontWeight: 400, opacity: 0.8 }}>{m.meal}</span>
+              <span
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  minWidth: 0,
+                  lineHeight: 1.4,
+                }}
+              >
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {isDemo && area?.hubId === 1
+                    ? "软件园"
+                    : (area?.name ?? "选地点")}
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 400, opacity: 0.8 }}>
+                  {m.meal}
+                </span>
+              </span>
               <DesignIcon name="chevronDown" size={14} />
             </a>
             <SceneToggle
@@ -1934,9 +2044,7 @@ export function useDesignBridge(
             void run(() => api.like(foodId, liveFood.isLiked === true));
           }}
           onFavorite={() => void toggleFavorite()}
-          onShare={() =>
-            void shareCurrent(liveFood.name ?? "山软今天吃什么", m.notice)
-          }
+          onShare={() => void sharing.share(liveFood.name ?? "山软今天吃什么")}
           onTags={() => {
             if (
               access({
@@ -1947,7 +2055,7 @@ export function useDesignBridge(
               m.openPanel("G-PanelTag");
           }}
           onRestaurant={() => m.setShopId(liveFood.restaurantId!)}
-          management={<FoodManage food={liveFood} anyone />}
+          management={<FoodManage food={liveFood} anyone inMenu />}
           footer={
             <React.Suspense fallback={null}>
               <FoodExtras id={foodId} inline />
@@ -1991,12 +2099,15 @@ export function useDesignBridge(
             className="mobile-restaurant-toolbar"
             style={undefined}
           >
-            {view.children}
+            {view.children[0]}
+            <div className="mobile-restaurant-toolbar-actions">
+              {view.children[1]}
+              <RestaurantMoreActions key={shopId} id={shopId} name={r.name} />
+            </div>
           </header>
         );
       if (id === 10)
-        p.onClick = () =>
-          void shareCurrent(r.name ?? "山软今天吃什么", m.notice);
+        p.onClick = () => void sharing.share(r.name ?? "山软今天吃什么");
       if (id === 12)
         return (
           <section {...p} className="mobile-restaurant-copy" style={undefined}>
@@ -2505,9 +2616,39 @@ export function useDesignBridge(
     if (screen === "G-Search" && tag === "span" && id === 27)
       return <span {...p}>{shops.data?.totalItems ?? "—"}</span>;
     if (screen === "G-Me") {
-      if (id === 1) p.className += " mobile-profile-screen";
+      if (id === 1) {
+        p.className += " mobile-profile-screen";
+        p.style = {
+          ...st,
+          "--profile-stage": "#ffca44",
+          "--profile-on": "#231c18",
+        };
+      }
       if (tag === "div" && st.top === "0" && st.height === "400px")
-        p.className = "mobile-profile-stage";
+        return (
+          <div {...p} className="mobile-profile-stage">
+            <div className="mobile-profile-cover" aria-hidden="true">
+              {displayedProfileCover === defaultProfileCover ? (
+                <img
+                  src={mediaUrl(defaultProfileCover.pictureUrl?.[0])}
+                  alt=""
+                  draggable={false}
+                />
+              ) : (
+                <FoodCover
+                  src={mediaUrl(displayedProfileCover.pictureUrl?.[0])}
+                  crop={displayedProfileCover.coverCrop}
+                  alt=""
+                  onError={
+                    displayedProfileCover === defaultProfileCover
+                      ? undefined
+                      : profilePhoto.onError
+                  }
+                />
+              )}
+            </div>
+          </div>
+        );
       if (tag === "div" && st.top === "372px")
         return (
           <ProfileSheet>
@@ -2522,9 +2663,44 @@ export function useDesignBridge(
       if (tag === "section" && st.top === "100px")
         return (
           <section {...p} className="mobile-profile-identity">
-            {view.children}
-            <ProfileGrowth />
+            {view.children[0]}
+            <div className="mobile-profile-title-row">
+              {view.children[1]}
+              <ProfileGrowth compact />
+            </div>
+            {view.children.slice(2)}
           </section>
+        );
+      if (tag === "a" && id === 5)
+        return (
+          <a {...p} aria-label="编辑资料">
+            <DesignIcon name="edit" size={24} />
+          </a>
+        );
+      if (tag === "a" && id === 6)
+        return (
+          <a {...p}>
+            <DesignIcon name="settings" size={24} />
+          </a>
+        );
+      if (id === 27)
+        return (
+          <div className="mobile-profile-shortcuts">
+            <Link to="/favorites">
+              <DesignIcon name="bookmark" size={25} />
+              <span>
+                <strong>收藏夹</strong>
+                <span>收藏的菜和店</span>
+              </span>
+            </Link>
+            <Link to="/history">
+              <DesignIcon name="history" size={25} />
+              <span>
+                <strong>足迹</strong>
+                <span>看过的菜和店</span>
+              </span>
+            </Link>
+          </div>
         );
       if (tag === "div" && st.marginTop === "18px")
         p.className = "mobile-profile-statistics";
@@ -2607,40 +2783,59 @@ export function useDesignBridge(
         n.attrs.role === "tab"
       ) {
         p.onClick = () => {
-          if (id === 43) nav("/me/shares?tab=comments");
-          else {
-            setCategory(id === 41 ? "收藏" : "上传");
-            setPage(1);
-          }
+          const params = new URLSearchParams(location.search);
+          params.delete("page");
+          params.set(
+            "tab",
+            id === 43 ? "comments" : id === 41 ? "favorites" : "uploads",
+          );
+          nav(`/me?${params}`, { replace: true });
+          setPage(1);
         };
         p["aria-selected"] =
-          id !== 43 &&
-          (category === (id === 41 ? "收藏" : "上传") ||
-            (!category && id === 39));
+          category === (id === 43 ? "评论" : id === 41 ? "收藏" : "上传");
         p.style = {
           ...st,
           fontWeight: p["aria-selected"] ? 900 : 400,
           color: p["aria-selected"] ? "#231C18" : "#6E625B",
         };
-        if (id !== 43)
-          return (
-            <button {...p}>
-              {id === 41 ? "收藏" : "上传"}
-              <span
-                style={{
-                  fontFamily: "'Bricolage Grotesque Variable'",
-                  fontSize: 13,
-                  fontWeight: 800,
-                }}
-              >
-                {id === 41
-                  ? (favorites.data?.totalItems ?? "—")
-                  : (myFoods.data?.totalItems ?? "—")}
-              </span>
-            </button>
-          );
+        if (id === 43) return <button {...p}>评论</button>;
+        return (
+          <button {...p}>
+            {id === 41 ? "收藏" : "上传"}
+            <span
+              style={{
+                fontFamily: "'Bricolage Grotesque Variable'",
+                fontSize: 13,
+                fontWeight: 800,
+              }}
+            >
+              {id === 41
+                ? (favorites.data?.totalItems ?? "—")
+                : (myFoods.data?.totalItems ?? "—")}
+            </span>
+          </button>
+        );
       }
       if (tag === "div" && id === 45) {
+        if (category === "评论")
+          return (
+            <div className="mobile-profile-comments">
+              <MyFoodComments
+                emptyState={
+                  <div className="mobile-profile-comments-empty">
+                    <span>
+                      <DesignIcon name="comment" size={34} />
+                    </span>
+                    <h2>还没写过评论</h2>
+                    <Link className="design-button light" to="/">
+                      去发现
+                    </Link>
+                  </div>
+                }
+              />
+            </div>
+          );
         const query = category === "收藏" ? favorites : myFoods;
         if (query.isPending)
           return (
@@ -2793,7 +2988,18 @@ export function useDesignBridge(
         pointerEvents: "none",
       };
     }
-    if (screen === "G-Crop" && tag === "input" && p.type === "range") p.min = 1;
+    if (screen === "G-Crop") {
+      if (tag === "div" && n.attrs.role === "group") {
+        p["aria-label"] = "照片取景，单指拖动、双指缩放";
+        p.onLostPointerCapture = values.up;
+      }
+      if (tag === "span" && clean(text) === "拖动、缩放，把主菜放进圈里")
+        return <span {...p}>单指拖动，双指缩放</span>;
+      if (tag === "input" && p.type === "range") {
+        p.min = 1;
+        p.max = MAX_PHOTO_ZOOM;
+      }
+    }
     if (screen === "G-Crop" && tag === "span" && clean(text) === "柳州螺蛳粉")
       return <span {...p}>{m.draft.name || "你的这道菜"}</span>;
     if (
@@ -3035,8 +3241,7 @@ export function useDesignBridge(
     if (!files.length || activeLocation.current !== page) return;
     await run(async () => {
       validateFiles(files, 0);
-      if ((await profile.save(files[0])) && activeLocation.current === page)
-        controller.setState({ sheet: false });
+      setAvatarCrop({ file: files[0], url: "" });
     });
   }
   function navigateDesign(target: string, label: string, aria?: string) {
@@ -3090,8 +3295,8 @@ export function useDesignBridge(
           document.getElementById("nick")?.focus();
           throw new Error("昵称需要 2–12 个字。");
         }
-        if (form.signature.length > 30)
-          throw new Error("个性签名最多填写 30 个字。");
+        if (form.signature.length > PROFILE_SIGNATURE_LIMIT)
+          throw new Error(`个性签名最多填写 ${PROFILE_SIGNATURE_LIMIT} 个字。`);
         const clearError = profileClearError(form, saved);
         if (clearError) throw new Error(clearError);
         const today = new Date();
@@ -3333,11 +3538,29 @@ export function useDesignBridge(
     );
   const after = (
     <>
+      {sharing.fallback}
       {!denied && profile && controller.state.sheet && (
         <AvatarSourceSheet
-          busy={busy}
+          busy={busy || !!avatarCrop}
           onPick={(source) => void pickAvatar(source)}
           onClose={() => controller.setState({ sheet: false })}
+        />
+      )}
+      {profile && avatarCrop && (
+        <CropDialog
+          variant="avatar"
+          image={avatarCrop}
+          onClose={() => setAvatarCrop(null)}
+          onApply={(result) => {
+            setAvatarCrop(null);
+            void run(async () => {
+              if (
+                (await profile.save(result.file)) &&
+                activeLocation.current === location.key
+              )
+                controller.setState({ sheet: false });
+            });
+          }}
         />
       )}
       {reportOpen && (
@@ -3494,15 +3717,4 @@ function relativeTime(value?: number | null) {
     month: "long",
     day: "numeric",
   });
-}
-async function shareCurrent(title: string, notice: (s: string) => void) {
-  try {
-    if (navigator.share) await navigator.share({ title, url: location.href });
-    else {
-      await navigator.clipboard.writeText(location.href);
-      notice("链接已复制，可以分享给同学。");
-    }
-  } catch {
-    /* User can cancel the system share sheet. */
-  }
 }

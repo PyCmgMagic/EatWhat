@@ -14,11 +14,8 @@ import SettingsPageHeader from "./SettingsPageHeader";
 
 type Setting = {
   title: string;
-  detail: string;
   to: string;
   icon: string;
-  value?: string;
-  attention?: boolean;
 };
 
 function SettingLink({ item }: { item: Setting }) {
@@ -29,17 +26,7 @@ function SettingLink({ item }: { item: Setting }) {
       </span>
       <span className="settings-home-copy">
         <strong>{item.title}</strong>
-        <small>{item.detail}</small>
       </span>
-      {item.value && (
-        <span
-          className="settings-home-value"
-          data-attention={item.attention || undefined}
-          data-unknown={item.value === "状态待确认" || undefined}
-        >
-          {item.value}
-        </span>
-      )}
       <Icon name="chevronRight" size={17} />
     </Link>
   );
@@ -66,128 +53,35 @@ export default function SettingsHome({
   const verified = user?.verified === true;
   const verificationKnown = typeof user?.verified === "boolean";
   const avatar = mediaUrl(user?.avatar);
-  const phone = user?.phone;
-  const phoneMissing = phone === null || phone === "";
-  const phoneNeedsVerification = phoneMissing && user?.verified === false;
-  const phoneValue = phone
-    ? phone.replace(/(\d{3})\d{4}(\d{4})$/, "$1****$2")
-    : phoneMissing
-      ? "未绑定"
-      : "状态待确认";
-  const passwordValue =
-    user?.hasPassword === true
-      ? "已设置"
-      : user?.hasPassword === false
-        ? "未设置"
-        : "状态待确认";
   useEffect(() => {
     document.title = "账号设置 · 山软今天吃什么";
   }, []);
 
-  const account: Setting[] = [
+  const settings: Setting[] = [
     {
-      title: "账号信息",
-      detail: "登录名与学生认证信息",
+      title: "账号与安全",
       to: "/settings/account",
       icon: "idcard",
     },
     {
-      title: phoneMissing ? "绑定手机号" : "手机号",
-      detail: phoneNeedsVerification
-        ? "完成学生认证后可绑定手机号"
-        : "用于登录与账号验证",
-      to: phone
-        ? "/settings/phone"
-        : phoneMissing && verificationKnown
-          ? phoneNeedsVerification
-            ? "/verify"
-            : "/settings/bind-phone"
-          : "/settings/account",
-      icon: "phone",
-      value: phoneValue,
-      attention: phoneMissing,
-    },
-    {
-      title: user?.hasPassword === false ? "设置密码" : "登录密码",
-      detail: "设置或更新你的登录密码",
-      to: "/settings/password",
-      icon: "lock",
-      value: passwordValue,
-      attention: user?.hasPassword === false,
-    },
-    {
-      title: "登录设备",
-      detail: "查看与管理已登录的设备",
-      to: "/settings/devices",
-      icon: "computer",
-    },
-    {
-      title: "学生认证",
-      detail: "查看校内身份与认证方式",
-      to: "/verify",
-      icon: "verify",
-      value: verified ? "已认证" : verificationKnown ? "未认证" : "状态待确认",
-      attention: user?.verified === false,
-    },
-  ];
-  const preferences: Setting[] = [
-    {
       title: "隐私设置",
-      detail: "管理关注、粉丝的公开范围",
       to: "/settings/privacy",
       icon: "eye",
     },
     {
       title: "口味偏好",
-      detail: "设置喜欢和不喜欢的口味",
       to: "/settings/preferences",
       icon: "utensils",
     },
     {
-      title: "通知偏好",
-      detail: "功能准备中，敬请期待",
-      to: "/settings/notifications",
-      icon: "bell",
-    },
-    {
-      title: "屏蔽名单",
-      detail: "管理不想在推荐中看到的食友",
-      to: "/settings/blocked",
-      icon: "block",
-    },
-    {
-      title: "使用统计授权",
-      detail: "自主决定是否分享使用统计",
-      to: "/settings/telemetry",
-      icon: "shield",
-    },
-  ];
-  const recovery: Setting[] = [
-    {
-      title: "恢复账号操作",
-      detail: "继续未完成的设备、手机号或注销操作",
-      to: "/auth/account-recovery",
-      icon: "key",
-    },
-  ];
-  const support: Setting[] = [
-    {
-      title: "关于我们",
-      detail: "认识山软今天吃什么",
-      to: "/settings/about",
-      icon: "bowl",
-    },
-    {
       title: "帮助与反馈",
-      detail: "查看使用帮助，提交与跟进问题",
       to: "/help",
       icon: "feedback",
     },
     {
-      title: "数据存放说明",
-      detail: "了解账号与内容的保存方式",
-      to: "/data-notice",
-      icon: "document",
+      title: "关于我们",
+      to: "/settings/about",
+      icon: "bowl",
     },
   ];
 
@@ -195,6 +89,7 @@ export default function SettingsHome({
     <div className="settings-home" aria-labelledby="settings-home-title">
       <SettingsPageHeader
         title="账号设置"
+        detail=""
         headingId="settings-home-title"
         back={embedded ? undefined : "/me"}
         action={
@@ -240,98 +135,16 @@ export default function SettingsHome({
           <Icon name="edit" size={17} />
           编辑资料
         </ProfileEditLink>
-        <div className="settings-home-status">
-          <Link to={account[1].to}>
-            <Icon name="phone" size={17} />
-            <span>手机号</span>
-            <strong>{phoneValue}</strong>
-          </Link>
-          <Link to="/settings/password">
-            <Icon name="lock" size={17} />
-            <span>登录密码</span>
-            <strong>{passwordValue}</strong>
-          </Link>
-        </div>
-        {user?.verified === false && (
-          <div className="settings-home-verification">
-            <span>
-              <Icon name="verify" size={18} />
-              完成学生认证后，可以发布菜品、点赞和管理标签。
-            </span>
-            <Link to="/verify">
-              去认证
-              <Icon name="chevronRight" size={16} />
-            </Link>
-          </div>
-        )}
       </section>
 
-      <div className="settings-home-groups">
-        {[
-          {
-            title: "账号与安全",
-            icon: "shield",
-            items: account,
-          },
-          {
-            title: "偏好与隐私",
-            icon: "settings",
-            items: preferences,
-          },
-        ].map((group) => (
-          <section
-            key={group.title}
-            className="settings-home-group"
-            aria-label={group.title}
-          >
-            <header>
-              <span>
-                <Icon name={group.icon} size={18} />
-              </span>
-              <h2>{group.title}</h2>
-            </header>
-            <div className="settings-home-group-content">
-              <div className="settings-home-group-items">
-                {group.items
-                  .filter((item) => !isRetiredV2(item.to))
-                  .map((item) => (
-                    <SettingLink key={item.title} item={item} />
-                  ))}
-              </div>
-              {group.title === "账号与安全" &&
-                recovery.some((item) => !isRetiredV2(item.to)) && (
-                  <details className="settings-home-recovery">
-                    <summary>账号恢复</summary>
-                    {recovery
-                      .filter((item) => !isRetiredV2(item.to))
-                      .map((item) => (
-                        <SettingLink key={item.to} item={item} />
-                      ))}
-                  </details>
-                )}
-            </div>
-          </section>
-        ))}
-      </div>
-
-      <section
-        className="settings-home-support"
-        aria-labelledby="settings-home-support-title"
-      >
-        <header>
-          <h2 id="settings-home-support-title">帮助与关于</h2>
-        </header>
-        <div>
-          {support.map((item) => (
+      <nav className="settings-home-menu" aria-label="账号设置">
+        {settings
+          .filter((item) => !isRetiredV2(item.to))
+          .map((item) => (
             <SettingLink key={item.to} item={item} />
           ))}
-        </div>
-      </section>
+      </nav>
       <footer className="settings-home-session">
-        <div>
-          <strong>当前账号</strong>
-          <p>退出后，收藏和分享会保留在账号中。</p>
-        </div>
         <button
           type="button"
           className="settings-home-logout"

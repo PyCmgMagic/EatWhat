@@ -1119,9 +1119,11 @@ export function TagFoods({ id }: { id: number }) {
 export function RestaurantActions({
   id,
   hideFavorite = false,
+  hideMaintenance = false,
 }: {
   id: number;
   hideFavorite?: boolean;
+  hideMaintenance?: boolean;
 }) {
   const { pathname, search } = useLocation();
   const [correctionOpen, setCorrectionOpen] = useState(false);
@@ -1149,7 +1151,9 @@ export function RestaurantActions({
     : [];
   return (
     <div className="v4-inline restaurant-hub">
-      <div className="restaurant-hub-grid">
+      <div
+        className={`restaurant-hub-grid${hideMaintenance ? " is-experience-only" : ""}`}
+      >
         <section className="restaurant-hub-section restaurant-experience">
           <div className="restaurant-section-heading">
             <span className="restaurant-section-mark">
@@ -1221,55 +1225,57 @@ export function RestaurantActions({
             )}
           </div>
         </section>
-        <section className="restaurant-hub-section restaurant-maintenance">
-          <div className="restaurant-section-heading">
-            <span className="restaurant-section-mark">
-              <Icon name="tool" size={19} />
-            </span>
-            <div>
-              <h2>店铺维护</h2>
-              <p>信息有变化？一起让它更准确</p>
+        {!hideMaintenance && (
+          <section className="restaurant-hub-section restaurant-maintenance">
+            <div className="restaurant-section-heading">
+              <span className="restaurant-section-mark">
+                <Icon name="tool" size={19} />
+              </span>
+              <div>
+                <h2>店铺维护</h2>
+                <p>信息有变化？一起让它更准确</p>
+              </div>
             </div>
-          </div>
-          <nav
-            className="restaurant-maintenance-links"
-            aria-label="店铺维护操作"
-          >
-            <Link className="restaurant-action-link" to={shopEditPath(id)}>
-              <Icon name="edit" size={16} />
-              <span>修改店铺</span>
-              <Icon name="chevronRight" size={13} />
-            </Link>
-            <button
-              type="button"
-              className="restaurant-action-link"
-              aria-haspopup="dialog"
-              aria-expanded={correctionOpen}
-              onClick={() => setCorrectionOpen(true)}
+            <nav
+              className="restaurant-maintenance-links"
+              aria-label="店铺维护操作"
             >
-              <Icon name="feedback" size={16} />
-              <span>信息纠错</span>
-              <Icon name="chevronRight" size={13} />
-            </button>
-            <Link
-              className="restaurant-action-link"
-              to={`/restaurants/${id}/history`}
-              state={{ returnTo: pathname + search }}
-            >
-              <Icon name="history" size={16} />
-              <span>修改记录</span>
-              <Icon name="chevronRight" size={13} />
-            </Link>
-            <Link
-              className="restaurant-action-link is-muted"
-              to={`/reports/new?type=RESTAURANT&id=${id}`}
-            >
-              <Icon name="report" size={16} />
-              <span>举报店铺</span>
-              <Icon name="chevronRight" size={13} />
-            </Link>
-          </nav>
-        </section>
+              <Link className="restaurant-action-link" to={shopEditPath(id)}>
+                <Icon name="edit" size={16} />
+                <span>修改店铺</span>
+                <Icon name="chevronRight" size={13} />
+              </Link>
+              <button
+                type="button"
+                className="restaurant-action-link"
+                aria-haspopup="dialog"
+                aria-expanded={correctionOpen}
+                onClick={() => setCorrectionOpen(true)}
+              >
+                <Icon name="feedback" size={16} />
+                <span>信息纠错</span>
+                <Icon name="chevronRight" size={13} />
+              </button>
+              <Link
+                className="restaurant-action-link"
+                to={`/restaurants/${id}/history`}
+                state={{ returnTo: pathname + search }}
+              >
+                <Icon name="history" size={16} />
+                <span>修改记录</span>
+                <Icon name="chevronRight" size={13} />
+              </Link>
+              <Link
+                className="restaurant-action-link is-muted"
+                to={`/reports/new?type=RESTAURANT&id=${id}`}
+              >
+                <Icon name="report" size={16} />
+                <span>举报店铺</span>
+                <Icon name="chevronRight" size={13} />
+              </Link>
+            </nav>
+          </section>
+        )}
       </div>
       {shop && (
         <div className="restaurant-fact-strip">

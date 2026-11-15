@@ -5,7 +5,6 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
-import { ProfileEditLink } from "../app/profile-navigation";
 import { useAuthBusy, useAuthFlow } from "../app/auth-dialog";
 import { localDestination } from "../app/navigation";
 import { isDemo } from "../app/runtime";
@@ -22,7 +21,6 @@ import {
 } from "../app/verification-return";
 import VerificationResult from "../features/VerificationResult";
 import {
-  Avatar,
   Note,
   PageHead,
   PendingPage,
@@ -62,7 +60,7 @@ function Row({
   action,
 }: {
   title: string;
-  value: string;
+  value?: string;
   to?: string;
   action?: string;
 }) {
@@ -70,7 +68,7 @@ function Row({
     <div className="pc-secondary-row">
       <div>
         <b>{title}</b>
-        <p>{value}</p>
+        {value && <p>{value}</p>}
       </div>
       {to && (
         <Link className="pc-secondary-text-link" to={to}>
@@ -108,87 +106,56 @@ function Account() {
   return (
     <>
       <PageHead title="账号与安全" back="/settings" crumb="设置" />
-      <div className="pc-secondary-columns">
-        <Section title="你的账号">
-          <div className="pc-secondary-identity">
-            <Avatar name={user?.displayName} src={user?.avatar} />
-            <div>
-              <b>{user?.displayName || "同学"}</b>
-              <small>
-                {user?.verified ? "学生身份已认证" : "学生身份待认证"}
-              </small>
-            </div>
-            <ProfileEditLink className="pc-secondary-text-link">
-              编辑资料
-            </ProfileEditLink>
-          </div>
-          <Row
-            title="学生认证"
-            value={
-              user?.verified ? "已完成学生身份认证" : "完成认证，解锁校园分享"
-            }
-            to="/verify"
-            action="查看"
-          />
-          <Row
-            title="手机号"
-            value={
-              user?.phone
-                ? user.phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2")
-                : "尚未绑定"
-            }
-            to={user?.phone ? "/settings/phone" : "/settings/bind-phone"}
-            action={user?.phone ? "换绑" : "去绑定"}
-          />
-          <Row
-            title="登录名"
-            value={
-              user?.hasUsername
-                ? user.userName || "暂不可用"
-                : "设置后可使用登录名登录"
-            }
-            to={user?.hasUsername === false ? "/settings/username" : undefined}
-            action="去设置"
-          />
-          <Row
-            title="登录密码"
-            value="定期更新密码，保护你的账号"
-            to="/settings/password"
-            action="修改"
-          />
-          <Row
-            title="登录设备"
-            value="查看有效会话，管理登录设备"
-            to="/settings/devices"
-            action="管理"
-          />
-          <Row
-            title="通知偏好"
-            value="功能准备中，敬请期待"
-            to="/settings/notifications"
-          />
-          <Row
-            title="使用统计"
-            value="自主选择是否分享最小使用统计"
-            to="/settings/telemetry"
-          />
-          <Row
-            title="全部功能"
-            value="专题、反馈、收藏餐厅与提交记录"
-            to="/features"
-          />
-          <Row
-            title="注销账号"
-            value="申请注销及查询处理进度"
-            to="/settings/delete"
-            action="了解"
-          />
-        </Section>
-        <Note title={BRAND_SLOGAN} icon="lock">
-          <p>请勿向他人透露密码或验证码。在公用电脑使用后，记得退出登录。</p>
-          <Link to="/settings/privacy">管理我的公开范围 →</Link>
-        </Note>
-      </div>
+      <section
+        className="pc-secondary-section pc-settings-account"
+        aria-label="账号信息"
+      >
+        <Row
+          title="登录名"
+          value={
+            user?.hasUsername === false
+              ? "未设置"
+              : user?.userName || "状态待确认"
+          }
+          to={user?.hasUsername === false ? "/settings/username" : undefined}
+          action="去设置"
+        />
+        <Row
+          title="手机号"
+          value={
+            user?.phone
+              ? user.phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2")
+              : "尚未绑定"
+          }
+          to={user?.phone ? "/settings/phone" : "/settings/bind-phone"}
+          action={user?.phone ? "换绑" : "去绑定"}
+        />
+        <Row
+          title="登录密码"
+          value={
+            user?.hasPassword === false
+              ? "未设置"
+              : user?.hasPassword === true
+                ? "已设置"
+                : "状态待确认"
+          }
+          to="/settings/password"
+          action={user?.hasPassword === false ? "去设置" : "修改"}
+        />
+        <Row title="登录设备" to="/settings/devices" action="管理" />
+        <Row
+          title="学生认证"
+          value={
+            user?.verified === true
+              ? "已认证"
+              : user?.verified === false
+                ? "未认证"
+                : "状态待确认"
+          }
+          to="/verify"
+          action={user?.verified === false ? "去认证" : "查看"}
+        />
+      </section>
     </>
   );
 }
@@ -328,6 +295,14 @@ function Privacy() {
           follower={q.data.fansVisible}
         />
       )}
+      <div className="pc-secondary-row pc-privacy-tools">
+        <Link className="pc-button light" to="/settings/blocked">
+          屏蔽名单 <Icon name="chevronRight" size={16} />
+        </Link>
+        <Link className="pc-button light" to="/settings/telemetry">
+          使用统计授权 <Icon name="chevronRight" size={16} />
+        </Link>
+      </div>
     </>
   );
 }
@@ -610,8 +585,8 @@ function About({ data }: { data: boolean }) {
       <PageHead
         title={data ? "数据存放说明" : "关于我们"}
         detail={data ? "了解账号信息与分享内容的保存方式。" : BRAND_SLOGAN}
-        back="/settings"
-        crumb="设置"
+        back={data ? "/settings/about" : "/settings"}
+        crumb={data ? "关于我们" : "设置"}
       />
       {data ? (
         <div className="pc-secondary-columns">

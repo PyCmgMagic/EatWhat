@@ -27,6 +27,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { NotFound, useReturnTo } from "../app/navigation";
+import { useDiscoveryCategory } from "../app/discovery-category";
 import {
   keepPreviousData,
   useQuery,
@@ -104,6 +105,7 @@ const DesktopHistory = lazy(() =>
 );
 import { Catalog, FoodManage } from "../features/Catalog";
 import { DishMoreActions } from "./DishMoreActions";
+import { RestaurantMoreActions } from "../features/RestaurantMoreActions";
 import { RecommendationControls, Preferences } from "../features/Account";
 import { EditFood } from "../features/EditFood";
 import { EditRestaurant, isShopEditPath } from "../features/EditRestaurant";
@@ -748,7 +750,7 @@ function DesktopHome() {
     m = useMobile(),
     { campusId, area } = useArea(),
     [n, setN] = useState(0),
-    [category, setCategory] = useState(""),
+    [category, setCategory] = useDiscoveryCategory(),
     pointer = useRef<{ id: number; x: number; radius: number } | null>(null),
     orbitMotion = useRef(createHeroOrbitScheduler()),
     copy = useRef<HTMLDivElement>(null);
@@ -1700,6 +1702,7 @@ function DesktopRestaurant() {
             <span>{shop.name}</span>
           </div>
           <section className="pc-restaurant-hero">
+            <RestaurantMoreActions key={id} id={id} name={shop.name} desktop />
             <div className="pc-restaurant-hero-copy">
               <span className="pc-eyebrow">好味道，也值得被分享</span>
               <h1>{shop.name}</h1>
@@ -1780,7 +1783,7 @@ function DesktopRestaurant() {
             </div>
           </section>
           <Suspense fallback={<ContentSkeleton kind="rows" count={1} />}>
-            <RestaurantActions id={id} />
+            <RestaurantActions id={id} hideMaintenance />
           </Suspense>
           <section className="pc-content-sheet is-standalone">
             <div className="pc-section-toolbar">

@@ -109,7 +109,7 @@ export const mobileSettingsPages: Record<
   "/settings/about": { title: "关于我们", back: "/settings", public: true },
   "/data-notice": {
     title: "数据存放说明",
-    back: "/settings/account",
+    back: "/settings/about",
     public: true,
   },
 };

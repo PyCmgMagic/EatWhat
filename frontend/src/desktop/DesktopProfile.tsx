@@ -10,7 +10,7 @@ import { errorMessage } from "../api/client";
 import { mediaUrl } from "../api/models";
 import { validateFiles } from "../api/validation";
 import { DesignIcon as Icon, type Draft } from "../mobile/ui";
-import { profileClearError } from "./profile";
+import { PROFILE_SIGNATURE_LIMIT, profileClearError } from "./profile";
 import CropDialog from "./CropDialog";
 import { useSurfaceDismiss } from "../motion/hooks";
 import { usePageLifetime } from "../app/drafts";
@@ -136,8 +136,8 @@ export default function DesktopProfile() {
       document.getElementById("nick")?.focus();
       return;
     }
-    if (form.signature.length > 30) {
-      setError("个性签名最多填写 30 个字。");
+    if (form.signature.length > PROFILE_SIGNATURE_LIMIT) {
+      setError(`个性签名最多填写 ${PROFILE_SIGNATURE_LIMIT} 个字。`);
       return;
     }
     if (form.birthday && form.birthday > maxDate) {
@@ -304,13 +304,13 @@ export default function DesktopProfile() {
                   <label htmlFor="sign">
                     个性签名
                     <small aria-hidden="true">
-                      {form.signature.length} / 30
+                      {form.signature.length} / {PROFILE_SIGNATURE_LIMIT}
                     </small>
                   </label>
                   <textarea
                     id="sign"
                     rows={2}
-                    maxLength={30}
+                    maxLength={PROFILE_SIGNATURE_LIMIT}
                     value={form.signature}
                     onChange={(e) => change({ signature: e.target.value })}
                   />

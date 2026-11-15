@@ -3,7 +3,7 @@
   --settings-muted: #827367;
   --settings-line: #e8dfd5;
   container: settings / inline-size;
-  max-width: 1120px;
+  max-width: 800px;
   min-width: 0;
   margin: 0 auto;
   padding: 18px 0 32px;
@@ -45,7 +45,7 @@
   align-items: center;
   gap: 14px;
   margin-bottom: 24px;
-  padding: 20px 24px 0;
+  padding: 20px 24px;
   background: #fffaf0;
   border: 1px solid #e9dec8;
   border-radius: 16px;
@@ -253,6 +253,19 @@
 .settings-home-row > .design-icon {
   color: #ad9e8f;
 }
+.settings-home-menu {
+  overflow: hidden;
+  border: 1px solid var(--settings-line);
+  border-radius: 16px;
+  background: #fff;
+}
+.settings-home-menu > .settings-home-row {
+  min-height: 64px;
+  border-bottom: 1px solid #eee8e1;
+}
+.settings-home-menu > .settings-home-row:last-child {
+  border-bottom: 0;
+}
 .settings-home .settings-home-recovery {
   border-top: 1px solid #eee8e1;
   padding: 0 18px 8px;
@@ -293,7 +306,7 @@
 .settings-home-session {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 18px;
   margin-top: 24px;
   padding: 20px 0 0;
@@ -425,7 +438,7 @@
   }
   .settings-home-profile {
     grid-template-columns: 46px minmax(0, 1fr) auto;
-    padding: 18px 18px 0;
+    padding: 18px;
     gap: 14px 12px;
   }
   .settings-home-avatar {

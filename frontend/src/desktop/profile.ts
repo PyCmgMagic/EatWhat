@@ -1,5 +1,7 @@
 import type { Schema, User } from "../api/models";
 
+export const PROFILE_SIGNATURE_LIMIT = 100;
+
 export type ProfileForm = {
   name: string;
   signature: string;

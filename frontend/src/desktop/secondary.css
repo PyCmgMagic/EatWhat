@@ -196,6 +196,21 @@
   border-bottom: 0;
   padding-bottom: 2px;
 }
+.pc-settings-account {
+  max-width: 800px;
+}
+.pc-settings-account .pc-secondary-row {
+  min-height: 72px;
+  padding: 16px 0;
+}
+.pc-settings-account .pc-secondary-text-link {
+  min-height: 44px;
+}
+.pc-privacy-tools {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
 .pc-secondary-row > div {
   min-width: 0;
 }

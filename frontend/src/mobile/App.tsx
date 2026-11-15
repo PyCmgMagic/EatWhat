@@ -57,6 +57,7 @@ const ApiV2Routes = lazy(() => import("../features/ApiV2Routes"));
 const LoginPage = lazy(() => import("./Login"));
 const MobileAccountSettings = lazy(() => import("./AccountSettings"));
 const MobileSettingsPages = lazy(() => import("./SettingsPages"));
+const MobileNotifications = lazy(() => import("./Notifications"));
 import { Gate } from "../components/ui";
 import "@fontsource-variable/noto-sans-sc";
 import "@fontsource-variable/bricolage-grotesque";
@@ -65,10 +66,7 @@ import DesktopExperience from "../desktop/Desktop";
 import ProfileHelp from "../features/ProfileHelp";
 import { profileSection } from "../app/profile-workspace";
 import { Catalog } from "../features/Catalog";
-import {
-  PasswordByCode,
-  RecommendationControls,
-} from "../features/Account";
+import { PasswordByCode, RecommendationControls } from "../features/Account";
 import { EditFood } from "../features/EditFood";
 import { EditRestaurant, isShopEditPath } from "../features/EditRestaurant";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
@@ -319,6 +317,7 @@ function MobileWorkspace() {
           : profileSection(loc.pathname)
             ? "me"
             : null;
+  const navigationPresence = useExitPresence(navigationSection);
   useEffect(() => {
     setPanel(null);
   }, [loc.pathname]);
@@ -405,7 +404,7 @@ function MobileWorkspace() {
     },
   };
   if (
-    (desktop || new URLSearchParams(loc.search).get("tab") === "comments") &&
+    desktop &&
     loc.pathname === "/me" &&
     !new URLSearchParams(loc.search).has("people")
   ) {
@@ -425,12 +424,7 @@ function MobileWorkspace() {
       );
     }
   }
-  if (
-    !desktop &&
-    !reference &&
-    loc.pathname === "/me/shares" &&
-    new URLSearchParams(loc.search).get("tab") !== "comments"
-  ) {
+  if (!desktop && !reference && loc.pathname === "/me/shares") {
     const params = new URLSearchParams(loc.search);
     if (!params.has("tab")) params.set("tab", "uploads");
     return <Navigate replace to={"/me?" + params} state={loc.state} />;
@@ -501,6 +495,12 @@ function MobileWorkspace() {
                   !reference &&
                   mobileSettingsPages[loc.pathname] ? (
                   <MobileSettingsPages key={loc.pathname} />
+                ) : !desktop &&
+                  !reference &&
+                  loc.pathname === "/notifications" ? (
+                  <Gate verified={false}>
+                    <MobileNotifications />
+                  </Gate>
                 ) : !desktop && !reference && isV4Path(loc.pathname) ? (
                   <div className="ew-mobile-feature">
                     <V4Routes key={loc.pathname} />
@@ -619,19 +619,31 @@ function MobileWorkspace() {
                 )}
               </Suspense>
             </DesktopExperience>
-            {!desktop && !reference && !showIndex && navigationSection && (
-              <div
-                className="mobile-main-navigation"
-                aria-hidden={
-                  panelPresence.value || noticePresence.value ? true : undefined
-                }
-                inert={
-                  panelPresence.value || noticePresence.value ? true : undefined
-                }
-              >
-                <DesignNav active={navigationSection} />
-              </div>
-            )}
+            {!desktop &&
+              !reference &&
+              !showIndex &&
+              navigationPresence.value && (
+                <div
+                  className="mobile-main-navigation"
+                  data-exiting={navigationPresence.exiting || undefined}
+                  aria-hidden={
+                    navigationPresence.exiting ||
+                    panelPresence.value ||
+                    noticePresence.value
+                      ? true
+                      : undefined
+                  }
+                  inert={
+                    navigationPresence.exiting ||
+                    panelPresence.value ||
+                    noticePresence.value
+                      ? true
+                      : undefined
+                  }
+                >
+                  <DesignNav active={navigationPresence.value} />
+                </div>
+              )}
             <ProfilePeopleDialog />
           </>
         )}

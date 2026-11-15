@@ -104,6 +104,27 @@
   padding: 0 20px;
   list-style: none;
 }
+.food-history-content {
+  margin: 0;
+  border: 0;
+}
+.food-history-content .edit-history-list {
+  padding: 0;
+}
+.food-history-content .edit-history-list > li:first-child {
+  border-top: 0;
+}
+.food-history-content :is(.edit-history-state, .edit-history-pager) {
+  padding: 16px 0;
+  flex-wrap: wrap;
+}
+.food-history-content button {
+  min-height: 44px;
+}
+.food-history-content .edit-history-list ul {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
 .edit-history-list > li {
   padding: 14px 0;
   border-top: 1px solid #f1ebe3;

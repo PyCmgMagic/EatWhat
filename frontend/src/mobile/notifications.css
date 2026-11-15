@@ -1,0 +1,195 @@
+.mobile-inbox {
+  width: 100%;
+  max-width: 520px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: max(8px, env(safe-area-inset-top)) 24px
+    max(32px, env(safe-area-inset-bottom));
+  background: #fff;
+  color: #231c18;
+}
+.mobile-inbox button,
+.mobile-inbox a {
+  -webkit-tap-highlight-color: transparent;
+}
+.mobile-inbox button {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+.mobile-inbox-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+}
+.mobile-inbox-header > a {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-left: -6px;
+  flex: none;
+  color: inherit;
+}
+.mobile-inbox-header h1 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 32px;
+  font-weight: 900;
+}
+.mobile-inbox-header > button {
+  min-height: 44px;
+  margin-left: auto;
+  padding: 0 4px 0 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+.mobile-inbox-header > button:disabled {
+  opacity: 0.45;
+}
+.mobile-inbox-count {
+  margin: 16px 0 36px;
+  min-height: 22px;
+  font-size: 16px;
+  line-height: 22px;
+  color: #6e625b;
+}
+.mobile-inbox-tabs {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.mobile-inbox-tabs::-webkit-scrollbar {
+  display: none;
+}
+.mobile-inbox-tabs > button {
+  flex: none;
+  min-height: 44px;
+  padding: 0;
+  font-size: 16px;
+  line-height: 24px;
+  white-space: nowrap;
+  color: #6e625b;
+}
+.mobile-inbox-tabs > button[aria-selected="true"] {
+  color: #231c18;
+  font-weight: 900;
+}
+.mobile-inbox-messages {
+  margin-top: 18px;
+}
+.mobile-inbox-messages section + section {
+  margin-top: 26px;
+}
+.mobile-inbox-messages h2 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 24px;
+  font-weight: 500;
+  color: #6e625b;
+}
+.mobile-inbox-messages ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mobile-inbox-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 0;
+  text-decoration: none;
+  text-align: left;
+  color: inherit;
+}
+.mobile-inbox-unread-dot {
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: #231c18;
+}
+.mobile-inbox-symbol {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #f4f3f1;
+}
+.mobile-inbox-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+}
+.mobile-inbox-title {
+  font-size: 17px;
+  line-height: 25px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.mobile-inbox-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  line-height: 24px;
+  color: #6e625b;
+}
+.mobile-inbox-copy time {
+  font-size: 14px;
+  line-height: 22px;
+  color: #6e625b;
+}
+.mobile-inbox-row[data-expanded] .mobile-inbox-description {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.mobile-inbox-state {
+  margin: 48px 0;
+  color: #6e625b;
+  text-align: center;
+  font-size: 15px;
+}
+.mobile-inbox-state button {
+  min-height: 44px;
+  text-decoration: underline;
+}
+.mobile-inbox-pages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 24px;
+  font-size: 14px;
+}
+.mobile-inbox-pages button {
+  min-height: 44px;
+}
+.mobile-inbox-row:focus-visible,
+.mobile-inbox-tabs > button:focus-visible {
+  outline-offset: 2px;
+}
+@media (max-width: 390px) {
+  .mobile-inbox-tabs {
+    gap: 24px;
+  }
+}
+@media (max-width: 360px) {
+  .mobile-inbox-tabs {
+    gap: 18px;
+  }
+}

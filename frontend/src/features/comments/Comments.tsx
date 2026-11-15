@@ -1060,7 +1060,9 @@ function DeleteSubmission({ row }: { row: CommentSubmission }) {
     </>
   );
 }
-export function MyFoodComments() {
+export function MyFoodComments({
+  emptyState,
+}: { emptyState?: ReactNode } = {}) {
   const { api, user } = useApp(),
     [params, setParams] = useSearchParams();
   const page = validPage(params.get("page"));
@@ -1072,55 +1074,55 @@ export function MyFoodComments() {
   return (
     <div className="comments-my-list">
       <QueryState query={q}>
-        {!q.data?.items?.length ? (
-          <div className="comments-state">
-            <Icon name="comment" size={30} />
-            <p>还没有评论记录。</p>
-            <Link to="/">去发现好味道</Link>
-          </div>
-        ) : (
-          q.data.items.map((row) => (
-            <article
-              className="comments-submission"
-              key={row.revisionId ?? row.id}
-            >
-              <div className="comments-submission-heading">
-                <span>{row.kind === "REPLY" ? "回复" : "评论"}</span>
-                <span
-                  className="comments-status"
-                  data-status={row.moderationStatus}
-                >
-                  {commentStatus(row.moderationStatus)}
-                </span>
-                <time dateTime={row.createdAt ?? undefined}>
-                  {commentTime(row.createdAt)}
-                </time>
+        {!q.data?.items?.length
+          ? (emptyState ?? (
+              <div className="comments-state">
+                <Icon name="comment" size={30} />
+                <p>还没有评论记录。</p>
+                <Link to="/">去发现好味道</Link>
               </div>
-              <p className="comments-text">
-                {row.moderationStatus === "DELETED" ? "评论已删除" : row.text}
-              </p>
-              {!!row.imageCount && (
-                <span className="comments-muted">
-                  <Icon name="image" size={15} /> {row.imageCount} 张图片
-                </span>
-              )}
-              {row.moderationStatus === "REJECTED" &&
-                (row.reasonMessage || row.reasonCode) && (
-                  <p className="comments-rejection">
-                    {row.reasonMessage || row.reasonCode}
-                  </p>
+            ))
+          : q.data.items.map((row) => (
+              <article
+                className="comments-submission"
+                key={row.revisionId ?? row.id}
+              >
+                <div className="comments-submission-heading">
+                  <span>{row.kind === "REPLY" ? "回复" : "评论"}</span>
+                  <span
+                    className="comments-status"
+                    data-status={row.moderationStatus}
+                  >
+                    {commentStatus(row.moderationStatus)}
+                  </span>
+                  <time dateTime={row.createdAt ?? undefined}>
+                    {commentTime(row.createdAt)}
+                  </time>
+                </div>
+                <p className="comments-text">
+                  {row.moderationStatus === "DELETED" ? "评论已删除" : row.text}
+                </p>
+                {!!row.imageCount && (
+                  <span className="comments-muted">
+                    <Icon name="image" size={15} /> {row.imageCount} 张图片
+                  </span>
                 )}
-              <div className="comments-submission-actions">
-                {row.foodId && (
-                  <Link to={`/foods/${row.foodId}?section=comments`}>
-                    查看菜品 <Icon name="chevronRight" size={14} />
-                  </Link>
-                )}
-                <DeleteSubmission row={row} />
-              </div>
-            </article>
-          ))
-        )}
+                {row.moderationStatus === "REJECTED" &&
+                  (row.reasonMessage || row.reasonCode) && (
+                    <p className="comments-rejection">
+                      {row.reasonMessage || row.reasonCode}
+                    </p>
+                  )}
+                <div className="comments-submission-actions">
+                  {row.foodId && (
+                    <Link to={`/foods/${row.foodId}?section=comments`}>
+                      查看菜品 <Icon name="chevronRight" size={14} />
+                    </Link>
+                  )}
+                  <DeleteSubmission row={row} />
+                </div>
+              </article>
+            ))}
         <Pager
           page={page}
           hasNext={q.data?.hasNext}

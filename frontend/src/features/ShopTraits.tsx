@@ -6,6 +6,7 @@ import {
   shopKinds,
 } from "../api/v2-vocab";
 import { FieldMark } from "./FieldMark";
+import type { ReactNode } from "react";
 import { useShopOptions } from "./shop-options";
 import "./latest.css";
 
@@ -42,25 +43,48 @@ export function shopTraitsOf(shop: Partial<ShopTraits> | null | undefined) {
 const toggle = (list: string[], value: string, on: boolean) =>
   on ? [...list, value] : list.filter((x) => x !== value);
 
-/** Uses the same checkbox rows as the dish forms (.ew-meals). */
+function TraitHeading({
+  children,
+  compact,
+  required,
+  note,
+}: {
+  children: ReactNode;
+  compact?: boolean;
+  required?: boolean;
+  note?: string;
+}) {
+  return (
+    <b>
+      <span>{children}</span>
+      {compact ? (
+        note && <small className="shop-edit-limit">{note}</small>
+      ) : (
+        <FieldMark required={required} note={note} />
+      )}
+    </b>
+  );
+}
+
 export function ShopTraitsFields({
   value,
   onChange,
   disabled,
+  compact,
 }: {
   value: ShopTraits;
   onChange: (next: ShopTraits) => void;
   disabled?: boolean;
+  compact?: boolean;
 }) {
   const set = (patch: Partial<ShopTraits>) => onChange({ ...value, ...patch });
   const options = useShopOptions();
   return (
     <fieldset className="ew-shop-traits" disabled={disabled}>
       <div className="ew-meals" role="radiogroup" aria-label="店铺类型">
-        <b>
+        <TraitHeading compact={compact} required>
           店铺类型
-          <FieldMark required />
-        </b>
+        </TraitHeading>
         {shopKinds.map((k) => (
           <label key={k.id}>
             <input
@@ -74,10 +98,7 @@ export function ShopTraitsFields({
         ))}
       </div>
       <div className="ew-meals" role="radiogroup" aria-label="人均价位">
-        <b>
-          人均价位
-          <FieldMark />
-        </b>
+        <TraitHeading compact={compact}>人均价位</TraitHeading>
         {[...priceBands, { id: "", name: "不确定" }].map((p) => (
           <label key={p.id}>
             <input
@@ -90,11 +111,18 @@ export function ShopTraitsFields({
           </label>
         ))}
       </div>
-      <div className="ew-meals">
-        <b>
+      <div
+        className="ew-meals shop-edit-meals"
+        role="group"
+        aria-label="营业饭点"
+      >
+        <TraitHeading
+          compact={compact}
+          required
+          note={compact ? "至少选 1 项" : "至少一个"}
+        >
           营业饭点
-          <FieldMark required note="至少一个" />
-        </b>
+        </TraitHeading>
         {mealTimes.map((m) => (
           <label key={m.id}>
             <input
@@ -110,11 +138,10 @@ export function ShopTraitsFields({
           </label>
         ))}
       </div>
-      <div className="ew-meals">
-        <b>
+      <div className="ew-meals" role="group" aria-label="店铺分类">
+        <TraitHeading compact={compact} note={`最多 ${MAX_SHOP_CATEGORIES} 个`}>
           店铺分类
-          <FieldMark note={`最多 ${MAX_SHOP_CATEGORIES} 个`} />
-        </b>
+        </TraitHeading>
         {options.categories.map((c) => (
           <label key={c}>
             <input
@@ -134,11 +161,10 @@ export function ShopTraitsFields({
           </label>
         ))}
       </div>
-      <div className="ew-meals">
-        <b>
+      <div className="ew-meals" role="group" aria-label="口味">
+        <TraitHeading compact={compact} note={`最多 ${MAX_SHOP_TAGS} 个`}>
           口味
-          <FieldMark note={`最多 ${MAX_SHOP_TAGS} 个`} />
-        </b>
+        </TraitHeading>
         {options.tags.map((t) => (
           <label key={t}>
             <input
@@ -155,11 +181,12 @@ export function ShopTraitsFields({
           </label>
         ))}
       </div>
-      <div className="ew-meals">
-        <b>
-          外卖
-          <FieldMark />
-        </b>
+      <div
+        className="ew-meals shop-edit-delivery"
+        role="group"
+        aria-label="外卖"
+      >
+        <TraitHeading compact={compact}>外卖</TraitHeading>
         <label>
           <input
             type="checkbox"

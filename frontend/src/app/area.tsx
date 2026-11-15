@@ -44,6 +44,14 @@ function initialArea(): Area | null {
   }
   return null;
 }
+function rememberArea(area: Area) {
+  if (!isDemo)
+    try {
+      localStorage.setItem("eatwhat-area", JSON.stringify(area));
+    } catch {
+      /* preference optional */
+    }
+}
 const Context = createContext<{
   area: Area | null;
   openArea: () => void;
@@ -90,14 +98,42 @@ export function AreaProvider({ children }: { children: ReactNode }) {
   }
   const [area, setArea] = useState<Area | null>(initialArea),
     [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (
+      area?.source !== "device" ||
+      !["当前位置", "我的当前位置"].includes(area.name)
+    )
+      return;
+    let active = true;
+    void (async () => {
+      const hub = await api
+        .locateHub(area.gcjLng, area.gcjLat)
+        .catch(() => null);
+      if (!active) return;
+      let name = hub?.name ? `${hub.name}附近` : undefined;
+      if (!name)
+        try {
+          const { addressForMapPoint } = await import("../api/baidu-map");
+          name = await addressForMapPoint(area);
+        } catch {
+          /* A name lookup must not discard usable device coordinates. */
+        }
+      if (!active || !name) return;
+      const named = {
+        ...area,
+        name,
+        hubId: hub?.id ?? area.hubId,
+      };
+      setArea(named);
+      rememberArea(named);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [area, api]);
   function select(a: Area) {
     setArea(a);
-    if (!isDemo)
-      try {
-        localStorage.setItem("eatwhat-area", JSON.stringify(a));
-      } catch {
-        /* preference optional */
-      }
+    rememberArea(a);
     setOpen(false);
   }
   return (
