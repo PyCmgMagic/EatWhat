@@ -20,7 +20,9 @@ export type RequestOptions = {
       | "X-Captcha-Randstr"
       | "Idempotency-Key"
       | "X-Recovery-Capability"
-      | "X-Lifecycle-Recovery",
+      | "X-Lifecycle-Recovery"
+      | "X-Phone-Auth-Trace"
+      | "X-Phone-Auth-Timing",
       string
     >
   >;

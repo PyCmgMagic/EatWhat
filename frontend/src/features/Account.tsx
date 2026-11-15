@@ -13,7 +13,12 @@ import { LoginLink, useAuthBusy, useAuthFlow } from "../app/auth-dialog";
 import { isDemo, sessionSignal } from "../app/runtime";
 import { useTask } from "../components/useTask";
 import { classifyAuth } from "../api/service";
-import { localNumberToken, looksLikePhone } from "../app/local-number";
+import {
+  createLocalNumberTiming,
+  localNumberTimingHeaders,
+  localNumberToken,
+  looksLikePhone,
+} from "../app/local-number";
 import "../app/local-number.css";
 import { FeaturePage, FeatureState } from "./Catalog";
 import { useArea } from "../app/area";
@@ -237,8 +242,14 @@ export function PhoneLoginForm({
             onClick={() => {
               if (!mobileInput.current?.reportValidity()) return;
               login.run(async () => {
-                const spToken = await localNumberToken(api);
-                await signInWith(await api.webVerifyLogin({ mobile, spToken }));
+                const timing = createLocalNumberTiming();
+                const spToken = await localNumberToken(api, undefined, timing);
+                await signInWith(
+                  await api.webVerifyLogin(
+                    { mobile, spToken },
+                    localNumberTimingHeaders(timing),
+                  ),
+                );
               });
             }}
           >
