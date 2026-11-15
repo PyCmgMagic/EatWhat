@@ -41,10 +41,9 @@ export function validateFoodDraft(value: {
   if (value.tags.length > 20) throw new Error("最多添加 20 个个人标签。");
   for (const tag of value.tags) boundedText(normalizedTag(tag), 10, "个人标签");
 }
-export function foodEditBody(
-  original: Food,
-  patch: Schema["EditFoodDTORequest"],
-) {
+export function foodEditBody<
+  T extends Omit<Schema["EditFoodDTORequest"], "mealTimes">,
+>(original: Food, patch: T) {
   const body = { ...patch };
   if (body.name != null) {
     if (body.name.trim() === original.name?.trim()) delete body.name;

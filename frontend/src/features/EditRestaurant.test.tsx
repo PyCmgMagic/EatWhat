@@ -94,7 +94,6 @@ it("lets a verified user take a shop out of the night slot", async () => {
     mealTimes: ["lunch", "dinner"],
     categories: ["粉面"],
     tags: [],
-    deliveryEnabled: false,
   });
   expect(toast).toHaveBeenCalledWith("店铺信息已更新");
   expect(host.textContent).toContain("店铺详情");

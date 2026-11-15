@@ -256,6 +256,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/foods/{id}/rating": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 【需角色：verified 或 admin】给菜品评分（1–5 分） */
+        put: operations["rateFood"];
+        post?: never;
+        /** 【需登录】撤销菜品评分 */
+        delete: operations["unrateFood"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/foods/edit/{id}": {
         parameters: {
             query?: never;
@@ -2554,7 +2572,7 @@ export interface components {
             /** Format: int64 */
             timestamp?: number;
         };
-        EditRequest: {
+        RestaurantEditRequest: {
             name?: string;
             address?: string;
             /** Format: double */
@@ -2569,7 +2587,6 @@ export interface components {
             priceBand?: string;
             categories?: string[];
             tags?: string[];
-            deliveryEnabled?: boolean;
         };
         Edited: {
             /** Format: int64 */
@@ -2594,10 +2611,41 @@ export interface components {
             /** Format: int64 */
             campusId?: number | null;
         };
+        Rated: {
+            myRating?: number | null;
+            rating?: components["schemas"]["Rating"];
+        };
+        Rating: {
+            score?: number | null;
+            /** Format: int64 */
+            count?: number;
+        };
+        ResultRated: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["Rated"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
         CoverCrop: {
             centerX?: number;
             centerY?: number;
             diameter?: number;
+        };
+        FoodEditRequest: {
+            name?: string;
+            category?: string;
+            price?: number | null;
+            description?: string;
+            pictures?: string[];
+            tags?: string[];
+            signature?: boolean;
+            stageColor?: string;
+            stageAlternates?: string[];
+            coverCrop?: components["schemas"]["CoverCrop"];
+            mealTimes?: string[];
+            deliveryEnabled?: boolean;
         };
         VersionRequest: {
             /** Format: int32 */
@@ -2817,7 +2865,7 @@ export interface components {
             /** Format: int64 */
             timestamp?: number;
         };
-        AddRequest: {
+        RestaurantAddRequest: {
             name?: string;
             address?: string;
             /** Format: double */
@@ -2831,7 +2879,6 @@ export interface components {
             priceBand?: string;
             categories?: string[];
             tags?: string[];
-            deliveryEnabled?: boolean;
             force?: boolean;
         };
         Created: {
@@ -2876,7 +2923,7 @@ export interface components {
             /** Format: int64 */
             replyToId?: number;
         };
-        UploadRequest: {
+        FoodUploadRequest: {
             /** Format: int64 */
             restaurantId?: number;
             name?: string;
@@ -2889,6 +2936,8 @@ export interface components {
             stageColor?: string;
             stageAlternates?: string[];
             coverCrop?: components["schemas"]["CoverCrop"];
+            mealTimes?: string[];
+            deliveryEnabled?: boolean;
         };
         SuggestRequest: {
             /** Format: int64 */
@@ -3610,6 +3659,11 @@ export interface components {
             isFavorite?: boolean | null;
             signatureFoods?: components["schemas"]["SignatureFood"][];
         };
+        DishRating: {
+            score?: number | null;
+            /** Format: int64 */
+            count?: number;
+        };
         Feed: {
             mealTime?: string;
             /** Format: int64 */
@@ -3637,6 +3691,8 @@ export interface components {
             pictureUrl?: string | null;
             stageColor?: string | null;
             coverCrop?: components["schemas"]["CoverCrop"] | null;
+            signature?: boolean;
+            rating?: components["schemas"]["DishRating"];
         };
         Options: {
             categories?: string[];
@@ -3851,20 +3907,75 @@ export interface components {
             /** Format: int64 */
             timestamp?: number;
         };
-        PageResultFood: {
+        FoodOptions: {
+            categories?: string[];
+            tags?: string[];
+            stageColors?: string[];
+            /** Format: int32 */
+            maxPictures?: number;
+            /** Format: int32 */
+            maxTags?: number;
+            /** Format: int32 */
+            maxSignatures?: number;
+            mealTimes?: string[];
+        };
+        ResultFoodOptions: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["FoodOptions"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        FoodView: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            restaurantId?: number;
+            restaurantName?: string;
+            /** Format: int64 */
+            accountId?: number;
+            name?: string;
+            category?: string;
+            price?: number;
+            description?: string;
+            pictureUrls?: string[];
+            tags?: string[];
+            signature?: boolean;
+            stageColor?: string;
+            stageAlternates?: string[];
+            coverCrop?: components["schemas"]["CoverCrop"];
+            /** Format: int64 */
+            likeCount?: number;
+            /** Format: int64 */
+            favoriteCount?: number;
+            isLiked?: boolean;
+            isFavorite?: boolean;
+            /** Format: int64 */
+            createdAt?: number;
+            /** Format: int64 */
+            updatedAt?: number;
+            mealTimes?: string[];
+            effectiveMealTimes?: string[];
+            deliveryEnabled?: boolean;
+            rating?: components["schemas"]["Rating"];
+            /** Format: int32 */
+            myRating?: number;
+        };
+        PageResultFoodView: {
             /** Format: int64 */
             currentPage?: number;
-            items?: components["schemas"]["Food"][];
+            items?: components["schemas"]["FoodView"][];
             /** Format: int64 */
             totalPages?: number;
             /** Format: int64 */
             totalItems?: number;
             hasNext?: boolean;
         };
-        ResultPageResultFood: {
+        ResultPageResultFoodView: {
             /** Format: int32 */
             code?: number;
-            data?: components["schemas"]["PageResultFood"];
+            data?: components["schemas"]["PageResultFoodView"];
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
@@ -3886,10 +3997,10 @@ export interface components {
             /** Format: int64 */
             timestamp?: number;
         };
-        ResultFood: {
+        ResultFoodView: {
             /** Format: int32 */
             code?: number;
-            data?: components["schemas"]["Food"];
+            data?: components["schemas"]["FoodView"];
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
@@ -4250,29 +4361,15 @@ export interface components {
             createdAt?: number;
             /** Format: int64 */
             updatedAt?: number;
+            mealTimes?: string[];
+            effectiveMealTimes?: string[];
+            deliveryEnabled?: boolean;
+            rating?: components["schemas"]["Rating"];
+            myRating?: number | null;
         };
-        FoodEditRequest: {
-            name?: string;
-            category?: string;
-            price?: number | null;
-            description?: string;
-            pictures?: string[];
-            tags?: string[];
-            signature?: boolean;
-            stageColor?: string;
-            stageAlternates?: string[];
-            coverCrop?: components["schemas"]["CoverCrop"];
-        };
-        FoodOptions: {
-            categories?: string[];
-            tags?: string[];
-            stageColors?: string[];
+        FoodRatingRequest: {
             /** Format: int32 */
-            maxPictures?: number;
-            /** Format: int32 */
-            maxTags?: number;
-            /** Format: int32 */
-            maxSignatures?: number;
+            score: number;
         };
         ResultFoodV2: {
             /** Format: int32 */
@@ -4296,14 +4393,6 @@ export interface components {
             /** Format: int32 */
             code?: number;
             data?: components["schemas"]["PageResultFoodV2"];
-            msg?: string;
-            /** Format: int64 */
-            timestamp?: number;
-        };
-        ResultFoodOptions: {
-            /** Format: int32 */
-            code?: number;
-            data?: components["schemas"]["FoodOptions"];
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
@@ -5072,7 +5161,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["EditRequest"];
+                "application/json": components["schemas"]["RestaurantEditRequest"];
             };
         };
         responses: {
@@ -5109,6 +5198,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultVoid"];
+                };
+            };
+        };
+    };
+    rateFood: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FoodRatingRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultRated"];
+                };
+            };
+        };
+    };
+    unrateFood: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultRated"];
                 };
             };
         };
@@ -5696,7 +5833,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["AddRequest"];
+                "application/json": components["schemas"]["RestaurantAddRequest"];
             };
         };
         responses: {
@@ -6120,7 +6257,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UploadRequest"];
+                "application/json": components["schemas"]["FoodUploadRequest"];
             };
         };
         responses: {
@@ -7691,6 +7828,7 @@ export interface operations {
                 sort?: string;
                 scene?: string;
                 campusId?: number;
+                mealTime?: string;
                 page?: number;
                 pageSize?: number;
             };

@@ -134,6 +134,8 @@ const signatureDish = (shop: Json, dish: Json, known?: Json) =>
     distanceMeters: shop.distanceMeters,
     stageColor: dish.stageColor ?? known?.stageColor ?? null,
     coverCrop: dish.coverCrop ?? known?.coverCrop ?? null,
+    signature: dish.signature ?? known?.signature ?? false,
+    rating: dish.rating ?? known?.rating,
   })!;
 const omit = (query: Query, allowed: string[]) =>
   Object.fromEntries(
@@ -179,13 +181,22 @@ export function food(v: Json | null | undefined): Json | null {
     isLiked: v.isLiked ?? null,
     isFavorite: v.isFavorite ?? null,
     likesCount: v.likeCount ?? 0,
-    mealTimes: [],
+    mealTimes: v.mealTimes ?? [],
+    effectiveMealTimes: v.effectiveMealTimes ?? [],
+    deliveryEnabled: v.deliveryEnabled ?? null,
     stageColor: v.stageColor ?? null,
     stageAlternates: v.stageAlternates ?? [],
     coverCrop: v.coverCrop ?? null,
+    rating: dishRating(v.rating),
+    myRating: v.myRating ?? null,
   };
 }
 
+/** A dish's 1-5 rating: the average is null until somebody has rated it. */
+const dishRating = (v: Json | null | undefined) => ({
+  score: v?.score ?? null,
+  count: v?.count ?? 0,
+});
 const rating = (value: unknown) =>
   value === "RECOMMEND" || value === "NOT_RECOMMEND" ? value : null;
 export function restaurant(v: Json | null | undefined): Json | null {
@@ -223,6 +234,8 @@ export function restaurant(v: Json | null | undefined): Json | null {
       stageColor: f.stageColor ?? null,
       coverCrop: f.coverCrop ?? null,
       likesCount: f.likeCount ?? 0,
+      signature: f.signature ?? false,
+      rating: dishRating(f.rating),
     })),
     // v2 search by dish name returns the one dish that matched.
     matchedFoods: v.matchedFood
@@ -467,6 +480,12 @@ function foodBody(body: Json, create: boolean) {
       ? { stageColor: body.stageColor, stageAlternates: body.stageAlternates }
       : {}),
     ...(body.coverCrop ? { coverCrop: body.coverCrop } : {}),
+    // Omitted: a new dish follows its shop and does not deliver; an edit
+    // keeps what the dish has. [] puts the dish back on its shop's meal times.
+    ...(Array.isArray(body.mealTimes) ? { mealTimes: body.mealTimes } : {}),
+    ...(typeof body.deliveryEnabled === "boolean"
+      ? { deliveryEnabled: body.deliveryEnabled }
+      : {}),
   };
 }
 function restaurantBody(body: Json, current?: Json | null) {
@@ -489,7 +508,7 @@ function restaurantBody(body: Json, current?: Json | null) {
     priceBand: pick<string | null>("priceBand", null),
     categories: pick("categories", []),
     tags: pick("tags", []),
-    deliveryEnabled: pick("deliveryEnabled", false),
+    // No deliveryEnabled: v2 derives it from the shop's dishes.
   };
 }
 const created = (v: Json | null) => ({
@@ -982,6 +1001,8 @@ const routes: [string, RegExp, Handler][] = [
             category: toV2Category(query.category),
             scene: query.scene === "delivery" ? "delivery" : "dine_in",
             campusId: query.campusId,
+            // The slot the home page shows; v2 picks the current one if absent.
+            mealTime: query.mealTime,
             page: 1,
             pageSize: Math.max(size, 20),
           },
@@ -1075,6 +1096,9 @@ const routes: [string, RegExp, Handler][] = [
       }),
   ],
   ["POST", /^\/foods\/(\d+)\/(like|unlike|favorite|unfavorite)$/, pass],
+  // 1-5 score after eating the dish; replies {myRating, rating}.
+  ["PUT", /^\/foods\/(\d+)\/rating$/, pass],
+  ["DELETE", /^\/foods\/(\d+)\/rating$/, pass],
   [
     "GET",
     /^\/foods\/tags\/system$/,

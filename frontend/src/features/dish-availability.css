@@ -1,0 +1,13 @@
+.dish-availability {
+  display: contents;
+}
+.dish-availability-note {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #6e625b;
+}
+.dish-hero-copy .dish-availability-note {
+  color: var(--dish-ink, #231c18);
+  opacity: 0.72;
+}

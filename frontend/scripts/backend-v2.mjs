@@ -22,6 +22,8 @@ const stableNames = {
   "PUT /user/blocks/{userId}": "block",
   "DELETE /user/blocks/{userId}": "unblock",
   "PUT /restaurant/{id}/rating": "rate",
+  "PUT /foods/{id}/rating": "rateFood",
+  "DELETE /foods/{id}/rating": "unrateFood",
   "DELETE /restaurant/{id}/rating": "unrate",
   "PUT /restaurant/{id}/favorite": "favorite",
   "DELETE /restaurant/{id}/favorite": "unfavorite",
@@ -184,7 +186,22 @@ export async function readBackendV2() {
     isFavorite: nullable(bool),
     createdAt: int64,
     updatedAt: int64,
+    mealTimes: array(string),
+    effectiveMealTimes: array(string),
+    deliveryEnabled: bool,
+    rating: ref("Rating"),
+    myRating: nullable(int32),
   });
+  // Shop and dish ratings both use a record named RatingRequest; springdoc
+  // keeps only the shop's {scene, rating}. A dish is rated with a 1-5 score.
+  schemas.FoodRatingRequest = {
+    type: "object",
+    required: ["score"],
+    properties: {
+      score: { type: "integer", format: "int32", minimum: 1, maximum: 5 },
+    },
+  };
+  request("/foods/{id}/rating", "put", "FoodRatingRequest");
   schemas.FoodEditRequest = object({
     name: string,
     category: string,
@@ -196,6 +213,8 @@ export async function readBackendV2() {
     stageColor: string,
     stageAlternates: array(string),
     coverCrop: ref("CoverCrop"),
+    mealTimes: array(string),
+    deliveryEnabled: bool,
   });
   schemas.FoodOptions = object({
     categories: array(string),
@@ -204,6 +223,7 @@ export async function readBackendV2() {
     maxPictures: int32,
     maxTags: int32,
     maxSignatures: int32,
+    mealTimes: array(string),
   });
   schemas.ResultFoodV2 = result(ref("FoodV2"));
   schemas.PageResultFoodV2 = page(ref("FoodV2"));
@@ -367,6 +387,9 @@ export async function readBackendV2() {
       "hubName",
     ],
     SignatureFood: ["price", "pictureUrl", "stageColor", "coverCrop"],
+    DishRating: ["score"],
+    Rating: ["score"],
+    Rated: ["myRating"],
     MyInfo: ["banReason", "banUntil"],
     UserListItem: ["banReason", "banUntil"],
     DeviceSessionPage: ["nextCursor"],
@@ -446,7 +469,7 @@ export async function readBackendV2() {
 }
 
 const { spec, endpoints, callbacks } = await readBackendV2();
-if (Object.keys(endpoints).length !== 156 || callbacks.length !== 8) {
+if (Object.keys(endpoints).length !== 158 || callbacks.length !== 8) {
   throw new Error(
     "Backend v2 operation count changed; review the client coverage.",
   );

@@ -7,6 +7,7 @@ export type RestaurantFilters = NonNullable<
   operations["RestaurantController_browseRestaurants_get"]["parameters"]["query"]
 >;
 import type { CaptchaRunner } from "./captcha";
+import type { FoodRated } from "./v2-vocab";
 import type { components as V2 } from "./backend-v2-schema";
 /** One hit of the pre-publish duplicate check (backend v2 /foods/duplicates). */
 export type FoodDuplicate = V2["schemas"]["DishDuplicate"];
@@ -33,6 +34,8 @@ import type {
   Notification,
 } from "./models";
 
+/** v2: when a dish is served ([] = follows its shop) and if it delivers. */
+export type DishServing = { mealTimes?: string[]; deliveryEnabled?: boolean };
 export type FoodFilters = {
   hubId?: number;
   keyword?: string;
@@ -401,6 +404,14 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       post(`/foods/${id}/${liked ? "unlike" : "like"}`),
     favorite: (id: number, saved: boolean) =>
       post(`/foods/${id}/${saved ? "unfavorite" : "favorite"}`),
+    /** Rate a dish 1-5 after eating it; a new score replaces the old one. */
+    rateFood: (id: number, score: number) =>
+      data<FoodRated>(`/foods/${id}/rating`, {
+        method: "PUT",
+        body: { score },
+      }),
+    unrateFood: (id: number) =>
+      data<FoodRated>(`/foods/${id}/rating`, { method: "DELETE" }),
     foodTags: (id: number) =>
       data<Schema["FoodTagViewVOResponse"]>(`/foods/${id}/tags`),
     myTags: (page = 1) =>
@@ -427,9 +438,14 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
     deleteTag: (tagId: number) =>
       request<void>(`/foods/tags/my/${tagId}`, { method: "DELETE" }),
     createFood: (
-      body: Schema["CreateFoodDTORequest"] & { signature?: boolean },
+      body: Omit<Schema["CreateFoodDTORequest"], "mealTimes"> & {
+        signature?: boolean;
+      } & DishServing,
     ) => created("/foods/upload", body),
-    editMyFood: (id: number, body: Schema["EditFoodDTORequest"]) =>
+    editMyFood: (
+      id: number,
+      body: Omit<Schema["EditFoodDTORequest"], "mealTimes"> & DishServing,
+    ) =>
       request<Schema["CreatedResourceVOResponse"] | null>(`/foods/my/${id}`, {
         method: "PUT",
         body,

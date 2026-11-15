@@ -1,4 +1,10 @@
 import { useFeedbackState } from "../components/feedback";
+import {
+  DishAvailabilityFields,
+  dishAvailabilityOf,
+  sameMealTimes,
+} from "./DishAvailability";
+import type { DishServing } from "../api/service";
 import { Select } from "../components/Select";
 import { foodEditBody } from "../api/content-rules";
 import { useEffect, useRef, useState } from "react";
@@ -113,7 +119,8 @@ function EditForm({
   const originalTags = ((food as Food & V2Food).tags ?? []).filter((t) =>
       tasteTags.includes(t),
     ),
-    originalSignature = !!(food as Food & V2Food).signature;
+    originalSignature = !!(food as Food & V2Food).signature,
+    originalServing = dishAvailabilityOf(food as Food & V2Food);
   const [fields, setFields, clearFields] = useSessionDraft(draftKey, {
     name: food.name ?? "",
     description: food.description ?? "",
@@ -121,10 +128,19 @@ function EditForm({
     category: food.category ?? null,
     tags: originalTags,
     signature: originalSignature,
+    serving: originalServing,
     stage: (food.stageColor ?? null) as Stage | null,
     editVersion: 1,
   });
   const { name, description, price, category, tags, signature, stage } = fields;
+  // Drafts saved before this field existed have no serving.
+  const serving = fields.serving ?? originalServing;
+  const mealTimesChanged = !sameMealTimes(
+      serving.mealTimes,
+      originalServing.mealTimes,
+    ),
+    deliveryChanged =
+      serving.deliveryEnabled !== originalServing.deliveryEnabled;
   const stageChanged = stage !== (food.stageColor ?? null);
   const updateFields = (patch: Partial<typeof fields>) =>
     setFields((f) => ({ ...f, ...patch }));
@@ -158,6 +174,8 @@ function EditForm({
     category !== (food.category ?? null) ||
     tagsChanged ||
     signatureChanged ||
+    mealTimesChanged ||
+    deliveryChanged ||
     stageChanged ||
     photosChanged;
   useEffect(() => {
@@ -182,10 +200,10 @@ function EditForm({
           if (!name.trim()) throw new Error("请填写菜名。");
           if (food.price != null && price === "")
             throw new Error("价格不能为空，请填写有效价格。");
-          const body: Schema["EditFoodDTORequest"] & {
+          const body: Omit<Schema["EditFoodDTORequest"], "mealTimes"> & {
             systemTagIds?: number[];
             signature?: boolean;
-          } = {
+          } & DishServing = {
             name: name.trim(),
             description:
               description !== (food.description ?? "")
@@ -198,6 +216,10 @@ function EditForm({
               ? tags.map((tag) => tasteTags.indexOf(tag) + 1)
               : undefined,
             signature: signatureChanged ? signature : undefined,
+            mealTimes: mealTimesChanged ? serving.mealTimes : undefined,
+            deliveryEnabled: deliveryChanged
+              ? serving.deliveryEnabled
+              : undefined,
           };
           // v2 saves the stage colour together with its two alternates.
           if (stageChanged && stage) {
@@ -238,10 +260,7 @@ function EditForm({
             if (next[0].key !== food.pictureKeys?.[0])
               body.coverCrop = { centerX: 0.5, centerY: 0.5, diameter: 1 };
           }
-          await api.editMyFood(
-            food.id!,
-            foodEditBody(food, body),
-          );
+          await api.editMyFood(food.id!, foodEditBody(food, body));
           clearFields();
           clearPhotos();
           photos.forEach((p) => {
@@ -440,6 +459,11 @@ function EditForm({
                 这是这家店的招牌
               </label>
             </div>
+            <DishAvailabilityFields
+              value={serving}
+              disabled={busy || uncertain}
+              onChange={(serving) => updateFields({ serving })}
+            />
           </section>
         </div>
       </fieldset>

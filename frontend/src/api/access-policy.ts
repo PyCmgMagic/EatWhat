@@ -26,22 +26,29 @@ export function actionUnavailable(
 }
 
 export type AccessRequirement = "public" | "login" | "verified";
-const rules = requestAccessRules.map(([method, path, access]) => ({
-  method,
-  pattern: new RegExp(
-    "^" +
-      path
-        .split("/")
-        .map((part) =>
-          /^\{[^}]+\}$/.test(part)
-            ? "[^/]+"
-            : part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-        )
-        .join("/") +
-      "$",
-  ),
-  access,
-}));
+/** Backend v2 commands the APIv7 document (the generated rules) lacks. */
+const v2Rules = [
+  ["PUT", "/foods/{id}/rating", "verified"],
+  ["DELETE", "/foods/{id}/rating", "login"],
+] as const;
+const rules = [...requestAccessRules, ...v2Rules].map(
+  ([method, path, access]) => ({
+    method,
+    pattern: new RegExp(
+      "^" +
+        path
+          .split("/")
+          .map((part) =>
+            /^\{[^}]+\}$/.test(part)
+              ? "[^/]+"
+              : part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+          )
+          .join("/") +
+        "$",
+    ),
+    access,
+  }),
+);
 
 /** UI preflights and actual requests consult the same contract-derived policy. */
 export function requestAccess(
