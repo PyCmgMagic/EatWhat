@@ -6,6 +6,7 @@ import { DishIllustration } from "../../components/DishIllustration";
 import {
   businessDate,
   growthPercent,
+  ledgerSourceName,
   validBusinessDate,
 } from "../../api/growth";
 import { Card, Shell, QueryView, Pager, Field, timeText } from "./shared";
@@ -89,7 +90,7 @@ export default function Growth() {
                 </span>
                 <div>
                   <strong>
-                    {entry.sourceType === "DAILY_USE" ? "每日使用" : "经验奖励"}
+                    {ledgerSourceName(entry.sourceType)}
                   </strong>
                   <span>所属日期 {entry.businessDate ?? "待确认"}</span>
                   <small>入账于 {timeText(entry.createdAt)}</small>

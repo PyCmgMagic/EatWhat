@@ -29,3 +29,10 @@ export function growthPercent(value?: Schema["GrowthProgressResponse"]) {
     ? Math.max(0, Math.min(100, (value.experienceInLevel / span) * 100))
     : undefined;
 }
+/** 经验记录的来源名：后端 v2 直接返回中文名（sourceName），旧的枚举值兜底。 */
+export function ledgerSourceName(source?: string | null) {
+  const name = source?.trim();
+  if (!name) return "经验奖励";
+  if (name === "DAILY_USE" || name === "daily_use") return "每日使用";
+  return name;
+}
