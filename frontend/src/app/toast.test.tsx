@@ -27,11 +27,26 @@ function Harness({ error, dialog }: { error?: unknown; dialog?: boolean }) {
 }
 beforeEach(async () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  vi.stubGlobal("matchMedia", () =>
+    Object.assign(new EventTarget(), { matches: false }),
+  );
   vi.useFakeTimers();
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
   await act(async () => root.render(<Harness />));
+});
+
+it("starts closing a short success message after two seconds and retains it for the exit", async () => {
+  await act(async () => controller.toast("已发布", { tone: "success" }));
+  await act(async () => vi.advanceTimersByTime(1999));
+  expect(document.querySelector('.app-toast[data-exiting="true"]')).toBeNull();
+  await act(async () => vi.advanceTimersByTime(1));
+  expect(
+    document.querySelector('.app-toast[data-exiting="true"]'),
+  ).not.toBeNull();
+  await act(async () => vi.advanceTimersByTime(160));
+  expect(document.querySelector(".app-toast")).toBeNull();
 });
 afterEach(async () => {
   await act(async () => root.unmount());
@@ -78,7 +93,70 @@ it("renews identical retry feedback instead of letting its old timer hide it", a
   await act(async () => vi.advanceTimersByTime(1500));
   expect(document.querySelector(".app-toast")).not.toBeNull();
   await act(async () => vi.advanceTimersByTime(6500));
+  expect(
+    document.querySelector('.app-toast[data-exiting="true"]'),
+  ).not.toBeNull();
+  await act(async () => vi.advanceTimersByTime(160));
   expect(document.querySelector(".app-toast")).toBeNull();
+});
+
+it("animates pointer dismissal while keeping other messages visible", async () => {
+  await act(async () => {
+    controller.toast("已发布", { tone: "success" });
+    controller.toast("上传失败", { tone: "error" });
+  });
+  await act(async () =>
+    document
+      .querySelector<HTMLButtonElement>(
+        '.app-toast[data-tone="success"] button',
+      )!
+      .dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 })),
+  );
+  expect(
+    document.querySelector('.app-toast[data-exiting="true"]')?.textContent,
+  ).toContain("已发布");
+  await act(async () => vi.advanceTimersByTime(160));
+  expect(document.querySelectorAll(".app-toast")).toHaveLength(1);
+  expect(document.querySelector(".app-toast")?.textContent).toContain(
+    "上传失败",
+  );
+});
+
+it("pauses automatic dismissal while keyboard focus is inside the toast", async () => {
+  await act(async () => controller.toast("已发布", { tone: "success" }));
+  const close = document.querySelector<HTMLButtonElement>(".app-toast button")!;
+  await act(async () => close.focus());
+  await act(async () => vi.advanceTimersByTime(5000));
+  expect(document.querySelector('.app-toast[data-exiting="true"]')).toBeNull();
+  expect(document.querySelector(".app-toast")).not.toBeNull();
+  await act(async () => close.blur());
+  await act(async () => vi.advanceTimersByTime(2000));
+  expect(
+    document.querySelector('.app-toast[data-exiting="true"]'),
+  ).not.toBeNull();
+  await act(async () => vi.advanceTimersByTime(160));
+  expect(document.querySelector(".app-toast")).toBeNull();
+});
+
+it("dismisses without waiting for an exit when reduced motion is preferred", async () => {
+  vi.stubGlobal("matchMedia", () =>
+    Object.assign(new EventTarget(), { matches: true }),
+  );
+  await act(async () => controller.toast("已发布", { tone: "success" }));
+  await act(async () => vi.advanceTimersByTime(2000));
+  expect(document.querySelector(".app-toast")).toBeNull();
+});
+
+it("keeps a renewed message alive when its previous instance was already exiting", async () => {
+  await act(async () => controller.toast("已发布", { tone: "success" }));
+  await act(async () => vi.advanceTimersByTime(2000));
+  expect(
+    document.querySelector('.app-toast[data-exiting="true"]'),
+  ).not.toBeNull();
+  await act(async () => controller.toast("已发布", { tone: "success" }));
+  await act(async () => vi.advanceTimersByTime(160));
+  expect(document.querySelectorAll(".app-toast")).toHaveLength(1);
+  expect(document.querySelector('.app-toast[data-exiting="true"]')).toBeNull();
 });
 
 it("does not duplicate one error reported by a controller and its compatibility view", async () => {

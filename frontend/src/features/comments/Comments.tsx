@@ -464,6 +464,14 @@ export function CommentComposer({
           : value.moderationStatus === "REJECTED"
             ? "未通过审核，可在我的评论查看原因。"
             : "已提交，等待审核。",
+        {
+          tone:
+            value.moderationStatus === "APPROVED"
+              ? "success"
+              : value.moderationStatus === "REJECTED"
+                ? "error"
+                : "info",
+        },
       );
       await refresh();
       if (active.current) after?.();
@@ -721,6 +729,7 @@ export function FoodDiscussion({
     if (mobile)
       nav(
         `/comments/write?foodId=${food.id}&rootId=${value.rootId}&replyToId=${value.id}&name=${encodeURIComponent(value.name)}`,
+        { state: { commentList: loc.pathname + loc.search } },
       );
     else {
       setTarget(value);
@@ -827,7 +836,10 @@ export function FoodDiscussion({
           <button
             className="comments-input-trigger"
             onClick={() => {
-              if (access(false)) nav(`/comments/write?foodId=${food.id}`);
+              if (access(false))
+                nav(`/comments/write?foodId=${food.id}`, {
+                  state: { commentList: loc.pathname + loc.search },
+                });
             }}
           >
             吃过的话，说两句
@@ -836,7 +848,10 @@ export function FoodDiscussion({
             className="comments-icon"
             aria-label="发表带图片的评论"
             onClick={() => {
-              if (access(true)) nav(`/comments/write?foodId=${food.id}`);
+              if (access(true))
+                nav(`/comments/write?foodId=${food.id}`, {
+                  state: { commentList: loc.pathname + loc.search },
+                });
             }}
           >
             <Icon name="image" size={24} />
@@ -953,6 +968,12 @@ export function MobileComments() {
   const rootId = parseId(params.get("rootId") ?? undefined),
     replyId = parseId(params.get("replyToId") ?? undefined);
   const writing = loc.pathname.endsWith("/write");
+  const source =
+    typeof loc.state?.commentList === "string" ? loc.state.commentList : "";
+  const sourceParams = new URLSearchParams(source.split("?")[1]);
+  const fromComments =
+    source.split("?")[0] === "/comments" &&
+    parseId(sourceParams.get("foodId") ?? undefined) === foodId;
   const q = useQuery({
     queryKey: ["food", foodId],
     queryFn: () => api.food(foodId!),
@@ -960,7 +981,9 @@ export function MobileComments() {
   });
   const back = foodId
     ? writing
-      ? commentsHref(foodId)
+      ? fromComments
+        ? source
+        : commentsHref(foodId)
       : `/foods/${foodId}`
     : "/";
   useEffect(() => {
@@ -996,7 +1019,10 @@ export function MobileComments() {
                     }
                   : null
               }
-              after={() => nav("/me/shares?tab=comments")}
+              after={() => {
+                if (fromComments) nav(-1);
+                else nav(commentsHref(foodId), { replace: true });
+              }}
             />
           ) : (
             <>

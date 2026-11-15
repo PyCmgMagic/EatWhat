@@ -41,13 +41,11 @@ async function mount() {
     .mockResolvedValueOnce("comments/one")
     .mockRejectedValueOnce(new Error("第二张上传失败"))
     .mockResolvedValueOnce("comments/two");
-  const submit = vi
-    .fn()
-    .mockResolvedValue({
-      id: 7,
-      revisionId: "revision",
-      moderationStatus: "PENDING",
-    });
+  const submit = vi.fn().mockResolvedValue({
+    id: 7,
+    revisionId: "revision",
+    moderationStatus: "PENDING",
+  });
   const toast = vi.fn();
   const app = {
     user: { id: 10, verified: true },
@@ -114,7 +112,7 @@ it("preserves completed upload keys after a partial failure and retries only the
     },
     expect.any(String),
   );
-  expect(toast).toHaveBeenCalledWith("已提交，等待审核。");
+  expect(toast).toHaveBeenCalledWith("已提交，等待审核。", { tone: "info" });
   expect(host.querySelector("textarea")!.value).toBe("");
 });
 it("counts emoji by Unicode character and prevents oversized submissions", async () => {

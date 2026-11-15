@@ -29,8 +29,11 @@ function BridgeScreen() {
     setState: noop,
   } as unknown as Controller;
   const bridge = useDesignBridge("G-AddDish", controller, { cats: [] }, false);
-  const props: Record<string, any> = { href: "G-Dish.dc.html" };
-  bridge.node({
+  const props: Record<string, any> = {
+    href: "G-Dish.dc.html",
+    "data-testid": "publish",
+  };
+  const publishControl = bridge.node({
     screen: "G-AddDish",
     node: { id: -1, tag: "a", attrs: {}, children: [] },
     props,
@@ -40,9 +43,7 @@ function BridgeScreen() {
   });
   return (
     <>
-      <a {...props} data-testid="publish">
-        发布
-      </a>
+      {publishControl ?? <a {...props}>发布</a>}
       {bridge.after}
       <output data-busy={String(bridge.busy)} />
     </>

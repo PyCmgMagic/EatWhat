@@ -7,6 +7,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Check, CircleAlert, Info, X } from "lucide-react";
+import { motion } from "../motion/runtime";
 import "./toast.css";
 
 export type ToastOptions = { tone?: "info" | "success" | "error" };
@@ -51,14 +52,40 @@ function ToastItem({
   dismiss: (id: number) => void;
 }) {
   const [paused, setPaused] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const lifetime =
+    item.tone === "error"
+      ? 8000
+      : Math.min(
+          5000,
+          Math.max(
+            item.tone === "success" ? 2000 : 3000,
+            [...item.message].length * 80,
+          ),
+        );
   useEffect(() => {
-    if (paused) return;
-    const timer = setTimeout(
-      () => dismiss(item.id),
-      item.tone === "error" ? 8000 : 5000,
-    );
+    if (paused || closing) return;
+    const timer = setTimeout(() => setClosing(true), lifetime);
     return () => clearTimeout(timer);
-  }, [item.id, item.tone, dismiss, paused]);
+  }, [item.id, lifetime, paused, closing]);
+  useEffect(() => {
+    if (!closing) return;
+    const preference = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    const finish = () => dismiss(item.id);
+    if (preference?.matches) {
+      finish();
+      return;
+    }
+    const timer = window.setTimeout(finish, motion.exit);
+    const changed = () => {
+      if (preference?.matches) finish();
+    };
+    preference?.addEventListener("change", changed);
+    return () => {
+      clearTimeout(timer);
+      preference?.removeEventListener("change", changed);
+    };
+  }, [closing, item.id, dismiss]);
   const Icon =
     item.tone === "error"
       ? CircleAlert
@@ -69,6 +96,8 @@ function ToastItem({
     <div
       className="toast visible app-toast"
       data-tone={item.tone}
+      data-exiting={closing ? "true" : undefined}
+      inert={closing}
       role={item.tone === "error" ? "alert" : "status"}
       aria-atomic="true"
       onPointerEnter={() => setPaused(true)}
@@ -88,7 +117,10 @@ function ToastItem({
       <span>{item.message}</span>
       <button
         type="button"
-        onClick={() => dismiss(item.id)}
+        onClick={(event) => {
+          if (event.detail === 0) dismiss(item.id);
+          else setClosing(true);
+        }}
         aria-label="关闭提示"
       >
         <X size={16} aria-hidden="true" />
