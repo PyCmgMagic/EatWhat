@@ -203,6 +203,11 @@
 .mobile-auth-page input:focus {
   border-bottom-color: #231c18;
 }
+/* The underline is the focus cue here; drop the inherited outline box. */
+.mobile-auth-page input:not([type="checkbox"]):focus {
+  outline: none;
+  border-bottom-color: #231c18;
+}
 .mobile-auth-page .pc-auth-password {
   position: relative;
   display: flex;
