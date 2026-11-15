@@ -1084,6 +1084,37 @@ export function demoTransport(
         foods = foods.sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0));
       return ok(paged(foods.map(withFoodViewer)));
     }
+    case "getFoodDuplicates": {
+      const key = (value: unknown) =>
+        String(value ?? "")
+          .replace(/\s+/g, "")
+          .toLowerCase();
+      const wanted = key(q.keyword);
+      if (!wanted) return fail(10001, "菜名应为 1–30 个字符");
+      return ok(
+        state.foods
+          .filter(
+            (food) =>
+              food.restaurantId === Number(q.restaurantId) &&
+              key(food.name).includes(wanted),
+          )
+          .sort(
+            (a, b) =>
+              Number(key(b.name) === wanted) - Number(key(a.name) === wanted) ||
+              key(a.name).length - key(b.name).length ||
+              a.id - b.id,
+          )
+          .slice(0, 5)
+          .map((food) => ({
+            id: food.id,
+            name: food.name,
+            category: food.category,
+            price: food.price ?? null,
+            pictureUrl: food.pictureUrls?.[0] ?? null,
+            sameName: key(food.name) === wanted,
+          })),
+      );
+    }
     case "getFoodsMy":
       return ok(
         paged(

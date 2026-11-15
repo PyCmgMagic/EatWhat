@@ -12,6 +12,7 @@ const out = new URL("../src/api/", import.meta.url);
 // contract instead. New operations receive a deterministic method/path name.
 const stableNames = {
   "GET /auth/sdu": "sdu",
+  "GET /foods/duplicates": "getFoodDuplicates",
   "POST /auth/sdu": "startSso",
   "PUT /user/updateInfo": "updateInfo",
   "GET /user/recommendation-profile/preferences": "preferences",
@@ -445,7 +446,7 @@ export async function readBackendV2() {
 }
 
 const { spec, endpoints, callbacks } = await readBackendV2();
-if (Object.keys(endpoints).length !== 150 || callbacks.length !== 8) {
+if (Object.keys(endpoints).length !== 151 || callbacks.length !== 8) {
   throw new Error(
     "Backend v2 operation count changed; review the client coverage.",
   );

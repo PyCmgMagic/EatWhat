@@ -9,6 +9,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useApp } from "../app/state";
+import { DishDuplicateHint } from "../features/DishDuplicateHint";
 import { usePageLifetime } from "../app/drafts";
 import { useArea } from "../app/area";
 import { duplicateFoodId, errorMessage, resultUncertain } from "../api/client";
@@ -710,6 +711,7 @@ export default function DesktopPublish() {
                 </div>
               </label>
             </div>
+            <DishDuplicateHint restaurantId={selectedId} name={draft.name} />
             <div className="pc-composer-kind">
               <span>菜品分类</span>
               <div role="radiogroup" aria-label="菜品分类">

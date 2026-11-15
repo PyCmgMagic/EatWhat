@@ -7,6 +7,9 @@ export type RestaurantFilters = NonNullable<
   operations["RestaurantController_browseRestaurants_get"]["parameters"]["query"]
 >;
 import type { CaptchaRunner } from "./captcha";
+import type { components as V2 } from "./backend-v2-schema";
+/** One hit of the pre-publish duplicate check (backend v2 /foods/duplicates). */
+export type FoodDuplicate = V2["schemas"]["DishDuplicate"];
 import type { ShopTraits } from "../features/ShopTraits";
 import { createV4Api } from "./v4";
 import { createCommentsApi } from "./comments";
@@ -356,6 +359,21 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
     ) =>
       data<Page<Food>>("/foods/list", {
         query: { restaurantId, page, pageSize: 12, ...filters },
+      }),
+    /**
+     * Dishes of this shop whose name contains the keyword (spaces and case
+     * ignored), same name first. Only a hint before publishing: a dish shared
+     * under dine-in may be hidden under delivery when the shop has delivery off.
+     */
+    foodDuplicates: (
+      restaurantId: number,
+      keyword: string,
+      signal?: AbortSignal,
+    ) =>
+      data<FoodDuplicate[]>("/foods/duplicates", {
+        query: { restaurantId, keyword },
+        public: true,
+        signal,
       }),
     myFoods: (page = 1) =>
       data<Page<Food>>("/foods/my", { query: { page, pageSize: 12 } }),

@@ -642,6 +642,11 @@ export const endpoints = {
     "path": "/foods/favorites",
     "access": "login"
   },
+  "getFoodDuplicates": {
+    "method": "GET",
+    "path": "/foods/duplicates",
+    "access": "public"
+  },
   "getFoodsDetailById": {
     "method": "GET",
     "path": "/foods/detail/{id}",
