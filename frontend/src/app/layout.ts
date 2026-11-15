@@ -17,7 +17,6 @@ export function desktopLayout(
 export function editingFlow(path: string) {
   if (path === "/comments/write") return "comment";
   if (path === "/publish" || path.startsWith("/publish/")) return "publish";
-  if (path === "/me/edit" || path === "/me/details") return "profile";
   if (/^\/foods\/\d+\/edit$/.test(path)) return path;
   if (/^\/restaurants\/\d+\/edit$/.test(path)) return path;
   if (path === "/restaurants/new" || path === "/restaurants/new/details")

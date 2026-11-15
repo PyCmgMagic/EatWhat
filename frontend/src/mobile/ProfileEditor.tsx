@@ -11,6 +11,7 @@ export default function ProfileEditor({
   busy,
   onChange,
   onAvatar,
+  onUndoAvatar,
   onSave,
   onCancel,
 }: {
@@ -20,6 +21,7 @@ export default function ProfileEditor({
   busy: boolean;
   onChange: (patch: Partial<ProfileForm>) => void;
   onAvatar: () => void;
+  onUndoAvatar?: () => void;
   onSave: () => void;
   onCancel: () => void;
 }) {
@@ -82,6 +84,11 @@ export default function ProfileEditor({
           >
             换头像
           </button>
+          {onUndoAvatar && (
+            <button type="button" disabled={busy} onClick={onUndoAvatar}>
+              撤销头像更换
+            </button>
+          )}
         </div>
         <fieldset className="mobile-profile-editor-fields" disabled={busy}>
           <div className="mobile-profile-editor-field">

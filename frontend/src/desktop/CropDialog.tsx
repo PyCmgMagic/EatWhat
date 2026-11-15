@@ -33,7 +33,8 @@ export default function CropDialog({
     [url, setUrl] = useState(""),
     [frameSize, setFrameSize] = useState(300);
   const [busy, setBusy] = useState(false),
-    [error, setError] = useFeedbackState();
+    [, setError] = useFeedbackState();
+  const isAvatar = variant === "avatar";
   const source = image.original ?? image.file;
   const dismiss = useSurfaceDismiss(dialog, onClose);
   useEffect(() => {
@@ -65,7 +66,7 @@ export default function CropDialog({
   return (
     <dialog
       ref={dialog}
-      className="pc-crop-dialog"
+      className={`pc-crop-dialog${isAvatar ? " pc-profile-crop" : ""}`}
       aria-labelledby="pc-crop-title"
       onCancel={(event) => {
         event.preventDefault();
@@ -74,12 +75,10 @@ export default function CropDialog({
     >
       <header>
         <div>
-          <h2 id="pc-crop-title">
-            {variant === "avatar" ? "调整头像" : "调整菜品照片"}
-          </h2>
+          <h2 id="pc-crop-title">{isAvatar ? "调整头像" : "调整菜品照片"}</h2>
           <p>
-            {variant === "avatar"
-              ? "拖动和缩放，选一个最适合你的角度。"
+            {isAvatar
+              ? "拖动照片或用方向键调整位置。"
               : "拖动照片，把好吃的放在画面中间。"}
           </p>
         </div>
@@ -161,7 +160,7 @@ export default function CropDialog({
             {url && (
               <img
                 src={url}
-                alt={variant === "avatar" ? "待裁剪的头像" : "待裁剪的菜品照片"}
+                alt={isAvatar ? "待裁剪的头像" : "待裁剪的菜品照片"}
                 draggable={false}
                 onLoad={(event) => {
                   const img = event.currentTarget,
@@ -182,15 +181,15 @@ export default function CropDialog({
           </div>
         </div>
         <div className="pc-crop-controls">
-          <span className="pc-eyebrow">画面调整</span>
-          <h3>
-            {variant === "avatar" ? "让食友一眼认出你" : "让这一口更出彩"}
-          </h3>
-          <p>
-            {variant === "avatar"
-              ? "圆形区域就是头像展示的范围。调整完成后，记得保存个人资料。"
-              : "拖动调整位置，放大突出菜品。使用原照片重新取景，随时可以取消。"}
-          </p>
+          {!isAvatar && (
+            <>
+              <span className="pc-eyebrow">画面调整</span>
+              <h3>让这一口更出彩</h3>
+              <p>
+                拖动调整位置，放大突出菜品。使用原照片重新取景，随时可以取消。
+              </p>
+            </>
+          )}
           <label htmlFor="pc-crop-zoom">
             缩放 <span>{crop.zoom.toFixed(1)}×</span>
           </label>
@@ -208,15 +207,18 @@ export default function CropDialog({
           />
           <button
             type="button"
-            className="pc-small-link"
-            disabled={busy}
+            className={isAvatar ? "pc-profile-action" : "pc-small-link"}
+            disabled={
+              busy ||
+              (isAvatar && crop.x === 0 && crop.y === 0 && crop.zoom === 1)
+            }
             onClick={() => setCrop({ x: 0, y: 0, zoom: 1 })}
           >
             恢复原始取景
           </button>
           <small>
-            {variant === "avatar"
-              ? "确认取景只会更新预览，保存资料后才会更换头像。"
+            {isAvatar
+              ? "保存资料后更换头像。"
               : "调整仅应用到这次分享，原文件会保留。"}
           </small>
         </div>
@@ -232,7 +234,7 @@ export default function CropDialog({
         </button>
         <button
           type="button"
-          className="pc-button"
+          className={isAvatar ? "pc-button pc-profile-primary" : "pc-button"}
           disabled={busy}
           onClick={async () => {
             if (busy) return;
@@ -247,11 +249,7 @@ export default function CropDialog({
             }
           }}
         >
-          {busy
-            ? "正在处理…"
-            : variant === "avatar"
-              ? "使用这个头像"
-              : "使用这张照片"}
+          {busy ? "正在处理…" : isAvatar ? "使用这个头像" : "使用这张照片"}
           <Icon name="check" size={18} />
         </button>
       </footer>

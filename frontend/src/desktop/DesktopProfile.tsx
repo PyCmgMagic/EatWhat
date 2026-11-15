@@ -3,18 +3,19 @@ import { Select } from "../components/Select";
 import { useContext, useEffect, useRef, useState, type FormEvent } from "react";
 import { ProfileNavigationGuardContext } from "../app/profile-workspace";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { Crop, Undo2 } from "lucide-react";
 import { useApp } from "../app/state";
 import { errorMessage } from "../api/client";
-import { mediaUrl, type User } from "../api/models";
+import { mediaUrl } from "../api/models";
 import { validateFiles } from "../api/validation";
 import { DesignIcon as Icon, type Draft } from "../mobile/ui";
-import { profileChanges, profileForm, profileClearError } from "./profile";
+import { profileClearError } from "./profile";
 import CropDialog from "./CropDialog";
 import { useSurfaceDismiss } from "../motion/hooks";
-import { useMemoryDraft, useSessionDraft } from "../app/drafts";
+import { usePageLifetime } from "../app/drafts";
+import { useProfileDraft } from "../app/profile-draft";
 import { useProfileReturnTo } from "../app/profile-navigation";
-import { readSession, sessionSignal } from "../app/runtime";
 import { PageHead, Section } from "./secondary";
 import "./profile.css";
 
@@ -28,35 +29,25 @@ export default function DesktopProfile() {
       ? "返回个人主页"
       : "返回原页面";
   const app = useApp(),
-    cache = useQueryClient(),
     nav = useNavigate();
-  const [saved, setSaved] = useState(() => profileForm(app.user!));
-  const draftKey = `profile:${app.user?.id}`;
-  const [form, setForm, clearFormDraft] = useSessionDraft(draftKey, saved);
-  const [avatar, setAvatar, clearAvatarDraft] = useMemoryDraft<Avatar | null>(
-    draftKey,
-    null,
-  );
+  const profile = useProfileDraft()!;
+  const { form, saved, avatar, phase } = profile;
+  const active = usePageLifetime();
   const [cropping, setCropping] = useState<Avatar | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [busy, setBusy] = useState(false),
-    [phase, setPhase] = useState("");
-  const [error, setError] = useFeedbackState(),
+  const busy = !!phase;
+  const [, setError] = useFeedbackState(),
     [notice, setNotice] = useState("");
   const [nameTouched, setNameTouched] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [leaveTo, setLeaveTo] = useState(returnTo);
   const navigationGuard = useContext(ProfileNavigationGuardContext);
   const input = useRef<HTMLInputElement>(null),
+    changeAvatar = useRef<HTMLButtonElement>(null),
+    saveBar = useRef<HTMLElement>(null),
     leaveDialog = useRef<HTMLDialogElement>(null);
   const dismissLeave = useSurfaceDismiss(leaveDialog, () => setLeaving(false));
-  const saving = useRef(false),
-    uploaded = useRef<{ file: File; key: string } | null>(null);
-  const changes = profileChanges(form, saved);
-  const dirty =
-    !!avatar ||
-    Object.keys(changes).length > 0 ||
-    JSON.stringify(form) !== JSON.stringify(saved);
+  const dirty = !!avatar || JSON.stringify(form) !== JSON.stringify(saved);
   const clearError = profileClearError(form, saved);
   const nameInvalid =
     form.name.trim().length < 2 || form.name.trim().length > 12;
@@ -70,6 +61,7 @@ export default function DesktopProfile() {
     enabled: form.province !== null,
   });
   const avatarUrl = avatar?.url || mediaUrl(app.user?.avatar);
+  const saveStatus = busy ? phase : notice || (dirty ? "有修改尚未保存" : "");
   const unknownBirthday = form.birthday === undefined;
   const today = new Date(),
     maxDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
@@ -104,7 +96,7 @@ export default function DesktopProfile() {
   }, [busy, dirty, navigationGuard]);
 
   function change(patch: Partial<typeof form>) {
-    setForm((current) => ({ ...current, ...patch }));
+    profile.change(patch);
     setNotice("");
     setError("");
   }
@@ -121,12 +113,7 @@ export default function DesktopProfile() {
     }
   }
   function reset() {
-    if (avatar?.url) URL.revokeObjectURL(avatar.url);
-    setForm(saved);
-    setAvatar(null);
-    clearFormDraft();
-    clearAvatarDraft();
-    uploaded.current = null;
+    profile.reset();
     setError("");
     setNotice("");
     setNameTouched(false);
@@ -139,7 +126,7 @@ export default function DesktopProfile() {
   }
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (saving.current || !dirty) return;
+    if (busy || !dirty) return;
     setNameTouched(true);
     if (clearError) {
       setError(clearError);
@@ -157,55 +144,15 @@ export default function DesktopProfile() {
       setError("生日不能晚于今天。");
       return;
     }
-    saving.current = true;
-    const owner = sessionSignal(app.session);
-    const checkOwner = () => {
-      readSession();
-      owner.throwIfAborted();
-    };
-    setBusy(true);
     setError("");
     setNotice("");
     try {
-      const body = { ...changes };
-      if (avatar) {
-        if (uploaded.current?.file !== avatar.file) {
-          setPhase("正在上传头像…");
-          const key = await app.upload(avatar.file, "avatar");
-          uploaded.current = { file: avatar.file, key };
-        }
-        body.avatar = uploaded.current!.key;
-      }
-      setPhase("正在保存资料…");
-      await app.api.updateProfile(body);
-      // A successful PUT acknowledges these fields even if readback is offline.
-      let user: User = { ...app.user, ...body };
-      try {
-        user = await app.api.me();
-      } catch (error) {
-        checkOwner();
-        if (error instanceof Error && error.name === "AbortError") throw error;
-        /* Keep acknowledged changes. */
-      }
-      checkOwner();
-      cache.setQueryData(["me"], user);
-      const next = profileForm(user);
-      setSaved(next);
-      setForm(next);
-      if (avatar?.url) URL.revokeObjectURL(avatar.url);
-      setAvatar(null);
-      clearFormDraft();
-      clearAvatarDraft();
-      uploaded.current = null;
+      if (!(await profile.save())) return;
       setNotice("修改已保存，个人主页已同步更新。");
       app.toast("个人资料已更新");
-      void cache.invalidateQueries({ queryKey: ["user"] });
     } catch (e) {
-      if (!owner.aborted) setError(errorMessage(e));
-    } finally {
-      saving.current = false;
-      setBusy(false);
-      setPhase("");
+      if (!(e instanceof Error && e.name === "AbortError"))
+        setError(errorMessage(e));
     }
   }
 
@@ -213,7 +160,6 @@ export default function DesktopProfile() {
     <div className="pc-profile-editor">
       <PageHead
         title="编辑个人资料"
-        detail="管理头像、昵称和个人信息，保存后同步到个人主页。"
         crumb={returnLabel}
         onBack={back}
         backDisabled={busy}
@@ -224,133 +170,155 @@ export default function DesktopProfile() {
         noValidate
         aria-label="个人资料表单"
       >
-        <fieldset disabled={busy}>
-          <Section title="基本资料" detail="头像、昵称和签名会展示在个人主页。">
-            <div className="pc-profile-avatar-row">
-              <button
-                type="button"
-                className={`pc-profile-avatar-picker ${dragging ? "is-dragging" : ""}`}
-                aria-label="选择头像图片"
-                disabled={busy}
-                onClick={() => input.current?.click()}
+        <fieldset
+          disabled={busy}
+          onFocus={({ target }) => {
+            const bar = saveBar.current;
+            if (
+              bar &&
+              target.getBoundingClientRect().bottom >
+                bar.getBoundingClientRect().top
+            )
+              target.scrollIntoView({ block: "nearest", behavior: "instant" });
+          }}
+        >
+          <Section title="基本资料">
+            <div className="pc-profile-basics">
+              <div
+                className={`pc-profile-avatar-row${dragging ? " is-dragging" : ""}`}
                 onDragOver={(e) => {
+                  if (busy || !e.dataTransfer.types.includes("Files")) return;
                   e.preventDefault();
                   setDragging(true);
                 }}
-                onDragLeave={() => setDragging(false)}
+                onDragLeave={(e) => {
+                  if (
+                    !(e.relatedTarget instanceof Node) ||
+                    !e.currentTarget.contains(e.relatedTarget)
+                  )
+                    setDragging(false);
+                }}
                 onDrop={(e) => {
                   e.preventDefault();
                   setDragging(false);
                   pick(Array.from(e.dataTransfer.files));
                 }}
               >
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="头像预览" />
-                ) : (
-                  <span>{form.name.trim().slice(0, 1) || "食"}</span>
-                )}
-                <i>
-                  <Icon name="camera" size={17} />
-                </i>
-              </button>
-              <input
-                ref={input}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                hidden
-                aria-label="上传头像"
-                onChange={(e) => {
-                  pick(Array.from(e.target.files ?? []));
-                  e.target.value = "";
-                }}
-              />
-              <div className="pc-profile-avatar-details">
-                <b>头像</b>
-                <p>点击或拖入图片，支持 JPG、PNG、WebP，10 MB 以内。</p>
-                <div className="pc-profile-avatar-actions">
-                  <button
-                    type="button"
-                    className="pc-button light"
-                    disabled={busy}
-                    onClick={() => input.current?.click()}
-                  >
-                    <Icon name="image" size={16} />
-                    更换头像
-                  </button>
-                  {avatar && (
-                    <button
-                      type="button"
-                      className="pc-profile-text-button"
-                      disabled={busy}
-                      onClick={() => setCropping(avatar)}
-                    >
-                      调整取景
-                    </button>
-                  )}
-                </div>
-
-                {avatar && (
-                  <button
-                    type="button"
-                    className="pc-profile-undo"
-                    disabled={busy}
-                    onClick={() => {
-                      setAvatar(null);
-                      uploaded.current = null;
-                    }}
-                  >
-                    撤销头像更换
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="pc-profile-fields">
-              <div className="pc-profile-field">
-                <label htmlFor="nick">
-                  昵称<span className="pc-profile-required">必填</span>
-                  <small>{form.name.length} / 12</small>
-                </label>
-                <input
-                  id="nick"
-                  autoComplete="nickname"
-                  maxLength={12}
-                  value={form.name}
-                  onChange={(e) => change({ name: e.target.value })}
-                  onBlur={() => setNameTouched(true)}
-                  aria-invalid={nameTouched && nameInvalid}
-                  aria-describedby="pc-profile-name-hint"
-                />
-                <p
-                  id="pc-profile-name-hint"
-                  className={
-                    nameTouched && nameInvalid ? "pc-profile-invalid" : ""
-                  }
+                <button
+                  type="button"
+                  className="pc-profile-avatar-picker"
+                  aria-label="选择头像图片"
+                  aria-describedby="pc-profile-avatar-hint"
+                  onClick={() => input.current?.click()}
                 >
-                  {nameTouched && nameInvalid
-                    ? "昵称需要 2–12 个字，请调整后再保存。"
-                    : "2–12 个字，可以和其他食友重名。"}
-                </p>
-              </div>
-              <div className="pc-profile-field">
-                <label htmlFor="sign">
-                  个性签名<span>选填</span>
-                  <small>{form.signature.length} / 30</small>
-                </label>
-                <textarea
-                  id="sign"
-                  rows={2}
-                  maxLength={30}
-                  placeholder="一句话介绍自己，或写下你的口味"
-                  value={form.signature}
-                  onChange={(e) => change({ signature: e.target.value })}
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="头像预览" />
+                  ) : (
+                    <span>{form.name.trim().slice(0, 1) || "食"}</span>
+                  )}
+                  <i aria-hidden="true">
+                    <Icon name="camera" size={17} />
+                  </i>
+                </button>
+                <input
+                  ref={input}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  aria-label="上传头像"
+                  onChange={(e) => {
+                    pick(Array.from(e.target.files ?? []));
+                    e.target.value = "";
+                  }}
                 />
+                <div className="pc-profile-avatar-details">
+                  <h3>头像</h3>
+                  <div className="pc-profile-avatar-actions">
+                    <button
+                      ref={changeAvatar}
+                      type="button"
+                      className="pc-profile-action pc-profile-avatar-change"
+                      onClick={() => input.current?.click()}
+                    >
+                      <Icon name="image" size={16} />
+                      更换头像
+                    </button>
+                    {avatar && (
+                      <>
+                        <button
+                          type="button"
+                          className="pc-profile-action"
+                          onClick={() => setCropping(avatar)}
+                        >
+                          <Crop size={14} aria-hidden="true" />
+                          调整取景
+                        </button>
+                        <button
+                          type="button"
+                          className="pc-profile-action"
+                          onClick={() => {
+                            profile.setAvatar(null);
+                            changeAvatar.current?.focus();
+                          }}
+                        >
+                          <Undo2 size={14} aria-hidden="true" />
+                          撤销头像更换
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  <p id="pc-profile-avatar-hint">
+                    可拖入 JPG、PNG、WebP，最大 10 MB
+                  </p>
+                </div>
+              </div>
+              <div className="pc-profile-fields">
+                <div className="pc-profile-field">
+                  <label htmlFor="nick">
+                    昵称
+                    <small aria-hidden="true">{form.name.length} / 12</small>
+                  </label>
+                  <input
+                    id="nick"
+                    autoComplete="nickname"
+                    required
+                    maxLength={12}
+                    value={form.name}
+                    onChange={(e) => change({ name: e.target.value })}
+                    onBlur={() => setNameTouched(true)}
+                    aria-invalid={nameTouched && nameInvalid}
+                    aria-describedby="pc-profile-name-hint"
+                  />
+                  <p
+                    id="pc-profile-name-hint"
+                    className={
+                      nameTouched && nameInvalid ? "pc-profile-invalid" : ""
+                    }
+                  >
+                    {nameTouched && nameInvalid
+                      ? "昵称需要 2–12 个字。"
+                      : "2–12 个字"}
+                  </p>
+                </div>
+                <div className="pc-profile-field">
+                  <label htmlFor="sign">
+                    个性签名
+                    <small aria-hidden="true">
+                      {form.signature.length} / 30
+                    </small>
+                  </label>
+                  <textarea
+                    id="sign"
+                    rows={2}
+                    maxLength={30}
+                    value={form.signature}
+                    onChange={(e) => change({ signature: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
           </Section>
-          <Section
-            title="更多资料"
-            detail="以下信息均为选填，可以按自己的意愿填写。"
-          >
+          <Section title="更多资料">
             <div className="pc-profile-fields">
               <div className="pc-profile-field">
                 <label htmlFor="profile-gender">性别</label>
@@ -370,18 +338,19 @@ export default function DesktopProfile() {
                 </Select>
               </div>
               <div className="pc-profile-field">
-                <label htmlFor="profile-birthday">
-                  生日
+                <div className="pc-profile-field-heading">
+                  <label htmlFor="profile-birthday">生日</label>
                   {(form.birthday || unknownBirthday) && (
                     <button
                       type="button"
-                      className="pc-profile-text-button"
+                      className="pc-profile-action"
+                      aria-label="清除生日"
                       onClick={() => change({ birthday: "" })}
                     >
                       清除
                     </button>
                   )}
-                </label>
+                </div>
                 <input
                   id="profile-birthday"
                   type="date"
@@ -457,6 +426,7 @@ export default function DesktopProfile() {
                 ，已保存的家乡会保留。
                 <button
                   type="button"
+                  className="pc-profile-action"
                   onClick={() =>
                     void (provinces.error
                       ? provinces.refetch()
@@ -469,22 +439,19 @@ export default function DesktopProfile() {
             )}
           </Section>
         </fieldset>
-        <footer className="pc-profile-savebar">
+        <footer ref={saveBar} className="pc-profile-savebar">
           <div
             className={`pc-profile-save-status ${notice ? "is-saved" : ""}`}
             role="status"
           >
-            <Icon
-              name={notice ? "check" : dirty ? "edit" : "check"}
-              size={18}
-            />
-            <span>
-              {busy
-                ? phase
-                : notice || (dirty ? "有修改尚未保存" : "资料已是最新状态")}
-            </span>
+            {saveStatus && (
+              <>
+                <Icon name={notice ? "check" : "edit"} size={16} />
+                <span>{saveStatus}</span>
+              </>
+            )}
           </div>
-          <div>
+          <div className="pc-profile-save-actions">
             <button
               type="button"
               className="pc-button light"
@@ -495,11 +462,11 @@ export default function DesktopProfile() {
             </button>
             <button
               type="submit"
-              className="pc-button"
+              className="pc-button pc-profile-primary"
               disabled={busy || !dirty}
             >
-              {busy ? "正在保存…" : "保存修改"}
               <Icon name="check" size={17} />
+              {busy ? "正在保存…" : "保存修改"}
             </button>
           </div>
         </footer>
@@ -510,14 +477,13 @@ export default function DesktopProfile() {
           image={cropping}
           onClose={() => setCropping(null)}
           onApply={(result, framing) => {
-            if (avatar?.url) URL.revokeObjectURL(avatar.url);
-            setAvatar({
+            if (!active.current) return;
+            profile.setAvatar({
               file: result.file,
               original: cropping.original ?? cropping.file,
               url: URL.createObjectURL(result.file),
               framing,
             });
-            uploaded.current = null;
             setCropping(null);
             setNotice("");
           }}
@@ -534,18 +500,14 @@ export default function DesktopProfile() {
           }}
         >
           <h2 id="pc-profile-leave-title">还有修改未保存</h2>
-          <p>离开当前页面会放弃这次修改，继续编辑可以保留当前内容。</p>
+          <p>离开后，本次修改将丢失。</p>
           <div>
-            <button
-              type="button"
-              className="pc-button light"
-              onClick={dismissLeave}
-            >
+            <button type="button" className="pc-button" onClick={dismissLeave}>
               继续编辑
             </button>
             <button
               type="button"
-              className="pc-button"
+              className="pc-button light pc-profile-discard"
               onClick={() => {
                 reset();
                 nav(leaveTo);

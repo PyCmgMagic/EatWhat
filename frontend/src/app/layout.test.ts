@@ -22,11 +22,14 @@ describe("responsive presentation", () => {
     expect(editingFlow("/publish/crop")).toBe("publish");
     expect(editingFlow("/publish/dish")).toBe("publish");
   });
-  it("retains the profile and restaurant editor through their steps", () => {
-    expect(editingFlow("/me/edit")).toBe(editingFlow("/me/details"));
+  it("retains the restaurant editor through its steps", () => {
     expect(editingFlow("/restaurants/new")).toBe(
       editingFlow("/restaurants/new/details"),
     );
+  });
+  it("lets both profile editor entries follow the current viewport", () => {
+    expect(editingFlow("/me/edit")).toBeNull();
+    expect(editingFlow("/me/details")).toBeNull();
   });
   it("isolates different food editors and excludes ordinary pages", () => {
     expect(editingFlow("/foods/1/edit")).not.toBe(editingFlow("/foods/2/edit"));

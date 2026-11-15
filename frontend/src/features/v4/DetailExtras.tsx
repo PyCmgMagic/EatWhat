@@ -37,7 +37,7 @@ export function FoodExtras({
             </button>
           </p>
         )}
-        <EditHistory kind="food" id={id} />
+        <EditHistory id={id} />
         <Link
           className="mobile-food-report"
           to={`/reports/new?type=FOOD&id=${id}`}
@@ -46,10 +46,10 @@ export function FoodExtras({
         </Link>
       </footer>
     );
-  if (!q.isError && !q.data?.length) return <EditHistory kind="food" id={id} />;
+  if (!q.isError && !q.data?.length) return <EditHistory id={id} />;
   return (
     <>
-      <EditHistory kind="food" id={id} />
+      <EditHistory id={id} />
       <Card title="相关专题">
         <QueryView query={q}>
           {q.data?.map((t) => (
@@ -79,7 +79,6 @@ export default function DetailExtras({
       >
         <h2>店铺评价与反馈</h2>
         <RestaurantActions id={id} hideFavorite />
-        <EditHistory kind="restaurant" id={id} />
       </section>
     );
   return (
@@ -87,12 +86,9 @@ export default function DetailExtras({
       {/^\/foods\/\d+$/.test(path) ? (
         <FoodExtras id={id} />
       ) : (
-        <>
-          <Card title="店铺评价与反馈">
-            <RestaurantActions id={id} hideFavorite />
-          </Card>
-          <EditHistory kind="restaurant" id={id} />
-        </>
+        <Card title="店铺评价与反馈">
+          <RestaurantActions id={id} hideFavorite />
+        </Card>
       )}
     </div>
   );

@@ -21,7 +21,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useApp } from "../app/state";
-import { removeDraft } from "../app/drafts";
+import { useProfileDraft } from "../app/profile-draft";
 import { useDebouncedSearch } from "../app/search";
 import { isDemo } from "../app/runtime";
 import { useArea } from "../app/area";
@@ -82,12 +82,7 @@ import HomeOrbit from "./HomeOrbit";
 import TagPanel from "./TagPanel";
 import AvatarSourceSheet from "./AvatarSourceSheet";
 import ProfileEditor from "./ProfileEditor";
-import {
-  profileChanges,
-  profileClearError,
-  profileForm,
-  type ProfileForm,
-} from "../desktop/profile";
+import { profileClearError } from "../desktop/profile";
 import { withDraftTag, withDraftTags } from "./draft-tags";
 import { useActionAccess } from "../features/access";
 import { useContentMotion } from "../motion/hooks";
@@ -173,6 +168,8 @@ export function useDesignBridge(
   draftRef.current = m.draft;
   const access = useActionAccess();
   const profileReturnTo = useProfileReturnTo();
+  const profileDraft = useProfileDraft();
+  const profile = screen === "G-EditProfile" && !reference ? profileDraft : null;
   const foodBack = useReturnTo("/"),
     shopBack = useReturnTo("/nearby");
   const activeLocation = useRef(location.key);
@@ -205,7 +202,8 @@ export function useDesignBridge(
   const tagAdding = useRef(false),
     publishLock = useRef(false);
   const publishUncertain = screen === "G-AddDish" && !!m.draft.publishUncertain;
-  const busy = localBusy || (screen === "G-AddDish" && !!m.draft.publishing);
+  const busy =
+    localBusy || !!profile?.phase || (screen === "G-AddDish" && !!m.draft.publishing);
   const active = !reference && !!session,
     verified = active && user?.verified === true && !user?.banned;
   const browse = !reference;
@@ -509,16 +507,6 @@ export function useDesignBridge(
       heroWithoutDish && !recommendedShops?.length,
     shopsWithoutDish = heroWithoutDish && !!recommendedShops?.length;
   const liveFood = detail.data;
-  function profileDraft(): ProfileForm {
-    return {
-      name: String(controller.state.nick ?? ""),
-      signature: String(controller.state.sign ?? ""),
-      gender: String(controller.state.gender ?? ""),
-      birthday: controller.state.birthday,
-      province: controller.state.province ?? null,
-      city: controller.state.city ?? null,
-    };
-  }
   async function run(fn: () => Promise<unknown>, success?: string) {
     if (busy) return;
     setBusy(true);
@@ -810,19 +798,6 @@ export function useDesignBridge(
     values.line = error ? "#A8321C" : "#E6DED8";
     values.locked = busy;
     values.canLogin = !busy;
-  }
-  if (screen === "G-EditProfile" && !reference) {
-    // The live chooser opens above the scaled canvas as a native modal.
-    values.sheet = false;
-    const invalid =
-      String(controller.state.nick ?? "").trim().length < 2 ||
-      String(controller.state.nick ?? "").trim().length > 12;
-    values.nickBad = invalid ? "true" : "false";
-    values.nickTip = invalid
-      ? "昵称需要 2–12 个字"
-      : "2–12 个字，可以和别人重名";
-    values.setNick = (e: any) =>
-      controller.setState({ nick: e.target.value.slice(0, 12) });
   }
   if (screen === "G-Verify" && !reference) {
     values.verified = user?.verified === true;
@@ -2339,21 +2314,17 @@ export function useDesignBridge(
         p.onChange = (e: any) => m.setDraft({ price: e.target.value });
       }
     }
-    if (screen === "G-EditProfile" && id === 1 && user)
+    if (profile && id === 1 && user)
       return (
         <ProfileEditor
-          form={profileDraft()}
-          avatar={mediaUrl(user.avatar)}
+          form={profile.form}
+          avatar={profile.avatar?.url || mediaUrl(user.avatar)}
           avatarOpen={Boolean(controller.state.sheet)}
           busy={busy}
-          onChange={(patch) => {
-            const { name, signature, ...other } = patch;
-            controller.setState({
-              ...other,
-              ...(name !== undefined ? { nick: name } : {}),
-              ...(signature !== undefined ? { sign: signature } : {}),
-            });
-          }}
+          onChange={profile.change}
+          onUndoAvatar={
+            profile.avatar ? () => profile.setAvatar(null) : undefined
+          }
           onAvatar={() => controller.setState({ sheet: true })}
           onSave={() => navigateDesign("G-Me.dc.html", "保存")}
           onCancel={() => navigateDesign("G-Me.dc.html", "取消")}
@@ -2999,17 +2970,17 @@ export function useDesignBridge(
     });
   }
   async function pickAvatar(source: "camera" | "library") {
+    if (!profile || busy) return;
+    const page = location.key;
     const files = await pickFiles(
       false,
       source === "camera" ? "user" : undefined,
     );
-    if (!files.length) return;
+    if (!files.length || activeLocation.current !== page) return;
     await run(async () => {
       validateFiles(files, 0);
-      const key = await app.upload(files[0], "avatar");
-      await api.updateProfile({ avatar: key });
-      await app.me.refetch();
-      controller.setState({ sheet: false });
+      if (await profile.save(files[0]) && activeLocation.current === page)
+        controller.setState({ sheet: false });
     });
   }
   function navigateDesign(target: string, label: string, aria?: string) {
@@ -3054,10 +3025,10 @@ export function useDesignBridge(
       void login();
       return;
     }
-    if (screen === "G-EditProfile" && label === "保存") {
+    if (profile && label === "保存") {
       if (busy || !user) return;
       void run(async () => {
-        const form = profileDraft();
+        const { form, saved } = profile;
         const name = form.name.trim();
         if (name.length < 2 || name.length > 12) {
           document.getElementById("nick")?.focus();
@@ -3065,23 +3036,19 @@ export function useDesignBridge(
         }
         if (form.signature.length > 30)
           throw new Error("个性签名最多填写 30 个字。");
-        const saved = profileForm(user);
         const clearError = profileClearError(form, saved);
         if (clearError) throw new Error(clearError);
         const today = new Date();
         const maxDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
         if (form.birthday && form.birthday > maxDate)
           throw new Error("生日不能晚于今天。");
-        const changes = profileChanges(form, saved);
-        if (Object.keys(changes).length) await api.updateProfile(changes);
-        removeDraft(`profile-mobile:${user?.id}`);
-        await app.me.refetch();
-        nav(profileReturnTo);
+        if (await profile.save() && activeLocation.current === location.key)
+          nav(profileReturnTo);
       }, "个人资料已更新");
       return;
     }
-    if (screen === "G-EditProfile" && label === "取消") {
-      removeDraft(`profile-mobile:${user?.id}`);
+    if (profile && label === "取消") {
+      profile.reset();
       nav(profileReturnTo);
       return;
     }
@@ -3310,7 +3277,7 @@ export function useDesignBridge(
     );
   const after = (
     <>
-      {!denied && screen === "G-EditProfile" && controller.state.sheet && (
+      {!denied && profile && controller.state.sheet && (
         <AvatarSourceSheet
           busy={busy}
           onPick={(source) => void pickAvatar(source)}

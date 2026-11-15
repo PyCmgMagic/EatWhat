@@ -28,6 +28,7 @@ import {
 import { CatalogCard } from "../Catalog";
 import { ProfileSectionNav } from "../ProfileSectionNav";
 import "../profile-activity.css";
+import "./edit-history.css";
 import {
   Card,
   Shell,
@@ -1118,6 +1119,7 @@ export function RestaurantActions({
   id: number;
   hideFavorite?: boolean;
 }) {
+  const { pathname, search } = useLocation();
   const { api, session } = useApp(),
     cache = useQueryClient(),
     task = useCommand(),
@@ -1187,6 +1189,15 @@ export function RestaurantActions({
         {/* Open editing, like dishes: verified users fix it themselves. */}
         <Link to={shopEditPath(id)}>修改店铺</Link>
         <Link to={`/restaurants/correction?id=${id}`}>店铺信息有误</Link>
+        <Link
+          className="restaurant-history-link"
+          to={`/restaurants/${id}/history`}
+          state={{ returnTo: pathname + search }}
+        >
+          <Icon name="history" size={16} />
+          修改记录
+          <Icon name="chevronRight" size={14} />
+        </Link>
         <Link to={`/reports/new?type=RESTAURANT&id=${id}`}>举报</Link>
       </div>
       {shop && (

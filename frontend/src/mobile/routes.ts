@@ -1,3 +1,5 @@
+import { restaurantHistoryId } from "../features/v4-paths";
+
 export const screenRoutes: Record<string, string> = {
   "G2-Home": "/",
   "G-HomePhoto": "/home-photo",
@@ -232,6 +234,7 @@ export function browserTitle(path: string) {
       ? `${screenTitles[key]} · 原型预览 · ${brand}`
       : `页面不存在 · ${brand}`;
   }
+  if (restaurantHistoryId(path) !== undefined) return `修改记录 · ${brand}`;
   const dynamic = /^\/foods\/\d+\/edit$/.test(path)
     ? "编辑菜品"
     : /^\/restaurants\/\d+\/edit$/.test(path)

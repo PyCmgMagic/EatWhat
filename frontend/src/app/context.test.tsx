@@ -9,6 +9,7 @@ import { useApp, type AppState } from "./state";
 import { writeSession, readSession } from "./runtime";
 import { MobileChange } from "../features/v4/Account";
 import DesktopProfile from "../desktop/DesktopProfile";
+import { ProfileDraftProvider } from "./profile-draft";
 import { recoveryCommands } from "../api/recovery";
 import { FeedbackForm } from "../features/v4/Community";
 
@@ -40,7 +41,9 @@ function Probe({ page }: { page?: "mobile" | "profile" | "feedback" }) {
     page === "mobile" ? (
       <MobileChange />
     ) : page === "profile" ? (
-      <DesktopProfile />
+      <ProfileDraftProvider editing>
+        <DesktopProfile />
+      </ProfileDraftProvider>
     ) : page === "feedback" ? (
       <FeedbackForm />
     ) : null

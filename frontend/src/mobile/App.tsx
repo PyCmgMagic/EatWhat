@@ -78,6 +78,7 @@ import { useContentMotion, useExitPresence } from "../motion/hooks";
 import { desktopLayout, editingFlow } from "../app/layout";
 import { NotFound } from "../app/navigation";
 import { useProfileReturnTo } from "../app/profile-navigation";
+import { ProfileDraftProvider } from "../app/profile-draft";
 import { usePageLifetime } from "../app/drafts";
 import { useVisibleViewport } from "../app/viewport";
 import RestaurantLocationField, {
@@ -125,7 +126,13 @@ export default function MobileApp() {
       version: workspace.version + (workspace.owner ? 1 : 0),
     });
   }
-  return <MobileWorkspace key={workspace.version} />;
+  const { pathname } = useLocation();
+  const editingProfile = pathname === "/me/edit" || pathname === "/me/details";
+  return (
+    <ProfileDraftProvider key={workspace.version} editing={editingProfile}>
+      <MobileWorkspace />
+    </ProfileDraftProvider>
+  );
 }
 function MobileWorkspace() {
   const profileReturnTo = useProfileReturnTo();

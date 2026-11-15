@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useLocation } from "react-router-dom";
 import { useApp } from "../../app/state";
 import { errorMessage } from "../../api/client";
 import { mealTimes, priceBands, shopKinds } from "../../api/v2-vocab";
+import { DesignIcon as Icon } from "../../mobile/ui";
 import { timeText } from "./shared";
 import "./edit-history.css";
 
@@ -86,20 +88,66 @@ function changeLines(revision: Revision) {
   });
 }
 
-/**
- * Edit history shown under a dish or shop. Signed-in verified users (and
- * admins) can put an earlier version back, as backend v2 allows.
- */
-export function EditHistory({
+export function EditHistory({ id }: { id: number }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <details
+      className="edit-history"
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
+      <summary>
+        修改记录
+        <small>大家一起维护菜品信息</small>
+      </summary>
+      <RevisionList kind="food" id={id} enabled={open} />
+    </details>
+  );
+}
+
+export function RestaurantEditHistory({ id }: { id: number }) {
+  const { api } = useApp();
+  const location = useLocation();
+  const detailPath = `/restaurants/${id}`;
+  const source = location.state?.returnTo;
+  const back =
+    typeof source === "string" && source.split("?")[0] === detailPath
+      ? source
+      : detailPath;
+  const shop = useQuery({
+    queryKey: ["restaurants", "detail", id],
+    queryFn: () => api.restaurant(id),
+  });
+  return (
+    <section
+      className="restaurant-history-page"
+      aria-labelledby="restaurant-history-title"
+    >
+      <header>
+        <Link className="restaurant-history-back" to={back}>
+          <Icon name="back" size={16} />
+          返回店铺
+        </Link>
+        <h1 id="restaurant-history-title">修改记录</h1>
+        {shop.data?.name && <p>{shop.data.name}</p>}
+      </header>
+      <div className="edit-history restaurant-history-card">
+        <RevisionList kind="restaurant" id={id} />
+      </div>
+    </section>
+  );
+}
+
+function RevisionList({
   kind,
   id,
+  enabled = true,
 }: {
   kind: "food" | "restaurant";
   id: number;
+  enabled?: boolean;
 }) {
   const { api, user } = useApp(),
     cache = useQueryClient(),
-    [open, setOpen] = useState(false),
     [page, setPage] = useState(1),
     [confirm, setConfirm] = useState<number | null>(null),
     [busy, setBusy] = useState(false),
@@ -107,28 +155,27 @@ export function EditHistory({
   const q = useQuery({
     queryKey: ["edit-history", kind, id, page],
     queryFn: () => api.editHistory(kind, id, page),
-    enabled: open && !!id,
+    enabled: enabled && !!id,
   });
   const canRestore =
     !!user && (user.verified === true || user.role === "admin");
   const items = q.data?.items ?? [];
   return (
-    <details
-      className="edit-history"
-      onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
-    >
-      <summary>
-        修改记录
-        <small>
-          {kind === "food" ? "大家一起维护菜品信息" : "大家一起维护店铺信息"}
-        </small>
-      </summary>
-      {q.isPending && open && <p className="edit-history-state">正在读取…</p>}
+    <>
+      {q.isPending && enabled && (
+        <p className="edit-history-state" role="status">
+          正在读取…
+        </p>
+      )}
       {q.isError && (
         <p className="edit-history-state">
           {errorMessage(q.error)}
-          <button type="button" onClick={() => void q.refetch()}>
-            重试
+          <button
+            type="button"
+            disabled={q.isFetching}
+            onClick={() => void q.refetch()}
+          >
+            {q.isFetching ? "正在重试…" : "重试"}
           </button>
         </p>
       )}
@@ -203,6 +250,7 @@ export function EditHistory({
                     ) : (
                       <button
                         type="button"
+                        disabled={busy}
                         onClick={() => {
                           setNote("");
                           setConfirm(revision.id!);
@@ -227,21 +275,27 @@ export function EditHistory({
         <nav className="edit-history-pager" aria-label="修改记录分页">
           <button
             type="button"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => p - 1)}
+            disabled={busy || page <= 1}
+            onClick={() => {
+              setConfirm(null);
+              setPage((p) => p - 1);
+            }}
           >
             较新
           </button>
           <span>第 {page} 页</span>
           <button
             type="button"
-            disabled={!q.data?.hasNext}
-            onClick={() => setPage((p) => p + 1)}
+            disabled={busy || !q.data?.hasNext}
+            onClick={() => {
+              setConfirm(null);
+              setPage((p) => p + 1);
+            }}
           >
             更早
           </button>
         </nav>
       )}
-    </details>
+    </>
   );
 }

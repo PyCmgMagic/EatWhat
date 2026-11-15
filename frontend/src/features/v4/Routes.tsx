@@ -3,6 +3,8 @@ import { useLocation } from "react-router-dom";
 import { Gate } from "../../components/ui";
 import { ContentSkeleton } from "../../components/LoadingSkeleton";
 import { recoveryCommands } from "../../api/recovery";
+import { restaurantHistoryId } from "../v4-paths";
+import { RestaurantEditHistory } from "./EditHistory";
 import {
   Devices,
   MobileChange,
@@ -26,6 +28,8 @@ const Growth = lazy(() => import("./Growth"));
 const Directory = lazy(() => import("./Directory"));
 export default function V4Routes() {
   const path = useLocation().pathname;
+  const historyId = restaurantHistoryId(path);
+  if (historyId !== undefined) return <RestaurantEditHistory id={historyId} />;
   let page;
   if (path === "/auth/device-recovery") return <Devices />;
   if (path === "/auth/mobile-recovery") return <MobileChange />;

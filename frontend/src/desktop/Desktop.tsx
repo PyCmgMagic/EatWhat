@@ -85,11 +85,6 @@ const RestaurantActions = lazy(() =>
     default: m.RestaurantActions,
   })),
 );
-const ShopHistory = lazy(() =>
-  import("../features/v4/EditHistory").then((m) => ({
-    default: m.EditHistory,
-  })),
-);
 const FoodExtras = lazy(() =>
   import("../features/v4/DetailExtras").then((m) => ({
     default: m.FoodExtras,
@@ -1782,7 +1777,6 @@ function DesktopRestaurant() {
           </section>
           <Suspense fallback={<ContentSkeleton kind="rows" count={1} />}>
             <RestaurantActions id={id} />
-            <ShopHistory kind="restaurant" id={id} />
           </Suspense>
           <section className="pc-content-sheet is-standalone">
             <div className="pc-section-toolbar">

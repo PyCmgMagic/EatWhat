@@ -135,61 +135,58 @@ function ProfileEditorSkeleton() {
       aria-label="正在加载个人资料"
       aria-busy="true"
     >
-      <PageHead
-        title="编辑个人资料"
-        detail="管理头像、昵称和个人信息，保存后同步到个人主页。"
-        crumb={crumb}
-        back={returnTo}
-      />
+      <PageHead title="编辑个人资料" crumb={crumb} back={returnTo} />
       <div className="pc-profile-form" aria-hidden="true">
-        <Section title="基本资料" detail="头像、昵称和签名会展示在个人主页。">
-          <div className="pc-profile-avatar-row">
-            <span className="pc-profile-avatar-picker">
-              <Skeleton width="100%" height="100%" round />
-            </span>
-            <div className="pc-profile-avatar-details">
-              <b>头像</b>
-              <p>点击或拖入图片，支持 JPG、PNG、WebP，10 MB 以内。</p>
-              <Skeleton width={104} height={36} />
+        <Section title="基本资料">
+          <div className="pc-profile-basics">
+            <div className="pc-profile-avatar-row">
+              <span className="pc-profile-avatar-picker">
+                <Skeleton width="100%" height="100%" round />
+              </span>
+              <div className="pc-profile-avatar-details">
+                <h3>头像</h3>
+                <Skeleton width={92} height={32} />
+                <p>可拖入 JPG、PNG、WebP，最大 10 MB</p>
+              </div>
             </div>
-          </div>
-          <div className="pc-profile-fields">
-            <div className="pc-profile-field">
-              <label>昵称</label>
-              <Skeleton height={44} />
-              <p>2–12 个字，可以和其他食友重名。</p>
-            </div>
-            <div className="pc-profile-field">
-              <label>个性签名</label>
-              <Skeleton height={77} />
+            <div className="pc-profile-fields">
+              <div className="pc-profile-field">
+                <label>昵称</label>
+                <Skeleton height={42} />
+                <p>2–12 个字</p>
+              </div>
+              <div className="pc-profile-field">
+                <label>个性签名</label>
+                <Skeleton height={74} />
+              </div>
             </div>
           </div>
         </Section>
-        <Section
-          title="更多资料"
-          detail="以下信息均为选填，可以按自己的意愿填写。"
-        >
+        <Section title="更多资料">
           <div className="pc-profile-fields">
             {["性别", "生日", "家乡省份", "家乡城市"].map((label) => (
               <div className="pc-profile-field" key={label}>
                 <label>{label}</label>
-                <Skeleton height={44} />
+                <Skeleton height={42} />
               </div>
             ))}
           </div>
         </Section>
         <footer className="pc-profile-savebar">
           <div className="pc-profile-save-status">
-            <Icon name="refresh" size={18} />
             <span>正在加载资料…</span>
           </div>
-          <div>
+          <div className="pc-profile-save-actions">
             <button className="pc-button light" type="button" disabled>
               取消修改
             </button>
-            <button className="pc-button" type="button" disabled>
-              保存修改
+            <button
+              className="pc-button pc-profile-primary"
+              type="button"
+              disabled
+            >
               <Icon name="check" size={17} />
+              保存修改
             </button>
           </div>
         </footer>

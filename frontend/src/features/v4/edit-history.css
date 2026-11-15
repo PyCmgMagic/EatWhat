@@ -1,4 +1,68 @@
-/* Edit history under dishes and shops (backend v2 revisions). */
+.v4-actions .restaurant-history-link,
+.restaurant-history-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-weight: 650;
+}
+.v4-actions .restaurant-history-link {
+  padding: 0 10px;
+  border: 1px solid #e7dcd2;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.restaurant-history-link:hover {
+  background: #fff6e4;
+  border-color: #d7ba82;
+}
+.restaurant-history-page {
+  max-width: 820px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 12px 0 36px;
+  color: #231c18;
+}
+.restaurant-history-page > header h1 {
+  margin: 6px 0 0;
+  font-size: clamp(24px, 4vw, 32px);
+  font-weight: 850;
+}
+.restaurant-history-page > header p {
+  margin: 4px 0 0;
+  color: #6e625b;
+  overflow-wrap: anywhere;
+}
+.restaurant-history-back {
+  color: #6e625b;
+  font-size: 13px;
+  text-decoration: none;
+}
+.restaurant-history-back:hover {
+  color: #231c18;
+}
+.restaurant-history-page .restaurant-history-card {
+  margin: 16px 0 0;
+}
+.restaurant-history-card .edit-history-list > li:first-child {
+  border-top: 0;
+}
+.restaurant-history-card .edit-history-state {
+  padding-block: 16px;
+  flex-wrap: wrap;
+}
+.restaurant-history-card .edit-history-list ul {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.restaurant-history-card button {
+  min-height: 44px;
+}
+.restaurant-history-card button:hover:not(:disabled, .is-primary) {
+  background: #fff3dc;
+}
 .edit-history {
   margin: 16px 0;
   border: 1px solid #eae3d9;
