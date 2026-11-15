@@ -614,14 +614,13 @@ const routes: [string, RegExp, Handler][] = [
   ],
   [
     "POST",
-    /^\/auth\/phone\/web-verify\/login$/,
+    /^\/auth\/phone\/web-one-click\/login$/,
     ({ body, call, options }) =>
       withLoginConsent(call, body.policyVersion, (policyVersion) =>
-        call("/auth/phone/web-verify/login", {
+        call("/auth/phone/web-one-click/login", {
           ...options,
           // No deletionKey: only password and SMS logins may undo a deletion.
           body: {
-            mobile: body.mobile,
             spToken: body.spToken,
             policyVersion,
             installId: installId(),

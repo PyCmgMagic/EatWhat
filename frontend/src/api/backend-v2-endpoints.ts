@@ -384,14 +384,14 @@ export const endpoints = {
     "path": "/auth/register",
     "access": "public"
   },
-  "postAuthPhoneWebVerifyToken": {
+  "postAuthPhoneWebOneClickToken": {
     "method": "POST",
-    "path": "/auth/phone/web-verify/token",
+    "path": "/auth/phone/web-one-click/token",
     "access": "public"
   },
-  "postAuthPhoneWebVerifyLogin": {
+  "postAuthPhoneWebOneClickLogin": {
     "method": "POST",
-    "path": "/auth/phone/web-verify/login",
+    "path": "/auth/phone/web-one-click/login",
     "access": "public"
   },
   "postAuthPhoneOneClickLogin": {
@@ -717,9 +717,9 @@ export const endpoints = {
     "path": "/auth/sessions",
     "access": "login"
   },
-  "getAuthPhoneWebVerifyConfig": {
+  "getAuthPhoneWebOneClickConfig": {
     "method": "GET",
-    "path": "/auth/phone/web-verify/config",
+    "path": "/auth/phone/web-one-click/config",
     "access": "public"
   },
   "getAuthPhoneOneClickConfig": {

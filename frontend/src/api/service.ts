@@ -207,14 +207,14 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         "/auth/phone/login",
         { method: "POST", body, public: true, raw: true },
       ),
-    /** Local number verification (H5): shown only when the backend has it on. */
-    webVerifyConfig: () =>
-      data<{ enabled?: boolean }>("/auth/phone/web-verify/config", {
+    /** H5 one-click login: shown only when enabled by the backend. */
+    webOneClickConfig: () =>
+      data<{ enabled?: boolean }>("/auth/phone/web-one-click/config", {
         public: true,
       }),
-    webVerifyToken: (url: string, trace?: string) =>
+    webOneClickToken: (url: string, trace?: string) =>
       data<{ accessToken?: string; jwtToken?: string }>(
-        "/auth/phone/web-verify/token",
+        "/auth/phone/web-one-click/token",
         {
           method: "POST",
           body: { url },
@@ -223,12 +223,12 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         },
       ),
     /** Same reply as phoneLogin; spToken comes from the web SDK. */
-    webVerifyLogin: (
-      body: { mobile: string; spToken: string },
+    webOneClickLogin: (
+      body: { spToken: string },
       headers?: RequestOptions["headers"],
     ) =>
       request<Envelope<Schema["PhoneLoginReply"]["data"]>>(
-        "/auth/phone/web-verify/login",
+        "/auth/phone/web-one-click/login",
         { method: "POST", body, headers, public: true, raw: true },
       ),
     passwordCode: (signal?: AbortSignal) =>

@@ -2737,15 +2737,15 @@
         "summary" : "用户名注册（默认关闭，返回 30014）"
       }
     },
-    "/auth/phone/web-verify/token" : {
+    "/auth/phone/web-one-click/token" : {
       "post" : {
-        "tags" : [ "账号 · WebPhoneVerify" ],
-        "operationId" : "webVerifyToken",
+        "tags" : [ "账号 · WebOneClickAuth" ],
+        "operationId" : "webOneClickToken",
         "requestBody" : {
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/WebVerifyTokenRequest"
+                "$ref" : "#/components/schemas/WebOneClickTokenRequest"
               }
             }
           },
@@ -2757,24 +2757,24 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResultWebVerifyToken"
+                  "$ref" : "#/components/schemas/ResultWebOneClickToken"
                 }
               }
             }
           }
         },
-        "summary" : "获取网页本机号码校验的鉴权 Token"
+        "summary" : "获取网页一键登录的鉴权 Token"
       }
     },
-    "/auth/phone/web-verify/login" : {
+    "/auth/phone/web-one-click/login" : {
       "post" : {
-        "tags" : [ "账号 · WebPhoneVerify" ],
-        "operationId" : "webVerifyLogin",
+        "tags" : [ "账号 · WebOneClickAuth" ],
+        "operationId" : "webOneClickLogin",
         "requestBody" : {
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/WebVerifyLogin"
+                "$ref" : "#/components/schemas/WebOneClickLogin"
               }
             }
           },
@@ -2792,7 +2792,7 @@
             }
           }
         },
-        "summary" : "网页本机号码校验登录（未注册自动建号）"
+        "summary" : "网页一键登录（未注册自动建号）"
       }
     },
     "/auth/phone/one-click/login" : {
@@ -5443,23 +5443,23 @@
         } ]
       }
     },
-    "/auth/phone/web-verify/config" : {
+    "/auth/phone/web-one-click/config" : {
       "get" : {
-        "tags" : [ "账号 · WebPhoneVerify" ],
-        "operationId" : "webVerifyConfig",
+        "tags" : [ "账号 · WebOneClickAuth" ],
+        "operationId" : "webOneClickConfig",
         "responses" : {
           "200" : {
             "description" : "OK",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResultWebVerifyConfig"
+                  "$ref" : "#/components/schemas/ResultWebOneClickConfig"
                 }
               }
             }
           }
         },
-        "summary" : "查询网页本机号码校验登录开关"
+        "summary" : "查询网页一键登录开关"
       }
     },
     "/auth/phone/one-click/config" : {
@@ -7468,7 +7468,7 @@
           }
         }
       },
-      "WebVerifyTokenRequest" : {
+      "WebOneClickTokenRequest" : {
         "type" : "object",
         "properties" : {
           "url" : {
@@ -7479,7 +7479,7 @@
         },
         "required" : [ "url" ]
       },
-      "ResultWebVerifyToken" : {
+      "ResultWebOneClickToken" : {
         "type" : "object",
         "properties" : {
           "code" : {
@@ -7487,7 +7487,7 @@
             "format" : "int32"
           },
           "data" : {
-            "$ref" : "#/components/schemas/WebVerifyToken"
+            "$ref" : "#/components/schemas/WebOneClickToken"
           },
           "msg" : {
             "type" : "string"
@@ -7498,7 +7498,7 @@
           }
         }
       },
-      "WebVerifyToken" : {
+      "WebOneClickToken" : {
         "type" : "object",
         "properties" : {
           "accessToken" : {
@@ -7509,13 +7509,9 @@
           }
         }
       },
-      "WebVerifyLogin" : {
+      "WebOneClickLogin" : {
         "type" : "object",
         "properties" : {
-          "mobile" : {
-            "type" : "string",
-            "minLength" : 1
-          },
           "spToken" : {
             "type" : "string",
             "maxLength" : 8192,
@@ -7532,7 +7528,7 @@
             "format" : "uuid"
           }
         },
-        "required" : [ "mobile", "spToken" ]
+        "required" : [ "spToken" ]
       },
       "OneClickLogin" : {
         "type" : "object",
@@ -10283,7 +10279,7 @@
           }
         }
       },
-      "ResultWebVerifyConfig" : {
+      "ResultWebOneClickConfig" : {
         "type" : "object",
         "properties" : {
           "code" : {
@@ -10291,7 +10287,7 @@
             "format" : "int32"
           },
           "data" : {
-            "$ref" : "#/components/schemas/WebVerifyConfig"
+            "$ref" : "#/components/schemas/WebOneClickConfig"
           },
           "msg" : {
             "type" : "string"
@@ -10302,7 +10298,7 @@
           }
         }
       },
-      "WebVerifyConfig" : {
+      "WebOneClickConfig" : {
         "type" : "object",
         "properties" : {
           "enabled" : {

@@ -80,28 +80,29 @@ describe("v2 bridge", () => {
     },
   );
 
-  it("signs in with a local number check and never sends a deletion key", async () => {
+  it("signs in with a carrier token without sending a mobile number or deletion key", async () => {
     const { transport, sent } = backend(() =>
-      ok({ tokenName: "satoken", tokenValue: "local-number-session" }),
+      ok({ tokenName: "satoken", tokenValue: "web-one-click-session" }),
     );
     const headers = {
       "X-Phone-Auth-Trace": crypto.randomUUID(),
       "X-Phone-Auth-Timing": "sdk=1,token=2,environment=3,carrier=4",
     };
-    const reply = await createApi(transport).webVerifyLogin(
+    const reply = await createApi(transport).webOneClickLogin(
       {
-        mobile: "13800000000",
         spToken: "sp-1",
       },
       headers,
     );
     expect(classifyAuth(reply).kind).toBe("session");
-    const login = sent.find((s) => s.path === "/auth/phone/web-verify/login")!;
+    const login = sent.find(
+      (s) => s.path === "/auth/phone/web-one-click/login",
+    )!;
     expect(login.body).toMatchObject({
-      mobile: "13800000000",
       spToken: "sp-1",
     });
     expect(login.body).not.toHaveProperty("deletionKey");
+    expect(login.body).not.toHaveProperty("mobile");
     expect(login.headers).toMatchObject(headers);
   });
 

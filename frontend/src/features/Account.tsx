@@ -14,12 +14,12 @@ import { isDemo, sessionSignal } from "../app/runtime";
 import { useTask } from "../components/useTask";
 import { classifyAuth } from "../api/service";
 import {
-  createLocalNumberTiming,
-  localNumberTimingHeaders,
-  localNumberToken,
+  createWebOneClickTiming,
+  webOneClickTimingHeaders,
+  webOneClickToken,
   looksLikePhone,
-} from "../app/local-number";
-import "../app/local-number.css";
+} from "../app/web-one-click";
+import "../app/web-one-click.css";
 import { FeaturePage, FeatureState } from "./Catalog";
 import { useArea } from "../app/area";
 import { useMobile } from "../mobile/ui";
@@ -128,10 +128,10 @@ export function PhoneLoginForm({
     send = useTask(),
     login = useTask();
   useAuthBusy(send.isPending || login.isPending);
-  // Local number verification replaces the SMS code on phones with mobile data.
-  const localNumber = useQuery({
-    queryKey: ["auth", "web-verify-config"],
-    queryFn: () => api.webVerifyConfig(),
+  // Carrier authorization replaces the SMS code on phones with mobile data.
+  const webOneClick = useQuery({
+    queryKey: ["auth", "web-one-click-config"],
+    queryFn: () => api.webOneClickConfig(),
     enabled: looksLikePhone(),
     staleTime: 5 * 60_000,
     retry: false,
@@ -174,6 +174,28 @@ export function PhoneLoginForm({
           });
         }}
       >
+        {webOneClick.data?.enabled && (
+          <button
+            type="button"
+            className="ew-web-one-click"
+            disabled={login.isPending || send.isPending}
+            onClick={() => {
+              login.run(async () => {
+                const timing = createWebOneClickTiming();
+                const spToken = await webOneClickToken(api, undefined, timing);
+                await signInWith(
+                  await api.webOneClickLogin(
+                    { spToken },
+                    webOneClickTimingHeaders(timing),
+                  ),
+                );
+              });
+            }}
+          >
+            本机号码一键登录
+            <small>开启移动数据，在授权页补全号码中间 4 位</small>
+          </button>
+        )}
         <label>
           手机号
           <input
@@ -234,29 +256,6 @@ export function PhoneLoginForm({
         >
           {login.isPending ? "正在登录…" : "登录 / 注册"}
         </button>
-        {localNumber.data?.enabled && (
-          <button
-            type="button"
-            className="ew-local-number"
-            disabled={login.isPending || send.isPending}
-            onClick={() => {
-              if (!mobileInput.current?.reportValidity()) return;
-              login.run(async () => {
-                const timing = createLocalNumberTiming();
-                const spToken = await localNumberToken(api, undefined, timing);
-                await signInWith(
-                  await api.webVerifyLogin(
-                    { mobile, spToken },
-                    localNumberTimingHeaders(timing),
-                  ),
-                );
-              });
-            }}
-          >
-            本机号码验证，免验证码
-            <small>需开启移动数据，Wi-Fi 下不可用</small>
-          </button>
-        )}
       </form>
       {!compact && (
         <>

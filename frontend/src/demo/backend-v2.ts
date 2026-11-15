@@ -1752,7 +1752,7 @@ export function demoTransport(
     case "getAdminRemoteConfigAudit":
       return ok(paged([]));
     // The carrier check needs a real SIM on mobile data; the demo has none.
-    case "getAuthPhoneWebVerifyConfig":
+    case "getAuthPhoneWebOneClickConfig":
     case "getAuthPhoneOneClickConfig":
       return ok({ enabled: false });
     case "presign":

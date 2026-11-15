@@ -1128,7 +1128,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/phone/web-verify/token": {
+    "/auth/phone/web-one-click/token": {
         parameters: {
             query?: never;
             header?: never;
@@ -1137,15 +1137,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 获取网页本机号码校验的鉴权 Token */
-        post: operations["postAuthPhoneWebVerifyToken"];
+        /** 获取网页一键登录的鉴权 Token */
+        post: operations["postAuthPhoneWebOneClickToken"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/auth/phone/web-verify/login": {
+    "/auth/phone/web-one-click/login": {
         parameters: {
             query?: never;
             header?: never;
@@ -1154,8 +1154,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 网页本机号码校验登录（未注册自动建号） */
-        post: operations["postAuthPhoneWebVerifyLogin"];
+        /** 网页一键登录（未注册自动建号） */
+        post: operations["postAuthPhoneWebOneClickLogin"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2185,15 +2185,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/phone/web-verify/config": {
+    "/auth/phone/web-one-click/config": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** 查询网页本机号码校验登录开关 */
-        get: operations["getAuthPhoneWebVerifyConfig"];
+        /** 查询网页一键登录开关 */
+        get: operations["getAuthPhoneWebOneClickConfig"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3038,23 +3038,22 @@ export interface components {
             loginDeviceType?: string;
             tag?: string;
         };
-        WebVerifyTokenRequest: {
+        WebOneClickTokenRequest: {
             url: string;
         };
-        ResultWebVerifyToken: {
+        ResultWebOneClickToken: {
             /** Format: int32 */
             code?: number;
-            data?: components["schemas"]["WebVerifyToken"];
+            data?: components["schemas"]["WebOneClickToken"];
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
         };
-        WebVerifyToken: {
+        WebOneClickToken: {
             accessToken?: string;
             jwtToken?: string;
         };
-        WebVerifyLogin: {
-            mobile: string;
+        WebOneClickLogin: {
             spToken: string;
             policyVersion?: string;
             deviceName?: string;
@@ -4111,15 +4110,15 @@ export interface components {
             /** Format: int64 */
             timestamp?: number;
         };
-        ResultWebVerifyConfig: {
+        ResultWebOneClickConfig: {
             /** Format: int32 */
             code?: number;
-            data?: components["schemas"]["WebVerifyConfig"];
+            data?: components["schemas"]["WebOneClickConfig"];
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
         };
-        WebVerifyConfig: {
+        WebOneClickConfig: {
             enabled?: boolean;
         };
         OneClickConfig: {
@@ -6535,7 +6534,7 @@ export interface operations {
             };
         };
     };
-    postAuthPhoneWebVerifyToken: {
+    postAuthPhoneWebOneClickToken: {
         parameters: {
             query?: never;
             header?: never;
@@ -6544,7 +6543,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["WebVerifyTokenRequest"];
+                "application/json": components["schemas"]["WebOneClickTokenRequest"];
             };
         };
         responses: {
@@ -6554,12 +6553,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ResultWebVerifyToken"];
+                    "application/json": components["schemas"]["ResultWebOneClickToken"];
                 };
             };
         };
     };
-    postAuthPhoneWebVerifyLogin: {
+    postAuthPhoneWebOneClickLogin: {
         parameters: {
             query?: never;
             header?: never;
@@ -6568,7 +6567,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["WebVerifyLogin"];
+                "application/json": components["schemas"]["WebOneClickLogin"];
             };
         };
         responses: {
@@ -8099,7 +8098,7 @@ export interface operations {
             };
         };
     };
-    getAuthPhoneWebVerifyConfig: {
+    getAuthPhoneWebOneClickConfig: {
         parameters: {
             query?: never;
             header?: never;
@@ -8114,7 +8113,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ResultWebVerifyConfig"];
+                    "application/json": components["schemas"]["ResultWebOneClickConfig"];
                 };
             };
         };
