@@ -1946,6 +1946,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/foods/duplicates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 上传前查重（这家店是否已有这道菜） */
+        get: operations["getFoodDuplicates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/foods/detail/{id}": {
         parameters: {
             query?: never;
@@ -3759,6 +3776,23 @@ export interface components {
             /** Format: int32 */
             code?: number;
             data?: components["schemas"]["PageResultFood"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        DishDuplicate: {
+            /** Format: int64 */
+            id?: number;
+            name?: string;
+            category?: string;
+            price?: number;
+            pictureUrl?: string;
+            sameName?: boolean;
+        };
+        ResultListDishDuplicate: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["DishDuplicate"][];
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
@@ -7472,6 +7506,8 @@ export interface operations {
                 category?: string;
                 signatureOnly?: boolean;
                 sort?: string;
+                scene?: string;
+                campusId?: number;
                 page?: number;
                 pageSize?: number;
             };
@@ -7511,6 +7547,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultPageResultFoodV2"];
+                };
+            };
+        };
+    };
+    getFoodDuplicates: {
+        parameters: {
+            query: {
+                restaurantId: number;
+                keyword: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultListDishDuplicate"];
                 };
             };
         };

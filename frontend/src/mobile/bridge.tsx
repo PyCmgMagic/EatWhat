@@ -63,6 +63,7 @@ import {
 import { demoDishes, visualFor, stageColors } from "./catalog";
 import { SceneToggle } from "../features/SceneToggle";
 import { AiTagSuggest, draftPictureKeys } from "../features/AiTagSuggest";
+import { DishDuplicateHint } from "../features/DishDuplicateHint";
 import { screenRoutes, panelScreens, pendingScreens } from "./routes";
 import { adjustPhoto, saveVisual } from "./photos";
 import { photoFraming, type PhotoFraming } from "./photo-framing";
@@ -2133,6 +2134,14 @@ export function useDesignBridge(
         };
     }
     if (screen === "G-AddDish") {
+      // The name and price row; the duplicate hint goes right under it.
+      if (id === 26 && !reference)
+        return (
+          <>
+            {React.createElement(tag, p, view.children)}
+            <DishDuplicateHint restaurantId={shopId} name={m.draft.name} />
+          </>
+        );
       if (id === 45)
         return (
           <div className="mobile-publish-tag-groups">

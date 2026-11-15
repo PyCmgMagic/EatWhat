@@ -273,10 +273,24 @@ describe("v2 bridge", () => {
         : ok({ items: [] }),
     );
     const dishes = await request<any[]>("/foods/recommend", {
-      query: { size: 8, campusId: 1, mealTime: "dinner", category: "dessert" },
+      query: {
+        size: 8,
+        campusId: 1,
+        mealTime: "dinner",
+        scene: "delivery",
+        category: "dessert",
+      },
     });
     expect(sent.map((s) => s.path)).toEqual(["/foods/list"]);
-    expect(sent[0].query).toMatchObject({ category: "饮品甜品" });
+    expect(sent[0].query).toMatchObject({
+      category: "饮品甜品",
+      scene: "delivery",
+      campusId: 1,
+    });
+    await request<any[]>("/foods/recommend", {
+      query: { size: 8, category: "dessert" },
+    });
+    expect(sent[1].query).toMatchObject({ scene: "dine_in" });
     expect(dishes[0]).toMatchObject({
       id: 1,
       category: "dessert",
