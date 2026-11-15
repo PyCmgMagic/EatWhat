@@ -28,6 +28,7 @@ type PhoneNumberServer = {
   closeLoginPage(): void;
   getConnection(): string;
   setUploadEnable?(enabled: boolean): void;
+  setLoggerEnable?(enabled: boolean): void;
 };
 
 export type WebOneClickApi = {
@@ -114,10 +115,37 @@ function parse(reply: SdkReply | string): SdkReply {
   }
 }
 
-function failure(reply: SdkReply) {
-  // 600008: the environment check failed, almost always Wi-Fi or no SIM data.
-  if (Number(reply.code) === 600008) return new Error(WIFI);
-  return new Error("本机号码一键登录没有完成，请用短信验证码登录。");
+function failure(
+  reply: SdkReply,
+  timing: WebOneClickTiming,
+  stage: "environment" | "carrier",
+) {
+  // Accept only SDK error codes, never display/log the raw provider message.
+  const code =
+    /^600\d{3}$/.test(String(reply?.code)) && Number(reply.code) !== OK
+      ? String(reply.code)
+      : undefined;
+  const messages: Record<string, string> = {
+    "600008": WIFI,
+    "600011":
+      "运营商取号失败，请关闭 Wi-Fi、VPN 或代理后重试，也可使用短信登录。",
+    "600013": "运营商服务暂不可用，请使用短信或密码登录。",
+    "600014": "运营商调用次数已达上限，请稍后重试或使用短信登录。",
+    "600015": "运营商响应超时，请在移动数据网络下重试或使用短信登录。",
+    "600018": "该号码暂时无法使用运营商认证，请使用短信或密码登录。",
+    "600025": "一键登录鉴权失败，请使用短信登录并反馈此错误码。",
+    "600032": "一键登录配置不匹配，请使用短信登录并反馈此错误码。",
+    "600034": "一键登录凭证已过期，请重新点击一键登录。",
+  };
+  console.warn("phone_auth_error", {
+    trace: timing.trace,
+    stage,
+    code: code ?? "unknown",
+  });
+  const message =
+    (code && messages[code]) ||
+    "本机号码一键登录没有完成，请用短信验证码登录。";
+  return new Error(message + (code ? `（错误码 ${code}）` : ""));
 }
 
 /**
@@ -163,6 +191,7 @@ export async function loadSdk(): Promise<PhoneNumberServer> {
   const sdk = new Server();
   // The SDK reports usage logs to Aliyun by default; this page does not need it.
   sdk.setUploadEnable?.(false);
+  sdk.setLoggerEnable?.(false);
   return sdk;
 }
 
@@ -192,7 +221,7 @@ export async function webOneClickToken(
         if (checked) return;
         checked = true;
         recordTiming(timing, "environment", start, "error");
-        reject(failure(parse(raw)));
+        reject(failure(parse(raw), timing, "environment"));
       };
       server.checkLoginAvailable({
         accessToken,
@@ -232,9 +261,10 @@ export async function webOneClickToken(
                         reply.spToken.trim()
                       )
                         settle(reply.spToken);
-                      else settle(undefined, failure(reply));
+                      else settle(undefined, failure(reply, timing, "carrier"));
                     },
-                    error: (raw) => settle(undefined, failure(parse(raw))),
+                    error: (raw) =>
+                      settle(undefined, failure(parse(raw), timing, "carrier")),
                     watch: (status) => {
                       if (status === 2)
                         settle(

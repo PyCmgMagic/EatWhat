@@ -170,6 +170,57 @@ describe("web one-click login", () => {
     expect(server.closeLoginPage).toHaveBeenCalledOnce();
   });
 
+  it.each([
+    [600011, "运营商取号失败"],
+    [600015, "运营商响应超时"],
+    [600032, "配置不匹配"],
+  ])(
+    "shows a safe SDK error code %s without exposing the reply",
+    async (code, message) => {
+      const log = vi.spyOn(console, "warn").mockImplementation(() => {});
+      try {
+        const server = sdk({
+          getLoginToken: (o: any) =>
+            o.error({ code, msg: "private-reply", spToken: "private-token" }),
+        });
+        await expect(
+          webOneClickToken(
+            {
+              webOneClickToken: async () => ({
+                accessToken: "a",
+                jwtToken: "j",
+              }),
+            },
+            server as any,
+          ),
+        ).rejects.toThrow(`${message}`);
+        expect(log).toHaveBeenCalledWith("phone_auth_error", {
+          trace: expect.any(String),
+          stage: "carrier",
+          code: String(code),
+        });
+        expect(JSON.stringify(log.mock.calls)).not.toMatch(
+          /private-reply|private-token/,
+        );
+      } finally {
+        log.mockRestore();
+      }
+    },
+  );
+
+  it("never reflects arbitrary provider codes or messages", async () => {
+    const server = sdk({
+      getLoginToken: (o: any) =>
+        o.error({ code: "private-code", msg: "private-message" }),
+    });
+    await expect(
+      webOneClickToken(
+        { webOneClickToken: async () => ({ accessToken: "a", jwtToken: "j" }) },
+        server as any,
+      ),
+    ).rejects.toThrow("本机号码一键登录没有完成，请用短信验证码登录。");
+  });
+
   it("only offers it on phones", () => {
     expect(
       looksLikePhone("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)"),
