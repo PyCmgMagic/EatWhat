@@ -595,6 +595,23 @@ const routes: [string, RegExp, Handler][] = [
   ],
   [
     "POST",
+    /^\/auth\/phone\/web-verify\/login$/,
+    ({ body, call, options }) =>
+      withLoginConsent(call, body.policyVersion, (policyVersion) =>
+        call("/auth/phone/web-verify/login", {
+          ...options,
+          // No deletionKey: only password and SMS logins may undo a deletion.
+          body: {
+            mobile: body.mobile,
+            spToken: body.spToken,
+            policyVersion,
+            installId: installId(),
+          },
+        }),
+      ),
+  ],
+  [
+    "POST",
     /^\/auth\/getCode$/,
     ({ query, call, options }) =>
       call("/auth/phone/code", {

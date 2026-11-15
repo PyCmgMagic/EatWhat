@@ -374,6 +374,21 @@ export const endpoints = {
     "path": "/auth/register",
     "access": "public"
   },
+  "postAuthPhoneWebVerifyToken": {
+    "method": "POST",
+    "path": "/auth/phone/web-verify/token",
+    "access": "public"
+  },
+  "postAuthPhoneWebVerifyLogin": {
+    "method": "POST",
+    "path": "/auth/phone/web-verify/login",
+    "access": "public"
+  },
+  "postAuthPhoneOneClickLogin": {
+    "method": "POST",
+    "path": "/auth/phone/one-click/login",
+    "access": "public"
+  },
   "phoneLogin": {
     "method": "POST",
     "path": "/auth/phone/login",
@@ -691,6 +706,16 @@ export const endpoints = {
     "method": "GET",
     "path": "/auth/sessions",
     "access": "login"
+  },
+  "getAuthPhoneWebVerifyConfig": {
+    "method": "GET",
+    "path": "/auth/phone/web-verify/config",
+    "access": "public"
+  },
+  "getAuthPhoneOneClickConfig": {
+    "method": "GET",
+    "path": "/auth/phone/one-click/config",
+    "access": "public"
   },
   "consentStatus": {
     "method": "GET",

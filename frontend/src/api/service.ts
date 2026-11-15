@@ -204,6 +204,22 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         "/auth/phone/login",
         { method: "POST", body, public: true, raw: true },
       ),
+    /** Local number verification (H5): shown only when the backend has it on. */
+    webVerifyConfig: () =>
+      data<{ enabled?: boolean }>("/auth/phone/web-verify/config", {
+        public: true,
+      }),
+    webVerifyToken: (url: string) =>
+      data<{ accessToken?: string; jwtToken?: string }>(
+        "/auth/phone/web-verify/token",
+        { method: "POST", body: { url }, public: true },
+      ),
+    /** Same reply as phoneLogin; spToken comes from the web SDK. */
+    webVerifyLogin: (body: { mobile: string; spToken: string }) =>
+      request<Envelope<Schema["PhoneLoginReply"]["data"]>>(
+        "/auth/phone/web-verify/login",
+        { method: "POST", body, public: true, raw: true },
+      ),
     passwordCode: (signal?: AbortSignal) =>
       sendVerified("/auth/password/code", { method: "POST", signal }),
     legacyPhoneCode: (mobile: string, signal?: AbortSignal) =>

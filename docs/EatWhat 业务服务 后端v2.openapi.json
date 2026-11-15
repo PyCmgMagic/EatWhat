@@ -2667,6 +2667,93 @@
         "summary" : "用户名注册（默认关闭，返回 30014）"
       }
     },
+    "/auth/phone/web-verify/token" : {
+      "post" : {
+        "tags" : [ "账号 · WebPhoneVerify" ],
+        "operationId" : "webVerifyToken",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WebVerifyTokenRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultWebVerifyToken"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "获取网页本机号码校验的鉴权 Token"
+      }
+    },
+    "/auth/phone/web-verify/login" : {
+      "post" : {
+        "tags" : [ "账号 · WebPhoneVerify" ],
+        "operationId" : "webVerifyLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WebVerifyLogin"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultSaTokenInfo"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "网页本机号码校验登录（未注册自动建号）"
+      }
+    },
+    "/auth/phone/one-click/login" : {
+      "post" : {
+        "tags" : [ "账号 · OneClickAuth" ],
+        "operationId" : "oneClickLogin",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OneClickLogin"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultSaTokenInfo"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "阿里云 App 一键登录（未注册自动建号）"
+      }
+    },
     "/auth/phone/login" : {
       "post" : {
         "tags" : [ "账号 · Contact" ],
@@ -2687,7 +2774,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResultPhoneLoginResult"
+                  "$ref" : "#/components/schemas/ResultSaTokenInfo"
                 }
               }
             }
@@ -5279,6 +5366,44 @@
         } ]
       }
     },
+    "/auth/phone/web-verify/config" : {
+      "get" : {
+        "tags" : [ "账号 · WebPhoneVerify" ],
+        "operationId" : "webVerifyConfig",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultWebVerifyConfig"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "查询网页本机号码校验登录开关"
+      }
+    },
+    "/auth/phone/one-click/config" : {
+      "get" : {
+        "tags" : [ "账号 · OneClickAuth" ],
+        "operationId" : "oneClickConfig",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultOneClickConfig"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "查询 App 一键登录开关"
+      }
+    },
     "/auth/consent" : {
       "get" : {
         "tags" : [ "账号 · Consent" ],
@@ -7166,6 +7291,93 @@
           }
         }
       },
+      "WebVerifyTokenRequest" : {
+        "type" : "object",
+        "properties" : {
+          "url" : {
+            "type" : "string",
+            "maxLength" : 1024,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "url" ]
+      },
+      "ResultWebVerifyToken" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/WebVerifyToken"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "WebVerifyToken" : {
+        "type" : "object",
+        "properties" : {
+          "accessToken" : {
+            "type" : "string"
+          },
+          "jwtToken" : {
+            "type" : "string"
+          }
+        }
+      },
+      "WebVerifyLogin" : {
+        "type" : "object",
+        "properties" : {
+          "mobile" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "spToken" : {
+            "type" : "string",
+            "maxLength" : 8192,
+            "minLength" : 0
+          },
+          "policyVersion" : {
+            "type" : "string"
+          },
+          "deviceName" : {
+            "type" : "string"
+          },
+          "installId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "mobile", "spToken" ]
+      },
+      "OneClickLogin" : {
+        "type" : "object",
+        "properties" : {
+          "accessToken" : {
+            "type" : "string",
+            "maxLength" : 8192,
+            "minLength" : 0
+          },
+          "policyVersion" : {
+            "type" : "string"
+          },
+          "deviceName" : {
+            "type" : "string"
+          },
+          "installId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "accessToken" ]
+      },
       "PhoneLogin" : {
         "type" : "object",
         "properties" : {
@@ -7198,68 +7410,6 @@
           }
         },
         "required" : [ "code", "device", "mobile" ]
-      },
-      "PhoneLoginResult" : {
-        "type" : "object",
-        "properties" : {
-          "tokenName" : {
-            "type" : "string"
-          },
-          "tokenValue" : {
-            "type" : "string"
-          },
-          "isLogin" : {
-            "type" : "boolean"
-          },
-          "loginId" : { },
-          "loginType" : {
-            "type" : "string"
-          },
-          "tokenTimeout" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "sessionTimeout" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "tokenSessionTimeout" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "tokenActiveTimeout" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "loginDeviceType" : {
-            "type" : "string"
-          },
-          "tag" : {
-            "type" : "string"
-          },
-          "newUser" : {
-            "type" : "boolean"
-          }
-        }
-      },
-      "ResultPhoneLoginResult" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "data" : {
-            "$ref" : "#/components/schemas/PhoneLoginResult"
-          },
-          "msg" : {
-            "type" : "string"
-          },
-          "timestamp" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }
       },
       "SendLoginCode" : {
         "type" : "object",
@@ -9764,6 +9914,60 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/DeviceSessionPage"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ResultWebVerifyConfig" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/WebVerifyConfig"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "WebVerifyConfig" : {
+        "type" : "object",
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "OneClickConfig" : {
+        "type" : "object",
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "ResultOneClickConfig" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/OneClickConfig"
           },
           "msg" : {
             "type" : "string"

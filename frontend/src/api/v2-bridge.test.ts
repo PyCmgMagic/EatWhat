@@ -73,6 +73,20 @@ describe("v2 bridge", () => {
     },
   );
 
+  it("signs in with a local number check and never sends a deletion key", async () => {
+    const { transport, sent } = backend(() =>
+      ok({ tokenName: "satoken", tokenValue: "local-number-session" }),
+    );
+    const reply = await createApi(transport).webVerifyLogin({
+      mobile: "13800000000",
+      spToken: "sp-1",
+    });
+    expect(classifyAuth(reply).kind).toBe("session");
+    const login = sent.find((s) => s.path === "/auth/phone/web-verify/login")!;
+    expect(login.body).toMatchObject({ mobile: "13800000000", spToken: "sp-1" });
+    expect(login.body).not.toHaveProperty("deletionKey");
+  });
+
   it("recovers upload keys from v2 public picture URLs", () => {
     expect(pictureKey(PIC.replace(" ", "%20"))).toBe("foods/2026/11/a b.webp");
     expect(pictureKey("foods/2026/11/x.png")).toBe("foods/2026/11/x.png");
