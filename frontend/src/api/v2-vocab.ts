@@ -69,7 +69,19 @@ export type V2Food = {
   tags?: string[] | null;
   signature?: boolean | null;
   favoriteCount?: number | null;
+  /** The dish's own meal times; [] = it follows the shop's. */
+  mealTimes?: string[] | null;
+  /** When the dish is actually served (the shop's when it follows the shop). */
+  effectiveMealTimes?: string[] | null;
+  deliveryEnabled?: boolean | null;
+  rating?: DishRating | null;
+  /** The viewer's own score (1-5); null for guests or when not rated. */
+  myRating?: number | null;
 };
+/** score: average of 1-5 to one decimal, null while nobody has rated. */
+export type DishRating = { score?: number | null; count?: number | null };
+/** Reply of rating a dish or taking the rating back. */
+export type FoodRated = { myRating: number | null; rating: DishRating };
 export type V2Shop = {
   kind?: string | null;
   mealTimes?: string[] | null;

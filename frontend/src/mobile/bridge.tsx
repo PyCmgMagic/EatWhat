@@ -79,6 +79,7 @@ import {
 } from "../api/food-display";
 import { FoodManage } from "../features/Catalog";
 import DishDetail from "./DishDetail";
+import { DishAvailabilityFields } from "../features/DishAvailability";
 import ProfileSheet from "./ProfileSheet";
 import ProfileGrowth from "../features/ProfileGrowth";
 import SheetHandle from "./SheetHandle";
@@ -762,6 +763,8 @@ export function useDesignBridge(
             pictureUrl: images.map((i) => i.key!),
             systemTagIds: draft.systemTagIds,
             signature: !!draft.signature,
+            mealTimes: draft.mealTimes ?? [],
+            deliveryEnabled: !!draft.deliveryEnabled,
             ...publishDisplay(draft.stage, draft.candidates),
             coverCrop: { centerX: 0.5, centerY: 0.5, diameter: 1 },
           });
@@ -777,6 +780,8 @@ export function useDesignBridge(
             tagInput: "",
             systemTagIds: [],
             signature: false,
+            mealTimes: [],
+            deliveryEnabled: false,
             stage: "#F3C46E",
             crop: undefined,
             candidates: undefined,
@@ -1708,7 +1713,11 @@ export function useDesignBridge(
             <SearchField
               className="mobile-home-search"
               onSearch={(keyword) =>
-                nav(keyword ? `/search?q=${encodeURIComponent(keyword)}` : "/search")
+                nav(
+                  keyword
+                    ? `/search?q=${encodeURIComponent(keyword)}`
+                    : "/search",
+                )
               }
             />
           </>
@@ -2328,6 +2337,14 @@ export function useDesignBridge(
                 </button>
               </div>
             </fieldset>
+            <DishAvailabilityFields
+              variant="chips"
+              value={{
+                mealTimes: m.draft.mealTimes ?? [],
+                deliveryEnabled: !!m.draft.deliveryEnabled,
+              }}
+              onChange={(next) => m.setDraft(next)}
+            />
           </div>
         );
       if (id === 21)

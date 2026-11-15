@@ -34,6 +34,8 @@ type Data = {
   foods: DemoFood[];
   foodLikes: Record<number, number[]>;
   foodFavorites: Record<number, number[]>;
+  /** Dish id -> user id -> score (1-5). */
+  foodRatings: Record<number, Record<number, number>>;
   comments: DemoComment[];
   commentLikes: Record<number, number[]>;
   feedback: V2Schema["CaseView"][];
@@ -200,6 +202,10 @@ function seed(): Data {
       updatedAt: Date.now(),
     },
   ];
+  // Delivery is set per dish; the seed dishes take over their shop's old flag.
+  for (const food of foods)
+    food.deliveryEnabled = !!shops.find((shop) => shop.id === food.restaurantId)
+      ?.deliveryEnabled;
   return {
     shops,
     people: profiles.map((person) => ({
@@ -257,6 +263,7 @@ function seed(): Data {
     foods,
     foodLikes: { 1: [1] },
     foodFavorites: { 1: [2] },
+    foodRatings: {},
     comments: [
       {
         id: 1,
@@ -311,6 +318,7 @@ function load(): Data {
         foods: saved.foods ?? fresh.foods,
         foodLikes: saved.foodLikes ?? fresh.foodLikes,
         foodFavorites: saved.foodFavorites ?? fresh.foodFavorites,
+        foodRatings: saved.foodRatings ?? fresh.foodRatings,
         comments: saved.comments ?? fresh.comments,
         commentLikes: saved.commentLikes ?? fresh.commentLikes,
         feedback: saved.feedback ?? fresh.feedback,
@@ -411,7 +419,7 @@ export function demoTransport(
   // Payloads come from the typed API client. The mock still checks the fields
   // that affect user-visible flows, including OTPs and policy versions.
   const body = (options.body ?? {}) as Record<string, string> &
-    V2Schema["EditRequest"];
+    V2Schema["RestaurantEditRequest"];
   const payload = (options.body ?? {}) as Record<string, unknown>;
   const text = (key: string) => String(payload[key] ?? "").trim();
   const list = (key: string) =>
@@ -424,6 +432,32 @@ export function demoTransport(
   const target = state.people.find((person) => person.id === userId);
   const hasFavorite = (id: number) =>
     uid ? (state.favorites[uid] ?? []).includes(id) : null;
+  const scoresOf = (foodId: number) =>
+    Object.values(state.foodRatings[foodId] ?? {});
+  /** Average to one decimal; null while nobody has rated the dish. */
+  const foodRating = (foodId: number) => {
+    const scores = scoresOf(foodId);
+    return {
+      score: scores.length
+        ? Math.round((scores.reduce((a, b) => a + b, 0) * 10) / scores.length) /
+          10
+        : null,
+      count: scores.length,
+    };
+  };
+  /** Bayesian average used for ordering: five votes of the site-wide mean. */
+  const smoothed = (foodId: number) => {
+    const all = Object.values(state.foodRatings).flatMap((byUser) =>
+      Object.values(byUser),
+    );
+    const prior = all.length
+      ? all.reduce((a, b) => a + b, 0) / all.length
+      : 3.5;
+    const scores = scoresOf(foodId);
+    return (
+      (scores.reduce((a, b) => a + b, 0) + 5 * prior) / (scores.length + 5)
+    );
+  };
   const viewerRating = (id: number) =>
     uid
       ? {
@@ -446,14 +480,30 @@ export function demoTransport(
       isFavorite: hasFavorite(shop.id),
       myRatings: viewerRating(shop.id),
       distanceMeters,
+      // Read-only summary: the shop delivers when one of its dishes does.
+      deliveryEnabled: state.foods.some(
+        (food) => food.restaurantId === shop.id && food.deliveryEnabled,
+      ),
+      // Featured dishes: best smoothed score first, signature dishes win ties,
+      // then likes (the backend's rule for recommendation cards).
       signatureFoods: state.foods
-        .filter((food) => food.restaurantId === shop.id && food.signature)
+        .filter((food) => food.restaurantId === shop.id)
+        .sort(
+          (a, b) =>
+            smoothed(b.id) - smoothed(a.id) ||
+            Number(b.signature ?? false) - Number(a.signature ?? false) ||
+            (b.likeCount ?? 0) - (a.likeCount ?? 0),
+        )
         .slice(0, 3)
         .map((food) => ({
           id: food.id,
           name: food.name,
           price: food.price,
           pictureUrl: food.pictureUrls?.[0] ?? null,
+          stageColor: food.stageColor ?? null,
+          coverCrop: food.coverCrop ?? null,
+          signature: food.signature ?? false,
+          rating: foodRating(food.id),
         })),
     };
   };
@@ -593,6 +643,14 @@ export function demoTransport(
     ...food,
     isLiked: uid ? idList(state.foodLikes).includes(food.id) : null,
     isFavorite: uid ? idList(state.foodFavorites).includes(food.id) : null,
+    mealTimes: food.mealTimes ?? [],
+    effectiveMealTimes: food.mealTimes?.length
+      ? food.mealTimes
+      : (state.shops.find((shop) => shop.id === food.restaurantId)?.mealTimes ??
+        []),
+    deliveryEnabled: food.deliveryEnabled ?? false,
+    rating: foodRating(food.id),
+    myRating: uid ? (state.foodRatings[food.id]?.[user] ?? null) : null,
   });
   const withCommentViewer = (comment: DemoComment) => ({
     ...comment,
@@ -1145,6 +1203,7 @@ export function demoTransport(
     }
     case "postFoodsUpload":
     case "putFoodsEditById": {
+      const dishMeals = ["breakfast", "lunch", "dinner", "night"];
       const previous = state.foods.find((item) => item.id === id);
       const nextId =
         previous?.id ?? Math.max(0, ...state.foods.map((item) => item.id)) + 1;
@@ -1164,7 +1223,8 @@ export function demoTransport(
         name: text("name") || previous?.name || "菜品",
         category: text("category") || previous?.category || "特色",
         price:
-          payload.price === undefined || payload.price === ""
+          // The bridge sends null for "not changed", like an omitted field.
+          payload.price == null || payload.price === ""
             ? previous?.price
             : Number(payload.price),
         description:
@@ -1180,11 +1240,22 @@ export function demoTransport(
           payload.signature === undefined
             ? (previous?.signature ?? false)
             : Boolean(payload.signature),
+        // Omitted: a new dish follows its shop and does not deliver.
+        mealTimes:
+          payload.mealTimes === undefined
+            ? (previous?.mealTimes ?? [])
+            : dishMeals.filter((meal) => list("mealTimes").includes(meal)),
+        deliveryEnabled:
+          payload.deliveryEnabled === undefined
+            ? (previous?.deliveryEnabled ?? false)
+            : Boolean(payload.deliveryEnabled),
         likeCount: previous?.likeCount ?? 0,
         favoriteCount: previous?.favoriteCount ?? 0,
         createdAt: previous?.createdAt ?? Date.now(),
         updatedAt: Date.now(),
       };
+      if (list("mealTimes").some((meal) => !dishMeals.includes(meal)))
+        return fail(10001, "mealTimes 取值无效");
       state.foods = [
         ...state.foods.filter((item) => item.id !== nextId),
         next,
@@ -1208,6 +1279,22 @@ export function demoTransport(
       if (name === "postFoodsByIdLike" || name === "postFoodsByIdFavorite")
         source[user].push(id);
       return write();
+    }
+    case "rateFood":
+    case "unrateFood": {
+      if (!state.foods.some((food) => food.id === id))
+        return fail(40015, "菜品不存在。");
+      if (name === "rateFood") {
+        const score = Number(payload.score);
+        if (payload.score == null) return fail(10002, "score不能为空");
+        if (!Number.isInteger(score) || score < 1 || score > 5)
+          return fail(10001, "score 应为 1–5 的整数");
+        (state.foodRatings[id] ??= {})[user] = score;
+      } else delete state.foodRatings[id]?.[user];
+      return write({
+        myRating: state.foodRatings[id]?.[user] ?? null,
+        rating: foodRating(id),
+      });
     }
     case "getFoodsByIdHistory":
       return ok(

@@ -83,7 +83,10 @@ describe("v2 bridge", () => {
     });
     expect(classifyAuth(reply).kind).toBe("session");
     const login = sent.find((s) => s.path === "/auth/phone/web-verify/login")!;
-    expect(login.body).toMatchObject({ mobile: "13800000000", spToken: "sp-1" });
+    expect(login.body).toMatchObject({
+      mobile: "13800000000",
+      spToken: "sp-1",
+    });
     expect(login.body).not.toHaveProperty("deletionKey");
   });
 
@@ -139,6 +142,7 @@ describe("v2 bridge", () => {
         systemTagIds: [1, 4],
         myCustomTagNames: ["清淡", "好吃"],
         mealTimes: ["lunch"],
+        deliveryEnabled: true,
         stageColor: "chili",
       },
     });
@@ -161,7 +165,43 @@ describe("v2 bridge", () => {
         signature: false,
       },
     });
-    expect(sent[0].body).not.toHaveProperty("mealTimes");
+    // The dish's own meal times and delivery flag go to v2 as they are.
+    expect(sent[0].body).toMatchObject({
+      mealTimes: ["lunch"],
+      deliveryEnabled: true,
+    });
+  });
+
+  it("leaves a dish's meal times and delivery alone unless the form sets them", async () => {
+    const { request, sent } = backend(({ path }) =>
+      path === "/foods/detail/5"
+        ? ok({
+            id: 5,
+            name: "豆浆",
+            category: "饮品甜品",
+            mealTimes: ["breakfast"],
+            effectiveMealTimes: ["breakfast"],
+            deliveryEnabled: true,
+          })
+        : ok({ id: 5 }),
+    );
+    await request("/foods/my/5", { method: "PUT", body: { name: "热豆浆" } });
+    expect(sent.at(-1)!.body).not.toHaveProperty("mealTimes");
+    expect(sent.at(-1)!.body).not.toHaveProperty("deliveryEnabled");
+    // [] puts the dish back on its shop's meal times; false turns delivery off.
+    await request("/foods/my/5", {
+      method: "PUT",
+      body: { mealTimes: [], deliveryEnabled: false },
+    });
+    expect(sent.at(-1)!.body).toMatchObject({
+      mealTimes: [],
+      deliveryEnabled: false,
+    });
+    expect(await request<any>("/foods/detail/5")).toMatchObject({
+      mealTimes: ["breakfast"],
+      effectiveMealTimes: ["breakfast"],
+      deliveryEnabled: true,
+    });
   });
 
   it("edits an owner's dish through the v2 edit endpoint without blanks", async () => {
@@ -211,8 +251,9 @@ describe("v2 bridge", () => {
       priceBand: "OVER_30",
       categories: ["粉面"],
       tags: ["甜"],
-      deliveryEnabled: true,
     });
+    // Delivery is a read-only summary of the shop's dishes in v2.
+    expect(sent[1].body).not.toHaveProperty("deliveryEnabled");
   });
 
   it("never invents a price band for a shop that has none", async () => {
@@ -370,20 +411,21 @@ describe("v2 bridge", () => {
           })
         : ok({ items: [{ id: 3, category: "汤", pictureUrls: [], tags: [] }] }),
     );
-    const feed = await request<{ items: any[]; shops: any[]; mealTime: string }>(
-      "/foods/recommend",
-      {
-        query: {
-          size: 8,
-          campusId: 1,
-          mealTime: "lunch",
-          scene: "dine_in",
-          deviceId: "abcdefgh",
-          gcjLng: 117.134,
-          gcjLat: 36.667,
-        },
+    const feed = await request<{
+      items: any[];
+      shops: any[];
+      mealTime: string;
+    }>("/foods/recommend", {
+      query: {
+        size: 8,
+        campusId: 1,
+        mealTime: "lunch",
+        scene: "dine_in",
+        deviceId: "abcdefgh",
+        gcjLng: 117.134,
+        gcjLat: 36.667,
       },
-    );
+    });
     // Scene, the selected area's point and meal go along; the device id stays behind.
     expect(sent.find((s) => s.path === "/recommend")?.query).toEqual({
       scene: "dine_in",
@@ -412,6 +454,73 @@ describe("v2 bridge", () => {
     });
     expect(sent.some((s) => s.path === "/foods/list")).toBe(false);
     expect(feed.mealTime).toBe("lunch");
+  });
+
+  it("rates a dish 1-5 and reads the rating back on dishes and featured dishes", async () => {
+    const { transport, sent } = backend(({ path, method }) =>
+      path === "/foods/2/rating"
+        ? ok({
+            myRating: method === "PUT" ? 4 : null,
+            rating: { score: method === "PUT" ? 4.5 : 5, count: 2 },
+          })
+        : path === "/foods/detail/2"
+          ? ok({
+              id: 2,
+              name: "牛肉面",
+              category: "主食",
+              rating: { score: 4.5, count: 2 },
+              myRating: 4,
+            })
+          : path === "/recommend"
+            ? ok({
+                mealTime: "lunch",
+                items: [
+                  {
+                    id: 9,
+                    name: "一口面馆",
+                    signatureFoods: [
+                      {
+                        id: 2,
+                        name: "牛肉面",
+                        signature: true,
+                        rating: { score: 4.5, count: 2 },
+                      },
+                      { id: 4, name: "炸酱面", signature: false },
+                    ],
+                  },
+                ],
+              })
+            : undefined,
+    );
+    const api = createApi(transport);
+    expect(await api.rateFood(2, 4)).toEqual({
+      myRating: 4,
+      rating: { score: 4.5, count: 2 },
+    });
+    expect(sent.at(-1)).toMatchObject({
+      path: "/foods/2/rating",
+      method: "PUT",
+      body: { score: 4 },
+    });
+    expect((await api.unrateFood(2)).myRating).toBeNull();
+    expect(sent.at(-1)).toMatchObject({
+      path: "/foods/2/rating",
+      method: "DELETE",
+    });
+    expect(await api.food(2)).toMatchObject({
+      rating: { score: 4.5, count: 2 },
+      myRating: 4,
+    });
+    const feed = await api.recommendFeed(8, { scene: "dine_in" });
+    expect(feed.shops?.[0].signatureFoods).toMatchObject([
+      { id: 2, signature: true, rating: { score: 4.5, count: 2 } },
+      { id: 4, signature: false, rating: { score: null, count: 0 } },
+    ]);
+    expect(feed.items[0]).toMatchObject({
+      id: 2,
+      signature: true,
+      rating: { score: 4.5, count: 2 },
+    });
   });
 
   it("keeps the delivery recommendation as signature dishes without shops", async () => {
@@ -546,9 +655,14 @@ describe("v2 bridge", () => {
     });
     const id = store.get("eatwhat.installId");
     expect(id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(sent[0]).toMatchObject({ path: "/auth/login", body: { installId: id } });
+    expect(sent[0]).toMatchObject({
+      path: "/auth/login",
+      body: { installId: id },
+    });
     await vi.waitFor(() =>
-      expect(sent.find((s) => s.path === "/device/register")?.body).toMatchObject({
+      expect(
+        sent.find((s) => s.path === "/device/register")?.body,
+      ).toMatchObject({
         installId: id,
         platform: "web",
       }),

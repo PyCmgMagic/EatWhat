@@ -78,6 +78,9 @@ export type Draft = {
   systemTagIds?: number[];
   /** v2: marks the dish as the shop's signature. */
   signature?: boolean;
+  /** v2: the dish's own meal times ([] or absent = follows the shop). */
+  mealTimes?: string[];
+  deliveryEnabled?: boolean;
   crop?: { x: number; y: number; zoom: number };
   candidates?: string[];
   shopName?: string;

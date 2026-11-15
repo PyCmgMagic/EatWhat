@@ -17,6 +17,8 @@ import { visualFor } from "./catalog";
 import "./dish-detail.css";
 import { SupplementPrice } from "../features/SupplementPrice";
 import { FoodCommentPreview } from "../features/comments/Comments";
+import { FoodRating } from "../features/FoodRating";
+import { availabilityText } from "../features/DishAvailability";
 
 type Props = {
   food: Food;
@@ -148,6 +150,9 @@ export default function DishDetail({
               {money(food.price)}
               <SupplementPrice food={food} />
             </p>
+            {availabilityText(food) && (
+              <p className="dish-availability-note">{availabilityText(food)}</p>
+            )}
           </div>
           <div
             className={`dish-plate${visual.asset ? " is-illustration" : ""}`}
@@ -205,6 +210,7 @@ export default function DishDetail({
             </button>
           )}
         </div>
+        <FoodRating food={food} />
         <section className="dish-story" aria-label="食友分享">
           <h2>食友分享</h2>
           <p

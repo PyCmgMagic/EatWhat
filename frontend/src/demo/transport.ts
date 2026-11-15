@@ -8,6 +8,7 @@ import {
 import { demoGrowth, demoGrowthProgress, type DemoGrowth } from "./growth";
 import type { Transport, Query } from "../api/client";
 import { ApiError } from "../api/client";
+import type { V2Food } from "../api/v2-vocab";
 import type {
   Food,
   Restaurant,
@@ -1039,6 +1040,19 @@ export const demoTransport: Transport = async (path, options) => {
       food.isLiked = true;
       food.likesCount = (food.likesCount ?? 0) + 1;
       save();
+    } else if (path.endsWith("/rating")) {
+      // One viewer in this mock: their score is the whole rating.
+      const rated = food as Food & V2Food;
+      const score = method === "PUT" ? Number(b.score) : null;
+      if (
+        score != null &&
+        !(Number.isInteger(score) && score >= 1 && score <= 5)
+      )
+        throw new ApiError("score 应为 1–5 的整数", 10001);
+      rated.myRating = score;
+      rated.rating = { score, count: score == null ? 0 : 1 };
+      save();
+      result = { myRating: rated.myRating, rating: rated.rating };
     } else if (path.endsWith("/unfavorite")) {
       food.isFavorite = false;
       save();

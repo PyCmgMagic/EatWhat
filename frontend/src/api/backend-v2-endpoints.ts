@@ -100,6 +100,16 @@ export const endpoints = {
     "path": "/hub/edit/{id}",
     "access": "admin"
   },
+  "rateFood": {
+    "method": "PUT",
+    "path": "/foods/{id}/rating",
+    "access": "verifiedOrAdmin"
+  },
+  "unrateFood": {
+    "method": "DELETE",
+    "path": "/foods/{id}/rating",
+    "access": "login"
+  },
   "putFoodsEditById": {
     "method": "PUT",
     "path": "/foods/edit/{id}",

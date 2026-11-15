@@ -2,13 +2,21 @@ import { Link } from "react-router-dom";
 import type { Food, Restaurant } from "../api/models";
 import { mediaUrl, money } from "../api/models";
 import { stagePalette } from "../api/food-display";
-import { priceBands } from "../api/v2-vocab";
+import { priceBands, type DishRating } from "../api/v2-vocab";
 import { FoodCover } from "../components/FoodCover";
 import { useFoodPhoto } from "./media";
+import { ratingText } from "./FoodRating";
 import "./recommend-shops.css";
 
+/**
+ * A dish on a recommendation card. The field is still called signatureFoods,
+ * but v2 now sends the featured dishes: the best rated ones served in the
+ * current scene and meal time, whether or not they are marked as signature.
+ */
 export type Signature = NonNullable<Restaurant["signatureFoods"]>[number] & {
   coverCrop?: Food["coverCrop"];
+  signature?: boolean | null;
+  rating?: DishRating | null;
 };
 /** Fields of the v2 recommendation card the v1 shop type does not declare. */
 type Card = Restaurant & {
@@ -41,6 +49,7 @@ function DishThumb({
 }) {
   const src = mediaUrl(dish.coverUrl);
   const photo = useFoodPhoto(src);
+  const score = ratingText(dish.rating);
   return (
     <li>
       <Link
@@ -62,14 +71,16 @@ function DishThumb({
               className="rec-shop-cover"
               src={src}
               crop={dish.coverCrop}
-              alt={dish.name ?? "招牌菜"}
+              alt={dish.name ?? "代表菜"}
               loading="lazy"
               decoding="async"
               onError={photo.onError}
             />
           )}
+          {dish.signature && <span className="rec-shop-dish-badge">招牌</span>}
         </span>
         <span className="rec-shop-dish-name">{dish.name}</span>
+        {score && <span className="rec-shop-dish-score">{score}</span>}
         <span className="rec-shop-dish-price">
           {dish.price == null ? "价格待补充" : money(dish.price)}
         </span>
@@ -78,7 +89,7 @@ function DishThumb({
   );
 }
 
-/** One recommended shop with up to three signature dishes under it. */
+/** One recommended shop with up to three featured dishes under it. */
 export function RecommendShopCard({
   shop,
   onOpenShop,
@@ -119,13 +130,15 @@ export function RecommendShopCard({
         )}
       </Link>
       {dishes.length ? (
-        <ul className="rec-shop-dishes" aria-label={`${shop.name}的招牌菜`}>
+        <ul className="rec-shop-dishes" aria-label={`${shop.name}的代表菜`}>
           {dishes.map((dish) => (
             <DishThumb key={dish.id} dish={dish} onOpen={onOpenFood} />
           ))}
         </ul>
       ) : (
-        <p className="rec-shop-no-dish">还没有招牌菜，进店看看菜单吧</p>
+        <p className="rec-shop-no-dish">
+          这个时段还没有可展示的菜，进店看看菜单吧
+        </p>
       )}
     </article>
   );

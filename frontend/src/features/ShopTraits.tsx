@@ -18,7 +18,6 @@ export type ShopTraits = {
   mealTimes: string[];
   categories: string[];
   tags: string[];
-  deliveryEnabled: boolean;
 };
 export const defaultShopTraits = (): ShopTraits => ({
   kind: "food",
@@ -26,7 +25,6 @@ export const defaultShopTraits = (): ShopTraits => ({
   mealTimes: ["lunch", "dinner"],
   categories: [],
   tags: [],
-  deliveryEnabled: false,
 });
 export function shopTraitsOf(shop: Partial<ShopTraits> | null | undefined) {
   const base = defaultShopTraits();
@@ -36,7 +34,6 @@ export function shopTraitsOf(shop: Partial<ShopTraits> | null | undefined) {
     mealTimes: shop?.mealTimes?.length ? shop.mealTimes : base.mealTimes,
     categories: shop?.categories ?? [],
     tags: shop?.tags ?? [],
-    deliveryEnabled: !!shop?.deliveryEnabled,
   };
 }
 
@@ -181,21 +178,9 @@ export function ShopTraitsFields({
           </label>
         ))}
       </div>
-      <div
-        className="ew-meals shop-edit-delivery"
-        role="group"
-        aria-label="外卖"
-      >
-        <TraitHeading compact={compact}>外卖</TraitHeading>
-        <label>
-          <input
-            type="checkbox"
-            checked={value.deliveryEnabled}
-            onChange={(e) => set({ deliveryEnabled: e.target.checked })}
-          />
-          可以点外卖
-        </label>
-      </div>
+      <p className="shop-edit-delivery-note">
+        外卖按菜品设置：发布或编辑菜品时勾选“这道菜可以点外卖”。
+      </p>
     </fieldset>
   );
 }

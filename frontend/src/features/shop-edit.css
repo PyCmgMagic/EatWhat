@@ -108,8 +108,11 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
-.ew-shop-edit .shop-edit-delivery > label {
-  grid-column: 1 / -1;
+.shop-edit-delivery-note {
+  margin: 0;
+  color: #6e625b;
+  font-size: 12px;
+  line-height: 1.8;
 }
 .ew-shop-edit .shop-edit-notice {
   border-top: 1px solid #efe9e4;

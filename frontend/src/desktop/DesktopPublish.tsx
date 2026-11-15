@@ -1,4 +1,5 @@
 import { useFeedbackState } from "../components/feedback";
+import { DishAvailabilityFields } from "../features/DishAvailability";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { validateFoodDraft, submissionPath } from "../api/content-rules";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
@@ -236,6 +237,8 @@ export default function DesktopPublish() {
         pictureUrl: images.map((item) => item.key!),
         systemTagIds: snapshot.systemTagIds,
         signature: !!snapshot.signature,
+        mealTimes: snapshot.mealTimes ?? [],
+        deliveryEnabled: !!snapshot.deliveryEnabled,
         ...publishDisplay(snapshot.stage, snapshot.candidates),
         coverCrop: { centerX: 0.5, centerY: 0.5, diameter: 1 },
       });
@@ -252,6 +255,8 @@ export default function DesktopPublish() {
         tagInput: "",
         systemTagIds: [],
         signature: false,
+        mealTimes: [],
+        deliveryEnabled: false,
         crop: undefined,
         candidates: undefined,
         shopName: undefined,
@@ -780,6 +785,14 @@ export default function DesktopPublish() {
                 这是这家店的招牌
               </label>
             </div>
+            <DishAvailabilityFields
+              value={{
+                mealTimes: draft.mealTimes ?? [],
+                deliveryEnabled: !!draft.deliveryEnabled,
+              }}
+              disabled={locked || draft.publishUncertain}
+              onChange={(next) => m.setDraft(next)}
+            />
             <div className="ew-feature ew-meals">
               <b>口味标签（最多 {MAX_DISH_TAGS} 个）</b>
               {systemTags.isPending && <small>正在读取公共标签…</small>}

@@ -131,6 +131,7 @@ describe("shared request permissions", () => {
     ["POST", "/foods/upload"],
     ["PUT", "/restaurant/7/favorite"],
     ["PUT", "/restaurant/7/rating"],
+    ["PUT", "/foods/7/rating"],
     ["POST", "/activity/spring/posts"],
     ["POST", "/user/getCode"],
   ])(

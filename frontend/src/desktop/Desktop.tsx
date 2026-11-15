@@ -116,6 +116,8 @@ import { useFoodImageRefresh, useFoodPhoto } from "../features/media";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
 import { FoodCover } from "../components/FoodCover";
 import { FoodReportDialog } from "../features/FoodReportDialog";
+import { FoodRating } from "../features/FoodRating";
+import { availabilityText } from "../features/DishAvailability";
 import RestaurantMap from "../features/RestaurantMap";
 import HeaderSearch from "./DesktopSearch";
 import { baiduMarkerUrl } from "../features/map-geometry";
@@ -1547,6 +1549,11 @@ function DesktopDish() {
                 {money(food.price)}
                 <SupplementPrice food={{ ...food, id }} />
               </div>
+              {availabilityText(food) && (
+                <p className="dish-availability-note">
+                  {availabilityText(food)}
+                </p>
+              )}
               <Link
                 className="pc-dish-shop"
                 to={`/restaurants/${food.restaurantId}`}
@@ -1592,6 +1599,7 @@ function DesktopDish() {
                   <Icon name="navigate" size={18} />
                 </Link>
               </div>
+              <FoodRating food={food} />
               <div className="pc-taste-section">
                 <div className="pc-taste-heading">
                   <h2>口味</h2>
