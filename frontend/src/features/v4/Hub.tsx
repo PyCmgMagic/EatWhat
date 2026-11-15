@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import { DesignIcon as Icon } from "../../mobile/ui";
 import { Shell } from "./shared";
@@ -107,13 +106,6 @@ const groups = [
     icon: "bell",
     tone: "gold",
     items: [
-      {
-        to: "/notifications",
-        title: "通知中心",
-        detail: "查看互动消息与处理结果",
-        icon: "bell",
-        keywords: "点赞 提醒 未读",
-      },
       {
         to: "/help",
         title: "帮助与反馈",
@@ -224,7 +216,7 @@ const visibleGroups = groups.map((group) => ({
 const allFeatures: Feature[] = visibleGroups.flatMap((group) => group.items);
 
 export default function Features() {
-  const { user, api, session } = useApp();
+  const { user } = useApp();
   const [params, setParams] = useSearchParams();
   const location = useLocation();
   const searchRef = useRef<HTMLInputElement>(null);
@@ -258,17 +250,6 @@ export default function Features() {
     (count, group) => count + group.items.length,
     0,
   );
-  const unread = useQuery({
-    queryKey: ["notification-cards", "unread"],
-    queryFn: () => api.unreadCards(),
-    enabled: !!session,
-    retry: false,
-  });
-  const unreadCount =
-    session && typeof unread.data?.members === "number"
-      ? unread.data.members
-      : 0;
-
   function updateSearch(value: string) {
     setParams(
       (previous) => {
@@ -297,14 +278,6 @@ export default function Features() {
     setParams({}, { replace: true, preventScrollReset: true });
     searchRef.current?.focus();
   }
-  function badge(item: Feature) {
-    return item.to === "/notifications" && unreadCount > 0 ? (
-      <span className="feature-unread" aria-label={unreadCount + " 条未读"}>
-        {unreadCount > 99 ? "99+" : unreadCount}
-      </span>
-    ) : null;
-  }
-
   return (
     <Shell title="功能搜索" back="/me">
       <div className="feature-center profile-function-search">
@@ -399,7 +372,6 @@ export default function Features() {
                         <strong>{item.title}</strong>
                         <small>{item.detail}</small>
                       </span>
-                      {badge(item)}
                       <Icon name="chevronRight" size={15} />
                     </Link>
                   ))}
@@ -411,7 +383,7 @@ export default function Features() {
             <div className="feature-empty">
               <Icon name="search" size={30} />
               <h3>没有找到相关功能</h3>
-              <p>试试“通知”“收藏”或“账号”，也可以查看全部功能。</p>
+              <p>试试“收藏”“账号”或“设置”，也可以查看全部功能。</p>
               <button type="button" onClick={clearFilters}>
                 查看全部功能
               </button>

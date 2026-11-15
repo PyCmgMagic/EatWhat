@@ -367,6 +367,13 @@
   outline: 0;
   font-size: 15px;
 }
+.mobile-nearby-search:focus-within {
+  box-shadow: 0 0 0 2px #9c742f;
+}
+.mobile-nearby-search input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
 .mobile-nearby-area {
   align-self: flex-start;
   display: flex;

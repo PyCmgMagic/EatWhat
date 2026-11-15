@@ -23,6 +23,7 @@ import { normalizeAuthRoute } from "./auth-routes";
 import "./auth-dialog.css";
 
 const AuthDialogContent = lazy(() => import("../components/AuthDialogContent"));
+const RegistrationGuide = lazy(() => import("./RegistrationGuide"));
 const dialogPaths = new Set([
   "/auth",
   "/auth/password",
@@ -55,11 +56,12 @@ type LoginOptions = {
 type AuthFlow = {
   location: Location;
   navigate: (to: string) => void;
-  finish: (fallback: string) => void;
+  finish: (fallback: string, registration?: AbortSignal) => void;
   setBusy: (busy: boolean) => void;
 };
 const LoginDialogContext = createContext<{
   openLogin: (to?: string, options?: LoginOptions) => void;
+  showRegistrationGuide: (registration: AbortSignal) => void;
 } | null>(null);
 const AuthFlowContext = createContext<AuthFlow | null>(null);
 
@@ -72,6 +74,7 @@ export function useLoginDialog() {
 /** The same forms can navigate inside a dialog or on the standalone auth route. */
 export function useAuthFlow() {
   const flow = useContext(AuthFlowContext);
+  const loginDialog = useContext(LoginDialogContext);
   const location = useLocation();
   const navigate = useNavigate();
   return (
@@ -80,11 +83,12 @@ export function useAuthFlow() {
       navigate: (to: string) => {
         void navigate(normalizeAuthRoute(to));
       },
-      finish: (fallback: string) => {
+      finish: (fallback: string, registration?: AbortSignal) => {
         void navigate(
           safeLoginNext(new URLSearchParams(location.search).get("next")) ??
             fallback,
         );
+        if (registration) loginDialog?.showRegistrationGuide(registration);
       },
       setBusy: () => {},
     }
@@ -140,6 +144,20 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [request, setRequest] = useState<LoginRequest | null>(null);
+  const [registration, setRegistration] = useState<AbortSignal | null>(null);
+  const closeGuide = useCallback(() => setRegistration(null), []);
+  const showRegistrationGuide = useCallback((signal: AbortSignal) => {
+    if (!signal.aborted) setRegistration(signal);
+  }, []);
+  useEffect(() => {
+    if (!registration) return;
+    if (registration.aborted) {
+      closeGuide();
+      return;
+    }
+    registration.addEventListener("abort", closeGuide);
+    return () => registration.removeEventListener("abort", closeGuide);
+  }, [registration, closeGuide]);
   const active = useRef<LoginRequest | null>(null);
   const sequence = useRef(0);
   const close = useCallback(() => {
@@ -192,7 +210,7 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
     if (active.current && active.current.origin.key !== location.key) close();
   }, [location.key, close]);
   return (
-    <LoginDialogContext.Provider value={{ openLogin }}>
+    <LoginDialogContext.Provider value={{ openLogin, showRegistrationGuide }}>
       {children}
       {request &&
         createPortal(
@@ -200,16 +218,22 @@ export function LoginDialogProvider({ children }: { children: ReactNode }) {
             key={request.id}
             request={request}
             onClose={close}
-            onFinish={(next) => {
+            onFinish={(next, registration) => {
               // Ignore completions from a dialog dismissed before its request returned.
               if (active.current?.id !== request.id) return;
               close();
               if (next !== location.pathname + location.search + location.hash)
                 void navigate(next);
+              if (registration) showRegistrationGuide(registration);
             }}
           />,
           document.body,
         )}
+      {registration && !registration.aborted && (
+        <Suspense fallback={null}>
+          <RegistrationGuide onClose={closeGuide} />
+        </Suspense>
+      )}
     </LoginDialogContext.Provider>
   );
 }
@@ -221,7 +245,7 @@ function LoginDialog({
 }: {
   request: LoginRequest;
   onClose: () => void;
-  onFinish: (next: string) => void;
+  onFinish: (next: string, registration?: AbortSignal) => void;
 }) {
   const [route, setRoute] = useState(request.to);
   const [busy, setBusy] = useState(false);
@@ -324,7 +348,7 @@ function LoginDialog({
           value={{
             location: { ...request.origin, pathname: path, search, hash: "" },
             navigate,
-            finish: () => onFinish(next.current),
+            finish: (_, registration) => onFinish(next.current, registration),
             setBusy,
           }}
         >

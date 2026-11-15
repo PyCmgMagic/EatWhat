@@ -23,6 +23,7 @@ import {
 import { useApp } from "../app/state";
 import { useProfileDraft } from "../app/profile-draft";
 import { useDebouncedSearch } from "../app/search";
+import { NearbySearchInput } from "../features/NearbySearchInput";
 import { isDemo } from "../app/runtime";
 import { useArea } from "../app/area";
 import {
@@ -87,6 +88,7 @@ import { withDraftTag, withDraftTags } from "./draft-tags";
 import { useActionAccess } from "../features/access";
 import { useContentMotion } from "../motion/hooks";
 import { instantMotion } from "../motion/runtime";
+import { createHeroOrbitScheduler, heroOrbitStep } from "../motion/hero-orbit";
 import { peopleHref } from "../features/profile-people";
 import { AccessWelcome } from "../components/AccessWelcome";
 import RestaurantMap from "../features/RestaurantMap";
@@ -96,6 +98,8 @@ import { useReturnTo } from "../app/navigation";
 import { useProfileReturnTo } from "../app/profile-navigation";
 import "./restaurant-detail.css";
 import { RecommendShopList } from "../features/RecommendShops";
+import { FoodReportDialog } from "../features/FoodReportDialog";
+import { RestaurantCorrectionDialog } from "../features/RestaurantCorrectionDialog";
 
 const FoodExtras = React.lazy(() =>
   import("../features/v4/DetailExtras").then((module) => ({
@@ -166,10 +170,17 @@ export function useDesignBridge(
   // Latest draft, for callbacks that finish after later edits (photo uploads).
   const draftRef = useRef(m.draft);
   draftRef.current = m.draft;
+  const orbitMotion = useRef({
+    scheduler: createHeroOrbitScheduler(),
+    angle: 0,
+    startX: 0,
+  });
+  useEffect(() => () => orbitMotion.current.scheduler.cancel(), []);
   const access = useActionAccess();
   const profileReturnTo = useProfileReturnTo();
   const profileDraft = useProfileDraft();
-  const profile = screen === "G-EditProfile" && !reference ? profileDraft : null;
+  const profile =
+    screen === "G-EditProfile" && !reference ? profileDraft : null;
   const foodBack = useReturnTo("/"),
     shopBack = useReturnTo("/nearby");
   const activeLocation = useRef(location.key);
@@ -199,11 +210,15 @@ export function useDesignBridge(
     ),
     [search, setSearch] = useState("");
   const [mapShopId, setMapShopId] = useState<number>();
+  const [reportOpen, setReportOpen] = useState(false);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const tagAdding = useRef(false),
     publishLock = useRef(false);
   const publishUncertain = screen === "G-AddDish" && !!m.draft.publishUncertain;
   const busy =
-    localBusy || !!profile?.phase || (screen === "G-AddDish" && !!m.draft.publishing);
+    localBusy ||
+    !!profile?.phase ||
+    (screen === "G-AddDish" && !!m.draft.publishing);
   const active = !reference && !!session,
     verified = active && user?.verified === true && !user?.banned;
   const browse = !reference;
@@ -222,6 +237,8 @@ export function useDesignBridge(
     () => setPage(1),
     [controller.state.tab, search, controller.state.q],
   );
+  useEffect(() => setReportOpen(false), [screen, foodId]);
+  useEffect(() => setCorrectionOpen(false), [screen, shopId]);
   const remote = useRemoteConfig(),
     batchSize = recommendationBatchSize(remote.data);
   const recommendations = useQuery({
@@ -773,16 +790,53 @@ export function useDesignBridge(
     values.tr =
       instantMotion() || controller.state.dragging
         ? "none"
-        : "transform 360ms cubic-bezier(0.25,1,0.5,1), opacity 180ms ease-out";
+        : "transform 360ms cubic-bezier(0.25,1,0.5,1), opacity 200ms ease-out";
     const list = carouselFoods,
       N = list.length,
       n = controller.state.n ?? 0,
-      k = N ? ((n % N) + N) % N : 0;
+      k = N ? ((n % N) + N) % N : 0,
+      down = values.down,
+      next = values.next;
     values.s = visualFor(list[k] ?? { name: "", category: "drink" }, isDemo);
     values.dots = list.map((_, i) => ({
       w: i === k ? 16 : 5,
       o: i === k ? 1 : 0.4,
     }));
+    values.down = (e: React.PointerEvent<HTMLElement>) => {
+      const state = orbitMotion.current;
+      state.scheduler.cancel();
+      state.angle = 0;
+      state.startX = e.clientX;
+      down(e);
+    };
+    values.move = (e: React.PointerEvent<HTMLElement>) => {
+      if (!controller.state.dragging) return;
+      const state = orbitMotion.current,
+        target = e.currentTarget as HTMLElement,
+        degrees = (e.clientX - state.startX) / 7.5;
+      state.angle = Math.max(
+        -heroOrbitStep * 1.1,
+        Math.min(heroOrbitStep * 1.1, degrees),
+      );
+      state.scheduler.update(target, state.angle, 55);
+    };
+    values.up = () => {
+      if (!controller.state.dragging) return;
+      const state = orbitMotion.current,
+        steps = state.angle < -4 ? 1 : state.angle > 4 ? -1 : 0;
+      state.scheduler.cancel();
+      state.angle = 0;
+      controller.setState({
+        n: (controller.state.n ?? 0) + steps,
+        drag: 0,
+        dragging: false,
+      });
+    };
+    values.next = () => {
+      orbitMotion.current.scheduler.cancel();
+      orbitMotion.current.angle = 0;
+      next();
+    };
     if (N < 2) {
       values.next = values.down = values.move = values.up = () => {};
     }
@@ -1281,13 +1335,12 @@ export function useDesignBridge(
           <header className="mobile-nearby-toolbar">
             <div className="mobile-nearby-search">
               <DesignIcon name="search" size={20} />
-              <input
+              <NearbySearchInput
                 type="search"
-                aria-label="搜店名或菜名"
-                placeholder="搜一家店"
+                label="搜店名或菜名"
                 value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
+                onCommit={(value) => {
+                  setSearch(value);
                   setPage(1);
                 }}
               />
@@ -1568,8 +1621,11 @@ export function useDesignBridge(
         if (food?.id) p.href = `#/foods/${food.id}`;
       }
       if (n.attrs.role === "group")
-        p.onPointerCancel = () =>
+        p.onPointerCancel = () => {
+          orbitMotion.current.scheduler.cancel();
+          orbitMotion.current.angle = 0;
           controller.setState({ drag: 0, dragging: false });
+        };
       if (tag === "header") p.className = "mobile-home-toolbar";
       if (tag === "div" && st.top === "392px") p.className = "mobile-home-dots";
       if (tag === "div" && st.top === "414px")
@@ -2979,7 +3035,7 @@ export function useDesignBridge(
     if (!files.length || activeLocation.current !== page) return;
     await run(async () => {
       validateFiles(files, 0);
-      if (await profile.save(files[0]) && activeLocation.current === page)
+      if ((await profile.save(files[0])) && activeLocation.current === page)
         controller.setState({ sheet: false });
     });
   }
@@ -3042,7 +3098,7 @@ export function useDesignBridge(
         const maxDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
         if (form.birthday && form.birthday > maxDate)
           throw new Error("生日不能晚于今天。");
-        if (await profile.save() && activeLocation.current === location.key)
+        if ((await profile.save()) && activeLocation.current === location.key)
           nav(profileReturnTo);
       }, "个人资料已更新");
       return;
@@ -3141,11 +3197,11 @@ export function useDesignBridge(
     }
     if (target === "G-PanelReport.dc.html") {
       m.closePanel();
-      nav(`/reports/new?type=FOOD&id=${foodId}`);
+      setReportOpen(true);
       return;
     }
     if (target === "G-WrongInfo.dc.html") {
-      nav(`/restaurants/correction?id=${shopId}`);
+      setCorrectionOpen(true);
       return;
     }
     if (target === "G-PanelTag.dc.html") {
@@ -3282,6 +3338,22 @@ export function useDesignBridge(
           busy={busy}
           onPick={(source) => void pickAvatar(source)}
           onClose={() => controller.setState({ sheet: false })}
+        />
+      )}
+      {reportOpen && (
+        <FoodReportDialog
+          key={foodId}
+          foodId={foodId}
+          foodName={detail.data?.name}
+          onClose={() => setReportOpen(false)}
+        />
+      )}
+      {correctionOpen && (
+        <RestaurantCorrectionDialog
+          key={shopId}
+          restaurantId={shopId}
+          restaurantName={restaurant.data?.name}
+          onClose={() => setCorrectionOpen(false)}
         />
       )}
       {isDemo && ["G-Login", "G-PasswordLogin"].includes(screen) && (

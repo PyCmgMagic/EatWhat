@@ -1,18 +1,21 @@
-.profile-help-header {
+.profile-section-heading {
   margin: 0 0 24px;
   color: #2e251e;
 }
-.profile-help-header .profile-page-eyebrow {
+.profile-section-heading .profile-page-eyebrow {
   font-size: 12px;
   color: #827367;
 }
-.profile-help-header h1 {
+.profile-section-heading h1 {
   margin: 8px 0 10px;
   font-size: 32px;
   letter-spacing: -0.035em;
   line-height: 1.3;
 }
-.profile-help-header p {
+.profile-section-heading > h1:first-child {
+  margin-top: 0;
+}
+.profile-section-heading p {
   margin: 0;
   color: #827367;
   font-size: 14px;
@@ -20,12 +23,24 @@
 }
 .pc-profile-workspace-content
   > .pc-motion-region
-  > .v4-page:is([data-route="/feedback"], [data-route="/feedback/mine"]) {
+  > .v4-page:is(
+    [data-route="/feedback"],
+    [data-route="/feedback/mine"],
+    [data-route="/restaurants/favorites"]
+  ) {
   padding-top: 0;
 }
 .ew-mobile-feature
-  > .v4-page:is([data-route="/feedback"], [data-route="/feedback/mine"]) {
+  > .v4-page:is(
+    [data-route="/feedback"],
+    [data-route="/feedback/mine"],
+    [data-route="/restaurants/favorites"]
+  ) {
   padding: 0 0 35px;
+}
+.v4-page .v4-list-toolbar.profile-collections-toolbar {
+  justify-content: flex-end;
+  min-height: 44px;
 }
 .profile-section-nav {
   display: flex;
@@ -89,13 +104,13 @@
   padding-left: 0;
 }
 @media (max-width: 600px) {
-  .profile-help-header {
+  .profile-section-heading {
     margin-bottom: 20px;
   }
-  .profile-help-header h1 {
+  .profile-section-heading h1 {
     font-size: 28px;
   }
-  .profile-help-header p {
+  .profile-section-heading p {
     font-size: 13px;
   }
   .profile-section-nav {

@@ -34,9 +34,9 @@ async(page) => {
         await settle();
         const initial = await p.evaluate(() => ({ scroll: document.documentElement.scrollWidth, text: document.body.innerText }));
         if (initial.scroll > width + 1 || initial.text.includes('这里还没有内容') || initial.text.includes('先完成学生认证') || initial.text.includes('还没有自己的标签')) issues.push({width,path,initial});
-        const nav = p.locator(width >= 600 ? '.pc-header' : '.design-navigation').first();
+        const nav = p.locator(width >= 640 ? '.pc-header' : '.design-navigation').first();
         const before = await nav.count() ? await nav.boundingBox() : null;
-        const stableSelector = width >= 600 ? path === '/' ? '.pc-hero' : path === '/foods/1' ? '.pc-dish-layout' : path === '/restaurants/1' ? '.pc-restaurant-hero' : null : null;
+        const stableSelector = width >= 640 ? path === '/' ? '.pc-hero' : path === '/foods/1' ? '.pc-dish-layout' : path === '/restaurants/1' ? '.pc-restaurant-hero' : null : null;
         const frameBefore = stableSelector ? await p.locator(stableSelector).boundingBox() : null;
         if (path === '/' || path === '/foods/1' || path === '/restaurants/1') await p.screenshot({path:`output/playwright/loading-${width}-${path.replace(/\W+/g,'-')}.png`,fullPage:false});
         await p.waitForFunction(() => ![...document.querySelectorAll('.ew-page-skeleton,.ew-mobile-skeleton,.ew-content-skeleton')].some(e=>e.checkVisibility()));

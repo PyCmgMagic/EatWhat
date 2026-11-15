@@ -29,14 +29,26 @@ export default function VerificationResult({
       callback.result,
       callback.code,
       callback.ticket,
+      callback.token,
     ],
     queryFn: async () => {
+      if (callback.token && !origin.accountChanged) {
+        const token = callback.token;
+        forgetCallbackParameter("token");
+        try {
+          await confirmed(`email:${token}`, () => api.verifyEmail(token));
+        } catch (error) {
+          const me = await api.me();
+          if (me?.verified) return me;
+          throw error;
+        }
+      }
       if (callback.ticket && !origin.accountChanged) {
         const ticket = callback.ticket;
         // The ticket works once; drop it so a refresh does not resend it.
-        forgetTicket();
+        forgetCallbackParameter("ticket");
         try {
-          await confirmed(ticket, () => api.ssoConfirm(ticket));
+          await confirmed(`sso:${ticket}`, () => api.ssoConfirm(ticket));
         } catch (error) {
           const me = await api.me();
           // Already bound (e.g. confirmed in another tab): show the result.
@@ -140,20 +152,20 @@ export default function VerificationResult({
   );
 }
 
-/** One request per ticket even if React runs the query twice. */
+/** One request per credential even if React runs the query twice. */
 const confirming = new Map<string, Promise<unknown>>();
-function confirmed(ticket: string, send: () => Promise<unknown>) {
-  let pending = confirming.get(ticket);
-  if (!pending) confirming.set(ticket, (pending = send()));
+function confirmed(key: string, send: () => Promise<unknown>) {
+  let pending = confirming.get(key);
+  if (!pending) confirming.set(key, (pending = send()));
   return pending;
 }
-function forgetTicket() {
+function forgetCallbackParameter(name: "ticket" | "token") {
   const hash = window.location.hash,
     at = hash.indexOf("?");
   if (at < 0) return;
   const params = new URLSearchParams(hash.slice(at + 1));
-  if (!params.has("ticket")) return;
-  params.delete("ticket");
+  if (!params.has(name)) return;
+  params.delete(name);
   window.history.replaceState(
     window.history.state,
     "",

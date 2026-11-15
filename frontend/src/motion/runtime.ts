@@ -1,6 +1,6 @@
 export const motion = {
   fast: 140,
-  content: 180,
+  content: 200,
   surface: 240,
   exit: 160,
   enter: "cubic-bezier(0.22, 1, 0.36, 1)",

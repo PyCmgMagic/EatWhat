@@ -114,19 +114,6 @@
 .feature-quick-link > .design-icon {
   display: none;
 }
-.feature-unread {
-  flex-shrink: 0;
-  align-self: center;
-  font-size: 11px;
-  font-weight: 750;
-  line-height: 20px;
-  min-width: 20px;
-  padding: 0 5px;
-  border-radius: 10px;
-  text-align: center;
-  background: #a43d28;
-  color: white;
-}
 .feature-directory {
   margin-top: 32px;
 }
@@ -430,15 +417,6 @@
     border-radius: 12px;
   }
   .feature-quick-link > .design-icon {
-    display: none;
-  }
-  .feature-quick-link > .feature-unread {
-    position: absolute;
-    top: -7px;
-    right: 10px;
-    border: 2px solid #f4efeb;
-  }
-  .feature-quick-link:has(.feature-unread) > .design-icon {
     display: none;
   }
   .feature-quick-link .feature-copy strong {

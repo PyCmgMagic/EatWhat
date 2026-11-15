@@ -10,7 +10,7 @@ import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { useSessionDraft } from "../app/drafts";
 import { LoginLink, useAuthBusy, useAuthFlow } from "../app/auth-dialog";
-import { isDemo } from "../app/runtime";
+import { isDemo, sessionSignal } from "../app/runtime";
 import { useTask } from "../components/useTask";
 import { classifyAuth } from "../api/service";
 import { FeaturePage, FeatureState } from "./Catalog";
@@ -150,11 +150,14 @@ export function PhoneLoginForm({
             });
             const result = classifyAuth(reply);
             if (result.kind === "session") {
+              const registered =
+                reply.data &&
+                "newUser" in reply.data &&
+                reply.data.newUser === true;
               await signIn(result.session);
               finish(
-                reply.data && "newUser" in reply.data && reply.data.newUser
-                  ? "/settings/username?first=1"
-                  : "/me",
+                "/me",
+                registered ? sessionSignal(result.session) : undefined,
               );
             } else throw new Error(result.message);
           });

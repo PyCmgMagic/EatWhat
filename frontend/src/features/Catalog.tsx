@@ -1,5 +1,5 @@
 import { Select } from "../components/Select";
-import { useContext, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import {
   Link,
   useSearchParams,
@@ -39,8 +39,7 @@ import { useContentMotion } from "../motion/hooks";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { AccessWelcome } from "../components/AccessWelcome";
 import { FavoritesEmpty, FavoritesFilters } from "./FavoritesControls";
-import { ProfileSectionNav } from "./ProfileSectionNav";
-import { ProfileWorkspaceContext } from "../app/profile-workspace";
+import { ProfileCollectionsHeader } from "./ProfileSectionNav";
 import SettingsPageHeader from "./SettingsPageHeader";
 import { useTask } from "../components/useTask";
 import {
@@ -246,7 +245,6 @@ export function CatalogCard({
   );
 }
 export function Catalog({ favorites = false }: { favorites?: boolean }) {
-  const embedded = useContext(ProfileWorkspaceContext);
   const { api, session, user } = useApp(),
     [params, setParams] = useSearchParams(),
     mode = favorites ? "food" : params.get("type") === "shop" ? "shop" : "food",
@@ -332,49 +330,52 @@ export function Catalog({ favorites = false }: { favorites?: boolean }) {
   if (favorites && !session) return <AccessWelcome />;
   return (
     <div className={`ew-feature${favorites ? " ew-favorites" : " ew-catalog"}`}>
-      <header className="ew-head">
-        {(!favorites || !embedded) && (
-          <Link to={favorites ? "/me" : "/"}>
-            <Icon name="back" size={18} />
-            {favorites ? "我的" : "发现"}
-          </Link>
-        )}
-        <h1>{favorites ? "我的收藏" : "找到今天想吃的"}</h1>
-        <p>
-          {favorites
-            ? "喜欢的，慢慢吃。把心头好留给每一个好胃口。"
-            : "搜一道菜，也找一家店。"}
-        </p>
-      </header>
-      {favorites && <ProfileSectionNav section="collections" />}
-      {!favorites && (
-        <nav className="ew-tabs" aria-label="搜索类型">
-          <button
-            aria-pressed={mode === "food"}
-            onClick={() =>
-              mode !== "food" && setParams(changeCatalogMode(params, "food"))
-            }
-          >
-            搜菜品
-          </button>
-          <button
-            aria-pressed={mode === "shop"}
-            onClick={() =>
-              mode !== "shop" && setParams(changeCatalogMode(params, "shop"))
-            }
-          >
-            搜店铺
-          </button>
-        </nav>
+      {favorites ? (
+        <ProfileCollectionsHeader />
+      ) : (
+        <>
+          <header className="ew-head">
+            <Link to="/">
+              <Icon name="back" size={18} />
+              发现
+            </Link>
+            <h1>搜索结果</h1>
+            <p>
+              {filters.keyword
+                ? `“${filters.keyword}” 的${mode === "shop" ? "店铺" : "菜品"}结果`
+                : `全部${mode === "shop" ? "店铺" : "菜品"}`}
+            </p>
+          </header>
+          <nav className="ew-tabs" aria-label="搜索类型">
+            <button
+              aria-pressed={mode === "food"}
+              onClick={() =>
+                mode !== "food" && setParams(changeCatalogMode(params, "food"))
+              }
+            >
+              搜菜品
+            </button>
+            <button
+              aria-pressed={mode === "shop"}
+              onClick={() =>
+                mode !== "shop" && setParams(changeCatalogMode(params, "shop"))
+              }
+            >
+              搜店铺
+            </button>
+          </nav>
+        </>
       )}
-      <FavoritesFilters
-        key={favoritesFormKey}
-        mode={favorites ? "favorites" : mode}
-        filters={filters}
-        apply={set}
-        reset={resetFilters}
-        filtered={filtered}
-      />
+      {favorites && (
+        <FavoritesFilters
+          key={favoritesFormKey}
+          mode="favorites"
+          filters={filters}
+          apply={set}
+          reset={resetFilters}
+          filtered={filtered}
+        />
+      )}
       <div className={favorites ? "favorites-library-bar" : undefined}>
         {favorites && !!user?.verified && (
           <div className="ew-tag-filter">

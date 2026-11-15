@@ -35,6 +35,7 @@ import {
 import { useApp } from "../app/state";
 import { LoginLink } from "../app/auth-dialog";
 import { useDebouncedSearch } from "../app/search";
+import { NearbySearchInput } from "../features/NearbySearchInput";
 import { useArea } from "../app/area";
 import { isDemo } from "../app/runtime";
 import { errorMessage } from "../api/client";
@@ -64,6 +65,7 @@ import { MotionRegion, SlidingTabs } from "./motion";
 import { useContentMotion } from "../motion/hooks";
 import { instantMotion } from "../motion/runtime";
 import {
+  createHeroOrbitScheduler,
   dragHeroOrbit,
   heroOrbitSlots,
   heroOrbitStep,
@@ -111,11 +113,10 @@ import { foodCategories, type V2Food } from "../api/v2-vocab";
 import { useFoodImageRefresh, useFoodPhoto } from "../features/media";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
 import { FoodCover } from "../components/FoodCover";
+import { FoodReportDialog } from "../features/FoodReportDialog";
 import RestaurantMap from "../features/RestaurantMap";
+import HeaderSearch from "./DesktopSearch";
 import { baiduMarkerUrl } from "../features/map-geometry";
-const DesktopAuth = lazy(() =>
-  import("./DesktopAccount").then((m) => ({ default: m.DesktopAuth })),
-);
 const DesktopSettingsPage = lazy(() =>
   import("./DesktopAccount").then((m) => ({ default: m.DesktopSettingsPage })),
 );
@@ -187,20 +188,26 @@ export default function DesktopExperience({
   screen,
   overlay,
   children,
+  responsivePage,
 }: {
   enabled: boolean;
   screen: string;
   overlay: boolean;
   children: ReactNode;
+  responsivePage?: ReactNode;
 }) {
   const location = useLocation();
   const { session } = useApp();
   const workspace = !!session && profileSection(location.pathname) !== null;
-  if (!enabled) return children;
+  // Keep shared pages mounted as desktop navigation is added or removed.
+  if (!enabled && !responsivePage) return children;
   return (
-    <div className="pc-app" inert={overlay || undefined}>
-      <DesktopHeader />
-      <main className="pc-main">
+    <div
+      className={enabled ? "pc-app" : undefined}
+      inert={overlay || undefined}
+    >
+      {enabled && <DesktopHeader />}
+      <main className={enabled ? "pc-main" : undefined}>
         <MotionRegion
           // Reapply inheritance after a modal closes; lazy subtrees can retain
           // Chromium's computed inert state even after the attribute is removed.
@@ -217,19 +224,19 @@ export default function DesktopExperience({
           order={location.pathname === "/nearby" ? 1 : workspace ? 2 : 0}
         >
           <Suspense fallback={<ContentSkeleton kind="form" count={3} />}>
-            <DesktopRoute screen={screen}>{children}</DesktopRoute>
+            {responsivePage ?? (
+              <DesktopRoute screen={screen}>{children}</DesktopRoute>
+            )}
           </Suspense>
         </MotionRegion>
       </main>
-      <DesktopFooter />
+      {enabled && <DesktopFooter />}
     </div>
   );
 }
 function DesktopHeader() {
   const { user, session, api } = useApp(),
-    location = useLocation(),
-    nav = useNavigate(),
-    [search, setSearch] = useState("");
+    location = useLocation();
   const unread = useQuery({
     queryKey: ["notifications", "unread"],
     queryFn: () => unreadCount(api),
@@ -237,26 +244,28 @@ function DesktopHeader() {
     refetchInterval: 60_000,
   });
   const active =
-    location.pathname === "/nearby" ||
-    location.pathname === "/restaurants" ||
-    location.pathname === "/restaurants/directory"
-      ? "nearby"
-      : profileSection(location.pathname) !== null ||
-          location.pathname.startsWith("/me") ||
-          location.pathname.startsWith("/settings") ||
-          location.pathname === "/favorites" ||
-          location.pathname === "/history" ||
-          location.pathname === "/notifications" ||
-          location.pathname === "/features" ||
-          location.pathname === "/submissions" ||
-          location.pathname.startsWith("/submissions/") ||
-          location.pathname === "/feedback/mine" ||
-          location.pathname.startsWith("/feedback/mine/") ||
-          location.pathname === "/restaurants/favorites" ||
-          location.pathname === "/verify" ||
-          location.pathname === "/follows"
-        ? "me"
-        : "home";
+    location.pathname === "/notifications" ||
+    location.pathname === "/announcements"
+      ? "notifications"
+      : location.pathname === "/nearby" ||
+          location.pathname === "/restaurants" ||
+          location.pathname === "/restaurants/directory"
+        ? "nearby"
+        : profileSection(location.pathname) !== null ||
+            location.pathname.startsWith("/me") ||
+            location.pathname.startsWith("/settings") ||
+            location.pathname === "/favorites" ||
+            location.pathname === "/history" ||
+            location.pathname === "/features" ||
+            location.pathname === "/submissions" ||
+            location.pathname.startsWith("/submissions/") ||
+            location.pathname === "/feedback/mine" ||
+            location.pathname.startsWith("/feedback/mine/") ||
+            location.pathname === "/restaurants/favorites" ||
+            location.pathname === "/verify" ||
+            location.pathname === "/follows"
+          ? "me"
+          : "home";
   return (
     <header className="pc-header">
       <div className="pc-header-inner">
@@ -289,32 +298,7 @@ function DesktopHeader() {
         </SlidingTabs>
         <div className="pc-header-actions">
           <WorkspaceSwitch />
-          <form
-            className="pc-header-search"
-            role="search"
-            onSubmit={(e) => {
-              e.preventDefault();
-              nav("/search?q=" + encodeURIComponent(search.trim()));
-            }}
-          >
-            <Icon name="search" size={18} />
-            <input
-              aria-label="搜索菜品或店名"
-              placeholder="搜菜品或店名"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <button aria-label="开始搜索">
-              <Icon name="chevronRight" size={16} />
-            </button>
-          </form>
-          <Link
-            className="pc-compact-search pc-icon-button"
-            to="/search"
-            aria-label="搜索菜品或店名"
-          >
-            <Icon name="search" size={21} />
-          </Link>
+          <HeaderSearch />
           <Link
             className="pc-icon-button"
             to="/notifications"
@@ -448,13 +432,7 @@ function DesktopPage({
   if (isV4Path(loc.pathname)) return <V4Routes key={loc.pathname} />;
   if (/^\/foods\/\d+\/edit$/.test(loc.pathname)) return <EditFood />;
   if (isShopEditPath(loc.pathname)) return <EditRestaurant />;
-  if (
-    [
-      "/settings/username",
-      "/settings/blocked",
-      "/auth/password-conflict/reset",
-    ].includes(loc.pathname)
-  )
+  if (["/settings/username", "/settings/blocked"].includes(loc.pathname))
     return <ApiV2Routes key={loc.pathname} />;
   if (loc.pathname === "/settings/preferences") return <Preferences />;
   if (loc.pathname === "/search") return <Catalog />;
@@ -465,18 +443,7 @@ function DesktopPage({
       </DesktopGate>
     );
   if (loc.pathname === "/auth" || loc.pathname.startsWith("/auth/"))
-    return [
-      "/auth",
-      "/auth/password",
-      "/auth/register",
-      "/auth/register/confirm",
-      "/auth/username-register",
-      "/auth/forgot",
-    ].includes(loc.pathname) ? (
-      <DesktopAuth key={loc.pathname} />
-    ) : (
-      <NotFound />
-    );
+    return <NotFound />;
   if (loc.pathname === "/notifications")
     return (
       <DesktopGate verified={false}>
@@ -783,7 +750,9 @@ function DesktopHome() {
     [n, setN] = useState(0),
     [category, setCategory] = useState(""),
     pointer = useRef<{ id: number; x: number; radius: number } | null>(null),
+    orbitMotion = useRef(createHeroOrbitScheduler()),
     copy = useRef<HTMLDivElement>(null);
+  useEffect(() => () => orbitMotion.current.cancel(), []);
   const query = useQuery({
       queryKey: [
         "foods",
@@ -1054,6 +1023,7 @@ function DesktopHome() {
               list.length < 2
             )
               return;
+            orbitMotion.current.cancel();
             const plate =
               e.currentTarget.querySelector<HTMLElement>(".pc-current-plate");
             pointer.current = {
@@ -1073,12 +1043,13 @@ function DesktopHome() {
                 (e.clientX - start.x) /
                   ((start.radius * heroOrbitStep * Math.PI) / 180),
               );
-            dragHeroOrbit(e.currentTarget, angle);
+            orbitMotion.current.update(e.currentTarget, angle);
           }}
           onPointerUp={(e) => {
             const start = pointer.current;
             if (start?.id !== e.pointerId) return;
             pointer.current = null;
+            orbitMotion.current.cancel();
             delete e.currentTarget.dataset.dragging;
             dragHeroOrbit(e.currentTarget);
             if (
@@ -1092,12 +1063,14 @@ function DesktopHome() {
           onLostPointerCapture={(e) => {
             if (pointer.current?.id !== e.pointerId) return;
             pointer.current = null;
+            orbitMotion.current.cancel();
             delete e.currentTarget.dataset.dragging;
             dragHeroOrbit(e.currentTarget);
           }}
           onPointerCancel={(e) => {
             if (pointer.current?.id !== e.pointerId) return;
             pointer.current = null;
+            orbitMotion.current.cancel();
             delete e.currentTarget.dataset.dragging;
             dragHeroOrbit(e.currentTarget);
           }}
@@ -1257,6 +1230,7 @@ function NextPage({
 
 function DesktopNearby() {
   const [params, setParams] = useSearchParams();
+  const searchInput = useRef<HTMLInputElement>(null);
   const update = (patch: Record<string, string | undefined>) =>
     setParams(
       (previous) => {
@@ -1335,16 +1309,21 @@ function DesktopNearby() {
             </div>
             <div className="pc-search-field">
               <Icon name="search" size={20} />
-              <input
-                aria-label="附近搜店名"
-                placeholder="搜一家店"
+              <NearbySearchInput
+                ref={searchInput}
+                label="附近搜店名"
                 value={q}
-                onChange={(e) => {
-                  setQ(e.target.value);
-                }}
+                onCommit={setQ}
               />
               {q && (
-                <button aria-label="清空搜索" onClick={() => setQ("")}>
+                <button
+                  type="button"
+                  aria-label="清空搜索"
+                  onClick={() => {
+                    setQ("");
+                    searchInput.current?.focus();
+                  }}
+                >
                   <Icon name="close" size={16} />
                 </button>
               )}
@@ -1463,9 +1442,13 @@ function DesktopDish() {
     enabled: !!food?.restaurantId,
   });
   const [image, setImage] = useState(0),
+    [reportOpen, setReportOpen] = useState(false),
     photo = useRef<HTMLDivElement>(null);
   useContentMotion(photo, image, image, "opacity");
-  useEffect(() => setImage(0), [id]);
+  useEffect(() => {
+    setImage(0);
+    setReportOpen(false);
+  }, [id]);
   useEffect(() => m.setFoodId(id), [id]);
   return (
     <QueryStatus query={query} skeleton="dish">
@@ -1548,7 +1531,11 @@ function DesktopDish() {
                       size={20}
                     />
                   </button>
-                  <DishMoreActions key={id} food={food} id={id} />
+                  <DishMoreActions
+                    key={id}
+                    food={food}
+                    onReport={() => setReportOpen(true)}
+                  />
                 </div>
               </div>
               <h1>{food.name}</h1>
@@ -1669,6 +1656,14 @@ function DesktopDish() {
             <FoodDiscussion key={id} food={{ ...food, id }} />
             <FoodExtras id={id} />
           </Suspense>
+          {reportOpen && (
+            <FoodReportDialog
+              key={id}
+              foodId={id}
+              foodName={food.name}
+              onClose={() => setReportOpen(false)}
+            />
+          )}
         </>
       )}
     </QueryStatus>
@@ -1705,23 +1700,32 @@ function DesktopRestaurant() {
             <span>{shop.name}</span>
           </div>
           <section className="pc-restaurant-hero">
-            <div>
+            <div className="pc-restaurant-hero-copy">
               <span className="pc-eyebrow">好味道，也值得被分享</span>
               <h1>{shop.name}</h1>
-              <p>
+              <p className="pc-restaurant-address">
                 <Icon name="nearby" size={18} />
-                {shop.address ?? "地址待补充"}
+                <span>{shop.address ?? "地址待补充"}</span>
               </p>
               <div className="pc-restaurant-stats">
-                <strong>{foods.data?.totalItems ?? "—"}</strong>
-                <span>道菜</span>
-                <span>
-                  {shop.ratingSummaryState === "SYNC_PENDING"
-                    ? "评分同步中"
-                    : shop.recommendationRate == null
-                      ? "评分人数不足"
-                      : `推荐率 ${shop.recommendationRate}%`}
-                </span>
+                <div className="pc-restaurant-stat">
+                  <strong>{foods.data?.totalItems ?? "—"}</strong>
+                  <span>道已分享菜品</span>
+                </div>
+                <div className="pc-restaurant-stat">
+                  <strong>
+                    {shop.recommendationRate == null
+                      ? "—"
+                      : `${shop.recommendationRate}%`}
+                  </strong>
+                  <span>
+                    {shop.ratingSummaryState === "SYNC_PENDING"
+                      ? "评分同步中"
+                      : shop.recommendationRate == null
+                        ? "评分人数不足"
+                        : "食友推荐率"}
+                  </span>
+                </div>
               </div>
               <div className="pc-restaurant-actions">
                 <button
@@ -1780,13 +1784,13 @@ function DesktopRestaurant() {
           </Suspense>
           <section className="pc-content-sheet is-standalone">
             <div className="pc-section-toolbar">
-              <h2>这家店的好味道</h2>
-              <Link
-                to={`/restaurants/correction?id=${id}`}
-                onClick={() => m.setShopId(id)}
-              >
-                信息有误
-              </Link>
+              <div>
+                <h2>这家店的好味道</h2>
+                <p>从招牌菜到日常一餐，看看食友们的真实分享</p>
+              </div>
+              <span className="pc-menu-count">
+                {foods.data?.totalItems ?? "—"} 道菜品
+              </span>
             </div>
             <QueryStatus query={foods} empty={!foods.data?.items?.length}>
               <div className="pc-food-grid">

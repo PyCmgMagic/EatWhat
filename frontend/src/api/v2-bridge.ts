@@ -575,8 +575,8 @@ const routes: [string, RegExp, Handler][] = [
   [
     "POST",
     /^\/auth\/phone\/login$/,
-    async ({ body, call, options }) => ({
-      ...(await withLoginConsent(
+    ({ body, call, options }) =>
+      withLoginConsent(
         call,
         body.policyVersion ?? body.consentPolicyVersion,
         (policyVersion) =>
@@ -591,9 +591,7 @@ const routes: [string, RegExp, Handler][] = [
               installId: installId(),
             },
           }),
-      )),
-      newUser: false,
-    }),
+      ),
   ],
   [
     "POST",

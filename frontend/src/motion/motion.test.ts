@@ -9,6 +9,7 @@ import {
   useSurfaceDismiss,
 } from "./hooks";
 import { finishMotion } from "./runtime";
+import { createHeroOrbitScheduler } from "./hero-orbit";
 
 let host: HTMLDivElement,
   root: Root,
@@ -275,5 +276,41 @@ describe("surface presence", () => {
     }
     expect(animations).toHaveLength(2);
     expect(close).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("hero orbit scheduling", () => {
+  it("batches pointer updates and applies only the latest angle", () => {
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal(
+      "requestAnimationFrame",
+      vi.fn((callback: FrameRequestCallback) => {
+        frames.push(callback);
+        return frames.length;
+      }),
+    );
+    const element = document.createElement("div"),
+      plate = document.createElement("div");
+    plate.dataset.orbitOffset = "1";
+    element.append(plate);
+    const scheduler = createHeroOrbitScheduler();
+    scheduler.update(element, 10);
+    scheduler.update(element, 20);
+    expect(requestAnimationFrame).toHaveBeenCalledOnce();
+    frames[0](0);
+    expect(plate.style.transform).toContain("75deg");
+  });
+
+  it("cancels a pending frame when dragging ends", () => {
+    const cancel = vi.fn();
+    vi.stubGlobal(
+      "requestAnimationFrame",
+      vi.fn(() => 7),
+    );
+    vi.stubGlobal("cancelAnimationFrame", cancel);
+    const scheduler = createHeroOrbitScheduler();
+    scheduler.update(document.createElement("div"), 20);
+    scheduler.cancel();
+    expect(cancel).toHaveBeenCalledWith(7);
   });
 });

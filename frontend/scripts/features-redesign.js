@@ -30,7 +30,7 @@ async (page) => {
   );
   const settle = async () => {
     await p.waitForFunction(() =>
-      Boolean(document.querySelector('.pc-app')) === (innerWidth >= 600) &&
+      Boolean(document.querySelector('.pc-app')) === (innerWidth >= 640) &&
       document.querySelector('.feature-search'),
     );
     await p.getByRole("heading", { name: "全部功能", exact: true }).waitFor();

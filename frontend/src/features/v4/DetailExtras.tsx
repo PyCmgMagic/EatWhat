@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { FoodReportDialog } from "../FoodReportDialog";
 import { useApp } from "../../app/state";
 import { RestaurantActions } from "./Community";
 import { Card, QueryView } from "./shared";
@@ -12,6 +14,7 @@ export function FoodExtras({
   inline?: boolean;
 }) {
   const { api } = useApp(),
+    [reportOpen, setReportOpen] = useState(false),
     q = useQuery({
       queryKey: ["topics", "food", id],
       queryFn: () => api.topicsForFood(id),
@@ -19,32 +22,40 @@ export function FoodExtras({
     });
   if (inline)
     return (
-      <footer className="mobile-food-footer" aria-label="菜品相关操作">
-        {!!q.data?.length && (
-          <nav className="mobile-food-topics" aria-label="相关专题">
-            {q.data.map((t) => (
-              <Link key={t.id} to={`/topics/${t.id}`}>
-                已入选：{t.name} →
-              </Link>
-            ))}
-          </nav>
+      <>
+        <footer className="mobile-food-footer" aria-label="菜品相关操作">
+          {!!q.data?.length && (
+            <nav className="mobile-food-topics" aria-label="相关专题">
+              {q.data.map((t) => (
+                <Link key={t.id} to={`/topics/${t.id}`}>
+                  已入选：{t.name} →
+                </Link>
+              ))}
+            </nav>
+          )}
+          {q.isError && (
+            <p className="mobile-food-topics-error" role="status">
+              相关专题暂时未能加载
+              <button disabled={q.isFetching} onClick={() => void q.refetch()}>
+                {q.isFetching ? "加载中…" : "重试"}
+              </button>
+            </p>
+          )}
+          <EditHistory id={id} />
+          <button
+            type="button"
+            className="mobile-food-report"
+            aria-haspopup="dialog"
+            aria-expanded={reportOpen}
+            onClick={() => setReportOpen(true)}
+          >
+            举报这道菜
+          </button>
+        </footer>
+        {reportOpen && (
+          <FoodReportDialog foodId={id} onClose={() => setReportOpen(false)} />
         )}
-        {q.isError && (
-          <p className="mobile-food-topics-error" role="status">
-            相关专题暂时未能加载
-            <button disabled={q.isFetching} onClick={() => void q.refetch()}>
-              {q.isFetching ? "加载中…" : "重试"}
-            </button>
-          </p>
-        )}
-        <EditHistory id={id} />
-        <Link
-          className="mobile-food-report"
-          to={`/reports/new?type=FOOD&id=${id}`}
-        >
-          举报这道菜
-        </Link>
-      </footer>
+      </>
     );
   if (!q.isError && !q.data?.length) return <EditHistory id={id} />;
   return (

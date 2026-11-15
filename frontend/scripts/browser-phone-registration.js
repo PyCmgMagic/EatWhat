@@ -5,9 +5,12 @@ async (page) => {
   for (const width of [320, 390, 820, 1440]) {
     const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
     const p = await context.newPage(), requests = [], errors = [];
+    let newUser = true;
     p.setDefaultTimeout(10000);
+    p.setDefaultNavigationTimeout(12000);
+    await p.bringToFront();
     p.on("pageerror", error => { if (!error.message.includes("ResizeObserver loop")) errors.push(error.message); });
-    const user = { id: 21, displayName: "测试食友", userName: null, hasUsername: false, hasPassword: false, mobile: "13800000000", verified: false, banned: false, role: "user" };
+    const user = { id: 21, displayName: "测试食友", userName: null, hasUsername: false, hasPassword: false, phone: "13800000000", verified: false, banned: false, role: "user" };
     await context.route(url => url.origin !== base, route => route.abort());
     await context.route(url => url.origin === base && url.pathname.startsWith("/api/"), route => {
       const request = route.request(), path = new URL(request.url()).pathname;
@@ -18,7 +21,7 @@ async (page) => {
       if (path === "/api/auth/captcha/config") return reply({enabled:false});
       if (path === "/api/auth/phone/code") return reply(null);
       if (["/api/auth/phone/login", "/api/auth/login"].includes(path))
-        return reply({isLogin:true,tokenName:"x-registration-test",tokenValue:"isolated-registration-session",newUser:path.endsWith("phone/login")});
+        return reply({isLogin:true,tokenName:"x-registration-test",tokenValue:"isolated-registration-session",...(path.endsWith("phone/login") && newUser !== undefined ? {newUser} : {})});
       if (path === "/api/user/info") return reply(user);
       if (path === "/api/campus/list") return reply([{id:1,name:"软件园",open:true,isDefault:true}]);
       if (path === "/api/remote-config") return reply({configVersion:1,flags:{},params:{},maintenance:{mode:"NONE"},announcements:[],versions:{}});
@@ -48,6 +51,15 @@ async (page) => {
       await root.getByLabel("登录验证码", {exact:true}).fill("123456");
       await root.getByRole("button", {name:"登录 / 注册",exact:true}).click();
     };
+    const guide = p.getByRole("dialog", {name:"注册成功",exact:true});
+    const openGuide = async () => {
+      await guide.waitFor();
+      for (const name of ["设置密码", "设置登录名", "完善个人资料"])
+        await guide.getByRole("link", {name,exact:true}).waitFor();
+      const bounds = await guide.boundingBox();
+      assert(bounds.x >= 0 && bounds.x + bounds.width <= width, "Registration guide overflows the screen");
+      assert(await p.evaluate(() => !!JSON.parse(localStorage.getItem("eatwhat-session"))?.tokenValue), "Guide appeared before SMS authentication");
+    };
     try {
       // All current registration links use SMS and retain the protected destination.
       await visit("/auth/password?next=%2Fsettings%2Fpassword");
@@ -63,17 +75,29 @@ async (page) => {
       await phoneForm();
       await submitPhone();
       await p.waitForURL("**#/settings/password");
+      await openGuide();
+      await guide.getByRole("link", {name:"设置密码",exact:true}).click();
+      await guide.waitFor({state:"hidden"});
+      await p.locator('input[autocomplete="new-password"]').first().waitFor();
       assert(requests.some(r => r.path === "/api/auth/phone/login" && r.body.mobile === "13800000000" && r.body.code === "123456" && !r.body.userName), "SMS registration sent the wrong request");
       checks.push(`${width}px: registration entry, legacy redirect, SMS submit and next destination`);
 
-      // Setting a login name happens only after a successful phone registration.
+      // The guide also works when a standalone registration has no return URL.
       await signedOut();
       await visit("/auth/register");
       await phoneForm();
       await submitPhone();
-      await p.waitForURL("**#/settings/username?first=1");
-      assert(await p.evaluate(() => !!JSON.parse(localStorage.getItem("eatwhat-session"))?.tokenValue), "Login-name setup appeared before SMS authentication");
-      checks.push(`${width}px: optional login-name setup follows an authenticated phone signup`);
+      await p.waitForURL("**#/me");
+      await openGuide();
+      const resizedWidth = width < 640 ? 1024 : 390;
+      await p.setViewportSize({width:resizedWidth,height:900});
+      await guide.waitFor();
+      await p.setViewportSize({width,height:900});
+      await guide.getByRole("link", {name:"设置登录名",exact:true}).click();
+      await p.waitForURL("**#/settings/username");
+      await p.getByRole("textbox", {name:/^登录名/}).waitFor();
+      await guide.waitFor({state:"hidden"});
+      checks.push(`${width}px: guide stays open on resize and links to login-name setup`);
 
       if (width >= 600) {
         await signedOut();
@@ -88,9 +112,33 @@ async (page) => {
         assert(p.url() === originalUrl, "Switching registration left the active page");
         await submitPhone(dialog);
         await dialog.waitFor({state:"hidden"});
+        await openGuide();
         assert(p.url() === originalUrl, "Modal signup lost the active destination");
-        checks.push(`${width}px: desktop dialog registers via SMS and returns to the original page`);
+        await guide.getByRole("link", {name:"完善个人资料",exact:true}).click();
+        await p.waitForURL("**#/me/edit");
+        await p.getByRole("textbox", {name:/昵称/}).waitFor();
+        await guide.waitFor({state:"hidden"});
+        checks.push(`${width}px: desktop signup opens the guide on the original page and links to profile editing`);
       }
+
+      await signedOut();
+      await visit("/auth/register");
+      await submitPhone();
+      await openGuide();
+      await guide.getByRole("button", {name:"稍后再说",exact:true}).click();
+      await guide.waitFor({state:"hidden"});
+      await p.reload();
+      await p.waitForURL("**#/me");
+      assert(await guide.count() === 0, "Guide reappeared after reload");
+      for (const flag of [false, undefined]) {
+        newUser = flag;
+        await signedOut();
+        await visit("/auth/register");
+        await submitPhone();
+        await p.waitForURL("**#/me");
+        assert(await guide.count() === 0, "Returning phone user saw the registration guide");
+      }
+      checks.push(`${width}px: dismiss, reload and returning SMS logins do not reopen the guide`);
 
       // Existing username accounts still use password login.
       await signedOut();
@@ -99,13 +147,14 @@ async (page) => {
       await p.locator('input[name="password"]').fill("test-password");
       await p.locator("form").getByRole("button", {name:"登录",exact:true}).click();
       await p.waitForFunction(() => !!JSON.parse(localStorage.getItem("eatwhat-session"))?.tokenValue);
+      assert(await guide.count() === 0, "Password login opened the registration guide");
       assert(requests.some(r => r.path === "/api/auth/login" && r.body.userName === "ExistingUser"), "Existing username login was removed");
       await clean();
       assert(errors.length===0, errors.join("\n"));
       checks.push(`${width}px: existing username/password login remains available`);
     } catch (error) {
-      await p.screenshot({path:`output/playwright/phone-registration-${engine}-${width}-failure.png`});
-      throw error;
+      await p.screenshot({path:`output/playwright/phone-registration-${engine}-${width}-failure.png`,timeout:2000}).catch(() => {});
+      throw new Error(`${width}px at ${p.url()}: ${error.message}`, {cause:error});
     } finally { await context.close(); }
   }
   return {engine,checks,realBackendRequests:0,realSmsMessages:0};

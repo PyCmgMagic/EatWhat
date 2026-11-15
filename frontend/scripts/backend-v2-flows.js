@@ -75,7 +75,7 @@ async function verifyBackendV2(page) {
         layout.hasSheet &&
           layout.sceneAboveRecommendation &&
           layout.sceneOutsideResults &&
-          (width < 600
+          (width < 640
             ? layout.mobileWidth === width && layout.floatingNav
             : layout.desktop),
         "Original home layout missing at " + width,

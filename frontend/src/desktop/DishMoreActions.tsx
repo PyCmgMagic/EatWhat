@@ -1,10 +1,15 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
 import type { Food } from "../api/models";
 import { FoodManage } from "../features/Catalog";
 import { DesignIcon } from "../mobile/ui";
 
-export function DishMoreActions({ food, id }: { food: Food; id: number }) {
+export function DishMoreActions({
+  food,
+  onReport,
+}: {
+  food: Food;
+  onReport: () => void;
+}) {
   const disclosure = useRef<HTMLDetailsElement>(null);
   const trigger = useRef<HTMLElement>(null);
 
@@ -62,10 +67,10 @@ export function DishMoreActions({ food, id }: { food: Food; id: number }) {
         }}
       >
         <FoodManage food={food} inMenu anyone />
-        <Link to={`/reports/new?type=FOOD&id=${id}`}>
+        <button type="button" aria-haspopup="dialog" onClick={onReport}>
           <DesignIcon name="report" size={16} />
           举报菜品
-        </Link>
+        </button>
       </div>
     </details>
   );

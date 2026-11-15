@@ -10,11 +10,12 @@ async (page) => {
     });
   };
   const inspect = async (mode, path, width, height) => {
+    const desktop = mode === 'desktop' || (!mode && width >= 640);
     await page.setViewportSize({ width, height });
     await page.goto(`http://127.0.0.1:5173/?demo=1${mode ? '&view=' + mode : ''}#${path}`);
     await page.locator('.pc-app, .mobile-viewport, .ew-mobile-feature, .mobile-page-native').first().waitFor();
     if (path === '/search' || path === '/favorites') await page.locator('.ew-food-card').first().waitFor();
-    if (path === '/publish' && (mode === 'desktop' || width >= 600)) await page.locator('.pc-composer-shops').waitFor();
+    if (path === '/publish' && desktop) await page.locator('.pc-composer-shops').waitFor();
     if (path === '/foods/1') await page.locator('.pc-dish-layout').waitFor();
     if (path === '/me/tags') await page.locator('.pc-tag-card').first().waitFor();
     await settle();
@@ -31,7 +32,7 @@ async (page) => {
     if (result.headerOverlap) failures.push({ ...entry, issue: '页头重叠' });
     if (result.forms.some(f => f.scroll > f.w + 2)) failures.push({ ...entry, issue: '表单内部溢出' });
     if (result.desktop && result.zoom !== '1') failures.push({ ...entry, issue: 'PC 页面被整体缩放' });
-    if (!mode && result.desktop !== (width >= 600)) failures.push({ ...entry, issue: '自动断点错误' });
+    if (!mode && result.desktop !== desktop) failures.push({ ...entry, issue: '自动断点错误' });
     if (!mode && result.canvas && width <= 520 && Math.abs(result.canvas.w - width) > 1) failures.push({ ...entry, issue: '手机未占满宽度' });
   };
   try {
@@ -40,7 +41,7 @@ async (page) => {
         await inspect('desktop', path, width, 900);
       }
     }
-    for (const width of [320, 390, 430, 600, 767, 768, 820, 1023, 1024, 1440]) {
+    for (const width of [320, 390, 430, 639, 640, 768, 820, 1023, 1024, 1440]) {
       for (const path of ['/', '/me', '/search', '/publish']) await inspect('', path, width, 844);
     }
     for (const [width, height] of [[320, 568], [390, 450], [667, 375], [844, 390], [1024, 600]]) {

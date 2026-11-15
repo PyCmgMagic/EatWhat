@@ -35,3 +35,26 @@ export function dragHeroOrbit(element: HTMLElement, angle = 0, tilt = 0) {
     );
   }
 }
+
+export function createHeroOrbitScheduler() {
+  let frame = 0;
+  let pending: { element: HTMLElement; angle: number; tilt: number } | null =
+    null;
+  return {
+    update(element: HTMLElement, angle = 0, tilt = 0) {
+      pending = { element, angle, tilt };
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        if (pending)
+          dragHeroOrbit(pending.element, pending.angle, pending.tilt);
+        pending = null;
+      });
+    },
+    cancel() {
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+      pending = null;
+    },
+  };
+}

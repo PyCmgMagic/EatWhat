@@ -115,6 +115,18 @@ it("expires recovery context and tolerates unavailable browser storage", () => {
   expect(() => rememberVerificationReturn(10, "/foods/71")).not.toThrow();
   expect(verificationReturn(10).intent).toBeUndefined();
 });
+it("accepts an email token independently and carries it through the callback bridge", () => {
+  const token = "A".repeat(40) + "_-9";
+  expect(readVerificationCallback(`?token=${token}`)).toEqual({
+    result: "success",
+    code: "",
+    token,
+  });
+  expect(readVerificationCallback("?token=bad")).toBeUndefined();
+  expect(
+    verificationCallbackUrl(`https://eat.v50to.you/home?token=${token}`),
+  ).toBe(`/#/verify?result=success&code=&token=${token}`);
+});
 it("carries backend v2's one-time ticket on success only", () => {
   const ticket = "A".repeat(40) + "_-9";
   expect(

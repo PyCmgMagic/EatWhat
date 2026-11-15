@@ -680,8 +680,7 @@
     height: 44px;
   }
 }
-/* Match the application's 600px desktop breakpoint; smaller forced previews
-   retain two rows so every destination stays reachable. */
+/* Very narrow desktop previews retain two rows so every destination stays reachable. */
 @media (max-width: 599px) {
   .pc-app {
     --header-height: calc(117px + max(12px, env(safe-area-inset-top)));

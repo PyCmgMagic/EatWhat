@@ -5,6 +5,7 @@ import {
   unavailable,
   type Envelope,
 } from "./client";
+import { classifyAuth, createApi } from "./service";
 import { bridgeToV2, DINE_IN_SHOPS, pictureKey } from "./v2-bridge";
 
 const consent = vi.hoisted(() => ({ answer: true, asked: [] as string[] }));
@@ -49,6 +50,29 @@ beforeEach(() => {
 });
 
 describe("v2 bridge", () => {
+  it.each([true, false, undefined])(
+    "preserves the phone registration signal (%s) and establishes a session",
+    async (newUser) => {
+      const { transport, sent } = backend(() =>
+        ok({
+          tokenName: "satoken",
+          tokenValue: "demo-session",
+          ...(newUser === undefined ? {} : { newUser }),
+        }),
+      );
+      const reply = await createApi(transport).phoneLogin({
+        mobile: "13800000000",
+        code: "123456",
+        device: "WEB",
+      });
+      expect(
+        reply.data && "newUser" in reply.data ? reply.data.newUser : undefined,
+      ).toBe(newUser);
+      expect(classifyAuth(reply).kind).toBe("session");
+      expect(sent[0].path).toBe("/auth/phone/login");
+    },
+  );
+
   it("recovers upload keys from v2 public picture URLs", () => {
     expect(pictureKey(PIC.replace(" ", "%20"))).toBe("foods/2026/11/a b.webp");
     expect(pictureKey("foods/2026/11/x.png")).toBe("foods/2026/11/x.png");

@@ -38,16 +38,47 @@ const sections = {
 
 export type ProfileSectionNavKind = keyof typeof sections;
 
-export function ProfileHelpHeader() {
+function ProfileSectionHeader({
+  section,
+  title,
+  eyebrow,
+  detail,
+}: {
+  section: ProfileSectionNavKind;
+  title: string;
+  eyebrow?: string;
+  detail: string;
+}) {
   return (
     <>
-      <header className="profile-help-header">
-        <span className="profile-page-eyebrow">使用帮助</span>
-        <h1>帮助与反馈</h1>
-        <p>查找常见问题，提交建议，并查看处理进度与回复。</p>
+      <header className="profile-section-heading">
+        {eyebrow && <span className="profile-page-eyebrow">{eyebrow}</span>}
+        <h1>{title}</h1>
+        <p>{detail}</p>
       </header>
-      <ProfileSectionNav section="help" />
+      <ProfileSectionNav section={section} />
     </>
+  );
+}
+
+export function ProfileHelpHeader() {
+  return (
+    <ProfileSectionHeader
+      section="help"
+      eyebrow="使用帮助"
+      title="帮助与反馈"
+      detail="查找常见问题，提交建议，并查看处理进度与回复。"
+    />
+  );
+}
+
+export function ProfileCollectionsHeader() {
+  return (
+    <ProfileSectionHeader
+      section="collections"
+      title="我的收藏"
+      detail="喜欢的菜品和想去的餐厅，都留在这里。"
+    />
   );
 }
 

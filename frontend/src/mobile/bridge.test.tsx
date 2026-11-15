@@ -10,7 +10,7 @@ import { useApp } from "../app/state";
 import { writeSession } from "../app/runtime";
 import { useDesignBridge } from "./bridge";
 import { MobileContext, type Draft, type MobileState } from "./ui";
-import type { Controller } from "./types";
+import type { Bridge, Controller, Values } from "./types";
 import { PrivateImages } from "../features/v4/Community";
 
 let host: HTMLDivElement, root: Root, cache: QueryClient;
@@ -157,6 +157,26 @@ beforeEach(() => {
       if (path.endsWith("/user/info")) return ok(account);
       if (path.endsWith("/foods/tags/system") || path.endsWith("/campus/list"))
         return ok([]);
+      if (path.endsWith("/recommend"))
+        return ok({
+          items: [
+            {
+              id: 201,
+              name: "测试店一",
+              signatureFoods: [
+                { id: 101, name: "测试菜一", category: "staple" },
+              ],
+            },
+            {
+              id: 202,
+              name: "测试店二",
+              signatureFoods: [
+                { id: 102, name: "测试菜二", category: "staple" },
+              ],
+            },
+          ],
+          hasNext: false,
+        });
       if (path.endsWith("/foods/upload")) {
         creates++;
         throw new TypeError("simulated response loss after server acceptance");
@@ -315,4 +335,94 @@ it.skip("discards private images when switching the access mode for the same rev
   await spin(() => !!host.querySelector("img"));
   await click('[data-testid="admin"]');
   expect(host.querySelector("img")).toBeNull();
+});
+
+let homeValues: Bridge | undefined;
+function HomeBridgeContent() {
+  const [state, setState] = useState<Values>({
+    n: 0,
+    drag: 0,
+    dragging: false,
+  });
+  const controller = {
+    state,
+    setState: (patch: Values) =>
+      setState((current) => ({ ...current, ...patch })),
+    renderVals: () => ({}),
+  } as unknown as Controller;
+  homeValues = useDesignBridge(
+    "G2-Home",
+    controller,
+    {
+      next: () =>
+        controller.setState({
+          n: controller.state.n + 1,
+          drag: 0,
+          dragging: false,
+        }),
+      down: () => controller.setState({ dragging: true, drag: 0 }),
+      move: noop,
+      up: noop,
+    },
+    false,
+  );
+  return <output data-testid="home-index">{state.n}</output>;
+}
+function HomeBridge() {
+  const mobile = {
+    foodId: 1,
+    shopId: 7,
+    draft: {},
+    meal: "晚饭",
+    mealAuto: true,
+    mealKey: "auto:dinner",
+    mealTime: "晚饭",
+    scene: "dine_in",
+    noteServedMeal: noop,
+  } as unknown as MobileState;
+  return (
+    <MobileContext.Provider value={mobile}>
+      <HomeBridgeContent />
+    </MobileContext.Provider>
+  );
+}
+
+it("advances the mobile carousel once per action without state updates on every pointer move", async () => {
+  vi.stubGlobal(
+    "requestAnimationFrame",
+    vi.fn(() => 1),
+  );
+  vi.stubGlobal("cancelAnimationFrame", vi.fn());
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches: false })),
+  );
+  await act(async () =>
+    root.render(
+      <AppProvider>
+        <MemoryRouter>
+          <HomeBridge />
+        </MemoryRouter>
+      </AppProvider>,
+    ),
+  );
+  await spin(() => homeValues?.values.dots?.length === 2);
+  await act(async () => homeValues!.values.next());
+  expect(host.querySelector('[data-testid="home-index"]')!.textContent).toBe(
+    "1",
+  );
+  const element = document.createElement("div");
+  await act(async () =>
+    homeValues!.values.down({ clientX: 0, currentTarget: element }),
+  );
+  await act(async () =>
+    homeValues!.values.move({ clientX: -50, currentTarget: element }),
+  );
+  expect(host.querySelector('[data-testid="home-index"]')!.textContent).toBe(
+    "1",
+  );
+  await act(async () => homeValues!.values.up());
+  expect(host.querySelector('[data-testid="home-index"]')!.textContent).toBe(
+    "2",
+  );
 });

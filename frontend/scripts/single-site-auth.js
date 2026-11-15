@@ -176,7 +176,10 @@ async function validateSingleSiteAuth(page) {
       await p.getByRole("button", { name: /s 后重发/ }).waitFor();
       await p.getByLabel("登录验证码", { exact: true }).fill("123456");
       await p.getByRole("button", { name: "登录 / 注册", exact: true }).click();
-      await p.waitForURL(/#\/settings\/username\?first=1$/);
+      await p.waitForURL(/#\/me$/);
+      const guide = p.getByRole("dialog", { name: "注册成功", exact: true });
+      await guide.getByRole("button", { name: "稍后再说", exact: true }).click();
+      await guide.waitFor({ state: "hidden" });
       assert(!!(await session()), "Phone login did not establish session");
       newUser = false;
       checks.push(
@@ -226,7 +229,7 @@ async function validateSingleSiteAuth(page) {
         "/auth/withdraw-consent",
       ]) {
         await visit(path);
-        await p.waitForURL(width < 600 ? /#\/auth\/password$/ : /#\/auth$/);
+        await p.waitForURL(/#\/auth\/password$/);
         await clean();
       }
       legacy = true;
@@ -243,7 +246,7 @@ async function validateSingleSiteAuth(page) {
         .waitFor();
       assert(!(await session()), "Legacy proof became a session");
       assert(
-        p.url().endsWith(width < 600 ? "#/auth/password" : "#/auth"),
+        p.url().endsWith("#/auth/password"),
         "Legacy proof navigated to retired authorization flow",
       );
       await p.screenshot({

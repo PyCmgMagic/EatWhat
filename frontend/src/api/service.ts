@@ -110,8 +110,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
     // Deployed servers return data as an array; the checked-in API contract
     // still describes a page. Normalize both here for desktop and mobile.
     const result = await data<
-      | Food[]
-      | (Page<Food> & { mealTime?: string | null; shops?: Restaurant[] })
+      Food[] | (Page<Food> & { mealTime?: string | null; shops?: Restaurant[] })
     >("/foods/recommend", { query: { size: limit, ...filters } });
     const items = Array.isArray(result) ? result : result.items;
     if (!Array.isArray(items))
@@ -317,6 +316,11 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
     verified: () => data<string[]>("/auth/verify"),
     sendEmail: (email: string, signal?: AbortSignal) =>
       sendVerified("/auth/sendEmail", { query: { email }, signal }),
+    verifyEmail: (token: string) =>
+      request<void>("/auth/verifyEmail", {
+        method: "POST",
+        body: { token },
+      }),
     consentPolicy: () =>
       data<Schema["ConsentPolicyVOResponse"]>("/auth/consent/policy", {
         public: true,

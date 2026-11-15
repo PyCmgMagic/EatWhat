@@ -13,6 +13,8 @@ export type VerificationCallback = {
   code: string;
   /** One-time ticket backend v2 adds on success; confirmed with /auth/sdu/confirm. */
   ticket?: string;
+  /** Email token confirmed by the signed-in account with /auth/verifyEmail. */
+  token?: string;
 };
 
 export function verificationDestination(value: unknown) {
@@ -25,8 +27,13 @@ export function readVerificationCallback(
   search: string,
 ): VerificationCallback | undefined {
   const params = new URLSearchParams(search),
-    result = params.get("result");
-  if (result !== "success" && result !== "failure") return;
+    result = params.get("result"),
+    token = params.get("token") ?? "",
+    emailToken = /^[A-Za-z0-9_-]{43}$/.test(token) ? token : undefined;
+  if (result !== "success" && result !== "failure")
+    return emailToken
+      ? { result: "success", code: "", token: emailToken }
+      : undefined;
   const code = params.get("code") ?? "",
     ticket = params.get("ticket") ?? "";
   return {
@@ -35,6 +42,7 @@ export function readVerificationCallback(
     ...(result === "success" && /^[A-Za-z0-9_-]{43}$/.test(ticket)
       ? { ticket }
       : {}),
+    ...(emailToken ? { token: emailToken } : {}),
   };
 }
 
@@ -54,6 +62,7 @@ export function verificationCallbackUrl(address: string) {
     result: callback.result,
     code: callback.code,
     ...(callback.ticket ? { ticket: callback.ticket } : {}),
+    ...(callback.token ? { token: callback.token } : {}),
   });
   const display = new URLSearchParams();
   for (const key of ["demo", "view"]) {

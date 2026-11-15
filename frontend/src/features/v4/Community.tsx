@@ -26,9 +26,15 @@ import {
   type V2Shop,
 } from "../../api/v2-vocab";
 import { CatalogCard } from "../Catalog";
-import { ProfileHelpHeader, ProfileSectionNav } from "../ProfileSectionNav";
+import { RestaurantCorrectionDialog } from "../RestaurantCorrectionDialog";
+import {
+  ProfileCollectionsHeader,
+  ProfileHelpHeader,
+  ProfileSectionNav,
+} from "../ProfileSectionNav";
 import "../profile-activity.css";
 import "./edit-history.css";
+import "./restaurant-actions.css";
 import {
   Card,
   Shell,
@@ -1064,10 +1070,8 @@ export function FavoriteRestaurants() {
       queryFn: () => api.favoriteRestaurants({ page, pageSize: 12 }),
     });
   return (
-    <Shell title="我的收藏">
-      <ProfileSectionNav section="collections" />
-      <div className="v4-list-toolbar">
-        <span>想去的、常去的，都值得留一份位置。</span>
+    <Shell title="我的收藏" heading={<ProfileCollectionsHeader />}>
+      <div className="v4-list-toolbar profile-collections-toolbar">
         <Link className="v4-button" to="/restaurants/directory">
           <Icon name="store" size={17} />
           再找一家店
@@ -1120,6 +1124,7 @@ export function RestaurantActions({
   hideFavorite?: boolean;
 }) {
   const { pathname, search } = useLocation();
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const { api, session } = useApp(),
     cache = useQueryClient(),
     task = useCommand(),
@@ -1132,97 +1137,170 @@ export function RestaurantActions({
   const refresh = async () => {
     await cache.invalidateQueries({ queryKey: ["restaurants"] });
   };
+  const scenes = ratingScenes.filter(
+    (scene) => scene.id === "dine_in" || v2Shop?.deliveryEnabled,
+  );
+  const facts = shop
+    ? [
+        ...(v2Shop?.categories ?? []),
+        priceBands.find((p) => p.id === shop.priceBand)?.name,
+        v2Shop?.deliveryEnabled ? "可外卖" : "仅堂食",
+      ].filter(Boolean)
+    : [];
   return (
-    <div className="v4-inline">
-      <div className="v4-actions">
-        {session ? (
-          <>
-            {!hideFavorite && (
-              <button
-                disabled={
-                  !shop ||
-                  task.busy ||
-                  task.uncertain ||
-                  shop?.personalState === "SYNC_PENDING"
-                }
-                onClick={() =>
-                  void task.run(
-                    () =>
-                      shop?.isFavorite
-                        ? api.unfavoriteRestaurant(id)
-                        : api.favoriteRestaurant(id),
-                    refresh,
-                  )
-                }
-              >
-                {shop?.isFavorite ? "取消收藏店铺" : "收藏店铺"}
-              </button>
+    <div className="v4-inline restaurant-hub">
+      <div className="restaurant-hub-grid">
+        <section className="restaurant-hub-section restaurant-experience">
+          <div className="restaurant-section-heading">
+            <span className="restaurant-section-mark">
+              <Icon name="heart" size={19} />
+            </span>
+            <div>
+              <h2>我的店铺体验</h2>
+              <p>收藏与评价，帮你记住这一餐</p>
+            </div>
+          </div>
+          <div className="restaurant-experience-controls">
+            {session ? (
+              <>
+                {!hideFavorite && (
+                  <button
+                    className={`restaurant-favorite${shop?.isFavorite ? " is-active" : ""}`}
+                    aria-pressed={shop?.isFavorite === true}
+                    disabled={
+                      !shop ||
+                      task.busy ||
+                      task.uncertain ||
+                      shop?.personalState === "SYNC_PENDING"
+                    }
+                    onClick={() =>
+                      void task.run(
+                        () =>
+                          shop?.isFavorite
+                            ? api.unfavoriteRestaurant(id)
+                            : api.favoriteRestaurant(id),
+                        refresh,
+                      )
+                    }
+                  >
+                    <Icon
+                      name={shop?.isFavorite ? "bookmarkOn" : "bookmark"}
+                      size={18}
+                    />
+                    {shop?.isFavorite ? "已收藏" : "收藏店铺"}
+                  </button>
+                )}
+                {scenes.map((scene) => (
+                  <label className="restaurant-rating-control" key={scene.id}>
+                    <span>{scene.name}体验</span>
+                    <select
+                      aria-label={`我的${scene.name}评价`}
+                      value={v2Shop?.myRatings?.[scene.key] ?? ""}
+                      disabled={!shop || task.busy || task.uncertain}
+                      onChange={(e) => {
+                        const value = (e.target.value ||
+                          null) as RatingValue | null;
+                        void task.run(
+                          () => api.rateRestaurantScene(id, scene.id, value),
+                          refresh,
+                        );
+                      }}
+                    >
+                      <option value="">暂未评价</option>
+                      <option value="RECOMMEND">推荐这家店</option>
+                      <option value="NOT_RECOMMEND">暂不推荐</option>
+                    </select>
+                  </label>
+                ))}
+              </>
+            ) : (
+              <LoginLink className="restaurant-login" to="/auth/password">
+                <Icon name="bookmark" size={18} />
+                登录后收藏与评分
+              </LoginLink>
             )}
-            {ratingScenes
-              .filter(
-                (scene) => scene.id === "dine_in" || v2Shop?.deliveryEnabled,
-              )
-              .map((scene) => (
-                <select
-                  key={scene.id}
-                  aria-label={`我的${scene.name}评价`}
-                  value={v2Shop?.myRatings?.[scene.key] ?? ""}
-                  disabled={!shop || task.busy || task.uncertain}
-                  onChange={(e) => {
-                    const value = (e.target.value ||
-                      null) as RatingValue | null;
-                    void task.run(
-                      () => api.rateRestaurantScene(id, scene.id, value),
-                      refresh,
-                    );
-                  }}
-                >
-                  <option value="">{scene.name}：未评价</option>
-                  <option value="RECOMMEND">{scene.name}：推荐</option>
-                  <option value="NOT_RECOMMEND">{scene.name}：不推荐</option>
-                </select>
-              ))}
-          </>
-        ) : (
-          <LoginLink to="/auth/password">登录后收藏与评分</LoginLink>
-        )}
-        {/* Open editing, like dishes: verified users fix it themselves. */}
-        <Link to={shopEditPath(id)}>修改店铺</Link>
-        <Link to={`/restaurants/correction?id=${id}`}>店铺信息有误</Link>
-        <Link
-          className="restaurant-history-link"
-          to={`/restaurants/${id}/history`}
-          state={{ returnTo: pathname + search }}
-        >
-          <Icon name="history" size={16} />
-          修改记录
-          <Icon name="chevronRight" size={14} />
-        </Link>
-        <Link to={`/reports/new?type=RESTAURANT&id=${id}`}>举报</Link>
+          </div>
+        </section>
+        <section className="restaurant-hub-section restaurant-maintenance">
+          <div className="restaurant-section-heading">
+            <span className="restaurant-section-mark">
+              <Icon name="tool" size={19} />
+            </span>
+            <div>
+              <h2>店铺维护</h2>
+              <p>信息有变化？一起让它更准确</p>
+            </div>
+          </div>
+          <nav
+            className="restaurant-maintenance-links"
+            aria-label="店铺维护操作"
+          >
+            <Link className="restaurant-action-link" to={shopEditPath(id)}>
+              <Icon name="edit" size={16} />
+              <span>修改店铺</span>
+              <Icon name="chevronRight" size={13} />
+            </Link>
+            <button
+              type="button"
+              className="restaurant-action-link"
+              aria-haspopup="dialog"
+              aria-expanded={correctionOpen}
+              onClick={() => setCorrectionOpen(true)}
+            >
+              <Icon name="feedback" size={16} />
+              <span>信息纠错</span>
+              <Icon name="chevronRight" size={13} />
+            </button>
+            <Link
+              className="restaurant-action-link"
+              to={`/restaurants/${id}/history`}
+              state={{ returnTo: pathname + search }}
+            >
+              <Icon name="history" size={16} />
+              <span>修改记录</span>
+              <Icon name="chevronRight" size={13} />
+            </Link>
+            <Link
+              className="restaurant-action-link is-muted"
+              to={`/reports/new?type=RESTAURANT&id=${id}`}
+            >
+              <Icon name="report" size={16} />
+              <span>举报店铺</span>
+              <Icon name="chevronRight" size={13} />
+            </Link>
+          </nav>
+        </section>
       </div>
       {shop && (
-        <p>
-          {ratingScenes
-            .filter(
-              (scene) => scene.id === "dine_in" || v2Shop?.deliveryEnabled,
-            )
-            .map((scene) => `${scene.name} ${rateText(v2Shop?.[scene.key])}`)
-            .join(" · ")}
-        </p>
+        <div className="restaurant-fact-strip">
+          <div className="restaurant-fact-rating">
+            <span>食友评价</span>
+            <strong>
+              {scenes
+                .map(
+                  (scene) => `${scene.name} ${rateText(v2Shop?.[scene.key])}`,
+                )
+                .join(" · ")}
+            </strong>
+          </div>
+          <div className="restaurant-fact-list" aria-label="店铺特点">
+            {facts.map((fact, index) => (
+              <span key={`${fact}-${index}`}>{fact}</span>
+            ))}
+            {!!v2Shop?.tags?.length && (
+              <span>口味：{v2Shop.tags.join("、")}</span>
+            )}
+          </div>
+        </div>
       )}
-      {shop && (
-        <p>
-          {[
-            ...(v2Shop?.categories ?? []),
-            priceBands.find((p) => p.id === shop.priceBand)?.name,
-            v2Shop?.deliveryEnabled ? "可外卖" : "仅堂食",
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-      )}
-      {!!v2Shop?.tags?.length && <p>口味：{v2Shop.tags.join(" · ")}</p>}
       <CommandState task={task} />
+      {correctionOpen && (
+        <RestaurantCorrectionDialog
+          restaurantId={id}
+          restaurantName={shop?.name}
+          onClose={() => setCorrectionOpen(false)}
+        />
+      )}
     </div>
   );
 }

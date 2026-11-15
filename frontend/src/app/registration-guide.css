@@ -1,0 +1,87 @@
+.modal.ew-registration-guide {
+  width: min(416px, calc(100% - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid #eae3d9;
+  border-radius: 24px;
+  background: #fffdf9;
+  color: #30251f;
+}
+
+.ew-registration-guide .modal-pad {
+  padding: clamp(20px, 5vw, 28px);
+}
+
+.ew-registration-guide .modal-pad > h2 {
+  margin: 0 42px 20px 0;
+  color: inherit;
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.ew-registration-actions {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ew-registration-actions a {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 12px;
+  border: 1px solid #eae3d9;
+  border-radius: 14px;
+  color: inherit;
+  font-size: 15px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.ew-registration-actions a:hover {
+  background: #f9f1e3;
+}
+
+.ew-registration-action-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #faeac7;
+  color: #765421;
+}
+
+.ew-registration-actions a > svg {
+  color: #8a7560;
+}
+
+.ew-registration-later {
+  display: block;
+  min-height: 44px;
+  margin: 12px auto -4px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #6e625b;
+  font: inherit;
+  font-size: 14px;
+}
+
+.ew-registration-later:hover {
+  background: #f4efeb;
+}
+
+.ew-registration-guide :is(a, button):focus-visible {
+  outline: 2px solid #8b6021;
+  outline-offset: 2px;
+}

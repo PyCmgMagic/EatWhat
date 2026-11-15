@@ -28,18 +28,24 @@ export function SlidingTabs({
       const selected = container?.querySelector<HTMLElement>(
         '[aria-current="page"], [aria-selected="true"]',
       );
-      if (!container || !indicator || !selected) return;
+      if (!container || !indicator) return;
+      if (!selected) {
+        delete container.dataset.indicatorReady;
+        return;
+      }
+      const left = selected.offsetLeft,
+        top = selected.offsetTop,
+        width = selected.offsetWidth,
+        selectedHeight = selected.offsetHeight,
+        height = navigation ? `${selectedHeight}px` : "3px",
+        y = top + (navigation ? 0 : selectedHeight - 3);
       // A breakpoint can change both rows and item widths. Snap to the new
       // geometry on resize; animate only deliberate tab selection changes.
       if (!animate) indicator.style.transition = "none";
       indicator.style.top = "0";
       indicator.style.bottom = "auto";
-      indicator.style.height = navigation
-        ? `${selected.offsetHeight}px`
-        : "3px";
-      const y =
-        selected.offsetTop + (navigation ? 0 : selected.offsetHeight - 3);
-      indicator.style.transform = `translate3d(${selected.offsetLeft}px,${y}px,0) scaleX(${selected.offsetWidth / 100})`;
+      if (indicator.style.height !== height) indicator.style.height = height;
+      indicator.style.transform = `translate3d(${left}px,${y}px,0) scaleX(${width / 100})`;
       container.dataset.indicatorReady = "true";
       if (!animate) {
         indicator.getBoundingClientRect();
@@ -52,12 +58,22 @@ export function SlidingTabs({
   useEffect(() => {
     const container = root.current;
     if (!container) return;
-    const observer = new ResizeObserver(() => measure(false));
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        measure(false);
+      });
+    });
     observer.observe(container);
     container
       .querySelectorAll("a,button")
       .forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
   }, [measure]);
   const Tag = navigation ? "nav" : "div";
   return (
@@ -121,13 +137,23 @@ export function MotionRegion({
   useLayoutEffect(() => {
     const element = root.current;
     if (!reserveSpace || !element) return;
-    let height = element.offsetHeight;
+    let height = element.offsetHeight,
+      frame = 0;
     const observer = new ResizeObserver(([entry]) => {
-      height = Math.max(height, entry.contentRect.height);
-      element.style.minHeight = `${height}px`;
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const next = Math.max(height, entry.contentRect.height);
+        if (next === height) return;
+        height = next;
+        element.style.minHeight = `${height}px`;
+      });
     });
     observer.observe(element);
-    return () => observer.disconnect();
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
   }, [reserveSpace]);
   return (
     <div ref={root} className={`pc-motion-region ${className}`} {...props}>

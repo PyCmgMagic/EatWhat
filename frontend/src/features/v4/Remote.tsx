@@ -83,11 +83,7 @@ export function RemoteBanner() {
 export function Announcements() {
   const q = useRemoteConfig();
   return (
-    <Shell
-      title="消息通知"
-      back="/notifications"
-      detail="站点公告与服务安排，都在这里。"
-    >
+    <Shell title="消息通知" back="/notifications">
       <ProfileSectionNav section="messages" />
       <div className="profile-activity-toolbar profile-announcement-intro">
         <div>

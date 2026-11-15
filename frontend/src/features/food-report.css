@@ -1,0 +1,87 @@
+.food-report-modal {
+  width: min(560px, calc(100vw - 40px));
+}
+.food-report-modal .modal-pad {
+  padding: 32px;
+}
+.food-report-description {
+  margin: 0 0 24px;
+  color: #716458;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.food-report-description strong {
+  color: #392f28;
+  overflow-wrap: anywhere;
+}
+.food-report-form fieldset {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.food-report-field {
+  display: grid;
+  gap: 8px;
+}
+.food-report-field > span {
+  color: #504338;
+  font-size: 13px;
+  font-weight: 700;
+}
+.food-report-form :is(select, textarea) {
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid #e9e0d8;
+  border-radius: 12px;
+  background: #faf7f4;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+}
+.food-report-form textarea {
+  min-height: 128px;
+  resize: vertical;
+  line-height: 1.7;
+}
+.food-report-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: -8px;
+  color: #716458;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.food-report-meta a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #64564c;
+}
+.food-report-form .modal-actions {
+  justify-content: flex-end;
+  margin-top: 0;
+}
+.food-report-form .modal-actions .btn {
+  min-height: 44px;
+}
+@media (max-width: 600px) {
+  .food-report-modal {
+    width: calc(100vw - 24px);
+  }
+  .food-report-modal .modal-pad {
+    padding: 28px 20px 20px;
+  }
+  .food-report-form :is(select, textarea) {
+    font-size: 16px;
+  }
+  .food-report-form .modal-actions .btn {
+    flex: 1;
+  }
+}

@@ -2898,6 +2898,32 @@ export interface components {
             /** Format: uuid */
             installId?: string;
         };
+        PhoneLoginResult: {
+            tokenName?: string;
+            tokenValue?: string;
+            isLogin?: boolean;
+            loginId?: unknown;
+            loginType?: string;
+            /** Format: int64 */
+            tokenTimeout?: number;
+            /** Format: int64 */
+            sessionTimeout?: number;
+            /** Format: int64 */
+            tokenSessionTimeout?: number;
+            /** Format: int64 */
+            tokenActiveTimeout?: number;
+            loginDeviceType?: string;
+            tag?: string;
+            newUser?: boolean;
+        };
+        ResultPhoneLoginResult: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["PhoneLoginResult"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
         SendLoginCode: {
             mobile: string;
         };
@@ -6246,7 +6272,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ResultSaTokenInfo"];
+                    "application/json": components["schemas"]["ResultPhoneLoginResult"];
                 };
             };
         };

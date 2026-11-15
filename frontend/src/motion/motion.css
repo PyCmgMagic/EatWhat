@@ -1,17 +1,13 @@
 /* A shared rhythm for desktop, prototype adapters and native feature pages. */
 :root {
   --motion-fast: 140ms;
-  --motion-content: 180ms;
+  --motion-content: 200ms;
   --motion-surface: 240ms;
   --motion-exit: 160ms;
   --ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-move: cubic-bezier(0.25, 1, 0.5, 1);
   --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
 }
-html:has(body.desktop-mode) {
-  scrollbar-gutter: stable;
-}
-
 /* Controls react immediately on press and settle when released. */
 :is(
     .pc-app,
@@ -38,7 +34,8 @@ html:has(body.desktop-mode) {
     background-color var(--motion-fast) ease-out,
     border-color var(--motion-fast) ease-out,
     color var(--motion-fast) ease-out,
-    box-shadow var(--motion-fast) ease-out;
+    box-shadow var(--motion-fast) ease-out,
+    filter var(--motion-fast) ease-out;
 }
 :is(
     .pc-app,
@@ -169,6 +166,12 @@ button[aria-pressed="true"] > .design-icon {
 }
 html[data-motion-input="keyboard"] .pc-hero-food > .pc-plate {
   transition: none;
+}
+.pc-motion-tabs > .pc-tab-indicator {
+  will-change: transform;
+}
+.mobile-home-orbit .mobile-home-plate {
+  will-change: transform, opacity;
 }
 
 /* Native dialogs keep their top layer during close in supporting browsers. */

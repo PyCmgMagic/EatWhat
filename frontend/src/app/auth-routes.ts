@@ -11,3 +11,12 @@ export function isPhoneAuthPath(path: string) {
     normalizeAuthRoute(path.replace(/\/+$/, "")),
   );
 }
+
+export function isStandaloneLoginPath(path: string) {
+  return (
+    path === "/auth" ||
+    path === "/auth/password" ||
+    path === "/auth/forgot" ||
+    isPhoneAuthPath(path)
+  );
+}

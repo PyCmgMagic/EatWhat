@@ -67,6 +67,13 @@
   margin-bottom: 5px;
   padding: 0 12px;
 }
+.pc-nearby-list-header .pc-search-field:focus-within {
+  box-shadow: 0 0 0 2px #9c742f;
+}
+.pc-nearby-list-header .pc-search-field input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
 .pc-nearby-list-header .pc-small-note {
   font-size: 11px;
   line-height: 18px;
@@ -88,18 +95,23 @@
   width: 100%;
   min-height: 64px;
   padding: 10px;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
   text-align: left;
-  transition: background 160ms;
+  transition:
+    background-color 160ms,
+    border-color 160ms;
 }
 .pc-shop-row:hover {
   background: #f7f4f1;
+  border-color: #e9e2dc;
 }
-.pc-shop-row[aria-pressed="true"] {
-  background: #f8f1e4;
-  box-shadow: inset 3px 0 #e9b538;
+.pc-shop-row[aria-pressed="true"],
+.pc-shop-row[aria-pressed="true"]:hover {
+  background: #f4f0eb;
+  border-color: #d8cec2;
+  box-shadow: none;
 }
 .pc-shop-thumbnail {
   display: grid;

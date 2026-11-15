@@ -264,7 +264,7 @@ button:disabled {
   font-size: 13px;
   line-height: 1.7;
 }
-.mobile-food-footer a {
+.mobile-food-footer :is(a, button) {
   display: flex;
   align-items: center;
   min-height: calc(44px / var(--mobile-scale, 1));
@@ -286,6 +286,12 @@ button:disabled {
 }
 .mobile-food-report {
   align-self: flex-end;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
 }
 .design-screen {
   isolation: isolate;

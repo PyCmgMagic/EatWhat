@@ -7,21 +7,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { ProfileEditLink } from "../app/profile-navigation";
 import { useAuthBusy, useAuthFlow } from "../app/auth-dialog";
-import { isPhoneAuthPath } from "../app/auth-routes";
 import { localDestination } from "../app/navigation";
 import { isDemo } from "../app/runtime";
 import { classifyAuth } from "../api/service";
 import { useTask } from "../components/useTask";
 import { DesignIcon as Icon } from "../mobile/ui";
-import { DishCarousel } from "../components/DishCarousel";
 import { MobileBinding } from "../pages/ProfileExtras";
 import { VerificationMethods } from "../features/AccountExtras";
-import {
-  PhoneLoginForm,
-  PasswordByCode,
-  SsoStart,
-  RecoverPassword,
-} from "../features/Account";
+import { PasswordByCode, SsoStart } from "../features/Account";
 import "../features/student-verification.css";
 import {
   readVerificationCallback,
@@ -697,33 +690,6 @@ function About({ data }: { data: boolean }) {
   );
 }
 
-export function DesktopAuth() {
-  const path = useLocation().pathname;
-  return (
-    <div className="pc-secondary-auth" data-pc-secondary="auth">
-      <aside className="pc-secondary-auth-art">
-        <Link to="/" className="pc-secondary-back">
-          <Icon name="back" size={17} />
-          回到发现
-        </Link>
-        <span className="pc-eyebrow">山软 · 今天吃什么</span>
-        <h1>{BRAND_SLOGAN}</h1>
-        <DishCarousel />
-      </aside>
-      <section className="pc-secondary-auth-content" key={path}>
-        {path === "/auth/forgot" ? (
-          <RecoverPassword />
-        ) : isPhoneAuthPath(path) ? (
-          <PhoneLoginForm embedded />
-        ) : pendingPages[path] ? (
-          <PendingPage path={path} />
-        ) : (
-          <AuthForm />
-        )}
-      </section>
-    </div>
-  );
-}
 export function AuthForm({ compact = false }: { compact?: boolean }) {
   const { location: loc, finish } = useAuthFlow();
   const { api, signIn, session } = useApp(),

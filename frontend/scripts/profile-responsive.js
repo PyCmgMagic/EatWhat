@@ -41,10 +41,10 @@ async function validateResponsiveProfile(browserPage) {
     const draftAvatar = await page.getByAltText("头像预览").getAttribute("src");
     assert(draftAvatar?.startsWith("blob:"), "Missing desktop avatar draft");
 
-    await resize(599, mobile);
+    await resize(639, mobile);
     assert(
       (await desktop.count()) === 0,
-      "Desktop editor stayed mounted at 599 px",
+      "Desktop editor stayed mounted at 639 px",
     );
     assert(
       (await nickname.inputValue()) === name,
@@ -72,10 +72,10 @@ async function validateResponsiveProfile(browserPage) {
     await chooser.waitFor({ state: "hidden" });
     await signature.fill(sign);
 
-    await resize(600, desktop);
+    await resize(640, desktop);
     assert(
       (await mobile.count()) === 0,
-      "Mobile editor stayed mounted at 600 px",
+      "Mobile editor stayed mounted at 640 px",
     );
     assert(
       (await signature.inputValue()) === sign,
@@ -121,7 +121,7 @@ async function validateResponsiveProfile(browserPage) {
     assert(errors.length === 0, errors.join("\n"));
     return {
       checks: [
-        "desktop → mobile at 599 px → desktop at 600 px",
+        "desktop → mobile at 639 px → desktop at 640 px",
         "unsaved text, birthday and avatar preview survive",
         "mobile avatar chooser and save/readback work",
         "legacy route and explicit previews work",

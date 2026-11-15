@@ -8,7 +8,7 @@ export function desktopLayout(
     !reference &&
     !design &&
     view !== "mobile" &&
-    (view === "desktop" || width >= 600)
+    (view === "desktop" || width >= 640)
   );
 }
 
@@ -21,6 +21,5 @@ export function editingFlow(path: string) {
   if (/^\/restaurants\/\d+\/edit$/.test(path)) return path;
   if (path === "/restaurants/new" || path === "/restaurants/new/details")
     return "new-shop";
-  if (path === "/auth" || path.startsWith("/auth/")) return "auth";
   return null;
 }

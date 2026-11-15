@@ -54,7 +54,7 @@ import {
 } from "../features/comments/Comments";
 const V4Routes = lazy(() => import("../features/v4/Routes"));
 const ApiV2Routes = lazy(() => import("../features/ApiV2Routes"));
-const MobileLogin = lazy(() => import("./Login"));
+const LoginPage = lazy(() => import("./Login"));
 const MobileAccountSettings = lazy(() => import("./AccountSettings"));
 const MobileSettingsPages = lazy(() => import("./SettingsPages"));
 import { Gate } from "../components/ui";
@@ -68,7 +68,6 @@ import { Catalog } from "../features/Catalog";
 import {
   PasswordByCode,
   RecommendationControls,
-  RecoverPassword,
 } from "../features/Account";
 import { EditFood } from "../features/EditFood";
 import { EditRestaurant, isShopEditPath } from "../features/EditRestaurant";
@@ -76,6 +75,7 @@ import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { idOf } from "../api/models";
 import { useContentMotion, useExitPresence } from "../motion/hooks";
 import { desktopLayout, editingFlow } from "../app/layout";
+import { isStandaloneLoginPath } from "../app/auth-routes";
 import { NotFound } from "../app/navigation";
 import { useProfileReturnTo } from "../app/profile-navigation";
 import { ProfileDraftProvider } from "../app/profile-draft";
@@ -293,8 +293,15 @@ function MobileWorkspace() {
     setFlowLayout({ flow, desktop: preferredDesktop });
   const desktop =
     flow && flowLayout.flow === flow ? flowLayout.desktop : preferredDesktop;
-  // Keep reference artboards at their original size. Phone canvases fill the
-  // screen; tablet and desktop layouts reflow through CSS instead of zooming.
+  const responsiveAuthPage = isStandaloneLoginPath(loc.pathname) ? (
+    <LoginPage desktop={desktop} />
+  ) : loc.pathname === "/auth/password-conflict/reset" ? (
+    <div className={desktop ? undefined : "ew-mobile-feature"}>
+      <ApiV2Routes />
+    </div>
+  ) : undefined;
+  // Reference artboards keep their original dimensions. Mobile canvases cap
+  // their width so they stay readable in wider windows.
   const scale =
     desktop || reference
       ? Math.min(1, viewport.width / 390)
@@ -418,14 +425,6 @@ function MobileWorkspace() {
       );
     }
   }
-  if (desktop && loc.pathname === "/auth/password")
-    return (
-      <Navigate
-        replace
-        to={{ pathname: "/auth", search: loc.search }}
-        state={loc.state}
-      />
-    );
   if (
     !desktop &&
     !reference &&
@@ -482,6 +481,7 @@ function MobileWorkspace() {
               enabled={desktop}
               screen={screen}
               overlay={!!panelPresence.value || !!noticePresence.value}
+              responsivePage={responsiveAuthPage}
             >
               <Suspense fallback={<ContentSkeleton kind="form" count={3} />}>
                 {!desktop &&
@@ -507,18 +507,7 @@ function MobileWorkspace() {
                   </div>
                 ) : !desktop &&
                   !reference &&
-                  [
-                    "/auth",
-                    "/auth/password",
-                    "/auth/register",
-                    "/auth/register/confirm",
-                    "/auth/username-register",
-                  ].includes(loc.pathname) ? (
-                  <MobileLogin />
-                ) : !desktop &&
-                  !reference &&
-                  (loc.pathname === "/auth/password-conflict/reset" ||
-                    /^\/users\/\d+$/.test(loc.pathname)) ? (
+                  /^\/users\/\d+$/.test(loc.pathname) ? (
                   <div className="ew-mobile-feature">
                     <ApiV2Routes key={loc.pathname} />
                   </div>
@@ -531,8 +520,7 @@ function MobileWorkspace() {
                   (loc.pathname === "/search" ||
                     loc.pathname === "/favorites" ||
                     /^\/foods\/\d+\/edit$/.test(loc.pathname) ||
-                    isShopEditPath(loc.pathname) ||
-                    loc.pathname === "/auth/forgot") ? (
+                    isShopEditPath(loc.pathname)) ? (
                   <div className="ew-mobile-feature">
                     {loc.pathname === "/search" ? (
                       <Catalog />
@@ -540,11 +528,9 @@ function MobileWorkspace() {
                       <Catalog favorites />
                     ) : /^\/foods\/\d+\/edit$/.test(loc.pathname) ? (
                       <EditFood />
-                    ) : isShopEditPath(loc.pathname) ? (
+                    ) : (
                       <EditRestaurant />
-                    ) : loc.pathname === "/auth/forgot" ? (
-                      <RecoverPassword />
-                    ) : null}
+                    )}
                   </div>
                 ) : loc.pathname === "/me/details" ? (
                   <Navigate

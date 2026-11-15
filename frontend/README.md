@@ -25,7 +25,7 @@ npx --yes --package @playwright/cli playwright-cli -s=eatwhat-v2 run-code --file
 
 React 19、TypeScript、Vite、React Router、TanStack Query。当前移动端以 `../prototype/` 的本地画板为设计来源；旧 `design/` 不再作为移动端基准。51 张 HTML 画板编译为 React 页面，复用原始 CSS、SVG 插画、MingCute 图标、九种舞台色，以及本地托管的 Noto Sans SC 和 Bricolage Grotesque 字体。
 
-已新增同风格 PC 布局：顶部导航、横向圆桌舞台、多列内容、地图与店铺双栏、个人侧栏、详情和发布分栏。当前在 600px 及以上使用可重排的桌面/平板布局，手机使用移动端布局。详见 [PC 设计说明](../docs/PC端设计与实现.md)。
+前端提供移动、平板和桌面布局。自动模式下，视口不足 640px 使用移动端，640–1023px 使用平板布局，从 1024px 开始使用桌面布局。详见 [PC 设计说明](../docs/PC端设计与实现.md)。
 
 桌面导航、页脚及首页/附近浏览区随窗口扩展，最大宽度 2304px；详情、账号和表单内容保留 1360px 阅读宽度。附近地图使用扣除导航、标题和页脚后的可用高度，首页舞台与卡片在大屏按各自上下限调整尺寸。详情图片区按可用窗口高度设定上下限，圆盘最大 420px，保留靠右、局部出框的构图；详情在 900px 以下改为上下排布。长标题、标签和描述自然撑开文档，图片尺寸独立受限，加载骨架使用相同高度预算。以 CSS 视口宽高适配窗口和浏览器缩放，不使用整页 `zoom` 或按设备分辨率等比放大。`scripts/browser-dish-responsive.js` 覆盖短窗口、平板、大屏、长内容和图片切换。
 
@@ -240,7 +240,7 @@ PC 二级页面已补齐专门布局，覆盖设置与认证、通知、食友�
 
 关注与粉丝现已整合到个人主页：PC 使用双列食友弹层，手机使用单列底部面板，点击数量就地打开，关闭后保留原来的主页内容。自己的入口为 `/me?people=fans` 或 `/me?people=follow`，他人的入口为 `/users/:id?people=...`；旧 `/follows?tab=...&userId=...` 自动转到对应主页。分页、本页搜索、隐私保护、失败重试和浏览器前进后退均保留，点击食友后返回可恢复列表。移动端他人主页的菜单默认收起，设计对照模式保持原样。当前专项为 `scripts/desktop-profile-people.js` 和 `scripts/desktop-profile-people-touch.js`；旧二级页脚本中独立关注页面的断言已过时。记录为 `../output/profile-people-validation.json`，截图为 `../output/playwright/profile-people-desktop.png`、`profile-people-mobile.png`。触屏为浏览器模拟。
 
-响应式布局现由 `src/responsive.css` 统一处理。自动模式下，小于 600px 使用移动界面，手机画板在 320–520px 范围贴合可用宽度；600–767px 使用紧凑平板布局，768px、1024px 与 1200px 继续调整侧栏、网格和表单。显式 `view=desktop` 在窄屏重新排版，已移除固定 1280px 后整体缩小的做法；`view=mobile` 和原型对照入口继续可用。压缩搜索框后保留搜索图标入口。关注、裁剪、地点与饭点、提示面板支持窄屏与矮屏；裁剪预览尺寸变化沿用同一套取景坐标。编辑流程沿用进入时的界面控制器，避免窗口缩放或旋转清空输入，离开流程后恢复自动断点。
+平板个人中心使用窄左栏和独立内容区，概览卡集中显示头像、资料和统计。移动画板最多宽 520px，宽窗口内居中。`view=desktop`、`view=mobile` 和原型对照入口可用于预览。登录和资料编辑随视口切换并保留输入。发布、新建店铺、修改菜品或店铺和写评论沿用进入流程时的界面控制器，避免窗口缩放或旋转清空输入。
 
 `scripts/desktop-responsive.js` 检查 201 个页面与视口组合（11 种主要宽度、13 个主要 PC 页面、自动切换及横屏弹层）；`scripts/desktop-responsive-interactions.js` 通过 8 组跨断点操作，`scripts/desktop-tabs.js` 的 7 组回归通过。无横向溢出、页头重叠、页面异常或真实 API 请求。记录见 `../output/responsive-validation.json`，截图为 `../output/playwright/responsive-*.png`。验收使用独立 Chrome 和触屏模拟，实体手机和其他浏览器仍需最终验收。
 

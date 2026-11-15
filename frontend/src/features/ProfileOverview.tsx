@@ -15,15 +15,6 @@ import { DishIllustration } from "../components/DishIllustration";
 import ProfileGrowth from "./ProfileGrowth";
 import "./profile-overview.css";
 
-const mobileLinks = [
-  { to: "/me/shares", name: "我的分享", icon: "bowl" },
-  { to: "/favorites", name: "我的收藏", icon: "bookmark" },
-  { to: "/history", name: "浏览足迹", icon: "history" },
-  { to: "/notifications", name: "消息", icon: "bell" },
-  { to: "/settings", name: "设置", icon: "settings" },
-  { to: "/help", name: "帮助与反馈", icon: "feedback" },
-];
-
 function FoodPhoto({ food }: { food: Food }) {
   const visual = visualFor(food, isDemo);
   const src = mediaUrl(food.pictureUrl?.[0]);
@@ -128,71 +119,63 @@ export default function ProfileOverview() {
     );
   return (
     <div className="profile-overview">
-      <header className="profile-overview-identity">
-        <span className="profile-overview-avatar" aria-hidden="true">
-          {avatar && !avatarFailed ? (
-            <img src={avatar} alt="" onError={() => setAvatarFailed(true)} />
-          ) : (
-            user?.displayName?.slice(0, 1) || "食"
-          )}
-        </span>
-        <div className="profile-overview-intro">
-          <span className="profile-overview-eyebrow">个人总览</span>
-          <h1>{user?.displayName || "我的"}</h1>
-          <p>{user?.signature || BRAND_SLOGAN}</p>
-          <ProfileGrowth />
-        </div>
-        <ProfileEditLink className="profile-overview-edit">
-          <Icon name="edit" size={17} />
-          编辑资料
-        </ProfileEditLink>
-      </header>
-      <div className="profile-overview-social" aria-label="个人统计">
-        <div>
-          <strong>{statValue(stats.data?.earnedLikes)}</strong>
-          <span>获赞</span>
-        </div>
-        <Link to="/me/shares">
-          <strong>{statValue(stats.data?.uploadedFoodsCount)}</strong>
-          <span>分享的菜</span>
-        </Link>
-        <Link
-          to={peopleHref("/me", location.search, "fans")}
-          state={{ profilePeopleFrom: location.key }}
-          preventScrollReset
-          aria-label="查看我的粉丝"
-        >
-          <strong>{statValue(stats.data?.fansCount)}</strong>
-          <span>粉丝</span>
-        </Link>
-        <Link
-          to={peopleHref("/me", location.search, "follow")}
-          state={{ profilePeopleFrom: location.key }}
-          preventScrollReset
-          aria-label="查看我的关注"
-        >
-          <strong>{statValue(stats.data?.followingsCount)}</strong>
-          <span>关注</span>
-        </Link>
-        {stats.isError && (
-          <button
-            className="profile-overview-stat-retry"
-            onClick={() => void stats.refetch()}
-          >
-            重新加载统计
-          </button>
-        )}
-      </div>
-
-      <nav className="profile-overview-mobile-nav" aria-label="我的常用功能">
-        {mobileLinks.map((item) => (
-          <Link key={item.to} to={item.to}>
-            <Icon name={item.icon} size={20} />
-            <span>{item.name}</span>
-            <Icon name="chevronRight" size={15} />
+      <div className="profile-overview-summary">
+        <header className="profile-overview-identity">
+          <span className="profile-overview-avatar" aria-hidden="true">
+            {avatar && !avatarFailed ? (
+              <img src={avatar} alt="" onError={() => setAvatarFailed(true)} />
+            ) : (
+              user?.displayName?.slice(0, 1) || "食"
+            )}
+          </span>
+          <div className="profile-overview-intro">
+            <span className="profile-overview-eyebrow">个人总览</span>
+            <h1>{user?.displayName || "我的"}</h1>
+            <p>{user?.signature || BRAND_SLOGAN}</p>
+            <ProfileGrowth />
+          </div>
+          <ProfileEditLink className="profile-overview-edit">
+            <Icon name="edit" size={17} />
+            编辑资料
+          </ProfileEditLink>
+        </header>
+        <div className="profile-overview-social" aria-label="个人统计">
+          <div>
+            <strong>{statValue(stats.data?.earnedLikes)}</strong>
+            <span>获赞</span>
+          </div>
+          <Link to="/me/shares">
+            <strong>{statValue(stats.data?.uploadedFoodsCount)}</strong>
+            <span>分享的菜</span>
           </Link>
-        ))}
-      </nav>
+          <Link
+            to={peopleHref("/me", location.search, "fans")}
+            state={{ profilePeopleFrom: location.key }}
+            preventScrollReset
+            aria-label="查看我的粉丝"
+          >
+            <strong>{statValue(stats.data?.fansCount)}</strong>
+            <span>粉丝</span>
+          </Link>
+          <Link
+            to={peopleHref("/me", location.search, "follow")}
+            state={{ profilePeopleFrom: location.key }}
+            preventScrollReset
+            aria-label="查看我的关注"
+          >
+            <strong>{statValue(stats.data?.followingsCount)}</strong>
+            <span>关注</span>
+          </Link>
+          {stats.isError && (
+            <button
+              className="profile-overview-stat-retry"
+              onClick={() => void stats.refetch()}
+            >
+              重新加载统计
+            </button>
+          )}
+        </div>
+      </div>
 
       <div className="profile-overview-columns">
         <section

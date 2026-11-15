@@ -136,9 +136,6 @@
   background: none;
   font-size: 11px !important;
 }
-.profile-overview-mobile-nav {
-  display: none;
-}
 .profile-overview-columns {
   display: grid;
   grid-template-columns: minmax(0, 1.65fr) minmax(300px, 1fr);
@@ -546,28 +543,95 @@
     margin-left: 0;
   }
 }
-@media (max-width: 767px) {
-  .profile-overview-mobile-nav {
+@media (640px <= width < 1024px) {
+  .profile-overview-summary {
+    margin: 0 0 24px;
+    padding: clamp(14px, 2.4vw, 22px);
+    border: 1px solid #eadfce;
+    border-radius: 18px;
+    background: #fffaf0;
+  }
+  .profile-overview-identity {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 18px;
-    margin: -8px 0 30px;
-    border-bottom: 1px solid var(--overview-line);
-    padding-bottom: 16px;
+    grid-template-columns: 54px minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px;
+    padding: 0 0 14px;
   }
-  .profile-overview-mobile-nav a {
-    display: flex;
+  .profile-overview-avatar {
+    width: 54px;
+    height: 54px;
+    font-size: 25px;
+  }
+  .profile-overview-eyebrow {
+    display: none;
+  }
+  .profile-overview .profile-overview-intro h1 {
+    font-size: clamp(22px, 3.2vw, 30px);
+  }
+  .profile-overview-intro p {
+    margin: 5px 0 0;
+    font-size: 13px;
+  }
+  .profile-overview-intro > .profile-growth {
+    margin-top: 5px;
+  }
+  .profile-overview-edit {
+    grid-column: 3;
+    justify-self: end;
+    min-height: 44px;
+    margin-left: 0;
+    padding-inline: 10px;
+    background: #fff;
+  }
+  .profile-overview-social {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    margin: 0;
+    padding: 14px 0 0;
+    border: 0;
+    border-top: 1px solid var(--overview-line);
+  }
+  .profile-overview-social > :is(a, div) {
+    justify-content: center;
     align-items: center;
-    gap: 8px;
-    min-height: 46px;
-    font-size: 14px;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 4px;
+    min-width: 0;
+    min-height: 44px;
   }
-  .profile-overview-mobile-nav a .design-icon:first-child {
-    color: #8a7355;
+  .profile-overview-social > :first-child {
+    padding-left: 4px;
   }
-  .profile-overview-mobile-nav a .design-icon:last-child {
-    margin-left: auto;
-    color: #b1a294;
+  .profile-overview-social strong {
+    max-width: 100%;
+    font-size: clamp(17px, 2.3vw, 23px);
+    overflow-wrap: anywhere;
+  }
+  .profile-overview-social span:not(.profile-overview-stat-loading) {
+    font-size: 12px;
+  }
+  .profile-overview-stat-retry {
+    grid-column: 1 / -1;
+    min-height: 32px;
+  }
+  .profile-overview-favorites {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    gap: clamp(8px, 1.6vw, 15px);
+    padding-bottom: 0;
+    overflow: visible;
+  }
+  .profile-overview-favorite {
+    padding: 8px 8px 10px;
+    border-radius: 14px;
+  }
+  .profile-overview-food-photo {
+    aspect-ratio: 1.12;
+    border-radius: 9px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
