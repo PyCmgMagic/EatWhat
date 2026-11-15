@@ -7489,6 +7489,9 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "title" : {
+            "type" : "string"
+          },
           "gender" : {
             "type" : "string"
           },
@@ -7701,6 +7704,25 @@
           }
         }
       },
+      "ExperienceRule" : {
+        "type" : "object",
+        "properties" : {
+          "source" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "amount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "dailyCap" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
       "Level" : {
         "type" : "object",
         "properties" : {
@@ -7734,6 +7756,15 @@
           "dailyUseExperience" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "rules" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ExperienceRule"
+            }
           }
         }
       },
@@ -7877,6 +7908,9 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "title" : {
+            "type" : "string"
+          },
           "banned" : {
             "type" : "boolean"
           },
@@ -7968,6 +8002,9 @@
             "type" : "string"
           },
           "avatar" : {
+            "type" : "string"
+          },
+          "title" : {
             "type" : "string"
           },
           "createdAt" : {
@@ -9076,6 +9113,9 @@
             "type" : "string"
           },
           "avatar" : {
+            "type" : "string"
+          },
+          "title" : {
             "type" : "string"
           }
         }

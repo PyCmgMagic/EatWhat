@@ -5,10 +5,13 @@ import { DesignIcon as Icon } from "../../mobile/ui";
 import { DishIllustration } from "../../components/DishIllustration";
 import {
   businessDate,
+  experienceRules,
   growthPercent,
   ledgerSourceName,
+  userTitle,
   validBusinessDate,
 } from "../../api/growth";
+import { UserTitle } from "../../components/UserTitle";
 import { Card, Shell, QueryView, Pager, Field, timeText } from "./shared";
 import "./growth.css";
 import { useFeedbackState } from "../../components/feedback";
@@ -27,7 +30,9 @@ export default function Growth() {
     enabled: !!user?.id,
   });
   const g = progress.data,
-    percent = growthPercent(g);
+    percent = growthPercent(g),
+    title = userTitle(g),
+    rules = experienceRules(g);
   return (
     <Shell title="我的成长" advice={false}>
       <Card>
@@ -36,7 +41,10 @@ export default function Growth() {
             <DishIllustration name="danchaofan" className="growth-dish" />
             <div className="growth-level">
               <span>校园食友</span>
-              <h2>Lv.{g?.level ?? "—"}</h2>
+              <h2>
+                Lv.{g?.level ?? "—"}
+                <UserTitle title={title} />
+              </h2>
               <p>累计 {g?.totalExperience ?? "—"} 经验</p>
             </div>
             <div className="growth-progress">
@@ -66,12 +74,35 @@ export default function Growth() {
               </small>
             </div>
           </section>
-          <p className="growth-rule">
-            {g?.dailyExperience != null
-              ? `每天首次使用，自动获得 ${g.dailyExperience} 经验。`
-              : "每天首次使用会自动积累经验。"}
-            无需签到或领取，升级也不会扣除经验。
-          </p>
+          {rules.length ? (
+            <section className="growth-rules" aria-label="怎么获得经验">
+              <h3>怎么获得经验</h3>
+              <ul>
+                {rules.map((r) => (
+                  <li key={r.source}>
+                    <span>{r.name}</span>
+                    <b>+{r.amount}</b>
+                    <small>
+                      {r.source === "verified"
+                        ? "仅一次"
+                        : `每天最多 ${r.dailyCap} 次`}
+                    </small>
+                  </li>
+                ))}
+              </ul>
+              <p className="growth-rule">
+                升到 Lv.10 获得称号"老吃家"，会显示在你的主页和评论旁。
+                无需签到或领取，升级不扣经验；发布的内容因违规被删除时，会扣回它获得的经验。
+              </p>
+            </section>
+          ) : (
+            <p className="growth-rule">
+              {g?.dailyExperience != null
+                ? `每天首次使用，自动获得 ${g.dailyExperience} 经验。`
+                : "每天首次使用会自动积累经验。"}
+              无需签到或领取，升级也不会扣除经验。
+            </p>
+          )}
         </QueryView>
       </Card>
       <Card title="经验记录">
@@ -89,9 +120,7 @@ export default function Growth() {
                   <Icon name="bowl" size={22} />
                 </span>
                 <div>
-                  <strong>
-                    {ledgerSourceName(entry.sourceType)}
-                  </strong>
+                  <strong>{ledgerSourceName(entry.sourceType)}</strong>
                   <span>所属日期 {entry.businessDate ?? "待确认"}</span>
                   <small>入账于 {timeText(entry.createdAt)}</small>
                 </div>

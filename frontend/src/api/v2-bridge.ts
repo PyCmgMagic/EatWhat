@@ -277,6 +277,7 @@ function comment(v: Json) {
     rootCommentGid: v.rootId ? `comment-${v.rootId}` : null,
     replyToGid: null,
     authorName: v.author?.displayName ?? null,
+    authorTitle: v.author?.title ?? null,
     likesCount: v.likeCount ?? 0,
     createdAt: iso(v.createdAt),
     images: (v.pictureUrls ?? []).map((url: string, slot: number) => ({
@@ -378,6 +379,8 @@ function growth(v: Json | null) {
     maxLevel: v.maxLevel === true,
     levelRuleVersion: "v2",
     dailyExperience: v.dailyUseExperience ?? null,
+    title: v.title ?? null,
+    rules: v.rules ?? [],
   };
 }
 /** /telemetry/consent → APIv7 telemetry consent (no revisions in v2). */

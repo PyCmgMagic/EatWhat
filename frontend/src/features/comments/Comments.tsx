@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { UserTitle } from "../../components/UserTitle";
+import { userTitle } from "../../api/growth";
 import {
   Link,
   useLocation,
@@ -326,7 +328,10 @@ function CommentRow({
       </span>
       <div className="comments-row-body">
         <div className="comments-byline">
-          <strong>{name}</strong>
+          <strong>
+            {name}
+            <UserTitle title={userTitle({ title: comment.authorTitle })} />
+          </strong>
           <time dateTime={comment.createdAt ?? undefined}>
             {commentTime(comment.createdAt)}
           </time>
@@ -922,7 +927,10 @@ export function FoodCommentPreview({ foodId }: { foodId: number }) {
               {Array.from(row.authorName || "匿名用户")[0]}
             </span>
             <span>
-              <strong>{row.authorName || "匿名用户"}</strong>
+              <strong>
+                {row.authorName || "匿名用户"}
+                <UserTitle title={userTitle({ title: row.authorTitle })} />
+              </strong>
               <span>{row.text}</span>
             </span>
           </Link>

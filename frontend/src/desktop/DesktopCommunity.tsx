@@ -1,4 +1,6 @@
 import "../features/user-level.css";
+import { UserTitle } from "../components/UserTitle";
+import { userTitle } from "../api/growth";
 import { FieldMark } from "../features/FieldMark";
 import { boundedText, submissionPath } from "../api/content-rules";
 import { BlockControl, UserFoods } from "../features/ApiV2";
@@ -258,6 +260,7 @@ export function DesktopUser() {
             {u.level != null && (
               <span className="user-level-badge">Lv.{u.level}</span>
             )}
+            <UserTitle title={userTitle(u)} />
           </h2>
           <p>{self ? "这是其他同学眼中的你。" : "山软校园食友"}</p>
           {u.isFollowingMe && (

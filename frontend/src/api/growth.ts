@@ -36,3 +36,29 @@ export function ledgerSourceName(source?: string | null) {
   if (name === "DAILY_USE" || name === "daily_use") return "每日使用";
   return name;
 }
+
+/** 一个经验来源（后端 v2 /user/level 的 rules）。 */
+export interface ExperienceRule {
+  source: string;
+  name: string;
+  amount: number;
+  dailyCap: number;
+}
+
+/** v2 在等级、用户信息、评论作者上带 title（满级称号"老吃家"），旧接口没有这个字段。 */
+export function userTitle(value: unknown): string | null {
+  const t = (value as { title?: unknown } | null | undefined)?.title;
+  return typeof t === "string" && t.trim() ? t.trim() : null;
+}
+
+export function experienceRules(value: unknown): ExperienceRule[] {
+  const rules = (value as { rules?: unknown } | null | undefined)?.rules;
+  if (!Array.isArray(rules)) return [];
+  return rules.filter(
+    (r): r is ExperienceRule =>
+      !!r &&
+      typeof r.name === "string" &&
+      typeof r.amount === "number" &&
+      typeof r.dailyCap === "number",
+  );
+}

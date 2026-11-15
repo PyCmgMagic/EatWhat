@@ -3024,6 +3024,7 @@ export interface components {
             avatar?: string;
             /** Format: int32 */
             level?: number;
+            title?: string;
             gender?: string;
             signature?: string;
             /** Format: int64 */
@@ -3100,6 +3101,14 @@ export interface components {
             /** Format: int64 */
             createdAt?: number;
         };
+        ExperienceRule: {
+            source?: string;
+            name?: string;
+            /** Format: int32 */
+            amount?: number;
+            /** Format: int32 */
+            dailyCap?: number;
+        };
         Level: {
             /** Format: int32 */
             level?: number;
@@ -3116,6 +3125,8 @@ export interface components {
             maxLevel?: boolean;
             /** Format: int32 */
             dailyUseExperience?: number;
+            title?: string;
+            rules?: components["schemas"]["ExperienceRule"][];
         };
         ResultLevel: {
             /** Format: int32 */
@@ -3172,6 +3183,7 @@ export interface components {
             verifiedEmail?: string;
             /** Format: int32 */
             level?: number;
+            title?: string;
             banned?: boolean;
             banReason?: string | null;
             banUntil?: number | null;
@@ -3208,6 +3220,7 @@ export interface components {
             id?: number;
             displayName?: string;
             avatar?: string;
+            title?: string;
             /** Format: int64 */
             createdAt?: number;
         };
@@ -3640,6 +3653,7 @@ export interface components {
             id?: number;
             displayName?: string;
             avatar?: string;
+            title?: string;
         };
         PageResultPicture: {
             /** Format: int64 */

@@ -1,4 +1,6 @@
 import "./user-level.css";
+import { UserTitle } from "../components/UserTitle";
+import { userTitle } from "../api/growth";
 import { Select } from "../components/Select";
 import { isDemo, readSession, sameSession } from "../app/runtime";
 import { authNext, useReturnTo } from "../app/navigation";
@@ -1003,6 +1005,7 @@ export function MobileUserProfile() {
               {q.data!.level != null && (
                 <span className="user-level-badge">Lv.{q.data!.level}</span>
               )}
+              <UserTitle title={userTitle(q.data!)} />
             </h1>
             <p className="mobile-user-caption">
               {self ? "我的公开主页" : followsMe ? "关注了你" : "校园食友"}

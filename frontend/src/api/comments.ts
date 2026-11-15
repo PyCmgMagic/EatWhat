@@ -6,7 +6,10 @@ import {
 import { boundedText } from "./content-rules";
 import type { Page, Schema } from "./models";
 
-export type CommentView = Schema["CommentViewResponse"];
+/** authorTitle：作者的满级称号（后端 v2），没有时为 null。 */
+export type CommentView = Schema["CommentViewResponse"] & {
+  authorTitle?: string | null;
+};
 export type CommentSubmission = Schema["CommentQueriesSubmissionResponse"];
 export type CommentImage = Schema["CommentGalleryImageViewResponse"];
 export type CommentSort = "MOST_USEFUL" | "NEWEST";

@@ -11,3 +11,17 @@
     sans-serif;
   letter-spacing: 0;
 }
+.user-title-badge {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f7d58a, #e9a94b);
+  color: #5b3a0e;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: 0;
+  white-space: nowrap;
+}

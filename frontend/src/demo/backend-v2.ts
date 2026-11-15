@@ -262,7 +262,7 @@ function seed(): Data {
         id: 1,
         foodId: 1,
         rootId: null,
-        author: { id: 2, displayName: "管理员" },
+        author: { id: 2, displayName: "管理员", title: "老吃家" },
         replyTo: null,
         text: "汤底很稳，晚饭也不会腻。",
         pictureUrls: ["/assets/noodles.jpg"],
@@ -1396,7 +1396,9 @@ export function demoTransport(
       return ok();
     case "postDeviceRegister":
       // 演示数据只确认收到，不保存设备档案
-      return text("installId") && text("platform") ? ok() : fail(10002, "参数缺失");
+      return text("installId") && text("platform")
+        ? ok()
+        : fail(10002, "参数缺失");
     case "postTelemetryEvents":
       return ok({
         accepted: list("events").length,
@@ -1425,6 +1427,48 @@ export function demoTransport(
         toNextLevel: 125,
         maxLevel: false,
         dailyUseExperience: 5,
+        title: null,
+        rules: [
+          { source: "daily_use", name: "每日使用", amount: 5, dailyCap: 1 },
+          { source: "verified", name: "完成学生认证", amount: 50, dailyCap: 1 },
+          {
+            source: "food_published",
+            name: "发布菜品",
+            amount: 15,
+            dailyCap: 3,
+          },
+          {
+            source: "restaurant_created",
+            name: "新建店铺",
+            amount: 10,
+            dailyCap: 2,
+          },
+          {
+            source: "content_edited",
+            name: "完善店铺或菜品",
+            amount: 3,
+            dailyCap: 5,
+          },
+          {
+            source: "restaurant_rated",
+            name: "评价店铺",
+            amount: 3,
+            dailyCap: 3,
+          },
+          {
+            source: "comment_posted",
+            name: "发表评论",
+            amount: 3,
+            dailyCap: 3,
+          },
+          { source: "food_liked", name: "菜品被赞", amount: 2, dailyCap: 20 },
+          {
+            source: "comment_liked",
+            name: "评论被赞",
+            amount: 1,
+            dailyCap: 10,
+          },
+        ],
       });
     case "getUserLevelLogs":
       return ok(
