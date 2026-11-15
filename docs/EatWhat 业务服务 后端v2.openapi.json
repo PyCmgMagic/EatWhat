@@ -554,7 +554,6 @@
     "/telemetry/consent" : {
       "get" : {
         "tags" : [ "telemetry · Telemetry" ],
-        "summary" : "【需登录】获取本人使用统计开关",
         "operationId" : "consent",
         "responses" : {
           "200" : {
@@ -568,13 +567,10 @@
             }
           }
         },
-        "security" : [ {
-          "satoken" : [ ]
-        } ]
+        "summary" : "获取使用统计开关"
       },
       "put" : {
         "tags" : [ "telemetry · Telemetry" ],
-        "summary" : "【需登录】开启使用统计",
         "operationId" : "enable",
         "responses" : {
           "200" : {
@@ -588,14 +584,20 @@
             }
           }
         },
-        "security" : [ {
-          "satoken" : [ ]
-        } ]
+        "summary" : "开启使用统计"
       },
       "delete" : {
         "tags" : [ "telemetry · Telemetry" ],
-        "summary" : "【需登录】关闭使用统计并删除已收集的事件",
         "operationId" : "disable",
+        "parameters" : [ {
+          "name" : "installId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -608,9 +610,7 @@
             }
           }
         },
-        "security" : [ {
-          "satoken" : [ ]
-        } ]
+        "summary" : "关闭使用统计并删除已收集的事件"
       }
     },
     "/restaurant/{id}/rating" : {
@@ -1595,7 +1595,6 @@
     "/telemetry/events" : {
       "post" : {
         "tags" : [ "telemetry · Telemetry" ],
-        "summary" : "【需登录】上报使用统计事件",
         "operationId" : "events",
         "requestBody" : {
           "content" : {
@@ -1619,9 +1618,7 @@
             }
           }
         },
-        "security" : [ {
-          "satoken" : [ ]
-        } ]
+        "summary" : "上报使用统计事件（游客带安装 ID）"
       }
     },
     "/restaurant/{id}/history/{revisionId}/restore" : {
@@ -2447,6 +2444,35 @@
         } ]
       }
     },
+    "/device/register" : {
+      "post" : {
+        "tags" : [ "device · Device" ],
+        "operationId" : "register_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Register"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "登记设备（同意隐私政策后，游客也可以）"
+      }
+    },
     "/auth/verifyEmail" : {
       "post" : {
         "tags" : [ "账号 · Verification" ],
@@ -2615,7 +2641,7 @@
     "/auth/register" : {
       "post" : {
         "tags" : [ "账号 · Auth" ],
-        "operationId" : "register_1",
+        "operationId" : "register_2",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6553,6 +6579,10 @@
       "Batch" : {
         "type" : "object",
         "properties" : {
+          "installId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "events" : {
             "type" : "array",
             "items" : {
@@ -6939,6 +6969,45 @@
           }
         }
       },
+      "Register" : {
+        "type" : "object",
+        "properties" : {
+          "installId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "platform" : {
+            "type" : "string"
+          },
+          "hardwareId" : {
+            "type" : "string"
+          },
+          "model" : {
+            "type" : "string"
+          },
+          "osVersion" : {
+            "type" : "string"
+          },
+          "appVersion" : {
+            "type" : "string"
+          },
+          "appBuild" : {
+            "type" : "string"
+          },
+          "screenWidth" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "screenHeight" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pixelRatio" : {
+            "type" : "number",
+            "format" : "double"
+          }
+        }
+      },
       "EmailToken" : {
         "type" : "object",
         "properties" : {
@@ -6987,30 +7056,6 @@
           }
         },
         "required" : [ "ticket" ]
-      },
-      "Register" : {
-        "type" : "object",
-        "properties" : {
-          "userName" : {
-            "type" : "string"
-          },
-          "password" : {
-            "type" : "string",
-            "maxLength" : 64,
-            "minLength" : 6
-          },
-          "device" : {
-            "type" : "string",
-            "enum" : [ "WEB", "APP" ]
-          },
-          "policyVersion" : {
-            "type" : "string"
-          },
-          "deviceName" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "device", "password" ]
       },
       "ResultSaTokenInfo" : {
         "type" : "object",
@@ -7096,6 +7141,10 @@
           },
           "deviceName" : {
             "type" : "string"
+          },
+          "installId" : {
+            "type" : "string",
+            "format" : "uuid"
           }
         },
         "required" : [ "code", "device", "mobile" ]
@@ -7149,6 +7198,10 @@
           },
           "deviceName" : {
             "type" : "string"
+          },
+          "installId" : {
+            "type" : "string",
+            "format" : "uuid"
           }
         },
         "required" : [ "device", "password" ]

@@ -1110,7 +1110,7 @@ export function TelemetrySettings() {
             </div>
           </div>
           <p>
-            默认开启，可以随时关闭。只上报预设事件，不采集自由文本、网址或用户标识。保留时间：
+            默认开启，可以随时关闭，关闭时会删除已收集的事件。只上报预设事件和这台设备的安装 ID，不采集你输入的文字或网址。保留时间：
             {q.data?.retentionDays ?? "待确认"} 天。
           </p>
           <label className="v4-check">

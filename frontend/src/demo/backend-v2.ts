@@ -1394,6 +1394,9 @@ export function demoTransport(
     case "postPushBindingsByIdToken":
     case "postPushBindingsByIdUnbind":
       return ok();
+    case "postDeviceRegister":
+      // 演示数据只确认收到，不保存设备档案
+      return text("installId") && text("platform") ? ok() : fail(10002, "参数缺失");
     case "postTelemetryEvents":
       return ok({
         accepted: list("events").length,

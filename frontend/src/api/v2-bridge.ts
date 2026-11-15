@@ -8,6 +8,7 @@
  * shown on page load) or with a 404 "retired" error, which the old UI already
  * treats as "unavailable".
  */
+import { installId, registerDevice } from "./install-id";
 import {
   ApiError,
   type Envelope,
@@ -542,6 +543,7 @@ const routes: [string, RegExp, Handler][] = [
             device: body.device ?? "WEB",
             policyVersion,
             deletionKey: deletionKey(),
+            installId: installId(),
           },
           options,
         ),
@@ -562,6 +564,7 @@ const routes: [string, RegExp, Handler][] = [
               password: body.password,
               device: body.device ?? "WEB",
               policyVersion,
+              installId: installId(),
             },
           }),
       ),
@@ -582,6 +585,7 @@ const routes: [string, RegExp, Handler][] = [
               device: body.device ?? "WEB",
               policyVersion,
               deletionKey: deletionKey(),
+              installId: installId(),
             },
           }),
       )),
@@ -683,6 +687,7 @@ const routes: [string, RegExp, Handler][] = [
       const v = await call("/auth/consent/grant", {
         body: { policyVersion: body.policyVersion },
       });
+      void registerDevice(sendDevice(call));
       return {
         status: "GRANTED",
         identityReady: true,
@@ -739,7 +744,16 @@ const routes: [string, RegExp, Handler][] = [
       };
     },
   ],
-  ["GET", /^\/user\/info$/, async ({ call }) => me(await call("/user/info"))],
+  [
+    "GET",
+    /^\/user\/info$/,
+    async ({ call }) => {
+      const user = me(await call("/user/info"));
+      // 登录着就同意过当前政策；档案没变时不会重发
+      void registerDevice(sendDevice(call));
+      return user;
+    },
+  ],
   [
     "PUT",
     /^\/user\/updateInfo$/,
@@ -1614,7 +1628,7 @@ const routes: [string, RegExp, Handler][] = [
     async ({ body, call }) =>
       call("/telemetry/events", {
         method: "POST",
-        body: { events: body.events ?? [] },
+        body: { installId: installId(), events: body.events ?? [] },
       }),
   ],
   [
@@ -1677,8 +1691,12 @@ async function withLoginConsent<T>(
   // A token is a signed-in session; the old pages also check isLogin.
   const session = (v: any) =>
     v && typeof v === "object" && v.tokenValue ? { isLogin: true, ...v } : v;
+  const signedIn = (v: any) => {
+    void registerDevice(sendDevice(call));
+    return session(v);
+  };
   try {
-    return session(await send(given));
+    return signedIn(await send(given));
   } catch (error) {
     if (
       !(error instanceof ApiError) ||
@@ -1689,9 +1707,13 @@ async function withLoginConsent<T>(
     const { askPolicyConsent } = await import("../app/policy-consent");
     if (!policy?.version || !(await askPolicyConsent(policy, "login")))
       throw new ApiError("需要先同意隐私政策才能登录。", "POLICY_DECLINED");
-    return session(await send(policy.version));
+    return signedIn(await send(policy.version));
   }
 }
+
+/** 设备登记不需要登录（见 install-id.ts）。 */
+const sendDevice = (call: Call) => (body: Json) =>
+  call("/device/register", { method: "POST", public: true, body });
 
 async function loginWithCaptcha(
   call: Call,

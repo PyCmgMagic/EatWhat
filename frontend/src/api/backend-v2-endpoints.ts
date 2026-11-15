@@ -58,17 +58,17 @@ export const endpoints = {
   "getTelemetryConsent": {
     "method": "GET",
     "path": "/telemetry/consent",
-    "access": "login"
+    "access": "public"
   },
   "putTelemetryConsent": {
     "method": "PUT",
     "path": "/telemetry/consent",
-    "access": "login"
+    "access": "public"
   },
   "deleteTelemetryConsent": {
     "method": "DELETE",
     "path": "/telemetry/consent",
-    "access": "login"
+    "access": "public"
   },
   "rate": {
     "method": "PUT",
@@ -216,7 +216,7 @@ export const endpoints = {
   "postTelemetryEvents": {
     "method": "POST",
     "path": "/telemetry/events",
-    "access": "login"
+    "access": "public"
   },
   "restore": {
     "method": "POST",
@@ -337,6 +337,11 @@ export const endpoints = {
     "method": "POST",
     "path": "/feedback/catalog-errors",
     "access": "login"
+  },
+  "postDeviceRegister": {
+    "method": "POST",
+    "path": "/device/register",
+    "access": "public"
   },
   "verifyEmail": {
     "method": "POST",

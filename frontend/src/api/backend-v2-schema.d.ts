@@ -174,12 +174,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 【需登录】获取本人使用统计开关 */
+        /** 获取使用统计开关 */
         get: operations["getTelemetryConsent"];
-        /** 【需登录】开启使用统计 */
+        /** 开启使用统计 */
         put: operations["putTelemetryConsent"];
         post?: never;
-        /** 【需登录】关闭使用统计并删除已收集的事件 */
+        /** 关闭使用统计并删除已收集的事件 */
         delete: operations["deleteTelemetryConsent"];
         options?: never;
         head?: never;
@@ -591,7 +591,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 【需登录】上报使用统计事件 */
+        /** 上报使用统计事件（游客带安装 ID） */
         post: operations["postTelemetryEvents"];
         delete?: never;
         options?: never;
@@ -985,6 +985,23 @@ export interface paths {
         put?: never;
         /** 【需登录】提交店铺信息有误 */
         post: operations["postFeedbackCatalogErrors"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/device/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 登记设备（同意隐私政策后，游客也可以） */
+        post: operations["postDeviceRegister"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2673,6 +2690,8 @@ export interface components {
             timestamp?: number;
         };
         Batch: {
+            /** Format: uuid */
+            installId?: string;
             events?: components["schemas"]["Event"][];
         };
         Event: {
@@ -2813,6 +2832,22 @@ export interface components {
             errorType?: string;
             note?: string;
         };
+        Register: {
+            /** Format: uuid */
+            installId?: string;
+            platform?: string;
+            hardwareId?: string;
+            model?: string;
+            osVersion?: string;
+            appVersion?: string;
+            appBuild?: string;
+            /** Format: int32 */
+            screenWidth?: number;
+            /** Format: int32 */
+            screenHeight?: number;
+            /** Format: double */
+            pixelRatio?: number;
+        };
         EmailToken: {
             token: string;
         };
@@ -2826,14 +2861,6 @@ export interface components {
         };
         SsoTicket: {
             ticket: string;
-        };
-        Register: {
-            userName?: string;
-            password: string;
-            /** @enum {string} */
-            device: "WEB" | "APP";
-            policyVersion?: string;
-            deviceName?: string;
         };
         ResultSaTokenInfo: {
             /** Format: int32 */
@@ -2868,6 +2895,8 @@ export interface components {
             policyVersion?: string;
             deletionKey?: string;
             deviceName?: string;
+            /** Format: uuid */
+            installId?: string;
         };
         SendLoginCode: {
             mobile: string;
@@ -2884,6 +2913,8 @@ export interface components {
             policyVersion?: string;
             deletionKey?: string;
             deviceName?: string;
+            /** Format: uuid */
+            installId?: string;
         };
         ConsentStatus: {
             agreedVersion?: string | null;
@@ -4731,7 +4762,9 @@ export interface operations {
     };
     deleteTelemetryConsent: {
         parameters: {
-            query?: never;
+            query?: {
+                installId?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -6009,6 +6042,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultFeedbackAccepted"];
+                };
+            };
+        };
+    };
+    postDeviceRegister: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Register"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultVoid"];
                 };
             };
         };

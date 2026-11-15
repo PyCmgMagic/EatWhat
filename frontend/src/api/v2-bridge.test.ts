@@ -478,6 +478,40 @@ describe("v2 bridge", () => {
     vi.unstubAllGlobals();
   });
 
+  it("sends this device's install id when signing in and registers the device", async () => {
+    const store = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => store.set(k, v),
+      removeItem: (k: string) => store.delete(k),
+    });
+    const { transport, sent } = backend(() =>
+      ok({ tokenName: "satoken", tokenValue: "t" }),
+    );
+    await transport("/auth/login", {
+      method: "POST",
+      body: { userName: "a", password: "p", device: "WEB" },
+    });
+    const id = store.get("eatwhat.installId");
+    expect(id).toMatch(/^[0-9a-f-]{36}$/);
+    expect(sent[0]).toMatchObject({ path: "/auth/login", body: { installId: id } });
+    await vi.waitFor(() =>
+      expect(sent.find((s) => s.path === "/device/register")?.body).toMatchObject({
+        installId: id,
+        platform: "web",
+      }),
+    );
+    await transport("/telemetry/events", {
+      method: "POST",
+      body: { events: [] },
+    });
+    expect(sent.at(-1)).toMatchObject({
+      path: "/telemetry/events",
+      body: { installId: id },
+    });
+    vi.unstubAllGlobals();
+  });
+
   it("reports retired features as unavailable", async () => {
     const { request, sent } = backend(() => undefined);
     const error = await request("/user/cancellation", { method: "POST" }).catch(
@@ -503,7 +537,9 @@ describe("v2 bridge", () => {
     });
     expect(consent.asked).toEqual(["login"]);
     expect(reply.data).toMatchObject({ isLogin: true, tokenValue: "t" });
-    expect(sent.at(-1)?.body).toMatchObject({ policyVersion: "v3" });
+    expect(
+      sent.filter((s) => s.path === "/auth/login").at(-1)?.body,
+    ).toMatchObject({ policyVersion: "v3" });
 
     consent.answer = false;
     const declined = await transport("/auth/login", {
