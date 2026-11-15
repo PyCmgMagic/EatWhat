@@ -26,7 +26,13 @@ vi.mock("../app/policy-consent", () => ({
   },
 }));
 
-type Sent = { path: string; method: string; body?: any; query?: any };
+type Sent = {
+  path: string;
+  method: string;
+  body?: any;
+  query?: any;
+  headers?: any;
+};
 function backend(reply: (sent: Sent) => Envelope<unknown> | undefined) {
   const sent: Sent[] = [];
   const transport = bridgeToV2(async (path, options) => {
@@ -35,6 +41,7 @@ function backend(reply: (sent: Sent) => Envelope<unknown> | undefined) {
       method: options.method ?? "GET",
       body: options.body,
       query: options.query,
+      headers: options.headers,
     };
     sent.push(request);
     return reply(request) ?? { code: 0, msg: "ok", data: null };
@@ -77,10 +84,17 @@ describe("v2 bridge", () => {
     const { transport, sent } = backend(() =>
       ok({ tokenName: "satoken", tokenValue: "local-number-session" }),
     );
-    const reply = await createApi(transport).webVerifyLogin({
-      mobile: "13800000000",
-      spToken: "sp-1",
-    });
+    const headers = {
+      "X-Phone-Auth-Trace": crypto.randomUUID(),
+      "X-Phone-Auth-Timing": "sdk=1,token=2,environment=3,carrier=4",
+    };
+    const reply = await createApi(transport).webVerifyLogin(
+      {
+        mobile: "13800000000",
+        spToken: "sp-1",
+      },
+      headers,
+    );
     expect(classifyAuth(reply).kind).toBe("session");
     const login = sent.find((s) => s.path === "/auth/phone/web-verify/login")!;
     expect(login.body).toMatchObject({
@@ -88,6 +102,7 @@ describe("v2 bridge", () => {
       spToken: "sp-1",
     });
     expect(login.body).not.toHaveProperty("deletionKey");
+    expect(login.headers).toMatchObject(headers);
   });
 
   it("recovers upload keys from v2 public picture URLs", () => {

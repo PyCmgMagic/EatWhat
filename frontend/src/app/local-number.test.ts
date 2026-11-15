@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
-import { localNumberToken, looksLikePhone } from "./local-number";
+import {
+  createLocalNumberTiming,
+  localNumberTimingHeaders,
+  localNumberToken,
+  looksLikePhone,
+} from "./local-number";
 
 function sdk(overrides: Record<string, unknown> = {}) {
   return {
@@ -20,11 +25,72 @@ describe("local number verification", () => {
     };
     const server = sdk();
     await expect(localNumberToken(api, server as any)).resolves.toBe("sp-1");
-    expect(api.webVerifyToken).toHaveBeenCalledWith(location.href);
+    expect(api.webVerifyToken).toHaveBeenCalledWith(
+      location.href,
+      expect.any(String),
+    );
     expect(server.checkAuthAvailable.mock.calls[0][0]).toMatchObject({
       accessToken: "a",
       jwtToken: "j",
     });
+  });
+
+  it("sends only bounded stage durations and a random correlation ID", async () => {
+    const timing = createLocalNumberTiming();
+    const api = {
+      webVerifyToken: vi.fn(async () => ({
+        accessToken: "secret-a",
+        jwtToken: "secret-j",
+      })),
+    };
+    const log = vi.spyOn(console, "info").mockImplementation(() => {});
+    try {
+      await expect(localNumberToken(api, sdk() as any, timing)).resolves.toBe(
+        "sp-1",
+      );
+      expect(api.webVerifyToken).toHaveBeenCalledWith(
+        location.href,
+        timing.trace,
+      );
+      const headers = localNumberTimingHeaders(timing);
+      expect(headers["X-Phone-Auth-Trace"]).toBe(timing.trace);
+      expect(headers["X-Phone-Auth-Timing"]).toMatch(
+        /^sdk=\d{1,6},token=\d{1,6},environment=\d{1,6},carrier=\d{1,6}$/,
+      );
+      expect(log.mock.calls.map((call) => call[1].stage)).toEqual([
+        "sdk",
+        "token",
+        "environment",
+        "carrier",
+      ]);
+      expect(JSON.stringify(log.mock.calls)).not.toMatch(
+        /secret-a|secret-j|sp-1/,
+      );
+    } finally {
+      log.mockRestore();
+    }
+  });
+
+  it("records a failed step without recording SDK error contents", async () => {
+    const log = vi.spyOn(console, "info").mockImplementation(() => {});
+    try {
+      await expect(
+        localNumberToken(
+          { webVerifyToken: async () => ({ accessToken: "a", jwtToken: "j" }) },
+          sdk({
+            checkAuthAvailable: (o: any) =>
+              o.error({ code: 600008, msg: "private-value" }),
+          }) as any,
+        ),
+      ).rejects.toThrow("关闭 Wi-Fi");
+      expect(log.mock.calls.at(-1)?.[1]).toMatchObject({
+        stage: "environment",
+        result: "error",
+      });
+      expect(JSON.stringify(log.mock.calls)).not.toContain("private-value");
+    } finally {
+      log.mockRestore();
+    }
   });
 
   it("stops before asking the backend when the phone is on Wi-Fi", async () => {

@@ -24,8 +24,61 @@ type PhoneNumberServer = {
 export type LocalNumberApi = {
   webVerifyToken(
     url: string,
+    trace?: string,
   ): Promise<{ accessToken?: string; jwtToken?: string }>;
 };
+
+export type LocalNumberTiming = {
+  trace: string;
+  sdk: number;
+  token: number;
+  environment: number;
+  carrier: number;
+};
+
+export function createLocalNumberTiming(): LocalNumberTiming {
+  return {
+    trace: crypto.randomUUID(),
+    sdk: 0,
+    token: 0,
+    environment: 0,
+    carrier: 0,
+  };
+}
+
+export function localNumberTimingHeaders(timing: LocalNumberTiming) {
+  return {
+    "X-Phone-Auth-Trace": timing.trace,
+    "X-Phone-Auth-Timing": `sdk=${timing.sdk},token=${timing.token},environment=${timing.environment},carrier=${timing.carrier}`,
+  };
+}
+
+async function timed<T>(
+  timing: LocalNumberTiming,
+  stage: "sdk" | "token" | "environment" | "carrier",
+  action: () => Promise<T>,
+): Promise<T> {
+  const start = performance.now();
+  let result = "ok";
+  try {
+    return await action();
+  } catch (error) {
+    result = "error";
+    throw error;
+  } finally {
+    timing[stage] = Math.min(
+      999999,
+      Math.max(0, Math.round(performance.now() - start)),
+    );
+    // Never include SDK replies, errors, phone numbers or authentication tokens.
+    console.info("phone_auth_timing", {
+      trace: timing.trace,
+      stage,
+      elapsedMs: timing[stage],
+      result,
+    });
+  }
+}
 
 /** Only phones have a SIM on mobile data; desktops never pass the check. */
 export function looksLikePhone(userAgent = navigator.userAgent) {
@@ -101,32 +154,48 @@ export async function loadSdk(): Promise<PhoneNumberServer> {
 export async function localNumberToken(
   api: LocalNumberApi,
   sdk?: PhoneNumberServer,
+  timing = createLocalNumberTiming(),
 ): Promise<string> {
-  const server = sdk ?? (await loadSdk());
+  const server = await timed(timing, "sdk", () =>
+    sdk ? Promise.resolve(sdk) : loadSdk(),
+  );
   if (server.getConnection() === "wifi") throw new Error(WIFI);
-  const { accessToken, jwtToken } = await api.webVerifyToken(location.href);
+  const { accessToken, jwtToken } = await timed(timing, "token", () =>
+    api.webVerifyToken(location.href, timing.trace),
+  );
   if (!accessToken || !jwtToken)
     throw new Error("本机号码验证暂时不可用，请用短信验证码登录。");
-  await new Promise<void>((resolve, reject) =>
-    server.checkAuthAvailable({
-      accessToken,
-      jwtToken,
-      success: (raw) => {
-        const reply = parse(raw);
-        if (Number(reply.code) === OK) resolve();
-        else reject(failure(reply));
-      },
-      error: (raw) => reject(failure(parse(raw))),
-    }),
+  await timed(
+    timing,
+    "environment",
+    () =>
+      new Promise<void>((resolve, reject) =>
+        server.checkAuthAvailable({
+          accessToken,
+          jwtToken,
+          success: (raw) => {
+            const reply = parse(raw);
+            if (Number(reply.code) === OK) resolve();
+            else reject(failure(reply));
+          },
+          error: (raw) => reject(failure(parse(raw))),
+        }),
+      ),
   );
-  return new Promise<string>((resolve, reject) =>
-    server.getVerifyToken({
-      success: (raw) => {
-        const reply = parse(raw);
-        if (Number(reply.code) === OK && reply.spToken) resolve(reply.spToken);
-        else reject(failure(reply));
-      },
-      error: (raw) => reject(failure(parse(raw))),
-    }),
+  return timed(
+    timing,
+    "carrier",
+    () =>
+      new Promise<string>((resolve, reject) =>
+        server.getVerifyToken({
+          success: (raw) => {
+            const reply = parse(raw);
+            if (Number(reply.code) === OK && reply.spToken)
+              resolve(reply.spToken);
+            else reject(failure(reply));
+          },
+          error: (raw) => reject(failure(parse(raw))),
+        }),
+      ),
   );
 }

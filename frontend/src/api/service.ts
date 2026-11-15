@@ -212,16 +212,24 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       data<{ enabled?: boolean }>("/auth/phone/web-verify/config", {
         public: true,
       }),
-    webVerifyToken: (url: string) =>
+    webVerifyToken: (url: string, trace?: string) =>
       data<{ accessToken?: string; jwtToken?: string }>(
         "/auth/phone/web-verify/token",
-        { method: "POST", body: { url }, public: true },
+        {
+          method: "POST",
+          body: { url },
+          public: true,
+          headers: trace ? { "X-Phone-Auth-Trace": trace } : undefined,
+        },
       ),
     /** Same reply as phoneLogin; spToken comes from the web SDK. */
-    webVerifyLogin: (body: { mobile: string; spToken: string }) =>
+    webVerifyLogin: (
+      body: { mobile: string; spToken: string },
+      headers?: RequestOptions["headers"],
+    ) =>
       request<Envelope<Schema["PhoneLoginReply"]["data"]>>(
         "/auth/phone/web-verify/login",
-        { method: "POST", body, public: true, raw: true },
+        { method: "POST", body, headers, public: true, raw: true },
       ),
     passwordCode: (signal?: AbortSignal) =>
       sendVerified("/auth/password/code", { method: "POST", signal }),
