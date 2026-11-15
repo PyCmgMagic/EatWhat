@@ -1110,6 +1110,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/phone/web-verify/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 获取网页本机号码校验的鉴权 Token */
+        post: operations["postAuthPhoneWebVerifyToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/web-verify/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 网页本机号码校验登录（未注册自动建号） */
+        post: operations["postAuthPhoneWebVerifyLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/one-click/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 阿里云 App 一键登录（未注册自动建号） */
+        post: operations["postAuthPhoneOneClickLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/phone/login": {
         parameters: {
             query?: never;
@@ -2116,6 +2167,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/phone/web-verify/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询网页本机号码校验登录开关 */
+        get: operations["getAuthPhoneWebVerifyConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/one-click/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查询 App 一键登录开关 */
+        get: operations["getAuthPhoneOneClickConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/consent": {
         parameters: {
             query?: never;
@@ -2904,6 +2989,36 @@ export interface components {
             loginDeviceType?: string;
             tag?: string;
         };
+        WebVerifyTokenRequest: {
+            url: string;
+        };
+        ResultWebVerifyToken: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["WebVerifyToken"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        WebVerifyToken: {
+            accessToken?: string;
+            jwtToken?: string;
+        };
+        WebVerifyLogin: {
+            mobile: string;
+            spToken: string;
+            policyVersion?: string;
+            deviceName?: string;
+            /** Format: uuid */
+            installId?: string;
+        };
+        OneClickLogin: {
+            accessToken: string;
+            policyVersion?: string;
+            deviceName?: string;
+            /** Format: uuid */
+            installId?: string;
+        };
         PhoneLogin: {
             mobile: string;
             code: string;
@@ -2914,32 +3029,6 @@ export interface components {
             deviceName?: string;
             /** Format: uuid */
             installId?: string;
-        };
-        PhoneLoginResult: {
-            tokenName?: string;
-            tokenValue?: string;
-            isLogin?: boolean;
-            loginId?: unknown;
-            loginType?: string;
-            /** Format: int64 */
-            tokenTimeout?: number;
-            /** Format: int64 */
-            sessionTimeout?: number;
-            /** Format: int64 */
-            tokenSessionTimeout?: number;
-            /** Format: int64 */
-            tokenActiveTimeout?: number;
-            loginDeviceType?: string;
-            tag?: string;
-            newUser?: boolean;
-        };
-        ResultPhoneLoginResult: {
-            /** Format: int32 */
-            code?: number;
-            data?: components["schemas"]["PhoneLoginResult"];
-            msg?: string;
-            /** Format: int64 */
-            timestamp?: number;
         };
         SendLoginCode: {
             mobile: string;
@@ -3907,6 +3996,28 @@ export interface components {
             /** Format: int32 */
             code?: number;
             data?: components["schemas"]["DeviceSessionPage"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        ResultWebVerifyConfig: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["WebVerifyConfig"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        WebVerifyConfig: {
+            enabled?: boolean;
+        };
+        OneClickConfig: {
+            enabled?: boolean;
+        };
+        ResultOneClickConfig: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["OneClickConfig"];
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
@@ -6287,6 +6398,78 @@ export interface operations {
             };
         };
     };
+    postAuthPhoneWebVerifyToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebVerifyTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultWebVerifyToken"];
+                };
+            };
+        };
+    };
+    postAuthPhoneWebVerifyLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebVerifyLogin"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultSaTokenInfo"];
+                };
+            };
+        };
+    };
+    postAuthPhoneOneClickLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OneClickLogin"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultSaTokenInfo"];
+                };
+            };
+        };
+    };
     phoneLogin: {
         parameters: {
             query?: never;
@@ -6306,7 +6489,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ResultPhoneLoginResult"];
+                    "application/json": components["schemas"]["ResultSaTokenInfo"];
                 };
             };
         };
@@ -7774,6 +7957,46 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultDeviceSessionPage"];
+                };
+            };
+        };
+    };
+    getAuthPhoneWebVerifyConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultWebVerifyConfig"];
+                };
+            };
+        };
+    };
+    getAuthPhoneOneClickConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultOneClickConfig"];
                 };
             };
         };

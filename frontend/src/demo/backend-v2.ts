@@ -1664,6 +1664,10 @@ export function demoTransport(
       return ok();
     case "getAdminRemoteConfigAudit":
       return ok(paged([]));
+    // The carrier check needs a real SIM on mobile data; the demo has none.
+    case "getAuthPhoneWebVerifyConfig":
+    case "getAuthPhoneOneClickConfig":
+      return ok({ enabled: false });
     case "presign":
     case "presignBatch":
     case "complete":

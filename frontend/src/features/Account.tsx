@@ -13,6 +13,8 @@ import { LoginLink, useAuthBusy, useAuthFlow } from "../app/auth-dialog";
 import { isDemo, sessionSignal } from "../app/runtime";
 import { useTask } from "../components/useTask";
 import { classifyAuth } from "../api/service";
+import { localNumberToken, looksLikePhone } from "../app/local-number";
+import "../app/local-number.css";
 import { FeaturePage, FeatureState } from "./Catalog";
 import { useArea } from "../app/area";
 import { useMobile } from "../mobile/ui";
@@ -121,6 +123,24 @@ export function PhoneLoginForm({
     send = useTask(),
     login = useTask();
   useAuthBusy(send.isPending || login.isPending);
+  // Local number verification replaces the SMS code on phones with mobile data.
+  const localNumber = useQuery({
+    queryKey: ["auth", "web-verify-config"],
+    queryFn: () => api.webVerifyConfig(),
+    enabled: looksLikePhone(),
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+  const signInWith = async (
+    reply: Awaited<ReturnType<typeof api.phoneLogin>>,
+  ) => {
+    const result = classifyAuth(reply);
+    if (result.kind !== "session") throw new Error(result.message);
+    const registered =
+      reply.data && "newUser" in reply.data && reply.data.newUser === true;
+    await signIn(result.session);
+    finish("/me", registered ? sessionSignal(result.session) : undefined);
+  };
   useEffect(() => {
     if (until <= Date.now()) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -143,23 +163,9 @@ export function PhoneLoginForm({
           login.run(async () => {
             if (sentTo !== mobile)
               throw new Error("请先为当前手机号获取验证码。");
-            const reply = await api.phoneLogin({
-              mobile,
-              code,
-              device: "WEB",
-            });
-            const result = classifyAuth(reply);
-            if (result.kind === "session") {
-              const registered =
-                reply.data &&
-                "newUser" in reply.data &&
-                reply.data.newUser === true;
-              await signIn(result.session);
-              finish(
-                "/me",
-                registered ? sessionSignal(result.session) : undefined,
-              );
-            } else throw new Error(result.message);
+            await signInWith(
+              await api.phoneLogin({ mobile, code, device: "WEB" }),
+            );
           });
         }}
       >
@@ -223,6 +229,23 @@ export function PhoneLoginForm({
         >
           {login.isPending ? "正在登录…" : "登录 / 注册"}
         </button>
+        {localNumber.data?.enabled && (
+          <button
+            type="button"
+            className="ew-local-number"
+            disabled={login.isPending || send.isPending}
+            onClick={() => {
+              if (!mobileInput.current?.reportValidity()) return;
+              login.run(async () => {
+                const spToken = await localNumberToken(api);
+                await signInWith(await api.webVerifyLogin({ mobile, spToken }));
+              });
+            }}
+          >
+            本机号码验证，免验证码
+            <small>需开启移动数据，Wi-Fi 下不可用</small>
+          </button>
+        )}
       </form>
       {!compact && (
         <>
