@@ -106,7 +106,7 @@ export const mobileSettingsPages: Record<
     source: "preferences",
   },
   "/verify": { title: "学生认证", back: "/settings/account" },
-  "/settings/about": { title: "关于与反馈", back: "/settings", public: true },
+  "/settings/about": { title: "关于我们", back: "/settings", public: true },
   "/data-notice": {
     title: "数据存放说明",
     back: "/settings/account",

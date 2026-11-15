@@ -41,6 +41,7 @@ import { AccessWelcome } from "../components/AccessWelcome";
 import { FavoritesEmpty, FavoritesFilters } from "./FavoritesControls";
 import { ProfileSectionNav } from "./ProfileSectionNav";
 import { ProfileWorkspaceContext } from "../app/profile-workspace";
+import SettingsPageHeader from "./SettingsPageHeader";
 import { useTask } from "../components/useTask";
 import {
   DishIllustration,
@@ -56,15 +57,20 @@ export function FeaturePage({
   children: ReactNode;
   back?: string;
 }) {
+  const location = useLocation();
   return (
     <div className="ew-feature">
-      <header className="ew-head">
-        <Link to={back}>
-          <Icon name="back" size={18} />
-          返回
-        </Link>
-        <h1>{title}</h1>
-      </header>
+      {location.pathname.startsWith("/settings/") ? (
+        <SettingsPageHeader title={title} back={back} />
+      ) : (
+        <header className="ew-head">
+          <Link to={back}>
+            <Icon name="back" size={18} />
+            返回
+          </Link>
+          <h1>{title}</h1>
+        </header>
+      )}
       {children}
     </div>
   );

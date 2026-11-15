@@ -26,7 +26,7 @@ import {
   type V2Shop,
 } from "../../api/v2-vocab";
 import { CatalogCard } from "../Catalog";
-import { ProfileSectionNav } from "../ProfileSectionNav";
+import { ProfileHelpHeader, ProfileSectionNav } from "../ProfileSectionNav";
 import "../profile-activity.css";
 import "./edit-history.css";
 import {
@@ -121,11 +121,11 @@ export function FeedbackForm({
           ? "举报内容"
           : kind === "catalog"
             ? "店铺信息有误"
-            : "意见反馈"
+            : "帮助与反馈"
       }
       detail="每一条建议都会进入你的反馈记录，处理后可查看回复。"
+      heading={kind === "feedback" ? <ProfileHelpHeader /> : undefined}
     >
-      {kind === "feedback" && <ProfileSectionNav section="help" />}
       <Card>
         <div className="v4-form-intro">
           <div>
@@ -313,7 +313,8 @@ export function FeedbackRecords({ id }: { id?: number }) {
     );
   return (
     <Shell
-      title="反馈记录"
+      title="帮助与反馈"
+      heading={<ProfileHelpHeader />}
       back={
         typeof location.state?.feedbackReturnTo === "string" &&
         /^\/(?:feedback|reports\/new|restaurants\/correction)(?:\?|$)/.test(
@@ -323,7 +324,6 @@ export function FeedbackRecords({ id }: { id?: number }) {
           : "/feedback"
       }
     >
-      <ProfileSectionNav section="help" />
       <QueryView
         query={list}
         empty={!list.data?.items?.length}

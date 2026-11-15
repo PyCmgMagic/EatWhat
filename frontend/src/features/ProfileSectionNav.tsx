@@ -38,6 +38,19 @@ const sections = {
 
 export type ProfileSectionNavKind = keyof typeof sections;
 
+export function ProfileHelpHeader() {
+  return (
+    <>
+      <header className="profile-help-header">
+        <span className="profile-page-eyebrow">使用帮助</span>
+        <h1>帮助与反馈</h1>
+        <p>查找常见问题，提交建议，并查看处理进度与回复。</p>
+      </header>
+      <ProfileSectionNav section="help" />
+    </>
+  );
+}
+
 export function ProfileSectionNav({
   section,
 }: {

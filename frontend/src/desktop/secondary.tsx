@@ -8,6 +8,7 @@ import { errorMessage } from "../api/client";
 import { mediaUrl } from "../api/models";
 import "./secondary.css";
 import { ToastError } from "../components/feedback";
+import SettingsPageHeader from "../features/SettingsPageHeader";
 
 export const secondaryTitles: Record<string, string> = {
   "/me": "个人总览",
@@ -31,7 +32,7 @@ export const secondaryTitles: Record<string, string> = {
   "/auth/register": "手机登录 / 注册",
   "/auth/register/confirm": "注册确认",
   "/auth/forgot": "找回密码",
-  "/settings/phone": "换绑手机号",
+  "/settings/phone": "更换手机号",
   "/settings/devices": "登录设备",
   "/settings/delete": "注销账号",
   "/settings/blocked": "屏蔽名单",
@@ -63,6 +64,22 @@ export function PageHead({
   onBack?: () => void;
   backDisabled?: boolean;
 }) {
+  const location = useLocation();
+  if (
+    location.pathname.startsWith("/settings/") ||
+    ["/verify", "/data-notice"].includes(location.pathname)
+  )
+    return (
+      <SettingsPageHeader
+        title={title}
+        detail={detail}
+        action={action}
+        back={back}
+        backLabel={crumb.startsWith("返回") ? crumb : `返回${crumb}`}
+        onBack={onBack}
+        backDisabled={backDisabled}
+      />
+    );
   return (
     <header className="pc-secondary-head">
       <div>

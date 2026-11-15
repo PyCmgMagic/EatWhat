@@ -28,36 +28,6 @@
   outline: 2px solid #947220;
   outline-offset: 4px;
 }
-.settings-home-heading {
-  margin-bottom: 22px;
-}
-.settings-home-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  margin-bottom: 12px;
-  color: var(--settings-muted) !important;
-  font-size: 13px;
-}
-.settings-home-heading > div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-}
-.settings-home-heading h1 {
-  font-size: 32px;
-  font-weight: 800;
-  line-height: 1.3;
-  letter-spacing: -0.035em;
-}
-.settings-home-heading p {
-  margin-top: 10px;
-  color: var(--settings-muted);
-  font-size: 14px;
-  line-height: 1.7;
-}
 .settings-home-all {
   display: inline-flex;
   align-items: center;
@@ -453,10 +423,6 @@
     align-items: center;
     padding: 18px;
   }
-  .settings-home-heading > div {
-    align-items: start;
-    flex-wrap: wrap;
-  }
   .settings-home-profile {
     grid-template-columns: 46px minmax(0, 1fr) auto;
     padding: 18px 18px 0;
@@ -514,12 +480,6 @@
 @media (max-width: 599px) {
   .settings-home {
     padding: 0 0 20px;
-  }
-  .settings-home-heading h1 {
-    font-size: 28px;
-  }
-  .settings-home-heading {
-    margin-bottom: 22px;
   }
   .settings-home-profile {
     margin-bottom: 28px;

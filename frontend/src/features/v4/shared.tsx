@@ -20,6 +20,7 @@ import {
 } from "../../components/DishIllustration";
 import { errorMessage, resultUncertain, unavailable } from "../../api/client";
 import { ProfileWorkspaceContext } from "../../app/profile-workspace";
+import SettingsPageHeader from "../SettingsPageHeader";
 import "./v4.css";
 import "./design.css";
 export const labels: Record<string, string> = {
@@ -79,12 +80,14 @@ export function timeText(value?: string | number | null) {
 export function Shell({
   title,
   detail,
+  heading,
   children,
   back = "/me",
   advice = true,
 }: {
   title: string;
   detail?: string;
+  heading?: ReactNode;
   children: ReactNode;
   back?: string;
   advice?: boolean;
@@ -187,33 +190,50 @@ export function Shell({
   }, [title]);
   return (
     <div className="v4-page" data-section={section} data-route={path}>
-      <header className="v4-heading">
-        {showBreadcrumb && (
-          <div className="v4-breadcrumb">
-            <Link to={featuresReturnTo ?? back}>
-              <Icon name="back" size={15} />
-              返回
-            </Link>
-            <span />
-            <span>{meta[section].name}</span>
-          </div>
-        )}
-        <div className="v4-page-title">
-          <span className="v4-page-symbol">
-            <Icon name={meta[section].icon} size={28} />
-          </span>
-          <div>
-            <h1>{title}</h1>
-            {detail && <p>{detail}</p>}
-          </div>
-          {!embedded && path !== "/features" && featuresReturnTo && (
-            <Link to={featuresReturnTo} className="v4-heading-home">
-              返回功能搜索
-              <Icon name="chevronRight" size={16} />
-            </Link>
-          )}
-        </div>
-      </header>
+      {heading ??
+        (section === "account" ? (
+          <SettingsPageHeader
+            title={title}
+            detail={detail}
+            back={back}
+            action={
+              !embedded && path !== "/features" && featuresReturnTo ? (
+                <Link to={featuresReturnTo} className="v4-heading-home">
+                  返回功能搜索
+                  <Icon name="chevronRight" size={16} />
+                </Link>
+              ) : undefined
+            }
+          />
+        ) : (
+          <header className="v4-heading">
+            {showBreadcrumb && (
+              <div className="v4-breadcrumb">
+                <Link to={featuresReturnTo ?? back}>
+                  <Icon name="back" size={15} />
+                  返回
+                </Link>
+                <span />
+                <span>{meta[section].name}</span>
+              </div>
+            )}
+            <div className="v4-page-title">
+              <span className="v4-page-symbol">
+                <Icon name={meta[section].icon} size={28} />
+              </span>
+              <div>
+                <h1>{title}</h1>
+                {detail && <p>{detail}</p>}
+              </div>
+              {!embedded && path !== "/features" && featuresReturnTo && (
+                <Link to={featuresReturnTo} className="v4-heading-home">
+                  返回功能搜索
+                  <Icon name="chevronRight" size={16} />
+                </Link>
+              )}
+            </div>
+          </header>
+        ))}
       <div className={aside ? "v4-workspace" : undefined}>
         <div className="v4-page-content">{children}</div>
         {aside && <PageAdvice section={section} path={path} />}

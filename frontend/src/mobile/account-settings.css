@@ -8,22 +8,9 @@
   color: #231c18;
   font-family: "Noto Sans SC Variable", "PingFang SC", sans-serif;
 }
-.mobile-account-heading {
-  margin-bottom: 20px;
-}
-.mobile-account-heading > a {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  margin-left: 8px;
-  text-decoration: none;
-}
-.mobile-account-heading h1 {
-  margin: 8px 20px 0;
-  font-size: 34px;
-  line-height: 42px;
-  font-weight: 900;
+.mobile-settings-page > .settings-page-head {
+  margin-right: 20px;
+  margin-left: 20px;
 }
 .mobile-account-groups {
   display: flex;

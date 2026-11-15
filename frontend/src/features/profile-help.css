@@ -3,21 +3,6 @@
   color: #2e251e;
   min-width: 0;
 }
-.profile-page-eyebrow {
-  font-size: 12px;
-  color: #827367;
-}
-.profile-help > header h1 {
-  font-size: 32px;
-  margin: 8px 0 10px;
-  letter-spacing: -0.035em;
-}
-.profile-help > header p {
-  font-size: 14px;
-  color: #827367;
-  line-height: 1.7;
-  margin: 0 0 24px;
-}
 .profile-help button,
 .profile-help input {
   font: inherit;
@@ -354,11 +339,6 @@
   }
   .profile-help-questions summary {
     gap: 12px;
-  }
-}
-@media (max-width: 599px) {
-  .profile-help > header h1 {
-    font-size: 28px;
   }
 }
 @media (hover: hover) {

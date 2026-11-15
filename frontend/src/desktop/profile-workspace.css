@@ -200,11 +200,9 @@
 .pc-profile-workspace-content .v4-page .v4-directory-search input {
   padding-left: 39px;
 }
-.pc-profile-workspace-content .settings-home-heading h1,
 .pc-profile-workspace-content .v4-page .v4-page-title h1 {
   font-size: 30px;
 }
-.pc-profile-workspace-content .settings-home-heading p,
 .pc-profile-workspace-content .v4-page .v4-page-title p {
   font-size: 13px;
 }
@@ -319,7 +317,6 @@
   .pc-profile-workspace-content .settings-home-support .settings-home-icon {
     display: grid;
   }
-  .pc-profile-workspace-content .settings-home-heading > div,
   .pc-profile-workspace-content .feature-directory-heading,
   .pc-profile-workspace-content .pc-library-heading {
     flex-wrap: wrap;
@@ -358,7 +355,6 @@
     padding: 20px 16px;
     min-height: 350px;
   }
-  .pc-profile-workspace-content .settings-home-heading h1,
   .pc-profile-workspace-content .v4-page .v4-page-title h1 {
     font-size: 25px;
   }

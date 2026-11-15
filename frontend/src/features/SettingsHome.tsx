@@ -10,6 +10,7 @@ import { DesignIcon as Icon } from "../mobile/ui";
 import "./settings-home.css";
 import { isRetiredV2 } from "../app/retired-routes";
 import "./profile-section-nav.css";
+import SettingsPageHeader from "./SettingsPageHeader";
 
 type Setting = {
   title: string;
@@ -192,25 +193,19 @@ export default function SettingsHome({
 
   return (
     <div className="settings-home" aria-labelledby="settings-home-title">
-      <header className="settings-home-heading">
-        {!embedded && (
-          <Link className="settings-home-back" to="/me">
-            <Icon name="back" size={16} />
-            个人中心
-          </Link>
-        )}
-        <div>
-          <div>
-            <h1 id="settings-home-title">账号设置</h1>
-          </div>
-          {featuresReturnTo && (
+      <SettingsPageHeader
+        title="账号设置"
+        headingId="settings-home-title"
+        back={embedded ? undefined : "/me"}
+        action={
+          featuresReturnTo && (
             <Link className="settings-home-all" to={featuresReturnTo}>
               <Icon name="back" size={16} />
               返回功能搜索
             </Link>
-          )}
-        </div>
-      </header>
+          )
+        }
+      />
 
       <section className="settings-home-profile" aria-label="当前账号">
         <span className="settings-home-avatar" aria-hidden="true">

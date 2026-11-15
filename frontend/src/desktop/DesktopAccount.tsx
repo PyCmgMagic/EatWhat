@@ -615,7 +615,7 @@ function About({ data }: { data: boolean }) {
   return (
     <>
       <PageHead
-        title={data ? "数据存放说明" : "关于山软今天吃什么"}
+        title={data ? "数据存放说明" : "关于我们"}
         detail={data ? "了解账号信息与分享内容的保存方式。" : BRAND_SLOGAN}
         back="/settings"
         crumb="设置"

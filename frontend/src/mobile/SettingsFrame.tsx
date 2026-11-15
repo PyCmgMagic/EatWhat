@@ -1,6 +1,5 @@
 import { useEffect, type ReactNode } from "react";
-import { Link } from "react-router-dom";
-import { DesignIcon } from "./ui";
+import SettingsPageHeader from "../features/SettingsPageHeader";
 import "./account-settings.css";
 import "./settings-pages.css";
 
@@ -22,12 +21,7 @@ export default function SettingsFrame({
   }, [title]);
   return (
     <section className="mobile-settings-page mobile-account-settings">
-      <header className="mobile-account-heading">
-        <Link to={back} aria-label={backLabel}>
-          <DesignIcon name="back" size={24} />
-        </Link>
-        <h1>{title}</h1>
-      </header>
+      <SettingsPageHeader title={title} back={back} backLabel={backLabel} />
       <div
         className={list ? "mobile-settings-list" : "mobile-settings-content"}
       >

@@ -10,6 +10,7 @@ import {
 import { DesignIcon as Icon } from "../mobile/ui";
 import { PageHead, Section } from "./secondary";
 import "../features/settings-home.css";
+import "../features/settings-page-header.css";
 import "./profile.css";
 import "./route-skeleton.css";
 
@@ -37,12 +38,10 @@ function SettingsSkeleton() {
       aria-label="正在加载账号设置"
       aria-busy="true"
     >
-      <header className="settings-home-heading" aria-hidden="true">
-        <div>
-          <div>
-            <h1>账号设置</h1>
-            <p>管理你的账号，调整自己的使用习惯。</p>
-          </div>
+      <header className="settings-page-head" aria-hidden="true">
+        <div className="settings-page-head-copy">
+          <h1>账号设置</h1>
+          <p>管理账号安全、隐私偏好与站点服务。</p>
         </div>
       </header>
       <section className="settings-home-profile" aria-hidden="true">

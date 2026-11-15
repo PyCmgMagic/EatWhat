@@ -8,7 +8,13 @@
 }
 .mobile-settings-page
   .mobile-settings-content
-  :is(.pc-secondary-head, .pc-secondary-rail, .ew-head, .v4-heading) {
+  :is(
+    .pc-secondary-head,
+    .pc-secondary-rail,
+    .ew-head,
+    .v4-heading,
+    .settings-page-head
+  ) {
   display: none;
 }
 .mobile-settings-page

@@ -370,7 +370,7 @@ export function Preferences() {
     });
   if (!session)
     return (
-      <FeaturePage title="口味偏好">
+      <FeaturePage title="口味偏好" back="/settings">
         <LoginLink
           className="ew-button"
           to="/auth/password?next=%2Fsettings%2Fpreferences"
@@ -380,7 +380,7 @@ export function Preferences() {
       </FeaturePage>
     );
   return (
-    <FeaturePage title="我的口味偏好" back="/settings">
+    <FeaturePage title="口味偏好" back="/settings">
       {q.isPending || q.isError ? (
         <FeatureState
           loading={q.isPending}

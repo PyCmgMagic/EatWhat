@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { DesignIcon as Icon } from "../mobile/ui";
-import ProfileSectionNav from "./ProfileSectionNav";
+import { ProfileHelpHeader } from "./ProfileSectionNav";
 import { DishIllustration } from "../components/DishIllustration";
 import { isRetiredV2 } from "../app/retired-routes";
 import "./profile-help.css";
@@ -80,11 +80,7 @@ export default function ProfileHelp() {
   );
   return (
     <section className="profile-help">
-      <header>
-        <span className="profile-page-eyebrow">使用帮助</span>
-        <h1>帮助与反馈</h1>
-      </header>
-      <ProfileSectionNav section="help" />
+      <ProfileHelpHeader />
       <div className="profile-help-search">
         <Icon name="search" size={21} />
         <label
