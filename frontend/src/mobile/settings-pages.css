@@ -69,6 +69,33 @@
   color: #6e625b;
   font-size: 13px;
 }
+/* 关于我们：介绍型页面，标题要像标题，而不是设置项的分组标签。 */
+.mobile-settings-page
+  .mobile-settings-content
+  .about-page
+  .pc-secondary-section-title
+  h2 {
+  color: #231c18;
+  font-size: 18px;
+  font-weight: 700;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  .about-page
+  .pc-secondary-section-title
+  p {
+  margin: 4px 0 14px;
+  font-size: 13px;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  .about-page
+  .pc-secondary-prose
+  h3 {
+  margin: 20px 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
 .mobile-settings-page .mobile-settings-content p {
   margin: 8px 0 16px;
   font-size: 14px;

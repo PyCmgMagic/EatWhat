@@ -22,9 +22,10 @@ import {
 } from "../app/web-one-click";
 import "../app/web-one-click.css";
 import { FeaturePage, FeatureState } from "./Catalog";
-import { useMobile } from "../mobile/ui";
+import { DesignIcon as Icon, useMobile } from "../mobile/ui";
 import { mealOptions } from "../api/food-display";
 import "./latest.css";
+import "./preferences.css";
 import { SceneToggle } from "./SceneToggle";
 import { LocationControl } from "./LocationControl";
 import { priceBands } from "../api/v2-vocab";
@@ -417,14 +418,17 @@ function ImplicitTaste() {
   ];
   if (!q.data) return null;
   return (
-    <div className="ew-form-panel ew-implicit-taste">
-      <b>从你的点赞和收藏看出</b>
-      <p className="ew-note">
-        {names.length
-          ? `你可能偏爱：${names.join("、")}。推荐会同时参考这里和上面的设置。`
-          : "多点赞、收藏几道菜后，这里会显示推测出的口味。"}
-      </p>
-    </div>
+    <aside className="ew-prefs-note">
+      <Icon name="info" size={18} />
+      <div>
+        <b>从你的点赞和收藏看出</b>
+        <p>
+          {names.length
+            ? `你可能偏爱：${names.join("、")}。推荐会同时参考这里和上面的设置。`
+            : "多点赞、收藏几道菜后，这里会显示推测出的口味。"}
+        </p>
+      </div>
+    </aside>
   );
 }
 type V2Preferences = {
@@ -473,120 +477,284 @@ function PreferencesForm({ initial }: { initial: V2Preferences }) {
     priceBand: "",
     maxDistance: "",
   };
+  const saved = {
+    likedCategories: initial.likedCategories ?? [],
+    likedTags: initial.likedTags ?? [],
+    dislikedTags: initial.dislikedTags ?? [],
+    priceBand: initial.priceBand ?? "",
+    maxDistance: initial.maxDistance == null ? "" : String(initial.maxDistance),
+  };
+  const same = (a: string[], b: string[]) =>
+    a.length === b.length &&
+    [...a].sort().every((value, index) => value === [...b].sort()[index]);
+  const dirty =
+    !same(draft.likedCategories, saved.likedCategories) ||
+    !same(draft.likedTags, saved.likedTags) ||
+    !same(draft.dislikedTags, saved.dislikedTags) ||
+    draft.priceBand !== saved.priceBand ||
+    draft.maxDistance !== saved.maxDistance;
+  const priceChoices = [{ id: "", name: "不限" }, ...priceBands];
+  const priceName =
+    priceChoices.find((band) => band.id === draft.priceBand)?.name ?? "不限";
+  const distanceName =
+    distances.find((choice) => choice.value === draft.maxDistance)?.name ??
+    "不限";
+  const chosen =
+    draft.likedCategories.length +
+    draft.likedTags.length +
+    draft.dislikedTags.length;
+  const save = () => {
+    if (draft.likedTags.some((tag) => draft.dislikedTags.includes(tag)))
+      throw new Error("同一口味不能既喜欢又忌口。");
+    return api
+      .savePreferences({
+        likedCategories: draft.likedCategories,
+        likedTags: draft.likedTags,
+        dislikedTags: draft.dislikedTags,
+        priceBand: draft.priceBand || undefined,
+        maxDistance: draft.maxDistance ? Number(draft.maxDistance) : undefined,
+      } as never)
+      .then(() => clearDraft());
+  };
   return (
-    <div className="ew-form-panel">
-      <p>选择你的偏好，推荐会优先给你合口味的店。</p>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          task.run(async () => {
-            if (draft.likedTags.some((x) => draft.dislikedTags.includes(x)))
-              throw new Error("同一口味不能既喜欢又忌口。");
-            await api.savePreferences({
-              likedCategories: draft.likedCategories,
-              likedTags: draft.likedTags,
-              dislikedTags: draft.dislikedTags,
-              priceBand: draft.priceBand || undefined,
-              maxDistance: draft.maxDistance
-                ? Number(draft.maxDistance)
-                : undefined,
-            } as never);
-            clearDraft();
-          });
-        }}
-      >
-        <div className="ew-meals">
-          <b>喜欢的店铺分类</b>
-          {options.categories.map((c) => (
-            <label key={c}>
-              <input
-                type="checkbox"
-                checked={draft.likedCategories.includes(c)}
-                onChange={(e) => toggle("likedCategories", c, e.target.checked)}
-              />
-              {c}
-            </label>
-          ))}
-        </div>
-        <div className="ew-meals">
-          <b>喜欢的口味</b>
-          {options.tags.map((t) => (
-            <label key={t}>
-              <input
-                type="checkbox"
-                checked={draft.likedTags.includes(t)}
-                onChange={(e) => toggle("likedTags", t, e.target.checked)}
-              />
-              {t}
-            </label>
-          ))}
-        </div>
-        <div className="ew-meals">
-          <b>忌口</b>
-          {options.dislikableTags.map((t) => (
-            <label key={t}>
-              <input
-                type="checkbox"
-                checked={draft.dislikedTags.includes(t)}
-                onChange={(e) => toggle("dislikedTags", t, e.target.checked)}
-              />
-              不吃{t}
-            </label>
-          ))}
-        </div>
-        <div className="ew-meals" role="radiogroup" aria-label="人均价位">
-          <b>人均价位</b>
-          {[{ id: "", name: "不限" }, ...priceBands].map((p) => (
-            <label key={p.id}>
-              <input
-                type="radio"
-                name="preference-price"
-                checked={draft.priceBand === p.id}
-                onChange={() => setDraft((d) => ({ ...d, priceBand: p.id }))}
-              />
-              {p.name}
-            </label>
-          ))}
-        </div>
-        <div className="ew-meals" role="radiogroup" aria-label="堂食距离">
-          <b>堂食距离</b>
-          {distances.map((d) => (
-            <label key={d.value}>
-              <input
-                type="radio"
-                name="preference-distance"
-                checked={draft.maxDistance === d.value}
-                onChange={() =>
-                  setDraft((x) => ({ ...x, maxDistance: d.value }))
-                }
-              />
-              {d.name}
-            </label>
-          ))}
-        </div>
-        <div className="ew-inline">
-          <button className="ew-button" disabled={task.isPending}>
-            保存口味偏好
-          </button>
-          <button
-            className="ew-button light"
-            type="button"
-            disabled={task.isPending}
-            onClick={() =>
-              task.run(async () => {
-                await api.clearPreferences();
-                setDraft(empty);
-                clearDraft();
-              })
-            }
+    <form
+      className="ew-prefs-shell"
+      onSubmit={(event) => {
+        event.preventDefault();
+        task.run(save);
+      }}
+    >
+      <div className="ew-prefs">
+        <section className="ew-prefs-card" aria-labelledby="prefs-category">
+          <header className="ew-prefs-head">
+            <div>
+              <h2 id="prefs-category">喜欢的店铺分类</h2>
+              <p>选中的菜系，推荐店时会优先出现。</p>
+            </div>
+            <span className="ew-prefs-count">
+              {draft.likedCategories.length}
+              <small>/{options.categories.length}</small>
+            </span>
+          </header>
+          <div
+            className="ew-prefs-options"
+            role="group"
+            aria-labelledby="prefs-category"
           >
-            清空偏好
-          </button>
-        </div>
-      </form>
-    </div>
+            {options.categories.map((category) => {
+              const on = draft.likedCategories.includes(category);
+              return (
+                <label key={category} className="ew-chip">
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    onChange={(event) =>
+                      toggle("likedCategories", category, event.target.checked)
+                    }
+                  />
+                  {on && <Icon name="check" size={13} />}
+                  <span>{category}</span>
+                </label>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="ew-prefs-card" aria-labelledby="prefs-taste">
+          <header className="ew-prefs-head">
+            <div>
+              <h2 id="prefs-taste">口味与忌口</h2>
+              <p>同一个口味只能二选一：喜欢，或者不吃。</p>
+            </div>
+            <span className="ew-prefs-count">
+              {draft.likedTags.length + draft.dislikedTags.length}
+              <small>项</small>
+            </span>
+          </header>
+          <div className="ew-prefs-field is-inline">
+            <span className="ew-prefs-label">喜欢的口味</span>
+            <div
+              className="ew-prefs-options"
+              role="group"
+              aria-label="喜欢的口味"
+            >
+              {options.tags.map((tag) => {
+                const on = draft.likedTags.includes(tag);
+                return (
+                  <label key={tag} className="ew-chip">
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      onChange={(event) =>
+                        toggle("likedTags", tag, event.target.checked)
+                      }
+                    />
+                    {on && <Icon name="check" size={13} />}
+                    <span>{tag}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+          <div className="ew-prefs-field is-inline">
+            <span className="ew-prefs-label">忌口</span>
+            <div className="ew-prefs-options" role="group" aria-label="忌口">
+              {options.dislikableTags.map((tag) => {
+                const on = draft.dislikedTags.includes(tag);
+                return (
+                  <label key={tag} className="ew-chip is-avoid">
+                    <input
+                      type="checkbox"
+                      checked={on}
+                      onChange={(event) =>
+                        toggle("dislikedTags", tag, event.target.checked)
+                      }
+                    />
+                    {on && <Icon name="check" size={13} />}
+                    <span>不吃{tag}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        <section className="ew-prefs-card" aria-labelledby="prefs-range">
+          <header className="ew-prefs-head">
+            <div>
+              <h2 id="prefs-range">推荐范围</h2>
+              <p>价位和距离会直接影响推荐结果。</p>
+            </div>
+          </header>
+          <div className="ew-prefs-field is-inline">
+            <span className="ew-prefs-label">人均价位</span>
+            <div
+              className="ew-prefs-options"
+              role="radiogroup"
+              aria-label="人均价位"
+            >
+              {priceChoices.map((band) => {
+                const on = draft.priceBand === band.id;
+                return (
+                  <label key={band.id} className="ew-chip">
+                    <input
+                      type="radio"
+                      name="preference-price"
+                      checked={on}
+                      onChange={() =>
+                        setDraft((current) => ({
+                          ...current,
+                          priceBand: band.id,
+                        }))
+                      }
+                    />
+                    {on && <Icon name="check" size={13} />}
+                    <span>{band.name}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+          <div className="ew-prefs-field is-inline">
+            <span className="ew-prefs-label">堂食距离</span>
+            <div
+              className="ew-prefs-options"
+              role="radiogroup"
+              aria-label="堂食距离"
+            >
+              {distances.map((choice) => {
+                const on = draft.maxDistance === choice.value;
+                return (
+                  <label key={choice.value} className="ew-chip">
+                    <input
+                      type="radio"
+                      name="preference-distance"
+                      checked={on}
+                      onChange={() =>
+                        setDraft((current) => ({
+                          ...current,
+                          maxDistance: choice.value,
+                        }))
+                      }
+                    />
+                    {on && <Icon name="check" size={13} />}
+                    <span>{choice.name}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <aside className="ew-prefs-side">
+        <section className="ew-prefs-summary" aria-label="你的偏好概览">
+          <header>
+            <b>你的口味档案</b>
+            <span>{chosen ? `已选 ${chosen} 项` : "还没选"}</span>
+          </header>
+          <dl>
+            <div>
+              <dt>店铺分类</dt>
+              <dd>
+                {draft.likedCategories.length
+                  ? draft.likedCategories.join("、")
+                  : "未选择"}
+              </dd>
+            </div>
+            <div>
+              <dt>喜欢的口味</dt>
+              <dd>
+                {draft.likedTags.length ? draft.likedTags.join("、") : "未选择"}
+              </dd>
+            </div>
+            <div>
+              <dt>忌口</dt>
+              <dd>
+                {draft.dislikedTags.length
+                  ? draft.dislikedTags.map((tag) => `不吃${tag}`).join("、")
+                  : "未设置"}
+              </dd>
+            </div>
+            <div>
+              <dt>人均价位</dt>
+              <dd>{priceName}</dd>
+            </div>
+            <div>
+              <dt>堂食距离</dt>
+              <dd>{distanceName}</dd>
+            </div>
+          </dl>
+          <div className="ew-prefs-actions">
+            <button
+              className="ew-button"
+              type="submit"
+              disabled={task.isPending || !dirty}
+            >
+              {task.isPending ? "正在保存…" : dirty ? "保存口味偏好" : "已保存"}
+            </button>
+            <button
+              className="ew-prefs-clear"
+              type="button"
+              disabled={task.isPending}
+              onClick={() =>
+                task.run(async () => {
+                  await api.clearPreferences();
+                  setDraft(empty);
+                  clearDraft();
+                })
+              }
+            >
+              清空所有偏好
+            </button>
+          </div>
+          <p className="ew-prefs-hint">保存后立刻用于首页推荐。</p>
+        </section>
+      </aside>
+    </form>
   );
 }
+
 export function SsoStart({
   returnTo = "/settings/account",
 }: {

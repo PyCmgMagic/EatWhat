@@ -78,7 +78,12 @@ export function ShopTraitsFields({
   const options = useShopOptions();
   return (
     <fieldset className="ew-shop-traits" disabled={disabled}>
-      <div className="ew-meals" role="radiogroup" aria-label="店铺类型">
+      <div
+        className="ew-meals"
+        data-trait="kind"
+        role="radiogroup"
+        aria-label="店铺类型"
+      >
         <TraitHeading compact={compact} required>
           店铺类型
         </TraitHeading>
@@ -94,7 +99,12 @@ export function ShopTraitsFields({
           </label>
         ))}
       </div>
-      <div className="ew-meals" role="radiogroup" aria-label="人均价位">
+      <div
+        className="ew-meals"
+        data-trait="price"
+        role="radiogroup"
+        aria-label="人均价位"
+      >
         <TraitHeading compact={compact}>人均价位</TraitHeading>
         {[...priceBands, { id: "", name: "不确定" }].map((p) => (
           <label key={p.id}>
@@ -110,6 +120,7 @@ export function ShopTraitsFields({
       </div>
       <div
         className="ew-meals shop-edit-meals"
+        data-trait="meals"
         role="group"
         aria-label="营业饭点"
       >
@@ -135,7 +146,12 @@ export function ShopTraitsFields({
           </label>
         ))}
       </div>
-      <div className="ew-meals" role="group" aria-label="店铺分类">
+      <div
+        className="ew-meals"
+        data-trait="categories"
+        role="group"
+        aria-label="店铺分类"
+      >
         <TraitHeading compact={compact} note={`最多 ${MAX_SHOP_CATEGORIES} 个`}>
           店铺分类
         </TraitHeading>
@@ -158,7 +174,12 @@ export function ShopTraitsFields({
           </label>
         ))}
       </div>
-      <div className="ew-meals" role="group" aria-label="口味">
+      <div
+        className="ew-meals"
+        data-trait="tags"
+        role="group"
+        aria-label="口味"
+      >
         <TraitHeading compact={compact} note={`最多 ${MAX_SHOP_TAGS} 个`}>
           口味
         </TraitHeading>

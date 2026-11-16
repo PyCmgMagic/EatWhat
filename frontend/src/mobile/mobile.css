@@ -769,8 +769,37 @@ html[data-motion-input="keyboard"] .design-fab-surface {
   margin: 0;
   font-weight: 900;
 }
-.mobile-empty > .dish-illustration {
-  margin-bottom: 8px;
+.mobile-empty-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 156px;
+  height: 156px;
+  margin-bottom: 2px;
+}
+.mobile-empty-art::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: radial-gradient(
+    72% 72% at 50% 44%,
+    #fff7e6 0%,
+    #f9ecd1 44%,
+    rgb(249 236 209 / 0%) 74%
+  );
+}
+.mobile-empty-art > .dish-illustration {
+  position: relative;
+  --dish-illustration-size: 132px;
+  filter: drop-shadow(0 16px 24px rgb(35 28 24 / 14%));
+}
+.mobile-home-unavailable .mobile-empty-art {
+  width: 120px;
+  height: 120px;
+}
+.mobile-home-unavailable .mobile-empty-art > .dish-illustration {
+  --dish-illustration-size: 104px;
 }
 .mobile-empty p {
   font-size: 13px;
@@ -1622,6 +1651,30 @@ body:has(
   display: grid;
   place-items: center;
   font-weight: 700;
+}
+.mobile-place-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.mobile-place-picker > .ew-select {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.mobile-place-picker .ew-select > .ew-select-trigger {
+  min-height: 44px;
+  padding: 10px 14px;
+  border-color: #e9dfd1;
+  border-radius: 14px;
+  background: #fffdf8;
+  color: #231c18;
+  font-size: 14px;
+  font-weight: 600;
+}
+.mobile-place-picker .ew-select-label {
+  font-weight: 600;
 }
 .mobile-place-chip {
   height: 36px;

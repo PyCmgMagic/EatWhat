@@ -64,11 +64,6 @@ export default function MobileSettingsPages() {
       }
     >
       {content}
-      {path === "/settings/about" && (
-        <Link className="mobile-settings-feedback" to="/feedback">
-          意见反馈与建议 →
-        </Link>
-      )}
     </SettingsFrame>
   );
 }

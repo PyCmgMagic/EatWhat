@@ -1,6 +1,9 @@
 import { useSendSignal } from "../features/useSendSignal";
 import { BRAND_SLOGAN } from "../app/brand";
-import { PersonalizedRecommendation, BlockedListDialog } from "../features/ApiV2";
+import {
+  PersonalizedRecommendation,
+  BlockedListDialog,
+} from "../features/ApiV2";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -634,7 +637,7 @@ function About({ data }: { data: boolean }) {
           </Note>
         </div>
       ) : (
-        <>
+        <div className="about-page">
           <div className="pc-secondary-about">
             <div>
               <span className="pc-brand-symbol">
@@ -657,27 +660,61 @@ function About({ data }: { data: boolean }) {
             </div>
             <img src="/prototype/assets/dishes/yuntun.svg" alt="一碗鲜虾云吞" />
           </div>
-          <Section title="你的校园美食小档案">
-            <Row
-              title="分享与推荐"
-              value="记录值得一吃的菜，发现同学的私藏。"
-              to="/publish"
-              action="分享一道菜"
-            />
-            <Row
-              title="收藏与分类"
-              value="用个人标签整理收藏，想吃的时候更容易找到。"
-              to="/favorites"
-              action="我的收藏"
-            />
-            <Row
-              title="资料与隐私"
-              value="由你决定如何介绍自己，以及公开哪些关注信息。"
-              to="/data-notice"
-              action="数据说明"
-            />
+          <Section
+            title="我们在做什么"
+            detail="一个帮山软同学决定「今天吃什么」的小工具。"
+          >
+            <div className="pc-secondary-prose">
+              <h3>先定位置和饭点，再给一道菜</h3>
+              <p>
+                选好校区、饭点和堂食或外卖之后，首页会从同学们分享过的菜品里挑出今天值得吃的那一道，菜品背后的店、距离和推荐率也一起给出。
+              </p>
+              <h3>内容都来自校园里的食友</h3>
+              <p>
+                菜品、店铺、推荐率与评价都由同学自己分享和投票产生，不做广告位；发现信息不准，随时可以用纠错告诉我们。
+              </p>
+              <h3>把想吃的好味道存下来</h3>
+              <p>
+                收藏、口味偏好、浏览足迹和成长等级，让下一次决定快一点，也把吃过的好味道留成自己的小档案。
+              </p>
+            </div>
           </Section>
-        </>
+          <Section title="制作团队" detail="一群爱吃、也爱折腾的同学。">
+            <div className="pc-secondary-prose">
+              <p>
+                「山软今天吃什么」由山软的同学在课余时间一起做出来：一起选题、一起设计、一起写代码，也一起去食堂试吃。
+              </p>
+            </div>
+            <div className="pc-secondary-row">
+              <div>
+                <b>产品与设计</b>
+                <p>想清楚「每天该吃什么」这件事，也把它做得好看。</p>
+              </div>
+            </div>
+            <div className="pc-secondary-row">
+              <div>
+                <b>开发与体验</b>
+                <p>把推荐、地图和分享的细节磨到顺手。</p>
+              </div>
+            </div>
+            <div className="pc-secondary-row">
+              <div>
+                <b>内容与运营</b>
+                <p>整理校园店铺与菜品信息，处理纠错与反馈。</p>
+              </div>
+            </div>
+          </Section>
+          <div className="pc-secondary-columns about-columns">
+            <Note title="关于这份数据" icon="lock">
+              <p>账号资料、分享内容与关注关系的保存方式。</p>
+              <Link to="/data-notice">查看数据存放说明 →</Link>
+            </Note>
+            <Note title="想一起做点什么" icon="feedback">
+              <p>发现问题，或者有想法想告诉团队，都可以直接留言。</p>
+              <Link to="/feedback">前往意见反馈 →</Link>
+            </Note>
+          </div>
+        </div>
       )}
     </>
   );

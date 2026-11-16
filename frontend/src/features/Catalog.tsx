@@ -201,9 +201,12 @@ function CollectionAction({ food }: { food: Food }) {
 export function CatalogCard({
   food,
   collection = false,
+  actions,
 }: {
   food: Food;
   collection?: boolean;
+  /** 三态：undefined 保持原行为；true 展示管理操作（管理员「管理」模式）；false 只读。 */
+  actions?: boolean;
 }) {
   const v = visualFor(food, isDemo),
     src = mediaUrl(food.pictureUrl?.[0]);
@@ -240,8 +243,8 @@ export function CatalogCard({
       </Link>
       {collection ? (
         <CollectionAction food={food} />
-      ) : (
-        <FoodManage food={food} />
+      ) : actions === false ? null : (
+        <FoodManage food={food} anyone={actions === true} />
       )}
     </article>
   );

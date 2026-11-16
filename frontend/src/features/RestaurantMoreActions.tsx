@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { DesignIcon } from "../mobile/ui";
 import { shopEditPath } from "./EditRestaurant";
 import { RestaurantCorrectionDialog } from "./RestaurantCorrectionDialog";
+import { RestaurantReportDialog } from "./RestaurantReportDialog";
+import { RestaurantHistoryDialog } from "./v4/EditHistory";
 import "./restaurant-more-actions.css";
 
 export function RestaurantMoreActions({
@@ -18,6 +20,8 @@ export function RestaurantMoreActions({
   const disclosure = useRef<HTMLDetailsElement>(null);
   const trigger = useRef<HTMLElement>(null);
   const [correctionOpen, setCorrectionOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   function dismiss() {
     if (!disclosure.current?.open) return;
@@ -77,13 +81,27 @@ export function RestaurantMoreActions({
             <DesignIcon name="edit" size={18} />
             编辑店铺
           </Link>
-          <Link
-            to={`/restaurants/${id}/history`}
-            state={{ returnTo: pathname + search }}
-          >
-            <DesignIcon name="history" size={18} />
-            修改记录
-          </Link>
+          {desktop ? (
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => {
+                dismiss();
+                setHistoryOpen(true);
+              }}
+            >
+              <DesignIcon name="history" size={18} />
+              修改记录
+            </button>
+          ) : (
+            <Link
+              to={`/restaurants/${id}/history`}
+              state={{ returnTo: pathname + search }}
+            >
+              <DesignIcon name="history" size={18} />
+              修改记录
+            </Link>
+          )}
           <button
             type="button"
             aria-haspopup="dialog"
@@ -95,10 +113,17 @@ export function RestaurantMoreActions({
             <DesignIcon name="feedback" size={18} />
             信息纠错
           </button>
-          <Link to={`/reports/new?type=RESTAURANT&id=${id}`}>
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => {
+              dismiss();
+              setReportOpen(true);
+            }}
+          >
             <DesignIcon name="report" size={18} />
             举报店铺
-          </Link>
+          </button>
         </div>
       </details>
       {correctionOpen && (
@@ -106,6 +131,20 @@ export function RestaurantMoreActions({
           restaurantId={id}
           restaurantName={name}
           onClose={() => setCorrectionOpen(false)}
+        />
+      )}
+      {reportOpen && (
+        <RestaurantReportDialog
+          restaurantId={id}
+          restaurantName={name}
+          onClose={() => setReportOpen(false)}
+        />
+      )}
+      {historyOpen && (
+        <RestaurantHistoryDialog
+          id={id}
+          name={name}
+          onClose={() => setHistoryOpen(false)}
         />
       )}
     </>

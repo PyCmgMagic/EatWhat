@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 import { UserTitle } from "../../components/UserTitle";
 import { userTitle } from "../../api/growth";
 import {
@@ -53,6 +59,15 @@ const validPage = (raw: string | null) => {
   return Number.isSafeInteger(n) && n > 0 ? n : 1;
 };
 const commentsHref = (foodId: number) => `/comments?foodId=${foodId}`;
+/**
+ * A tapped tab keeps focus, and the browser's focus ring then hugs the 44px tap
+ * target while the selected state only draws a 2px underline — together they read
+ * as a stray box around the label. Pointer activations drop focus (keyboard ones
+ * report detail === 0 and keep it, so the ring still works for Tab users).
+ */
+const dropPointerFocus = (event: MouseEvent<HTMLButtonElement>) => {
+  if (event.detail > 0) event.currentTarget.blur();
+};
 function discussionScroll(behavior: ScrollBehavior = "smooth") {
   document.getElementById("food-discussion")?.scrollIntoView({
     block: "start",
@@ -264,6 +279,7 @@ function Like({ comment }: { comment: CommentView }) {
     },
   );
   const liked = q.data?.liked === true;
+  const likes = q.data?.likesCount ?? comment.likesCount;
   return (
     <div ref={ref} className="comments-like">
       <button
@@ -277,7 +293,9 @@ function Like({ comment }: { comment: CommentView }) {
       >
         <Icon name={liked ? "heartOn" : "heart"} size={18} />
         <span>有用</span>
-        <b>{q.data?.likesCount ?? comment.likesCount ?? "—"}</b>
+        {likes != null && likes > 0 && (
+          <b className="comments-like-count">{likes}</b>
+        )}
       </button>
       {q.isError && (
         <button
@@ -766,13 +784,19 @@ export function FoodDiscussion({
         <div className="comments-tabs" aria-label="讨论内容">
           <button
             aria-pressed={!gallery}
-            onClick={() => change({ view: null, commentPage: null })}
+            onClick={(event) => {
+              dropPointerFocus(event);
+              change({ view: null, commentPage: null });
+            }}
           >
             评论
           </button>
           <button
             aria-pressed={gallery}
-            onClick={() => change({ view: "gallery", commentPage: null })}
+            onClick={(event) => {
+              dropPointerFocus(event);
+              change({ view: "gallery", commentPage: null });
+            }}
           >
             晒图
           </button>
@@ -794,7 +818,10 @@ export function FoodDiscussion({
                   <button
                     key={value}
                     aria-pressed={sort === value}
-                    onClick={() => change({ sort: value, commentPage: null })}
+                    onClick={(event) => {
+                      dropPointerFocus(event);
+                      change({ sort: value, commentPage: null });
+                    }}
                   >
                     {label}
                   </button>
@@ -933,22 +960,23 @@ export function FoodCommentPreview({ foodId }: { foodId: number }) {
         <p className="comments-muted">{commentError(q.error)}</p>
       ) : q.data?.items?.length ? (
         q.data.items.map((row) => (
-          <Link
-            className="comments-preview-row"
-            key={row.id}
-            to={commentsHref(foodId)}
-          >
-            <span className="comments-avatar">
-              {Array.from(row.authorName || "匿名用户")[0]}
-            </span>
-            <span>
-              <strong>
-                {row.authorName || "匿名用户"}
-                <UserTitle title={userTitle({ title: row.authorTitle })} />
-              </strong>
-              <span>{row.text}</span>
-            </span>
-          </Link>
+          <div className="comments-preview-row" key={row.id}>
+            <Link className="comments-preview-main" to={commentsHref(foodId)}>
+              <span className="comments-avatar">
+                {Array.from(row.authorName || "匿名用户")[0]}
+              </span>
+              <span className="comments-preview-body">
+                <strong>
+                  {row.authorName || "匿名用户"}
+                  <UserTitle title={userTitle({ title: row.authorTitle })} />
+                </strong>
+                <span>{row.text}</span>
+              </span>
+            </Link>
+            <div className="comments-preview-actions">
+              <Like comment={row} />
+            </div>
+          </div>
         ))
       ) : (
         <Link className="comments-preview-empty" to={commentsHref(foodId)}>

@@ -155,8 +155,24 @@
     margin-top: 0;
     width: 100%;
   }
+  .growth-summary {
+    gap: 16px;
+  }
   .growth-dish {
-    --dish-illustration-size: 88px;
+    --dish-illustration-size: 92px;
+  }
+  .v4-page .growth-summary .growth-level h2 {
+    font-size: 34px;
+  }
+  .growth-track {
+    margin: 10px 0 6px;
+  }
+  .growth-rules {
+    margin-top: 16px;
+    padding-top: 12px;
+  }
+  .growth-ledger li {
+    padding: 15px 0;
   }
   .growth-stats {
     grid-template-columns: 1fr;
@@ -279,4 +295,12 @@
   margin-bottom: 16px;
   padding-bottom: 14px;
   border-bottom: 1px solid #f0e9e2;
+}
+
+/* 桌面端成长页只有一个卡片，别被拉到 1000px+ 宽，读起来更稳。 */
+@media (min-width: 1000px) {
+  .pc-profile-space-content .v4-page:has(.growth-summary) {
+    max-width: 860px;
+    margin-inline: auto;
+  }
 }

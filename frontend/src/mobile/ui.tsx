@@ -283,7 +283,9 @@ export function MobileEmpty({
   return (
     <div className="mobile-empty">
       {illustration ? (
-        <DishIllustration name={illustration} />
+        <span className="mobile-empty-art">
+          <DishIllustration name={illustration} />
+        </span>
       ) : (
         <DesignIcon name="bowl" size={32} />
       )}

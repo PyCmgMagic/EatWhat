@@ -4,6 +4,7 @@ import { useApp } from "../../app/state";
 import { RestaurantActions } from "./Community";
 import { Card, QueryView } from "./shared";
 import { EditHistory } from "./EditHistory";
+import { MobileShopFeedback } from "./MobileShopFeedback";
 export function FoodExtras({
   id,
   inline = false,
@@ -73,7 +74,7 @@ export default function DetailExtras({
         tabIndex={-1}
       >
         <h2>店铺评价与反馈</h2>
-        <RestaurantActions id={id} hideFavorite hideMaintenance />
+        <MobileShopFeedback id={id} />
       </section>
     );
   return (

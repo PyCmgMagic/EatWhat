@@ -3,6 +3,7 @@ import { useFeedbackState } from "../components/feedback";
 import { BRAND_SLOGAN } from "../app/brand";
 import { unreadCount } from "../api/notifications";
 import { DishIllustration } from "../components/DishIllustration";
+import { Select } from "../components/Select";
 import {
   useRemoteConfig,
   recommendationBatchSize,
@@ -1943,6 +1944,7 @@ export function useDesignBridge(
                 <MobileEmpty
                   title="暂时没有推荐"
                   detail="换个饭点或地点，也可以逛逛附近。"
+                  illustration="yuntun"
                   action={
                     <button
                       className="mobile-inline-link"
@@ -2001,6 +2003,7 @@ export function useDesignBridge(
                 <MobileEmpty
                   title={category ? "这个分类还没有推荐" : "暂时没有推荐"}
                   detail="换个分类或饭点，也可以逛逛附近。"
+                  illustration="yuntun"
                   action={
                     <button
                       className="mobile-inline-link"
@@ -2724,11 +2727,12 @@ export function useDesignBridge(
       if (tag === "header" && id === 4)
         return (
           <header {...p}>
-            {view.children[0]}
+            {/* 后台入口排在第一位，其次是编辑资料、设置。 */}
             <WorkspaceSwitch
               className="mobile-profile-admin-link"
               iconSize={24}
             />
+            {view.children[0]}
             {view.children[1]}
           </header>
         );
@@ -3069,27 +3073,33 @@ export function useDesignBridge(
       n.attrs["aria-label"] === "校区"
     )
       return (
-        <div {...p} role="group" aria-label="推荐校区与附近区域">
-          <div role="radiogroup" aria-label="推荐校区">
+        <div
+          className="mobile-place-picker"
+          role="group"
+          aria-label="推荐校区与附近区域"
+        >
+          <Select
+            aria-label="推荐校区"
+            value={campusId ? String(campusId) : ""}
+            disabled={busy}
+            onChange={(event) => {
+              const next = Number(event.currentTarget.value);
+              if (Number.isFinite(next) && next > 0) selectCampus(next);
+            }}
+          >
+            {!campusList.data && (
+              <option value="" disabled={campusList.isError}>
+                {campusList.isError ? "校区暂时加载失败" : "正在加载校区…"}
+              </option>
+            )}
             {campusList.data
-              ?.filter((c) => c.open !== false)
+              ?.filter((c) => c.open !== false && c.id != null)
               .map((c) => (
-                <button
-                  key={c.id}
-                  role="radio"
-                  aria-checked={campusId === c.id}
-                  className="mobile-place-chip"
-                  style={
-                    campusId === c.id
-                      ? { background: "#231c18", color: "white" }
-                      : undefined
-                  }
-                  onClick={() => selectCampus(c.id!)}
-                >
+                <option key={c.id} value={String(c.id)}>
                   {c.name}
-                </button>
+                </option>
               ))}
-          </div>
+          </Select>
           {hubs.data?.items?.map((h) => (
             <button
               key={h.id}

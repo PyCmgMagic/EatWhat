@@ -50,6 +50,8 @@
 }
 .comments-tabs button,
 .comments-sort button {
+  appearance: none;
+  -webkit-appearance: none;
   background: none;
   border: 0;
   border-radius: 0;
@@ -58,6 +60,23 @@
   min-height: 44px;
   padding: 8px 0;
   cursor: pointer;
+}
+/*
+ * Tapping a tab leaves it focused, and some browsers then draw their own focus
+ * rectangle around the 44px tap target — it reads as a stray border around the
+ * underlined label. Pointer users get no ring; keyboard users get a rounded one
+ * that follows the tab shape instead of the square box.
+ */
+.comments-tabs button:focus:not(:focus-visible),
+.comments-sort button:focus:not(:focus-visible) {
+  outline: none;
+}
+.comments-tabs button:focus-visible,
+.comments-sort button:focus-visible {
+  border-radius: 10px;
+  background: #f1ebe5;
+  outline: 2px solid #a8978a;
+  outline-offset: -2px;
 }
 .comments-tabs button[aria-pressed="true"],
 .comments-sort button[aria-pressed="true"] {
@@ -190,10 +209,25 @@
 .comments-actions button[aria-pressed="true"] {
   color: #a8321c;
 }
-.comments-actions button b {
+.comments-like-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 21px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #f1ebe5;
+  color: #6e625b;
   font:
-    700 14px "Bricolage Grotesque Variable",
+    700 11px "Bricolage Grotesque Variable",
     sans-serif;
+  line-height: 1;
+}
+.comments-actions button[aria-pressed="true"] .comments-like-count,
+.comments-preview-actions button[aria-pressed="true"] .comments-like-count {
+  background: #fdeee8;
+  color: #a8321c;
 }
 .comments-actions button:disabled {
   cursor: default;
@@ -677,11 +711,20 @@
   display: flex;
   gap: 10px;
   padding: 14px 0;
-  text-decoration: none;
   color: #231c18;
   align-items: flex-start;
+  justify-content: space-between;
 }
-.comments-preview-row > span:last-child {
+.comments-preview-main {
+  display: flex;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+  align-items: flex-start;
+}
+.comments-preview-body {
   min-width: 0;
   display: grid;
   gap: 6px;
@@ -689,13 +732,49 @@
 .comments-preview-row strong {
   font-size: 13px;
 }
-.comments-preview-row > span > span {
+.comments-preview-body > span {
   font-size: 14px;
   line-height: 1.8;
   overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+.comments-preview-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding-top: 1px;
+}
+.comments-preview-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 4px 9px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: #6e625b;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 140ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.comments-preview-actions button:hover {
+  background: #f7f2ee;
+}
+.comments-preview-actions button[aria-pressed="true"] {
+  color: #a8321c;
+}
+.comments-preview-actions button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.comments-preview-actions button:focus-visible {
+  outline: 2px solid #be8d27;
+  outline-offset: 1px;
 }
 .comments-preview-empty {
   display: flex;

@@ -1,0 +1,307 @@
+/* 食友主页：复用「我的」个人中心的介绍卡/内容卡语言，让别人的主页和我的主页看起来是同一个页面。 */
+.pc-friend-space {
+  --profile-stage: #e8e1d8;
+  --profile-on: #231c18;
+  --profile-ghost: rgb(35 28 24 / 10%);
+}
+
+.pc-friend-space > .profile-overview-hero {
+  margin-bottom: 0;
+}
+
+.pc-friend-space .profile-overview-sheet {
+  margin-bottom: 40px;
+}
+
+.pc-friend-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* The friend page has no profile tab bar, so the hero scrolls away with the
+   sheet instead of sticking under the header. */
+.pc-friend-space > .profile-overview-hero {
+  position: relative;
+  top: auto;
+}
+
+/* Two action pills sit at the hero's top-right, so drop the cover slightly to
+   keep it clear of them. */
+.pc-friend-space .profile-overview-cover {
+  top: 96px;
+}
+
+.pc-friend-space .pc-friend-follow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: 14px;
+  background: #2e251e;
+  color: #fffdf8;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 12px 26px rgb(35 28 24 / 18%);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.pc-friend-space .pc-friend-follow:hover {
+  background: #1b1511;
+}
+
+.pc-friend-space .pc-friend-follow:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.pc-friend-space .pc-friend-follow.is-following {
+  border-color: rgb(255 255 255 / 52%);
+  background: rgb(255 253 248 / 82%);
+  color: #2e251e;
+  box-shadow: none;
+  backdrop-filter: blur(12px);
+}
+
+.pc-friend-space .pc-friend-follow.is-following:hover {
+  background: #fffdf8;
+}
+
+/* 屏蔽入口在介绍卡上是配角：白色半透明，别和关注按钮抢注意力。 */
+.pc-friend-actions .ew-v2-block-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pc-friend-space .pc-friend-actions .ew-v2-block-control .ew-button {
+  min-height: 44px;
+  padding: 0 15px;
+  border: 1px solid rgb(255 255 255 / 52%);
+  border-radius: 14px;
+  background: rgb(255 253 248 / 62%);
+  color: #2e251e;
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+  backdrop-filter: blur(12px);
+}
+
+.pc-friend-space .pc-friend-actions .ew-v2-block-control .ew-button:hover {
+  background: rgb(255 253 248 / 88%);
+}
+
+.pc-friend-space
+  .pc-friend-actions
+  .ew-v2-block-control
+  > button:not(.ew-button) {
+  color: #2e251e;
+  font-size: 12px;
+}
+
+.pc-friend-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.pc-friend-following-me {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 64%);
+  color: #2e251e;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.pc-friend-space .profile-overview-cover {
+  display: grid;
+  place-items: center;
+  background: rgb(255 255 255 / 26%);
+}
+
+.pc-friend-space .profile-overview-cover > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pc-friend-space .profile-overview-cover > .design-icon {
+  color: rgb(255 255 255 / 78%);
+}
+
+.pc-friend-locked {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  opacity: 0.72;
+}
+
+.pc-friend-relations {
+  display: grid;
+  gap: 10px;
+}
+
+.pc-friend-relation {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 12px 16px;
+  border: 1px solid var(--overview-line, #efe7de);
+  border-radius: 18px;
+  background: #fff;
+  color: var(--overview-ink, #231c18) !important;
+  font-size: 14px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.pc-friend-relation:hover {
+  border-color: #dfd2c2;
+  box-shadow: 0 10px 24px rgb(52 39 28 / 7%);
+}
+
+.pc-friend-relation .design-icon:first-child {
+  color: #86735f;
+}
+
+.pc-friend-relation > span {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pc-friend-relation b {
+  font-size: 20px;
+  font-weight: 780;
+  font-variant-numeric: tabular-nums;
+}
+
+.pc-friend-relation small {
+  color: var(--overview-muted, #827367);
+  font-size: 12px;
+}
+
+.pc-friend-relation .design-icon:last-child {
+  margin-left: auto;
+  color: #b6a695;
+}
+
+.pc-friend-relation.is-locked {
+  background: #faf7f3;
+  cursor: default;
+}
+
+.pc-friend-relation.is-locked:hover {
+  border-color: var(--overview-line, #efe7de);
+  box-shadow: none;
+}
+
+.pc-friend-record {
+  margin: 18px 0 0;
+  color: var(--overview-muted, #827367);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.pc-friend-shares {
+  margin-top: 8px;
+  padding: 28px 32px 32px;
+  border-top: 1px solid var(--overview-line, #efe7de);
+}
+
+/* 全部分享沿用现有的 UserFoods 组件，去掉它自带的页面级卡片外壳。 */
+.pc-friend-shares .ew-feature.ew-v2-foods {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.pc-friend-shares .ew-v2-filter {
+  margin-bottom: 18px;
+}
+
+.pc-friend-shares .ew-note {
+  margin: 0 0 14px;
+}
+
+.pc-friend-error {
+  margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .pc-friend-shares {
+    padding: 24px 22px 26px;
+  }
+}
+
+@media (max-width: 700px) {
+  .pc-friend-space .profile-overview-sheet {
+    margin-inline: 10px;
+    margin-bottom: 28px;
+  }
+
+  .pc-friend-shares {
+    padding: 22px 18px 24px;
+  }
+
+  .pc-friend-actions {
+    gap: 8px;
+  }
+
+  .pc-friend-follow,
+  .pc-friend-actions .ew-v2-block-control .ew-button {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 12px;
+  }
+}
+
+/* 管理员在别人主页开启「管理」后才暴露编辑/删除，默认关闭。 */
+.pc-friend-space .pc-friend-actions .pc-friend-manage {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px dashed rgb(255 255 255 / 34%);
+  border-radius: 14px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pc-friend-space .pc-friend-actions .pc-friend-manage:hover {
+  background: rgb(255 255 255 / 10%);
+}
+.pc-friend-space .pc-friend-actions .pc-friend-manage.is-on {
+  border-style: solid;
+  border-color: #2e251e;
+  background: #2e251e;
+  color: #fffdf8;
+}

@@ -121,6 +121,26 @@ export function FoodEditHistoryDialog({
   );
 }
 
+/** Shop history as a dialog, so the PC menu does not leave the shop page. */
+export function RestaurantHistoryDialog({
+  id,
+  name,
+  onClose,
+}: {
+  id: number;
+  name?: string | null;
+  onClose: () => void;
+}) {
+  return (
+    <Modal title="修改记录" className="shop-history-modal" onClose={onClose}>
+      <div className="edit-history food-history-content">
+        {name && <p className="shop-history-name">{name}</p>}
+        <RevisionList kind="restaurant" id={id} />
+      </div>
+    </Modal>
+  );
+}
+
 export function RestaurantEditHistory({ id }: { id: number }) {
   const { api } = useApp();
   const location = useLocation();

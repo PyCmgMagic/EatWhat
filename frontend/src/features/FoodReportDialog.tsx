@@ -5,6 +5,7 @@ import { useSessionDraft } from "../app/drafts";
 import type { Schema } from "../api/models";
 import { Modal } from "../components/ui";
 import { useCommand } from "./v4/shared";
+import { ReportReasonField } from "./ReportReasonField";
 import "./food-report.css";
 
 const reportReasons = [
@@ -25,7 +26,6 @@ export function FoodReportDialog({
 }) {
   const app = useApp(),
     task = useCommand(),
-    reasonId = useId(),
     noteId = useId();
   const draftKey = `feedback:${app.user?.id}:report:FOOD:${foodId}`;
   const [draft, setDraft, clearDraft] = useSessionDraft(draftKey, {
@@ -72,26 +72,13 @@ export function FoodReportDialog({
         }}
       >
         <fieldset disabled={task.busy || task.uncertain}>
-          <label className="food-report-field" htmlFor={reasonId}>
-            <span>问题类型</span>
-            <select
-              id={reasonId}
-              className="field"
-              value={draft.reason}
-              onChange={(event) =>
-                setDraft((current) => ({
-                  ...current,
-                  reason: event.target.value,
-                }))
-              }
-            >
-              {reportReasons.map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <ReportReasonField
+            value={draft.reason}
+            options={reportReasons}
+            onChange={(reason) =>
+              setDraft((current) => ({ ...current, reason }))
+            }
+          />
           <label className="food-report-field" htmlFor={noteId}>
             <span>补充说明（可选）</span>
             <textarea

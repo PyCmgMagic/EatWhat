@@ -202,3 +202,17 @@
   color: #76695e;
   font-size: 12px;
 }
+
+/* Shop history in a dialog: the PC menu opens it in place. */
+.shop-history-modal {
+  width: min(560px, calc(100vw - 32px));
+}
+.shop-history-modal .modal-pad {
+  padding: 24px;
+}
+.shop-history-name {
+  margin: 0 0 12px;
+  color: #6e625b;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}

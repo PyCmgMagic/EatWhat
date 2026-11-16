@@ -32,6 +32,7 @@ import {
 } from "../app/drafts";
 import { FeaturePage, FeatureState } from "./Catalog";
 import "./latest.css";
+import "./edit-food.css";
 import { AiTagSuggest, draftPictureKeys } from "./AiTagSuggest";
 
 export function EditFood() {
@@ -189,7 +190,7 @@ function EditForm({
   }, [dirty]);
   return (
     <form
-      className="ew-edit-form ew-form-panel"
+      className="ew-edit ew-edit-form"
       onSubmit={async (e) => {
         e.preventDefault();
         if (locked.current || uncertain) return;
@@ -283,8 +284,9 @@ function EditForm({
     >
       <fieldset disabled={busy || uncertain}>
         <div className="ew-edit-columns">
-          <section>
-            <FoodPhotoPicker
+          <section className="ew-edit-col">
+            <div className="ew-edit-card" data-card="photos">
+              <FoodPhotoPicker
               photos={photos}
               disabled={busy || uncertain}
               onAdd={(files) => {
@@ -342,8 +344,36 @@ function EditForm({
                 ))}
               </Select>
             </label>
+            </div>
+            <div className="ew-edit-card" data-card="menu">
+              <header className="ew-edit-head">
+                <h2>菜单属性</h2>
+              </header>
+              <div className="ew-meals">
+                <b>招牌菜</b>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={signature}
+                    onChange={(e) =>
+                      updateFields({ signature: e.target.checked })
+                    }
+                  />
+                  这是这家店的招牌
+                </label>
+              </div>
+              <DishAvailabilityFields
+                value={serving}
+                disabled={busy || uncertain}
+                onChange={(serving) => updateFields({ serving })}
+              />
+            </div>
           </section>
-          <section>
+          <section className="ew-edit-col">
+            <div className="ew-edit-card" data-card="basic">
+              <header className="ew-edit-head">
+                <h2>基本信息</h2>
+              </header>
             <label>
               菜品名称
               <input
@@ -391,6 +421,11 @@ function EditForm({
                 onChange={(e) => setDescription(e.target.value)}
               />
             </label>
+            </div>
+            <div className="ew-edit-card" data-card="tags">
+              <header className="ew-edit-head">
+                <h2>口味与标签</h2>
+              </header>
             <div className="ew-meals">
               <b>口味标签（最多 {MAX_DISH_TAGS} 个）</b>
               {tasteTags.map((tag) => (
@@ -446,24 +481,7 @@ function EditForm({
                 })
               }
             />
-            <div className="ew-meals">
-              <b>招牌菜</b>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={signature}
-                  onChange={(e) =>
-                    updateFields({ signature: e.target.checked })
-                  }
-                />
-                这是这家店的招牌
-              </label>
             </div>
-            <DishAvailabilityFields
-              value={serving}
-              disabled={busy || uncertain}
-              onChange={(serving) => updateFields({ serving })}
-            />
           </section>
         </div>
       </fieldset>
@@ -473,7 +491,7 @@ function EditForm({
       {uncertain && (
         <p className="ew-error">保存结果尚未确认，请返回详情核实后再继续。</p>
       )}
-      <footer className="ew-inline">
+      <footer className="ew-edit-footer">
         <Link to={back}>
           {back.split("?")[0] === `/foods/${food.id}`
             ? "返回菜品详情"

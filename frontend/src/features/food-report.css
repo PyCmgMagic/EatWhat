@@ -1,14 +1,18 @@
 .food-report-modal {
-  width: min(560px, calc(100vw - 40px));
+  width: min(520px, calc(100vw - 32px));
 }
 .food-report-modal .modal-pad {
-  padding: 32px;
+  padding: 24px;
 }
-.food-report-description {
-  margin: 0 0 24px;
+/* These dialogs render inline in the page (the shop menu sits inside the
+   restaurant hero), so page-level `p` rules would otherwise reshape the
+   description into a flex row. Keep the dialog's own type scale. */
+.food-report-modal.modal .food-report-description {
+  display: block;
+  margin: 0 0 20px;
   color: #716458;
   font-size: 13px;
-  line-height: 1.8;
+  line-height: 1.75;
 }
 .food-report-description strong {
   color: #392f28;
@@ -16,7 +20,7 @@
 }
 .food-report-form fieldset {
   display: grid;
-  gap: 18px;
+  gap: 16px;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -48,6 +52,21 @@
   resize: vertical;
   line-height: 1.7;
 }
+/* The reason picker uses the app Select so the popup matches the rest of the
+   product instead of a native OS menu. */
+.food-report-form .ew-select > .ew-select-trigger {
+  min-height: 48px;
+  padding: 12px 14px;
+  border-color: #e9e0d8;
+  border-radius: 12px;
+  background: #faf7f4;
+  box-shadow: none;
+  font-size: 14px;
+}
+.food-report-form .ew-select > .ew-select-trigger:hover:not(:disabled) {
+  border-color: #c9bca8;
+  background: #fffdf8;
+}
 .food-report-meta {
   display: flex;
   align-items: center;
@@ -76,9 +95,10 @@
     width: calc(100vw - 24px);
   }
   .food-report-modal .modal-pad {
-    padding: 28px 20px 20px;
+    padding: 22px 18px 18px;
   }
-  .food-report-form :is(select, textarea) {
+  .food-report-form :is(select, textarea),
+  .food-report-form .ew-select > .ew-select-trigger {
     font-size: 16px;
   }
   .food-report-form .modal-actions .btn {

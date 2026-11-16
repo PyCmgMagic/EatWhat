@@ -440,3 +440,106 @@
     transition: none;
   }
 }
+
+/* 管理员在别人主页的「管理」开关：默认关闭，开启后卡片上出现编辑/删除。 */
+.mobile-user-more .mobile-user-manage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.mobile-user-more .mobile-user-manage:hover {
+  background: color-mix(in oklab, var(--ink) 6%, transparent);
+}
+.mobile-user-manage-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.mobile-user-manage-text em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+.mobile-user-switch {
+  flex: none;
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--ink) 16%, transparent);
+  transition: background 160ms ease;
+}
+.mobile-user-switch i {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: 0 1px 3px rgb(35 28 24 / 28%);
+  transition: translate 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.mobile-user-switch[data-on="true"] {
+  background: #2e251e;
+}
+.mobile-user-switch[data-on="true"] i {
+  translate: 18px 0;
+  background: #fffdf8;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-user-switch,
+  .mobile-user-switch i {
+    transition: none;
+  }
+}
+/* 菜单里的「屏蔽」和「管理」排成同一种行式样式，不要出现浅色药丸。 */
+.mobile-user-more .ew-v2-block-control .ew-button.light,
+.mobile-user-more .ew-v2-block-control .ew-button.light:hover {
+  justify-content: flex-start;
+  min-height: 48px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink);
+}
+.mobile-user-more .ew-v2-block-control .ew-button.light:hover {
+  background: color-mix(in oklab, var(--ink) 6%, transparent);
+}
+/* 「上传」标题旁的「管理中」徽章：提醒当前处于管理员管理模式，点一下退出。 */
+.mobile-user-foods-heading h2 .mobile-user-manage-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 3px 8px;
+  border: 0;
+  border-radius: 999px;
+  background: #2e251e;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  vertical-align: 2px;
+  cursor: pointer;
+}
+.mobile-user-foods-heading h2 .mobile-user-manage-badge > span {
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0.7;
+}

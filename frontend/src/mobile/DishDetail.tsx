@@ -1,6 +1,12 @@
 import { foodAuthor } from "../api/models";
 import { FoodCover } from "../components/FoodCover";
-import type { CSSProperties, ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { Link } from "react-router-dom";
 import {
   categories,
@@ -56,6 +62,43 @@ export default function DishDetail({
   const visual = visualFor(food, demo),
     src = mediaUrl(food.pictureUrl?.[0]);
   const renewImage = useFoodImageRefresh();
+  // Liking answers the tap immediately (filled heart, +1) and reconciles with
+  // the server value; the celebration only fires on the false → true edge.
+  const serverLiked = food.isLiked === true,
+    [pendingLike, setPendingLike] = useState<boolean | null>(null),
+    liked = pendingLike ?? serverLiked,
+    [celebrating, setCelebrating] = useState(false),
+    wasLiked = useRef(serverLiked);
+  const likesCount =
+    (food.likesCount ?? 0) +
+    (pendingLike === null || pendingLike === serverLiked
+      ? 0
+      : serverLiked
+        ? -1
+        : 1);
+  useEffect(() => {
+    if (pendingLike === null) return;
+    if (pendingLike === serverLiked) {
+      setPendingLike(null);
+      return;
+    }
+    // The request never came back: fall back to the server value.
+    const timer = window.setTimeout(() => setPendingLike(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [pendingLike, serverLiked]);
+  useEffect(() => {
+    const justLiked = liked && !wasLiked.current;
+    wasLiked.current = liked;
+    if (!justLiked) return;
+    setCelebrating(true);
+    const timer = window.setTimeout(() => setCelebrating(false), 520);
+    return () => window.clearTimeout(timer);
+  }, [liked]);
+  const likeNow = () => {
+    if (pendingLike !== null) return;
+    setPendingLike(!liked);
+    onLike();
+  };
   const restaurantId = parseId(String(food.restaurantId));
   const authorId = foodAuthor(food).id;
   const tags = food.systemTags ?? [];
@@ -185,15 +228,17 @@ export default function DishDetail({
         <div className="dish-actions">
           <button
             type="button"
-            className="dish-like"
-            aria-label={food.isLiked ? "取消喜欢这道菜" : "喜欢这道菜"}
-            aria-pressed={food.isLiked === true}
+            className={`dish-like${celebrating ? " is-celebrating" : ""}`}
+            aria-label={liked ? "取消喜欢这道菜" : "喜欢这道菜"}
+            aria-pressed={liked}
             disabled={likeDisabled}
-            onClick={onLike}
+            onClick={likeNow}
           >
-            <DesignIcon name={food.isLiked ? "heartOn" : "heart"} size={20} />
-            <span>{food.isLiked ? "已喜欢" : "喜欢"}</span>
-            <b>{food.likesCount ?? "—"}</b>
+            <span className="dish-like-icon" aria-hidden>
+              <DesignIcon name={liked ? "heartOn" : "heart"} size={20} />
+            </span>
+            <span>{liked ? "已喜欢" : "喜欢"}</span>
+            <b>{food.likesCount == null ? "—" : likesCount}</b>
           </button>
           {restaurantId ? (
             <Link

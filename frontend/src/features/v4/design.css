@@ -260,6 +260,102 @@
   min-height: 44px;
   box-sizing: border-box;
 }
+/* 单选/复选做成可点的选项块，别再露出系统原生控件。 */
+.v4-page .v4-check {
+  gap: 12px;
+  padding: 13px 15px;
+  border: 1px solid #efe3d3;
+  background: #fffdf8;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease-out,
+    background-color 0.16s ease-out,
+    box-shadow 0.16s ease-out;
+}
+.v4-page .v4-check:hover {
+  border-color: #e0cdb6;
+  background: #fff;
+}
+.v4-page .v4-check:has(input:checked) {
+  border-color: #231c18;
+  background: #fffdf8;
+  box-shadow: 0 12px 26px -22px rgb(35 28 24 / 70%);
+}
+.v4-page .v4-check:has(input:focus-visible) {
+  outline: 2px solid #231c18;
+  outline-offset: 2px;
+}
+.v4-page .v4-check input[type="checkbox"],
+.v4-page .v4-check input[type="radio"] {
+  appearance: none;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  border: 1.5px solid #cbb7a1;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease-out,
+    background-color 0.16s ease-out;
+}
+.v4-page .v4-check input[type="checkbox"] {
+  border-radius: 6px;
+}
+.v4-page .v4-check input[type="radio"] {
+  border-radius: 999px;
+}
+.v4-page .v4-check input:checked {
+  border-color: #231c18;
+  background: #231c18;
+}
+.v4-page .v4-check input[type="checkbox"]:checked::after {
+  content: "";
+  width: 10px;
+  height: 5px;
+  border-left: 2px solid #ffce47;
+  border-bottom: 2px solid #ffce47;
+  transform: rotate(-45deg) translate(0, -1px);
+}
+.v4-page .v4-check input[type="radio"]:checked::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #ffce47;
+}
+@media (prefers-reduced-motion: reduce) {
+  .v4-page .v4-check,
+  .v4-page .v4-check input {
+    transition: none;
+  }
+}
+/* 文件选择：给一个虚线投放区，别只露一个裸按钮。 */
+.v4-page input[type="file"]:not([type="checkbox"]):not([type="radio"]) {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px dashed #ddcdb9;
+  border-radius: 16px;
+  background: #fffdf8;
+  color: #6e625b;
+  font-size: 13px;
+}
+.v4-page input[type="file"]:not([type="checkbox"]):not([type="radio"]):hover {
+  border-color: #cdb595;
+}
+.v4-page input[type="file"]::file-selector-button {
+  background: #231c18;
+  border: 0;
+  border-radius: 12px;
+  padding: 8px 14px;
+  color: #fffdf8;
+  font: inherit;
+  font-weight: 600;
+  margin-right: 12px;
+  cursor: pointer;
+}
 .v4-page button,
 .v4-page .v4-button {
   font-size: 13px;
@@ -1044,6 +1140,24 @@
   .v4-page {
     padding: 18px 16px 35px;
   }
+  /* 移动端外壳已经留了 18px 的出血，页面内再叠一层会变成 34px 的双重边距。 */
+  .ew-mobile-feature > .v4-page {
+    padding: 6px 0 26px;
+  }
+  .ew-mobile-feature > .v4-page .v4-breadcrumb {
+    margin-bottom: 12px;
+  }
+  .ew-mobile-feature > .v4-page .v4-heading {
+    margin-bottom: 18px;
+  }
+  .ew-mobile-feature > .v4-page .v4-page-title h1 {
+    font-size: 24px;
+  }
+  .ew-mobile-feature > .v4-page .v4-card {
+    padding: 20px;
+    border-radius: 22px;
+    margin-bottom: 14px;
+  }
   .v4-page .v4-heading {
     margin-bottom: 24px;
   }
@@ -1582,6 +1696,24 @@
 .v4-page .v4-filter-checks .v4-check {
   font-size: 12px;
   gap: 8px;
+}
+/* 筛选行里的勾选保持紧凑，不要变成选项卡片。 */
+.v4-page .v4-filter-checks .v4-check {
+  padding: 0;
+  min-height: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.v4-page .v4-filter-checks .v4-check:has(input:checked) {
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+.v4-page .v4-filter-checks .v4-check input {
+  width: 18px;
+  height: 18px;
+  margin-top: 0;
 }
 .v4-page button.v4-filter-reset {
   background: transparent;
@@ -2687,4 +2819,21 @@
 }
 .v4-page .v6-cancellation-options p:last-child {
   margin-bottom: 0;
+}
+/* 选项本身已经是卡片，fieldset 不再多画一层边框，标题当小标题用。 */
+.v4-page fieldset.v6-cancellation-options {
+  border: 0;
+  margin: 18px 0 22px;
+  padding: 0;
+}
+.v4-page .v6-cancellation-options legend {
+  padding: 0;
+  margin-bottom: 10px;
+  color: #504338;
+  font-size: 13px;
+  font-weight: 700;
+}
+.v4-page .v6-cancellation-options > .v4-check + p {
+  padding-left: 47px;
+  margin: 6px 0 14px;
 }

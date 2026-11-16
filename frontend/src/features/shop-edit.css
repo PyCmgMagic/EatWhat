@@ -187,3 +187,92 @@
     transition: none;
   }
 }
+
+/* --- Desktop: use the full canvas instead of one long mobile column ------ */
+@media (min-width: 1000px) {
+  /* Keep the page header and the sheet on the same centred column. */
+  .ew-feature:has(> .ew-shop-edit) {
+    max-width: 1060px;
+  }
+  .ew-shop-edit {
+    max-width: none;
+  }
+  /* Two columns: basics on the left, kind + price on the right, wide trait
+     rows underneath. The trait fieldset dissolves into this grid. */
+  .ew-shop-edit .shop-edit-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 44px;
+    row-gap: 26px;
+    align-items: start;
+  }
+  .ew-shop-edit .shop-edit-basics {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    gap: 20px;
+  }
+  .ew-shop-edit .ew-shop-traits {
+    display: contents;
+  }
+  .ew-shop-edit .ew-shop-traits [data-trait="kind"] {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .ew-shop-edit .ew-shop-traits [data-trait="price"] {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .ew-shop-edit .ew-shop-traits [data-trait="meals"] {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+  .ew-shop-edit .ew-shop-traits [data-trait="categories"] {
+    grid-column: 1 / -1;
+    grid-row: 4;
+  }
+  .ew-shop-edit .ew-shop-traits [data-trait="tags"] {
+    grid-column: 1 / -1;
+    grid-row: 5;
+  }
+  .ew-shop-edit .shop-edit-delivery-note {
+    grid-column: 1 / -1;
+    grid-row: 6;
+    margin-top: -4px;
+  }
+  .ew-shop-edit .shop-edit-notice {
+    grid-column: 1 / -1;
+    grid-row: 7;
+  }
+  /* Wide rows fit more options, so the form stops being a 1.6k-tall scroll. */
+  .ew-shop-edit .ew-shop-traits [data-trait="categories"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .ew-shop-edit .ew-shop-traits [data-trait="tags"] {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  /* Compact chips instead of mobile-sized tap targets. */
+  .ew-shop-edit .ew-meals > label {
+    min-height: 42px;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .ew-shop-edit .ew-meals > b {
+    margin-bottom: 0;
+    font-size: 13px;
+  }
+  /* Save bar stays reachable while scrolling the form. */
+  .ew-shop-edit .shop-edit-actions {
+    position: sticky;
+    z-index: 3;
+    bottom: 0;
+    margin: 4px -28px -28px;
+    padding: 16px 28px 18px;
+    border-radius: 0 0 25px 25px;
+    background: #fff;
+    box-shadow: 0 -12px 26px rgb(35 28 24 / 7%);
+  }
+  .ew-shop-edit .shop-edit-actions > button {
+    flex: none;
+    min-width: 220px;
+    margin-left: auto;
+  }
+}

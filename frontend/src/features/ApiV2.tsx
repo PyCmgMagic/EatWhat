@@ -65,7 +65,16 @@ function Pages({
 }
 const userFoodDefaults = { keyword: "", category: "", sort: "NEWEST" };
 
-function ProfileFoodCard({ food }: { food: Food }) {
+function ProfileFoodCard({
+  food,
+  manage = false,
+}: {
+  food: Food;
+  manage?: boolean;
+}) {
+  const { user } = useApp();
+  // 自己的菜随时可管；别人的菜只有管理员打开「管理」后才出现操作。
+  const own = !!user?.id && food.accountId === user.id;
   const src = mediaUrl(food.pictureUrl?.[0]);
   const [failed, setFailed] = useState<string>();
   const renewImage = useFoodImageRefresh();
@@ -109,7 +118,7 @@ function ProfileFoodCard({ food }: { food: Food }) {
           {food.price != null && <b>{money(food.price)}</b>}
         </div>
       </Link>
-      <FoodManage food={food} />
+      {(own || manage) && <FoodManage food={food} anyone />}
     </article>
   );
 }
@@ -117,9 +126,15 @@ function ProfileFoodCard({ food }: { food: Food }) {
 export function UserFoods({
   userId,
   heading,
+  manage = false,
+  onExitManage,
 }: {
   userId: number;
   heading?: string;
+  /** 管理员在别人主页打开「管理」后为 true：卡片上出现编辑/删除。 */
+  manage?: boolean;
+  /** 传了就在列表标题旁显示「管理中」徽章，点一下退出管理模式。 */
+  onExitManage?: () => void;
 }) {
   const compact = !!heading;
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -145,6 +160,17 @@ export function UserFoods({
           <h2>
             {heading}
             <span>{q.data?.totalItems ?? "—"}</span>
+            {manage && onExitManage && (
+              <button
+                type="button"
+                className="mobile-user-manage-badge"
+                onClick={onExitManage}
+                title="退出管理模式"
+              >
+                管理中
+                <span aria-hidden="true">×</span>
+              </button>
+            )}
           </h2>
           <button
             type="button"
@@ -301,9 +327,9 @@ export function UserFoods({
             >
               {q.data.items.map((f) =>
                 compact ? (
-                  <ProfileFoodCard key={f.id} food={f} />
+                  <ProfileFoodCard key={f.id} food={f} manage={manage} />
                 ) : (
-                  <CatalogCard key={f.id} food={f} />
+                  <CatalogCard key={f.id} food={f} actions={manage} />
                 ),
               )}
             </div>
@@ -936,8 +962,11 @@ export function MobileUserProfile() {
   const back = useReturnTo("/me"),
     moreId = useId();
   const [avatarFailed, setAvatarFailed] = useState(false);
+  const [manage, setManage] = useState(false);
   const self = user?.id === id,
     ready = !!id && !!q.data;
+  // 「管理」是管理员的临时开关：默认关闭，离开页面即复位。
+  const canManage = !self && user?.role === "admin";
   const following = q.data?.isFollowingHim === true,
     followsMe = q.data?.isFollowingMe === true;
   return (
@@ -1097,12 +1126,39 @@ export function MobileUserProfile() {
           <>
             <RequestError error={follow.error} />
             <RequestError error={q.error} />
-            <UserFoods key={id} userId={id} heading="上传" />
+            <UserFoods
+              key={id}
+              userId={id}
+              heading="上传"
+              manage={canManage && manage}
+              onExitManage={canManage ? () => setManage(false) : undefined}
+            />
           </>
         )}
       </section>
       {ready && !self && (
         <div id={moreId} popover="auto" className="mobile-user-more">
+          {canManage && (
+            <button
+              type="button"
+              className="mobile-user-manage"
+              role="switch"
+              aria-checked={manage}
+              onClick={() => setManage(!manage)}
+            >
+              <span className="mobile-user-manage-text">
+                管理
+                <em>开启后可编辑、删除 TA 的菜品</em>
+              </span>
+              <span
+                className="mobile-user-switch"
+                data-on={manage ? "true" : undefined}
+                aria-hidden="true"
+              >
+                <i />
+              </span>
+            </button>
+          )}
           <BlockControl
             userId={id!}
             onAction={() => document.getElementById(moreId)?.hidePopover()}

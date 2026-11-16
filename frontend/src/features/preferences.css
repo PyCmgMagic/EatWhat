@@ -1,0 +1,328 @@
+/* 口味偏好（设置 → 口味偏好）
+   Desktop: options on the left, a sticky "taste profile" summary with the save
+   action on the right, so the page does not end in a wall of white space.
+   Phone: one column, the summary card simply follows the options. */
+.ew-prefs-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 296px;
+  gap: 18px;
+  align-items: start;
+  margin: 4px 0 0;
+}
+.ew-prefs {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.ew-prefs-card {
+  display: grid;
+  gap: 18px;
+  padding: 24px 26px;
+  border: 1px solid #f1ebe5;
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: 0 1px 2px #231c180a;
+  min-width: 0;
+}
+.ew-prefs-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.ew-prefs-head h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 850;
+  letter-spacing: -0.2px;
+  line-height: 1.5;
+}
+.ew-prefs-head p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--pc-muted, #6e625b);
+}
+.ew-prefs-count {
+  flex: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  min-height: 26px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f6f0e8;
+  color: #4a403a;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.ew-prefs-count small {
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a7d74;
+}
+.ew-prefs-field {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.ew-prefs-field.is-inline {
+  grid-template-columns: 84px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px 18px;
+}
+.ew-prefs-label {
+  padding-top: 10px;
+  font-size: 12px;
+  font-weight: 750;
+  color: #4a403a;
+}
+.ew-prefs-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+/* A chip is a label wrapping a native input: keep the input for a11y, paint the
+   pill instead, and let :has() carry the checked / focus states. */
+.ew-prefs .ew-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid #e9e1d9;
+  border-radius: 999px;
+  background: #fbf9f6;
+  color: #231c18;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease-out,
+    border-color 140ms ease-out,
+    color 140ms ease-out,
+    box-shadow 140ms ease-out;
+}
+.ew-prefs .ew-chip:hover {
+  border-color: #d8cbbc;
+  background: #fff;
+}
+.ew-prefs .ew-chip input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.ew-prefs .ew-chip:has(input:checked) {
+  border-color: #231c18;
+  background: #231c18;
+  color: #fff;
+  box-shadow: 0 10px 18px -14px rgb(35 28 24 / 70%);
+}
+.ew-prefs .ew-chip:has(input:checked) .design-icon {
+  color: #ffce47;
+}
+.ew-prefs .ew-chip.is-avoid:has(input:checked) {
+  border-color: #efc5b7;
+  background: #fdeee8;
+  color: #a8321c;
+  box-shadow: none;
+}
+.ew-prefs .ew-chip.is-avoid:has(input:checked) .design-icon {
+  color: #a8321c;
+}
+.ew-prefs .ew-chip:has(input:focus-visible) {
+  outline: 3px solid #be8d27;
+  outline-offset: 2px;
+}
+.ew-prefs-side {
+  min-width: 0;
+}
+.ew-prefs-summary {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #f1ebe5;
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: 0 1px 2px #231c180a;
+}
+.ew-prefs-summary > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ew-prefs-summary > header b {
+  font-size: 15px;
+  font-weight: 850;
+  letter-spacing: -0.2px;
+}
+.ew-prefs-summary > header span {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #a89380;
+  white-space: nowrap;
+}
+.ew-prefs-summary dl {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  min-width: 0;
+}
+.ew-prefs-summary dl > div {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  gap: 10px;
+  padding: 9px 0;
+  border-top: 1px dashed #efe6db;
+}
+.ew-prefs-summary dl > div:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.ew-prefs-summary dt {
+  font-size: 12px;
+  color: #8a7d74;
+}
+.ew-prefs-summary dd {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #231c18;
+}
+.ew-prefs-actions {
+  display: grid;
+  gap: 8px;
+}
+.ew-prefs-actions .ew-button {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 18px;
+}
+.ew-prefs-actions .ew-button:disabled {
+  background: #f1ece6;
+  color: #9c8f84;
+  cursor: default;
+  box-shadow: none;
+}
+.ew-prefs-clear {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #efe4d9;
+  border-radius: 13px;
+  background: #fffdfa;
+  color: #8a7d74;
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+  transition:
+    color 140ms ease-out,
+    border-color 140ms ease-out,
+    background-color 140ms ease-out;
+}
+.ew-prefs-clear:hover:not(:disabled) {
+  border-color: #eccfc4;
+  background: #fdf3ef;
+  color: #a8321c;
+}
+.ew-prefs-clear:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.ew-prefs-clear:focus-visible {
+  outline: 3px solid #be8d27;
+  outline-offset: 2px;
+}
+.ew-prefs-hint {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: #a89380;
+}
+.ew-prefs-note {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 18px;
+  padding: 16px 20px;
+  border: 1px solid #f0e8de;
+  border-radius: 20px;
+  background: #fbf7f2;
+}
+.ew-prefs-note > .design-icon {
+  flex: none;
+  margin-top: 1px;
+  color: #a8321c;
+}
+.ew-prefs-note b {
+  font-size: 13px;
+  font-weight: 800;
+}
+.ew-prefs-note p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.75;
+  color: #6e625b;
+}
+@media (max-width: 1180px) {
+  .ew-prefs-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ew-prefs-summary dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 24px;
+  }
+  .ew-prefs-summary dl > div:nth-child(2) {
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+@media (max-width: 720px) {
+  .ew-prefs-card {
+    gap: 16px;
+    padding: 20px;
+    border-radius: 22px;
+  }
+  .ew-prefs-field.is-inline {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ew-prefs-label {
+    padding-top: 0;
+  }
+  .ew-prefs .ew-chip {
+    min-height: 38px;
+    padding: 0 14px;
+  }
+  .ew-prefs-summary {
+    padding: 18px;
+  }
+  .ew-prefs-summary dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ew-prefs-summary dl > div:nth-child(2) {
+    border-top: 1px dashed #efe6db;
+    padding-top: 9px;
+  }
+  .ew-prefs-note {
+    padding: 15px 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ew-prefs .ew-chip,
+  .ew-prefs-clear {
+    transition: none;
+  }
+}

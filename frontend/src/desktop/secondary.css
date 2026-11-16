@@ -645,6 +645,12 @@
   filter: drop-shadow(0 15px 0 #231c1814);
   transform: translateX(20px) rotate(-8deg);
 }
+.pc-secondary-columns.about-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.pc-secondary-columns.about-columns > .pc-secondary-note {
+  margin: 0;
+}
 .pc-secondary-availability {
   display: flex;
   align-items: center;

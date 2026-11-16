@@ -242,6 +242,86 @@
   color: #231c18;
   background: #f4efeb;
 }
+.dish-like {
+  transition:
+    transform 120ms cubic-bezier(0.23, 1, 0.32, 1),
+    background-color 160ms ease-out,
+    border-color 160ms ease-out,
+    color 160ms ease-out;
+}
+.dish-like:active {
+  transform: scale(0.97);
+}
+.dish-like-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.dish-like-icon > .design-icon {
+  transition: transform 200ms cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.dish-like:active .dish-like-icon > .design-icon {
+  transform: scale(0.82);
+  transition-duration: 90ms;
+}
+.dish-like[aria-pressed="true"] .dish-like-icon > .design-icon {
+  transform: scale(1.06);
+}
+/* Halo sits behind the heart; only the celebration keyframes ever show it. */
+.dish-like-icon::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(168, 50, 28, 0.3),
+    rgba(168, 50, 28, 0) 68%
+  );
+  opacity: 0;
+  transform: scale(0.55);
+  pointer-events: none;
+}
+.dish-like.is-celebrating .dish-like-icon > .design-icon {
+  animation: dish-like-heart 320ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.dish-like.is-celebrating .dish-like-icon::after {
+  animation: dish-like-halo 480ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.dish-like.is-celebrating b {
+  animation: dish-like-count 340ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+@keyframes dish-like-heart {
+  0% {
+    transform: scale(0.6);
+  }
+  55% {
+    transform: scale(1.24);
+  }
+  100% {
+    transform: scale(1.06);
+  }
+}
+@keyframes dish-like-halo {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.55);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+@keyframes dish-like-count {
+  0% {
+    transform: translateY(3px) scale(0.84);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
 .dish-like b {
   font-family: "Bricolage Grotesque Variable", sans-serif;
   font-weight: 600;
