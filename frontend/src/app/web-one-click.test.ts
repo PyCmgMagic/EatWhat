@@ -4,6 +4,7 @@ import {
   createWebOneClickTiming,
   webOneClickTimingHeaders,
   webOneClickToken,
+  webOneClickAvailable,
   looksLikePhone,
 } from "./web-one-click";
 
@@ -349,6 +350,56 @@ describe("web one-click login", () => {
       );
     },
   );
+
+  it("offers the entry only after the carrier precheck succeeds", async () => {
+    const api = {
+      webOneClickToken: vi.fn(async () => ({
+        accessToken: "a",
+        jwtToken: "j",
+      })),
+    };
+    const server = sdk();
+    await expect(webOneClickAvailable(api, server as any)).resolves.toBe(true);
+    expect(api.webOneClickToken).toHaveBeenCalledOnce();
+    expect(server.getLoginToken).not.toHaveBeenCalled();
+  });
+
+  it("hides the entry on Wi-Fi without requesting carrier credentials", async () => {
+    const api = { webOneClickToken: vi.fn() };
+    await expect(
+      webOneClickAvailable(api, sdk({ getConnection: () => "wifi" }) as any),
+    ).resolves.toBe(false);
+    expect(api.webOneClickToken).not.toHaveBeenCalled();
+  });
+
+  it("hides the entry when the carrier rejects or cannot precheck", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const rejected = sdk({
+        checkLoginAvailable: (o: any) => o.error({ code: 600018 }),
+      });
+      const unsuccessful = sdk({
+        checkLoginAvailable: (o: any) => o.success({ code: 600011 }),
+      });
+      const api = {
+        webOneClickToken: async () => ({ accessToken: "a", jwtToken: "j" }),
+      };
+      await expect(webOneClickAvailable(api, rejected as any)).resolves.toBe(
+        false,
+      );
+      await expect(
+        webOneClickAvailable(api, unsuccessful as any),
+      ).resolves.toBe(false);
+      await expect(
+        webOneClickAvailable(
+          { webOneClickToken: async () => ({}) },
+          sdk() as any,
+        ),
+      ).resolves.toBe(false);
+    } finally {
+      warn.mockRestore();
+    }
+  });
 
   it("only offers it on phones", () => {
     expect(

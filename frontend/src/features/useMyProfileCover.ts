@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
-import { mediaUrl, type Food } from "../api/models";
+import { type Food } from "../api/models";
 import { stageCode } from "../api/food-display";
 import { demoDishes } from "../mobile/catalog";
 
@@ -20,8 +20,7 @@ export function useMyProfileCover(enabled: boolean) {
   };
   return {
     cover:
-      uploads.data?.items?.find((food) => mediaUrl(food.pictureUrl?.[0])) ??
-      fallback,
+      uploads.data?.items?.find((food) => !!food.pictureUrl?.[0]) ?? fallback,
     fallback,
     pending: !!session && (!user?.id || (enabled && uploads.isPending)),
   };

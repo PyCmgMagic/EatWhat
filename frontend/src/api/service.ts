@@ -207,7 +207,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         "/auth/phone/login",
         { method: "POST", body, public: true, raw: true },
       ),
-    /** H5 one-click login: shown only when enabled by the backend. */
+    /** H5 one-click login: backend gate before carrier availability precheck. */
     webOneClickConfig: () =>
       data<{ enabled?: boolean }>("/auth/phone/web-one-click/config", {
         public: true,

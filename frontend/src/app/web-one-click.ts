@@ -220,7 +220,6 @@ function sdkClass(): Promise<new () => PhoneNumberServer> {
   return loading;
 }
 
-/** Loaded on demand, on the first tap: the SDK is about 480 KB. */
 export async function loadSdk(): Promise<PhoneNumberServer> {
   const Server = await sdkClass();
   const sdk = new Server();
@@ -228,6 +227,43 @@ export async function loadSdk(): Promise<PhoneNumberServer> {
   sdk.setUploadEnable?.(false);
   sdk.setLoggerEnable?.(false);
   return sdk;
+}
+
+export async function webOneClickAvailable(
+  api: WebOneClickApi,
+  sdk?: PhoneNumberServer,
+  timing = createWebOneClickTiming(),
+): Promise<boolean> {
+  try {
+    const server = await timed(timing, "sdk", () =>
+      sdk ? Promise.resolve(sdk) : loadSdk(),
+    );
+    if (server.getConnection() === "wifi") return false;
+    const { accessToken, jwtToken } = await timed(timing, "token", () =>
+      api.webOneClickToken(location.href, timing.trace),
+    );
+    if (!accessToken || !jwtToken) return false;
+    return await new Promise<boolean>((resolve) => {
+      const start = performance.now();
+      let checked = false;
+      const finish = (available: boolean, raw?: SdkReply | string) => {
+        if (checked) return;
+        checked = true;
+        if (!available && raw !== undefined)
+          failure(parse(raw), timing, "environment");
+        recordTiming(timing, "environment", start, available ? "ok" : "error");
+        resolve(available);
+      };
+      server.checkLoginAvailable({
+        accessToken,
+        jwtToken,
+        success: (raw) => finish(Number(parse(raw).code) === OK, raw),
+        error: (raw) => finish(false, raw),
+      });
+    });
+  } catch {
+    return false;
+  }
 }
 
 /**

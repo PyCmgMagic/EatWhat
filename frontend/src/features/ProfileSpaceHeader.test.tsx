@@ -2,6 +2,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AppProvider } from "../app/context";
 import { writeSession } from "../app/runtime";
@@ -10,7 +11,13 @@ import ProfileSpaceHeader from "./ProfileSpaceHeader";
 let host: HTMLDivElement;
 let root: Root;
 let resolveFoods: (response: Response) => void;
+let readCoverData: () => unknown;
 const ok = (data: unknown) => new Response(JSON.stringify({ code: 0, data }));
+function CoverDataProbe() {
+  const cache = useQueryClient();
+  readCoverData = () => cache.getQueryState(["foods", "mine", 1]);
+  return null;
+}
 
 async function spin(condition: () => boolean) {
   for (let i = 0; i < 70 && !condition(); i++)
@@ -46,6 +53,7 @@ beforeEach(async () => {
   await act(async () =>
     root.render(
       <AppProvider>
+        <CoverDataProbe />
         <MemoryRouter initialEntries={["/me"]}>
           <ProfileSpaceHeader />
         </MemoryRouter>
@@ -75,7 +83,7 @@ it("uses a neutral loading stage before applying the real cover color", async ()
           {
             id: 71,
             name: "真实菜品",
-            pictureUrl: ["/real-cover.jpg"],
+            pictureUrls: ["https://cdn.example.com/real-cover.jpg"],
             stageColor: "porcelain",
           },
         ],
@@ -83,9 +91,15 @@ it("uses a neutral loading stage before applying the real cover color", async ()
       }),
     );
   });
-  await spin(() => hero.getAttribute("aria-busy") === "false");
+  expect(readCoverData()).toMatchObject({
+    status: "success",
+    data: { items: [{ id: 71, stageColor: "porcelain" }] },
+  });
+  await spin(
+    () => hero.style.getPropertyValue("--profile-stage") === "#9DB8D9",
+  );
   expect(hero.style.getPropertyValue("--profile-stage")).toBe("#9DB8D9");
   expect(
     host.querySelector(".profile-overview-cover img")?.getAttribute("src"),
-  ).toBe("/real-cover.jpg");
+  ).toBe("https://cdn.example.com/real-cover.jpg");
 });

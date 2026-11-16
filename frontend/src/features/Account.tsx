@@ -17,6 +17,7 @@ import {
   createWebOneClickTiming,
   webOneClickTimingHeaders,
   webOneClickToken,
+  webOneClickAvailable,
   looksLikePhone,
 } from "../app/web-one-click";
 import "../app/web-one-click.css";
@@ -128,12 +129,14 @@ export function PhoneLoginForm({
     send = useTask(),
     login = useTask();
   useAuthBusy(send.isPending || login.isPending);
-  // Carrier authorization replaces the SMS code on phones with mobile data.
   const webOneClick = useQuery({
-    queryKey: ["auth", "web-one-click-config"],
-    queryFn: () => api.webOneClickConfig(),
+    queryKey: ["auth", "web-one-click-availability"],
+    queryFn: async () => {
+      const config = await api.webOneClickConfig();
+      return config.enabled ? webOneClickAvailable(api) : false;
+    },
     enabled: looksLikePhone(),
-    staleTime: 5 * 60_000,
+    gcTime: 0,
     retry: false,
   });
   const signInWith = async (
@@ -174,7 +177,7 @@ export function PhoneLoginForm({
           });
         }}
       >
-        {webOneClick.data?.enabled && (
+        {webOneClick.data === true && (
           <button
             type="button"
             className="ew-web-one-click"
