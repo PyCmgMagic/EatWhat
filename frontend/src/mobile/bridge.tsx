@@ -180,7 +180,7 @@ export function useDesignBridge(
     nav = useNavigate(),
     location = useLocation(),
     cache = useQueryClient(),
-    { area, selectArea, campusId, selectCampus } = useArea();
+    { area, selectArea, campusId, selectCampus, ready = true } = useArea();
   // Latest draft, for callbacks that finish after later edits (photo uploads).
   const draftRef = useRef(m.draft);
   draftRef.current = m.draft;
@@ -279,7 +279,6 @@ export function useDesignBridge(
     queryKey: [
       "foods",
       "mobile-recommend",
-      campusId,
       m.mealKey,
       m.scene,
       area?.gcjLng,
@@ -289,7 +288,6 @@ export function useDesignBridge(
     ],
     queryFn: async () => {
       const feed = await api.recommendFeed(batchSize, {
-        campusId,
         mealTime: m.mealTime,
         scene: m.scene,
         gcjLng: area?.gcjLng,
@@ -300,7 +298,7 @@ export function useDesignBridge(
       if (!m.mealTime) m.noteServedMeal(feed.mealTime);
       return { items: feed.items, shops: feed.shops };
     },
-    enabled: browse && homeScreens.has(screen),
+    enabled: ready && browse && homeScreens.has(screen),
   });
   // Dine-in lists the recommended shops; the carousel shows their dishes.
   const recommendedFoods = recommendations.data?.items,
@@ -310,7 +308,6 @@ export function useDesignBridge(
       "foods",
       // Not the main feed's key: that one now holds dishes and shops.
       "mobile-recommend-category",
-      campusId,
       m.mealKey,
       m.scene,
       area?.gcjLng,
@@ -320,7 +317,6 @@ export function useDesignBridge(
     ],
     queryFn: () =>
       api.recommend(batchSize, {
-        campusId,
         mealTime: m.mealTime,
         scene: m.scene,
         gcjLng: area?.gcjLng,
@@ -328,7 +324,7 @@ export function useDesignBridge(
         category: category || undefined,
         deviceId: guestDeviceId(),
       }),
-    enabled: browse && homeScreens.has(screen) && !!category,
+    enabled: ready && browse && homeScreens.has(screen) && !!category,
     placeholderData: keepPreviousData,
   });
   const recommendationCopy = useRef<HTMLElement>(null),

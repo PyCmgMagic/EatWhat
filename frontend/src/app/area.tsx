@@ -25,7 +25,7 @@ export type Area = {
   gcjLng: number;
   gcjLat: number;
   hubId?: number;
-  source: "hub" | "device";
+  source: "hub" | "device" | "campus";
 };
 function initialArea(): Area | null {
   if (isDemo)
@@ -54,12 +54,14 @@ function rememberArea(area: Area) {
 }
 const Context = createContext<{
   area: Area | null;
+  ready: boolean;
   openArea: () => void;
   selectArea: (area: Area) => void;
   campusId?: number;
   selectCampus: (id: number) => void;
 }>({
   area: null,
+  ready: false,
   openArea: () => {},
   selectArea: () => {},
   selectCampus: () => {},
@@ -81,14 +83,38 @@ export function AreaProvider({ children }: { children: ReactNode }) {
       return undefined;
     }
   });
+  const [area, setArea] = useState<Area | null>(initialArea),
+    [open, setOpen] = useState(false);
   useEffect(() => {
-    const available = campuses.data?.filter((c) => c.open !== false);
-    if (available?.length && !available.some((c) => c.id === campusId))
-      setCampusId(
-        (available.find((c) => c.isDefault) || available[0]).id ?? undefined,
-      );
-  }, [campuses.data, campusId]);
-  function selectCampus(id: number) {
+    const available = campuses.data?.filter(
+      (c) => c.open !== false && c.id && hasCoordinates(c),
+    );
+    const campus =
+      available?.find((c) => c.id === campusId) ??
+      available?.find((c) => c.isDefault) ??
+      available?.[0];
+    if (!campus) return;
+    if (campus.id !== campusId) rememberCampus(campus.id!);
+    // A saved device/hub point takes precedence on startup. A campus point
+    // follows the current list, including changed coordinates or a removed ID.
+    if (!area || area.source === "campus") {
+      const point: Area = {
+        name: campus.name || "所选校区",
+        gcjLng: campus.gcjLng!,
+        gcjLat: campus.gcjLat!,
+        source: "campus",
+      };
+      if (
+        area?.name !== point.name ||
+        area.gcjLng !== point.gcjLng ||
+        area.gcjLat !== point.gcjLat
+      ) {
+        setArea(point);
+        rememberArea(point);
+      }
+    }
+  }, [campuses.data, campusId, area]);
+  function rememberCampus(id: number) {
     setCampusId(id);
     try {
       localStorage.setItem("eatwhat-campus", String(id));
@@ -96,8 +122,19 @@ export function AreaProvider({ children }: { children: ReactNode }) {
       /* preference optional */
     }
   }
-  const [area, setArea] = useState<Area | null>(initialArea),
-    [open, setOpen] = useState(false);
+  function selectCampus(id: number) {
+    const campus = campuses.data?.find(
+      (c) => c.id === id && c.open !== false && hasCoordinates(c),
+    );
+    if (!campus) return;
+    rememberCampus(id);
+    select({
+      name: campus.name || "所选校区",
+      gcjLng: campus.gcjLng!,
+      gcjLat: campus.gcjLat!,
+      source: "campus",
+    });
+  }
   useEffect(() => {
     if (
       area?.source !== "device" ||
@@ -140,6 +177,13 @@ export function AreaProvider({ children }: { children: ReactNode }) {
     <Context.Provider
       value={{
         area,
+        // Wait for the default point before consuming a personalized batch.
+        ready:
+          area !== null ||
+          (!campuses.isPending &&
+            !campuses.data?.some(
+              (c) => c.open !== false && c.id && hasCoordinates(c),
+            )),
         openArea: () => setOpen(true),
         selectArea: select,
         campusId,

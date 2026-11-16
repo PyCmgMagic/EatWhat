@@ -3586,7 +3586,6 @@ export interface components {
             permanentlyClosed?: boolean;
             hubId?: number | null;
             hubName?: string | null;
-            campusId?: number | null;
             distanceMeters?: number | null;
             isFavorite?: boolean | null;
             deliveryEnabled?: boolean;
@@ -3603,6 +3602,7 @@ export interface components {
             /** Format: int64 */
             updatedAt?: number;
             matchedFood?: components["schemas"]["MatchedFood"];
+            campusId?: never | null;
         };
         ResultPageResultRestaurant: {
             /** Format: int32 */
@@ -3831,7 +3831,6 @@ export interface components {
             gcjLng?: number;
             /** Format: double */
             gcjLat?: number;
-            campusId?: number | null;
             boundary?: {
                 [key: string]: unknown;
             } | null;
@@ -3839,6 +3838,7 @@ export interface components {
             createdAt?: number;
             /** Format: int64 */
             updatedAt?: number;
+            campusId?: never | null;
         };
         ResultHub: {
             /** Format: int32 */
@@ -7447,7 +7447,6 @@ export interface operations {
             query?: {
                 keyword?: string;
                 hubId?: number;
-                campusId?: number;
                 gcjLng?: number;
                 gcjLat?: number;
                 radius?: number;
@@ -7524,7 +7523,6 @@ export interface operations {
             query?: {
                 keyword?: string;
                 hubId?: number;
-                campusId?: number;
                 gcjLng?: number;
                 gcjLat?: number;
                 radius?: number;
@@ -7561,7 +7559,6 @@ export interface operations {
             query?: {
                 keyword?: string;
                 hubId?: number;
-                campusId?: number;
                 gcjLng?: number;
                 gcjLat?: number;
                 radius?: number;
@@ -7625,7 +7622,6 @@ export interface operations {
                 scene?: string;
                 gcjLng?: number;
                 gcjLat?: number;
-                campusId?: number;
                 mealTime?: string;
                 kind?: string;
                 page?: number;
@@ -7674,7 +7670,6 @@ export interface operations {
                 scene?: string;
                 gcjLng?: number;
                 gcjLat?: number;
-                campusId?: number;
                 mealTime?: string;
                 kind?: string;
             };
@@ -7978,7 +7973,6 @@ export interface operations {
                 signatureOnly?: boolean;
                 sort?: string;
                 scene?: string;
-                campusId?: number;
                 mealTime?: string;
                 page?: number;
                 pageSize?: number;

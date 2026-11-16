@@ -356,12 +356,12 @@ describe("v2 bridge", () => {
     expect(sent[0].query).toMatchObject({
       category: "饮品甜品",
       scene: "delivery",
-      campusId: 1,
     });
     await request<any[]>("/foods/recommend", {
       query: { size: 8, category: "dessert" },
     });
     expect(sent[1].query).toMatchObject({ scene: "dine_in" });
+    expect(sent[0].query).not.toHaveProperty("campusId");
     expect(dishes[0]).toMatchObject({
       id: 1,
       category: "dessert",
@@ -401,7 +401,7 @@ describe("v2 bridge", () => {
     });
     expect(sent.map((s) => s.path)).toEqual(["/recommend"]);
     // No mealTime: the backend picks the slot and says which one it used.
-    expect(sent[0].query).toEqual({ campusId: 1, scene: "delivery" });
+    expect(sent[0].query).toEqual({ scene: "delivery" });
     expect(feed.items.map((d: any) => d.id)).toEqual([2]);
     expect(feed.mealTime).toBe("night");
   });
@@ -445,7 +445,6 @@ describe("v2 bridge", () => {
     // Scene, the selected area's point and meal go along; the device id stays behind.
     expect(sent.find((s) => s.path === "/recommend")?.query).toEqual({
       scene: "dine_in",
-      campusId: 1,
       mealTime: "lunch",
       gcjLng: 117.134,
       gcjLat: 36.667,

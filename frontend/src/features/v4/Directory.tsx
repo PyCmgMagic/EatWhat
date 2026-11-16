@@ -43,10 +43,10 @@ export default function Directory() {
       return next;
     });
   const { api, session } = useApp(),
-    { campusId, area } = useArea(),
+    { area, ready = true } = useArea(),
     [expanded, setExpanded] = useState(false),
     search = useDebouncedSearch(keyword);
-  const areaKey = JSON.stringify([campusId, area]),
+  const areaKey = JSON.stringify(area),
     previousArea = useRef(areaKey);
   const areaChanged = previousArea.current !== areaKey;
   useEffect(() => {
@@ -56,7 +56,6 @@ export default function Directory() {
     }
   }, [areaKey]);
   const query = {
-    campusId,
     keyword: search || undefined,
     categories: category
       ? [category as Exclude<(typeof categories)[number]["id"], "">]
@@ -70,7 +69,7 @@ export default function Directory() {
     pageSize: 12,
   };
   const q = useQuery({
-    enabled: !areaChanged,
+    enabled: ready && !areaChanged,
     queryKey: ["restaurants", "directory", query, area],
     queryFn: () =>
       area

@@ -142,7 +142,6 @@ function seed(): Data {
     gcjLat: campus.gcjLat + index * 0.0007,
     hubId: 1,
     hubName: "软件园商圈",
-    campusId: 1,
     deliveryEnabled: index !== 2,
     kind: "food",
     mealTimes: ["breakfast", "lunch", "dinner", "night"],
@@ -231,7 +230,6 @@ function seed(): Data {
         name: "软件园商圈",
         gcjLng: campus.gcjLng,
         gcjLat: campus.gcjLat,
-        campusId: 1,
       },
     ],
     history: Object.fromEntries(
@@ -596,7 +594,6 @@ export function demoTransport(
             matches(shop.name) ||
             matches(shop.address) ||
             !!shop.matchedFood) &&
-          (!q.campusId || shop.campusId === Number(q.campusId)) &&
           (!q.hubId || shop.hubId === Number(q.hubId)) &&
           (!q.kind || shop.kind === q.kind) &&
           (!q.priceBand || shop.priceBand === q.priceBand) &&
@@ -913,7 +910,6 @@ export function demoTransport(
           name: body.name,
           gcjLng: body.gcjLng,
           gcjLat: body.gcjLat,
-          campusId: Number(body.campusId) || null,
           boundary: body.boundaryGeoJson
             ? JSON.parse(body.boundaryGeoJson)
             : null,
@@ -1050,7 +1046,6 @@ export function demoTransport(
               : shop?.pictureUrl,
         hubId: state.hubs[0]?.id,
         hubName: state.hubs[0]?.name,
-        campusId: state.hubs[0]?.campusId,
       };
       return write(updateShop(updated, shop ? "edit" : "create"));
     }

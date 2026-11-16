@@ -831,7 +831,7 @@ function DesktopHome() {
     [dismissed, setDismissed] = useState<number[]>([]),
     [dismissing, setDismissing] = useState(false),
     m = useMobile(),
-    { campusId, area } = useArea(),
+    { area, ready = true } = useArea(),
     [n, setN] = useState(0),
     [category, setCategory] = useDiscoveryCategory(),
     pointer = useRef<{ id: number; x: number; radius: number } | null>(null),
@@ -842,7 +842,6 @@ function DesktopHome() {
       queryKey: [
         "foods",
         "mobile-recommend",
-        campusId,
         m.mealKey,
         m.scene,
         area?.gcjLng,
@@ -852,7 +851,6 @@ function DesktopHome() {
       ],
       queryFn: async () => {
         const feed = await api.recommendFeed(batchSize, {
-          campusId,
           mealTime: m.mealTime,
           scene: m.scene,
           gcjLng: area?.gcjLng,
@@ -864,6 +862,7 @@ function DesktopHome() {
         return { items: feed.items, shops: feed.shops };
       },
       placeholderData: keepPreviousData,
+      enabled: ready,
     }),
     // "不想吃这家": v2 skips the shop for 30 days; hide its dishes right away.
     list = (query.data?.items ?? []).filter(
@@ -882,7 +881,6 @@ function DesktopHome() {
       "foods",
       // Not the main feed's key: that one now holds dishes and shops.
       "mobile-recommend-category",
-      campusId,
       m.mealKey,
       m.scene,
       area?.gcjLng,
@@ -892,7 +890,6 @@ function DesktopHome() {
     ],
     queryFn: () =>
       api.recommend(batchSize, {
-        campusId,
         mealTime: m.mealTime,
         scene: m.scene,
         gcjLng: area?.gcjLng,
@@ -900,7 +897,7 @@ function DesktopHome() {
         category: category || undefined,
         deviceId: guestDeviceId(),
       }),
-    enabled: !!category,
+    enabled: ready && !!category,
     placeholderData: keepPreviousData,
   });
   useContentMotion(copy, food?.id ?? undefined, n, "y");

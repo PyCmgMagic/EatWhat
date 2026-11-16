@@ -25,7 +25,7 @@ function Harness() {
   areaState = useArea();
   return <output>{areaState.area?.name}</output>;
 }
-async function mount(area: Area = device) {
+async function mount(area: Area | null = device) {
   localStorage.setItem("eatwhat-area", JSON.stringify(area));
   await act(async () => {
     root.render(
@@ -124,4 +124,89 @@ it("preserves existing named locations without querying again", async () => {
   expect(areaState.area).toEqual(named);
   expect(api.locateHub).not.toHaveBeenCalled();
   expect(address).not.toHaveBeenCalled();
+});
+
+const campuses = [
+  {
+    id: 1,
+    name: "软件园",
+    gcjLng: 117.140109,
+    gcjLat: 36.667382,
+    isDefault: true,
+  },
+  { id: 2, name: "中心", gcjLng: 117.055, gcjLat: 36.673, isDefault: false },
+];
+
+it("waits for the default campus and uses its coordinates without a hub lookup", async () => {
+  let finish!: (value: typeof campuses) => void;
+  api.campuses.mockReturnValue(
+    new Promise((resolve) => {
+      finish = resolve;
+    }),
+  );
+  await mount(null);
+  expect(areaState.ready).toBe(false);
+  await act(async () => finish(campuses));
+  await settle();
+  expect(areaState.ready).toBe(true);
+  expect(areaState.campusId).toBe(1);
+  expect(areaState.area).toEqual({
+    name: "软件园",
+    gcjLng: 117.140109,
+    gcjLat: 36.667382,
+    source: "campus",
+  });
+  expect(api.locateHub).not.toHaveBeenCalled();
+});
+
+it("switches the query point to the selected campus and remembers it", async () => {
+  api.campuses.mockResolvedValue(campuses);
+  await mount({ ...device, name: "当前区域", source: "hub", hubId: 7 });
+  await settle();
+  await act(async () => areaState.selectCampus(2));
+  expect(areaState.area).toEqual({
+    name: "中心",
+    gcjLng: 117.055,
+    gcjLat: 36.673,
+    source: "campus",
+  });
+  expect(areaState.campusId).toBe(2);
+  expect(localStorage.getItem("eatwhat-campus")).toBe("2");
+  expect(JSON.parse(localStorage.getItem("eatwhat-area")!)).toEqual(
+    areaState.area,
+  );
+  expect(api.locateHub).not.toHaveBeenCalled();
+  // A manually selected position remains authoritative after a list refresh.
+  const manual: Area = { ...device, name: "新位置" };
+  await act(async () => areaState.selectArea(manual));
+  await act(async () => {
+    cache.setQueryData(["campuses"], [...campuses]);
+  });
+  await settle();
+  expect(areaState.area).toEqual(manual);
+});
+
+it("restores a saved campus ID using the current list and falls back if removed", async () => {
+  api.campuses.mockResolvedValue(campuses);
+  localStorage.setItem("eatwhat-campus", "2");
+  await mount({ ...device, name: "旧校区名", source: "campus" });
+  await settle();
+  expect(areaState.area?.gcjLng).toBe(117.055);
+  expect(areaState.area?.name).toBe("中心");
+  await act(async () => {
+    cache.setQueryData(["campuses"], [campuses[0]]);
+  });
+  await settle();
+  expect(areaState.campusId).toBe(1);
+  expect(areaState.area?.gcjLng).toBe(117.140109);
+});
+
+it("does not replace a saved location on startup or accept a missing campus", async () => {
+  api.campuses.mockResolvedValue(campuses);
+  const saved: Area = { ...device, name: "当前位置附近" };
+  await mount(saved);
+  await settle();
+  expect(areaState.area).toEqual(saved);
+  await act(async () => areaState.selectCampus(999));
+  expect(areaState.area).toEqual(saved);
 });

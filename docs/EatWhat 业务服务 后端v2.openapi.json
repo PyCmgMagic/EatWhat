@@ -3900,14 +3900,6 @@
             "format" : "int64"
           }
         }, {
-          "name" : "campusId",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }, {
           "name" : "gcjLng",
           "in" : "query",
           "required" : false,
@@ -4070,14 +4062,6 @@
             "format" : "int64"
           }
         }, {
-          "name" : "campusId",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }, {
           "name" : "gcjLng",
           "in" : "query",
           "required" : false,
@@ -4208,14 +4192,6 @@
           }
         }, {
           "name" : "hubId",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }, {
-          "name" : "campusId",
           "in" : "query",
           "required" : false,
           "schema" : {
@@ -4418,14 +4394,6 @@
             "format" : "double"
           }
         }, {
-          "name" : "campusId",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }, {
           "name" : "mealTime",
           "in" : "query",
           "required" : false,
@@ -4516,14 +4484,6 @@
           "schema" : {
             "type" : "number",
             "format" : "double"
-          }
-        }, {
-          "name" : "campusId",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
           }
         }, {
           "name" : "mealTime",
@@ -5026,14 +4986,6 @@
           "required" : false,
           "schema" : {
             "type" : "string"
-          }
-        }, {
-          "name" : "campusId",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
           }
         }, {
           "name" : "mealTime",
@@ -6437,10 +6389,6 @@
           },
           "boundaryGeoJson" : {
             "type" : "string"
-          },
-          "campusId" : {
-            "type" : "integer",
-            "format" : "int64"
           }
         }
       },
@@ -8874,10 +8822,6 @@
           "hubName" : {
             "type" : "string"
           },
-          "campusId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "distanceMeters" : {
             "type" : "number",
             "format" : "double"
@@ -9522,10 +9466,6 @@
           "gcjLat" : {
             "type" : "number",
             "format" : "double"
-          },
-          "campusId" : {
-            "type" : "integer",
-            "format" : "int64"
           },
           "boundary" : {
             "type" : "object",

@@ -42,14 +42,15 @@ describe("recommendation response formats", () => {
     const api = createApi(createTransport("/api", () => null, fetcher));
     await expect(
       api.recommend(4, {
-        campusId: 1,
+        gcjLng: 117.140109,
+        gcjLat: 36.667382,
         mealTime: "dinner",
         category: "staple",
         deviceId: "test-device",
       }),
     ).resolves.toEqual([food]);
     expect(fetcher.mock.calls[0][0]).toBe(
-      "/api/foods/recommend?size=4&campusId=1&mealTime=dinner&category=staple&deviceId=test-device",
+      "/api/foods/recommend?size=4&gcjLng=117.140109&gcjLat=36.667382&mealTime=dinner&category=staple&deviceId=test-device",
     );
   });
 

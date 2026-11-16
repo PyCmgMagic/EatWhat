@@ -212,7 +212,6 @@ export function restaurant(v: Json | null | undefined): Json | null {
     permanentlyClosed: v.permanentlyClosed ?? false,
     operatingStatus: v.permanentlyClosed ? "CLOSED" : "OPEN",
     distanceMeters: v.distanceMeters ?? null,
-    campusId: v.campusId ?? null,
     hubName: v.hubName ?? null,
     hubId: v.hubId ?? null,
     visibleFoodCount: v.visibleFoodCount ?? null,
@@ -992,14 +991,13 @@ const routes: [string, RegExp, Handler][] = [
       // A category tab lists dishes of that category. It must not call
       // /recommend: v2 marks every shop it returns as seen for today, so an
       // extra call would use up the next batch of the main recommendation.
-      // scene and campusId keep the tab inside the current scene: under
+      // scene keeps the tab inside the current scene: under
       // delivery only dishes of shops that deliver, and no closed shops.
       if (typeof query.category === "string" && query.category) {
         const list = await call("/foods/list", {
           query: {
             category: toV2Category(query.category),
             scene: query.scene === "delivery" ? "delivery" : "dine_in",
-            campusId: query.campusId,
             // The slot the home page shows; v2 picks the current one if absent.
             mealTime: query.mealTime,
             page: 1,
@@ -1018,7 +1016,6 @@ const routes: [string, RegExp, Handler][] = [
         const feed = await call("/recommend", {
           query: {
             scene: "dine_in",
-            campusId: query.campusId,
             mealTime: query.mealTime,
             gcjLng: query.gcjLng,
             gcjLat: query.gcjLat,
@@ -1038,13 +1035,7 @@ const routes: [string, RegExp, Handler][] = [
       }
       const [feed, latest] = await Promise.all([
         call("/recommend", {
-          query: omit(query, [
-            "campusId",
-            "mealTime",
-            "scene",
-            "gcjLng",
-            "gcjLat",
-          ]),
+          query: omit(query, ["mealTime", "scene", "gcjLng", "gcjLat"]),
         }).catch(() => null),
         // Delivery shows only recommended shops: the newest dishes may come
         // from shops that do not deliver, so they are not used as filler.
@@ -1282,6 +1273,7 @@ const routes: [string, RegExp, Handler][] = [
     /^\/restaurant\/(list|browse|search|favorites)$/,
     async ({ match, query, call }) => {
       const q = { ...query };
+      delete q.campusId;
       if (Array.isArray(q.categories)) delete q.categories;
       if (q.sort === "FOOD_COUNT" || q.sort === "RECOMMENDATION_RATE")
         delete q.sort;
