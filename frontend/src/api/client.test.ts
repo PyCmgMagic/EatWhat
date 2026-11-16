@@ -10,6 +10,28 @@ import {
   safeJson,
 } from "./client";
 describe("v2 transport boundaries", () => {
+  it.each([50001, "50001"])(
+    "does not mislabel a one-click provider failure %s as a captcha failure",
+    async (code) => {
+      const request = createRequester(async () => ({
+        code,
+        msg: "第三方服务不可用",
+        data: null,
+      }));
+      const failure = await request("/auth/phone/web-one-click/token", {
+        method: "POST",
+        public: true,
+        body: { url: "https://eat.v50to.you/" },
+      }).catch((error: unknown) => error);
+      expect(errorMessage(failure)).toBe(
+        "第三方服务暂不可用，请稍后重试（错误码 50001）。",
+      );
+      expect(errorMessage(new ApiError("人机验证服务暂不可用", 50004))).toBe(
+        "人机验证暂不可用，请稍后重试。",
+      );
+    },
+  );
+
   it("preserves the gateway and controller prefixes, array parameters and zero values", () => {
     expect(buildUrl("/api/", "/api/location/provinces")).toBe(
       "/api/api/location/provinces",
