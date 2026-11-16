@@ -112,7 +112,7 @@ import { useMyProfileCover } from "../features/useMyProfileCover";
 import { MyFoodComments } from "../features/comments/Comments";
 import { useFoodPhoto } from "../features/media";
 import { FoodCover } from "../components/FoodCover";
-import { SearchField } from "../components/SearchField";
+import { HomeSearchButton, HomeSearchOverlay } from "./HomeSearch";
 import { PublishButton } from "../components/PublishButton";
 
 const FoodExtras = React.lazy(() =>
@@ -1731,16 +1731,8 @@ export function useDesignBridge(
             <header {...p} className="mobile-home-toolbar">
               {view.children}
             </header>
-            <SearchField
-              className="mobile-home-search"
-              onSearch={(keyword) =>
-                nav(
-                  keyword
-                    ? `/search?q=${encodeURIComponent(keyword)}`
-                    : "/search",
-                )
-              }
-            />
+            {/* The bar moved into the toolbar; its footprint stays reserved. */}
+            <div className="mobile-home-search-slot" aria-hidden="true" />
           </>
         );
       if (tag === "div" && st.top === "392px") p.className = "mobile-home-dots";
@@ -2043,8 +2035,20 @@ export function useDesignBridge(
           return React.createElement(tag, p, tab.name);
         }
       }
-      if (tag === "a" && String(n.attrs["aria-label"]).startsWith("通知"))
+      if (tag === "a" && String(n.attrs["aria-label"]).startsWith("通知")) {
         p["aria-label"] = `通知，${unread.data ?? 0} 条未读`;
+        // Search entry sits beside the bell, in the toolbar's top-right corner.
+        return (
+          <>
+            <HomeSearchButton
+              key="home-search"
+              open={!!controller.state.searchOpen}
+              onOpen={() => controller.setState({ searchOpen: true })}
+            />
+            {React.createElement(tag, p, ...view.children)}
+          </>
+        );
+      }
       if (
         tag === "span" &&
         st.width === "8px" &&
@@ -3595,6 +3599,17 @@ export function useDesignBridge(
     );
   const after = (
     <>
+      {homeScreens.has(screen) && !reference && (
+        <HomeSearchOverlay
+          open={!!controller.state.searchOpen}
+          onClose={() => controller.setState({ searchOpen: false })}
+          onSearch={(keyword) =>
+            nav(
+              keyword ? `/search?q=${encodeURIComponent(keyword)}` : "/search",
+            )
+          }
+        />
+      )}
       {sharing.fallback}
       {!denied && profile && controller.state.sheet && (
         <AvatarSourceSheet

@@ -5,7 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AppProvider } from "../../app/context";
 import { writeSession } from "../../app/runtime";
-import { NotificationCards } from "./Community";
+import { Messages } from "./Messages";
 
 let host: HTMLDivElement;
 let root: Root;
@@ -74,7 +74,7 @@ beforeEach(async () => {
     root.render(
       <AppProvider>
         <MemoryRouter initialEntries={["/notifications"]}>
-          <NotificationCards />
+          <Messages />
         </MemoryRouter>
       </AppProvider>,
     ),

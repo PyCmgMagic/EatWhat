@@ -1,0 +1,29 @@
+.ew-location-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+/* A street address is longer than a campus name: let it fill the row first. */
+.ew-recommend-controls .ew-location-control .ew-select {
+  max-width: min(46vw, 320px);
+}
+.ew-location-control .ew-select > .ew-select-trigger {
+  gap: 8px;
+  color: #231c18;
+}
+.ew-location-control .ew-select-label {
+  max-width: 100%;
+}
+.ew-location-retry {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #a47112;
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}

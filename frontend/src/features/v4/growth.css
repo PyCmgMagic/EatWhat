@@ -162,19 +162,85 @@
     grid-template-columns: 1fr;
   }
 }
+/* 折叠入口：怎么获得经验 / 经验记录。两个区块默认收起，摘要行保留标题和条数。 */
+.growth-disclosure {
+  display: block;
+}
+.v4-page .growth-disclosure > summary {
+  list-style: none;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.5;
+  color: inherit;
+  cursor: pointer;
+}
+.v4-page .growth-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.v4-page .growth-disclosure > summary::marker {
+  content: "";
+}
+/* design.css 的 details[open] > summary:before 是 "−"，这里连同展开态一起隐藏，改用右侧箭头。 */
+.v4-page .growth-disclosure > summary:before,
+.v4-page .growth-disclosure[open] > summary:before {
+  content: none;
+}
+.v4-page .growth-disclosure > summary:focus-visible {
+  outline: 2px solid #c4572a;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+@media (hover: hover) {
+  .v4-page .growth-disclosure > summary:hover,
+  .v4-page .growth-disclosure > summary:hover .growth-disclosure-title,
+  .v4-page .growth-disclosure > summary:hover .growth-disclosure-chevron,
+  .v4-page .growth-records > details > summary:hover h2 {
+    color: #9c7222;
+  }
+}
+.growth-disclosure-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: #4d3b2c;
+}
+.growth-disclosure-meta {
+  flex: none;
+  color: #8c7865;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.growth-disclosure-chevron {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: #a08a72;
+  transition: transform 160ms ease;
+}
+.growth-disclosure[open] .growth-disclosure-chevron {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .growth-disclosure-chevron {
+    transition: none;
+  }
+}
 .growth-rules {
   margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid #f0e9e2;
 }
-.growth-rules h3 {
-  margin: 0 0 10px;
-  font-size: 14px;
-  color: #4d3b2c;
+.v4-page .growth-rules > summary {
+  padding: 2px 0;
 }
 .growth-rules ul {
   list-style: none;
-  margin: 0;
+  margin: 12px 0 0;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -203,4 +269,14 @@
   border-top: 0;
   margin-top: 12px;
   padding-top: 0;
+}
+.v4-page .growth-records > details > summary h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+.v4-page .growth-records[open] > summary {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f0e9e2;
 }

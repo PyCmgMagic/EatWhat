@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./profile-section-nav.css";
 import { isRetiredV2 } from "../app/retired-routes";
@@ -74,11 +75,13 @@ export function ProfileHelpHeader() {
 
 export function ProfileCollectionsHeader() {
   return (
-    <ProfileSectionHeader
-      section="collections"
-      title="我的收藏"
-      detail="喜欢的菜品和想去的餐厅，都留在这里。"
-    />
+    <div className="profile-collections-head">
+      <header className="profile-section-heading">
+        <h1>我的收藏</h1>
+        <p>喜欢的菜品和想去的餐厅，都留在这里。</p>
+      </header>
+      <ProfileSectionNav section="collections" />
+    </div>
   );
 }
 
@@ -103,8 +106,70 @@ export function ProfileSectionNav({
     .find(
       (item) => current === item.to || current.startsWith(item.to + "/"),
     )?.to;
+  const nav = useRef<HTMLElement>(null);
+  const indicator = useRef<HTMLSpanElement>(null);
+  const previous = useRef<string | undefined>(undefined);
+  // The underline follows the active tab instead of jumping between links, so
+  // a switch reads as one control moving rather than two unrelated highlights.
+  useLayoutEffect(() => {
+    const container = nav.current,
+      bar = indicator.current;
+    if (!container || !bar) return;
+    const place = (animate: boolean) => {
+      const active = container.querySelector<HTMLElement>(
+        '[aria-current="page"]',
+      );
+      if (!active) {
+        bar.style.opacity = "0";
+        return;
+      }
+      bar.style.transition = animate ? "" : "none";
+      bar.style.opacity = "1";
+      bar.style.transform =
+        `translate3d(${active.offsetLeft}px,0,0)` +
+        ` scaleX(${active.offsetWidth / 100})`;
+      container.dataset.tabIndicator = "ready";
+      if (animate) return;
+      // Snap for the first paint and for resizes; keep the transition rule
+      // usable for the next tab switch.
+      void bar.offsetWidth;
+      bar.style.transition = "";
+    };
+    place(previous.current !== undefined && previous.current !== selected);
+    previous.current = selected;
+    if (typeof ResizeObserver === "undefined") return;
+    // ResizeObserver reports once for every target right after observe(); only
+    // a real size change should re-place the underline (and it should snap).
+    const signature = () =>
+      [
+        container.clientWidth,
+        ...Array.from(container.querySelectorAll("a")).map(
+          (link) => link.offsetWidth,
+        ),
+      ].join(":");
+    let measured = signature();
+    const observer = new ResizeObserver(() => {
+      const next = signature();
+      if (next === measured) return;
+      measured = next;
+      place(false);
+    });
+    observer.observe(container);
+    container.querySelectorAll("a").forEach((link) => observer.observe(link));
+    return () => observer.disconnect();
+  }, [selected]);
   return (
-    <nav className="profile-section-nav" aria-label={config.label}>
+    <nav
+      ref={nav}
+      className="profile-section-nav"
+      data-section={section}
+      aria-label={config.label}
+    >
+      <span
+        ref={indicator}
+        className="profile-section-tab-indicator"
+        aria-hidden="true"
+      />
       {items.map((item) => (
         <Link
           key={item.to}
@@ -115,11 +180,11 @@ export function ProfileSectionNav({
             item.to === "/feedback/mine" &&
             pathname === "/feedback"
               ? {
-                  preserveScroll: true,
+                  workspaceSwitch: true,
                   feedbackReturnTo: pathname + search,
                   feedbackSource: "/help",
                 }
-              : { preserveScroll: true }
+              : { workspaceSwitch: true }
           }
           preventScrollReset
         >

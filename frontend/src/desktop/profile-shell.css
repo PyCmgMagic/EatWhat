@@ -219,12 +219,8 @@
 .profile-shares-publish:hover {
   background: #f4c236;
 }
-.profile-shares .pc-section-toolbar {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-.pc-app .pc-profile-workspace-content .profile-shares .profile-section-nav {
-  border-bottom: 1px solid #e8e1d9;
+.profile-shares .pc-profile-tab-content {
+  margin-top: 24px;
 }
 .profile-shares-grid {
   display: grid;

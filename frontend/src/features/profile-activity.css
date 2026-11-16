@@ -489,12 +489,6 @@
   }
 }
 
-.v4-page[data-route="/notifications"] .v4-page-symbol {
-  display: none;
-}
-.v4-page[data-route="/notifications"] .v4-heading {
-  margin-bottom: 20px;
-}
 .v4-page[data-route="/notifications"] .profile-message-tools {
   margin: 0 0 20px;
   padding-bottom: 16px;

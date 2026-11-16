@@ -58,6 +58,20 @@
   scale: 0.975;
   transition-duration: 0s;
 }
+/* Full-bleed scrims are click surfaces, not pressable controls: scaling a
+   viewport-sized surface reads as the whole page shrinking for a frame. */
+:is(
+    .pc-app,
+    .design-screen,
+    .ew-feature,
+    .legacy-admin,
+    .mobile-page-native,
+    dialog,
+    .design-notice
+  )
+  :is(.pc-header-search-backdrop, .ew-home-search-scrim):active:not(:disabled) {
+  scale: 1;
+}
 /* Indicators and drag handles keep their geometry during a press. */
 :is(.pc-motion-tabs, .pc-hero-dots) > :is(button, a):active,
 .pc-hero-food:active,

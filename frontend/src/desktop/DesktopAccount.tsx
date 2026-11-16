@@ -447,112 +447,129 @@ function VerificationForm() {
         back={returnTo ?? "/settings/account"}
         crumb={returnTo ? "返回原页面" : "账号与安全"}
       />
-      <div
-        className={`pc-secondary-columns student-verification${user?.verified ? " verification-complete" : ""}`}
-      >
-        <Section title={user?.verified ? "认证结果" : "两种方式，任选其一"}>
-          <div
-            className={`pc-secondary-verification ${user?.verified ? "verified" : ""}`}
+      {user?.verified ? (
+        <div className="verify-done">
+          <section
+            className="verify-done-main"
+            aria-labelledby="verify-done-title"
           >
-            <Icon name="verify" size={35} />
-            <div>
-              <b>{user?.verified ? "学生身份已认证" : "完成一种方式即可"}</b>
-              <p>
-                {user?.verified
-                  ? "收藏、喜欢和分享已开启。"
-                  : "以下两种方式任选其一，无需全部完成。"}
-              </p>
+            <div className="verify-done-hero">
+              <span className="verify-done-badge" aria-hidden="true">
+                <Icon name="verify" size={26} />
+              </span>
+              <div className="verify-done-copy">
+                <h2 id="verify-done-title">学生身份已认证</h2>
+                <p>收藏、喜欢和分享已开启，可以继续和同学交流校园美食。</p>
+              </div>
             </div>
-            {!user?.verified && (
-              <span className="pc-secondary-badge">未认证</span>
-            )}
-          </div>
-          {user?.verified ? (
-            <div className="verification-complete-actions">
+            <ul className="verify-done-benefits">
+              <li>
+                <Icon name="bookmark" size={15} />
+                收藏和喜欢菜品
+              </li>
+              <li>
+                <Icon name="tag" size={15} />
+                添加标签，整理喜欢的口味
+              </li>
+              <li>
+                <Icon name="share" size={15} />
+                分享菜品，参与校园美食交流
+              </li>
+            </ul>
+            <div className="verify-done-actions">
               <Link className="pc-button" to={returnTo ?? "/me"}>
                 {returnTo ? "返回原页面" : "回到我的主页"}
               </Link>
-              <Link className="verification-discover" to="/">
-                去发现好味道 <Icon name="chevronRight" size={16} />
+              <Link className="verify-done-link" to="/">
+                去发现好味道
+                <Icon name="chevronRight" size={15} />
               </Link>
             </div>
-          ) : (
-            <>
-              <section
-                className="verification-option"
-                aria-labelledby="verification-sso-title"
-              >
-                <h3 id="verification-sso-title">学校统一认证</h3>
-                <p>使用学校统一身份账号，在学校认证页面完成登录。</p>
-                <SsoStart returnTo={returnTo ?? "/settings/account"} />
-              </section>
-              <div className="verification-or">或，选择学校邮箱认证</div>
-              <section
-                className="verification-option"
-                aria-labelledby="verification-email-title"
-              >
-                <h3 id="verification-email-title">学校邮箱认证</h3>
-                <p>使用你本人的学校邮箱，收取邮件并按提示完成认证。</p>
-                <form
-                  className="pc-secondary-form"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const d = new FormData(e.currentTarget),
-                      email = String(d.get("email") || "").trim();
-                    send.run(async () => {
-                      const domain = import.meta.env.VITE_VERIFY_EMAIL_DOMAIN;
-                      if (
-                        domain &&
-                        !email
-                          .toLowerCase()
-                          .endsWith("@" + domain.toLowerCase())
-                      )
-                        throw new Error(`请使用 @${domain} 邮箱。`);
-                      await api.sendEmail(email, getSignal());
-                      rememberVerificationReturn(
-                        user?.id,
-                        returnTo ?? "/settings/account",
-                      );
-                    });
-                  }}
-                >
-                  <Field
-                    label="学校邮箱地址"
-                    hint={
-                      isDemo
-                        ? "演示模式不会发送真实邮件。"
-                        : import.meta.env.VITE_VERIFY_EMAIL_DOMAIN
-                          ? `请使用 @${import.meta.env.VITE_VERIFY_EMAIL_DOMAIN} 邮箱。`
-                          : "请填写学校邮箱，不要使用个人邮箱。"
-                    }
-                  >
-                    <input
-                      name="email"
-                      type="email"
-                      autoComplete="email"
-                      placeholder="输入你的学校邮箱"
-                      required
-                    />
-                  </Field>
-                  {send.isSuccess && (
-                    <p className="verification-email-sent" role="status">
-                      邮件已发送，还差最后一步：打开学校邮箱，按邮件提示完成认证，再回到这里刷新认证状态。无需再进行学校统一认证。
-                    </p>
-                  )}
-                  <TaskError error={send.error} />
-                  <button
-                    className="pc-button"
-                    disabled={send.isPending || send.isSuccess}
-                  >
-                    {send.isPending ? "正在发送…" : "发送认证邮件"}
-                  </button>
-                </form>
-              </section>
-            </>
-          )}
-          {user?.verified ? (
+            <TaskError error={me.error} />
+          </section>
+          <aside className="verify-done-aside">
             <VerificationMethods />
-          ) : (
+          </aside>
+        </div>
+      ) : (
+        <div className="pc-secondary-columns student-verification">
+          <Section title="两种方式，任选其一">
+            <div className="pc-secondary-verification">
+              <Icon name="verify" size={35} />
+              <div>
+                <b>完成一种方式即可</b>
+                <p>以下两种方式任选其一，无需全部完成。</p>
+              </div>
+              <span className="pc-secondary-badge">未认证</span>
+            </div>
+            <section
+              className="verification-option"
+              aria-labelledby="verification-sso-title"
+            >
+              <h3 id="verification-sso-title">学校统一认证</h3>
+              <p>使用学校统一身份账号，在学校认证页面完成登录。</p>
+              <SsoStart returnTo={returnTo ?? "/settings/account"} />
+            </section>
+            <div className="verification-or">或，选择学校邮箱认证</div>
+            <section
+              className="verification-option"
+              aria-labelledby="verification-email-title"
+            >
+              <h3 id="verification-email-title">学校邮箱认证</h3>
+              <p>使用你本人的学校邮箱，收取邮件并按提示完成认证。</p>
+              <form
+                className="pc-secondary-form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const d = new FormData(e.currentTarget),
+                    email = String(d.get("email") || "").trim();
+                  send.run(async () => {
+                    const domain = import.meta.env.VITE_VERIFY_EMAIL_DOMAIN;
+                    if (
+                      domain &&
+                      !email.toLowerCase().endsWith("@" + domain.toLowerCase())
+                    )
+                      throw new Error(`请使用 @${domain} 邮箱。`);
+                    await api.sendEmail(email, getSignal());
+                    rememberVerificationReturn(
+                      user?.id,
+                      returnTo ?? "/settings/account",
+                    );
+                  });
+                }}
+              >
+                <Field
+                  label="学校邮箱地址"
+                  hint={
+                    isDemo
+                      ? "演示模式不会发送真实邮件。"
+                      : import.meta.env.VITE_VERIFY_EMAIL_DOMAIN
+                        ? `请使用 @${import.meta.env.VITE_VERIFY_EMAIL_DOMAIN} 邮箱。`
+                        : "请填写学校邮箱，不要使用个人邮箱。"
+                  }
+                >
+                  <input
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="输入你的学校邮箱"
+                    required
+                  />
+                </Field>
+                {send.isSuccess && (
+                  <p className="verification-email-sent" role="status">
+                    邮件已发送，还差最后一步：打开学校邮箱，按邮件提示完成认证，再回到这里刷新认证状态。无需再进行学校统一认证。
+                  </p>
+                )}
+                <TaskError error={send.error} />
+                <button
+                  className="pc-button"
+                  disabled={send.isPending || send.isSuccess}
+                >
+                  {send.isPending ? "正在发送…" : "发送认证邮件"}
+                </button>
+              </form>
+            </section>
             <div className="pc-secondary-row verification-refresh">
               <div>
                 <b>在学校页面或邮箱中完成后</b>
@@ -566,10 +583,8 @@ function VerificationForm() {
                 {me.isFetching ? "正在刷新…" : "刷新认证状态"}
               </button>
             </div>
-          )}
-          <TaskError error={me.error} />
-        </Section>
-        {!user?.verified && (
+            <TaskError error={me.error} />
+          </Section>
           <Note title="认证后可以" icon="verify">
             <ul>
               <li>收藏和喜欢菜品</li>
@@ -577,8 +592,8 @@ function VerificationForm() {
               <li>分享菜品，参与校园美食交流</li>
             </ul>
           </Note>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 }

@@ -218,6 +218,17 @@ async function validateApiV6(page) {
       });
       await p.locator(".profile-growth").click();
       await p.getByRole("heading", { name: "Lv.3", exact: true }).waitFor();
+      assert(
+        !(await p.locator(".growth-rules").evaluate((el) => el.open)),
+        "Experience rules should start collapsed",
+      );
+      assert(
+        !(await p
+          .locator(".growth-records > details")
+          .evaluate((el) => el.open)),
+        "Experience ledger should start collapsed",
+      );
+      await p.locator(".growth-records > details > summary").click();
       await p.getByText("所属日期 2026-11-07", { exact: true }).waitFor();
       assert(
         (await p.getByRole("progressbar").getAttribute("aria-valuenow")) ===
@@ -256,6 +267,7 @@ async function validateApiV6(page) {
       );
       growthMode = "empty";
       await p.reload();
+      await p.locator(".growth-records > details > summary").click();
       await p.getByText("还没有经验记录", { exact: true }).waitFor();
       // Keep the background response from filling the progress cache during this failure case.
       await context.route("**/api/user/activity", (route) =>

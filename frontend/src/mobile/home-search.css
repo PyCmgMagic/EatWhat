@@ -1,0 +1,202 @@
+/* Home search: the toolbar entry and the surface it opens over the hero. */
+.ew-home-search-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 140ms ease-out;
+}
+.ew-home-search-button:active {
+  background: rgb(35 28 24 / 8%);
+}
+.ew-home-search-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
+/* Collapsed, the hero still reserves the bar's footprint so nothing shifts. */
+.mobile-home-search-slot {
+  height: 54px;
+  margin-top: 12px;
+}
+
+.ew-home-search {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+}
+.ew-home-search-scrim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: rgb(35 28 24 / 32%);
+  cursor: pointer;
+  animation: ew-home-search-fade 180ms ease-out;
+  transition: opacity 140ms ease-out;
+}
+.ew-home-search[data-exiting] .ew-home-search-scrim {
+  opacity: 0;
+}
+/* Same coordinates as the collapsed slot: the bar grows out of its old place. */
+.ew-home-search-layer {
+  position: absolute;
+  top: calc(max(20px, env(safe-area-inset-top)) + 56px);
+  left: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: ew-home-search-drop 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    opacity 140ms ease-out,
+    transform 140ms ease-out;
+}
+.ew-home-search[data-exiting] .ew-home-search-layer {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+.ew-home-search-bar {
+  margin: 0;
+  border-color: transparent;
+  background: #fff;
+  box-shadow: 0 12px 30px rgb(35 28 24 / 18%);
+}
+.ew-home-search-panel {
+  max-height: min(58vh, 420px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 18px 44px rgb(35 28 24 / 20%);
+}
+.ew-home-search-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 8px 6px 2px 12px;
+}
+.ew-home-search-caption {
+  margin: 0;
+  color: #8a7b6f;
+  font-size: 12px;
+  font-weight: 600;
+}
+/* The suggestion group has no header row of its own, so it keeps the old lead-in. */
+.ew-home-search-panel section > .ew-home-search-caption {
+  margin: 8px 12px 2px;
+}
+.ew-home-search-clear {
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: #7a6a5e;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.ew-home-search-clear:active {
+  background: #f6efe7;
+  color: #231c18;
+}
+.ew-home-search-entry {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.ew-home-search-entry > .ew-home-search-row {
+  flex: 1;
+  min-width: 0;
+}
+.ew-home-search-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: #a08f80;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.ew-home-search-remove:active {
+  background: #f0e7dc;
+  color: #231c18;
+}
+.ew-home-search-clear:focus-visible,
+.ew-home-search-remove:focus-visible {
+  outline: 2px solid #231c18;
+  outline-offset: 1px;
+}
+.ew-home-search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 14px;
+  background: none;
+  color: #231c18;
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.ew-home-search-row > .design-icon {
+  color: #8a7b6f;
+}
+.ew-home-search-row > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ew-home-search-row:active {
+  background: #f6efe7;
+}
+.ew-home-search-row.is-query {
+  font-weight: 600;
+}
+@keyframes ew-home-search-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ew-home-search-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ew-home-search-scrim,
+  .ew-home-search-layer {
+    animation: none;
+    transition: none;
+  }
+}

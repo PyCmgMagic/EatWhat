@@ -1,10 +1,20 @@
 import { parseId } from "../api/models";
+import { profileSection } from "../app/profile-workspace";
 
 export type PeopleTab = "follow" | "fans";
 
+const otherProfilePath = /^\/users\/\d+$/;
+
+/**
+ * 关注/粉丝面板的宿主：个人工作台里的任意一页（含设置子页），或别人的主页。
+ * 面板浮在当前页面之上，关掉后仍停在原来那个标签页。
+ */
+export function isPeopleHost(pathname: string) {
+  return otherProfilePath.test(pathname) || profileSection(pathname) !== null;
+}
+
 export function peopleHref(pathname: string, search: string, tab: PeopleTab) {
-  const path =
-    pathname === "/me" || /^\/users\/\d+$/.test(pathname) ? pathname : "/me";
+  const path = isPeopleHost(pathname) ? pathname : "/me";
   const params = new URLSearchParams(search);
   params.set("people", tab);
   params.delete("peoplePage");

@@ -10,6 +10,7 @@ import { SlidingTabs, MotionRegion } from "../desktop/motion";
 import { State } from "../desktop/secondary";
 import {
   canReadPeople,
+  isPeopleHost,
   legacyPeopleHref,
   peoplePage,
   type PeopleTab,
@@ -38,8 +39,7 @@ export function ProfilePeopleDialog() {
     { api, user, session, me } = useApp();
   const params = new URLSearchParams(loc.search),
     selected = params.get("people");
-  const isProfile =
-    loc.pathname === "/me" || /^\/users\/\d+$/.test(loc.pathname);
+  const isProfile = isPeopleHost(loc.pathname);
   const open = isProfile && (selected === "follow" || selected === "fans");
   const presence = useExitPresence(open ? loc.pathname + loc.search : null);
   const viewPath = presence.value?.split("?")[0] ?? loc.pathname;
@@ -48,11 +48,11 @@ export function ProfilePeopleDialog() {
   );
   const tab: PeopleTab =
     viewParams.get("people") === "fans" ? "fans" : "follow";
-  const id =
-    viewPath === "/me"
-      ? (user?.id ?? undefined)
-      : parseId(viewPath.split("/").pop());
-  const own = viewPath === "/me" || (!!id && id === user?.id);
+  const viewingOther = /^\/users\/\d+$/.test(viewPath);
+  const id = viewingOther
+    ? parseId(viewPath.split("/").pop())
+    : (user?.id ?? undefined);
+  const own = !viewingOther || (!!id && id === user?.id);
   const dialog = useRef<HTMLDialogElement>(null),
     titleId = useId();
   const profile = useQuery({

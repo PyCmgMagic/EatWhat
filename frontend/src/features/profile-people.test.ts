@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   canReadPeople,
+  isPeopleHost,
   legacyPeopleHref,
   peopleHref,
   peoplePage,
@@ -14,6 +15,32 @@ describe("profile people routes", () => {
     expect(peopleHref("/users/21", "", "follow")).toBe(
       "/users/21?people=follow",
     );
+  });
+  it("opens over the workspace tab the reader is on instead of jumping home", () => {
+    expect(peopleHref("/settings", "", "fans")).toBe("/settings?people=fans");
+    expect(peopleHref("/me/shares", "?tab=comments", "fans")).toBe(
+      "/me/shares?tab=comments&people=fans",
+    );
+    expect(peopleHref("/settings/privacy", "?tab=follow", "follow")).toBe(
+      "/settings/privacy?tab=follow&people=follow",
+    );
+    expect(peopleHref("/community", "", "fans")).toBe("/me?people=fans");
+  });
+  it("only hosts the panel on profile pages and other people's profiles", () => {
+    for (const path of [
+      "/me",
+      "/me/shares",
+      "/submissions/7",
+      "/favorites",
+      "/me/growth",
+      "/history",
+      "/settings",
+      "/settings/privacy",
+      "/users/21",
+    ])
+      expect(isPeopleHost(path), path).toBe(true);
+    for (const path of ["/", "/community", "/foods/1", "/users/abc"])
+      expect(isPeopleHost(path), path).toBe(false);
   });
   it("redirects old self and other-user links into the right profile", () => {
     expect(legacyPeopleHref("?tab=fans", 10)).toBe("/me?people=fans");

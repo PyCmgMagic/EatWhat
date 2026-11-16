@@ -105,6 +105,7 @@ async function validateDishArtSurfaces(page) {
           "Page overflows on " + route,
         );
         if (route === "/me/growth") {
+          await p.locator(".growth-records > details > summary").click();
           await p
             .getByRole("heading", { name: "还没有经验记录", exact: true })
             .waitFor();

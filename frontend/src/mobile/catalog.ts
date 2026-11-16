@@ -49,7 +49,7 @@ export const demoDishes = [
     price: 16,
     asset: "luosifen",
     stage: "#A8321C",
-    tile: "#F3D6CF",
+    tile: "#EFC5BA",
     category: "staple",
     restaurantId: 4,
   },

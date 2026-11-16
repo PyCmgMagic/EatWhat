@@ -1,10 +1,28 @@
-import { businessDate, validBusinessDate } from "../api/growth";
+import {
+  businessDate,
+  validBusinessDate,
+  type ExperienceRule,
+} from "../api/growth";
 import type { Query } from "../api/client";
 import { ApiError } from "../api/client";
 import type { Schema } from "../api/models";
 
 export type DemoGrowth = { entries: Schema["ExperienceEntryResponse"][] };
-function progress(state: DemoGrowth): Schema["GrowthProgressResponse"] {
+/** 后端 v2 /user/level 的 rules，演示模式与真实接口保持同一套经验来源。 */
+const DEMO_RULES: ExperienceRule[] = [
+  { source: "daily_use", name: "每日使用", amount: 5, dailyCap: 1 },
+  { source: "verified", name: "完成学生认证", amount: 50, dailyCap: 1 },
+  { source: "food_published", name: "发布菜品", amount: 15, dailyCap: 3 },
+  { source: "restaurant_created", name: "新建店铺", amount: 10, dailyCap: 2 },
+  { source: "content_edited", name: "完善店铺或菜品", amount: 3, dailyCap: 5 },
+  { source: "restaurant_rated", name: "评价店铺", amount: 3, dailyCap: 3 },
+  { source: "comment_posted", name: "发表评论", amount: 3, dailyCap: 3 },
+  { source: "food_liked", name: "菜品被赞", amount: 2, dailyCap: 20 },
+  { source: "comment_liked", name: "评论被赞", amount: 1, dailyCap: 10 },
+];
+function progress(
+  state: DemoGrowth,
+): Schema["GrowthProgressResponse"] & { rules: ExperienceRule[] } {
   const total = state.entries.reduce((sum, e) => sum + (e.experience ?? 0), 0);
   const levels = [0, 30, 100, 250, 500, 1000, 2000, 4000, 8000, 16000];
   const index = levels.filter((start) => total >= start).length - 1,
@@ -19,6 +37,7 @@ function progress(state: DemoGrowth): Schema["GrowthProgressResponse"] {
     maxLevel: next == null,
     levelRuleVersion: "growth-levels-v1",
     dailyExperience: 5,
+    rules: DEMO_RULES,
   };
 }
 export function demoGrowth(

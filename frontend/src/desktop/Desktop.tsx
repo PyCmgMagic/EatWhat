@@ -8,7 +8,6 @@ import ProfileOverview from "../features/ProfileOverview";
 import ProfileSpaceHeader from "../features/ProfileSpaceHeader";
 import HelpFeedback, { isHelpFeedbackPath } from "../features/HelpFeedback";
 import DesktopRouteSkeleton from "./DesktopRouteSkeleton";
-import { ProfileSectionNav } from "../features/ProfileSectionNav";
 import { unreadCount } from "../api/notifications";
 import {
   useEffect,
@@ -74,7 +73,7 @@ import {
   heroPlateTransform,
   nearestHeroPosition,
 } from "../motion/hero-orbit";
-import { isV4Path } from "../features/v4-paths";
+import { isV4Path, routeMotionKey } from "../features/v4-paths";
 import {
   FeatureAvailability,
   useRemoteConfig,
@@ -224,7 +223,7 @@ export default function DesktopExperience({
               ? "profile-workspace"
               : location.pathname.startsWith("/publish")
                 ? "/publish"
-                : location.pathname
+                : routeMotionKey(location.pathname)
           }
           order={location.pathname === "/nearby" ? 1 : workspace ? 2 : 0}
         >
@@ -514,7 +513,8 @@ function DesktopPage({
       </DesktopGate>
     );
   if (isHelpFeedbackPath(loc.pathname)) return <HelpFeedback />;
-  if (isV4Path(loc.pathname)) return <V4Routes key={loc.pathname} />;
+  if (isV4Path(loc.pathname))
+    return <V4Routes key={routeMotionKey(loc.pathname)} />;
   if (/^\/foods\/\d+\/edit$/.test(loc.pathname)) return <EditFood />;
   if (isShopEditPath(loc.pathname)) return <EditRestaurant />;
   if (["/settings/username", "/settings/blocked"].includes(loc.pathname))
@@ -1943,9 +1943,6 @@ export function DesktopShares() {
           </Link>
         )}
       </header>
-      <div className="pc-section-toolbar">
-        <ProfileSectionNav section="shares" />
-      </div>
       {tab !== "comments" && query.isPlaceholderData && (
         <p className="pc-tab-loading" role="status">
           正在切换内容…

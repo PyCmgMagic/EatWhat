@@ -6,7 +6,6 @@ import { useArea } from "../../app/area";
 import { Card, Shell, QueryView, safeLink } from "./shared";
 import type { Schema } from "../../api/models";
 import { DesignIcon as Icon } from "../../mobile/ui";
-import { ProfileSectionNav } from "../ProfileSectionNav";
 import "../profile-activity.css";
 export function recommendationBatchSize(
   config?: Schema["ClientConfigResponse"],
@@ -80,11 +79,14 @@ export function RemoteBanner() {
     </aside>
   );
 }
-export function Announcements() {
+/**
+ * 「消息通知」的站点公告视图。页头与分类导航由 Messages 持有，
+ * 两个视图切换时只替换这里的内容。
+ */
+export function AnnouncementsPanel() {
   const q = useRemoteConfig();
   return (
-    <Shell title="消息通知" back="/notifications">
-      <ProfileSectionNav section="messages" />
+    <>
       <div className="profile-activity-toolbar profile-announcement-intro">
         <div>
           <h2>站点公告</h2>
@@ -137,7 +139,7 @@ export function Announcements() {
           ))}
         </div>
       </QueryView>
-    </Shell>
+    </>
   );
 }
 export function FeatureAvailability({

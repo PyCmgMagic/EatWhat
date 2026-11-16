@@ -31,6 +31,15 @@ it("uses the chosen stage palette on uploaded dish cards", () => {
   expect(visual.tile).toBe("#F6DDD3");
 });
 
+it("keeps a deeper card tile for the darkest red stage", () => {
+  expect(visualFor({ name: "锅包肉", stageColor: "redoil" }).tile).toBe(
+    "#EFC5BA",
+  );
+  expect(visualFor({ name: "番茄牛腩饭", stageColor: "tomato" }).tile).toBe(
+    "#F6DDD3",
+  );
+});
+
 it("ignores invalid saved colors and uses the category palette", () => {
   vi.stubGlobal("localStorage", {
     getItem: () => JSON.stringify({ "foods/my-photo.jpg": "invalid" }),

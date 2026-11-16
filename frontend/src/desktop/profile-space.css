@@ -1,15 +1,37 @@
 .pc-profile-space {
   width: 100%;
   min-width: 0;
+  /* 介绍卡与内容卡共用同一个内缩值：滚动堆叠时内容卡才能严丝合缝地盖住介绍卡。 */
+  --pc-space-inset: 18px;
+}
+/* 让介绍卡与内容卡同宽，否则介绍卡被钉住后会在内容卡两侧漏出竖条。 */
+.pc-profile-space > .profile-overview-hero {
+  margin-inline: var(--pc-space-inset);
+}
+/* 滚动堆叠：介绍卡钉在页头下方，内容卡带着圆角从下往上滑过它。 */
+@media (prefers-reduced-motion: no-preference) {
+  .pc-profile-space > .profile-overview-hero {
+    position: sticky;
+    top: var(--header-height, 94px);
+  }
 }
 .pc-profile-space > .profile-overview-tabbar {
-  position: relative;
-  z-index: 3;
-  margin: -32px 18px 0;
+  /* 内容区滚动时这排 tab 吸附在页头下方，切完 tab 内容从它下面接着展开。 */
+  position: sticky;
+  top: var(--header-height, 94px);
+  z-index: 4;
+  margin: -32px var(--pc-space-inset) 0;
   border: 1px solid rgb(234 227 220 / 80%);
   border-bottom-color: var(--overview-line);
   border-radius: 28px 28px 0 0;
   background: #fff;
+  /* 朝上的投影让内容卡在读起来是「浮在介绍卡前面」的那一层。 */
+  box-shadow: 0 -10px 26px -8px rgb(35 28 24 / 32%);
+}
+/* 吸附后上圆角会漏出介绍卡的颜色，压平并换成朝下的分隔阴影。 */
+.pc-profile-space > .profile-overview-tabbar[data-pinned] {
+  border-radius: 0;
+  box-shadow: 0 10px 22px -14px rgb(35 28 24 / 28%);
 }
 .pc-profile-space-content {
   position: relative;
@@ -17,13 +39,15 @@
   width: auto;
   min-width: 0;
   min-height: 360px;
-  margin: 0 18px;
+  margin: 0 var(--pc-space-inset);
   border: 1px solid rgb(234 227 220 / 80%);
   border-top: 0;
   border-radius: 0 0 28px 28px;
   background: #fff;
   box-shadow: 0 16px 40px rgb(52 39 28 / 7%);
   scroll-margin-top: calc(var(--header-height, 94px) + 24px);
+  /* 位置由导航层统一还原，关掉浏览器的滚动锚定以免内容替换时再挪一次。 */
+  overflow-anchor: none;
 }
 .pc-profile-space-content:focus {
   outline: none;
@@ -61,11 +85,8 @@
   }
 }
 @media (max-width: 700px) {
-  .pc-profile-space > .profile-overview-tabbar {
-    margin-inline: 10px;
-  }
-  .pc-profile-space-content {
-    margin-inline: 10px;
+  .pc-profile-space {
+    --pc-space-inset: 10px;
   }
   .pc-profile-space-content
     > .pc-motion-region
@@ -156,16 +177,6 @@
 .pc-profile-space-content .pc-profile-content.profile-shares {
   padding: 32px;
 }
-.pc-profile-space-content .profile-shares .pc-section-toolbar {
-  margin-bottom: 24px;
-  padding: 0;
-  border: 0;
-}
-.pc-profile-space-content .profile-shares .profile-section-nav {
-  width: fit-content;
-  max-width: 100%;
-  margin: 0;
-}
 .pc-profile-space-content .profile-shares-publish {
   min-height: 44px;
   border-radius: 13px;
@@ -210,66 +221,414 @@
   border-radius: 20px;
   background: #faf7f3;
 }
+/* 我的评论：单列列表 + 状态色分明的白卡 */
 .pc-profile-space-content
   .profile-shares[data-tab="comments"]
   .comments-my-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pc-profile-space-content
+  .profile-shares[data-tab="comments"]
+  .comments-my-list
+  > .comments-state,
+.pc-profile-space-content
+  .profile-shares[data-tab="comments"]
+  .comments-my-list
+  > .comments-pager {
+  width: 100%;
 }
 .pc-profile-space-content .comments-my-list .comments-submission,
 .pc-profile-space-content .comments-my-list .comments-submission:first-of-type {
+  display: grid;
+  grid-template-columns: 152px minmax(0, 1fr) auto;
+  column-gap: 26px;
+  align-items: center;
   min-width: 0;
-  padding: 20px;
-  border: 1px solid #ebe3da;
-  border-radius: 18px;
-  background: #faf8f5;
+  padding: 18px 24px;
+  border: 1px solid #ece4da;
+  border-radius: 20px;
+  background: #fff;
+  transition:
+    border-color 180ms ease,
+    box-shadow 200ms ease;
 }
 .pc-profile-space-content .comments-my-list .comments-submission:hover {
-  border-color: #dfd1c1;
-  background: #fff;
+  border-color: #e0d0be;
+  box-shadow: 0 16px 34px -26px rgb(52 39 28 / 55%);
+}
+.pc-profile-space-content .comments-my-list .comments-submission-heading {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: stretch;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  padding-right: 20px;
+  border-right: 1px solid #f4ede5;
+  color: #9a8b7d;
+  font-size: 12px;
+}
+.pc-profile-space-content
+  .comments-my-list
+  .comments-submission-heading
+  > span:first-child {
+  order: 2;
+  color: #a1907d;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.pc-profile-space-content
+  .comments-my-list
+  .comments-submission-heading
+  > .comments-status {
+  order: 1;
+}
+.pc-profile-space-content
+  .comments-my-list
+  .comments-submission-heading
+  time {
+  order: 3;
+  margin-left: 0;
+  color: #a99a8b;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
 }
 .pc-profile-space-content .comments-my-list .comments-text {
-  margin: 16px 0;
-  color: #332920;
+  grid-column: 2;
+  max-width: 72ch;
+  margin: 0;
+  color: #2e251e;
   font-size: 15px;
-  line-height: 1.8;
+  line-height: 1.85;
+}
+.pc-profile-space-content .comments-my-list .comments-muted {
+  grid-column: 2;
+  margin: 4px 0 0;
+  color: #9a8b7d;
+  font-size: 12px;
+}
+.pc-profile-space-content .comments-my-list .comments-rejection {
+  grid-column: 2 / -1;
+  margin: 10px 0 0;
+  padding: 10px 14px;
+  border: 1px solid #f6ded5;
+  border-radius: 12px;
+  background: #fdf3ef;
+  color: #a8321c;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.pc-profile-space-content .comments-my-list .comments-rejection::before {
+  content: "未通过原因";
+  margin-right: 8px;
+  font-weight: 700;
+  opacity: 0.8;
 }
 .pc-profile-space-content .comments-my-list .comments-submission-actions {
+  grid-column: 3;
+  grid-row: 1;
   align-items: center;
-  padding-top: 12px;
-  border-top: 1px solid #e9e1d8;
+  gap: 6px;
+  margin: 0 0 0 14px;
+  padding: 0;
+  border: 0;
 }
-.pc-profile-space-content .comments-my-list .comments-submission-actions > a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 40px;
-  padding: 0 13px;
-  border-radius: 10px;
+.pc-profile-space-content
+  .comments-my-list
+  .comments-submission-actions
+  > a {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #ece0d2;
+  border-radius: 999px;
   background: #fff;
   color: #5e4b3b;
+  font-size: 12.5px;
+  font-weight: 650;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
 }
-.pc-profile-space-content .comments-status {
-  background: #fff1c7;
+.pc-profile-space-content
+  .comments-my-list
+  .comments-submission-actions
+  > a:hover {
+  border-color: #dcc9b3;
+  background: #fffdf8;
+}
+.pc-profile-space-content .comments-my-list .comments-delete {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: #9a8b7d;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition:
+    color 160ms ease,
+    background 160ms ease;
+}
+.pc-profile-space-content .comments-my-list .comments-delete:hover {
+  background: #fdf3ef;
+  color: #a8321c;
+}
+.pc-profile-space-content .comments-my-list .comments-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  max-width: 360px;
+  padding: 10px 14px;
+  border: 1px solid #f1e3d8;
+  border-radius: 14px;
+  background: #fdf9f4;
+  color: #6e625b;
+  font-size: 12px;
+}
+.pc-profile-space-content .comments-my-list .comments-confirm p {
+  flex: 1 0 100%;
+  margin: 0 0 2px;
+  line-height: 1.7;
+}
+.pc-profile-space-content .comments-my-list .comments-confirm button {
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  color: #a8321c;
+  font-size: 12px;
+  font-weight: 650;
+}
+.pc-profile-space-content .comments-my-list .comments-confirm button:hover {
+  background: #fceee8;
+}
+.pc-profile-space-content .comments-my-list .comments-confirm button + button {
+  color: #857567;
+}
+.pc-profile-space-content
+  .comments-my-list
+  .comments-confirm
+  button
+  + button:hover {
+  background: #f5efe8;
+  color: #2e251e;
+}
+/* 我的评论：空态 */
+.pc-profile-space-content
+  .profile-shares[data-tab="comments"]
+  .comments-my-list
+  > .comments-state {
+  min-height: 340px;
+  gap: 14px;
+  padding: 48px 32px;
+  border-radius: 26px;
+  background: radial-gradient(
+    115% 150% at 80% 16%,
+    #fff3d6 0%,
+    #fcf7f1 50%,
+    #faf7f3 100%
+  );
+  color: #6e625b;
+  font-size: 14px;
+  text-align: center;
+}
+.pc-profile-space-content
+  .profile-shares[data-tab="comments"]
+  .comments-my-list
+  > .comments-state
+  > svg {
+  box-sizing: content-box;
+  width: 30px;
+  height: 30px;
+  padding: 17px;
+  border-radius: 50%;
+  background: #fff;
+  color: #b4801f;
+  box-shadow: 0 14px 28px -20px rgb(52 39 28 / 60%);
+}
+.pc-profile-space-content
+  .profile-shares[data-tab="comments"]
+  .comments-my-list
+  > .comments-state
+  > p {
+  color: #6e625b;
+  font-size: 15px;
+}
+.pc-profile-space-content
+  .profile-shares[data-tab="comments"]
+  .comments-my-list
+  > .comments-state
+  > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: #231c18;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 12px 24px -16px rgb(35 28 24 / 70%);
 }
 .pc-profile-space-content .ew-favorites {
-  padding: 32px;
+  padding: 34px 32px 40px;
 }
 .pc-profile-space-content .ew-favorites .profile-section-heading {
   margin: 0 0 20px;
   padding: 0;
 }
+.pc-profile-space-content .ew-favorites .profile-section-heading,
+.pc-profile-space-content .profile-collections-head .profile-section-heading {
+  margin: 0;
+  padding: 0;
+}
+.pc-profile-space-content .profile-collections-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 24px;
+  flex-wrap: wrap;
+  margin: 0 0 26px;
+}
+.pc-profile-space-content .profile-collections-head .profile-section-heading {
+  flex: 1 1 320px;
+  min-width: 0;
+}
 .pc-profile-space-content
-  .ew-favorites
+  .profile-collections-head
   .profile-section-heading
-  + .profile-section-nav {
-  margin: 0 0 20px;
+  h1 {
+  font-size: 33px;
+  letter-spacing: -0.04em;
+}
+.pc-profile-space-content
+  .profile-collections-head
+  .profile-section-heading
+  p {
+  color: #7d6f63;
+  font-size: 13.5px;
+}
+.pc-profile-space-content .profile-collections-head .profile-section-nav {
+  flex: 0 0 auto;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 4px;
+  padding: 4px;
+  gap: 2px;
+  border: 0;
+  border-radius: 999px;
+  background: #f3eee8;
+  overflow: visible;
+}
+.pc-profile-space-content .profile-collections-head .profile-section-nav > a {
+  min-height: 34px;
+  padding: 7px 17px;
+  border-radius: 999px;
+  color: #6e625b;
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.pc-profile-space-content
+  .profile-collections-head
+  .profile-section-nav
+  > a:hover {
+  background: rgb(255 255 255 / 64%);
+  color: #2e251e;
+}
+.pc-profile-space-content
+  .profile-collections-head
+  .profile-section-nav
+  > a[aria-current="page"] {
+  background: #fff;
+  color: #231c18;
+  font-weight: 750;
+  box-shadow:
+    0 1px 2px rgb(35 28 24 / 8%),
+    0 4px 12px rgb(52 39 28 / 8%);
+}
+.pc-profile-space-content
+  .profile-collections-head
+  .profile-section-nav
+  > a[aria-current="page"]::after {
+  display: none;
+}
+
+/* 帮助与反馈：标题、子导航、正文统一在同一条 32px 内缩基线上，
+   子导航改成与收藏页一致的 fit-content 药丸组（去掉整条底色和黄线）。 */
+.pc-profile-space-content .help-feedback-page .profile-section-heading {
+  margin: 0 32px 18px;
+  padding: 32px 0 0;
+}
+.pc-profile-space-content .help-feedback-page .profile-section-nav {
+  width: fit-content;
+  max-width: calc(100% - 64px);
+  gap: 2px;
+  margin: 0 32px 26px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #f3eee8;
+  overflow: visible;
+}
+.pc-profile-space-content .help-feedback-page .profile-section-nav > a {
+  min-height: 34px;
+  padding: 7px 17px;
+  border-radius: 999px;
+  color: #6e625b;
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.pc-profile-space-content
+  .help-feedback-page
+  .profile-section-nav
+  > a:hover {
+  background: rgb(255 255 255 / 64%);
+  color: #2e251e;
+}
+.pc-profile-space-content
+  .help-feedback-page
+  .profile-section-nav
+  > a[aria-current="page"] {
+  background: #fff;
+  color: #231c18;
+  font-weight: 750;
+  box-shadow:
+    0 1px 2px rgb(35 28 24 / 8%),
+    0 4px 12px rgb(52 39 28 / 8%);
+}
+.pc-profile-space-content
+  .help-feedback-page
+  .profile-section-nav
+  > a::after,
+.pc-profile-space-content
+  .help-feedback-page
+  .profile-section-nav
+  > .profile-section-tab-indicator {
+  display: none;
+}
+.pc-profile-space-content .help-feedback-page > .profile-help {
+  margin: 0 32px 40px;
+}
+/* 提交反馈 / 反馈记录也走同一条 32px 基线，切换子标签时内容不会左右跳。 */
+.pc-profile-space-content .help-feedback-page > .v4-page {
+  width: auto;
+  max-width: 1120px;
+  margin: 0 auto 40px 32px;
+  padding: 0;
 }
 .pc-profile-space-content .ew-favorites .favorites-filters {
   padding: 12px;
-  border-color: #ebe3da;
-  border-radius: 18px;
-  background: #faf7f3;
+  border-color: #ede4da;
+  border-radius: 20px;
+  background: #fbf8f4;
+}
+.pc-profile-space-content .ew-favorites .favorites-search-row {
+  gap: 10px;
+}
+.pc-profile-space-content .ew-favorites .favorites-search {
+  border-radius: 13px;
 }
 .pc-profile-space-content .ew-favorites .favorites-search,
 .pc-profile-space-content .ew-favorites .favorites-filter-toggle,
@@ -280,37 +639,404 @@
   background: #2e251e;
   color: #fff;
 }
+@media (min-width: 1000px) {
+  .pc-profile-space-content .ew-favorites .favorites-filters {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .pc-profile-space-content .ew-favorites .favorites-search-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+    border: 1px solid #ede4da;
+    border-radius: 19px;
+    background: #fff;
+    box-shadow:
+      0 1px 2px rgb(52 39 28 / 4%),
+      0 20px 44px -36px rgb(52 39 28 / 55%);
+    transition:
+      border-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+  .pc-profile-space-content .ew-favorites .favorites-search-row:focus-within {
+    border-color: #dcc596;
+    box-shadow:
+      0 0 0 4px rgb(255 207 68 / 14%),
+      0 20px 44px -36px rgb(52 39 28 / 55%);
+  }
+  .pc-profile-space-content .ew-favorites .favorites-search {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 44px;
+    padding-left: 10px;
+    border: 0;
+    background: transparent;
+    color: #8a7c71;
+  }
+  .pc-profile-space-content .ew-favorites .favorites-search:focus-within {
+    outline: 0;
+  }
+  .pc-profile-space-content .ew-favorites .favorites-search > input {
+    height: 44px;
+    font-size: 13.5px;
+  }
+  .pc-profile-space-content .ew-favorites .favorites-search-row > .ew-select {
+    display: flex;
+    align-items: stretch;
+    flex: 0 0 134px;
+    margin-left: 2px;
+    border-left: 1px solid #f2eae2;
+  }
+  .pc-profile-space-content
+    .ew-favorites
+    .favorites-search-row
+    > .ew-select
+    > .ew-select-trigger {
+    min-height: 44px;
+    padding: 0 8px 0 15px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    box-shadow: none;
+    color: #5c5047;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  .pc-profile-space-content
+    .ew-favorites
+    .favorites-search-row
+    > .ew-select
+    > .ew-select-trigger:hover:not(:disabled) {
+    background: #f8f3ec;
+  }
+  .pc-profile-space-content .ew-favorites .favorites-filter-toggle {
+    min-height: 44px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #6a5d52;
+    font-size: 12.5px;
+    font-weight: 600;
+    transition:
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+  .pc-profile-space-content .ew-favorites .favorites-filter-toggle:hover {
+    background: #f8f3ec;
+    color: #2e251e;
+  }
+  .pc-profile-space-content
+    .ew-favorites
+    .favorites-filter-toggle[aria-expanded="true"] {
+    background: #fff2cd;
+    border: 0;
+    color: #2e251e;
+  }
+  .pc-profile-space-content .ew-favorites .favorites-search-submit {
+    min-height: 44px;
+    margin-left: 2px;
+    padding: 0 22px;
+    border-radius: 14px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .pc-profile-space-content .ew-favorites .favorites-search-submit:hover {
+    background: #40342b;
+  }
+  .pc-profile-space-content .ew-favorites .favorites-advanced:not([hidden]) {
+    margin: 12px 2px 0;
+    padding: 16px 18px;
+    border: 1px solid #efe7df;
+    border-radius: 18px;
+    background: #fcf9f5;
+    gap: 16px 26px;
+  }
+}
 .pc-profile-space-content .ew-favorites .favorites-library-bar {
-  margin: 20px 0;
-  padding: 0 2px;
+  margin: 26px 0 18px;
+  padding: 0;
+  gap: 12px 18px;
+}
+.pc-profile-space-content .ew-favorites .ew-tag-filter {
+  gap: 8px;
 }
 .pc-profile-space-content .ew-favorites .ew-tag-filter button {
-  border-color: transparent;
+  min-height: 34px;
+  padding: 0 15px;
+  border: 1px solid #eae1d7;
   border-radius: 999px;
-  background: #f5f0ea;
+  background: #fff;
+  color: #6a5d52;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease;
+}
+.pc-profile-space-content
+  .ew-favorites
+  .ew-tag-filter
+  button:hover:not([aria-pressed="true"]) {
+  border-color: #d9c9b7;
+  color: #2e251e;
 }
 .pc-profile-space-content
   .ew-favorites
   .ew-tag-filter
   button[aria-pressed="true"] {
-  border-color: #e4c66f;
-  background: #fff3cd;
+  border-color: #2e251e;
+  background: #2e251e;
+  color: #fff;
+  box-shadow: 0 3px 10px rgb(46 37 30 / 16%);
+}
+.pc-profile-space-content
+  .ew-favorites
+  .ew-tag-filter
+  button.favorites-clear-filters {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 2px;
+  padding: 0 13px 0 11px;
+  border-style: dashed;
+  border-color: #e0d2c3;
+  background: transparent;
+  color: #97887a;
+  font-weight: 600;
+}
+.pc-profile-space-content
+  .ew-favorites
+  .ew-tag-filter
+  button.favorites-clear-filters:hover {
+  border-color: #d3c0aa;
+  background: #fbf7f2;
+  color: #6a5d52;
+}
+.pc-profile-space-content .ew-favorites .ew-results-head {
+  align-items: center;
+  gap: 12px;
+  min-height: 32px;
+  margin: 0 0 18px;
+}
+.pc-profile-space-content .ew-favorites .favorites-library-bar .ew-results-head {
+  margin: 0;
+}
+.pc-profile-space-content .ew-favorites .ew-results-head > b {
+  color: #8a7c71;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.pc-profile-space-content .ew-favorites .favorites-results-label {
+  color: #2e251e;
+  font-size: 15px;
+  font-weight: 750;
+}
+.pc-profile-space-content .ew-favorites .favorites-results-tools {
+  gap: 10px;
+}
+.pc-profile-space-content
+  .ew-favorites
+  .favorites-results-tools
+  > .ew-select {
+  width: 126px;
+}
+.pc-profile-space-content
+  .ew-favorites
+  .favorites-results-tools
+  > .ew-select
+  > .ew-select-trigger {
+  min-height: 32px;
+  padding: 5px 11px;
+  border: 1px solid #ece3d9;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: none;
+  color: #6a5d52;
+  font-size: 12px;
+  font-weight: 600;
+}
+.pc-profile-space-content
+  .ew-favorites
+  .favorites-results-tools
+  > .ew-select
+  > .ew-select-trigger:hover:not(:disabled) {
+  border-color: #dccfbe;
+  background: #fffdf9;
 }
 .pc-profile-space-content .ew-favorites .ew-results {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
+  gap: 20px;
 }
 .pc-profile-space-content .ew-favorites .ew-food-card {
-  padding: 11px 11px 0;
-  border-radius: 20px;
+  padding: 10px 10px 0;
+  border: 1px solid #f0e8e0;
+  border-radius: 22px;
+  transition:
+    transform 220ms cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+.pc-profile-space-content .ew-favorites .ew-food-card:hover {
+  transform: translateY(-2px);
+  border-color: #e3d5c4;
+  box-shadow: 0 16px 32px -20px rgb(52 39 28 / 30%);
 }
 .pc-profile-space-content .ew-favorites .ew-food-photo {
   height: auto;
-  aspect-ratio: 1.2;
+  aspect-ratio: 1.24;
+  border-radius: 15px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-profile-space-content .ew-favorites .ew-food-card {
+    transition: none;
+  }
+  .pc-profile-space-content .ew-favorites .ew-food-card:hover {
+    transform: none;
+  }
 }
 .pc-profile-space-content .ew-favorites .favorites-empty {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+  min-height: 0;
+  padding: 52px 56px;
   border: 0;
-  background: #faf7f3;
+  border-radius: 26px;
+  background:
+    radial-gradient(115% 150% at 86% 34%, #fff3d6 0%, #fcf7f1 46%, #faf7f3 100%);
+  text-align: left;
+  overflow: hidden;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty-copy {
+  max-width: 440px;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty h2 {
+  margin: 0 0 12px;
+  font-size: 27px;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty p {
+  max-width: 400px;
+  margin: 0 0 26px;
+  color: #7a6c60;
+  font-size: 13.5px;
+  line-height: 1.9;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty-actions {
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty .ew-button {
+  padding: 13px 22px;
+  border-radius: 13px;
+  box-shadow: 0 12px 26px -16px rgb(46 37 30 / 60%);
+  font-size: 13px;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty .ew-button:hover {
+  background: #40342b;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty-art {
+  width: 210px;
+  height: 210px;
+  margin: 0;
+}
+.pc-profile-space-content
+  .ew-favorites
+  .favorites-empty-art
+  > .dish-illustration {
+  transform: rotate(-14deg);
+}
+@media (max-width: 1180px) {
+  .pc-profile-space-content .ew-favorites .favorites-empty {
+    flex-direction: column-reverse;
+    gap: 28px;
+    padding: 44px 32px;
+    text-align: center;
+  }
+  .pc-profile-space-content .ew-favorites .favorites-empty p {
+    margin-inline: auto;
+  }
+  .pc-profile-space-content .ew-favorites .favorites-empty-actions {
+    justify-content: center;
+  }
+  .pc-profile-space-content .ew-favorites .favorites-empty-art {
+    width: 168px;
+    height: 168px;
+  }
+}
+.pc-profile-space-content
+  .v4-page[data-route="/restaurants/favorites"]
+  .profile-collections-head {
+  margin: 0 0 12px;
+}
+.pc-profile-space-content
+  .v4-page[data-route="/restaurants/favorites"]
+  .profile-collections-toolbar {
+  margin: 0 0 8px;
+}
+.pc-profile-space-content
+  .v4-page[data-route="/restaurants/favorites"]
+  .profile-collections-toolbar
+  .v4-button {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid #e7dfd7;
+  border-radius: 999px;
+  background: #fff;
+  color: #2e251e;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.pc-profile-space-content
+  .v4-page[data-route="/restaurants/favorites"]
+  .v4-state {
+  min-height: 360px;
+  padding: 48px 32px;
+  border: 0;
+  border-radius: 26px;
+  background: radial-gradient(
+    120% 155% at 78% 22%,
+    #fff3d6 0%,
+    #fcf7f1 48%,
+    #faf7f3 100%
+  );
+}
+.pc-profile-space-content
+  .v4-page[data-route="/restaurants/favorites"]
+  .v4-state
+  > .v4-state-dish {
+  --dish-illustration-size: 156px;
+  margin-bottom: 20px;
+}
+.pc-profile-space-content
+  .v4-page[data-route="/restaurants/favorites"]
+  .v4-state
+  h3 {
+  margin: 0 0 10px;
+  color: #2e251e;
+  font-size: 25px;
+  letter-spacing: -0.02em;
+}
+.pc-profile-space-content
+  .v4-page[data-route="/restaurants/favorites"]
+  .v4-state
+  p {
+  max-width: 380px;
+  color: #7d6f63;
+  font-size: 13.5px;
+  line-height: 1.85;
 }
 .pc-profile-space-content .pc-history-page {
   padding: 32px;
@@ -444,20 +1170,58 @@
   border-color: #ead9ae;
   background: #fffaf0;
 }
+/* 成长页：等级、进度与折叠区共用同一条左右轴线，进度独占一行。 */
 .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-summary {
-  grid-template-columns: auto minmax(150px, 0.7fr) minmax(280px, 1.3fr);
-  gap: 24px;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 20px 24px;
+  align-items: center;
 }
 .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-dish {
-  --dish-illustration-size: 128px;
+  --dish-illustration-size: 112px;
+}
+.pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-level {
+  min-width: 0;
 }
 .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-progress {
-  grid-column: auto;
-  align-self: center;
+  grid-column: 1 / -1;
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 16px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #f2e6cf;
+}
+.pc-profile-space-content
+  .v4-page[data-route="/me/growth"]
+  .growth-progress
+  > strong {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.pc-profile-space-content
+  .v4-page[data-route="/me/growth"]
+  .growth-progress
+  > small {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+  text-align: right;
 }
 .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-track {
+  grid-column: 1 / -1;
+  grid-row: 2;
   height: 12px;
+  margin: 12px 0 0;
   background: #eee4cf;
+}
+.pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-rules {
+  margin-top: 18px;
+  padding-top: 14px;
 }
 .pc-profile-space-content
   .v4-page[data-route="/me/growth"]
@@ -466,7 +1230,7 @@
   background: #d99c18;
 }
 .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-rules ul {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-rules li {
@@ -484,6 +1248,31 @@
   .growth-ledger
   li:hover {
   background: #faf7f3;
+}
+/* 「经验记录」默认收起：整卡只留一行摘要，展开后再露明细。 */
+.pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-records {
+  padding: 16px 24px;
+}
+.pc-profile-space-content
+  .v4-page[data-route="/me/growth"]
+  .growth-records:has(details[open]) {
+  padding: 16px 24px 24px;
+}
+.pc-profile-space-content
+  .v4-page[data-route="/me/growth"]
+  .growth-records
+  > details
+  > summary {
+  min-height: 52px;
+}
+.pc-profile-space-content
+  .v4-page[data-route="/me/growth"]
+  .growth-records
+  > details[open]
+  > summary {
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #efe6da;
 }
 .pc-profile-space-content .settings-home {
   max-width: none;
@@ -554,12 +1343,6 @@
   .pc-profile-space-content .settings-home-groups {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-summary {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-  .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-progress {
-    grid-column: 1 / -1;
-  }
   .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-rules ul {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -569,14 +1352,199 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-summary {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: 88px minmax(0, 1fr);
     gap: 16px;
   }
   .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-dish {
     --dish-illustration-size: 88px;
   }
+  .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-progress {
+    column-gap: 8px;
+  }
+  .pc-profile-space-content
+    .v4-page[data-route="/me/growth"]
+    .growth-progress
+    > small {
+    font-size: 11px;
+  }
 }
 
 .pc-profile-space-content .v4-page-title > .v4-page-symbol {
   display: none;
+}
+
+/* 设置类页面：与空间内其他页共用 32px 内边距、描边卡片与统一行高。 */
+.pc-profile-space-content .pc-secondary-body {
+  padding: 30px 32px 32px;
+}
+.pc-profile-space-content .pc-secondary-body > .settings-page-head {
+  margin: 0 0 20px;
+}
+.pc-profile-space-content .pc-secondary-section {
+  margin: 0 0 18px;
+  padding: 22px 24px;
+  border: 1px solid #ebe3da;
+  border-radius: 20px;
+  background: #fff;
+}
+.pc-profile-space-content .pc-settings-account {
+  max-width: none;
+}
+.pc-profile-space-content .pc-settings-account .pc-secondary-row {
+  min-height: 74px;
+  padding: 16px 0;
+  border-bottom-color: #f0e8df;
+}
+.pc-profile-space-content .pc-settings-account .pc-secondary-row b {
+  font-size: 15px;
+}
+.pc-profile-space-content .pc-settings-account .pc-secondary-row p {
+  font-size: 13px;
+}
+.pc-profile-space-content .pc-settings-account .pc-secondary-row:last-child {
+  padding-bottom: 16px;
+}
+.pc-profile-space-content .pc-settings-account .pc-secondary-text-link {
+  min-height: 38px;
+  padding: 0 15px;
+  border: 1px solid #eadfd4;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 650;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.pc-profile-space-content .pc-settings-account .pc-secondary-text-link:hover {
+  background: #fffaf0;
+  border-color: #dcc8ab;
+  text-decoration: none;
+}
+@media (max-width: 900px) {
+  .pc-profile-space-content .pc-secondary-body {
+    padding: 24px 20px;
+  }
+}
+
+/* 空间内的设置子页：让窄面板铺满内容列，避免右侧整块留白。 */
+.pc-profile-space-content .pc-secondary-body .student-verification,
+.pc-profile-space-content
+  .pc-secondary-body
+  .student-verification.verification-complete {
+  max-width: none;
+}
+.pc-profile-space-content .pc-secondary-body .ew-form-panel {
+  width: 100%;
+  max-width: none;
+}
+.pc-profile-space-content .pc-secondary-body .ew-password-panel {
+  padding: 24px;
+  border: 1px solid #ebe3da;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: none;
+}
+.pc-profile-space-content .pc-secondary-body .ew-password-panel :is(form, input) {
+  max-width: 560px;
+}
+/* 只有说明与入口的面板：标题、说明放左，入口做成右侧胶囊行。 */
+.pc-profile-space-content
+  .pc-secondary-body
+  .ew-password-panel:not(:has(form)) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 24px;
+  row-gap: 6px;
+  padding: 22px 24px;
+}
+.pc-profile-space-content
+  .pc-secondary-body
+  .ew-password-panel:not(:has(form))
+  > h2 {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  font-size: 17px;
+}
+.pc-profile-space-content
+  .pc-secondary-body
+  .ew-password-panel:not(:has(form))
+  > p {
+  grid-column: 1;
+  grid-row: 2;
+  margin: 0;
+}
+.pc-profile-space-content
+  .pc-secondary-body
+  .ew-password-panel:not(:has(form))
+  > a {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid #eadfd4;
+  border-radius: 999px;
+  background: #fff;
+  color: #231c18;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.pc-profile-space-content
+  .pc-secondary-body
+  .ew-password-panel:not(:has(form))
+  > a:hover {
+  background: #fffaf0;
+  border-color: #dcc8ab;
+}
+.pc-profile-space-content .settings-home-groups {
+  align-items: stretch;
+}
+
+/* ApiV2 系列的说明卡：同样去掉固定窄宽、补上描边，和空间卡片一致。 */
+.pc-profile-space-content .ew-v2-card {
+  margin: 0 0 20px;
+  border: 1px solid #ebe3da;
+}
+.pc-profile-space-content .ew-v2-account {
+  max-width: none;
+}
+.pc-profile-space-content .pc-secondary-body .verification-complete-actions {
+  max-width: 360px;
+}
+/* 表单里的“发送验证码”等行内动作按钮：补上站点按钮样式。 */
+.pc-profile-space-content .settings-card .text-link {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid #f0d9a4;
+  border-radius: 999px;
+  background: #fdf3da;
+  color: #7a5a1d;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+.pc-profile-space-content .settings-card .text-link:hover:not(:disabled) {
+  background: #fbebc6;
+  border-color: #e9cd91;
+}
+.pc-profile-space-content .settings-card .text-link:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+/* 说明类长文限制在可读行宽内。 */
+.pc-profile-space-content .v4-card > p,
+.pc-profile-space-content .settings-card .section-caption {
+  max-width: 780px;
 }

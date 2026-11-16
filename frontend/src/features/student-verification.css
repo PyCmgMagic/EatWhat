@@ -133,3 +133,310 @@
   font-size: 14px;
   text-decoration: none;
 }
+
+/* 认证完成后的结果页：左「已认证」主卡 + 右「认证记录」侧卡。
+   旧版把结果、按钮、记录都塞进一张 1166px 的白卡，右侧整片空白。 */
+.verify-done {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 22px;
+  align-items: start;
+}
+.verify-done-main {
+  position: relative;
+  min-width: 0;
+  padding: 26px 28px 24px;
+  border: 1px solid #ece3d8;
+  border-radius: 24px;
+  background:
+    radial-gradient(120% 130% at 94% 0%, #fdf4dd 0%, #fffdf9 48%, #fff 100%);
+  overflow: hidden;
+}
+.verify-done-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.verify-done-badge {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #e9f2e2;
+  color: #3f6b2c;
+  box-shadow: 0 0 0 6px rgb(233 242 226 / 55%);
+}
+.verify-done-copy h2 {
+  margin: 0;
+  color: #241d18;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+}
+.verify-done-copy p {
+  margin: 6px 0 0;
+  color: #7a6b5e;
+  font-size: 13px;
+  line-height: 1.75;
+}
+.verify-done-benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.verify-done-benefits li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border: 1px solid #efe6da;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 78%);
+  color: #6d5f52;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.verify-done-benefits .design-icon {
+  color: #4b7a33;
+}
+.verify-done-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid #f2ebe3;
+}
+.verify-done-actions > .pc-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 22px;
+  border-radius: 999px;
+}
+.verify-done-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  padding: 0 4px;
+  color: #6e625b;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.verify-done-aside {
+  min-width: 0;
+}
+.verify-done-aside .ew-verification-methods {
+  gap: 14px;
+  margin: 0;
+  padding: 20px;
+  border: 1px solid #ece3d8;
+  border-radius: 22px;
+  background: #fff;
+}
+.verify-done-aside .ew-verification-methods-heading h3 {
+  font-size: 15px;
+}
+.verify-done-aside .ew-verification-methods-list {
+  gap: 8px;
+}
+.verify-done-aside .ew-method-badge {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f8f5f1;
+  font-size: 13px;
+}
+@media (max-width: 1080px) {
+  .verify-done {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (hover: hover) {
+  .verify-done-link:hover {
+    color: #241d18;
+  }
+  .verify-done-actions > .pc-button:hover {
+    background: #3a3029;
+  }
+}
+
+/* 未认证：与「已认证」结果页共用同一套双列语言（主卡 + 320px 侧卡）。
+   仅桌面端生效，移动端沿用 settings-pages.css 的扁平列表样式。 */
+@media (min-width: 1024px) {
+  .student-verification.pc-secondary-columns {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 22px;
+  }
+  .student-verification > .pc-secondary-section {
+    margin-bottom: 0;
+    padding: 26px 28px 24px;
+    border: 1px solid #ece3d8;
+    border-radius: 24px;
+    background: #fff;
+  }
+  .student-verification > .pc-secondary-section > .pc-secondary-section-title {
+    margin-bottom: 18px;
+  }
+  .student-verification
+    > .pc-secondary-section
+    > .pc-secondary-section-title
+    h2 {
+    font-size: 19px;
+    letter-spacing: -0.01em;
+  }
+  .student-verification .pc-secondary-verification {
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    border: 1px solid #f3e7c8;
+    border-radius: 18px;
+    background: #fdf7e6;
+  }
+  .student-verification .pc-secondary-verification > .design-icon {
+    flex-shrink: 0;
+    color: #8a5a12;
+  }
+  .student-verification .pc-secondary-verification b {
+    font-size: 14.5px;
+  }
+  .student-verification .pc-secondary-verification p {
+    margin: 4px 0 0;
+    color: #7d6a4e;
+    font-size: 12.5px;
+    line-height: 1.7;
+  }
+  .student-verification .pc-secondary-badge {
+    margin-left: auto;
+    padding: 3px 10px 3px 8px;
+    border-radius: 999px;
+    background: #fff;
+    color: #8a5a12;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .student-verification .pc-secondary-badge::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    margin-right: 5px;
+    border-radius: 50%;
+    background: #c98a1c;
+    vertical-align: 1px;
+  }
+  .student-verification .verification-option {
+    padding: 18px 20px;
+    border: 1px solid #efe6da;
+    border-radius: 18px;
+    background: #fdfbf8;
+  }
+  .student-verification .verification-option h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+  }
+  .student-verification .verification-option > p {
+    margin: 0 0 14px;
+    color: #7a6b5e;
+    font-size: 13px;
+  }
+  .student-verification .verification-or {
+    margin: 14px 0;
+    color: #a1907d;
+    font-size: 12px;
+  }
+  .student-verification .verification-or::before,
+  .student-verification .verification-or::after {
+    background: #f0e8df;
+  }
+  .student-verification .ew-sso > :is(button, a) {
+    width: auto;
+    min-width: 190px;
+    margin: 0 0 10px;
+  }
+  .student-verification .verification-refresh {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 18px;
+    padding: 16px 18px;
+    border: 1px dashed #e6d9c8;
+    border-bottom: 0;
+    border-radius: 18px;
+    background: #fbf8f3;
+  }
+  .student-verification .verification-refresh b {
+    font-size: 13.5px;
+  }
+  .student-verification .verification-refresh p {
+    margin: 4px 0 0;
+    color: #7a6b5e;
+    font-size: 12.5px;
+  }
+  .student-verification .verification-refresh .pc-button {
+    flex-shrink: 0;
+  }
+  .student-verification > .pc-secondary-note {
+    margin: 0;
+    padding: 20px;
+    border: 1px solid #ece3d8;
+    border-radius: 22px;
+    background: #fff;
+    color: #6d5f52;
+  }
+  .student-verification > .pc-secondary-note > .design-icon {
+    display: none;
+  }
+  .student-verification > .pc-secondary-note h3 {
+    margin: 0 0 10px;
+    color: #241d18;
+    font-size: 15px;
+  }
+  .student-verification > .pc-secondary-note ul {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+  }
+  .student-verification > .pc-secondary-note li {
+    position: relative;
+    margin: 0 0 8px;
+    padding-left: 17px;
+    font-size: 12.5px;
+    line-height: 1.7;
+  }
+  .student-verification > .pc-secondary-note li:last-child {
+    margin-bottom: 0;
+  }
+  .student-verification > .pc-secondary-note li::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: 2px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #c3d3ad;
+  }
+  .student-verification .verification-email-sent {
+    border: 1px solid #f3e7c8;
+    border-radius: 14px;
+    background: #fdf7e6;
+    color: #6b4d13;
+    font-size: 13px;
+  }
+}
+@media (min-width: 1024px) and (max-width: 1080px) {
+  .student-verification.pc-secondary-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

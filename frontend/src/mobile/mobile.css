@@ -136,20 +136,17 @@ button:disabled {
   inset: auto !important;
   gap: 8px;
 }
-.mobile-home-toolbar > a {
+/* The location chip gives up width before the scene toggle does: the design's
+   120px basis plus the 106px toggle overflow the flex line below 375px, which
+   used to wrap the toggle onto a second row once the search button moved in. */
+.mobile-home-toolbar > div:first-child > a {
+  flex: 1 1 0 !important;
   min-width: 0;
-  flex-wrap: wrap;
   height: auto !important;
   min-height: 44px;
 }
 .mobile-home-toolbar > div {
   flex: none;
-}
-.mobile-home-search {
-  z-index: 2;
-  margin-top: 12px;
-  border-color: transparent;
-  background: #fffffff2;
 }
 .mobile-home-copy,
 .mobile-home-hero .mobile-home-resting-copy {

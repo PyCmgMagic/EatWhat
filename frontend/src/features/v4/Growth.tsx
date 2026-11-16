@@ -33,6 +33,16 @@ export default function Growth() {
     percent = growthPercent(g),
     title = userTitle(g),
     rules = experienceRules(g);
+  // 经验记录默认收进一个入口，摘要行露出标题和条数，展开后才看到明细。
+  const ledgerItems = ledger.data?.items ?? [],
+    ledgerCount = ledger.data?.totalItems ?? ledgerItems.length,
+    ledgerMeta = ledger.isError
+      ? "未能加载"
+      : ledger.data
+        ? ledgerCount
+          ? `共 ${ledgerCount} 条`
+          : "暂无记录"
+        : "加载中";
   return (
     <Shell title="我的成长" advice={false}>
       <Card>
@@ -75,8 +85,16 @@ export default function Growth() {
             </div>
           </section>
           {rules.length ? (
-            <section className="growth-rules" aria-label="怎么获得经验">
-              <h3>怎么获得经验</h3>
+            <details className="growth-disclosure growth-rules">
+              <summary className="growth-disclosure-summary">
+                <span className="growth-disclosure-title">怎么获得经验</span>
+                <span className="growth-disclosure-meta">
+                  {rules.length} 种途径
+                </span>
+                <span className="growth-disclosure-chevron" aria-hidden="true">
+                  <Icon name="chevronDown" size={16} />
+                </span>
+              </summary>
               <ul>
                 {rules.map((r) => (
                   <li key={r.source}>
@@ -93,7 +111,7 @@ export default function Growth() {
               <p className="growth-rule">
                 无需签到或领取，升级不扣经验；发布的内容因违规被删除时，会扣回它获得的经验。
               </p>
-            </section>
+            </details>
           ) : (
             <p className="growth-rule">
               {g?.dailyExperience != null
@@ -104,45 +122,54 @@ export default function Growth() {
           )}
         </QueryView>
       </Card>
-      <Card title="经验记录">
-        <QueryView
-          query={ledger}
-          empty={!ledger.data?.items?.length}
-          emptyTitle="还没有经验记录"
-          emptyIllustration="baozi"
-          emptyDetail="逛逛菜品和附近的店，新入账的经验会显示在这里。"
-        >
-          <ul className="growth-ledger">
-            {ledger.data?.items?.map((entry, i) => (
-              <li key={entry.entryId ?? i}>
-                <span className="growth-ledger-icon" aria-hidden="true">
-                  <Icon name="bowl" size={22} />
-                </span>
-                <div>
-                  <strong>{ledgerSourceName(entry.sourceType)}</strong>
-                  <span>所属日期 {entry.businessDate ?? "待确认"}</span>
-                  <small>入账于 {timeText(entry.createdAt)}</small>
-                </div>
-                <b>
-                  {entry.experience == null
-                    ? "—"
-                    : `${entry.experience >= 0 ? "+" : ""}${entry.experience}`}
-                  <small>经验</small>
-                </b>
-              </li>
-            ))}
-          </ul>
-        </QueryView>
-        <div className="growth-pagination">
-          <Pager
-            page={page}
-            hasNext={
-              !!ledger.data?.hasNext && !ledger.isFetching && page < 10000
-            }
-            onChange={setPage}
-          />
-        </div>
-      </Card>
+      <section className="v4-card growth-records">
+        <details className="growth-disclosure">
+          <summary className="growth-disclosure-summary">
+            <h2>经验记录</h2>
+            <span className="growth-disclosure-meta">{ledgerMeta}</span>
+            <span className="growth-disclosure-chevron" aria-hidden="true">
+              <Icon name="chevronDown" size={18} />
+            </span>
+          </summary>
+          <QueryView
+            query={ledger}
+            empty={!ledgerItems.length}
+            emptyTitle="还没有经验记录"
+            emptyIllustration="baozi"
+            emptyDetail="逛逛菜品和附近的店，新入账的经验会显示在这里。"
+          >
+            <ul className="growth-ledger">
+              {ledgerItems.map((entry, i) => (
+                <li key={entry.entryId ?? i}>
+                  <span className="growth-ledger-icon" aria-hidden="true">
+                    <Icon name="bowl" size={22} />
+                  </span>
+                  <div>
+                    <strong>{ledgerSourceName(entry.sourceType)}</strong>
+                    <span>所属日期 {entry.businessDate ?? "待确认"}</span>
+                    <small>入账于 {timeText(entry.createdAt)}</small>
+                  </div>
+                  <b>
+                    {entry.experience == null
+                      ? "—"
+                      : `${entry.experience >= 0 ? "+" : ""}${entry.experience}`}
+                    <small>经验</small>
+                  </b>
+                </li>
+              ))}
+            </ul>
+          </QueryView>
+          <div className="growth-pagination">
+            <Pager
+              page={page}
+              hasNext={
+                !!ledger.data?.hasNext && !ledger.isFetching && page < 10000
+              }
+              onChange={setPage}
+            />
+          </div>
+        </details>
+      </section>
     </Shell>
   );
 }

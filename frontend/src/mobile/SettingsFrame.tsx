@@ -5,12 +5,14 @@ import "./settings-pages.css";
 
 export default function SettingsFrame({
   title,
+  detail,
   back = "/settings",
   backLabel = "返回设置",
   children,
   list = false,
 }: {
   title: string;
+  detail?: string;
   back?: string;
   backLabel?: string;
   children: ReactNode;
@@ -21,7 +23,12 @@ export default function SettingsFrame({
   }, [title]);
   return (
     <section className="mobile-settings-page mobile-account-settings">
-      <SettingsPageHeader title={title} back={back} backLabel={backLabel} />
+      <SettingsPageHeader
+        title={title}
+        detail={detail}
+        back={back}
+        backLabel={backLabel}
+      />
       <div
         className={list ? "mobile-settings-list" : "mobile-settings-content"}
       >

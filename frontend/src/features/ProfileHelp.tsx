@@ -85,86 +85,90 @@ export default function ProfileHelp({
   return (
     <section className="profile-help">
       {showHeader && <ProfileHelpHeader />}
-      <div className="profile-help-search">
-        <Icon name="search" size={21} />
-        <label
-          className="profile-help-search-label"
-          htmlFor="profile-help-search"
-        >
-          搜索使用帮助
-        </label>
-        <input
-          id="profile-help-search"
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="搜索问题，例如：收藏、审核、手机号"
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            aria-label="清除问题搜索"
-          >
-            <Icon name="close" size={18} />
-          </button>
-        )}
-      </div>
-      <div className="profile-help-layout">
-        <section
-          className="profile-help-questions"
-          aria-labelledby="profile-help-questions-title"
-        >
-          <div className="profile-help-question-heading">
-            <h2 id="profile-help-questions-title">常见问题</h2>
-            <span role="status">{filtered.length} 个问题</span>
-          </div>
-          <div className="profile-help-categories" aria-label="问题分类">
-            {categories.map((item) => (
+      <div className="profile-help-body">
+        <div className="profile-help-main">
+          <div className="profile-help-search">
+            <Icon name="search" size={20} />
+            <label
+              className="profile-help-search-label"
+              htmlFor="profile-help-search"
+            >
+              搜索使用帮助
+            </label>
+            <input
+              id="profile-help-search"
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="搜索问题，例如：收藏、审核、手机号"
+            />
+            {query && (
               <button
-                key={item}
                 type="button"
-                aria-pressed={category === item}
-                onClick={() => setCategory(item)}
+                onClick={() => setQuery("")}
+                aria-label="清除问题搜索"
               >
-                {item}
+                <Icon name="close" size={17} />
               </button>
-            ))}
-          </div>
-          <div className="profile-help-question-list">
-            {filtered.map((question) => (
-              <details key={question.id}>
-                <summary>
-                  <span>{question.title}</span>
-                  <Icon name="add" size={18} />
-                </summary>
-                <div className="profile-help-answer">
-                  <p>{question.answer}</p>
-                  <Link to={question.to}>
-                    {question.action}
-                    <Icon name="chevronRight" size={16} />
-                  </Link>
-                </div>
-              </details>
-            ))}
-            {!filtered.length && (
-              <div className="profile-help-empty">
-                <Icon name="search" size={26} />
-                <h3>没有找到相关问题</h3>
-                <p>试试“收藏”或“账号”等关键词，也可以直接提交反馈。</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setQuery("");
-                    setCategory("全部");
-                  }}
-                >
-                  查看全部问题
-                </button>
-              </div>
             )}
           </div>
-        </section>
+          <section
+            className="profile-help-questions"
+            aria-labelledby="profile-help-questions-title"
+          >
+            <div className="profile-help-question-heading">
+              <h2 id="profile-help-questions-title">常见问题</h2>
+              <span role="status">{filtered.length} 个问题</span>
+            </div>
+            <div className="profile-help-categories" aria-label="问题分类">
+              {categories.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  aria-pressed={category === item}
+                  onClick={() => setCategory(item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            <div className="profile-help-question-list">
+              {filtered.map((question) => (
+                <details key={question.id}>
+                  <summary>
+                    <span>{question.title}</span>
+                    <Icon name="add" size={18} />
+                  </summary>
+                  <div className="profile-help-answer">
+                    <p>{question.answer}</p>
+                    <Link to={question.to}>
+                      {question.action}
+                      <Icon name="chevronRight" size={15} />
+                    </Link>
+                  </div>
+                </details>
+              ))}
+              {!filtered.length && (
+                <div className="profile-help-empty">
+                  <span className="profile-help-empty-icon">
+                    <Icon name="search" size={24} />
+                  </span>
+                  <h3>没有找到相关问题</h3>
+                  <p>试试“收藏”或“账号”等关键词，也可以直接提交反馈。</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuery("");
+                      setCategory("全部");
+                    }}
+                  >
+                    查看全部问题
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
         <aside className="profile-help-actions" aria-label="反馈入口">
           <section className="profile-help-contact">
             <DishIllustration
@@ -175,19 +179,21 @@ export default function ProfileHelp({
             <p>告诉我们发生了什么，也欢迎分享你对这里的建议。</p>
             <Link to="/feedback">
               提交反馈
-              <Icon name="chevronRight" size={18} />
+              <Icon name="chevronRight" size={17} />
             </Link>
           </section>
           <Link className="profile-help-records" to="/feedback/mine">
-            <Icon name="mail" size={22} />
-            <span>
+            <span className="profile-help-records-icon">
+              <Icon name="mail" size={19} />
+            </span>
+            <span className="profile-help-records-copy">
               <strong>反馈记录</strong>
               <small>查看处理状态和回复</small>
             </span>
-            <Icon name="chevronRight" size={18} />
+            <Icon name="chevronRight" size={17} />
           </Link>
           <p className="profile-help-tip">
-            <Icon name="info" size={16} />
+            <Icon name="info" size={15} />
             描述清楚页面和操作步骤，能帮助我们更快定位问题。
           </p>
         </aside>

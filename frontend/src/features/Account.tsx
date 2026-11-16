@@ -1,6 +1,6 @@
 import { Select } from "../components/Select";
 import { BRAND_SLOGAN } from "../app/brand";
-import { MapPin, Utensils } from "lucide-react";
+import { Utensils } from "lucide-react";
 import { useSendSignal } from "./useSendSignal";
 import { PasswordConflictRequest } from "./ApiV2";
 import { useEffect, useRef, useState } from "react";
@@ -22,11 +22,11 @@ import {
 } from "../app/web-one-click";
 import "../app/web-one-click.css";
 import { FeaturePage, FeatureState } from "./Catalog";
-import { useArea } from "../app/area";
 import { useMobile } from "../mobile/ui";
 import { mealOptions } from "../api/food-display";
 import "./latest.css";
 import { SceneToggle } from "./SceneToggle";
+import { LocationControl } from "./LocationControl";
 import { priceBands } from "../api/v2-vocab";
 import { useShopOptions } from "./shop-options";
 import { rememberVerificationReturn } from "../app/verification-return";
@@ -35,42 +35,10 @@ const AUTO_MEAL = "auto";
 export function RecommendationControls() {
   const cache = useQueryClient(),
     fetching = useIsFetching({ queryKey: ["foods", "mobile-recommend"] });
-  const { api } = useApp(),
-    { campusId, selectCampus } = useArea(),
-    m = useMobile(),
-    q = useQuery({
-      queryKey: ["campuses"],
-      queryFn: () => api.campuses(),
-      staleTime: 300000,
-    });
+  const m = useMobile();
   return (
     <div className="ew-recommend-controls">
-      <label>
-        校区
-        <Select
-          aria-label="推荐校区"
-          menuLabel="今天在哪个校区吃？"
-          icon={<MapPin size={16} />}
-          value={campusId ?? ""}
-          disabled={q.isPending || q.isError}
-          onChange={(e) => selectCampus(Number(e.target.value))}
-        >
-          <option value="" disabled hidden={!!campusId}>
-            {q.isPending
-              ? "加载校区…"
-              : q.isError
-                ? "校区加载失败"
-                : "选择校区"}
-          </option>
-          {q.data
-            ?.filter((c) => c.open !== false)
-            .map((c) => (
-              <option key={c.id} value={c.id!}>
-                {c.name}
-              </option>
-            ))}
-        </Select>
-      </label>
+      <LocationControl />
       <label>
         饭点
         <Select
@@ -95,7 +63,6 @@ export function RecommendationControls() {
         </Select>
       </label>
       <SceneToggle value={m.scene} onChange={m.setScene} />
-      {q.isError && <button onClick={() => void q.refetch()}>重试校区</button>}
       <button
         disabled={fetching > 0}
         onClick={() =>

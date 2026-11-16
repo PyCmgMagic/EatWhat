@@ -682,7 +682,11 @@ type SystemDetail = {
   content?: string | null;
 };
 
-export function NotificationCards() {
+/**
+ * 「消息通知」的互动通知视图。页头与分类导航由 Messages 持有，
+ * 两个视图切换时只替换这里的内容。
+ */
+export function NotificationCardsPanel() {
   const { api, toast } = useApp(),
     cache = useQueryClient(),
     [column, setColumn] = useState<
@@ -733,8 +737,7 @@ export function NotificationCards() {
     return paths[t.domain ?? ""] ? `/${paths[t.domain ?? ""]}/${t.id}` : null;
   };
   return (
-    <Shell title="消息通知">
-      <ProfileSectionNav section="messages" />
+    <>
       <div className="profile-message-tools">
         <div className="profile-message-filters" aria-label="通知分类">
           {(
@@ -999,7 +1002,7 @@ export function NotificationCards() {
         <Pager page={page} hasNext={q.data?.hasNext} onChange={setPage} />
       </QueryView>
       <CommandState task={task} />
-    </Shell>
+    </>
   );
 }
 

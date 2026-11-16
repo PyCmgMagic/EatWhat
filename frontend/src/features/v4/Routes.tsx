@@ -16,12 +16,12 @@ import {
   FeedbackForm,
   FeedbackRecords,
   Submissions,
-  NotificationCards,
   Topics,
   FavoriteRestaurants,
   TagFoods,
 } from "./Community";
-import { Announcements, FeatureAvailability } from "./Remote";
+import { FeatureAvailability } from "./Remote";
+import { Messages } from "./Messages";
 import Features from "./Hub";
 import NotificationSettings from "./NotificationSettings";
 const Growth = lazy(() => import("./Growth"));
@@ -34,7 +34,8 @@ export default function V4Routes() {
   if (path === "/auth/device-recovery") return <Devices />;
   if (path === "/auth/mobile-recovery") return <MobileChange />;
   if (path === "/auth/account-recovery") return <AccountRecovery />;
-  if (path === "/announcements") return <Announcements />;
+  if (path === "/notifications" || path === "/announcements")
+    return <Messages />;
   if (path === "/restaurants/directory")
     return (
       <Suspense fallback={<ContentSkeleton kind="rows" count={3} />}>
@@ -70,7 +71,6 @@ export default function V4Routes() {
   else if (path === "/settings/delete") page = <Cancellation />;
   else if (path === "/settings/notifications") page = <NotificationSettings />;
   else if (path === "/settings/telemetry") page = <TelemetrySettings />;
-  else if (path === "/notifications") page = <NotificationCards />;
   else if (path === "/feedback") page = <FeedbackForm />;
   else if (path === "/reports/new") page = <FeedbackForm kind="report" />;
   else if (path === "/restaurants/correction")

@@ -45,6 +45,11 @@ export default function MobileSettingsPages() {
   return (
     <SettingsFrame
       title={title}
+      detail={
+        path === "/verify" && user?.verified
+          ? "学生身份已确认，可以继续探索校园美食。"
+          : undefined
+      }
       back={returnTo ?? page.back}
       backLabel={
         returnTo

@@ -21,6 +21,7 @@ import {
 } from "../../components/DishIllustration";
 import { errorMessage, resultUncertain, unavailable } from "../../api/client";
 import { ProfileWorkspaceContext } from "../../app/profile-workspace";
+import { isMessagesPath } from "../v4-paths";
 import SettingsPageHeader from "../SettingsPageHeader";
 import "./v4.css";
 import "./design.css";
@@ -132,11 +133,9 @@ export function Shell({
                 ? "restaurants"
                 : path.startsWith("/submissions")
                   ? "submissions"
-                  : path === "/notifications"
+                  : isMessagesPath(path)
                     ? "notifications"
-                    : path === "/announcements"
-                      ? "announcements"
-                      : path.startsWith("/me/tags/")
+                    : path.startsWith("/me/tags/")
                         ? "tags"
                         : "hub";
   const meta: Record<string, { name: string; icon: string }> = {
@@ -171,10 +170,6 @@ export function Shell({
     notifications: {
       name: "消息与互动",
       icon: "bell",
-    },
-    announcements: {
-      name: "站点消息",
-      icon: "announce",
     },
     tags: {
       name: "我的标签",

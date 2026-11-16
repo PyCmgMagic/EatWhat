@@ -144,19 +144,62 @@ describe("route continuity", () => {
     await elapse(50);
     expect(top).toBe(600);
   });
-  it("keeps the current scroll position for explicit tab navigation", async () => {
+  it("gives every workspace tab its own scroll position", async () => {
     await mount("/me");
     await elapse();
     window.scrollTo({ top: 600 });
     window.dispatchEvent(new Event("scroll"));
+    // A tab that has not been visited yet starts at the top instead of
+    // inheriting the offset of the tab it is opened from.
     await act(async () =>
-      navigate("/me/shares", { state: { preserveScroll: true } }),
+      navigate("/me/shares", { state: { workspaceSwitch: true } }),
     );
     await elapse(50);
+    expect(top).toBe(0);
+    window.scrollTo({ top: 200 });
+    window.dispatchEvent(new Event("scroll"));
+    // Coming back to a tab restores the place left there, not a default one.
+    await act(async () => navigate("/me", { state: { workspaceSwitch: true } }));
+    await elapse(50);
     expect(top).toBe(600);
+    await act(async () =>
+      navigate("/me/shares", { state: { workspaceSwitch: true } }),
+    );
+    await elapse(50);
+    expect(top).toBe(200);
     await go("/favorites");
     await elapse(50);
     expect(top).toBe(0);
+  });
+  it("restores the mobile canvas scroll on the way back", async () => {
+    const screen = document.createElement("div");
+    screen.className = "design-screen";
+    let screenTop = 0;
+    Object.defineProperty(screen, "scrollTop", {
+      configurable: true,
+      get: () => screenTop,
+      set: (value: number) => {
+        screenTop = value;
+      },
+    });
+    screen.scrollTo = ((options: ScrollToOptions) => {
+      screenTop = options.top ?? 0;
+    }) as typeof screen.scrollTo;
+    document.body.append(screen);
+    try {
+      await mount("/me");
+      await elapse();
+      screen.scrollTop = 220;
+      window.dispatchEvent(new Event("scroll"));
+      await go("/foods/1");
+      await elapse(50);
+      expect(screen.scrollTop).toBe(0);
+      await go(-1);
+      await elapse(1500);
+      expect(screen.scrollTop).toBe(220);
+    } finally {
+      screen.remove();
+    }
   });
 });
 

@@ -43,6 +43,7 @@ import { FavoritesEmpty, FavoritesFilters } from "./FavoritesControls";
 import { ProfileCollectionsHeader } from "./ProfileSectionNav";
 import SettingsPageHeader from "./SettingsPageHeader";
 import { useTask } from "../components/useTask";
+import { X } from "lucide-react";
 import {
   DishIllustration,
   type DishIllustrationName,
@@ -379,7 +380,6 @@ export function Catalog({ favorites = false }: { favorites?: boolean }) {
           filters={filters}
           apply={set}
           reset={resetFilters}
-          filtered={filtered}
         />
       )}
       <div className={favorites ? "favorites-library-bar" : undefined}>
@@ -417,6 +417,16 @@ export function Catalog({ favorites = false }: { favorites?: boolean }) {
             {tags.isError && (
               <button onClick={() => void tags.refetch()}>
                 标签加载失败，重试
+              </button>
+            )}
+            {filtered && (
+              <button
+                type="button"
+                className="favorites-clear-filters"
+                onClick={resetFilters}
+              >
+                <X size={13} aria-hidden="true" />
+                清除筛选
               </button>
             )}
           </div>

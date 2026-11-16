@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 import { Link } from "react-router-dom";
-import { Bookmark, Search, SlidersHorizontal, X } from "lucide-react";
+import { Bookmark, Search, SlidersHorizontal } from "lucide-react";
 import { Select } from "../components/Select";
 import { categories } from "../api/models";
 import type { FoodFilters } from "../api/service";
@@ -13,13 +13,11 @@ export function FavoritesFilters({
   filters,
   apply,
   reset,
-  filtered,
   mode = "favorites",
 }: {
   filters: FoodFilters;
   apply: (patch: Record<string, string | undefined>) => void;
   reset: () => void;
-  filtered: boolean;
   mode?: "favorites" | "food" | "shop";
 }) {
   const { area, openArea } = useArea();
@@ -187,16 +185,6 @@ export function FavoritesFilters({
           </button>
         )}
       </div>
-      {favorites && filtered && !expanded && (
-        <button
-          type="button"
-          className="favorites-reset favorites-reset-inline"
-          onClick={reset}
-        >
-          <X size={14} aria-hidden="true" />
-          清除筛选
-        </button>
-      )}
     </form>
   );
 }
@@ -210,28 +198,40 @@ export function FavoritesEmpty({
 }) {
   return (
     <div className="favorites-empty" role="status">
+      <div className="favorites-empty-copy">
+        <h2>{filtered ? "没有找到这道心头好" : "把喜欢的味道，留给下一餐"}</h2>
+        <p>
+          {filtered
+            ? "换个关键词，或放宽筛选条件，再找找看。"
+            : "遇到想吃的菜，点一下收藏，下次就能在这里找到。"}
+        </p>
+        <div className="favorites-empty-actions">
+          {filtered ? (
+            <button type="button" className="ew-button" onClick={reset}>
+              清除筛选
+            </button>
+          ) : (
+            <>
+              <Link className="ew-button" to="/">
+                去发现好吃的
+                <Icon name="chevronRight" size={16} />
+              </Link>
+              <Link
+                className="favorites-empty-secondary"
+                to="/restaurants/favorites"
+              >
+                看看我的餐厅收藏
+              </Link>
+            </>
+          )}
+        </div>
+      </div>
       <div className="favorites-empty-art" aria-hidden="true">
         <DishIllustration name="yangzhi" />
         <span>
           <Bookmark size={23} />
         </span>
       </div>
-      <h2>{filtered ? "没有找到这道心头好" : "把喜欢的味道，留给下一餐"}</h2>
-      <p>
-        {filtered
-          ? "换个关键词，或放宽筛选条件，再找找看。"
-          : "遇到想吃的菜，点一下收藏，下次就能在这里找到。"}
-      </p>
-      {filtered ? (
-        <button type="button" className="ew-button" onClick={reset}>
-          清除筛选
-        </button>
-      ) : (
-        <Link className="ew-button" to="/">
-          去发现好吃的
-          <Icon name="chevronRight" size={16} />
-        </Link>
-      )}
     </div>
   );
 }

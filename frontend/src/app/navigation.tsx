@@ -24,8 +24,28 @@ type Entry = {
   back?: string;
   windowY: number;
   panelY: number;
+  screenY: number;
+  // Workspace tabs ask to be scrolled so the sticky tab bar sits right under the
+  // page header: the content then starts where the reader expects it, whatever
+  // height the previous tab had.
+  alignTabs?: boolean;
 };
 const Continuity = createContext<string | undefined>(undefined);
+
+// The mobile canvases scroll inside `.design-screen`, so the window position
+// alone would lose the place a phone user left on a long screen.
+function screenScrollTop() {
+  const screen = document.querySelector<HTMLElement>(".design-screen");
+  return Math.round(screen?.scrollTop ?? 0);
+}
+function scrollScreenTo(top: number) {
+  const screen = document.querySelector<HTMLElement>(".design-screen");
+  if (!screen) return 0;
+  if (typeof screen.scrollTo === "function")
+    screen.scrollTo({ top, behavior: "instant" });
+  else screen.scrollTop = top;
+  return screen.scrollTop;
+}
 
 // Each history entry remembers its own source. Returning to a detail through an
 // edit page must not replace the original list with the editor as its parent.
@@ -53,6 +73,8 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
       const preserveScroll =
         (loc.state as { preserveScroll?: boolean } | null)?.preserveScroll ===
         true;
+      const alignTabs =
+        (loc.state as { alignTabs?: boolean } | null)?.alignTabs === true;
       entry = {
         address,
         back:
@@ -66,6 +88,8 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
         panelY: preserveScroll
           ? (document.getElementById("profile-workspace-panel")?.scrollTop ?? 0)
           : 0,
+        screenY: preserveScroll ? screenScrollTop() : 0,
+        alignTabs,
       };
       if (
         action === "POP" ||
@@ -83,24 +107,48 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {
     const entry = active.current!;
     let restoring = true;
-    const targetWindow = entry.windowY,
-      targetPanel = entry.panelY;
+    let stable = 0;
+    const targetPanel = entry.panelY,
+      targetScreen = entry.screenY ?? 0;
+    // Measured on every retry: the header height and the tab bar's own position
+    // both change while fonts and covers settle.
+    const targetWindow = () => {
+      if (!entry.alignTabs) return entry.windowY;
+      const bar = document.querySelector<HTMLElement>(
+        ".profile-overview-tabbar",
+      );
+      const panel = document.getElementById("profile-workspace-panel");
+      if (!bar || !panel) return entry.windowY;
+      const stickyTop = Number.parseFloat(getComputedStyle(bar).top) || 0;
+      // A sticky bar's own offset follows the scroll position, so measure the
+      // (non-sticky) content card instead: its flow top minus the bar height is
+      // where the bar belongs.
+      const contentTop = panel.getBoundingClientRect().top + window.scrollY;
+      const barHeight = bar.getBoundingClientRect().height;
+      return Math.max(0, Math.round(contentTop - barHeight - stickyTop));
+    };
     const apply = () => {
       if (!restoring) return;
-      window.scrollTo({ top: targetWindow, behavior: "instant" });
+      const target = targetWindow();
+      window.scrollTo({ top: target, behavior: "instant" });
       const panel = document.getElementById("profile-workspace-panel");
       panel?.scrollTo({ top: targetPanel, behavior: "instant" });
-      if (
-        Math.abs(window.scrollY - targetWindow) < 2 &&
-        Math.abs((panel?.scrollTop ?? 0) - targetPanel) < 2
-      )
-        stop();
+      const screenY = scrollScreenTo(targetScreen);
+      const reached =
+        Math.abs(window.scrollY - target) < 2 &&
+        Math.abs((panel?.scrollTop ?? 0) - targetPanel) < 2 &&
+        Math.abs(screenY - targetScreen) < 2;
+      // Scroll anchoring and late covers shift the page by a few pixels right
+      // after it settles, so only trust a target that holds for a few frames.
+      stable = reached ? stable + 1 : 0;
+      if (stable >= 3) stop();
     };
     const record = () => {
       if (restoring) return;
       entry.windowY = window.scrollY;
       entry.panelY =
         document.getElementById("profile-workspace-panel")?.scrollTop ?? 0;
+      entry.screenY = screenScrollTop();
       positions.current.set(entry.address, { ...entry });
     };
     const stop = () => {
@@ -115,7 +163,12 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
         : new ResizeObserver(apply);
     observer.observe(document.body, { childList: true, subtree: true });
     resize?.observe(document.body);
-    const frame = requestAnimationFrame(apply);
+    const started = performance.now();
+    let frame = requestAnimationFrame(function settle() {
+      apply();
+      if (restoring && performance.now() - started < 1200)
+        frame = requestAnimationFrame(settle);
+    });
     // A slow list can initially clamp scrolling to zero. Keep the saved target
     // until content can reach it; never replace it with that temporary clamp.
     const timer = window.setTimeout(stop, 10000);

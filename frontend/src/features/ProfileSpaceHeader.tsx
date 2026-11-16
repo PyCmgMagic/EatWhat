@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router-dom";
 import { BRAND_SLOGAN } from "../app/brand";
@@ -37,6 +37,21 @@ export default function ProfileSpaceHeader() {
   const [avatarFailed, setAvatarFailed] = useState(false);
   const avatar = mediaUrl(user?.avatar);
   useEffect(() => setAvatarFailed(false), [avatar]);
+  // The tab bar sticks under the page header while the content scrolls; drop its
+  // rounded shoulders once it is pinned so no card corner peeks through.
+  const tabbar = useRef<HTMLDivElement>(null);
+  const [pinned, setPinned] = useState(false);
+  useEffect(() => {
+    const bar = tabbar.current;
+    if (!bar || typeof IntersectionObserver === "undefined") return;
+    const top = Number.parseFloat(getComputedStyle(bar).top) || 0;
+    const observer = new IntersectionObserver(
+      ([record]) => setPinned(record.intersectionRatio < 1),
+      { rootMargin: `-${Math.round(top) + 1}px 0px 0px 0px`, threshold: [0, 1] },
+    );
+    observer.observe(bar);
+    return () => observer.disconnect();
+  }, []);
   const stats = useQuery({
     queryKey: ["user", user?.id],
     queryFn: () => api.otherUser(user!.id!),
@@ -162,7 +177,7 @@ export default function ProfileSpaceHeader() {
             <span>上传的菜</span>
           </Link>
           <Link
-            to={peopleHref("/me", "", "fans")}
+            to={peopleHref(location.pathname, location.search, "fans")}
             state={{ profilePeopleFrom: location.key }}
             preventScrollReset
             aria-label="查看我的粉丝"
@@ -171,7 +186,7 @@ export default function ProfileSpaceHeader() {
             <span>粉丝</span>
           </Link>
           <Link
-            to={peopleHref("/me", "", "follow")}
+            to={peopleHref(location.pathname, location.search, "follow")}
             state={{ profilePeopleFrom: location.key }}
             preventScrollReset
             aria-label="查看我的关注"
@@ -189,7 +204,11 @@ export default function ProfileSpaceHeader() {
           )}
         </div>
       </section>
-      <div className="profile-overview-tabbar">
+      <div
+        className="profile-overview-tabbar"
+        ref={tabbar}
+        data-pinned={pinned || undefined}
+      >
         <nav className="profile-overview-tabs" aria-label="个人中心功能">
           {tabs.map((tab) => (
             <Link
@@ -197,7 +216,7 @@ export default function ProfileSpaceHeader() {
               to={tab.to}
               aria-current={activeTab === tab.key ? "page" : undefined}
               aria-controls="profile-workspace-panel"
-              state={{ preserveScroll: true }}
+              state={{ alignTabs: true }}
               preventScrollReset
             >
               <Icon name={tab.icon} size={19} />

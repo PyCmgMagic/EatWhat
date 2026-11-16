@@ -12,3 +12,9 @@ __pycache__/
 /output/*
 !/output/.gitkeep
 /frontend/output/
+
+# Root-level caches created by tooling run from the repository root.
+/node_modules/
+
+# Nested checkout of the standalone backend repository (Orbithy/EatWhat).
+/EatWhat_backend/
