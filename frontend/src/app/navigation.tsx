@@ -30,10 +30,6 @@ type Entry = {
   // page header: the content then starts where the reader expects it, whatever
   // height the previous tab had.
   alignTabs?: boolean;
-  // Links inside the profile space (a settings row, 管理, a sub-page's 返回)
-  // keep the tab bar where it is instead of throwing the reader back to the
-  // hero: align like a tab, but never scroll further down than they already were.
-  alignLimit?: number;
 };
 const Continuity = createContext<string | undefined>(undefined);
 
@@ -50,6 +46,21 @@ function scrollScreenTo(top: number) {
     screen.scrollTo({ top, behavior: "instant" });
   else screen.scrollTop = top;
   return screen.scrollTop;
+}
+
+// The scroll position at which the profile tab bar has just pinned under the
+// page header. Read from the outgoing page, whose layout is already settled.
+function profilePinY() {
+  const bar = document.querySelector<HTMLElement>(".profile-overview-tabbar");
+  const panel = document.getElementById("profile-workspace-panel");
+  // No tab bar means no desktop profile space (phone layout): start at the top.
+  if (!bar || !panel) return 0;
+  const stickyTop = Number.parseFloat(getComputedStyle(bar).top) || 0;
+  const contentTop = panel.getBoundingClientRect().top + window.scrollY;
+  return Math.max(
+    0,
+    Math.round(contentTop - bar.getBoundingClientRect().height - stickyTop),
+  );
 }
 
 // Each history entry remembers its own source. Returning to a detail through an
@@ -78,14 +89,17 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
       const preserveScroll =
         (loc.state as { preserveScroll?: boolean } | null)?.preserveScroll ===
         true;
-      const tabSwitch =
+      const alignTabs =
         (loc.state as { alignTabs?: boolean } | null)?.alignTabs === true;
+      // Links inside the profile space (a settings row, 管理, a sub-page's 返回)
+      // swap the content in place: the white card stays exactly where it was.
+      // Past the point where the tab bar pins, the card looks the same at any
+      // depth, so the new page starts from its top right under the pinned bar.
       const withinProfile =
         !!previous &&
-        !preserveScroll &&
+        !alignTabs &&
         profileSection(previous.address.split("?")[0]) !== null &&
         profileSection(loc.pathname) !== null;
-      const alignTabs = tabSwitch || withinProfile;
       entry = {
         address,
         back:
@@ -95,13 +109,16 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
             : samePage
               ? previous?.back
               : previous?.address),
-        windowY: preserveScroll ? window.scrollY : 0,
+        windowY: preserveScroll
+          ? window.scrollY
+          : withinProfile
+            ? Math.min(window.scrollY, profilePinY())
+            : 0,
         panelY: preserveScroll
           ? (document.getElementById("profile-workspace-panel")?.scrollTop ?? 0)
           : 0,
         screenY: preserveScroll ? screenScrollTop() : 0,
         alignTabs,
-        alignLimit: withinProfile && !tabSwitch ? window.scrollY : undefined,
       };
       if (
         action === "POP" ||
@@ -137,13 +154,7 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
       // where the bar belongs.
       const contentTop = panel.getBoundingClientRect().top + window.scrollY;
       const barHeight = bar.getBoundingClientRect().height;
-      const aligned = Math.max(
-        0,
-        Math.round(contentTop - barHeight - stickyTop),
-      );
-      return entry.alignLimit == null
-        ? aligned
-        : Math.min(aligned, Math.round(entry.alignLimit));
+      return Math.max(0, Math.round(contentTop - barHeight - stickyTop));
     };
     const apply = () => {
       if (!restoring) return;

@@ -4,7 +4,8 @@ import {
   type DishIllustrationName,
 } from "../components/DishIllustration";
 import { DesignIcon as Icon } from "../mobile/ui";
-import "./profile-pages.css";
+
+// 样式在 profile-pages.css，由桌面入口在 profile-space.css 之后引入，保证覆盖顺序。
 
 /**
  * 个人空间各标签页共用的页头：左侧标题 + 数量 + 一句说明，右侧放这一页的
