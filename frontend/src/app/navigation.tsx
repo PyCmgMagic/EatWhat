@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { Link, useLocation, useNavigationType } from "react-router-dom";
+import { profileSection } from "./profile-workspace";
 
 export function localDestination(value: unknown): string | undefined {
   return typeof value === "string" &&
@@ -29,6 +30,10 @@ type Entry = {
   // page header: the content then starts where the reader expects it, whatever
   // height the previous tab had.
   alignTabs?: boolean;
+  // Links inside the profile space (a settings row, 管理, a sub-page's 返回)
+  // keep the tab bar where it is instead of throwing the reader back to the
+  // hero: align like a tab, but never scroll further down than they already were.
+  alignLimit?: number;
 };
 const Continuity = createContext<string | undefined>(undefined);
 
@@ -73,8 +78,14 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
       const preserveScroll =
         (loc.state as { preserveScroll?: boolean } | null)?.preserveScroll ===
         true;
-      const alignTabs =
+      const tabSwitch =
         (loc.state as { alignTabs?: boolean } | null)?.alignTabs === true;
+      const withinProfile =
+        !!previous &&
+        !preserveScroll &&
+        profileSection(previous.address.split("?")[0]) !== null &&
+        profileSection(loc.pathname) !== null;
+      const alignTabs = tabSwitch || withinProfile;
       entry = {
         address,
         back:
@@ -90,6 +101,7 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
           : 0,
         screenY: preserveScroll ? screenScrollTop() : 0,
         alignTabs,
+        alignLimit: withinProfile && !tabSwitch ? window.scrollY : undefined,
       };
       if (
         action === "POP" ||
@@ -125,7 +137,13 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
       // where the bar belongs.
       const contentTop = panel.getBoundingClientRect().top + window.scrollY;
       const barHeight = bar.getBoundingClientRect().height;
-      return Math.max(0, Math.round(contentTop - barHeight - stickyTop));
+      const aligned = Math.max(
+        0,
+        Math.round(contentTop - barHeight - stickyTop),
+      );
+      return entry.alignLimit == null
+        ? aligned
+        : Math.min(aligned, Math.round(entry.alignLimit));
     };
     const apply = () => {
       if (!restoring) return;
