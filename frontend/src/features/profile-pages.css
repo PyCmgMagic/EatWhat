@@ -1,0 +1,787 @@
+/*
+ * 个人空间标签页的统一样式层。
+ * 主页、上传、收藏、评论、足迹、成长、设置都遵循同一套规则：
+ *   1. 页头：左标题（+数量）与一句说明，右侧放主操作或视图切换；
+ *   2. 内容区统一 32px 内缩，卡片圆角 20px、同一条描边色；
+ *   3. 菜品卡片一律四列栅格；
+ *   4. 空状态同一种版式。
+ * 这份样式在 profile-space.css 之后引入，旧页面的差异在文件后半段收拢。
+ */
+.pc-profile-space-content {
+  --pp-ink: #2e251e;
+  --pp-muted: #827367;
+  --pp-line: #ebe3da;
+  --pp-soft: #faf7f3;
+  --pp-accent: #ffcb45;
+  --pp-accent-deep: #d99c18;
+  --pp-radius: 20px;
+  --pp-gap: 18px;
+}
+
+/* ---------- 页面骨架 ---------- */
+.pp-page {
+  padding: 32px;
+  color: var(--pp-ink, #2e251e);
+}
+.pp-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px 24px;
+  margin: 0 0 24px;
+}
+.pp-head-copy {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.pp-head h1 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0;
+  color: var(--pp-ink, #2e251e);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.03em;
+}
+.pp-head p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 0;
+  color: var(--pp-muted, #827367);
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+.pp-head-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+}
+.pp-count {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f4efeb;
+  color: #76695e;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pp-eyebrow {
+  color: #8c7865;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.pp-section {
+  min-width: 0;
+  margin-top: 36px;
+}
+.pp-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 0 16px;
+}
+.pp-section-head h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--pp-ink, #2e251e);
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+.pp-section-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.pp-section-links > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  color: var(--pp-muted, #827367);
+  font-size: 13px;
+  white-space: nowrap;
+  transition: color 150ms ease;
+}
+.pp-section-links > a:hover {
+  color: var(--pp-ink, #2e251e);
+}
+
+/* ---------- 按钮 ---------- */
+.pp-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--pp-accent, #ffcb45);
+  color: #2e251e;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+.pp-button:hover {
+  background: #f7c033;
+}
+.pp-button:active {
+  transform: scale(0.98);
+}
+.pp-button.is-ink {
+  background: #2e251e;
+  color: #fff;
+}
+.pp-button.is-ink:hover {
+  background: #40342b;
+}
+.pp-button.is-quiet {
+  border-color: #e7dfd7;
+  background: #fff;
+  color: #2e251e;
+  font-weight: 650;
+}
+.pp-button.is-quiet:hover {
+  border-color: #d9c9b7;
+  background: #fffdf8;
+}
+.pp-button:focus-visible {
+  outline: 2px solid #c4572a;
+  outline-offset: 2px;
+}
+
+/* ---------- 分段切换（收藏：菜品/餐厅；足迹：菜品/店铺） ---------- */
+.pp-seg,
+.pc-profile-space-content .pp-head-actions > .profile-section-nav {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 4px;
+  border: 0;
+  border-radius: 999px;
+  background: #f3eee8;
+  overflow: visible;
+}
+.pp-seg .pc-tabs {
+  gap: 2px;
+}
+.pp-seg .pc-tabs > button,
+.pc-profile-space-content .pp-head-actions > .profile-section-nav > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #6e625b;
+  font-size: 12.5px;
+  font-weight: 650;
+  white-space: nowrap;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+.pp-seg .pc-tabs > button:hover,
+.pc-profile-space-content .pp-head-actions > .profile-section-nav > a:hover {
+  background: rgb(255 255 255 / 64%);
+  color: #2e251e;
+}
+.pp-seg .pc-tabs > button[aria-selected="true"],
+.pc-profile-space-content
+  .pp-head-actions
+  > .profile-section-nav
+  > a[aria-current="page"] {
+  background: #fff;
+  color: #231c18;
+  font-weight: 750;
+  box-shadow:
+    0 1px 2px rgb(35 28 24 / 8%),
+    0 4px 12px rgb(52 39 28 / 8%);
+}
+.pp-seg .pc-tab-indicator,
+.pc-profile-space-content
+  .pp-head-actions
+  > .profile-section-nav
+  > .profile-section-tab-indicator,
+.pc-profile-space-content .pp-head-actions > .profile-section-nav > a::after {
+  display: none;
+}
+
+/* ---------- 空状态 ---------- */
+.pp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  padding: 44px 32px;
+  border-radius: 24px;
+  background: radial-gradient(
+    120% 150% at 80% 18%,
+    #fff3d6 0%,
+    #fcf7f1 48%,
+    #faf7f3 100%
+  );
+  color: #7d6f63;
+  text-align: center;
+}
+.pp-empty.is-compact {
+  min-height: 232px;
+  padding: 30px 24px;
+}
+.pp-empty-dish {
+  --dish-illustration-size: 128px;
+  margin-bottom: 16px;
+}
+.pp-empty.is-compact .pp-empty-dish {
+  --dish-illustration-size: 96px;
+  margin-bottom: 12px;
+}
+.pp-empty-symbol {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+  border-radius: 50%;
+  background: #fff;
+  color: #b4801f;
+  box-shadow: 0 14px 28px -20px rgb(52 39 28 / 60%);
+}
+.pp-empty h2 {
+  margin: 0 0 8px;
+  color: #2e251e;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+.pp-empty.is-compact h2 {
+  font-size: 17px;
+}
+.pp-empty p {
+  max-width: 380px;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.8;
+}
+.pp-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+.pp-empty.is-compact .pp-empty-actions {
+  margin-top: 16px;
+}
+
+/* ---------- 主页：今日食签 + 成长速览 ---------- */
+.pp-glance {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: var(--pp-gap, 18px);
+}
+.pp-pick {
+  --pp-pick-tile: #f8ecd0;
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 24px;
+  min-width: 0;
+  min-height: 208px;
+  padding: 26px 28px;
+  overflow: hidden;
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--pp-pick-tile) 55%, #fff);
+  transition: background-color 320ms ease;
+}
+.pp-pick-copy {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+.pp-pick h2 {
+  margin: 12px 0 8px;
+  color: #2e251e;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+.pp-pick p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0;
+  color: #6e5f52;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+.pp-pick p > b {
+  color: #2e251e;
+  font-weight: 750;
+}
+.pp-pick p > small {
+  flex: 1 0 100%;
+  color: #8f7f70;
+  font-size: 12px;
+}
+.pp-pick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 20px;
+}
+.pp-pick .pp-button.is-quiet {
+  border-color: rgb(46 37 30 / 12%);
+  background: rgb(255 255 255 / 70%);
+}
+.pp-pick .pp-button.is-quiet:hover {
+  background: #fff;
+}
+.pp-pick-photo {
+  display: block;
+  flex: 0 0 auto;
+  align-self: center;
+  width: 156px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 6px rgb(255 255 255 / 70%),
+    0 18px 32px -18px rgb(52 39 28 / 55%);
+  transition: transform 260ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.pp-pick-photo:hover {
+  transform: rotate(-6deg) scale(1.03);
+}
+.pp-pick-photo .profile-overview-food-photo {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+  border-radius: 0;
+}
+.pp-pick-photo .profile-overview-food-photo[data-illustration] img {
+  width: 100%;
+  height: 100%;
+  transform: scale(1.5);
+}
+.pp-pick-loading {
+  display: grid;
+  gap: 10px;
+  width: min(100%, 320px);
+  margin-top: 16px;
+}
+.pp-pick-loading > span {
+  height: 26px;
+  border-radius: 9px;
+  background: rgb(46 37 30 / 8%);
+}
+.pp-pick-loading > span:last-child {
+  width: 60%;
+  height: 16px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pp-pick-name {
+    animation: pp-pick-in 320ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+  .pp-pick-photo {
+    animation: pp-pick-spin 420ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+}
+@keyframes pp-pick-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes pp-pick-spin {
+  from {
+    opacity: 0;
+    transform: rotate(-40deg) scale(0.86);
+  }
+}
+
+.pp-growth {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 26px 28px 20px;
+  border: 1px solid #ead9ae;
+  border-radius: 24px;
+  background: #fffaf0;
+  color: #2e251e;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+.pp-growth:hover {
+  border-color: #dcc27f;
+  box-shadow: 0 12px 26px -16px rgb(140 97 20 / 40%);
+}
+.pp-growth > strong {
+  margin-top: 8px;
+  font:
+    800 40px/1.15 "Bricolage Grotesque Variable",
+    sans-serif;
+  letter-spacing: -0.02em;
+}
+.pp-growth-track {
+  display: block;
+  height: 10px;
+  margin-top: 16px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #eee4cf;
+}
+.pp-growth-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--pp-accent-deep, #d99c18);
+}
+.pp-growth-next {
+  margin-top: 10px;
+  font-size: 13.5px;
+  font-weight: 650;
+}
+.pp-growth-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 16px;
+  color: #8c7865;
+  font-size: 12.5px;
+}
+
+/* ---------- 菜品卡片：主页 / 上传 / 收藏 同一套栅格与卡面 ---------- */
+.pc-profile-space-content .pp-page .profile-overview-dish-grid,
+.pc-profile-space-content .pp-page .profile-overview-loading,
+.pc-profile-space-content .profile-shares-grid,
+.pc-profile-space-content .ew-favorites .ew-results {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--pp-gap);
+}
+.pc-profile-space-content .pp-page .profile-overview-loading {
+  min-height: 0;
+}
+.pc-profile-space-content .pp-page .profile-overview-loading span {
+  height: auto;
+  aspect-ratio: 1.05;
+  border-radius: var(--pp-radius);
+}
+.pc-profile-space-content .pp-page .profile-overview-dish-card,
+.pc-profile-space-content .profile-share-card,
+.pc-profile-space-content .ew-favorites .ew-food-card {
+  border: 1px solid var(--pp-line);
+  border-radius: var(--pp-radius);
+  background: #fff;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+.pc-profile-space-content .pp-page .profile-overview-dish-card:hover,
+.pc-profile-space-content .profile-share-card:hover,
+.pc-profile-space-content .ew-favorites .ew-food-card:hover {
+  transform: none;
+  border-color: #dbcab5;
+  box-shadow: 0 12px 26px rgb(52 39 28 / 8%);
+}
+.pc-profile-space-content .pp-page .profile-overview-dish-card {
+  padding: 12px 12px 15px;
+}
+.pc-profile-space-content
+  .pp-page
+  .profile-overview-dish-card
+  .profile-overview-food-photo,
+.pc-profile-space-content
+  .profile-shares
+  .profile-share-card
+  .pc-food-card-image,
+.pc-profile-space-content .ew-favorites .ew-food-photo {
+  height: auto;
+  aspect-ratio: 1.3;
+  border-radius: 14px;
+}
+
+/* ---------- 各页内缩统一 ---------- */
+.pc-profile-space-content .ew-favorites {
+  padding: 32px;
+}
+.pc-profile-space-content .pp-head + .favorites-filters,
+.pc-profile-space-content .ew-favorites > .pp-head {
+  margin-top: 0;
+}
+.pc-profile-space-content .ew-favorites .favorites-library-bar {
+  margin: 20px 0 18px;
+}
+
+/* 评论、收藏、餐厅收藏沿用各自组件里的空状态结构，这里对齐到同一种版式。 */
+.pc-profile-space-content
+  .profile-shares[data-tab="comments"]
+  .comments-my-list
+  > .comments-state,
+.pc-profile-space-content .v4-page[data-route="/restaurants/favorites"] .v4-state,
+.pc-profile-space-content .ew-favorites .favorites-empty {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-height: 320px;
+  padding: 44px 32px;
+  border: 0;
+  border-radius: 24px;
+  background: radial-gradient(
+    120% 150% at 80% 18%,
+    #fff3d6 0%,
+    #fcf7f1 48%,
+    #faf7f3 100%
+  );
+  text-align: center;
+}
+.pc-profile-space-content
+  .profile-shares[data-tab="comments"]
+  .comments-my-list
+  > .comments-state
+  > svg {
+  margin-bottom: 16px;
+}
+.pc-profile-space-content
+  .profile-shares[data-tab="comments"]
+  .comments-my-list
+  > .comments-state
+  > p {
+  margin: 0;
+  color: #2e251e;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.pc-profile-space-content
+  .profile-shares[data-tab="comments"]
+  .comments-my-list
+  > .comments-state
+  > a {
+  min-height: 42px;
+  margin-top: 20px;
+  background: var(--pp-accent);
+  color: #2e251e;
+  box-shadow: none;
+}
+.pc-profile-space-content
+  .v4-page[data-route="/restaurants/favorites"]
+  .v4-state
+  > .v4-state-dish {
+  --dish-illustration-size: 128px;
+  margin-bottom: 16px;
+}
+.pc-profile-space-content
+  .v4-page[data-route="/restaurants/favorites"]
+  .v4-state
+  h3,
+.pc-profile-space-content .ew-favorites .favorites-empty h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty {
+  flex-direction: column-reverse;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty-copy {
+  max-width: 420px;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty p {
+  margin: 0 auto 20px;
+  line-height: 1.8;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty-actions {
+  justify-content: center;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty-art {
+  width: 128px;
+  height: 128px;
+  margin: 0 0 16px;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty .ew-button {
+  min-height: 42px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: var(--pp-accent);
+  color: #2e251e;
+  box-shadow: none;
+}
+.pc-profile-space-content .ew-favorites .favorites-empty .ew-button:hover {
+  background: #f7c033;
+}
+
+/* ---------- 足迹 ---------- */
+.pc-profile-space-content .pc-history-page .pc-history-toolbar {
+  margin: 0 0 4px;
+  border-color: var(--pp-line);
+  border-radius: 16px;
+}
+.pc-profile-space-content .pc-history-entry {
+  border-color: var(--pp-line);
+  border-radius: var(--pp-radius);
+}
+
+/* ---------- 成长 / 设置：沿用 v4 与设置页头，字号向统一页头看齐 ---------- */
+.pc-profile-space-content
+  :is(
+    .pc-library-heading,
+    .profile-section-heading,
+    .v4-page-title,
+    .settings-page-head
+  )
+  h1 {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.pc-profile-space-content
+  :is(
+    .pc-library-heading,
+    .profile-section-heading,
+    .v4-page-title,
+    .settings-page-head
+  )
+  p {
+  margin-top: 6px;
+  font-size: 13.5px;
+}
+.pc-profile-space-content .settings-home .settings-page-head {
+  margin-bottom: 24px;
+}
+.pc-profile-space-content .settings-home-group {
+  border-color: var(--pp-line);
+  border-radius: var(--pp-radius);
+  background: #fff;
+}
+.pc-profile-space-content
+  .settings-home-group-items
+  > .settings-home-row:hover {
+  background: var(--pp-soft);
+}
+.pc-profile-space-content .settings-home-logout {
+  border-radius: 999px;
+}
+
+@media (min-width: 1100px) {
+  /* 成长页：左边看等级与进度，右边直接读规则和记录，不再留一条窄栏。 */
+  .pc-profile-space-content
+    .v4-page[data-route="/me/growth"]
+    .v4-page-content {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    align-items: start;
+    gap: var(--pp-gap);
+  }
+  .pc-profile-space-content
+    .v4-page[data-route="/me/growth"]
+    .growth-rules
+    ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.pc-profile-space-content .v4-page[data-route="/me/growth"] .v4-card {
+  border-radius: 24px;
+}
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 1250px) {
+  .pc-profile-space-content .pp-page .profile-overview-dish-grid,
+  .pc-profile-space-content .pp-page .profile-overview-loading,
+  .pc-profile-space-content .profile-shares-grid,
+  .pc-profile-space-content .ew-favorites .ew-results {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .pc-profile-space-content .pp-page .profile-overview-dish-grid > :nth-child(4),
+  .pc-profile-space-content .pp-page .profile-overview-loading > :nth-child(4) {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .pp-glance {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-profile-space-content .pp-page .profile-overview-dish-grid,
+  .pc-profile-space-content .pp-page .profile-overview-loading,
+  .pc-profile-space-content .profile-shares-grid,
+  .pc-profile-space-content .ew-favorites .ew-results {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pc-profile-space-content .pp-page .profile-overview-dish-grid > :nth-child(4),
+  .pc-profile-space-content .pp-page .profile-overview-loading > :nth-child(4) {
+    display: block;
+  }
+}
+@media (max-width: 640px) {
+  .pp-page,
+  .pc-profile-space-content .ew-favorites {
+    padding: 24px 20px;
+  }
+  .pp-head h1 {
+    font-size: 24px;
+  }
+  .pp-pick {
+    padding: 22px 20px;
+  }
+  .pp-pick-photo {
+    width: 104px;
+  }
+  .pp-pick h2 {
+    font-size: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pp-button,
+  .pp-pick,
+  .pp-pick-photo,
+  .pp-growth {
+    transition: none;
+  }
+  .pp-pick-photo:hover {
+    transform: none;
+  }
+}
