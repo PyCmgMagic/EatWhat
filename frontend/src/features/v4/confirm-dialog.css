@@ -1,4 +1,6 @@
-.v4-confirm-dialog {
+/* mobile.css pads every .modal and the settings cards restyle h2; these
+   selectors outrank both so the only inset is .modal-pad's. */
+:root dialog.v4-confirm-dialog {
   width: min(420px, calc(100vw - 32px));
   border: 0;
   border-radius: 18px;
@@ -9,7 +11,7 @@
 .v4-confirm-dialog .modal-pad {
   padding: 28px;
 }
-.v4-confirm-dialog h2 {
+:root dialog.v4-confirm-dialog .modal-pad > h2 {
   font-size: 20px;
   padding-right: 28px;
   margin: 0 0 12px;
