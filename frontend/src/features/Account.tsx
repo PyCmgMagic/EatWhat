@@ -233,7 +233,7 @@ export function PhoneLoginForm({
           <p className="ew-note">验证码 5 分钟有效，请勿向他人透露。</p>
           <Link
             className={embedded ? "pc-secondary-text-link" : undefined}
-            to={"/auth" + loc.search}
+            to={"/auth/password" + loc.search}
           >
             使用密码登录
           </Link>
