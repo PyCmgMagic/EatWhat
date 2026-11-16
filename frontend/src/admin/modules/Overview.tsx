@@ -1,0 +1,371 @@
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { useApp } from "../../app/state";
+import { businessDate } from "../../api/growth";
+import { money } from "../../api/models";
+import { statusText } from "../../features/v4/shared";
+import { Async, Columns, Icon, Panel, Pill, Thumb, ago, num } from "../kit";
+
+/** Beijing business dates ending at `end`, oldest first. */
+export function recentDates(days: number, end = businessDate()) {
+  const base = Date.parse(end + "T00:00:00Z");
+  return Array.from({ length: days }, (_, i) =>
+    new Date(base - (days - 1 - i) * 86400000).toISOString().slice(0, 10),
+  );
+}
+/** One request per day: the service has no range query for activity yet. */
+export function useActiveSeries(days: number, end?: string) {
+  const { api } = useApp(),
+    dates = recentDates(days, end);
+  const results = useQueries({
+    queries: dates.map((date) => ({
+      queryKey: ["admin", "engagement", date],
+      queryFn: () => api.engagementStats(date),
+      staleTime: 300000,
+      retry: false,
+    })),
+  });
+  return {
+    loading: results.some((r) => r.isPending),
+    failed: results.every((r) => r.isError),
+    latest: results[results.length - 1]?.data,
+    points: dates.map((date, i) => ({
+      label: date.slice(5).replace("-", "/"),
+      value: results[i]?.data?.dailyActiveUsers,
+    })),
+  };
+}
+export const percent = (rate?: number | null) =>
+  rate == null
+    ? "—"
+    : `${(rate <= 1 ? rate * 100 : rate).toFixed(1).replace(/\.0$/, "")}%`;
+
+const greeting = () => {
+  const hour = new Date().getHours();
+  return hour < 5
+    ? "夜深了"
+    : hour < 11
+      ? "早上好"
+      : hour < 14
+        ? "中午好"
+        : hour < 18
+          ? "下午好"
+          : "晚上好";
+};
+const maintenance = {
+  NONE: ["good", "运行正常"],
+  READ_ONLY: ["warn", "只读维护中"],
+  DOWN: ["bad", "已暂停服务"],
+} as const;
+
+export default function Overview() {
+  const { api, user } = useApp();
+  const summary = useQuery({
+      queryKey: ["admin", "summary"],
+      queryFn: () => api.summary(),
+    }),
+    cases = useQuery({
+      queryKey: ["admin", "feedback", 1, "OPEN", "ALL"],
+      queryFn: () =>
+        api.adminFeedbackCases({ page: 1, pageSize: 12, status: "OPEN" }),
+      retry: false,
+    }),
+    foods = useQuery({
+      queryKey: ["foods", "admin", "latest"],
+      queryFn: () => api.foods(undefined, 1, { sort: "NEWEST" }),
+    }),
+    config = useQuery({
+      queryKey: ["admin", "remote-config"],
+      queryFn: () => api.adminRemoteConfig(),
+      retry: false,
+    }),
+    ai = useQuery({
+      queryKey: ["admin", "ai-settings"],
+      queryFn: () => api.adminAiSettings(),
+      retry: false,
+    }),
+    active = useActiveSeries(7);
+  const s = summary.data,
+    mode = config.data?.settings?.maintenance?.mode ?? "NONE",
+    flags = Object.entries(config.data?.settings?.flags ?? {}).filter(
+      ([, flag]) => flag?.on === false,
+    ),
+    openCount = cases.data?.totalItems ?? cases.data?.items?.length;
+  const stats = [
+    {
+      label: "注册用户",
+      icon: "me",
+      total: s?.totalUsers,
+      today: s?.todayUsers,
+      to: "/admin/users",
+    },
+    {
+      label: "菜品",
+      icon: "bowl",
+      total: s?.totalFoods,
+      today: s?.todayFoods,
+      to: "/admin/foods",
+    },
+    {
+      label: "餐厅与窗口",
+      icon: "store",
+      total: s?.totalRestaurants,
+      today: s?.todayRestaurants,
+      to: "/admin/restaurants",
+    },
+  ];
+  return (
+    <div className="ad-overview">
+      <header className="ad-hello">
+        <div>
+          <h2>
+            {greeting()}，{user?.displayName || "管理员"}
+          </h2>
+          <p>
+            {new Date().toLocaleDateString("zh-CN", {
+              month: "long",
+              day: "numeric",
+              weekday: "long",
+            })}
+            {openCount ? ` · 有 ${openCount} 条反馈等待处理` : ""}
+          </p>
+        </div>
+        {config.data && (
+          <Pill tone={maintenance[mode][0]}>{maintenance[mode][1]}</Pill>
+        )}
+      </header>
+
+      <Async query={summary} rows={2}>
+        <div className="ad-stats">
+          {stats.map((item) => (
+            <Link key={item.label} to={item.to} className="ad-stat">
+              <span className="ad-stat-icon">
+                <Icon name={item.icon} size={20} />
+              </span>
+              <span className="ad-stat-label">{item.label}</span>
+              <strong>{num(item.total)}</strong>
+              <small data-up={!!item.today || undefined}>
+                今日 +{num(item.today)}
+              </small>
+            </Link>
+          ))}
+          <div className="ad-stat">
+            <span className="ad-stat-icon">
+              <Icon name="verify" size={20} />
+            </span>
+            <span className="ad-stat-label">学生认证率</span>
+            <strong>{percent(s?.verifiedRate)}</strong>
+            <span className="ad-meter" aria-hidden="true">
+              <i
+                style={{
+                  width: `${Math.min(100, (s?.verifiedRate ?? 0) * ((s?.verifiedRate ?? 0) <= 1 ? 100 : 1))}%`,
+                }}
+              />
+            </span>
+          </div>
+        </div>
+      </Async>
+
+      <div className="ad-grid">
+        <Panel
+          title="近 7 日活跃"
+          hint="每日使用过的去重用户，北京时间"
+          actions={
+            <Link className="ad-link" to="/admin/engagement">
+              活跃统计
+              <Icon name="chevronRight" size={14} />
+            </Link>
+          }
+        >
+          {active.failed ? (
+            <div className="ad-state">
+              <Icon name="wifiOff" size={28} />
+              <strong>活跃数据暂时无法读取</strong>
+            </div>
+          ) : (
+            <>
+              <div className="ad-kpis">
+                <div>
+                  <span>今日活跃</span>
+                  <strong>{num(active.latest?.dailyActiveUsers)}</strong>
+                </div>
+                <div>
+                  <span>近 30 天</span>
+                  <strong>{num(active.latest?.rolling30ActiveUsers)}</strong>
+                </div>
+                <div>
+                  <span>{active.latest?.month ?? "本月"} 月活</span>
+                  <strong>{num(active.latest?.monthlyActiveUsers)}</strong>
+                </div>
+              </div>
+              <Columns data={active.points} label="近 7 日每日活跃用户" />
+            </>
+          )}
+        </Panel>
+
+        <Panel
+          title={
+            <>
+              待处理反馈
+              {!!openCount && <em className="ad-count">{openCount}</em>}
+            </>
+          }
+          flush
+          actions={
+            <Link className="ad-link" to="/admin/feedback">
+              全部
+              <Icon name="chevronRight" size={14} />
+            </Link>
+          }
+        >
+          <Async
+            query={cases}
+            empty={!cases.data?.items?.length}
+            emptyTitle="没有待处理的反馈"
+            emptyHint="新的反馈、纠错和举报会出现在这里。"
+          >
+            <ul className="ad-list">
+              {cases.data?.items?.slice(0, 5).map((item) => (
+                <li key={item.view?.id}>
+                  <Link to="/admin/feedback" state={{ caseId: item.view?.id }}>
+                    <Pill
+                      tone={item.view?.kind === "REPORT" ? "bad" : "info"}
+                      dot={false}
+                    >
+                      {statusText(item.view?.kind)}
+                    </Pill>
+                    <span className="ad-list-main">
+                      {item.targetName || item.view?.text || "查看详情"}
+                    </span>
+                    <time>{ago(item.view?.createdAt)}</time>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Async>
+        </Panel>
+
+        <Panel
+          title="最新菜品"
+          flush
+          actions={
+            <Link className="ad-link" to="/admin/foods">
+              菜品管理
+              <Icon name="chevronRight" size={14} />
+            </Link>
+          }
+        >
+          <Async
+            query={foods}
+            empty={!foods.data?.items?.length}
+            emptyTitle="还没有菜品"
+          >
+            <ul className="ad-list">
+              {foods.data?.items?.slice(0, 5).map((food) => (
+                <li key={food.id}>
+                  <Link to={`/foods/${food.id}`}>
+                    <Thumb src={food.pictureUrl?.[0]} />
+                    <span className="ad-list-main">
+                      {food.name}
+                      <small>{food.restaurantName || "未关联餐厅"}</small>
+                    </span>
+                    <span className="ad-list-side">
+                      {money(food.price)}
+                      <small>{ago(food.createdAt)}</small>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Async>
+        </Panel>
+
+        <Panel title="系统状态" flush>
+          <ul className="ad-list is-status">
+            <li>
+              <Link to="/admin/config">
+                <Icon name="settings" size={18} />
+                <span className="ad-list-main">
+                  站点运行
+                  <small>
+                    {config.data
+                      ? `配置版本 ${config.data.configVersion} · ${config.data.siteMode}`
+                      : "远程配置未读取"}
+                  </small>
+                </span>
+                {config.data && (
+                  <Pill tone={maintenance[mode][0]}>
+                    {maintenance[mode][1]}
+                  </Pill>
+                )}
+              </Link>
+            </li>
+            <li>
+              <Link to="/admin/config">
+                <Icon name="filter" size={18} />
+                <span className="ad-list-main">
+                  功能开关
+                  <small>
+                    {flags.length
+                      ? `已关闭：${flags.map(([key]) => key).join("、")}`
+                      : "全部功能已开启"}
+                  </small>
+                </span>
+                {config.data && (
+                  <Pill tone={flags.length ? "warn" : "good"}>
+                    {flags.length ? `${flags.length} 项关闭` : "正常"}
+                  </Pill>
+                )}
+              </Link>
+            </li>
+            <li>
+              <Link to="/admin/ai">
+                <Icon name="computer" size={18} />
+                <span className="ad-list-main">
+                  AI 建议
+                  <small>{ai.data?.model || "未配置模型"}</small>
+                </span>
+                {ai.data && (
+                  <Pill
+                    tone={
+                      !ai.data.configured
+                        ? "neutral"
+                        : ai.data.enabled
+                          ? "good"
+                          : "warn"
+                    }
+                  >
+                    {!ai.data.configured
+                      ? "未配置"
+                      : ai.data.enabled
+                        ? "已启用"
+                        : "已停用"}
+                  </Pill>
+                )}
+              </Link>
+            </li>
+            <li>
+              <Link to="/admin/versions">
+                <Icon name="download" size={18} />
+                <span className="ad-list-main">
+                  客户端版本
+                  <small>
+                    {config.data?.versions?.length
+                      ? config.data.versions
+                          .map(
+                            (line) =>
+                              `${line.platform} ${line.latestVersionName || line.latestBuild}`,
+                          )
+                          .join(" · ")
+                      : "暂无版本线"}
+                  </small>
+                </span>
+                <Icon name="chevronRight" size={15} />
+              </Link>
+            </li>
+          </ul>
+        </Panel>
+      </div>
+    </div>
+  );
+}

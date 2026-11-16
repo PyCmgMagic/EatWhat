@@ -6,7 +6,7 @@ export const adminModules = [
     path: "/admin",
     icon: "tool",
     group: "工作台",
-    source: "directory",
+    detail: "全站数据、待办与系统状态",
   },
   {
     id: "engagement",
@@ -14,7 +14,7 @@ export const adminModules = [
     path: "/admin/engagement",
     icon: "history",
     group: "工作台",
-    source: "operations",
+    detail: "日活、月活与近期走势",
   },
   {
     id: "foods",
@@ -22,7 +22,7 @@ export const adminModules = [
     path: "/admin/foods",
     icon: "bowl",
     group: "内容管理",
-    source: "directory",
+    detail: "检索、维护与下架菜品",
   },
   {
     id: "restaurants",
@@ -30,15 +30,15 @@ export const adminModules = [
     path: "/admin/restaurants",
     icon: "store",
     group: "内容管理",
-    source: "directory",
+    detail: "维护餐厅资料与营业信息",
   },
   {
     id: "hubs",
     title: "区域管理",
     path: "/admin/hubs",
-    icon: "nearby",
+    icon: "district",
     group: "内容管理",
-    source: "directory",
+    detail: "区域中心、边界与餐厅归属",
   },
   {
     id: "feedback",
@@ -46,7 +46,7 @@ export const adminModules = [
     path: "/admin/feedback",
     icon: "feedback",
     group: "审核与反馈",
-    source: "operations",
+    detail: "处理意见反馈、纠错与举报",
   },
   {
     id: "users",
@@ -54,7 +54,7 @@ export const adminModules = [
     path: "/admin/users",
     icon: "me",
     group: "账号管理",
-    source: "directory",
+    detail: "账号状态、封禁与临时密码",
   },
   {
     id: "announcements",
@@ -62,7 +62,7 @@ export const adminModules = [
     path: "/admin/announcements",
     icon: "announce",
     group: "站点运营",
-    source: "operations",
+    detail: "发布范围、时间与级别",
   },
   {
     id: "config",
@@ -70,7 +70,7 @@ export const adminModules = [
     path: "/admin/config",
     icon: "settings",
     group: "站点运营",
-    source: "operations",
+    detail: "功能开关与维护模式",
   },
   {
     id: "versions",
@@ -78,15 +78,15 @@ export const adminModules = [
     path: "/admin/versions",
     icon: "download",
     group: "站点运营",
-    source: "operations",
+    detail: "各端最低与最新版本",
   },
   {
     id: "ai",
     title: "AI 设置",
     path: "/admin/ai",
-    icon: "settings",
+    icon: "computer",
     group: "站点运营",
-    source: "operations",
+    detail: "模型提供商与图片检查",
   },
   {
     id: "audit",
@@ -94,7 +94,7 @@ export const adminModules = [
     path: "/admin/audit",
     icon: "document",
     group: "站点运营",
-    source: "operations",
+    detail: "配置与公告的修改记录",
   },
 ] as const;
 
