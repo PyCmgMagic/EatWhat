@@ -139,7 +139,8 @@
   margin-left: auto;
   color: #8a7e76;
 }
-.pc-header-search-submit {
+.pc-header-search .pc-header-search-submit {
+  display: flex;
   flex: none;
   align-items: center;
   justify-content: center;
@@ -151,7 +152,7 @@
   color: #fff;
   transition: background 150ms;
 }
-.pc-header-search-submit:hover {
+.pc-header-search .pc-header-search-submit:hover {
   background: #4a3a2d;
 }
 .pc-header-search-wrap button:focus-visible,

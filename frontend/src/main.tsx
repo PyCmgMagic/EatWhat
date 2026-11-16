@@ -11,6 +11,7 @@ import { ActionAccessPrompts } from "./app/access-prompt";
 import ForegroundActivity from "./app/ForegroundActivity";
 import RetiredRouteBoundary from "./app/retired-routes";
 import MobileApp from "./mobile/App";
+import "./base.css";
 // Keep responsive overrides last even when their page JavaScript is lazy.
 import "./desktop/profile.css";
 import "./desktop/publish.css";
