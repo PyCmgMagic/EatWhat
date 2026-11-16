@@ -446,6 +446,13 @@ const distances = [
   { value: "5000", name: "5 公里内" },
 ];
 /** Backend v2 preferences: fixed choices, used by the recommendations. */
+type PreferencePayload = {
+  likedCategories: string[];
+  likedTags: string[];
+  dislikedTags: string[];
+  priceBand?: string;
+  maxDistance?: number;
+};
 function PreferencesForm({ initial }: { initial: V2Preferences }) {
   const { api, user } = useApp(),
     [draft, setDraft, clearDraft] = useSessionDraft(
@@ -484,9 +491,12 @@ function PreferencesForm({ initial }: { initial: V2Preferences }) {
     priceBand: initial.priceBand ?? "",
     maxDistance: initial.maxDistance == null ? "" : String(initial.maxDistance),
   };
-  const same = (a: string[], b: string[]) =>
-    a.length === b.length &&
-    [...a].sort().every((value, index) => value === [...b].sort()[index]);
+  const same = (a: string[], b: string[]) => {
+    if (a.length !== b.length) return false;
+    const left = [...a].sort(),
+      right = [...b].sort();
+    return left.every((value, index) => value === right[index]);
+  };
   const dirty =
     !same(draft.likedCategories, saved.likedCategories) ||
     !same(draft.likedTags, saved.likedTags) ||
@@ -505,15 +515,20 @@ function PreferencesForm({ initial }: { initial: V2Preferences }) {
     draft.dislikedTags.length;
   const save = () => {
     if (draft.likedTags.some((tag) => draft.dislikedTags.includes(tag)))
-      throw new Error("同一口味不能既喜欢又忌口。");
+      return Promise.reject(new Error("同一口味不能既喜欢又忌口。"));
+    // 生成类型落后于 v2 接口（缺 likedCategories / priceBand / maxDistance），
+    // 这里按后端契约声明一次，避免再写 `as never`。
+    const payload: PreferencePayload = {
+      likedCategories: draft.likedCategories,
+      likedTags: draft.likedTags,
+      dislikedTags: draft.dislikedTags,
+      priceBand: draft.priceBand || undefined,
+      maxDistance: draft.maxDistance ? Number(draft.maxDistance) : undefined,
+    };
     return api
-      .savePreferences({
-        likedCategories: draft.likedCategories,
-        likedTags: draft.likedTags,
-        dislikedTags: draft.dislikedTags,
-        priceBand: draft.priceBand || undefined,
-        maxDistance: draft.maxDistance ? Number(draft.maxDistance) : undefined,
-      } as never)
+      .savePreferences(
+        payload as unknown as Parameters<typeof api.savePreferences>[0],
+      )
       .then(() => clearDraft());
   };
   return (
@@ -524,7 +539,7 @@ function PreferencesForm({ initial }: { initial: V2Preferences }) {
         task.run(save);
       }}
     >
-      <div className="ew-prefs">
+      <fieldset className="ew-prefs" disabled={task.isPending}>
         <section className="ew-prefs-card" aria-labelledby="prefs-category">
           <header className="ew-prefs-head">
             <div>
@@ -685,7 +700,7 @@ function PreferencesForm({ initial }: { initial: V2Preferences }) {
             </div>
           </div>
         </section>
-      </div>
+      </fieldset>
 
       <aside className="ew-prefs-side">
         <section className="ew-prefs-summary" aria-label="你的偏好概览">

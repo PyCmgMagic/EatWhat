@@ -132,6 +132,14 @@ beforeEach(async () => {
       }
       if (path.endsWith("/user/userInfo"))
         return Promise.resolve(ok(friend({ isFollowingHim: following })));
+      if (path.endsWith("/foods/by-user/11"))
+        return Promise.resolve(
+          ok({
+            items: [dish(1, "鲜虾蟹籽云吞", 18), dish(2, "玉米鲜肉饺子", 16)],
+            hasNext: false,
+            totalItems: 2,
+          }),
+        );
       if (path.endsWith("/foods/by-user/21"))
         return Promise.resolve(
           ok({
@@ -187,6 +195,7 @@ it("renders a friend page on the profile-space shell", async () => {
     "/users/21?people=fans",
     "/users/21?people=follow",
   ]);
+  expect(host.querySelector(".pc-friend-shares .ew-food-manage")).toBeNull();
 });
 
 it("shows the empty share state for a friend without dishes", async () => {
@@ -242,4 +251,39 @@ it("opens the own public page in edit mode", async () => {
     "编辑资料",
   );
   expect(host.textContent).toContain("我的公开主页");
+  // 自己的公开主页也要能直接管理菜品。
+  expect(host.querySelector(".pc-friend-shares .ew-food-manage")).toBeTruthy();
+});
+
+it("asks for a retry when the share list fails instead of claiming it is empty", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: RequestInfo | URL) => {
+      const path = String(input).split("?")[0];
+      if (path.endsWith("/user/info"))
+        return Promise.resolve(
+          ok({ id: 11, displayName: "我自己", verified: true, banned: false }),
+        );
+      if (path.endsWith("/user/userInfo")) return Promise.resolve(ok(friend()));
+      if (path.endsWith("/foods/by-user/21"))
+        return Promise.resolve(
+          new Response(JSON.stringify({ code: 500, msg: "boom" }), {
+            status: 500,
+          }),
+        );
+      if (path.endsWith("/user/blocks/21"))
+        return Promise.resolve(ok({ blocked: false }));
+      if (path.endsWith("/campus/list")) return Promise.resolve(ok([]));
+      return Promise.resolve(ok({ items: [], hasNext: false }));
+    }),
+  );
+  await render("/users/21");
+  await spin(() => host.textContent?.includes("分享暂时没有加载出来") ?? false);
+
+  expect(host.textContent).toContain("分享暂时没有加载出来");
+  expect(host.textContent).not.toContain("TA 还没有分享");
+  const retry = Array.from(host.querySelectorAll("button")).find((button) =>
+    button.textContent?.includes("重新加载"),
+  );
+  expect(retry).toBeTruthy();
 });

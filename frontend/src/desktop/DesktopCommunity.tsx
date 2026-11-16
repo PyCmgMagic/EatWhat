@@ -502,6 +502,19 @@ export function DesktopUser() {
                   <span />
                   <span />
                 </div>
+              ) : shares.isError ? (
+                <div className="profile-overview-empty" role="alert">
+                  <Icon name="warning" size={30} />
+                  <h3>分享暂时没有加载出来</h3>
+                  <p>网络或服务出了点问题，再试一次就好。</p>
+                  <button
+                    type="button"
+                    onClick={() => void shares.refetch()}
+                    disabled={shares.isFetching}
+                  >
+                    {shares.isFetching ? "正在重新加载…" : "重新加载"}
+                  </button>
+                </div>
               ) : items.length ? (
                 <div className="profile-overview-dish-grid">
                   {items.slice(0, 3).map((food) => (
@@ -591,7 +604,11 @@ export function DesktopUser() {
               </div>
             </div>
             {session ? (
-              <UserFoods key={id} userId={id} manage={canManage && manage} />
+              <UserFoods
+                key={id}
+                userId={id}
+                manage={self || (canManage && manage)}
+              />
             ) : (
               <p className="ew-note">登录后可以浏览食友的全部分享。</p>
             )}

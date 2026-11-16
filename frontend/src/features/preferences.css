@@ -14,6 +14,17 @@
   gap: 16px;
   min-width: 0;
 }
+/* 这一组选项包在 fieldset 里，便于保存中整体禁用；抹平默认外观。 */
+fieldset.ew-prefs {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+.ew-prefs .ew-chip:has(input:disabled) {
+  opacity: 0.55;
+  cursor: default;
+}
 .ew-prefs-card {
   display: grid;
   gap: 18px;

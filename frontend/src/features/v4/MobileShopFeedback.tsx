@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { errorMessage } from "../../api/client";
 import { LoginLink } from "../../app/auth-dialog";
 import { useApp } from "../../app/state";
 import {
@@ -8,7 +10,6 @@ import {
   type V2Shop,
 } from "../../api/v2-vocab";
 import { DesignIcon as Icon } from "../../mobile/ui";
-import { useCommand } from "./shared";
 import "./mobile-shop-feedback.css";
 
 /**
@@ -16,9 +17,13 @@ import "./mobile-shop-feedback.css";
  * viewer's own vote and the shop's traits into one panel.
  */
 export function MobileShopFeedback({ id }: { id: number }) {
-  const { api, session } = useApp();
+  const { api, session, toast } = useApp();
   const cache = useQueryClient();
-  const task = useCommand();
+  // 乐观投票：点下去马上亮，失败回滚并提示。
+  const [optimistic, setOptimistic] = useState<
+    Partial<Record<"dineIn" | "delivery", RatingValue | null>>
+  >({});
+  const [voting, setVoting] = useState(false);
   const q = useQuery({
     queryKey: ["restaurants", "detail", id],
     queryFn: () => api.restaurant(id),
@@ -43,16 +48,30 @@ export function MobileShopFeedback({ id }: { id: number }) {
   const secondaryText = deliveryStat?.count
     ? `外卖 ${Math.round((deliveryStat.rate ?? 0) * 100)}% · ${deliveryStat.count} 人`
     : "外卖还没有评价";
-  const mine = scenes.map(
-    (scene) => v2?.myRatings?.[scene.key] ?? (null as RatingValue | null),
+  const mine = scenes.map((scene) =>
+    scene.key in optimistic
+      ? (optimistic[scene.key] ?? null)
+      : (v2?.myRatings?.[scene.key] ?? (null as RatingValue | null)),
   );
   const voted = Boolean(session) && mine.some(Boolean);
-  const vote = (sceneId: "dine_in" | "delivery", next: RatingValue | null) =>
-    void task.run(
-      () => api.rateRestaurantScene(id, sceneId, next),
-      () => cache.invalidateQueries({ queryKey: ["restaurants"] }),
-    );
-  const busy = !shop || task.busy || task.uncertain;
+  const busy = !shop || voting;
+  const vote = async (
+    scene: (typeof scenes)[number],
+    next: RatingValue | null,
+  ) => {
+    if (busy) return;
+    setOptimistic((current) => ({ ...current, [scene.key]: next }));
+    setVoting(true);
+    try {
+      await api.rateRestaurantScene(id, scene.id, next);
+      await cache.invalidateQueries({ queryKey: ["restaurants"] });
+    } catch (error) {
+      toast(errorMessage(error), { tone: "error" });
+    } finally {
+      setVoting(false);
+      setOptimistic({});
+    }
+  };
 
   if (q.isPending)
     return (
@@ -135,8 +154,8 @@ export function MobileShopFeedback({ id }: { id: number }) {
                   aria-pressed={mine[index] === "RECOMMEND"}
                   disabled={busy}
                   onClick={() =>
-                    vote(
-                      scene.id,
+                    void vote(
+                      scene,
                       mine[index] === "RECOMMEND" ? null : "RECOMMEND",
                     )
                   }
@@ -150,8 +169,8 @@ export function MobileShopFeedback({ id }: { id: number }) {
                   aria-pressed={mine[index] === "NOT_RECOMMEND"}
                   disabled={busy}
                   onClick={() =>
-                    vote(
-                      scene.id,
+                    void vote(
+                      scene,
                       mine[index] === "NOT_RECOMMEND" ? null : "NOT_RECOMMEND",
                     )
                   }

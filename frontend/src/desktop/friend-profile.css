@@ -305,3 +305,21 @@
   background: #2e251e;
   color: #fffdf8;
 }
+
+/* 最近分享的失败态：同一个空态容器里放一个重试按钮。 */
+.pc-friend-space .profile-overview-empty > button {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: #231c18;
+  color: #fffdf8;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pc-friend-space .profile-overview-empty > button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

@@ -177,3 +177,26 @@ it("votes per scene and shows the delivery score when the shop delivers", async 
     "NOT_RECOMMEND",
   );
 });
+
+it("lights the vote immediately and rolls back with a toast when it fails", async () => {
+  let rejectVote: (error: Error) => void = () => {};
+  api.rateRestaurantScene.mockReset().mockImplementation(
+    () =>
+      new Promise((_resolve, reject) => {
+        rejectVote = reject;
+      }),
+  );
+  await open();
+  expect(yes()?.getAttribute("aria-pressed")).toBe("false");
+
+  await act(async () => yes()!.click());
+  // 乐观态：请求还没返回，按钮就已经亮了。
+  expect(yes()?.getAttribute("aria-pressed")).toBe("true");
+
+  await act(async () => {
+    rejectVote(new Error("服务开小差了"));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  });
+  expect(yes()?.getAttribute("aria-pressed")).toBe("false");
+  expect(toast).toHaveBeenCalled();
+});

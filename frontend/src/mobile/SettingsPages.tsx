@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useApp } from "../app/state";
 import { localDestination } from "../app/navigation";
 import { Gate } from "../components/ui";

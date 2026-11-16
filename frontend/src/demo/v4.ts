@@ -22,6 +22,8 @@ export type DemoV4 = {
   topics: Row[];
   favorites: number[];
   ratings: Record<string, string>;
+  /** 店铺场景评价：`${restaurantId}:${scene}` -> RECOMMEND / NOT_RECOMMEND */
+  sceneRatings: Record<string, string>;
   settings: Row;
   announcements: Row[];
   versions: Row[];
@@ -116,6 +118,7 @@ export function seedV4(): DemoV4 {
     ],
     favorites: [],
     ratings: {},
+    sceneRatings: {},
     settings: {
       revision: 1,
       flags: flags(),
@@ -765,6 +768,22 @@ export function handleV4(
       ),
     );
   }
+  const sceneStat = (
+    id: number,
+    scene: "dine_in" | "delivery",
+    count: number,
+    rate: number,
+  ) => {
+    const vote = v.sceneRatings?.[`${id}:${scene}`];
+    const score = (vote ?? v.ratings[String(id)]) as string | undefined;
+    if (!score) return { rate, count };
+    const nextCount = count + 1;
+    const recommended = score === "RECOMMEND" ? 1 : 0;
+    return {
+      rate: (rate * count + recommended) / nextCount,
+      count: nextCount,
+    };
+  };
   const restaurant = (r: Restaurant) => {
     const foods = s.foods.filter((f) => f.restaurantId === r.id),
       prices = foods
@@ -808,6 +827,14 @@ export function handleV4(
       personalState: "READY",
       publicTastesState: "READY",
       myRating: v.ratings[String(r.id)] ?? null,
+      myRatings: {
+        dineIn: v.sceneRatings?.[`${r.id}:dine_in`] ?? null,
+        delivery: v.sceneRatings?.[`${r.id}:delivery`] ?? null,
+      },
+      dineIn: sceneStat(r.id!, "dine_in", 5, 0.8),
+      ...("deliveryEnabled" in r && r.deliveryEnabled
+        ? { delivery: sceneStat(r.id!, "delivery", 3, 0.72) }
+        : {}),
       signatureFoods: [...foods]
         .sort((a, b) => (b.likesCount ?? 0) - (a.likesCount ?? 0))
         .slice(0, 3),
@@ -883,13 +910,28 @@ export function handleV4(
       if (m === "PUT") v.favorites.push(id);
       return ok({ isFavorite: m === "PUT" });
     }
-    if (m === "DELETE") delete v.ratings[String(id)];
-    else {
+    const scene = (b.scene ?? q.scene) as "dine_in" | "delivery" | undefined;
+    v.sceneRatings ??= {};
+    if (m === "DELETE") {
+      if (scene) delete v.sceneRatings[`${id}:${scene}`];
+      else {
+        delete v.ratings[String(id)];
+        delete v.sceneRatings[`${id}:dine_in`];
+        delete v.sceneRatings[`${id}:delivery`];
+      }
+    } else {
       if (!["RECOMMEND", "GOOD", "AVERAGE", "NOT_RECOMMEND"].includes(b.rating))
         fail("请选择评价。");
-      v.ratings[String(id)] = b.rating;
+      if (scene) v.sceneRatings[`${id}:${scene}`] = b.rating;
+      else v.ratings[String(id)] = b.rating;
     }
-    return ok({ rating: v.ratings[String(id)] ?? null });
+    return ok({
+      rating: v.ratings[String(id)] ?? null,
+      myRatings: {
+        dineIn: v.sceneRatings[`${id}:dine_in`] ?? null,
+        delivery: v.sceneRatings[`${id}:delivery`] ?? null,
+      },
+    });
   }
   const audit = (
     action: string,

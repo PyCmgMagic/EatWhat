@@ -2063,6 +2063,7 @@ export function useDesignBridge(
     if (screen === "G-Dish" && liveFood && id === 1)
       return (
         <DishDetail
+          key={liveFood.id}
           food={liveFood}
           restaurant={dishRestaurant.data}
           back={foodBack}
@@ -2140,7 +2141,11 @@ export function useDesignBridge(
             {view.children[0]}
             <div className="mobile-restaurant-toolbar-actions">
               {view.children[1]}
-              <RestaurantMoreActions key={shopId} id={shopId} name={r.name} />
+              <RestaurantMoreActions
+                key={`more-${shopId}`}
+                id={shopId}
+                name={r.name}
+              />
             </div>
           </header>
         );
@@ -3647,7 +3652,7 @@ export function useDesignBridge(
       )}
       {reportOpen && (
         <FoodReportDialog
-          key={foodId}
+          key={`report-${foodId}`}
           foodId={foodId}
           foodName={detail.data?.name}
           onClose={() => setReportOpen(false)}
@@ -3655,7 +3660,7 @@ export function useDesignBridge(
       )}
       {correctionOpen && (
         <RestaurantCorrectionDialog
-          key={shopId}
+          key={`correction-${shopId}`}
           restaurantId={shopId}
           restaurantName={restaurant.data?.name}
           onClose={() => setCorrectionOpen(false)}
