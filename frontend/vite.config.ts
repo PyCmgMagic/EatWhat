@@ -43,6 +43,12 @@ export default defineConfig(({ mode, command, isPreview }) => {
         },
       },
     },
-    test: { environment: "node", include: ["src/**/*.test.{ts,tsx}"] },
+    test: {
+      environment: "node",
+      include: ["src/**/*.test.{ts,tsx}"],
+      // CI exports the production API base for the build; tests assert on the
+      // default relative /api paths and must not depend on it.
+      env: { VITE_API_BASE_URL: "" },
+    },
   };
 });
