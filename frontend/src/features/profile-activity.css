@@ -488,3 +488,123 @@
     transition: none;
   }
 }
+
+.v4-page[data-route="/notifications"] .v4-page-symbol {
+  display: none;
+}
+.v4-page[data-route="/notifications"] .v4-heading {
+  margin-bottom: 20px;
+}
+.v4-page[data-route="/notifications"] .profile-message-tools {
+  margin: 0 0 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee7de;
+}
+.v4-page[data-route="/notifications"] .profile-message-filters {
+  gap: 6px;
+}
+.v4-page[data-route="/notifications"] .profile-message-filters button {
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 11px;
+}
+.v4-page[data-route="/notifications"] .profile-message-filters button:hover {
+  background: #f5f0ea;
+  color: #2e251e;
+}
+.v4-page[data-route="/notifications"]
+  .profile-message-filters
+  button[aria-pressed="true"] {
+  background: #fff0c3;
+  color: #2e251e;
+  font-weight: 700;
+}
+.v4-page[data-route="/notifications"] .profile-message-summary {
+  gap: 16px;
+}
+.v4-page[data-route="/notifications"] .profile-message-read-all {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #e6dbca;
+  border-radius: 10px;
+  background: transparent;
+  color: #6e5b45;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.v4-page[data-route="/notifications"]
+  .profile-message-read-all:hover:not(:disabled) {
+  border-color: #d8c39b;
+  background: #fff8e7;
+  color: #2e251e;
+}
+.v4-page[data-route="/notifications"] .profile-message-read-all:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+.v4-page[data-route="/notifications"] .profile-message-list {
+  border-color: #ece5dc;
+  border-radius: 16px;
+}
+.v4-page[data-route="/notifications"] .profile-message-row {
+  gap: 14px;
+  padding: 22px;
+}
+.v4-page[data-route="/notifications"] .profile-message-row[data-unread] {
+  background: #fff;
+}
+.v4-page[data-route="/notifications"]
+  .profile-message-row[data-unread]::before {
+  display: none;
+}
+.v4-page[data-route="/notifications"] .profile-activity-symbol {
+  flex-basis: 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #f4f0eb;
+  color: #75685b;
+}
+.v4-page[data-route="/notifications"] .profile-message-heading strong {
+  font-weight: 650;
+}
+.v4-page[data-route="/notifications"]
+  .profile-message-row[data-unread]
+  .profile-message-heading
+  strong {
+  font-weight: 780;
+}
+.v4-page[data-route="/notifications"] .profile-message-unread {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border-radius: 50%;
+  background: #c28b27;
+}
+.v4-page[data-route="/notifications"] .profile-message-copy p {
+  color: #62564b;
+}
+.v4-page[data-route="/notifications"]
+  .profile-message-copy
+  .profile-message-meta {
+  color: #8a7c70;
+}
+.v4-page[data-route="/notifications"] .profile-message-target {
+  min-height: 40px;
+  margin-top: 6px;
+}
+@media (max-width: 760px) {
+  .v4-page[data-route="/notifications"] .profile-message-tools {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .v4-page[data-route="/notifications"] .profile-message-summary {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

@@ -302,7 +302,6 @@ function DesktopHeader() {
           ))}
         </SlidingTabs>
         <div className="pc-header-actions">
-          <WorkspaceSwitch />
           <HeaderSearch />
           <Link
             className="pc-icon-button"
@@ -391,6 +390,7 @@ function HeaderAccount() {
             <Link to="/settings">
               <Icon name="settings" size={18} /> 账号设置
             </Link>
+            <WorkspaceSwitch />
           </div>
           <div className="pc-account-popover-footer">
             <button

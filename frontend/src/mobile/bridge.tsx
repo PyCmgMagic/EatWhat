@@ -2709,16 +2709,7 @@ export function useDesignBridge(
           </div>
         );
       if (tag === "div" && st.top === "372px")
-        return (
-          <ProfileSheet>
-            {user?.role === "admin" && (
-              <div className="mobile-admin-entry">
-                <WorkspaceSwitch />
-              </div>
-            )}
-            {view.children.slice(1)}
-          </ProfileSheet>
-        );
+        return <ProfileSheet>{view.children.slice(1)}</ProfileSheet>;
       if (tag === "section" && st.top === "100px")
         return (
           <section {...p} className="mobile-profile-identity">
@@ -2729,6 +2720,17 @@ export function useDesignBridge(
             </div>
             {view.children.slice(2)}
           </section>
+        );
+      if (tag === "header" && id === 4)
+        return (
+          <header {...p}>
+            {view.children[0]}
+            <WorkspaceSwitch
+              className="mobile-profile-admin-link"
+              iconSize={24}
+            />
+            {view.children[1]}
+          </header>
         );
       if (tag === "a" && id === 5)
         return (

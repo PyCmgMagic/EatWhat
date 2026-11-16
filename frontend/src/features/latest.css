@@ -344,6 +344,51 @@
 .ew-form-panel > form > .ew-button {
   align-self: flex-start;
 }
+.ew-password-panel {
+  width: 100%;
+  max-width: 600px;
+  margin: 0;
+  padding: 32px;
+  border: 1px solid #eee7df;
+  background: #faf7f4;
+  box-shadow: 0 10px 28px #382b1e08;
+}
+.ew-password-panel .ew-code-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 12px;
+}
+.ew-password-panel .ew-code-row > button {
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background: #f7dfaa;
+  color: #5c421c;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ew-password-panel .ew-code-row > button:hover:not(:disabled) {
+  background: #f3d18a;
+}
+.ew-password-panel input {
+  min-height: 48px;
+}
+.ew-password-panel form > .ew-button {
+  min-height: 48px;
+}
+@media (max-width: 600px) {
+  .ew-password-panel {
+    padding: 22px;
+  }
+  .ew-password-panel .ew-code-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ew-password-panel .ew-code-row > button {
+    width: 100%;
+  }
+}
 .ew-form-panel textarea {
   min-height: 100px;
   resize: vertical;

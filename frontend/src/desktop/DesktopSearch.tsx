@@ -298,9 +298,6 @@ export default function DesktopSearch() {
             className="pc-header-search-submit"
             aria-label={`搜索${kind === "shop" ? "店铺" : "菜品"}`}
           >
-            <span className="sr-only">
-              搜索{kind === "shop" ? "店铺" : "菜品"}
-            </span>
             <Icon name="search" size={17} />
           </button>
         </form>

@@ -46,7 +46,10 @@ export default function AuthLanding({ desktop }: { desktop: boolean }) {
           </h1>
           <p>{BRAND_SLOGAN}</p>
         </div>
-        <span className="auth-landing-fold" aria-hidden="true" />
+        <span className="auth-landing-fold" aria-hidden="true">
+          <span className="auth-landing-fold-back" />
+          <span className="auth-landing-fold-flap" />
+        </span>
         <DishCarousel />
       </section>
 

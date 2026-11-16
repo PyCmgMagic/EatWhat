@@ -7,9 +7,11 @@ import "./workspace-switch.css";
 export default function WorkspaceSwitch({
   mode = "admin",
   className = "",
+  iconSize = 18,
 }: {
   mode?: "front" | "admin";
   className?: string;
+  iconSize?: number;
 }) {
   const { user } = useApp();
   if (user?.role !== "admin") return null;
@@ -20,7 +22,10 @@ export default function WorkspaceSwitch({
       state={{ workspaceSwitch: true }}
       aria-label={mode === "admin" ? "切换到管理后台" : "切换到前台"}
     >
-      <DesignIcon name={mode === "admin" ? "tool" : "discover"} size={18} />
+      <DesignIcon
+        name={mode === "admin" ? "tool" : "discover"}
+        size={iconSize}
+      />
       <span>{mode === "admin" ? "管理后台" : "返回前台"}</span>
     </Link>
   );

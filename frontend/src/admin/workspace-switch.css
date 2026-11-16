@@ -27,12 +27,21 @@
 .workspace-switch svg {
   flex-shrink: 0;
 }
-.mobile-admin-entry {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0 0 16px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid #efe9e4;
+.mobile-profile-admin-link {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.mobile-profile-admin-link > span:not(.design-icon) {
+  display: none;
+}
+.mobile-profile-admin-link > .design-icon {
+  width: 24px;
+  height: 24px;
 }
 @media (max-width: 1100px) {
   .pc-header-actions .workspace-switch {

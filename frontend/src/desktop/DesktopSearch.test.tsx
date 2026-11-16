@@ -41,7 +41,7 @@ async function enter(value: string) {
 }
 function button(text: string) {
   return [...host.querySelectorAll<HTMLButtonElement>("button")].find(
-    (item) => item.textContent === text,
+    (item) => item.textContent === text || item.ariaLabel === text,
   )!;
 }
 

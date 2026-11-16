@@ -326,6 +326,9 @@ html:has(body.desktop-mode) {
   text-align: left;
   cursor: pointer;
 }
+.pc-account-popover a.workspace-switch {
+  justify-content: flex-start;
+}
 .pc-account-popover a:hover,
 .pc-account-logout:hover {
   background: #f7f3ef;

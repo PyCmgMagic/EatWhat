@@ -311,7 +311,7 @@ export function PasswordByCode() {
     return () => clearInterval(t);
   }, [until]);
   return (
-    <div className="ew-feature ew-form-panel">
+    <div className="ew-feature ew-form-panel ew-password-panel">
       <h2>
         {user?.hasPassword === false ? "设置登录密码" : "用短信验证码设置密码"}
       </h2>

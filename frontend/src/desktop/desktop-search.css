@@ -50,8 +50,8 @@
   color: #2e251e;
   box-shadow: 0 18px 46px #382b1e24;
   transform-origin: top center;
-  animation: pc-header-search-panel-in 200ms 70ms
-    cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: pc-header-search-panel-in 200ms 70ms cubic-bezier(0.22, 1, 0.36, 1)
+    both;
 }
 .pc-header-search-wrap[data-closing="true"] .pc-header-search-backdrop {
   animation: pc-header-search-backdrop-out 220ms ease-in both;

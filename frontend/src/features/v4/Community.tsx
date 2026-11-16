@@ -32,6 +32,7 @@ import {
   ProfileHelpHeader,
   ProfileSectionNav,
 } from "../ProfileSectionNav";
+import { notificationTime } from "../../mobile/notification-model";
 import "../profile-activity.css";
 import "./edit-history.css";
 import "./restaurant-actions.css";
@@ -682,7 +683,7 @@ type SystemDetail = {
 };
 
 export function NotificationCards() {
-  const { api } = useApp(),
+  const { api, toast } = useApp(),
     cache = useQueryClient(),
     [column, setColumn] = useState<
       "ALL" | "COMMENTS" | "INTERACTION" | "SYSTEM"
@@ -697,6 +698,20 @@ export function NotificationCards() {
       queryKey: ["notification-cards", "unread"],
       queryFn: () => api.unreadCards(),
     });
+  const markAllRead = () =>
+    task.run(
+      () => api.readAll(),
+      async () => {
+        cache.setQueryData(["notification-cards", "unread"], {
+          ...unread.data,
+          members: 0,
+          cards: 0,
+        });
+        cache.setQueryData(["notifications", "unread"], 0);
+        await cache.invalidateQueries({ queryKey: ["notification-cards"] });
+        toast("全部通知已标为已读", { tone: "success" });
+      },
+    );
   const targetLink = (item: Schema["CardResponse"]) => {
     const d = item.data?.detail;
     if (d?.type === "case_result" && d.caseId)
@@ -751,6 +766,15 @@ export function NotificationCards() {
                 : "消息都已读完"}
             </span>
           )}
+          <button
+            type="button"
+            className="profile-message-read-all"
+            disabled={task.busy || !unread.data?.members}
+            onClick={() => void markAllRead()}
+          >
+            <Icon name="check" size={15} />
+            {task.busy ? "正在处理…" : "全部已读"}
+          </button>
           <Link to="/settings/notifications">
             <Icon name="settings" size={16} />
             通知偏好
@@ -764,6 +788,22 @@ export function NotificationCards() {
               const link = targetLink(item),
                 detail = item.data?.detail,
                 extra = detail as SystemDetail | null | undefined,
+                actorNames =
+                  item.actors
+                    ?.map((actor) => actor.name ?? "校园食友")
+                    .join("、") ?? "",
+                actionText =
+                  item.kind === "like"
+                    ? "赞了你的分享"
+                    : item.kind === "favorite"
+                      ? "收藏了你的分享"
+                      : item.kind === "follow"
+                        ? "关注了你"
+                        : item.kind === "reply"
+                          ? "回复了你的评论"
+                          : item.kind === "comment"
+                            ? "评论了你的分享"
+                            : "与你有了新互动",
                 systemTitle =
                   item.kind === "moderation_result"
                     ? "审核结果"
@@ -813,25 +853,30 @@ export function NotificationCards() {
                   <div className="profile-message-copy">
                     <div className="profile-message-heading">
                       <strong>
-                        {item.actors
-                          ?.map((a) => a.name ?? "校园食友")
-                          .join("、") || systemTitle}
+                        {actorNames
+                          ? `${actorNames}${actionText}`
+                          : systemTitle}
                       </strong>
                       {!!item.unreadMemberCount && (
-                        <span className="profile-message-unread">未读</span>
+                        <span
+                          className="profile-message-unread"
+                          role="img"
+                          aria-label="未读"
+                        />
                       )}
                     </div>
                     <p className="profile-message-meta">
-                      {item.memberCount ?? 1} 条
-                      {item.kind === "like"
-                        ? "点赞"
-                        : item.kind === "favorite"
-                          ? "收藏"
-                          : item.kind === "follow"
-                            ? "关注"
-                            : "消息"}{" "}
-                      <span aria-hidden="true"> · </span>
-                      <time>{timeText(item.latestAt)}</time>
+                      {(item.memberCount ?? 0) > 1 &&
+                        `${item.memberCount} 条${
+                          item.kind === "like"
+                            ? "点赞"
+                            : item.kind === "favorite"
+                              ? "收藏"
+                              : item.kind === "follow"
+                                ? "关注"
+                                : "消息"
+                        } · `}
+                      <time>{notificationTime(item.latestAt)}</time>
                     </p>
                     {detail?.type === "case_result" && (
                       <p>

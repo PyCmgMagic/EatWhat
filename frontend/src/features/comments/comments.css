@@ -352,13 +352,21 @@
   box-shadow: 0 2px 0 rgba(35, 28, 24, 0.2);
   cursor: pointer;
 }
+.comments-composer button.comments-primary {
+  color: #fff;
+  -webkit-text-fill-color: #fff;
+}
+.comments-composer button.comments-primary:hover:not(:disabled) {
+  background: linear-gradient(#4a3a2d, #30251f);
+}
 .comments-primary:active {
   transform: translateY(1px);
   box-shadow: none;
 }
-.comments-primary:disabled {
+.comments-composer button.comments-primary:disabled {
   background: #e9e2dc;
   color: #6e625b;
+  -webkit-text-fill-color: #6e625b;
   box-shadow: none;
   cursor: default;
 }

@@ -82,9 +82,51 @@
   right: 0;
   width: 210px;
   height: 155px;
-  background: #fffdf9;
+  filter: drop-shadow(-5px 7px 7px #8b612622);
+  pointer-events: none;
+}
+.auth-landing-fold-back,
+.auth-landing-fold-flap {
+  position: absolute;
+  inset: 0;
   clip-path: polygon(42% 0, 100% 0, 100% 100%, 62% 82%);
-  filter: drop-shadow(-10px 12px 0 #b4843c24);
+  clip-path: path("M 88 0 H 210 V 155 L 130 127 Q 108 117 88 0 Z");
+  transform-origin: 100% 0;
+}
+.auth-landing-fold-back {
+  background: #b48b50;
+  opacity: 0.3;
+  transform: translate(3px, 4px);
+}
+.auth-landing-fold-flap {
+  background: linear-gradient(145deg, #fff 0%, #fffdf9 72%, #eee4d4 100%);
+  animation: auth-fold-enter 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 240ms ease-out;
+}
+.auth-landing-fold-flap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 64%,
+    #9b6c2b12 65%,
+    #ffffff80 67%,
+    transparent 70%
+  );
+}
+.auth-landing-stage:hover .auth-landing-fold-flap {
+  transform: translate(7px, -4px) scaleX(0.94);
+}
+@keyframes auth-fold-enter {
+  from {
+    opacity: 0;
+    transform: translate(24px, -10px) scaleX(0.25);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scaleX(1);
+  }
 }
 .auth-landing-sheet {
   position: relative;
@@ -296,8 +338,7 @@
   font-size: 15px;
 }
 .is-mobile .auth-landing-fold {
-  width: 150px;
-  height: 115px;
+  scale: 0.72;
 }
 .is-mobile .auth-dish-carousel {
   --dish-size: 220px;
@@ -348,7 +389,11 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .auth-landing-actions > button,
-  .auth-landing-consent input::before {
+  .auth-landing-consent input::before,
+  .auth-landing-fold-flap {
     transition: none;
+  }
+  .auth-landing-fold-flap {
+    animation: none;
   }
 }
