@@ -31,6 +31,22 @@ type Option = {
   group?: string;
 };
 
+/**
+ * The mobile shell scales its whole canvas with CSS `zoom` (--mobile-scale).
+ * Inside a zoomed subtree every length is multiplied by that zoom — including
+ * the offsets of a portalled popup — while getBoundingClientRect already
+ * reports viewport pixels. Coordinates measured from the trigger therefore have
+ * to be divided by the accumulated zoom to land where the trigger really is.
+ */
+function zoomScale(node: HTMLElement | null): number {
+  let scale = 1;
+  for (let el = node; el; el = el.parentElement) {
+    const zoom = Number.parseFloat(getComputedStyle(el).zoom);
+    if (Number.isFinite(zoom) && zoom > 0 && zoom !== 1) scale *= zoom;
+  }
+  return scale;
+}
+
 function text(children: ReactNode): string {
   return Children.toArray(children)
     .map((child) =>
@@ -246,24 +262,30 @@ export function Select({
         setOpen(false);
         return;
       }
-      const popupWidth = Math.min(Math.max(rect.width, 216), width - 24);
+      // Keep the panel glued to the trigger inside a zoomed canvas: the rect is
+      // in viewport pixels, the popup's own lengths are zoom-multiplied.
+      const scale = zoomScale(panel);
+      const popupWidth = Math.min(
+        Math.max(rect.width, 216 * scale),
+        width - 24,
+      );
       const below = height + offsetY - rect.bottom - 18,
         above = rect.top - offsetY - 18;
-      const flip = below < Math.min(panel.scrollHeight, 300) && above > below;
+      const needed = Math.min(panel.scrollHeight * scale, 300);
+      const flip = below < needed && above > below;
       const maxHeight = Math.max(60, Math.min(344, flip ? above : below));
       setPosition({
-        width: popupWidth,
-        maxHeight,
-        left: Math.max(
-          offsetX + 12,
-          Math.min(rect.left, offsetX + width - popupWidth - 12),
-        ),
-        top: flip
-          ? Math.max(
-              offsetY + 12,
-              rect.top - Math.min(panel.scrollHeight, maxHeight) - 8,
-            )
-          : rect.bottom + 8,
+        width: popupWidth / scale,
+        maxHeight: maxHeight / scale,
+        left:
+          Math.max(
+            offsetX + 12,
+            Math.min(rect.left, offsetX + width - popupWidth - 12),
+          ) / scale,
+        top:
+          (flip
+            ? Math.max(offsetY + 12, rect.top - Math.min(needed, maxHeight) - 8)
+            : rect.bottom + 8) / scale,
         transformOrigin: flip ? "bottom left" : "top left",
       });
     };
