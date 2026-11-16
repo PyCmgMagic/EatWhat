@@ -2287,6 +2287,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/summary/trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 【需角色：admin】获取最近若干天每天的注册人数 */
+        get: operations["getAdminSummaryTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/remote-config": {
         parameters: {
             query?: never;
@@ -2355,6 +2372,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/feedback/cases/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 【需角色：admin】获取未处理的反馈举报数量 */
+        get: operations["getAdminFeedbackCasesCounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/engagement/stats": {
         parameters: {
             query?: never;
@@ -2364,6 +2398,40 @@ export interface paths {
         };
         /** 【需角色：admin】获取日活、月活和最近 30 天活跃统计 */
         get: operations["getAdminEngagementStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/engagement/stats/range": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 【需角色：admin】获取区间内每天的日活 */
+        get: operations["getAdminEngagementStatsRange"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/content/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 【需角色：admin】获取菜品、店铺的总数和每日新增 */
+        get: operations["getAdminContentStats"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4168,6 +4236,23 @@ export interface components {
             /** Format: double */
             verifiedRate?: number;
         };
+        ResultSummaryTrend: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["SummaryTrend"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        SummaryTrend: {
+            days?: components["schemas"]["SummaryTrendDay"][];
+            timezone?: string;
+        };
+        SummaryTrendDay: {
+            date?: string;
+            /** Format: int64 */
+            newUsers?: number;
+        };
         AdminView: {
             /** Format: int64 */
             configVersion?: number;
@@ -4275,6 +4360,24 @@ export interface components {
             /** Format: int64 */
             timestamp?: number;
         };
+        OpenCounts: {
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            feedback?: number;
+            /** Format: int64 */
+            catalogError?: number;
+            /** Format: int64 */
+            report?: number;
+        };
+        ResultOpenCounts: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["OpenCounts"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
         EngagementStats: {
             date?: string;
             /** Format: int64 */
@@ -4294,6 +4397,52 @@ export interface components {
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
+        };
+        EngagementDay: {
+            date?: string;
+            /** Format: int64 */
+            activeUsers?: number;
+        };
+        EngagementRange: {
+            from?: string;
+            to?: string;
+            days?: components["schemas"]["EngagementDay"][];
+            timezone?: string;
+        };
+        ResultEngagementRange: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["EngagementRange"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        Day: {
+            date?: string;
+            /** Format: int64 */
+            foods?: number;
+            /** Format: int64 */
+            restaurants?: number;
+        };
+        ResultStats: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["Stats"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        Stats: {
+            /** Format: int64 */
+            totalFoods?: number;
+            /** Format: int64 */
+            todayFoods?: number;
+            /** Format: int64 */
+            totalRestaurants?: number;
+            /** Format: int64 */
+            todayRestaurants?: number;
+            days?: components["schemas"]["Day"][];
+            timezone?: string;
         };
         PageResultConsentPolicy: {
             /** Format: int64 */
@@ -7088,6 +7237,9 @@ export interface operations {
                 page?: number;
                 pageSize?: number;
                 keyword?: string;
+                role?: string;
+                verified?: boolean;
+                banned?: boolean;
             };
             header?: never;
             path?: never;
@@ -8218,6 +8370,28 @@ export interface operations {
             };
         };
     };
+    getAdminSummaryTrend: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultSummaryTrend"];
+                };
+            };
+        };
+    };
     getAdminRemoteConfig: {
         parameters: {
             query?: never;
@@ -8308,6 +8482,26 @@ export interface operations {
             };
         };
     };
+    getAdminFeedbackCasesCounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultOpenCounts"];
+                };
+            };
+        };
+    };
     getAdminEngagementStats: {
         parameters: {
             query?: {
@@ -8326,6 +8520,51 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultEngagementStats"];
+                };
+            };
+        };
+    };
+    getAdminEngagementStatsRange: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultEngagementRange"];
+                };
+            };
+        };
+    };
+    getAdminContentStats: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultStats"];
                 };
             };
         };

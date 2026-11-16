@@ -302,16 +302,15 @@ function Navigation({
   onNavigate: () => void;
 }) {
   const { api } = useApp();
-  // Same key as the overview's queue, so the two share one request.
+  // Same key as the overview, so the two share one request.
   const open = useQuery({
-    queryKey: ["admin", "feedback", 1, "OPEN", "ALL"],
-    queryFn: () =>
-      api.adminFeedbackCases({ page: 1, pageSize: 12, status: "OPEN" }),
+    queryKey: ["admin", "feedback", "counts"],
+    queryFn: () => api.feedbackCounts(),
     staleTime: 60000,
     retry: false,
   });
   const badge: Partial<Record<AdminModuleId, number>> = {
-    feedback: open.data?.totalItems ?? open.data?.items?.length,
+    feedback: open.data?.total,
   };
   return (
     <nav aria-label="管理模块">

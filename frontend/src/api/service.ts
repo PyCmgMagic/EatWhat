@@ -36,6 +36,12 @@ import type {
 
 /** v2: when a dish is served ([] = follows its shop) and if it delivers. */
 export type DishServing = { mealTimes?: string[]; deliveryEnabled?: boolean };
+export type AdminUserFilters = {
+  keyword?: string;
+  role?: "admin" | "user";
+  verified?: boolean;
+  banned?: boolean;
+};
 export type FoodFilters = {
   hubId?: number;
   keyword?: string;
@@ -654,10 +660,41 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         method: "POST",
         body: { password },
       }),
-    adminUsers: (page = 1) =>
+    adminUsers: (page = 1, filters: AdminUserFilters = {}) =>
       data<Page<Schema["UserListItemVOResponse"]>>("/user/list", {
-        query: { page, pageSize: 20 },
+        query: { page, pageSize: 20, ...filters },
       }),
+    /** Daily active users for each day of a closed range (at most 92 days). */
+    engagementRange: (from: string, to: string) =>
+      data<{
+        from: string;
+        to: string;
+        timezone: string;
+        days: { date: string; activeUsers: number }[];
+      }>("/admin/engagement/stats/range", { query: { from, to } }),
+    /** Registrations per day for the last `days` days, oldest first. */
+    summaryTrend: (days = 14) =>
+      data<{ days: { date: string; newUsers: number }[] }>(
+        "/admin/summary/trend",
+        { query: { days } },
+      ),
+    /** Dish and shop totals plus what was added on each recent day. */
+    contentStats: (days = 14) =>
+      data<{
+        totalFoods: number;
+        todayFoods: number;
+        totalRestaurants: number;
+        todayRestaurants: number;
+        days: { date: string; foods: number; restaurants: number }[];
+      }>("/admin/content/stats", { query: { days } }),
+    /** Unhandled feedback, corrections and reports. */
+    feedbackCounts: () =>
+      data<{
+        total: number;
+        feedback: number;
+        catalogError: number;
+        report: number;
+      }>("/admin/feedback/cases/counts"),
     ban: (userId: number, reason: string, banUntil?: string) =>
       post(`/user/ban/${userId}`, { reason, banUntil }),
     unban: (userId: number) => post(`/user/unban/${userId}`),

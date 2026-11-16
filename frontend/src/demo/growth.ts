@@ -28,6 +28,22 @@ export function demoGrowth(
   now = new Date(),
 ) {
   const today = businessDate(now);
+  if (path === "/admin/engagement/stats/range") {
+    const to = String(query.to || today),
+      days: { date: string; activeUsers: number }[] = [];
+    for (
+      let d = new Date(String(query.from || to) + "T00:00:00Z");
+      d.toISOString().slice(0, 10) <= to && days.length < 92;
+      d.setUTCDate(d.getUTCDate() + 1)
+    ) {
+      const date = d.toISOString().slice(0, 10);
+      days.push({
+        date,
+        activeUsers: Number(state.entries.some((e) => e.businessDate === date)),
+      });
+    }
+    return { from: days[0]?.date, to, timezone: "Asia/Shanghai", days };
+  }
   if (path === "/admin/engagement/stats") {
     const date = String(query.date || today);
     if (!validBusinessDate(date, today))

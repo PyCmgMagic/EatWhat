@@ -1868,3 +1868,24 @@ a.ad-stat:hover {
   color: var(--ad-muted);
   font-size: 12px;
 }
+
+.ad-panel-body > * {
+  min-width: 0;
+}
+.ad-columns li {
+  overflow: visible;
+}
+.ad-columns :is(b, small) {
+  width: 0;
+  display: flex;
+  justify-content: center;
+}
+.ad-columns[data-dense] {
+  gap: 3px;
+}
+.ad-columns[data-dense] .ad-column-bar {
+  border-radius: 3px 3px 1px 1px;
+}
+:is(.admin-page-heading h1, .admin-main):focus-visible {
+  outline: none;
+}

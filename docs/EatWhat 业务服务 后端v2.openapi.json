@@ -3526,6 +3526,27 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "role",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "verified",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "banned",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -5563,6 +5584,37 @@
         } ]
       }
     },
+    "/admin/summary/trend" : {
+      "get" : {
+        "tags" : [ "账号 · AdminUser" ],
+        "summary" : "【需角色：admin】获取最近若干天每天的注册人数",
+        "operationId" : "summaryTrend",
+        "parameters" : [ {
+          "name" : "days",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultSummaryTrend"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
     "/admin/remote-config" : {
       "get" : {
         "tags" : [ "remoteconfig · AdminRemoteConfig" ],
@@ -5708,6 +5760,28 @@
         } ]
       }
     },
+    "/admin/feedback/cases/counts" : {
+      "get" : {
+        "tags" : [ "feedback · Feedback" ],
+        "summary" : "【需角色：admin】获取未处理的反馈举报数量",
+        "operationId" : "counts",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultOpenCounts"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
     "/admin/engagement/stats" : {
       "get" : {
         "tags" : [ "账号 · AdminUser" ],
@@ -5728,6 +5802,74 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ResultEngagementStats"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
+    "/admin/engagement/stats/range" : {
+      "get" : {
+        "tags" : [ "账号 · AdminUser" ],
+        "summary" : "【需角色：admin】获取区间内每天的日活",
+        "operationId" : "engagementRange",
+        "parameters" : [ {
+          "name" : "from",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "to",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultEngagementRange"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
+    "/admin/content/stats" : {
+      "get" : {
+        "tags" : [ "food · AdminContent" ],
+        "summary" : "【需角色：admin】获取菜品、店铺的总数和每日新增",
+        "operationId" : "stats",
+        "parameters" : [ {
+          "name" : "days",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultStats"
                 }
               }
             }
@@ -10419,6 +10561,51 @@
           }
         }
       },
+      "ResultSummaryTrend" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/SummaryTrend"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "SummaryTrend" : {
+        "type" : "object",
+        "properties" : {
+          "days" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SummaryTrendDay"
+            }
+          },
+          "timezone" : {
+            "type" : "string"
+          }
+        }
+      },
+      "SummaryTrendDay" : {
+        "type" : "object",
+        "properties" : {
+          "date" : {
+            "type" : "string"
+          },
+          "newUsers" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "AdminView" : {
         "type" : "object",
         "properties" : {
@@ -10681,6 +10868,46 @@
           }
         }
       },
+      "OpenCounts" : {
+        "type" : "object",
+        "properties" : {
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "feedback" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "catalogError" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "report" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ResultOpenCounts" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/OpenCounts"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "EngagementStats" : {
         "type" : "object",
         "properties" : {
@@ -10726,6 +10953,122 @@
           "timestamp" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }
+      },
+      "EngagementDay" : {
+        "type" : "object",
+        "properties" : {
+          "date" : {
+            "type" : "string"
+          },
+          "activeUsers" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "EngagementRange" : {
+        "type" : "object",
+        "properties" : {
+          "from" : {
+            "type" : "string"
+          },
+          "to" : {
+            "type" : "string"
+          },
+          "days" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EngagementDay"
+            }
+          },
+          "timezone" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ResultEngagementRange" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/EngagementRange"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "Day" : {
+        "type" : "object",
+        "properties" : {
+          "date" : {
+            "type" : "string"
+          },
+          "foods" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "restaurants" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ResultStats" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/Stats"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "Stats" : {
+        "type" : "object",
+        "properties" : {
+          "totalFoods" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "todayFoods" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalRestaurants" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "todayRestaurants" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "days" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Day"
+            }
+          },
+          "timezone" : {
+            "type" : "string"
           }
         }
       },

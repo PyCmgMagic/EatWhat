@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useAdminState } from "../../app/admin-state";
 import { useApp } from "../../app/state";
 import type { Schema } from "../../api/models";
+import type { AdminUserFilters } from "../../api/service";
 import { useTask } from "../../components/useTask";
 import {
   Async,
@@ -38,22 +39,96 @@ const statusLabel = (u: Row) => {
 export default function Users() {
   const { api } = useApp(),
     [page, setPage] = useAdminState("users.page", 1),
+    [filters, setFilters] = useAdminState<AdminUserFilters>(
+      "users.filters",
+      {},
+    ),
     [selected, setSelected] = useState<Row | null>(null),
     q = useQuery({
-      queryKey: ["admin", "users", page],
-      queryFn: () => api.adminUsers(page),
+      queryKey: ["admin", "users", page, filters],
+      queryFn: () => api.adminUsers(page, filters),
     });
+  const filtered = Object.values(filters).some((v) => v !== undefined);
   // Keep the open drawer in step with refreshed list data.
   const current =
     selected && (q.data?.items?.find((u) => u.id === selected.id) ?? selected);
   return (
     <>
+      <form
+        className="ad-toolbar"
+        key={JSON.stringify(filters)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          const d = new FormData(e.currentTarget),
+            flag = (name: string) =>
+              d.get(name) === "" ? undefined : d.get(name) === "true";
+          setFilters({
+            keyword: String(d.get("keyword") || "").trim() || undefined,
+            role: (String(d.get("role") || "") ||
+              undefined) as AdminUserFilters["role"],
+            verified: flag("verified"),
+            banned: flag("banned"),
+          });
+          setPage(1);
+        }}
+      >
+        <label className="ad-search">
+          <Icon name="search" size={17} />
+          <input
+            name="keyword"
+            aria-label="搜索用户"
+            placeholder="昵称，或完整的登录名 / 手机号 / 邮箱 / 学号"
+            defaultValue={filters.keyword}
+          />
+        </label>
+        <select name="role" aria-label="角色" defaultValue={filters.role ?? ""}>
+          <option value="">全部角色</option>
+          <option value="user">用户</option>
+          <option value="admin">管理员</option>
+        </select>
+        <select
+          name="verified"
+          aria-label="学生认证"
+          defaultValue={String(filters.verified ?? "")}
+        >
+          <option value="">认证不限</option>
+          <option value="true">已认证</option>
+          <option value="false">未认证</option>
+        </select>
+        <select
+          name="banned"
+          aria-label="账号状态"
+          defaultValue={String(filters.banned ?? "")}
+        >
+          <option value="">状态不限</option>
+          <option value="false">正常</option>
+          <option value="true">封禁中</option>
+        </select>
+        <button className="ad-btn is-primary">查询</button>
+        {filtered && (
+          <button
+            type="button"
+            className="ad-btn is-ghost"
+            onClick={() => {
+              setFilters({});
+              setPage(1);
+            }}
+          >
+            清除筛选
+          </button>
+        )}
+      </form>
       <Panel flush>
         <Async
           query={q}
           rows={10}
           empty={!q.data?.items?.length}
-          emptyTitle="暂无用户"
+          emptyTitle={filtered ? "没有符合条件的用户" : "暂无用户"}
+          emptyHint={
+            filtered
+              ? "登录名、手机号、邮箱和学号需要输入完整内容。"
+              : undefined
+          }
         >
           <div className="ad-table-wrap">
             <table className="ad-table is-clickable">

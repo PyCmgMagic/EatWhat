@@ -9,7 +9,7 @@ export default function Engagement() {
   const { api, toast } = useApp(),
     today = businessDate(),
     [date, setDate] = useState(today),
-    [span, setSpan] = useState<"7" | "14">("14");
+    [span, setSpan] = useState<"7" | "14" | "30" | "90">("14");
   const q = useQuery({
       queryKey: ["admin", "engagement", date],
       queryFn: () => api.engagementStats(date),
@@ -81,6 +81,8 @@ export default function Engagement() {
             options={[
               ["7", "7 天"],
               ["14", "14 天"],
+              ["30", "30 天"],
+              ["90", "90 天"],
             ]}
           />
         }

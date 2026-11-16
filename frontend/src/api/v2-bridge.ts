@@ -1501,14 +1501,9 @@ const routes: [string, RegExp, Handler][] = [
     "GET",
     /^\/admin\/summary$/,
     async ({ call }) => {
-      const total = (path: string) =>
-        call(path, { query: { page: 1, pageSize: 1 } })
-          .then((p) => p?.totalItems ?? null)
-          .catch(() => null);
-      const [summary, totalFoods, totalRestaurants] = await Promise.all([
+      const [summary, content] = await Promise.all([
         call("/admin/summary"),
-        total("/foods/list"),
-        total("/restaurant/list"),
+        call("/admin/content/stats", { query: { days: 1 } }).catch(() => null),
       ]);
       return {
         ...summary,
@@ -1517,10 +1512,10 @@ const routes: [string, RegExp, Handler][] = [
           typeof summary?.verifiedRate === "number"
             ? Math.round(summary.verifiedRate * 10000) / 10000
             : null,
-        totalFoods,
-        totalRestaurants,
-        todayFoods: null,
-        todayRestaurants: null,
+        totalFoods: content?.totalFoods ?? null,
+        totalRestaurants: content?.totalRestaurants ?? null,
+        todayFoods: content?.todayFoods ?? null,
+        todayRestaurants: content?.todayRestaurants ?? null,
       };
     },
   ],

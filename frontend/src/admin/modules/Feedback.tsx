@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router-dom";
 import { useAdminState } from "../../app/admin-state";
 import { useApp } from "../../app/state";
@@ -46,6 +46,7 @@ const targetName: Record<string, string> = {
 
 export default function Feedback() {
   const { api } = useApp(),
+    cache = useQueryClient(),
     location = useLocation(),
     [page, setPage] = useAdminState("feedback.page", 1),
     [status, setStatus] = useAdminState<Status>("feedback.status", "OPEN"),
@@ -59,6 +60,13 @@ export default function Feedback() {
   useEffect(() => {
     if (linked) setSelected(linked);
   }, [linked]);
+  const counts = useQuery({
+    queryKey: ["admin", "feedback", "counts"],
+    queryFn: () => api.feedbackCounts(),
+    staleTime: 60000,
+    retry: false,
+  }).data;
+  const open = (n?: number) => (status === "OPEN" && n ? `（${n}）` : "");
   const q = useQuery({
     queryKey: ["admin", "feedback", page, status, kind],
     queryFn: () =>
@@ -93,10 +101,12 @@ export default function Feedback() {
               setPage(1);
             }}
           >
-            <option value="ALL">全部类型</option>
-            <option value="FEEDBACK">意见反馈</option>
-            <option value="CATALOG_ERROR">店铺纠错</option>
-            <option value="REPORT">举报</option>
+            <option value="ALL">全部类型{open(counts?.total)}</option>
+            <option value="FEEDBACK">意见反馈{open(counts?.feedback)}</option>
+            <option value="CATALOG_ERROR">
+              店铺纠错{open(counts?.catalogError)}
+            </option>
+            <option value="REPORT">举报{open(counts?.report)}</option>
           </select>
         </header>
         <Async
@@ -146,7 +156,12 @@ export default function Feedback() {
             key={selected}
             id={selected}
             onBack={() => setSelected(undefined)}
-            onResolved={() => void q.refetch()}
+            onResolved={() => {
+              void q.refetch();
+              void cache.invalidateQueries({
+                queryKey: ["admin", "feedback", "counts"],
+              });
+            }}
           />
         ) : (
           <div className="ad-state is-tall">
@@ -236,7 +251,9 @@ function CaseDetail({
                   "提交人",
                   data.submitterId ? (
                     <Link className="ad-link" to={`/users/${data.submitterId}`}>
-                      用户 #{data.submitterId}
+                      {(data as { submitterName?: string | null })
+                        .submitterName || "用户"}{" "}
+                      #{data.submitterId}
                     </Link>
                   ) : (
                     "—"

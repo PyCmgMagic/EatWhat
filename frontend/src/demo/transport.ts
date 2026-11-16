@@ -382,6 +382,7 @@ export const demoTransport: Transport = async (path, options) => {
       "/user/growth",
       "/user/growth/ledger",
       "/admin/engagement/stats",
+      "/admin/engagement/stats/range",
     ].includes(path)
   ) {
     if (
@@ -778,6 +779,30 @@ export const demoTransport: Transport = async (path, options) => {
       Object.assign(result as object, { created, updated });
     }
     if (method !== "GET") save();
+  } else if (
+    path === "/admin/summary/trend" ||
+    path === "/admin/content/stats"
+  ) {
+    const span = Math.min(90, Math.max(1, Number(q.days) || 14)),
+      added = s.foods.filter((f) => f.id! > 100).length,
+      days = Array.from({ length: span }, (_, i) => {
+        const date = new Date(
+            Date.now() - (span - 1 - i) * 86400000,
+          ).toLocaleDateString("en-CA", { timeZone: "Asia/Shanghai" }),
+          last = i === span - 1;
+        return { date, newUsers: 0, foods: last ? added : 0, restaurants: 0 };
+      });
+    result =
+      path === "/admin/summary/trend"
+        ? { days, timezone: "Asia/Shanghai" }
+        : {
+            totalFoods: s.foods.length,
+            todayFoods: added,
+            totalRestaurants: s.restaurants.length,
+            todayRestaurants: 0,
+            days,
+            timezone: "Asia/Shanghai",
+          };
   } else if (path === "/admin/summary")
     result = {
       totalUsers: 2,
@@ -867,7 +892,19 @@ export const demoTransport: Transport = async (path, options) => {
             accountStatus: s.bannedUsers.includes(21) ? "BANNED" : "NORMAL",
           },
         },
-      ],
+      ].filter(
+        (u) =>
+          (!q.keyword ||
+            [u.displayName, u.userName].some((v) =>
+              String(v ?? "").includes(String(q.keyword)),
+            )) &&
+          (!q.role || u.role === q.role) &&
+          (q.verified == null ||
+            u.verified === (String(q.verified) === "true")) &&
+          (q.banned == null ||
+            (u.accountStatus.accountStatus === "BANNED") ===
+              (String(q.banned) === "true")),
+      ),
       q,
     );
   else if (path.startsWith("/user/ban/")) {

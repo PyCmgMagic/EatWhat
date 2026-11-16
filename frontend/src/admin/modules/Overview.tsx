@@ -1,10 +1,21 @@
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useApp } from "../../app/state";
 import { businessDate } from "../../api/growth";
 import { money } from "../../api/models";
 import { statusText } from "../../features/v4/shared";
-import { Async, Columns, Icon, Panel, Pill, Thumb, ago, num } from "../kit";
+import {
+  Async,
+  Columns,
+  Icon,
+  Panel,
+  Pill,
+  Segmented,
+  Thumb,
+  ago,
+  num,
+} from "../kit";
 
 /** Beijing business dates ending at `end`, oldest first. */
 export function recentDates(days: number, end = businessDate()) {
@@ -13,25 +24,25 @@ export function recentDates(days: number, end = businessDate()) {
     new Date(base - (days - 1 - i) * 86400000).toISOString().slice(0, 10),
   );
 }
-/** One request per day: the service has no range query for activity yet. */
+/** Daily active users for the `days` days ending at `end`. */
 export function useActiveSeries(days: number, end?: string) {
   const { api } = useApp(),
-    dates = recentDates(days, end);
-  const results = useQueries({
-    queries: dates.map((date) => ({
-      queryKey: ["admin", "engagement", date],
-      queryFn: () => api.engagementStats(date),
-      staleTime: 300000,
-      retry: false,
-    })),
+    dates = recentDates(days, end),
+    from = dates[0],
+    to = dates[dates.length - 1];
+  const q = useQuery({
+    queryKey: ["admin", "engagement", "range", from, to],
+    queryFn: () => api.engagementRange(from, to),
+    staleTime: 300000,
+    retry: false,
   });
+  const byDate = new Map(q.data?.days.map((d) => [d.date, d.activeUsers]));
   return {
-    loading: results.some((r) => r.isPending),
-    failed: results.every((r) => r.isError),
-    latest: results[results.length - 1]?.data,
-    points: dates.map((date, i) => ({
+    loading: q.isPending,
+    failed: q.isError,
+    points: dates.map((date) => ({
       label: date.slice(5).replace("-", "/"),
-      value: results[i]?.data?.dailyActiveUsers,
+      value: byDate.get(date),
     })),
   };
 }
@@ -64,6 +75,31 @@ export default function Overview() {
       queryKey: ["admin", "summary"],
       queryFn: () => api.summary(),
     }),
+    counts = useQuery({
+      queryKey: ["admin", "feedback", "counts"],
+      queryFn: () => api.feedbackCounts(),
+      staleTime: 60000,
+      retry: false,
+    }),
+    today = useQuery({
+      queryKey: ["admin", "engagement", businessDate()],
+      queryFn: () => api.engagementStats(businessDate()),
+      staleTime: 300000,
+      retry: false,
+    }),
+    users = useQuery({
+      queryKey: ["admin", "summary-trend", 14],
+      queryFn: () => api.summaryTrend(14),
+      staleTime: 300000,
+      retry: false,
+    }),
+    content = useQuery({
+      queryKey: ["admin", "content-stats", 14],
+      queryFn: () => api.contentStats(14),
+      staleTime: 300000,
+      retry: false,
+    }),
+    [series, setSeries] = useState<"users" | "foods" | "restaurants">("users"),
     cases = useQuery({
       queryKey: ["admin", "feedback", 1, "OPEN", "ALL"],
       queryFn: () =>
@@ -90,7 +126,17 @@ export default function Overview() {
     flags = Object.entries(config.data?.settings?.flags ?? {}).filter(
       ([, flag]) => flag?.on === false,
     ),
-    openCount = cases.data?.totalItems ?? cases.data?.items?.length;
+    openCount =
+      counts.data?.total ?? cases.data?.totalItems ?? cases.data?.items?.length,
+    growth = (series === "users" ? users.data?.days : content.data?.days)?.map(
+      (d) => ({
+        label: d.date.slice(5).replace("-", "/"),
+        value:
+          series === "users"
+            ? (d as { newUsers: number }).newUsers
+            : (d as { foods: number; restaurants: number })[series],
+      }),
+    );
   const stats = [
     {
       label: "注册用户",
@@ -187,20 +233,44 @@ export default function Overview() {
               <div className="ad-kpis">
                 <div>
                   <span>今日活跃</span>
-                  <strong>{num(active.latest?.dailyActiveUsers)}</strong>
+                  <strong>{num(today.data?.dailyActiveUsers)}</strong>
                 </div>
                 <div>
                   <span>近 30 天</span>
-                  <strong>{num(active.latest?.rolling30ActiveUsers)}</strong>
+                  <strong>{num(today.data?.rolling30ActiveUsers)}</strong>
                 </div>
                 <div>
-                  <span>{active.latest?.month ?? "本月"} 月活</span>
-                  <strong>{num(active.latest?.monthlyActiveUsers)}</strong>
+                  <span>{today.data?.month ?? "本月"} 月活</span>
+                  <strong>{num(today.data?.monthlyActiveUsers)}</strong>
                 </div>
               </div>
               <Columns data={active.points} label="近 7 日每日活跃用户" />
             </>
           )}
+        </Panel>
+
+        <Panel
+          title="近 14 日新增"
+          hint="按北京时间自然日统计"
+          actions={
+            <Segmented
+              label="新增类型"
+              value={series}
+              onChange={setSeries}
+              options={[
+                ["users", "用户"],
+                ["foods", "菜品"],
+                ["restaurants", "餐厅"],
+              ]}
+            />
+          }
+        >
+          <Async query={series === "users" ? users : content} rows={3}>
+            <Columns
+              data={growth ?? []}
+              label={`近 14 日每日新增${series === "users" ? "用户" : series === "foods" ? "菜品" : "餐厅"}`}
+            />
+          </Async>
         </Panel>
 
         <Panel

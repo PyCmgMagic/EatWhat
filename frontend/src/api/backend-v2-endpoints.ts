@@ -749,6 +749,11 @@ export const endpoints = {
     "path": "/admin/summary",
     "access": "admin"
   },
+  "getAdminSummaryTrend": {
+    "method": "GET",
+    "path": "/admin/summary/trend",
+    "access": "admin"
+  },
   "getAdminRemoteConfig": {
     "method": "GET",
     "path": "/admin/remote-config",
@@ -769,9 +774,24 @@ export const endpoints = {
     "path": "/admin/feedback/cases/{id}",
     "access": "admin"
   },
+  "getAdminFeedbackCasesCounts": {
+    "method": "GET",
+    "path": "/admin/feedback/cases/counts",
+    "access": "admin"
+  },
   "getAdminEngagementStats": {
     "method": "GET",
     "path": "/admin/engagement/stats",
+    "access": "admin"
+  },
+  "getAdminEngagementStatsRange": {
+    "method": "GET",
+    "path": "/admin/engagement/stats/range",
+    "access": "admin"
+  },
+  "getAdminContentStats": {
+    "method": "GET",
+    "path": "/admin/content/stats",
     "access": "admin"
   },
   "policyDetail": {

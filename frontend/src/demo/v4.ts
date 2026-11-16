@@ -331,6 +331,16 @@ export function handleV4(
         ),
       ),
     );
+  if (path === "/admin/feedback/cases/counts") {
+    const open = (kind: string) =>
+      v.feedback.filter((x) => x.status === "OPEN" && x.kind === kind).length;
+    return ok({
+      total: v.feedback.filter((x) => x.status === "OPEN").length,
+      feedback: open("FEEDBACK"),
+      catalogError: open("CATALOG_ERROR"),
+      report: open("REPORT"),
+    });
+  }
   if (path === "/admin/feedback/cases")
     return ok(
       page(

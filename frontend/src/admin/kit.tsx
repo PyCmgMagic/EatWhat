@@ -506,18 +506,33 @@ export function Columns({
   data: { label: string; value?: number | null; note?: string }[];
   label: string;
 }) {
-  const max = Math.max(1, ...data.map((d) => d.value ?? 0));
+  const max = Math.max(1, ...data.map((d) => d.value ?? 0)),
+    // Keep about seven date labels however long the series is.
+    step = Math.ceil(data.length / 7),
+    dense = data.length > 16;
   return (
-    <ol className="ad-columns" aria-label={label}>
+    <ol
+      className="ad-columns"
+      aria-label={label}
+      data-dense={dense || undefined}
+    >
       {data.map((d, i) => (
-        <li key={i} data-last={i === data.length - 1 || undefined}>
-          <b>{d.value == null ? "—" : num(d.value)}</b>
+        <li
+          key={i}
+          data-last={i === data.length - 1 || undefined}
+          title={`${d.label}：${d.value == null ? "—" : num(d.value)}`}
+        >
+          {(!dense || i === data.length - 1) && (
+            <b>{d.value == null ? "—" : num(d.value)}</b>
+          )}
           <span
             className="ad-column-bar"
             style={{ height: `${Math.max(3, ((d.value ?? 0) / max) * 100)}%` }}
             data-empty={d.value == null || undefined}
           />
-          <small>{d.label}</small>
+          <small>
+            {(data.length - 1 - i) % step === 0 ? d.label : "\u00a0"}
+          </small>
         </li>
       ))}
     </ol>
