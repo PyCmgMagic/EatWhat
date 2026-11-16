@@ -34,6 +34,8 @@ import RestaurantLocationField, {
   requireShopLocation,
 } from "../features/RestaurantLocationField";
 import type { MapPoint } from "../features/map-geometry";
+import { mealTimes, priceBands, shopKinds } from "../api/v2-vocab";
+import "./new-shop.css";
 import { PageSkeleton } from "../components/LoadingSkeleton";
 import { ProfileSectionNav } from "../features/ProfileSectionNav";
 import "../features/profile-activity.css";
@@ -44,7 +46,6 @@ import {
 } from "../features/ShopTraits";
 import {
   Avatar,
-  Note,
   PageHead,
   Pager,
   Section,
@@ -610,6 +611,13 @@ type ShopDraft = {
   done: boolean;
 };
 const shopDrafts = new Map<string, ShopDraft>();
+function StepMark({ index, done }: { index: number; done: boolean }) {
+  return (
+    <span className="pc-new-shop-step-mark" aria-hidden="true">
+      {done ? <Icon name="check" size={15} /> : index}
+    </span>
+  );
+}
 export function DesktopNewShop() {
   const { api, user } = useApp(),
     { area } = useArea(),
@@ -645,6 +653,25 @@ export function DesktopNewShop() {
     window.addEventListener("beforeunload", leave);
     return () => window.removeEventListener("beforeunload", leave);
   }, [dirty]);
+  const busy = task.isPending || draft.uncertain,
+    hasName = !!draft.name.trim(),
+    hasPlace = !!draft.point && !!draft.address.trim(),
+    hasMeals = !!draft.traits.mealTimes.length,
+    checks = [
+      { name: "店名", done: hasName },
+      { name: "地图选点", done: !!draft.point },
+      { name: "详细地址", done: !!draft.address.trim() },
+      { name: "营业饭点", done: hasMeals },
+    ],
+    traitNames = [
+      shopKinds.find((k) => k.id === draft.traits.kind)?.name,
+      priceBands.find((p) => p.id === draft.traits.priceBand)?.name,
+      ...mealTimes
+        .filter((t) => draft.traits.mealTimes.includes(t.id))
+        .map((t) => t.name),
+      ...draft.traits.categories,
+      ...draft.traits.tags,
+    ].filter((name): name is string => !!name);
   return (
     <div className="pc-secondary-new-shop" data-pc-secondary="new-shop">
       <PageHead
@@ -671,52 +698,54 @@ export function DesktopNewShop() {
           </State>
         </Section>
       ) : (
-        <div className="pc-secondary-columns">
-          <Section title="店铺信息" detail="基本信息和位置在同一页完成。">
-            <form
-              className="pc-secondary-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (locked.current || draft.uncertain) return;
-                locked.current = true;
-                task.run(async () => {
-                  try {
-                    const name = boundedText(draft.name, 20, "店名"),
-                      address = boundedText(draft.address, 30, "地址");
-                    if (!name || !address)
-                      throw new Error("请填写店名和详细地址。");
-                    const point = requireShopLocation(draft.point);
-                    if (!draft.traits.mealTimes.length)
-                      throw new Error("请至少选择一个营业饭点。");
-                    const created = await api.createRestaurant({
-                      name,
-                      address,
-                      ...point,
-                      hubId: area?.hubId,
-                      ...draft.traits,
-                    });
-                    update({ done: true });
-                    if (created.revisionId) {
-                      shopDrafts.delete(key);
-                      nav(submissionPath(created, "/publish"));
-                      return;
-                    }
-                    m.setShopId(created.id);
-                    m.setDraft({ shopName: name, restaurantId: created.id });
+        <div className="pc-new-shop">
+          <form
+            id="new-shop-form"
+            className="pc-new-shop-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (locked.current || draft.uncertain) return;
+              locked.current = true;
+              task.run(async () => {
+                try {
+                  const name = boundedText(draft.name, 20, "店名"),
+                    address = boundedText(draft.address, 30, "地址");
+                  if (!name || !address)
+                    throw new Error("请填写店名和详细地址。");
+                  const point = requireShopLocation(draft.point);
+                  if (!draft.traits.mealTimes.length)
+                    throw new Error("请至少选择一个营业饭点。");
+                  const created = await api.createRestaurant({
+                    name,
+                    address,
+                    ...point,
+                    hubId: area?.hubId,
+                    ...draft.traits,
+                  });
+                  update({ done: true });
+                  if (created.revisionId) {
                     shopDrafts.delete(key);
-                    nav("/publish/dish");
-                  } catch (error) {
-                    if (resultUncertain(error)) update({ uncertain: true });
-                    throw error;
-                  } finally {
-                    locked.current = false;
+                    nav(submissionPath(created, "/publish"));
+                    return;
                   }
-                });
-              }}
-            >
-              <label className="pc-secondary-field">
-                <span>
-                  店铺名称
+                  m.setShopId(created.id);
+                  m.setDraft({ shopName: name, restaurantId: created.id });
+                  shopDrafts.delete(key);
+                  nav("/publish/dish");
+                } catch (error) {
+                  if (resultUncertain(error)) update({ uncertain: true });
+                  throw error;
+                } finally {
+                  locked.current = false;
+                }
+              });
+            }}
+          >
+            <section className="pc-new-shop-step" data-done={hasName}>
+              <StepMark index={1} done={hasName} />
+              <label className="pc-new-shop-name">
+                <span className="pc-new-shop-step-title">
+                  这家店叫什么
                   <FieldMark required />
                 </span>
                 <input
@@ -724,11 +753,18 @@ export function DesktopNewShop() {
                   value={draft.name}
                   maxLength={20}
                   onChange={(e) => update({ name: e.target.value })}
-                  disabled={task.isPending || draft.uncertain}
+                  disabled={busy}
                   required
                   placeholder="例如：西门口的那家云吞店"
                 />
+                <small>
+                  写同学们平时叫的名字，最多 20
+                  字。下面搜索地点时选中结果，也会自动填入。
+                </small>
               </label>
+            </section>
+            <section className="pc-new-shop-step" data-done={hasPlace}>
+              <StepMark index={2} done={hasPlace} />
               <RestaurantLocationField
                 name={draft.name}
                 onNameChange={(name) => update({ name })}
@@ -739,47 +775,94 @@ export function DesktopNewShop() {
                 }}
                 address={draft.address}
                 onAddressChange={(address) => update({ address })}
-                disabled={task.isPending || draft.uncertain}
+                disabled={busy}
               />
-              <ShopTraitsFields
-                value={draft.traits}
-                onChange={(traits) => update({ traits })}
-                disabled={task.isPending || draft.uncertain}
-              />
-              <TaskError error={task.error} />
-              {draft.uncertain && (
-                <div className="pc-secondary-error" role="alert">
-                  提交结果还未确认。请先返回发布页搜索这家店，核实结果，避免重复创建。本次提交已暂停。
-                </div>
-              )}
-              <div className="pc-secondary-form-footer">
-                <span>未提交内容在本次访问中保留</span>
-                <button
-                  className="pc-button"
-                  disabled={task.isPending || draft.uncertain || !draft.point}
-                >
-                  {task.isPending
-                    ? "正在提交…"
-                    : draft.point
-                      ? "提交新店"
-                      : "请先在地图选点"}
-                  <Icon name="check" size={17} />
-                </button>
+            </section>
+            <section className="pc-new-shop-step" data-done={hasMeals}>
+              <StepMark index={3} done={hasMeals} />
+              <div className="pc-new-shop-traits">
+                <h2 className="pc-new-shop-step-title">这家店的特点</h2>
+                <p>用于推荐和筛选，除类型和营业饭点外都可以先不填。</p>
+                <ShopTraitsFields
+                  value={draft.traits}
+                  onChange={(traits) => update({ traits })}
+                  disabled={busy}
+                />
               </div>
-            </form>
-          </Section>
-          <div className="pc-secondary-sticky">
-            <Note title="先找一找，再添加" icon="store">
-              <p>
-                同一家店可能已经被其他同学添加。建议先在发布页搜索，避免重复。
-              </p>
-              <Link to="/publish">返回发布页搜索 →</Link>
-            </Note>
-            <Note title="位置越准确，越容易找到" icon="pin">
-              <p>请在地图上标记店铺入口，方便同学找到它。</p>
-              <p>新店提交后，需要回到列表选择准确的店铺，再继续发布菜品。</p>
-            </Note>
-          </div>
+            </section>
+            <TaskError error={task.error} />
+            {draft.uncertain && (
+              <div className="pc-secondary-error" role="alert">
+                提交结果还未确认。请先返回发布页搜索这家店，核实结果，避免重复创建。本次提交已暂停。
+              </div>
+            )}
+          </form>
+          <aside className="pc-new-shop-side">
+            <div className="pc-new-shop-summary">
+              <span className="pc-new-shop-eyebrow">即将添加</span>
+              <div className="pc-new-shop-card">
+                <span className="pc-new-shop-card-icon">
+                  <Icon name="store" size={22} />
+                </span>
+                <div>
+                  <strong data-empty={!hasName}>
+                    {draft.name.trim() || "还没有店名"}
+                  </strong>
+                  <small>
+                    {draft.address.trim() ||
+                      (draft.point
+                        ? "位置已标记，请补充详细地址"
+                        : "在地图上选点后显示地址")}
+                  </small>
+                </div>
+              </div>
+              {traitNames.length > 0 && (
+                <ul className="pc-new-shop-chips" aria-label="已选特点">
+                  {traitNames.map((name) => (
+                    <li key={name}>{name}</li>
+                  ))}
+                </ul>
+              )}
+              <ul className="pc-new-shop-checks" aria-live="polite">
+                {checks.map((item) => (
+                  <li key={item.name} data-done={item.done}>
+                    <Icon name={item.done ? "check" : "add"} size={13} />
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
+              <button
+                className="pc-button"
+                form="new-shop-form"
+                disabled={busy || !draft.point}
+              >
+                {task.isPending
+                  ? "正在提交…"
+                  : draft.point
+                    ? "提交新店"
+                    : "请先在地图选点"}
+                <Icon name="check" size={17} />
+              </button>
+              <p className="pc-new-shop-keep">未提交内容在本次访问中保留</p>
+            </div>
+            <div className="pc-new-shop-tip">
+              <Icon name="search" size={18} />
+              <div>
+                <strong>先找一找，再添加</strong>
+                <p>同一家店可能已经被其他同学添加，先搜索可以避免重复。</p>
+                <Link to="/publish">返回发布页搜索 →</Link>
+              </div>
+            </div>
+            <div className="pc-new-shop-tip">
+              <Icon name="pin" size={18} />
+              <div>
+                <strong>把图钉放在店铺入口</strong>
+                <p>
+                  位置越准确，同学越容易找到。提交后回到发布页选中这家店，就能继续发布菜品。
+                </p>
+              </div>
+            </div>
+          </aside>
         </div>
       )}
     </div>

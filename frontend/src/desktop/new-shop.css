@@ -1,0 +1,432 @@
+/* 添加一家店：左侧三步表单，右侧随填写更新的摘要与提交。 */
+.pc-secondary-new-shop {
+  max-width: 1180px;
+}
+.pc-new-shop {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 24px;
+  align-items: start;
+}
+.pc-new-shop-form {
+  display: grid;
+  min-width: 0;
+  border-radius: 25px;
+  background: #fff;
+}
+.pc-new-shop-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  column-gap: 18px;
+  margin: 0;
+  padding: 30px 32px 32px 28px;
+}
+.pc-new-shop-step + .pc-new-shop-step {
+  border-top: 1px solid var(--pc-line);
+}
+/* 步骤之间的连接线，从序号圆点一直连到下一步。 */
+.pc-new-shop-step:not(:last-of-type)::before {
+  content: "";
+  position: absolute;
+  top: 66px;
+  bottom: -30px;
+  left: 42px;
+  z-index: 1;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--pc-line);
+}
+.pc-new-shop-step[data-done="true"]:not(:last-of-type)::before {
+  background: #e9c876;
+}
+.pc-new-shop-step-mark {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--pc-mist);
+  color: var(--pc-muted);
+  font:
+    700 13px "Bricolage Grotesque Variable",
+    sans-serif;
+  transition:
+    background-color 160ms ease-out,
+    color 160ms ease-out;
+}
+.pc-new-shop-step[data-done="true"] .pc-new-shop-step-mark {
+  background: #f5c64f;
+  color: var(--pc-ink);
+}
+.pc-new-shop-step-title,
+.pc-new-shop .restaurant-location-heading h2 {
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  margin: 0;
+  color: var(--pc-ink);
+  font-size: 17px;
+  font-weight: 850;
+  line-height: 1.4;
+}
+.pc-new-shop .ew-field-mark {
+  margin-left: 8px;
+}
+
+/* 1 店名 */
+.pc-new-shop-name {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.pc-new-shop-name input {
+  width: 100%;
+  min-width: 0;
+  height: 56px;
+  padding: 0 18px;
+  border: 1px solid #e9e1d9;
+  border-radius: 16px;
+  outline: 0;
+  background: #fbf9f6;
+  color: var(--pc-ink);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 650;
+  transition:
+    border-color 150ms,
+    box-shadow 150ms,
+    background-color 150ms;
+}
+.pc-new-shop-name input::placeholder {
+  color: #a79b91;
+  font-weight: 400;
+}
+.pc-new-shop-name input:focus {
+  border-color: #bd902b;
+  background: #fff;
+  box-shadow: 0 0 0 3px #ffcb4525;
+}
+.pc-new-shop-name small,
+.pc-new-shop-traits > p {
+  margin: 0;
+  color: var(--pc-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.7;
+}
+
+/* 2 位置：沿用共享的定位组件，只调整它在这一页里的比例。 */
+.pc-new-shop .restaurant-location-field {
+  gap: 14px;
+  margin: 0;
+}
+.pc-new-shop .restaurant-location-heading h2 > .design-icon {
+  display: none;
+}
+.pc-new-shop .restaurant-location-status {
+  padding: 6px 11px;
+  border-radius: 999px;
+}
+.pc-new-shop .restaurant-location-field .restaurant-map-picker {
+  height: clamp(320px, 46dvh, 440px);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.pc-new-shop .restaurant-location-field .restaurant-location-address {
+  margin-top: 6px;
+  color: var(--pc-ink);
+  font-weight: 750;
+}
+
+/* 3 特点：原生单选 / 复选 → 选项胶囊，标题在左、选项在右。 */
+.pc-new-shop-traits {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.pc-new-shop .ew-shop-traits {
+  gap: 0;
+  margin-top: 10px;
+}
+.pc-new-shop .ew-shop-traits .ew-meals {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 14px 0 14px 132px;
+  border-top: 1px solid var(--pc-line);
+}
+.pc-new-shop .ew-shop-traits .ew-meals > b {
+  position: absolute;
+  top: 14px;
+  left: 0;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  width: 120px;
+  min-width: 0;
+  min-height: 38px;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.4;
+}
+.pc-new-shop .ew-shop-traits .ew-meals > b .ew-field-mark {
+  margin-left: 0;
+  white-space: normal;
+}
+.pc-new-shop .ew-shop-traits .ew-meals label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid #e9e1d9;
+  border-radius: 999px;
+  background: #fbf9f6;
+  color: var(--pc-ink);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease-out,
+    border-color 140ms ease-out,
+    color 140ms ease-out;
+}
+.pc-new-shop .ew-shop-traits .ew-meals label:hover {
+  border-color: #d8cbbc;
+  background: #fff;
+}
+.pc-new-shop .ew-shop-traits .ew-meals label input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.pc-new-shop .ew-shop-traits .ew-meals label:has(input:checked) {
+  border-color: var(--pc-ink);
+  background: var(--pc-ink);
+  color: #fff;
+}
+.pc-new-shop .ew-shop-traits .ew-meals label:has(input:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.pc-new-shop .ew-shop-traits .ew-meals label:has(input:focus-visible) {
+  outline: 3px solid #cc972c;
+  outline-offset: 2px;
+}
+.pc-new-shop .shop-edit-delivery-note {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--pc-line);
+  color: var(--pc-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.pc-new-shop-form > .pc-secondary-error {
+  margin: 0 32px 28px;
+  border-radius: 14px;
+}
+
+/* 右侧：摘要 + 提交 */
+.pc-new-shop-side {
+  position: sticky;
+  top: 122px;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.pc-new-shop-summary {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border-radius: 24px;
+  background: #fff;
+}
+.pc-new-shop-eyebrow {
+  color: #a28c74;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.pc-new-shop-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border-radius: 16px;
+  background: #faf7f2;
+}
+.pc-new-shop-card-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #f9eac8;
+  color: #8a6418;
+}
+.pc-new-shop-card > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.pc-new-shop-card strong {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pc-new-shop-card strong[data-empty="true"] {
+  color: #a79b91;
+  font-weight: 600;
+}
+.pc-new-shop-card small {
+  color: var(--pc-muted);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.pc-new-shop-chips,
+.pc-new-shop-checks {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pc-new-shop-chips {
+  gap: 6px;
+}
+.pc-new-shop-chips li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--pc-mist);
+  color: #4a403a;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.pc-new-shop-checks {
+  gap: 8px 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--pc-line);
+}
+.pc-new-shop-checks li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #a79b91;
+  font-size: 12px;
+}
+.pc-new-shop-checks li[data-done="true"] {
+  color: #5c7a2e;
+  font-weight: 600;
+}
+.pc-new-shop-summary > .pc-button {
+  justify-content: center;
+  width: 100%;
+}
+.pc-new-shop-summary > .pc-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.pc-new-shop-keep {
+  margin: -6px 0 0;
+  color: var(--pc-muted);
+  font-size: 11px;
+  text-align: center;
+}
+.pc-new-shop-tip {
+  display: flex;
+  gap: 11px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #f9eac8;
+  color: #695333;
+}
+.pc-new-shop-tip > .design-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #8a6418;
+}
+.pc-new-shop-tip > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.pc-new-shop-tip strong {
+  color: var(--pc-ink);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.pc-new-shop-tip p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.pc-new-shop-tip a {
+  justify-self: start;
+  margin-top: 2px;
+  color: var(--pc-ink);
+  font-size: 12px;
+  font-weight: 750;
+}
+.pc-new-shop-tip a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1099px) {
+  .pc-new-shop {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-new-shop-side {
+    position: static;
+  }
+}
+@media (max-width: 719px) {
+  .pc-new-shop-step {
+    column-gap: 12px;
+    padding: 22px 18px 24px 16px;
+  }
+  .pc-new-shop-step:not(:last-of-type)::before {
+    top: 58px;
+    bottom: -22px;
+    left: 30px;
+  }
+  .pc-new-shop .ew-shop-traits .ew-meals {
+    padding-left: 0;
+  }
+  .pc-new-shop .ew-shop-traits .ew-meals > b {
+    position: static;
+    display: block;
+    flex-basis: 100%;
+    width: auto;
+    min-height: 0;
+  }
+  .pc-new-shop .ew-shop-traits .ew-meals > b .ew-field-mark {
+    margin-left: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-new-shop-step-mark,
+  .pc-new-shop-name input,
+  .pc-new-shop .ew-shop-traits .ew-meals label {
+    transition: none;
+  }
+}
