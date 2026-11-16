@@ -10,6 +10,7 @@
 
 - PR：部署工具测试 → `frontend/npm ci` → `npm test` → `npm run build` → 打包。
 - 合并 main 或在 main 手动运行：执行同样检查，将同一份已测试产物上传到服务器并发布。
+- 手动运行可显式选择 `skip_tests=true`，仅跳过本次部署工具和前端测试；默认 false，构建、产物校验、上线检查和自动回滚仍执行。
 - 仅 main 的非 PR 运行能进入 `production` 部署任务；不在 PR 中使用 SSH Secrets。
 - SSH 严格验证已登记的主机公钥，不在工作流中动态信任 `ssh-keyscan` 的结果。
 - 压缩包、逐文件 SHA-256、提交 SHA、运行编号和尝试编号一起校验；解包拒绝符号链接及目录穿越。

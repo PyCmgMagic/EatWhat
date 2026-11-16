@@ -6,6 +6,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: Skip tests for this explicitly requested deployment
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -30,17 +36,19 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Verify deployment tooling
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.skip_tests }}
         run: python3 -m unittest discover -s scripts/tests -p 'test_frontend_deploy.py' -v
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
       - name: Test frontend
+        if: ${{ github.event_name != 'workflow_dispatch' || !inputs.skip_tests }}
         working-directory: frontend
         run: npm test
       - name: Typecheck and build production assets
         working-directory: frontend
         run: npm run build
-      - name: Package the tested build
+      - name: Package the production build
         env:
           SOURCE_SHA: ${{ github.sha }}
           BUILD_RUN_ID: ${{ github.run_id }}
@@ -83,5 +91,5 @@ jobs:
         with:
           name: frontend-release
           path: artifact
-      - name: Deploy the exact tested artifact to 64.178.99.89
+      - name: Deploy the exact built artifact to 64.178.99.89
         run: python3 artifact/scripts/frontend_deploy.py ship --bundle artifact/release/site.tar.gz

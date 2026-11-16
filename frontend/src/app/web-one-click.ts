@@ -282,6 +282,7 @@ export async function webOneClickToken(
                     else fail(error);
                   };
                   server.getLoginToken({
+                    timeout: 5, // SDK timeout is measured in seconds.
                     authPageOption: {
                       navText: "本机号码一键登录",
                       btnText: "登录 / 注册",
