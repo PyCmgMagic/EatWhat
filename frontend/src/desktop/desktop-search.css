@@ -16,9 +16,10 @@
 .pc-header-search-wrap[data-open="true"] .pc-header-search {
   position: fixed;
   z-index: 102;
-  top: calc(var(--header-height, 94px) / 2);
-  left: 50%;
-  translate: -50% -50%;
+  /* Keep the anchor independent of animated dimensions. Safari can cache a
+     percentage translate during the animation and snap when it finishes. */
+  top: calc(var(--header-height, 94px) / 2 - 25px);
+  left: max(24px, calc(50% - 270px));
   display: flex;
   width: min(540px, calc(100vw - 48px));
   height: 50px;
@@ -208,6 +209,9 @@
   }
 }
 @media (max-width: 600px) {
+  .pc-header-search-wrap[data-open="true"] .pc-header-search {
+    left: 16px;
+  }
   .pc-header-search-wrap[data-open="true"] .pc-header-search,
   .pc-header-search-panel {
     width: calc(100vw - 32px);
