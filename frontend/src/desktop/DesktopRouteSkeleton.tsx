@@ -18,12 +18,12 @@ function SettingRows({ count }: { count: number }) {
   return Array.from({ length: count }, (_, i) => (
     <div className="settings-home-row" key={i}>
       <span className="settings-home-icon">
-        <Skeleton width={21} height={21} />
+        <Skeleton width={19} height={19} />
       </span>
       <span className="settings-home-copy">
-        <Skeleton width="42%" height={21} />
+        <Skeleton width="52%" height={19} />
       </span>
-      <Skeleton width={17} height={17} />
+      <Skeleton width={16} height={16} />
     </div>
   ));
 }
@@ -42,29 +42,42 @@ function SettingsSkeleton() {
           <h1>账号设置</h1>
         </div>
       </header>
-      <section className="settings-home-profile" aria-hidden="true">
-        <span className="settings-home-avatar">
-          <Skeleton width="100%" height="100%" round />
-        </span>
-        <div className="settings-home-identity">
-          <h2>
-            <Skeleton width={150} height="1.5em" />
-          </h2>
-          <div>
-            <Skeleton width={112} height={18} />
-          </div>
+      <div className="settings-home-account" aria-hidden="true">
+        <div className="settings-home-account-row">
+          <span className="settings-home-account-icon">
+            <Skeleton width="100%" height="100%" round />
+          </span>
+          <span className="settings-home-account-copy">
+            <Skeleton width={150} height={22} />
+            <Skeleton width="72%" height={13} />
+          </span>
+          <Skeleton width={78} height={38} />
         </div>
-        <span className="settings-home-edit">
-          <Icon name="edit" size={17} />
-          编辑资料
-        </span>
-      </section>
-      <div className="settings-home-menu" aria-hidden="true">
-        <SettingRows count={5} />
+        <div className="settings-home-facts">
+          {[0, 1, 2].map((i) => (
+            <div className="settings-home-fact" key={i}>
+              <Skeleton width={16} height={16} />
+              <Skeleton width={38} height={11} />
+              <Skeleton width="62%" height={14} />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="settings-home-groups" aria-hidden="true">
+        {[0, 1].map((group) => (
+          <section className="settings-home-group" key={group}>
+            <header>
+              <Skeleton width={54} height={18} />
+            </header>
+            <div className="settings-home-group-items">
+              <SettingRows count={3} />
+            </div>
+          </section>
+        ))}
       </div>
       <footer className="settings-home-session" aria-hidden="true">
         <span className="settings-home-logout">
-          <Icon name="logout" size={18} />
+          <Icon name="logout" size={17} />
           退出登录
         </span>
       </footer>

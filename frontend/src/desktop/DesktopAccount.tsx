@@ -57,11 +57,13 @@ function Field({
   );
 }
 function Row({
+  icon,
   title,
   value,
   to,
   action,
 }: {
+  icon: string;
   title: string;
   value?: string;
   to?: string;
@@ -69,7 +71,10 @@ function Row({
 }) {
   return (
     <div className="pc-secondary-row">
-      <div>
+      <span className="pc-settings-row-icon">
+        <Icon name={icon} size={19} />
+      </span>
+      <div className="pc-settings-row-copy">
         <b>{title}</b>
         {value && <p>{value}</p>}
       </div>
@@ -113,7 +118,12 @@ function Account() {
         className="pc-secondary-section pc-settings-account"
         aria-label="账号信息"
       >
+        <header className="pc-settings-account-head">
+          <h2>账号信息</h2>
+          <p>用于登录、安全验证与身份展示</p>
+        </header>
         <Row
+          icon="idcard"
           title="登录名"
           value={
             user?.hasUsername === false
@@ -124,6 +134,7 @@ function Account() {
           action="去设置"
         />
         <Row
+          icon="phone"
           title="手机号"
           value={
             user?.phone
@@ -134,6 +145,7 @@ function Account() {
           action={user?.phone ? "换绑" : "去绑定"}
         />
         <Row
+          icon="key"
           title="登录密码"
           value={
             user?.hasPassword === false
@@ -145,8 +157,14 @@ function Account() {
           to="/settings/password"
           action={user?.hasPassword === false ? "去设置" : "修改"}
         />
-        <Row title="登录设备" to="/settings/devices" action="管理" />
         <Row
+          icon="computer"
+          title="登录设备"
+          to="/settings/devices"
+          action="管理"
+        />
+        <Row
+          icon="verify"
           title="学生认证"
           value={
             user?.verified === true

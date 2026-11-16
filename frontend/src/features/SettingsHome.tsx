@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { localDestination, useReturnTo } from "../app/navigation";
 import { useApp } from "../app/state";
-import { ProfileEditLink } from "../app/profile-navigation";
-import { mediaUrl } from "../api/models";
 import { Modal } from "../components/ui";
 import { useTask } from "../components/useTask";
 import { DesignIcon as Icon } from "../mobile/ui";
@@ -17,14 +15,26 @@ function SettingLink({ item }: { item: SettingsNavItem }) {
   return (
     <Link className="settings-home-row" to={item.to}>
       <span className="settings-home-icon">
-        <Icon name={item.icon} size={21} />
+        <Icon name={item.icon} size={19} />
       </span>
       <span className="settings-home-copy">
         <strong>{item.name}</strong>
+        {item.hint && <small>{item.hint}</small>}
       </span>
-      <Icon name="chevronRight" size={17} />
+      <Icon name="chevronRight" size={16} />
     </Link>
   );
+}
+
+type AccountFact = {
+  icon: string;
+  label: string;
+  value: string;
+  tone?: "attention" | "muted";
+};
+
+function maskPhone(phone: string) {
+  return phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2");
 }
 
 export default function SettingsHome({
@@ -47,7 +57,7 @@ export default function SettingsHome({
   const [confirmLogout, setConfirmLogout] = useState(false);
   const verified = user?.verified === true;
   const verificationKnown = typeof user?.verified === "boolean";
-  const avatar = mediaUrl(user?.avatar);
+  const passwordKnown = typeof user?.hasPassword === "boolean";
   useEffect(() => {
     document.title = "账号设置 · 山软今天吃什么";
   }, []);
@@ -57,6 +67,44 @@ export default function SettingsHome({
       items: group.items.filter((item) => !isRetiredV2(item.to)),
     }))
     .filter((group) => group.items.length > 0);
+  const accountEntry: SettingsNavItem = groups.find(
+    (group) => group.id === "account",
+  )?.items[0] ?? { to: "/settings/account", name: "账号与安全", icon: "idcard" };
+  const menuGroups = groups.filter((group) => group.id !== "account");
+  const facts: AccountFact[] = [
+    {
+      icon: "phone",
+      label: "手机号",
+      value: user?.phone ? maskPhone(user.phone) : "未绑定",
+      tone: user?.phone ? undefined : "attention",
+    },
+    {
+      icon: "key",
+      label: "登录密码",
+      value:
+        user?.hasPassword === false
+          ? "未设置"
+          : passwordKnown
+            ? "已设置"
+            : "待确认",
+      tone:
+        user?.hasPassword === false
+          ? "attention"
+          : passwordKnown
+            ? undefined
+            : "muted",
+    },
+    {
+      icon: "verify",
+      label: "学生认证",
+      value: verified ? "已认证" : verificationKnown ? "未认证" : "待确认",
+      tone: verified
+        ? undefined
+        : verificationKnown
+          ? "attention"
+          : ("muted" as const),
+    },
+  ];
 
   return (
     <div className="settings-home" aria-labelledby="settings-home-title">
@@ -75,50 +123,45 @@ export default function SettingsHome({
         }
       />
 
-      <section className="settings-home-profile" aria-label="当前账号">
-        <span className="settings-home-avatar" aria-hidden="true">
-          {user?.displayName?.slice(0, 1) || "食"}
-          {avatar && (
-            <img
-              src={avatar}
-              alt=""
-              onError={(event) => {
-                event.currentTarget.hidden = true;
-              }}
-            />
-          )}
-        </span>
-        <div className="settings-home-identity">
-          <h2>{user?.displayName || "我的账号"}</h2>
-          <div>
-            <span
-              className="settings-home-badge"
-              data-verified={verified || undefined}
-            >
-              <Icon name={verified ? "verify" : "me"} size={14} />
-              {verified
-                ? "学生身份已认证"
-                : verificationKnown
-                  ? "学生身份未认证"
-                  : "认证状态待确认"}
-            </span>
-          </div>
+      <Link className="settings-home-account" to={accountEntry.to}>
+        <div className="settings-home-account-row">
+          <span className="settings-home-account-icon">
+            <Icon name={accountEntry.icon} size={23} />
+          </span>
+          <span className="settings-home-account-copy">
+            <strong>{accountEntry.name}</strong>
+            <small>登录名、手机号、密码、登录设备与学生认证</small>
+          </span>
+          <span className="settings-home-account-go">
+            管理
+            <Icon name="chevronRight" size={15} />
+          </span>
         </div>
-        <ProfileEditLink className="settings-home-edit">
-          <Icon name="edit" size={17} />
-          编辑资料
-        </ProfileEditLink>
-      </section>
+        <div className="settings-home-facts">
+          {facts.map((fact) => (
+            <div
+              className="settings-home-fact"
+              key={fact.label}
+              data-tone={fact.tone}
+            >
+              <Icon name={fact.icon} size={16} />
+              <span>{fact.label}</span>
+              <strong>{fact.value}</strong>
+            </div>
+          ))}
+        </div>
+      </Link>
 
       <div className="settings-home-groups">
-        {groups.map((group) => (
+        {menuGroups.map((group) => (
           <section
-            key={group.title}
+            key={group.id}
             className="settings-home-group"
             aria-label={group.title + "设置"}
           >
             <header>
               <h2>{group.title}</h2>
+              <p>{group.detail}</p>
             </header>
             <div className="settings-home-group-items">
               {group.items.map((item) => (
@@ -128,6 +171,7 @@ export default function SettingsHome({
           </section>
         ))}
       </div>
+
       <footer className="settings-home-session">
         <button
           type="button"
@@ -137,7 +181,7 @@ export default function SettingsHome({
             setConfirmLogout(true);
           }}
         >
-          <Icon name="logout" size={18} />
+          <Icon name="logout" size={17} />
           退出登录
         </button>
       </footer>

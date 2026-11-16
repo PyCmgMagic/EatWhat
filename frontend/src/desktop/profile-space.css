@@ -1278,59 +1278,16 @@
   max-width: none;
   color: #2e251e;
 }
-.pc-profile-space-content .settings-home-profile {
-  display: none;
-}
 .pc-profile-space-content .settings-home .settings-page-head {
   margin-bottom: 28px;
 }
 .pc-profile-space-content .settings-home-groups {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
-  align-items: start;
-}
-.pc-profile-space-content .settings-home-group {
-  border: 1px solid #ebe3da;
-  border-radius: 20px;
-  background: #faf8f5;
-}
-.pc-profile-space-content .settings-home-group > header {
-  padding: 18px 20px 12px;
-  border: 0;
-}
-.pc-profile-space-content .settings-home-group h2 {
-  font-size: 16px;
-}
-.pc-profile-space-content .settings-home-group-items {
-  padding: 0 10px 10px;
-}
-.pc-profile-space-content .settings-home-group-items > .settings-home-row {
-  min-height: 64px;
-  padding: 12px;
-  border: 0;
-  border-radius: 12px;
-}
-.pc-profile-space-content
-  .settings-home-group-items
-  > .settings-home-row:hover {
-  background: #fff;
-}
-.pc-profile-space-content .settings-home-icon {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: #fff0c9;
-  color: #80601f;
 }
 .pc-profile-space-content .settings-home-session {
   margin-top: 26px;
-  padding-top: 20px;
+  padding-top: 22px;
   border-top: 1px solid #ebe3da;
-}
-.pc-profile-space-content .settings-home-logout {
-  min-height: 44px;
-  padding: 0 16px;
-  border-radius: 12px;
 }
 .pc-profile-space-content .v4-page[data-section="account"] .settings-page-head {
   margin-bottom: 24px;
@@ -1340,17 +1297,11 @@
   display: block;
 }
 @media (max-width: 1100px) {
-  .pc-profile-space-content .settings-home-groups {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-rules ul {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 640px) {
-  .pc-profile-space-content .settings-home-groups {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .pc-profile-space-content .v4-page[data-route="/me/growth"] .growth-summary {
     grid-template-columns: 88px minmax(0, 1fr);
     gap: 16px;
@@ -1387,22 +1338,67 @@
   border-radius: 20px;
   background: #fff;
 }
+/* 账号与安全：卡片内分组标题 + 图标行 + 胶囊入口。 */
 .pc-profile-space-content .pc-settings-account {
   max-width: none;
+  padding: 10px 14px 14px;
+}
+.pc-settings-account-head {
+  display: grid;
+  gap: 4px;
+  padding: 14px 10px 12px;
+}
+.pc-settings-account-head h2 {
+  margin: 0;
+  color: #2e251e;
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.5;
+}
+.pc-settings-account-head p {
+  margin: 0;
+  color: #8b7b62;
+  font-size: 12.5px;
+  line-height: 1.6;
 }
 .pc-profile-space-content .pc-settings-account .pc-secondary-row {
-  min-height: 74px;
-  padding: 16px 0;
-  border-bottom-color: #f0e8df;
-}
-.pc-profile-space-content .pc-settings-account .pc-secondary-row b {
-  font-size: 15px;
-}
-.pc-profile-space-content .pc-settings-account .pc-secondary-row p {
-  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 72px;
+  padding: 12px 10px;
+  border: 0;
+  border-radius: 14px;
+  transition: background 0.16s ease;
 }
 .pc-profile-space-content .pc-settings-account .pc-secondary-row:last-child {
-  padding-bottom: 16px;
+  padding-bottom: 12px;
+}
+.pc-settings-row-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: #f7f1e6;
+  color: #8a6b2f;
+}
+.pc-settings-row-copy {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.pc-profile-space-content .pc-settings-account .pc-settings-row-copy b {
+  font-size: 15px;
+  font-weight: 650;
+}
+.pc-profile-space-content .pc-settings-account .pc-settings-row-copy p {
+  margin: 0;
+  color: #827367;
+  font-size: 13px;
+  line-height: 1.6;
 }
 .pc-profile-space-content .pc-settings-account .pc-secondary-text-link {
   min-height: 38px;
@@ -1412,12 +1408,32 @@
   background: #fff;
   font-size: 13px;
   font-weight: 650;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
 }
 .pc-profile-space-content .pc-settings-account .pc-secondary-text-link:hover {
   background: #fffaf0;
   border-color: #dcc8ab;
+  transform: translateX(1px);
   text-decoration: none;
+}
+@media (hover: hover) {
+  .pc-profile-space-content .pc-settings-account .pc-secondary-row:hover {
+    background: #faf6ef;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-profile-space-content .pc-settings-account .pc-secondary-row,
+  .pc-profile-space-content .pc-settings-account .pc-secondary-text-link {
+    transition: none;
+  }
+  .pc-profile-space-content
+    .pc-settings-account
+    .pc-secondary-text-link:hover {
+    transform: none;
+  }
 }
 @media (max-width: 900px) {
   .pc-profile-space-content .pc-secondary-body {
