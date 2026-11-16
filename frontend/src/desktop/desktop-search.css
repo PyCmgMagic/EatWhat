@@ -16,8 +16,8 @@
 .pc-header-search-wrap[data-open="true"] .pc-header-search {
   position: fixed;
   z-index: 102;
-  /* Keep the anchor independent of animated dimensions. Safari can cache a
-     percentage translate during the animation and snap when it finishes. */
+  /* Animate pixel offsets with width/height in the same layout pass. Mixing
+     compositor transforms with layout sizes lets WebKit paint them out of sync. */
   top: calc(var(--header-height, 94px) / 2 - 25px);
   left: max(24px, calc(50% - 270px));
   display: flex;

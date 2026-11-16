@@ -86,14 +86,16 @@ export default function DesktopSearch() {
     const animation = element.animate(
       [
         {
+          left: `${previous.left}px`,
+          top: `${previous.top}px`,
           width: `${previous.width}px`,
           height: `${previous.height}px`,
-          transform: `translate(${previous.left - next.left}px, ${previous.top - next.top}px)`,
         },
         {
+          left: `${next.left}px`,
+          top: `${next.top}px`,
           width: `${next.width}px`,
           height: `${next.height}px`,
-          transform: "translate(0, 0)",
         },
       ],
       { duration: 280, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
@@ -119,20 +121,22 @@ export default function DesktopSearch() {
     const animation = element.animate(
       [
         {
+          left: `${previous.left}px`,
+          top: `${previous.top}px`,
           width: `${previous.width}px`,
           height: `${previous.height}px`,
           padding: "0px 12px",
           backgroundColor: "#fff",
           boxShadow: "0 0 0 1px #e6ddd4, 0 12px 32px rgba(56, 43, 30, 0.1)",
-          transform: `translate(${previous.left - next.left}px, ${previous.top - next.top}px)`,
         },
         {
+          left: `${next.left}px`,
+          top: `${next.top}px`,
           width: `${next.width}px`,
           height: `${next.height}px`,
           padding: "0px 12px",
           backgroundColor: "#f4efeb",
           boxShadow: "0 0 0 0 rgba(216, 197, 160, 0)",
-          transform: "translate(0, 0)",
         },
       ],
       { duration: 220, easing: "cubic-bezier(0.4, 0, 1, 1)" },
@@ -243,7 +247,6 @@ export default function DesktopSearch() {
                   zIndex: 102,
                   top: home.current.top,
                   left: home.current.left,
-                  translate: "0 0",
                   display: "flex",
                   width: home.current.width,
                   height: home.current.height,
