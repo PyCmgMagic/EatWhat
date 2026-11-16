@@ -110,7 +110,7 @@ export default function SettingsHome({
     <div className="settings-home" aria-labelledby="settings-home-title">
       <SettingsPageHeader
         title="账号设置"
-        detail=""
+        detail={embedded ? undefined : ""}
         headingId="settings-home-title"
         back={embedded ? undefined : "/me"}
         action={

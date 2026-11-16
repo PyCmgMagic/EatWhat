@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { ProfileWorkspaceContext } from "../../app/profile-workspace";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import { DesignIcon as Icon } from "../../mobile/ui";
@@ -18,6 +19,8 @@ import { useFeedbackState } from "../../components/feedback";
 
 export default function Growth() {
   const { api, user } = useApp();
+  // 个人空间里版面足够，规则和记录直接摊开，不用再点一次。
+  const embedded = useContext(ProfileWorkspaceContext);
   const [page, setPage] = useState(1);
   const progress = useQuery({
     queryKey: ["growth", user?.id, "progress"],
@@ -44,7 +47,11 @@ export default function Growth() {
           : "暂无记录"
         : "加载中";
   return (
-    <Shell title="我的成长" advice={false}>
+    <Shell
+      title="我的成长"
+      detail="逛一逛、吃一顿、分享一道菜，都会攒下经验。"
+      advice={false}
+    >
       <Card>
         <QueryView query={progress}>
           <section className="growth-summary" aria-label="等级与经验">
@@ -85,7 +92,7 @@ export default function Growth() {
             </div>
           </section>
           {rules.length ? (
-            <details className="growth-disclosure growth-rules">
+            <details className="growth-disclosure growth-rules" open={embedded}>
               <summary className="growth-disclosure-summary">
                 <span className="growth-disclosure-title">怎么获得经验</span>
                 <span className="growth-disclosure-meta">
@@ -123,7 +130,7 @@ export default function Growth() {
         </QueryView>
       </Card>
       <section className="v4-card growth-records">
-        <details className="growth-disclosure">
+        <details className="growth-disclosure" open={embedded}>
           <summary className="growth-disclosure-summary">
             <h2>经验记录</h2>
             <span className="growth-disclosure-meta">{ledgerMeta}</span>

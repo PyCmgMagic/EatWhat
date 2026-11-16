@@ -29,6 +29,7 @@ import {
 import "./library.css";
 import "./history-page.css";
 import { ProfileSectionNav } from "../features/ProfileSectionNav";
+import { ProfileEmpty, ProfilePageHead } from "../features/ProfilePage";
 
 function Empty({
   title,
@@ -434,34 +435,35 @@ export function DesktopHistory() {
   }
   return (
     <section className="pc-profile-content pc-library pc-history-page">
-      <header className="pc-library-heading">
-        <div>
-          <h1>浏览足迹</h1>
-          <p>
+      <ProfilePageHead
+        title="浏览足迹"
+        detail={
+          <>
             <Icon name="lock" size={14} />
-            找回看过的菜品和店铺，浏览记录仅自己可见。
-          </p>
+            看过的菜品和店铺都记在这里，只有你自己看得到。
+          </>
+        }
+      >
+        <div className="pp-seg">
+          <SlidingTabs label="足迹类型" active={kind}>
+            {[
+              { id: "food", name: "菜品", icon: "bowl" },
+              { id: "restaurant", name: "店铺", icon: "store" },
+            ].map((tab) => (
+              <button
+                role="tab"
+                key={tab.id}
+                aria-selected={kind === tab.id}
+                tabIndex={kind === tab.id ? 0 : -1}
+                onClick={() => select(tab.id as HistoryKind)}
+              >
+                <Icon name={tab.icon} size={16} />
+                {tab.name}
+              </button>
+            ))}
+          </SlidingTabs>
         </div>
-      </header>
-      <div className="pc-history-tabs">
-        <SlidingTabs label="足迹类型" active={kind}>
-          {[
-            { id: "food", name: "浏览的菜品", icon: "bowl" },
-            { id: "restaurant", name: "浏览的店铺", icon: "store" },
-          ].map((tab) => (
-            <button
-              role="tab"
-              key={tab.id}
-              aria-selected={kind === tab.id}
-              tabIndex={kind === tab.id ? 0 : -1}
-              onClick={() => select(tab.id as HistoryKind)}
-            >
-              <Icon name={tab.icon} size={17} />
-              {tab.name}
-            </button>
-          ))}
-        </SlidingTabs>
-      </div>
+      </ProfilePageHead>
       {items.length > 0 && (
         <div className="pc-library-toolbar pc-history-toolbar">
           <span className="pc-history-count">
@@ -520,23 +522,22 @@ export function DesktopHistory() {
         {query.isPending ? (
           <ContentSkeleton kind="rows" count={4} />
         ) : query.isError && !query.data ? (
-          <div className="pc-history-failure" role="alert">
-            <span className="pc-library-empty-symbol">
-              <Icon name="history" size={32} />
-            </span>
-            <h2>暂时没能加载浏览记录</h2>
-            <p>{errorMessage(query.error)}</p>
+          <ProfileEmpty
+            role="alert"
+            icon="history"
+            title="暂时没能加载浏览记录"
+            detail={errorMessage(query.error)}
+          >
             <button
               type="button"
-              className="pc-button light"
+              className="pp-button is-quiet"
               onClick={() => void query.refetch()}
             >
               重新加载
             </button>
-          </div>
+          </ProfileEmpty>
         ) : !items.length ? (
-          <Empty
-            icon="history"
+          <ProfileEmpty
             illustration="baozi"
             title={
               page > 1
@@ -545,29 +546,34 @@ export function DesktopHistory() {
                   ? "还没有浏览过的菜品"
                   : "还没有浏览过的店铺"
             }
-          >
-            <p>
-              {page > 1
+            detail={
+              page > 1
                 ? "可以返回上一页，继续查找之前的足迹。"
-                : `看过的${kind === "food" ? "菜品" : "店铺"}会出现在这里，下次想吃时不用重新找。`}
-            </p>
+                : `看过的${kind === "food" ? "菜品" : "店铺"}会出现在这里，下次想吃时不用重新找。`
+            }
+          >
             {page === 1 && (
-              <Link
-                className="pc-button light"
-                to={kind === "food" ? "/" : "/nearby"}
-              >
+              <Link className="pp-button" to={kind === "food" ? "/" : "/nearby"}>
                 {kind === "food" ? "发现好吃的" : "找一家店"}
-                <Icon name="chevronRight" size={17} />
+                <Icon name="chevronRight" size={16} />
               </Link>
             )}
-          </Empty>
+          </ProfileEmpty>
         ) : !visible.length ? (
-          <Empty title="这页没有找到匹配的足迹">
-            <p>试试其他关键词，或翻页继续查找。</p>
-            <button className="pc-button light" onClick={() => setSearch("")}>
+          <ProfileEmpty
+            compact
+            icon="search"
+            title="这页没有找到匹配的足迹"
+            detail="试试其他关键词，或翻页继续查找。"
+          >
+            <button
+              type="button"
+              className="pp-button is-quiet"
+              onClick={() => setSearch("")}
+            >
               清除筛选
             </button>
-          </Empty>
+          </ProfileEmpty>
         ) : (
           groups.map((group) => (
             <section className="pc-history-group" key={group.key}>

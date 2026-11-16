@@ -1,6 +1,7 @@
 import { DesignIcon as Icon } from "../../mobile/ui";
 import { RestaurantCard, TopicCard, TopicHero } from "./Cards";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { ProfileWorkspaceContext } from "../../app/profile-workspace";
 import {
   Link,
   useLocation,
@@ -1128,6 +1129,7 @@ export function Topics({
   );
 }
 export function FavoriteRestaurants() {
+  const embedded = useContext(ProfileWorkspaceContext);
   const { api } = useApp(),
     [page, setPage] = useState(1),
     q = useQuery({
@@ -1135,13 +1137,27 @@ export function FavoriteRestaurants() {
       queryFn: () => api.favoriteRestaurants({ page, pageSize: 12 }),
     });
   return (
-    <Shell title="我的收藏" heading={<ProfileCollectionsHeader />}>
-      <div className="v4-list-toolbar profile-collections-toolbar">
-        <Link className="v4-button" to="/restaurants/directory">
-          <Icon name="store" size={17} />
-          再找一家店
-        </Link>
-      </div>
+    <Shell
+      title="我的收藏"
+      heading={
+        <ProfileCollectionsHeader
+          action={
+            <Link className="pp-button is-quiet" to="/restaurants/directory">
+              <Icon name="store" size={16} />
+              再找一家店
+            </Link>
+          }
+        />
+      }
+    >
+      {!embedded && (
+        <div className="v4-list-toolbar profile-collections-toolbar">
+          <Link className="v4-button" to="/restaurants/directory">
+            <Icon name="store" size={17} />
+            再找一家店
+          </Link>
+        </div>
+      )}
       <QueryView
         query={q}
         empty={!q.data?.items?.length}

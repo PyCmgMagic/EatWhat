@@ -296,11 +296,3 @@
   padding-bottom: 14px;
   border-bottom: 1px solid #f0e9e2;
 }
-
-/* 桌面端成长页只有一个卡片，别被拉到 1000px+ 宽，读起来更稳。 */
-@media (min-width: 1000px) {
-  .pc-profile-space-content .v4-page:has(.growth-summary) {
-    max-width: 860px;
-    margin-inline: auto;
-  }
-}

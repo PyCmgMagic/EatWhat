@@ -6,6 +6,7 @@ import { BRAND_SLOGAN } from "../app/brand";
 import { foodAuthor } from "../api/models";
 import ProfileOverview from "../features/ProfileOverview";
 import ProfileSpaceHeader from "../features/ProfileSpaceHeader";
+import { ProfileEmpty, ProfilePageHead } from "../features/ProfilePage";
 import HelpFeedback, { isHelpFeedbackPath } from "../features/HelpFeedback";
 import DesktopRouteSkeleton from "./DesktopRouteSkeleton";
 import { unreadCount } from "../api/notifications";
@@ -54,6 +55,7 @@ import "./nearby.css";
 import "./profile-workspace.css";
 import "./profile-shell.css";
 import "./profile-space.css";
+import "../features/profile-pages.css";
 import {
   ProfileWorkspaceContext,
   ProfileNavigationGuardContext,
@@ -1923,26 +1925,30 @@ export function DesktopShares() {
       placeholderData: keepPreviousData,
     });
   useEffect(() => {
-    document.title = `${tab === "comments" ? "我的评论" : "我的分享"} · 山软今天吃什么`;
+    document.title = `${tab === "comments" ? "我的评论" : "我的上传"} · 山软今天吃什么`;
   }, [tab]);
   return (
     <section className="pc-profile-content profile-shares" data-tab={tab}>
-      <header className="pc-library-heading">
-        <div>
-          <h1>{tab === "comments" ? "我的评论" : "我的分享"}</h1>
-          <p>
-            {tab === "comments"
-              ? "回看自己的用餐感受，也看看每一条分享的审核状态。"
-              : "记录吃过的好味道，也分享给下一位食友。"}
-          </p>
-        </div>
+      <ProfilePageHead
+        title={tab === "comments" ? "我的评论" : "我的上传"}
+        count={
+          tab !== "comments" && query.data?.totalItems != null
+            ? `${query.data.totalItems} 道`
+            : undefined
+        }
+        detail={
+          tab === "comments"
+            ? "写过的用餐感受都在这里，也能看到每条评论的审核状态。"
+            : "你分享给食友的菜品，随时可以回来补充和修改。"
+        }
+      >
         {tab !== "comments" && (
-          <Link to="/publish" className="profile-shares-publish">
-            <Icon name="add" size={19} />
+          <Link to="/publish" className="pp-button">
+            <Icon name="add" size={17} />
             分享一道菜
           </Link>
         )}
-      </header>
+      </ProfilePageHead>
       {tab !== "comments" && query.isPlaceholderData && (
         <p className="pc-tab-loading" role="status">
           正在切换内容…
@@ -1977,18 +1983,24 @@ export function DesktopShares() {
                   ))}
                 </div>
               ) : (
-                <div className="profile-comments-unavailable">
-                  <Icon name="bowl" size={28} />
-                  <h2>
-                    {page > 1 ? "这一页没有更多分享了" : "分享你的第一道好菜"}
-                  </h2>
-                  <p>
-                    {page > 1
+                <ProfileEmpty
+                  illustration="yuntun"
+                  title={
+                    page > 1 ? "这一页没有更多上传了" : "分享你的第一道好菜"
+                  }
+                  detail={
+                    page > 1
                       ? "返回前一页，继续查看已发布的菜品。"
-                      : "记下喜欢的味道，也给食友一份参考。"}
-                  </p>
-                  {page === 1 && <Link to="/publish">分享一道菜</Link>}
-                </div>
+                      : "记下喜欢的味道，也给食友一份参考。"
+                  }
+                >
+                  {page === 1 && (
+                    <Link to="/publish" className="pp-button">
+                      <Icon name="add" size={17} />
+                      分享一道菜
+                    </Link>
+                  )}
+                </ProfileEmpty>
               )}
             </QueryStatus>
             {query.isSuccess && (

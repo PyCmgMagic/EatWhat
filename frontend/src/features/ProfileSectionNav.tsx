@@ -1,7 +1,9 @@
-import { useLayoutEffect, useRef } from "react";
+import { useContext, useLayoutEffect, useRef, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "./profile-section-nav.css";
 import { isRetiredV2 } from "../app/retired-routes";
+import { ProfileWorkspaceContext } from "../app/profile-workspace";
+import { ProfilePageHead } from "./ProfilePage";
 
 const sections = {
   collections: {
@@ -73,7 +75,24 @@ export function ProfileHelpHeader() {
   );
 }
 
-export function ProfileCollectionsHeader() {
+export function ProfileCollectionsHeader({
+  action,
+}: {
+  /** 个人空间里放在视图切换旁边的次要操作。 */
+  action?: ReactNode;
+} = {}) {
+  // 个人空间里与其他标签页共用同一套页头；独立打开时保留原来的窄屏排版。
+  const embedded = useContext(ProfileWorkspaceContext);
+  if (embedded)
+    return (
+      <ProfilePageHead
+        title="我的收藏"
+        detail="喜欢的菜品和想去的餐厅，都留在这里。"
+      >
+        {action}
+        <ProfileSectionNav section="collections" />
+      </ProfilePageHead>
+    );
   return (
     <div className="profile-collections-head">
       <header className="profile-section-heading">
