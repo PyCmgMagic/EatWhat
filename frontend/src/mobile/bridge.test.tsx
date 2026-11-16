@@ -6,6 +6,7 @@ import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
 vi.mock("../features/access", () => ({ useActionAccess: () => () => true }));
 import { AppProvider } from "../app/context";
+import { AreaProvider } from "../app/area";
 import { useApp } from "../app/state";
 import { writeSession } from "../app/runtime";
 import { useDesignBridge } from "./bridge";
@@ -156,8 +157,17 @@ beforeEach(() => {
     vi.fn(async (url: string) => {
       const path = String(url).split("?")[0];
       if (path.endsWith("/user/info")) return ok(account);
-      if (path.endsWith("/foods/tags/system") || path.endsWith("/campus/list"))
-        return ok([]);
+      if (path.endsWith("/foods/tags/system")) return ok([]);
+      if (path.endsWith("/campus/list"))
+        return ok([
+          {
+            id: 1,
+            name: "软件园",
+            gcjLng: 117.140109,
+            gcjLat: 36.667382,
+            isDefault: true,
+          },
+        ]);
       if (path.endsWith("/recommend"))
         return ok({
           items: [
@@ -402,12 +412,23 @@ it("advances the mobile carousel once per action without state updates on every 
     root.render(
       <AppProvider>
         <MemoryRouter>
-          <HomeBridge />
+          <AreaProvider>
+            <HomeBridge />
+          </AreaProvider>
         </MemoryRouter>
       </AppProvider>,
     ),
   );
   await spin(() => homeValues?.values.dots?.length === 2);
+  const requests = vi
+    .mocked(fetch)
+    .mock.calls.map(([url]) => new URL(String(url), "https://example.test"))
+    .filter((url) => url.pathname.endsWith("/recommend"));
+  // Like the real app, wait for the preset coordinates before consuming a batch.
+  expect(requests).toHaveLength(1);
+  expect(requests[0].searchParams.get("gcjLng")).toBe("117.140109");
+  expect(requests[0].searchParams.get("gcjLat")).toBe("36.667382");
+  expect(requests[0].searchParams.has("campusId")).toBe(false);
   await act(async () => homeValues!.values.next());
   expect(host.querySelector('[data-testid="home-index"]')!.textContent).toBe(
     "1",
