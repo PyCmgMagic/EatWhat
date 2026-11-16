@@ -47,11 +47,11 @@ export function Announcements() {
   });
   return (
     <>
-      <div className="ad-toolbar">
-        <span className="ad-toolbar-note">
+      <div className="ew-admin-toolbar">
+        <span className="ew-admin-toolbar-note">
           公告按平台、校区、版本和时间筛选后展示给用户。
         </span>
-        <button className="ad-btn is-primary" onClick={() => setEdit(true)}>
+        <button className="ew-admin-btn is-primary" onClick={() => setEdit(true)}>
           <Icon name="add" size={16} />
           新建公告
         </button>
@@ -64,7 +64,7 @@ export function Announcements() {
           emptyTitle="还没有公告"
           emptyHint="新建一条公告，向用户说明活动、维护或版本变化。"
         >
-          <ul className="ad-notices">
+          <ul className="ew-admin-notices">
             {q.data?.items?.map((item) => {
               const [tone, label] = announcementState(item);
               return (
@@ -96,9 +96,9 @@ export function Announcements() {
                       {dateTime(item.updatedAt)}
                     </small>
                   </div>
-                  <div className="ad-row-actions">
+                  <div className="ew-admin-row-actions">
                     <button
-                      className="ad-icon-btn"
+                      className="ew-admin-icon-btn"
                       aria-label={`编辑 ${item.title ?? "公告"}`}
                       title="编辑"
                       onClick={() => setEdit(item)}
@@ -106,7 +106,7 @@ export function Announcements() {
                       <Icon name="edit" size={17} />
                     </button>
                     <button
-                      className="ad-icon-btn is-danger"
+                      className="ew-admin-icon-btn is-danger"
                       aria-label={`删除 ${item.title ?? "公告"}`}
                       title="删除"
                       onClick={() => setRemove(item)}
@@ -232,15 +232,15 @@ function AnnouncementEditor({
       }}
       footer={
         <>
-          <label className="ad-switch-row">
+          <label className="ew-admin-switch-row">
             <Toggle checked={enabled} onChange={setEnabled} label="启用公告" />
             {enabled ? "保存后启用" : "保存为停用"}
           </label>
-          <button type="button" className="ad-btn" onClick={onClose}>
+          <button type="button" className="ew-admin-btn" onClick={onClose}>
             取消
           </button>
           <button
-            className="ad-btn is-primary"
+            className="ew-admin-btn is-primary"
             disabled={task.busy || task.uncertain}
           >
             {task.busy ? "保存中…" : "保存公告"}
@@ -248,7 +248,7 @@ function AnnouncementEditor({
         </>
       }
     >
-      <div className="ad-form">
+      <div className="ew-admin-form">
         <Field label="标题" wide>
           <input name="title" defaultValue={value?.title ?? ""} />
         </Field>
@@ -268,7 +268,7 @@ function AnnouncementEditor({
             defaultValue={value?.linkUrl ?? ""}
           />
         </Field>
-        <div className="ad-field" data-wide>
+        <div className="ew-admin-field" data-wide>
           <span>级别</span>
           <Segmented
             label="公告级别"
@@ -281,11 +281,11 @@ function AnnouncementEditor({
           />
         </div>
       </div>
-      <h3 className="ad-subhead">发布范围</h3>
-      <div className="ad-form">
-        <div className="ad-field" data-wide>
+      <h3 className="ew-admin-subhead">发布范围</h3>
+      <div className="ew-admin-form">
+        <div className="ew-admin-field" data-wide>
           <span>平台</span>
-          <div className="ad-checks">
+          <div className="ew-admin-checks">
             {platforms.map((p) => (
               <label key={p}>
                 <input
@@ -299,9 +299,9 @@ function AnnouncementEditor({
           </div>
           <small>不选表示全部平台</small>
         </div>
-        <div className="ad-field" data-wide>
+        <div className="ew-admin-field" data-wide>
           <span>校区</span>
-          <div className="ad-checks">
+          <div className="ew-admin-checks">
             {campuses.data?.map((c) => (
               <label key={c.id}>
                 <input
@@ -378,12 +378,12 @@ function useRemoteConfig() {
 }
 function ConfigHeader({ q }: { q: ReturnType<typeof useRemoteConfig>["q"] }) {
   return (
-    <div className="ad-toolbar">
-      <span className="ad-toolbar-note">
+    <div className="ew-admin-toolbar">
+      <span className="ew-admin-toolbar-note">
         站点 {q.data?.siteMode ?? "—"} · 配置版本 {q.data?.configVersion ?? "—"}
       </span>
       <button
-        className="ad-btn"
+        className="ew-admin-btn"
         disabled={q.isFetching}
         onClick={() => void q.refetch()}
       >
@@ -445,7 +445,7 @@ function SettingsEditor({
     task = useCommand();
   return (
     <form
-      className="ad-stack"
+      className="ew-admin-stack"
       onSubmit={(e) => {
         e.preventDefault();
         void task.run(
@@ -479,7 +479,7 @@ function SettingsEditor({
       }}
     >
       <Panel title="功能开关" hint="关闭后，用户端会显示填写的说明" flush>
-        <ul className="ad-flags">
+        <ul className="ew-admin-flags">
           {Object.entries(flags).map(([key, flag]) => (
             <li key={key}>
               <div>
@@ -526,7 +526,7 @@ function SettingsEditor({
             <Notice tone={mode === "DOWN" ? "bad" : "warn"}>
               保存后立即对全站用户生效，请确认已做好通知。
             </Notice>
-            <div className="ad-form">
+            <div className="ew-admin-form">
               <Field label="维护说明" wide>
                 <input
                   value={message}
@@ -550,7 +550,7 @@ function SettingsEditor({
         hint="JSON 对象：饭点窗口、推荐批量、评分门槛、轮询、距离与分类顺序等。保留未修改的已有键。"
       >
         <textarea
-          className="is-mono ad-code"
+          className="is-mono ew-admin-code"
           aria-label="运营参数"
           value={params}
           onChange={(e) => setParams(e.target.value)}
@@ -558,13 +558,13 @@ function SettingsEditor({
           spellCheck={false}
         />
       </Panel>
-      <div className="ad-savebar">
+      <div className="ew-admin-savebar">
         <span>
           修订 {value.revision} · 更新于 {dateTime(value.updatedAt)}
           {value.updatedBy ? ` · 管理员 #${value.updatedBy}` : ""}
         </span>
         <button
-          className="ad-btn is-primary"
+          className="ew-admin-btn is-primary"
           disabled={task.busy || task.uncertain}
         >
           {task.busy ? "保存中…" : "保存配置"}
@@ -585,7 +585,7 @@ export function Versions() {
         empty={!q.data?.versions?.length}
         emptyTitle="暂无版本线"
       >
-        <div className="ad-cards">
+        <div className="ew-admin-cards">
           {q.data?.versions?.map((line) => (
             <VersionEditor
               key={`${line.platform}:${line.revision}`}
@@ -624,7 +624,7 @@ function VersionEditor({
       }
     >
       <form
-        className="ad-form"
+        className="ew-admin-form"
         onSubmit={(e) => {
           e.preventDefault();
           const d = new FormData(e.currentTarget),
@@ -685,8 +685,8 @@ function VersionEditor({
             defaultValue={value.releaseNotes ?? ""}
           />
         </Field>
-        <div className="ad-form-actions">
-          <button className="ad-btn" disabled={task.busy || task.uncertain}>
+        <div className="ew-admin-form-actions">
+          <button className="ew-admin-btn" disabled={task.busy || task.uncertain}>
             {task.busy ? "保存中…" : "保存版本线"}
           </button>
         </div>
@@ -705,7 +705,7 @@ export function Ai() {
   return (
     <Async query={q} rows={6}>
       {q.data && (
-        <div className="ad-cards is-uneven">
+        <div className="ew-admin-cards is-uneven">
           <AiSettingsEditor
             key={q.data.updatedAt ?? 0}
             value={q.data}
@@ -745,7 +745,7 @@ function AiSettingsEditor({
       }
     >
       <form
-        className="ad-form"
+        className="ew-admin-form"
         onSubmit={(e) => {
           e.preventDefault();
           const form = e.currentTarget,
@@ -806,7 +806,7 @@ function AiSettingsEditor({
             <option value="json_object">json_object</option>
           </select>
         </Field>
-        <label className="ad-switch-row" data-wide>
+        <label className="ew-admin-switch-row" data-wide>
           <Toggle
             checked={enabled}
             onChange={setEnabled}
@@ -817,7 +817,7 @@ function AiSettingsEditor({
             <small>发布菜品时建议分类与口味</small>
           </span>
         </label>
-        <label className="ad-switch-row" data-wide>
+        <label className="ew-admin-switch-row" data-wide>
           <Toggle
             checked={imageCheck}
             onChange={setImageCheck}
@@ -828,9 +828,9 @@ function AiSettingsEditor({
             <small>识别联系方式和广告；二维码始终在本地识别</small>
           </span>
         </label>
-        <div className="ad-form-actions">
+        <div className="ew-admin-form-actions">
           <button
-            className="ad-btn is-primary"
+            className="ew-admin-btn is-primary"
             disabled={task.busy || task.uncertain}
           >
             {task.busy ? "保存中…" : "保存配置"}
@@ -847,7 +847,7 @@ function AiTest() {
   return (
     <Panel title="连通测试" hint="用一道示例菜验证当前已保存的配置">
       <form
-        className="ad-form"
+        className="ew-admin-form"
         onSubmit={(e) => {
           e.preventDefault();
           const url = String(
@@ -867,8 +867,8 @@ function AiTest() {
         >
           <input name="imageUrl" inputMode="url" placeholder="https://" />
         </Field>
-        <div className="ad-form-actions">
-          <button className="ad-btn" disabled={task.busy}>
+        <div className="ew-admin-form-actions">
+          <button className="ew-admin-btn" disabled={task.busy}>
             {task.busy ? "测试中…" : "开始测试"}
           </button>
         </div>
@@ -902,8 +902,8 @@ export function Audit() {
           empty={!q.data?.items?.length}
           emptyTitle="还没有配置修改记录"
         >
-          <div className="ad-table-wrap">
-            <table className="ad-table is-clickable">
+          <div className="ew-admin-table-wrap">
+            <table className="ew-admin-table is-clickable">
               <thead>
                 <tr>
                   <th>时间</th>
@@ -921,7 +921,7 @@ export function Audit() {
                     <td className="is-muted">{dateTime(item.occurredAt)}</td>
                     <td>
                       <strong>{item.target}</strong>
-                      <small className="ad-sub">{item.targetKey}</small>
+                      <small className="ew-admin-sub">{item.targetKey}</small>
                     </td>
                     <td>
                       <Pill
@@ -943,9 +943,9 @@ export function Audit() {
                     <td className="is-num">{item.configVersion}</td>
                     <td>管理员 #{item.adminId}</td>
                     <td>
-                      <div className="ad-row-actions">
+                      <div className="ew-admin-row-actions">
                         <button
-                          className="ad-icon-btn"
+                          className="ew-admin-icon-btn"
                           aria-label="查看变更内容"
                           title="查看变更"
                         >
@@ -985,14 +985,14 @@ export function Audit() {
               ["记录编号", `#${open.id}`],
             ]}
           />
-          <h3 className="ad-subhead">修改前</h3>
-          <pre className="ad-code">
+          <h3 className="ew-admin-subhead">修改前</h3>
+          <pre className="ew-admin-code">
             {open.before
               ? JSON.stringify(open.before, null, 2)
               : "（无，首次创建）"}
           </pre>
-          <h3 className="ad-subhead">修改后</h3>
-          <pre className="ad-code">{JSON.stringify(open.after, null, 2)}</pre>
+          <h3 className="ew-admin-subhead">修改后</h3>
+          <pre className="ew-admin-code">{JSON.stringify(open.after, null, 2)}</pre>
         </Drawer>
       )}
     </>

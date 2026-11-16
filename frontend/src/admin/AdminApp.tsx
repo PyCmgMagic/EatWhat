@@ -127,7 +127,7 @@ export default function AdminApp() {
         <Brand to="/" />
         <main className="admin-access-card">
           {session && me.isPending ? (
-            <div className="ad-skeleton" aria-busy="true">
+            <div className="ew-admin-skeleton" aria-busy="true">
               <span />
               <span />
             </div>
@@ -136,7 +136,7 @@ export default function AdminApp() {
               <h1>暂时无法核实账号</h1>
               <p>{errorMessage(me.error)}</p>
               <button
-                className="ad-btn is-primary"
+                className="ew-admin-btn is-primary"
                 onClick={() => void me.refetch()}
               >
                 重新加载
@@ -150,12 +150,12 @@ export default function AdminApp() {
               <h1>登录管理后台</h1>
               <p>使用管理员账号登录后继续。</p>
               <LoginLink
-                className="ad-btn is-primary"
+                className="ew-admin-btn is-primary"
                 to={`/auth?next=${encodeURIComponent(location.pathname + location.search)}`}
               >
                 登录
               </LoginLink>
-              <Link className="ad-link" to="/">
+              <Link className="ew-admin-link" to="/">
                 返回前台
               </Link>
             </>
@@ -166,7 +166,7 @@ export default function AdminApp() {
               </span>
               <h1>{user?.banned ? "账号暂时无法使用" : "需要管理员身份"}</h1>
               <p>当前账号没有进入管理后台的权限。</p>
-              <Link className="ad-btn is-primary" to="/me">
+              <Link className="ew-admin-btn is-primary" to="/me">
                 返回前台
               </Link>
             </>
@@ -221,7 +221,7 @@ export default function AdminApp() {
           <button
             ref={menuButton}
             type="button"
-            className="ad-icon-btn admin-menu-toggle"
+            className="ew-admin-icon-btn admin-menu-toggle"
             aria-label={menu ? "关闭管理菜单" : "打开管理菜单"}
             aria-expanded={menu}
             aria-controls="admin-navigation"
@@ -267,7 +267,7 @@ export default function AdminApp() {
             <div className="admin-content" data-module={module.id}>
               <Suspense
                 fallback={
-                  <div className="ad-skeleton" aria-busy="true">
+                  <div className="ew-admin-skeleton" aria-busy="true">
                     <span />
                     <span />
                     <span />
@@ -279,10 +279,10 @@ export default function AdminApp() {
               </Suspense>
             </div>
           ) : (
-            <div className="ad-state is-tall">
+            <div className="ew-admin-state is-tall">
               <Icon name="question" size={30} />
               <strong>这个管理页面不存在</strong>
-              <Link className="ad-btn is-primary" to="/admin">
+              <Link className="ew-admin-btn is-primary" to="/admin">
                 返回数据概览
               </Link>
             </div>

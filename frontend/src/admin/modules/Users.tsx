@@ -55,7 +55,7 @@ export default function Users() {
   return (
     <>
       <form
-        className="ad-toolbar"
+        className="ew-admin-toolbar"
         key={JSON.stringify(filters)}
         onSubmit={(e) => {
           e.preventDefault();
@@ -72,7 +72,7 @@ export default function Users() {
           setPage(1);
         }}
       >
-        <label className="ad-search">
+        <label className="ew-admin-search">
           <Icon name="search" size={17} />
           <input
             name="keyword"
@@ -104,11 +104,11 @@ export default function Users() {
           <option value="false">正常</option>
           <option value="true">封禁中</option>
         </select>
-        <button className="ad-btn is-primary">查询</button>
+        <button className="ew-admin-btn is-primary">查询</button>
         {filtered && (
           <button
             type="button"
-            className="ad-btn is-ghost"
+            className="ew-admin-btn is-ghost"
             onClick={() => {
               setFilters({});
               setPage(1);
@@ -130,8 +130,8 @@ export default function Users() {
               : undefined
           }
         >
-          <div className="ad-table-wrap">
-            <table className="ad-table is-clickable">
+          <div className="ew-admin-table-wrap">
+            <table className="ew-admin-table is-clickable">
               <thead>
                 <tr>
                   <th>用户</th>
@@ -147,7 +147,7 @@ export default function Users() {
                 {q.data?.items?.map((u) => (
                   <tr key={u.id} onClick={() => setSelected(u)}>
                     <td>
-                      <div className="ad-cell-main">
+                      <div className="ew-admin-cell-main">
                         <Avatar src={u.avatar} name={u.displayName} />
                         <span>
                           <strong>{u.displayName || "校园食友"}</strong>
@@ -180,9 +180,9 @@ export default function Users() {
                       </Pill>
                     </td>
                     <td>
-                      <div className="ad-row-actions">
+                      <div className="ew-admin-row-actions">
                         <button
-                          className="ad-btn is-small"
+                          className="ew-admin-btn is-small"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelected(u);
@@ -229,7 +229,7 @@ function UserDrawer({ user: u, onClose }: { user: Row; onClose: () => void }) {
       subtitle={`#${u.id}${u.userName ? ` · 登录名 ${u.userName}` : ""}`}
       onClose={onClose}
     >
-      <div className="ad-profile">
+      <div className="ew-admin-profile">
         <Avatar src={u.avatar} name={u.displayName} size={56} />
         <div>
           <Pill tone={isBanned ? "bad" : "good"}>{statusLabel(u)}</Pill>
@@ -242,7 +242,7 @@ function UserDrawer({ user: u, onClose }: { user: Row; onClose: () => void }) {
             {u.verified ? "已认证" : "未认证"}
           </Pill>
         </div>
-        <Link className="ad-link" to={`/users/${u.id}`}>
+        <Link className="ew-admin-link" to={`/users/${u.id}`}>
           前台主页
           <Icon name="external" size={14} />
         </Link>
@@ -260,7 +260,7 @@ function UserDrawer({ user: u, onClose }: { user: Row; onClose: () => void }) {
         ]}
       />
 
-      <h3 className="ad-subhead">账号状态</h3>
+      <h3 className="ew-admin-subhead">账号状态</h3>
       {isBanned ? (
         <>
           <Notice tone="bad">
@@ -273,7 +273,7 @@ function UserDrawer({ user: u, onClose }: { user: Row; onClose: () => void }) {
               ? ` · 至 ${dateTime(u.accountStatus.banExpireAt)}`
               : " · 未设置截止时间"}
           </Notice>
-          <button className="ad-btn" onClick={() => setConfirmUnban(true)}>
+          <button className="ew-admin-btn" onClick={() => setConfirmUnban(true)}>
             解除封禁
           </button>
         </>
@@ -281,7 +281,7 @@ function UserDrawer({ user: u, onClose }: { user: Row; onClose: () => void }) {
         <Notice>不能封禁当前登录的管理员账号。</Notice>
       ) : (
         <form
-          className="ad-form"
+          className="ew-admin-form"
           onSubmit={(e) => {
             e.preventDefault();
             const form = e.currentTarget,
@@ -305,17 +305,17 @@ function UserDrawer({ user: u, onClose }: { user: Row; onClose: () => void }) {
               min={toLocalInput(new Date().toISOString())}
             />
           </Field>
-          <div className="ad-form-actions">
-            <button className="ad-btn is-danger" disabled={ban.isPending}>
+          <div className="ew-admin-form-actions">
+            <button className="ew-admin-btn is-danger" disabled={ban.isPending}>
               {ban.isPending ? "处理中…" : "封禁账号"}
             </button>
           </div>
         </form>
       )}
 
-      <h3 className="ad-subhead">临时密码</h3>
+      <h3 className="ew-admin-subhead">临时密码</h3>
       <form
-        className="ad-form"
+        className="ew-admin-form"
         onSubmit={(e) => {
           e.preventDefault();
           const form = e.currentTarget,
@@ -349,11 +349,11 @@ function UserDrawer({ user: u, onClose }: { user: Row; onClose: () => void }) {
             required
           />
         </Field>
-        <p className="ad-form-note">
+        <p className="ew-admin-form-note">
           设置后对方的所有设备都会下线。请通过可靠渠道告知，并提醒登录后尽快修改。
         </p>
-        <div className="ad-form-actions">
-          <button className="ad-btn" disabled={password.isPending}>
+        <div className="ew-admin-form-actions">
+          <button className="ew-admin-btn" disabled={password.isPending}>
             {password.isPending ? "设置中…" : "设置临时密码"}
           </button>
         </div>

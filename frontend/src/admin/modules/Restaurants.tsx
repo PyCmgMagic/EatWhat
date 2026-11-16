@@ -83,7 +83,7 @@ export default function Restaurants() {
   return (
     <>
       <form
-        className="ad-toolbar"
+        className="ew-admin-toolbar"
         key={keyword}
         onSubmit={(e) => {
           e.preventDefault();
@@ -93,7 +93,7 @@ export default function Restaurants() {
           setPage(1);
         }}
       >
-        <label className="ad-search">
+        <label className="ew-admin-search">
           <Icon name="search" size={17} />
           <input
             name="keyword"
@@ -102,11 +102,11 @@ export default function Restaurants() {
             defaultValue={keyword}
           />
         </label>
-        <button className="ad-btn is-primary">查询</button>
+        <button className="ew-admin-btn is-primary">查询</button>
         {keyword && (
           <button
             type="button"
-            className="ad-btn is-ghost"
+            className="ew-admin-btn is-ghost"
             onClick={() => {
               setKeyword("");
               setPage(1);
@@ -123,8 +123,8 @@ export default function Restaurants() {
           empty={!q.data?.items?.length}
           emptyTitle={keyword ? `没有名称包含「${keyword}」的餐厅` : "暂无餐厅"}
         >
-          <div className="ad-table-wrap">
-            <table className="ad-table">
+          <div className="ew-admin-table-wrap">
+            <table className="ew-admin-table">
               <thead>
                 <tr>
                   <th>餐厅</th>
@@ -140,7 +140,7 @@ export default function Restaurants() {
                 {q.data?.items?.map((r) => (
                   <tr key={r.id}>
                     <td>
-                      <div className="ad-cell-main">
+                      <div className="ew-admin-cell-main">
                         <Thumb src={r.coverUrl} icon="store" />
                         <span>
                           <Link to={`/restaurants/${r.id}`}>{r.name}</Link>
@@ -167,9 +167,9 @@ export default function Restaurants() {
                       </Pill>
                     </td>
                     <td>
-                      <div className="ad-row-actions">
+                      <div className="ew-admin-row-actions">
                         <button
-                          className="ad-icon-btn"
+                          className="ew-admin-icon-btn"
                           aria-label={`编辑 ${r.name}`}
                           title="编辑"
                           disabled={!r.id}
@@ -178,7 +178,7 @@ export default function Restaurants() {
                           <Icon name="edit" size={17} />
                         </button>
                         <button
-                          className="ad-icon-btn is-danger"
+                          className="ew-admin-icon-btn is-danger"
                           aria-label={`删除 ${r.name}`}
                           title="删除"
                           disabled={!r.id}
@@ -263,16 +263,16 @@ function RestaurantEditor({
       }}
       footer={
         <>
-          <button type="button" className="ad-btn" onClick={onClose}>
+          <button type="button" className="ew-admin-btn" onClick={onClose}>
             取消
           </button>
-          <button className="ad-btn is-primary" disabled={task.isPending}>
+          <button className="ew-admin-btn is-primary" disabled={task.isPending}>
             {task.isPending ? "保存中…" : "保存"}
           </button>
         </>
       }
     >
-      <div className="ad-form">
+      <div className="ew-admin-form">
         <Field label="名称" wide>
           <input name="name" defaultValue={r.name || ""} required />
         </Field>
@@ -284,8 +284,8 @@ function RestaurantEditor({
           lat={(r as { gcjLat?: number | null }).gcjLat}
         />
       </div>
-      <h3 className="ad-subhead">营业信息</h3>
-      <div className="ad-traits">
+      <h3 className="ew-admin-subhead">营业信息</h3>
+      <div className="ew-admin-traits">
         <ShopTraitsFields
           value={traits}
           onChange={setTraits}
@@ -308,11 +308,11 @@ export function Hubs() {
     task = useTask(undefined, () => setAction(null), ["hubs", "admin"]);
   return (
     <>
-      <div className="ad-toolbar">
-        <span className="ad-toolbar-note">
+      <div className="ew-admin-toolbar">
+        <span className="ew-admin-toolbar-note">
           区域决定餐厅归属与「附近」范围；修改边界后需单独重算餐厅归属。
         </span>
-        <button className="ad-btn is-primary" onClick={() => setEdit(true)}>
+        <button className="ew-admin-btn is-primary" onClick={() => setEdit(true)}>
           <Icon name="add" size={16} />
           添加区域
         </button>
@@ -325,8 +325,8 @@ export function Hubs() {
           emptyTitle="还没有区域"
           emptyHint="添加第一个区域后，餐厅可以按边界自动归属。"
         >
-          <div className="ad-table-wrap">
-            <table className="ad-table">
+          <div className="ew-admin-table-wrap">
+            <table className="ew-admin-table">
               <thead>
                 <tr>
                   <th>区域</th>
@@ -340,7 +340,7 @@ export function Hubs() {
                 {q.data?.items?.map((h) => (
                   <tr key={h.id}>
                     <td>
-                      <div className="ad-cell-main">
+                      <div className="ew-admin-cell-main">
                         <Thumb icon="district" />
                         <span>
                           <strong>{h.name}</strong>
@@ -358,15 +358,15 @@ export function Hubs() {
                     </td>
                     <td className="is-muted">{dateTime(h.updatedAt)}</td>
                     <td>
-                      <div className="ad-row-actions">
+                      <div className="ew-admin-row-actions">
                         <button
-                          className="ad-btn is-small"
+                          className="ew-admin-btn is-small"
                           onClick={() => setAction({ hub: h, kind: "rebind" })}
                         >
                           重算归属
                         </button>
                         <button
-                          className="ad-icon-btn"
+                          className="ew-admin-icon-btn"
                           aria-label={`编辑 ${h.name}`}
                           title="编辑"
                           onClick={() => setEdit(h)}
@@ -374,7 +374,7 @@ export function Hubs() {
                           <Icon name="edit" size={17} />
                         </button>
                         <button
-                          className="ad-icon-btn is-danger"
+                          className="ew-admin-icon-btn is-danger"
                           aria-label={`删除 ${h.name}`}
                           title="删除"
                           onClick={() => setAction({ hub: h, kind: "delete" })}
@@ -469,16 +469,16 @@ function HubEditor({ hub: h, onClose }: { hub?: Hub; onClose: () => void }) {
       }}
       footer={
         <>
-          <button type="button" className="ad-btn" onClick={onClose}>
+          <button type="button" className="ew-admin-btn" onClick={onClose}>
             取消
           </button>
-          <button className="ad-btn is-primary" disabled={task.isPending}>
+          <button className="ew-admin-btn is-primary" disabled={task.isPending}>
             {task.isPending ? "保存中…" : "保存区域"}
           </button>
         </>
       }
     >
-      <div className="ad-form">
+      <div className="ew-admin-form">
         <Field label="区域名称" wide>
           <input name="name" defaultValue={h?.name || ""} required />
         </Field>

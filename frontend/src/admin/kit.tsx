@@ -67,19 +67,19 @@ export function Panel({
 }) {
   return (
     <section
-      className={`ad-panel ${className}`}
+      className={`ew-admin-panel ${className}`}
       data-flush={flush || undefined}
     >
       {(title || actions) && (
-        <header className="ad-panel-head">
+        <header className="ew-admin-panel-head">
           <div>
             {title && <h2>{title}</h2>}
             {hint && <p>{hint}</p>}
           </div>
-          {actions && <div className="ad-panel-actions">{actions}</div>}
+          {actions && <div className="ew-admin-panel-actions">{actions}</div>}
         </header>
       )}
-      <div className="ad-panel-body">{children}</div>
+      <div className="ew-admin-panel-body">{children}</div>
     </section>
   );
 }
@@ -94,7 +94,7 @@ export function Pill({
   dot?: boolean;
 }) {
   return (
-    <span className="ad-pill" data-tone={tone}>
+    <span className="ew-admin-pill" data-tone={tone}>
       {dot && <i />}
       {children}
     </span>
@@ -109,7 +109,7 @@ export function Notice({
   children: ReactNode;
 }) {
   return (
-    <p className="ad-notice" data-tone={tone}>
+    <p className="ew-admin-notice" data-tone={tone}>
       <Icon
         name={tone === "bad" || tone === "warn" ? "warning" : "info"}
         size={17}
@@ -144,7 +144,7 @@ export function Async({
 }) {
   if (query.isPending)
     return (
-      <div className="ad-skeleton" aria-busy="true" aria-label="正在加载">
+      <div className="ew-admin-skeleton" aria-busy="true" aria-label="正在加载">
         {Array.from({ length: rows }, (_, i) => (
           <span key={i} />
         ))}
@@ -152,7 +152,7 @@ export function Async({
     );
   if (query.error && query.data === undefined)
     return (
-      <div className="ad-state" role="alert">
+      <div className="ew-admin-state" role="alert">
         <Icon name="wifiOff" size={28} />
         <strong>
           {unavailable(query.error) ? "服务端尚未提供此功能" : "加载失败"}
@@ -163,7 +163,7 @@ export function Async({
             : errorMessage(query.error)}
         </p>
         <button
-          className="ad-btn is-small"
+          className="ew-admin-btn is-small"
           onClick={() => void query.refetch()}
         >
           重试
@@ -172,7 +172,7 @@ export function Async({
     );
   if (empty)
     return (
-      <div className="ad-state" role="status">
+      <div className="ew-admin-state" role="status">
         <Icon name="bowl" size={28} />
         <strong>{emptyTitle}</strong>
         {emptyHint && <p>{emptyHint}</p>}
@@ -197,21 +197,21 @@ export function Pager({
   const more = hasNext ?? (totalPages ? page < totalPages : false);
   if (page <= 1 && !more && total == null) return null;
   return (
-    <nav className="ad-pager" aria-label="分页">
+    <nav className="ew-admin-pager" aria-label="分页">
       <span>
         {total != null && <>共 {num(total)} 条 · </>}第 {page}
         {totalPages ? ` / ${totalPages}` : ""} 页
       </span>
       <div>
         <button
-          className="ad-btn is-small"
+          className="ew-admin-btn is-small"
           disabled={page <= 1}
           onClick={() => onChange(page - 1)}
         >
           上一页
         </button>
         <button
-          className="ad-btn is-small"
+          className="ew-admin-btn is-small"
           disabled={!more}
           onClick={() => onChange(page + 1)}
         >
@@ -234,7 +234,7 @@ export function Avatar({
 }) {
   const url = mediaUrl(src);
   return (
-    <span className="ad-avatar" style={{ width: size, height: size }}>
+    <span className="ew-admin-avatar" style={{ width: size, height: size }}>
       {url ? (
         <img src={url} alt="" loading="lazy" />
       ) : (
@@ -253,7 +253,7 @@ export function Thumb({
   const url = mediaUrl(src);
   const [failed, setFailed] = useState(false);
   return (
-    <span className="ad-thumb">
+    <span className="ew-admin-thumb">
       {url && !failed ? (
         <img src={url} alt="" loading="lazy" onError={() => setFailed(true)} />
       ) : (
@@ -276,7 +276,7 @@ export function Field({
   wide?: boolean;
 }) {
   return (
-    <label className="ad-field" data-wide={wide || undefined}>
+    <label className="ew-admin-field" data-wide={wide || undefined}>
       <span>{label}</span>
       {children}
       {hint && <small>{hint}</small>}
@@ -298,7 +298,7 @@ export function Toggle({
     <button
       type="button"
       role="switch"
-      className="ad-toggle"
+      className="ew-admin-toggle"
       aria-checked={checked}
       aria-label={label}
       disabled={disabled}
@@ -320,7 +320,7 @@ export function Segmented<T extends string>({
   label: string;
 }) {
   return (
-    <div className="ad-segmented" role="radiogroup" aria-label={label}>
+    <div className="ew-admin-segmented" role="radiogroup" aria-label={label}>
       {options.map(([id, text]) => (
         <button
           key={id}
@@ -393,27 +393,27 @@ export function Drawer({
         </div>
         <button
           type="button"
-          className="ad-icon-btn"
+          className="ew-admin-icon-btn"
           aria-label="关闭"
           onClick={onClose}
         >
           <Icon name="close" size={18} />
         </button>
       </header>
-      <div className="ad-drawer-body">{children}</div>
+      <div className="ew-admin-drawer-body">{children}</div>
       {footer && <footer>{footer}</footer>}
     </>
   );
   return (
     <dialog
       {...dialog}
-      className="ad-drawer"
+      className="ew-admin-drawer"
       data-wide={wide || undefined}
       aria-labelledby={id}
     >
       {onSubmit ? (
         <form
-          className="ad-drawer-frame"
+          className="ew-admin-drawer-frame"
           onSubmit={(e) => {
             e.preventDefault();
             onSubmit(e);
@@ -422,7 +422,7 @@ export function Drawer({
           {content}
         </form>
       ) : (
-        <div className="ad-drawer-frame">{content}</div>
+        <div className="ew-admin-drawer-frame">{content}</div>
       )}
     </dialog>
   );
@@ -451,13 +451,13 @@ export function Confirm({
     id = useId(),
     [reason, setReason] = useState("");
   return (
-    <dialog {...dialog} className="ad-confirm" aria-labelledby={id}>
-      <div className="ad-confirm-frame">
-        <span className="ad-confirm-mark" data-danger={danger || undefined}>
+    <dialog {...dialog} className="ew-admin-confirm" aria-labelledby={id}>
+      <div className="ew-admin-confirm-frame">
+        <span className="ew-admin-confirm-mark" data-danger={danger || undefined}>
           <Icon name={danger ? "warning" : "question"} size={22} />
         </span>
         <h2 id={id}>{title}</h2>
-        {children && <div className="ad-confirm-text">{children}</div>}
+        {children && <div className="ew-admin-confirm-text">{children}</div>}
         {askReason && (
           <Field label={askReason}>
             <textarea
@@ -468,12 +468,12 @@ export function Confirm({
             />
           </Field>
         )}
-        <div className="ad-confirm-actions">
-          <button className="ad-btn" disabled={busy} onClick={onClose}>
+        <div className="ew-admin-confirm-actions">
+          <button className="ew-admin-btn" disabled={busy} onClick={onClose}>
             取消
           </button>
           <button
-            className={`ad-btn ${danger ? "is-danger" : "is-primary"}`}
+            className={`ew-admin-btn ${danger ? "is-danger" : "is-primary"}`}
             disabled={busy}
             onClick={() => onConfirm(reason.trim() || undefined)}
           >
@@ -488,7 +488,7 @@ export function Confirm({
 /* ---------- data display ---------- */
 export function Meta({ items }: { items: [ReactNode, ReactNode][] }) {
   return (
-    <dl className="ad-meta">
+    <dl className="ew-admin-meta">
       {items.map(([term, value], i) => (
         <div key={i}>
           <dt>{term}</dt>
@@ -512,7 +512,7 @@ export function Columns({
     dense = data.length > 16;
   return (
     <ol
-      className="ad-columns"
+      className="ew-admin-columns"
       aria-label={label}
       data-dense={dense || undefined}
     >
@@ -526,7 +526,7 @@ export function Columns({
             <b>{d.value == null ? "—" : num(d.value)}</b>
           )}
           <span
-            className="ad-column-bar"
+            className="ew-admin-column-bar"
             style={{ height: `${Math.max(3, ((d.value ?? 0) / max) * 100)}%` }}
             data-empty={d.value == null || undefined}
           />

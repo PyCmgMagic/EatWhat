@@ -62,7 +62,7 @@ export default function Foods() {
   return (
     <>
       <form
-        className="ad-toolbar"
+        className="ew-admin-toolbar"
         key={JSON.stringify(filters)}
         onSubmit={(event) => {
           event.preventDefault();
@@ -76,7 +76,7 @@ export default function Foods() {
           setPage(1);
         }}
       >
-        <label className="ad-search">
+        <label className="ew-admin-search">
           <Icon name="search" size={17} />
           <input
             name="keyword"
@@ -117,11 +117,11 @@ export default function Foods() {
           aria-label="餐厅编号"
           defaultValue={filters.restaurantId}
         />
-        <button className="ad-btn is-primary">查询</button>
+        <button className="ew-admin-btn is-primary">查询</button>
         {filtered && (
           <button
             type="button"
-            className="ad-btn is-ghost"
+            className="ew-admin-btn is-ghost"
             onClick={() => {
               setFilters({});
               setPage(1);
@@ -139,8 +139,8 @@ export default function Foods() {
           emptyTitle="当前条件下没有菜品"
           emptyHint={filtered ? "换个关键词或清除筛选试试。" : undefined}
         >
-          <div className="ad-table-wrap">
-            <table className="ad-table">
+          <div className="ew-admin-table-wrap">
+            <table className="ew-admin-table">
               <thead>
                 <tr>
                   <th>菜品</th>
@@ -157,7 +157,7 @@ export default function Foods() {
                 {q.data?.items?.map((food) => (
                   <tr key={food.id}>
                     <td>
-                      <div className="ad-cell-main">
+                      <div className="ew-admin-cell-main">
                         <Thumb src={food.pictureUrl?.[0]} />
                         <span>
                           <Link to={`/foods/${food.id}`}>{food.name}</Link>
@@ -180,9 +180,9 @@ export default function Foods() {
                     <td>{foodAuthor(food)?.name || "—"}</td>
                     <td className="is-muted">{ago(food.createdAt)}</td>
                     <td>
-                      <div className="ad-row-actions">
+                      <div className="ew-admin-row-actions">
                         <button
-                          className="ad-icon-btn"
+                          className="ew-admin-icon-btn"
                           aria-label={`编辑 ${food.name}`}
                           title="编辑"
                           onClick={() => setEdit(food)}
@@ -190,7 +190,7 @@ export default function Foods() {
                           <Icon name="edit" size={17} />
                         </button>
                         <button
-                          className="ad-icon-btn is-danger"
+                          className="ew-admin-icon-btn is-danger"
                           aria-label={`删除 ${food.name}`}
                           title="删除"
                           onClick={() => setRemove(food)}
@@ -264,23 +264,23 @@ function FoodEditor({ food, onClose }: { food: Food; onClose: () => void }) {
       }}
       footer={
         <>
-          <button type="button" className="ad-btn" onClick={onClose}>
+          <button type="button" className="ew-admin-btn" onClick={onClose}>
             取消
           </button>
-          <button className="ad-btn is-primary" disabled={task.isPending}>
+          <button className="ew-admin-btn is-primary" disabled={task.isPending}>
             {task.isPending ? "保存中…" : "保存"}
           </button>
         </>
       }
     >
       {!!food.pictureUrl?.length && (
-        <div className="ad-gallery">
+        <div className="ew-admin-gallery">
           {food.pictureUrl.slice(0, 4).map((src) => (
             <Thumb key={src} src={src} />
           ))}
         </div>
       )}
-      <div className="ad-form">
+      <div className="ew-admin-form">
         <Field label="菜品名称" wide>
           <input name="name" defaultValue={food.name || ""} required />
         </Field>

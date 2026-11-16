@@ -22,8 +22,8 @@ export default function Engagement() {
       : undefined;
   return (
     <>
-      <div className="ad-toolbar">
-        <label className="ad-inline-field">
+      <div className="ew-admin-toolbar">
+        <label className="ew-admin-inline-field">
           统计日
           <input
             type="date"
@@ -37,28 +37,28 @@ export default function Engagement() {
           />
         </label>
         {date !== today && (
-          <button className="ad-btn" onClick={() => setDate(today)}>
+          <button className="ew-admin-btn" onClick={() => setDate(today)}>
             回到今天
           </button>
         )}
-        <span className="ad-toolbar-note">
+        <span className="ew-admin-toolbar-note">
           按北京时间统计 · {data?.timezone ?? "Asia/Shanghai"}
         </span>
       </div>
       <Async query={q} rows={2}>
-        <div className="ad-stats is-three">
-          <div className="ad-stat">
-            <span className="ad-stat-label">当日活跃 DAU</span>
+        <div className="ew-admin-stats is-three">
+          <div className="ew-admin-stat">
+            <span className="ew-admin-stat-label">当日活跃 DAU</span>
             <strong>{num(data?.dailyActiveUsers)}</strong>
             <small>{data?.date}</small>
           </div>
-          <div className="ad-stat">
-            <span className="ad-stat-label">自然月活跃 MAU</span>
+          <div className="ew-admin-stat">
+            <span className="ew-admin-stat-label">自然月活跃 MAU</span>
             <strong>{num(data?.monthlyActiveUsers)}</strong>
             <small>{data?.month} 去重人数</small>
           </div>
-          <div className="ad-stat">
-            <span className="ad-stat-label">最近 30 天活跃</span>
+          <div className="ew-admin-stat">
+            <span className="ew-admin-stat-label">最近 30 天活跃</span>
             <strong>{num(data?.rolling30ActiveUsers)}</strong>
             <small>
               {data?.rolling30Start} 至 {data?.date}

@@ -161,8 +161,8 @@ export default function Overview() {
     },
   ];
   return (
-    <div className="ad-overview">
-      <header className="ad-hello">
+    <div className="ew-admin-overview">
+      <header className="ew-admin-hello">
         <div>
           <h2>
             {greeting()}，{user?.displayName || "管理员"}
@@ -182,26 +182,26 @@ export default function Overview() {
       </header>
 
       <Async query={summary} rows={2}>
-        <div className="ad-stats">
+        <div className="ew-admin-stats">
           {stats.map((item) => (
-            <Link key={item.label} to={item.to} className="ad-stat">
-              <span className="ad-stat-icon">
+            <Link key={item.label} to={item.to} className="ew-admin-stat">
+              <span className="ew-admin-stat-icon">
                 <Icon name={item.icon} size={20} />
               </span>
-              <span className="ad-stat-label">{item.label}</span>
+              <span className="ew-admin-stat-label">{item.label}</span>
               <strong>{num(item.total)}</strong>
               <small data-up={!!item.today || undefined}>
                 今日 +{num(item.today)}
               </small>
             </Link>
           ))}
-          <div className="ad-stat">
-            <span className="ad-stat-icon">
+          <div className="ew-admin-stat">
+            <span className="ew-admin-stat-icon">
               <Icon name="verify" size={20} />
             </span>
-            <span className="ad-stat-label">学生认证率</span>
+            <span className="ew-admin-stat-label">学生认证率</span>
             <strong>{percent(s?.verifiedRate)}</strong>
-            <span className="ad-meter" aria-hidden="true">
+            <span className="ew-admin-meter" aria-hidden="true">
               <i
                 style={{
                   width: `${Math.min(100, (s?.verifiedRate ?? 0) * ((s?.verifiedRate ?? 0) <= 1 ? 100 : 1))}%`,
@@ -212,25 +212,25 @@ export default function Overview() {
         </div>
       </Async>
 
-      <div className="ad-grid">
+      <div className="ew-admin-grid">
         <Panel
           title="近 7 日活跃"
           hint="每日使用过的去重用户，北京时间"
           actions={
-            <Link className="ad-link" to="/admin/engagement">
+            <Link className="ew-admin-link" to="/admin/engagement">
               活跃统计
               <Icon name="chevronRight" size={14} />
             </Link>
           }
         >
           {active.failed ? (
-            <div className="ad-state">
+            <div className="ew-admin-state">
               <Icon name="wifiOff" size={28} />
               <strong>活跃数据暂时无法读取</strong>
             </div>
           ) : (
             <>
-              <div className="ad-kpis">
+              <div className="ew-admin-kpis">
                 <div>
                   <span>今日活跃</span>
                   <strong>{num(today.data?.dailyActiveUsers)}</strong>
@@ -277,12 +277,12 @@ export default function Overview() {
           title={
             <>
               待处理反馈
-              {!!openCount && <em className="ad-count">{openCount}</em>}
+              {!!openCount && <em className="ew-admin-count">{openCount}</em>}
             </>
           }
           flush
           actions={
-            <Link className="ad-link" to="/admin/feedback">
+            <Link className="ew-admin-link" to="/admin/feedback">
               全部
               <Icon name="chevronRight" size={14} />
             </Link>
@@ -294,7 +294,7 @@ export default function Overview() {
             emptyTitle="没有待处理的反馈"
             emptyHint="新的反馈、纠错和举报会出现在这里。"
           >
-            <ul className="ad-list">
+            <ul className="ew-admin-list">
               {cases.data?.items?.slice(0, 5).map((item) => (
                 <li key={item.view?.id}>
                   <Link to="/admin/feedback" state={{ caseId: item.view?.id }}>
@@ -304,7 +304,7 @@ export default function Overview() {
                     >
                       {statusText(item.view?.kind)}
                     </Pill>
-                    <span className="ad-list-main">
+                    <span className="ew-admin-list-main">
                       {item.targetName || item.view?.text || "查看详情"}
                     </span>
                     <time>{ago(item.view?.createdAt)}</time>
@@ -319,7 +319,7 @@ export default function Overview() {
           title="最新菜品"
           flush
           actions={
-            <Link className="ad-link" to="/admin/foods">
+            <Link className="ew-admin-link" to="/admin/foods">
               菜品管理
               <Icon name="chevronRight" size={14} />
             </Link>
@@ -330,16 +330,16 @@ export default function Overview() {
             empty={!foods.data?.items?.length}
             emptyTitle="还没有菜品"
           >
-            <ul className="ad-list">
+            <ul className="ew-admin-list">
               {foods.data?.items?.slice(0, 5).map((food) => (
                 <li key={food.id}>
                   <Link to={`/foods/${food.id}`}>
                     <Thumb src={food.pictureUrl?.[0]} />
-                    <span className="ad-list-main">
+                    <span className="ew-admin-list-main">
                       {food.name}
                       <small>{food.restaurantName || "未关联餐厅"}</small>
                     </span>
-                    <span className="ad-list-side">
+                    <span className="ew-admin-list-side">
                       {money(food.price)}
                       <small>{ago(food.createdAt)}</small>
                     </span>
@@ -351,11 +351,11 @@ export default function Overview() {
         </Panel>
 
         <Panel title="系统状态" flush>
-          <ul className="ad-list is-status">
+          <ul className="ew-admin-list is-status">
             <li>
               <Link to="/admin/config">
                 <Icon name="settings" size={18} />
-                <span className="ad-list-main">
+                <span className="ew-admin-list-main">
                   站点运行
                   <small>
                     {config.data
@@ -373,7 +373,7 @@ export default function Overview() {
             <li>
               <Link to="/admin/config">
                 <Icon name="filter" size={18} />
-                <span className="ad-list-main">
+                <span className="ew-admin-list-main">
                   功能开关
                   <small>
                     {flags.length
@@ -391,7 +391,7 @@ export default function Overview() {
             <li>
               <Link to="/admin/ai">
                 <Icon name="computer" size={18} />
-                <span className="ad-list-main">
+                <span className="ew-admin-list-main">
                   AI 建议
                   <small>{ai.data?.model || "未配置模型"}</small>
                 </span>
@@ -417,7 +417,7 @@ export default function Overview() {
             <li>
               <Link to="/admin/versions">
                 <Icon name="download" size={18} />
-                <span className="ad-list-main">
+                <span className="ew-admin-list-main">
                   客户端版本
                   <small>
                     {config.data?.versions?.length

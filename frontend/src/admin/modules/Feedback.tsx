@@ -78,8 +78,8 @@ export default function Feedback() {
       }),
   });
   return (
-    <div className="ad-split" data-open={selected ? "" : undefined}>
-      <section className="ad-split-list" aria-label="反馈列表">
+    <div className="ew-admin-split" data-open={selected ? "" : undefined}>
+      <section className="ew-admin-split-list" aria-label="反馈列表">
         <header>
           <Segmented
             label="处理状态"
@@ -118,14 +118,14 @@ export default function Feedback() {
             status === "OPEN" ? "新的反馈、纠错和举报会出现在这里。" : undefined
           }
         >
-          <ul className="ad-cases">
+          <ul className="ew-admin-cases">
             {q.data?.items?.map((item) => (
               <li key={item.view?.id}>
                 <button
                   aria-current={selected === item.view?.id || undefined}
                   onClick={() => setSelected(item.view!.id!)}
                 >
-                  <span className="ad-case-top">
+                  <span className="ew-admin-case-top">
                     <Pill tone={kindTone[item.view?.kind ?? ""]} dot={false}>
                       {statusText(item.view?.kind)}
                     </Pill>
@@ -135,7 +135,7 @@ export default function Feedback() {
                     {item.targetName || item.view?.text || "未填写说明"}
                   </strong>
                   {item.targetName && item.view?.text && (
-                    <span className="ad-case-text">{item.view.text}</span>
+                    <span className="ew-admin-case-text">{item.view.text}</span>
                   )}
                 </button>
               </li>
@@ -150,7 +150,7 @@ export default function Feedback() {
           onChange={setPage}
         />
       </section>
-      <section className="ad-split-detail" aria-label="反馈详情">
+      <section className="ew-admin-split-detail" aria-label="反馈详情">
         {selected ? (
           <CaseDetail
             key={selected}
@@ -164,7 +164,7 @@ export default function Feedback() {
             }}
           />
         ) : (
-          <div className="ad-state is-tall">
+          <div className="ew-admin-state is-tall">
             <Icon name="feedback" size={30} />
             <strong>选择一条反馈查看详情</strong>
             <p>在左侧列表中选择后，可以在这里查看内容并给出处理结论。</p>
@@ -201,13 +201,13 @@ function CaseDetail({
     path = targetPath(view?.target);
   return (
     <>
-      <button className="ad-btn is-ghost ad-split-back" onClick={onBack}>
+      <button className="ew-admin-btn is-ghost ew-admin-split-back" onClick={onBack}>
         <Icon name="back" size={16} />
         返回列表
       </button>
       <Async query={detail} rows={6}>
         {view && (
-          <article className="ad-case">
+          <article className="ew-admin-case">
             <header>
               <div>
                 <Pill tone={kindTone[view.kind ?? ""]} dot={false}>
@@ -223,9 +223,9 @@ function CaseDetail({
                 #{view.id} · {dateTime(view.createdAt)}
               </span>
             </header>
-            <p className="ad-case-body">{view.text || "未填写补充说明"}</p>
+            <p className="ew-admin-case-body">{view.text || "未填写补充说明"}</p>
             {!!view.screenshots?.length && (
-              <div className="ad-shots">
+              <div className="ew-admin-shots">
                 {view.screenshots.map(
                   (image, i) =>
                     mediaUrl(image.url) && (
@@ -250,7 +250,7 @@ function CaseDetail({
                 [
                   "提交人",
                   data.submitterId ? (
-                    <Link className="ad-link" to={`/users/${data.submitterId}`}>
+                    <Link className="ew-admin-link" to={`/users/${data.submitterId}`}>
                       {(data as { submitterName?: string | null })
                         .submitterName || "用户"}{" "}
                       #{data.submitterId}
@@ -264,7 +264,7 @@ function CaseDetail({
                   "关联内容",
                   view.target ? (
                     path && !data.targetUnavailable ? (
-                      <Link className="ad-link" to={path}>
+                      <Link className="ew-admin-link" to={path}>
                         {data.targetName ||
                           `${targetName[view.target.type ?? ""]} #${view.target.id}`}
                         <Icon name="external" size={13} />
@@ -288,7 +288,7 @@ function CaseDetail({
               <Notice tone="warn">
                 这条纠错还需要到餐厅管理中更新目录。
                 <Link
-                  className="ad-link"
+                  className="ew-admin-link"
                   to={`/admin/restaurants?keyword=${encodeURIComponent(data.targetName ?? "")}`}
                 >
                   去维护餐厅
@@ -296,15 +296,15 @@ function CaseDetail({
               </Notice>
             )}
             {view.reply && (
-              <div className="ad-quote">
+              <div className="ew-admin-quote">
                 <span>给提交人的回复</span>
                 <p>{view.reply}</p>
               </div>
             )}
             {!!data.actions?.length && (
               <>
-                <h3 className="ad-subhead">处理记录</h3>
-                <ol className="ad-timeline">
+                <h3 className="ew-admin-subhead">处理记录</h3>
+                <ol className="ew-admin-timeline">
                   {data.actions.map((a, i) => (
                     <li key={a.decisionId ?? i}>
                       <strong>{statusText(a.outcome ?? a.action)}</strong>
@@ -320,7 +320,7 @@ function CaseDetail({
             )}
             {view.status === "OPEN" && (
               <form
-                className="ad-resolve"
+                className="ew-admin-resolve"
                 onSubmit={(e) => {
                   e.preventDefault();
                   void task.run(
@@ -346,7 +346,7 @@ function CaseDetail({
                   );
                 }}
               >
-                <h3 className="ad-subhead">处理结论</h3>
+                <h3 className="ew-admin-subhead">处理结论</h3>
                 <Segmented
                   label="结论"
                   value={outcome}
@@ -378,9 +378,9 @@ function CaseDetail({
                     上次提交的结果尚未确认，请刷新查看处理记录，避免重复提交。
                   </Notice>
                 )}
-                <div className="ad-form-actions">
+                <div className="ew-admin-form-actions">
                   <button
-                    className="ad-btn is-primary"
+                    className="ew-admin-btn is-primary"
                     disabled={task.busy || task.uncertain}
                   >
                     {task.busy ? "提交中…" : "提交结论"}
