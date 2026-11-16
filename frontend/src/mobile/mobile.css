@@ -910,6 +910,15 @@ html[data-motion-input="keyboard"] .design-fab-surface {
   height: 100%;
   object-fit: contain;
 }
+.mobile-profile-cover[data-cover-kind="photo"] {
+  overflow: hidden;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.42);
+  box-shadow: var(--shadow-plate);
+}
+.mobile-profile-cover[data-cover-kind="photo"] > :is(img, .food-cover-frame) {
+  object-fit: cover;
+}
 .mobile-profile-cover > .design-icon {
   opacity: 0.5;
 }
@@ -1281,19 +1290,15 @@ body:has(
   color: #231c18;
 }
 .design-tile-image > .is-food-photo {
-  /* Match G2-Home's oversized, offset plates; the tile crops the circle,
-     rather than squeezing it to fit or shrinking it into a centered avatar. */
   position: absolute;
-  top: var(--food-art-top);
-  left: var(--food-art-left);
-  width: var(--food-art-width);
-  height: var(--food-art-height);
+  inset: 0;
+  width: 100%;
+  height: 100%;
   max-width: none;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: 5px solid white;
+  border: 0;
+  border-radius: inherit;
   object-fit: cover;
-  box-shadow: 0 8px 18px #231c181a;
+  box-shadow: none;
 }
 :is(.design-food-grid, .mobile-food-carousel)
   > .design-food-tile:nth-child(even)

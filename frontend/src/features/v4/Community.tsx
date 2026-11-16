@@ -62,8 +62,10 @@ const reasons = {
 };
 export function FeedbackForm({
   kind = "feedback",
+  showHeader = true,
 }: {
   kind?: "feedback" | "report" | "catalog";
+  showHeader?: boolean;
 }) {
   const app = useApp(),
     nav = useNavigate(),
@@ -130,7 +132,16 @@ export function FeedbackForm({
             : "帮助与反馈"
       }
       detail="每一条建议都会进入你的反馈记录，处理后可查看回复。"
-      heading={kind === "feedback" ? <ProfileHelpHeader /> : undefined}
+      heading={
+        kind === "feedback" ? (
+          showHeader ? (
+            <ProfileHelpHeader />
+          ) : (
+            false
+          )
+        ) : undefined
+      }
+      advice={showHeader}
     >
       <Card>
         <div className="v4-form-intro">
@@ -294,7 +305,13 @@ export function FeedbackForm({
     </Shell>
   );
 }
-export function FeedbackRecords({ id }: { id?: number }) {
+export function FeedbackRecords({
+  id,
+  showHeader = true,
+}: {
+  id?: number;
+  showHeader?: boolean;
+}) {
   const { api } = useApp(),
     location = useLocation(),
     [page, setPage] = useState(1),
@@ -320,7 +337,7 @@ export function FeedbackRecords({ id }: { id?: number }) {
   return (
     <Shell
       title="帮助与反馈"
-      heading={<ProfileHelpHeader />}
+      heading={showHeader ? <ProfileHelpHeader /> : false}
       back={
         typeof location.state?.feedbackReturnTo === "string" &&
         /^\/(?:feedback|reports\/new|restaurants\/correction)(?:\?|$)/.test(

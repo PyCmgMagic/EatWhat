@@ -6,7 +6,7 @@ import { demoDishes } from "../mobile/catalog";
 
 /** Keep the cover on the first page when the content tabs or pagination change. */
 export function useMyProfileCover(enabled: boolean) {
-  const { api, user } = useApp();
+  const { api, user, session } = useApp();
   const uploads = useQuery({
     queryKey: ["foods", "mine", 1],
     queryFn: () => api.myFoods(1),
@@ -23,5 +23,6 @@ export function useMyProfileCover(enabled: boolean) {
       uploads.data?.items?.find((food) => mediaUrl(food.pictureUrl?.[0])) ??
       fallback,
     fallback,
+    pending: !!session && (!user?.id || (enabled && uploads.isPending)),
   };
 }

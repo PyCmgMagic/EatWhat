@@ -50,6 +50,9 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
       const source = localDestination(
         (loc.state as { returnTo?: string } | null)?.returnTo,
       );
+      const preserveScroll =
+        (loc.state as { preserveScroll?: boolean } | null)?.preserveScroll ===
+        true;
       entry = {
         address,
         back:
@@ -59,8 +62,10 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
             : samePage
               ? previous?.back
               : previous?.address),
-        windowY: 0,
-        panelY: 0,
+        windowY: preserveScroll ? window.scrollY : 0,
+        panelY: preserveScroll
+          ? (document.getElementById("profile-workspace-panel")?.scrollTop ?? 0)
+          : 0,
       };
       if (
         action === "POP" ||

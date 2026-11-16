@@ -7,7 +7,6 @@ export const profileSections = [
   { to: "/me/growth", name: "我的成长", icon: "bowl", group: "我的内容" },
   { to: "/history", name: "浏览足迹", icon: "history", group: "我的内容" },
   { to: "/settings", name: "账号设置", icon: "settings", group: "账号与服务" },
-  { to: "/help", name: "帮助与反馈", icon: "question", group: "账号与服务" },
 ] as const;
 
 export type ProfileSection =
@@ -36,7 +35,7 @@ export function profileSection(path: string): ProfileSection | null {
     path === "/reports/new" ||
     path === "/restaurants/correction"
   )
-    return "/help";
+    return "/settings";
   if (
     path === "/settings" ||
     path.startsWith("/settings/") ||

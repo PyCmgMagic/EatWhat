@@ -24,6 +24,7 @@ import "./publish.css";
 import { publishDisplay } from "../api/food-display";
 import { foodCategories, MAX_DISH_TAGS } from "../api/v2-vocab";
 import { AiTagSuggest, draftPictureKeys } from "../features/AiTagSuggest";
+import { PublishButton } from "../components/PublishButton";
 
 const kinds = foodCategories;
 let submissionInFlight = false;
@@ -204,7 +205,14 @@ export default function DesktopPublish() {
       return;
     }
     submissionInFlight = true;
-    m.setDraft({ publishing: true, tags: snapshot.tags, tagInput: "" });
+    m.setDraft({
+      publishing: true,
+      publishPhase: snapshot.images.some((image) => !image.key)
+        ? "uploading"
+        : "submitting",
+      tags: snapshot.tags,
+      tagInput: "",
+    });
     setError("");
     let creating = false;
     try {
@@ -227,6 +235,7 @@ export default function DesktopPublish() {
         saveVisual(images[i].key!, snapshot.stage);
       }
       setProgress("正在发布这道菜…");
+      m.setDraft({ publishPhase: "submitting" });
       creating = true;
       const created = await app.api.createFood({
         restaurantId: shop.id,
@@ -263,6 +272,7 @@ export default function DesktopPublish() {
         restaurantId: undefined,
         publishUncertain: false,
         publishing: false,
+        publishPhase: undefined,
       });
       void cache.invalidateQueries({ queryKey: ["foods"] });
       void cache.invalidateQueries({ queryKey: ["user"] });
@@ -282,7 +292,7 @@ export default function DesktopPublish() {
         m.setDraft({ publishUncertain: true });
     } finally {
       submissionInFlight = false;
-      m.setDraft({ publishing: false });
+      m.setDraft({ publishing: false, publishPhase: undefined });
       setProgress("");
     }
   }
@@ -874,14 +884,16 @@ export default function DesktopPublish() {
               >
                 暂存并离开
               </button>
-              <button
+              <PublishButton
                 type="submit"
                 className="pc-button"
                 disabled={!ready || locked || draft.publishUncertain}
+                label="发布这道菜"
+                pending={!!draft.publishing}
+                phase={draft.publishPhase}
               >
-                {draft.publishing ? "正在发布…" : "发布这道菜"}
                 <Icon name="chevronRight" size={18} />
-              </button>
+              </PublishButton>
             </div>
           </footer>
           {(duplicate || draft.publishUncertain) && (

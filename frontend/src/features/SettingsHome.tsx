@@ -11,21 +11,16 @@ import "./settings-home.css";
 import { isRetiredV2 } from "../app/retired-routes";
 import "./profile-section-nav.css";
 import SettingsPageHeader from "./SettingsPageHeader";
+import { settingsNavGroups, type SettingsNavItem } from "./settings-nav";
 
-type Setting = {
-  title: string;
-  to: string;
-  icon: string;
-};
-
-function SettingLink({ item }: { item: Setting }) {
+function SettingLink({ item }: { item: SettingsNavItem }) {
   return (
     <Link className="settings-home-row" to={item.to}>
       <span className="settings-home-icon">
         <Icon name={item.icon} size={21} />
       </span>
       <span className="settings-home-copy">
-        <strong>{item.title}</strong>
+        <strong>{item.name}</strong>
       </span>
       <Icon name="chevronRight" size={17} />
     </Link>
@@ -56,34 +51,12 @@ export default function SettingsHome({
   useEffect(() => {
     document.title = "账号设置 · 山软今天吃什么";
   }, []);
-
-  const settings: Setting[] = [
-    {
-      title: "账号与安全",
-      to: "/settings/account",
-      icon: "idcard",
-    },
-    {
-      title: "隐私设置",
-      to: "/settings/privacy",
-      icon: "eye",
-    },
-    {
-      title: "口味偏好",
-      to: "/settings/preferences",
-      icon: "utensils",
-    },
-    {
-      title: "帮助与反馈",
-      to: "/help",
-      icon: "feedback",
-    },
-    {
-      title: "关于我们",
-      to: "/settings/about",
-      icon: "bowl",
-    },
-  ];
+  const groups = settingsNavGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !isRetiredV2(item.to)),
+    }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <div className="settings-home" aria-labelledby="settings-home-title">
@@ -137,13 +110,24 @@ export default function SettingsHome({
         </ProfileEditLink>
       </section>
 
-      <nav className="settings-home-menu" aria-label="账号设置">
-        {settings
-          .filter((item) => !isRetiredV2(item.to))
-          .map((item) => (
-            <SettingLink key={item.to} item={item} />
-          ))}
-      </nav>
+      <div className="settings-home-groups">
+        {groups.map((group) => (
+          <section
+            key={group.title}
+            className="settings-home-group"
+            aria-label={group.title + "设置"}
+          >
+            <header>
+              <h2>{group.title}</h2>
+            </header>
+            <div className="settings-home-group-items">
+              {group.items.map((item) => (
+                <SettingLink key={item.to} item={item} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
       <footer className="settings-home-session">
         <button
           type="button"

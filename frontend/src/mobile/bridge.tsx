@@ -113,6 +113,7 @@ import { MyFoodComments } from "../features/comments/Comments";
 import { useFoodPhoto } from "../features/media";
 import { FoodCover } from "../components/FoodCover";
 import { SearchField } from "../components/SearchField";
+import { PublishButton } from "../components/PublishButton";
 
 const FoodExtras = React.lazy(() =>
   import("../features/v4/DetailExtras").then((module) => ({
@@ -418,6 +419,7 @@ export function useDesignBridge(
   const displayedProfileCover = profilePhoto.unavailable
     ? defaultProfileCover
     : profileCover;
+  const profileVisual = visualFor(displayedProfileCover, isDemo);
   const myTags = useQuery({
     queryKey: ["my-tags", page],
     queryFn: () => api.myTags(page),
@@ -730,7 +732,14 @@ export function useDesignBridge(
           )
         )
           throw new Error("最多添加 20 个个人标签，每个标签不超过 10 字。");
-        m.setDraft({ tags: draft.tags, tagInput: "", publishing: true });
+        m.setDraft({
+          tags: draft.tags,
+          tagInput: "",
+          publishing: true,
+          publishPhase: draft.images.some((image) => !image.key)
+            ? "uploading"
+            : "submitting",
+        });
         let creating = false;
         try {
           const images = [...draft.images];
@@ -752,6 +761,7 @@ export function useDesignBridge(
           // Photos uploaded earlier (for the AI suggestion) need it as well.
           for (const image of images)
             if (image.key) saveVisual(image.key, draft.stage);
+          m.setDraft({ publishPhase: "submitting" });
           creating = true;
           const created = await api.createFood({
             restaurantId: shopId,
@@ -788,6 +798,7 @@ export function useDesignBridge(
             restaurantId: undefined,
             shopName: undefined,
             publishing: false,
+            publishPhase: undefined,
             publishUncertain: false,
           });
           m.setFoodId(created.id);
@@ -803,7 +814,7 @@ export function useDesignBridge(
             m.setDraft({ publishUncertain: true });
           throw error;
         } finally {
-          m.setDraft({ publishing: false });
+          m.setDraft({ publishing: false, publishPhase: undefined });
         }
       });
     } finally {
@@ -1517,6 +1528,20 @@ export function useDesignBridge(
         >
           {view.children}
         </button>
+      );
+    }
+    if (screen === "G-AddDish" && tag === "a" && clean(text) === "发布") {
+      const { href: _href, onClick: _onClick, ...attributes } = p;
+      return (
+        <PublishButton
+          {...attributes}
+          label="发布"
+          pending={busy}
+          phase={m.draft.publishPhase}
+          disabled={busy || uncertain || publishUncertain}
+          style={{ ...st, border: 0, width: "100%" }}
+          onClick={() => void publish()}
+        />
       );
     }
 
@@ -2646,14 +2671,22 @@ export function useDesignBridge(
         p.className += " mobile-profile-screen";
         p.style = {
           ...st,
-          "--profile-stage": "#ffca44",
-          "--profile-on": "#231c18",
+          "--profile-stage": profileVisual.stage,
+          "--profile-on": profileVisual.on,
         };
       }
       if (tag === "div" && st.top === "0" && st.height === "400px")
         return (
           <div {...p} className="mobile-profile-stage">
-            <div className="mobile-profile-cover" aria-hidden="true">
+            <div
+              className="mobile-profile-cover"
+              data-cover-kind={
+                displayedProfileCover === defaultProfileCover
+                  ? "illustration"
+                  : "photo"
+              }
+              aria-hidden="true"
+            >
               {displayedProfileCover === defaultProfileCover ? (
                 <img
                   src={mediaUrl(defaultProfileCover.pictureUrl?.[0])}

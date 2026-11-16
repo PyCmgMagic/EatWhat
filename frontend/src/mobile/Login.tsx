@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { AuthForm } from "../desktop/DesktopAccount";
 import { PhoneLoginForm, RecoverPassword } from "../features/Account";
 import { DishCarousel } from "../components/DishCarousel";
-import { localDestination } from "../app/navigation";
+import AuthLanding from "../components/AuthLanding";
 import { isPhoneAuthPath } from "../app/auth-routes";
 import { BRAND_SLOGAN } from "../app/brand";
 import { DesignIcon as Icon } from "./ui";
@@ -13,7 +13,6 @@ import "./login.css";
 export default function LoginPage({ desktop }: { desktop: boolean }) {
   const location = useLocation();
   const { pathname: path, search: suffix, state } = location;
-  const landing = !desktop && path === "/auth";
   const phone = isPhoneAuthPath(path);
   const recovery = path === "/auth/forgot";
   const title = recovery ? "找回密码" : phone ? "手机登录 / 注册" : "登录";
@@ -21,26 +20,24 @@ export default function LoginPage({ desktop }: { desktop: boolean }) {
     document.title = `${title} · 山软今天吃什么`;
   }, [title]);
 
+  if (path === "/auth") return <AuthLanding desktop={desktop} />;
+
   return (
     <div
       className={
         desktop
           ? "pc-secondary-auth"
-          : landing
-            ? "ew-login mobile-login-landing"
-            : recovery
-              ? undefined
-              : "ew-login mobile-auth-page"
+          : recovery
+            ? undefined
+            : "ew-login mobile-auth-page"
       }
       data-pc-secondary={desktop ? "auth" : undefined}
       data-screen={
         desktop || recovery
           ? undefined
-          : landing
-            ? "G-Login"
-            : phone
-              ? "G-PhoneLogin"
-              : "G-PasswordLogin"
+          : phone
+            ? "G-PhoneLogin"
+            : "G-PasswordLogin"
       }
     >
       {desktop ? (
@@ -53,8 +50,6 @@ export default function LoginPage({ desktop }: { desktop: boolean }) {
           <h1>{BRAND_SLOGAN}</h1>
           <DishCarousel />
         </aside>
-      ) : landing ? (
-        <MobileLoginLanding />
       ) : !recovery ? (
         <>
           <header className="mobile-auth-header">
@@ -78,13 +73,9 @@ export default function LoginPage({ desktop }: { desktop: boolean }) {
             ? "pc-secondary-auth-content"
             : recovery
               ? "ew-mobile-feature"
-              : landing
-                ? undefined
-                : "mobile-auth-form pc-secondary-auth-content"
+              : "mobile-auth-form pc-secondary-auth-content"
         }
         aria-label={title}
-        // The desktop password form stays available when the user opens it from the mobile landing.
-        hidden={landing}
       >
         {recovery ? (
           <RecoverPassword />
@@ -93,13 +84,13 @@ export default function LoginPage({ desktop }: { desktop: boolean }) {
         ) : (
           <AuthForm compact={!desktop} />
         )}
-        {!desktop && !landing && !phone && !recovery && (
+        {!desktop && !phone && !recovery && (
           <Link className="mobile-auth-forgot" to={"/auth/forgot" + suffix}>
             忘了密码
           </Link>
         )}
       </section>
-      {!desktop && !landing && !recovery && (
+      {!desktop && !recovery && (
         <footer className="mobile-auth-footer">
           {!phone ? (
             <>
@@ -121,54 +112,5 @@ export default function LoginPage({ desktop }: { desktop: boolean }) {
         </footer>
       )}
     </div>
-  );
-}
-
-function MobileLoginLanding() {
-  const { search, state } = useLocation();
-  const returnTo =
-    localDestination((state as { returnTo?: string } | null)?.returnTo) ?? "/";
-  return (
-    <>
-      <header className="mobile-login-stage">
-        <Link
-          className="mobile-login-back"
-          to={returnTo}
-          replace
-          aria-label="返回"
-        >
-          <ArrowLeft size={24} aria-hidden="true" />
-        </Link>
-        <div className="mobile-login-intro">
-          <span>山软</span>
-          <h1>
-            今天
-            <br />
-            吃什么
-          </h1>
-          <p>
-            看看软件园的同学都在吃什么，
-            <br />
-            再把你的好店分享出去。
-          </p>
-        </div>
-        <DishCarousel />
-      </header>
-      <section className="mobile-login-sheet" aria-label="登录与注册">
-        <Link
-          className="mobile-login-primary"
-          to={"/auth/password" + search}
-          state={state}
-        >
-          登录
-        </Link>
-        <p className="mobile-login-register">
-          还没有账号？
-          <Link to={"/auth/register" + search} state={state}>
-            注册
-          </Link>
-        </p>
-      </section>
-    </>
   );
 }

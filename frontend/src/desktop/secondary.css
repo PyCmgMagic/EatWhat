@@ -206,10 +206,39 @@
 .pc-settings-account .pc-secondary-text-link {
   min-height: 44px;
 }
-.pc-privacy-tools {
-  justify-content: flex-start;
-  flex-wrap: wrap;
+.pc-secondary-note .pc-privacy-tools {
+  display: grid;
+  margin-top: 18px;
+  padding-top: 8px;
+  border-top: 1px solid #69533320;
+}
+.pc-secondary-note .pc-privacy-tools :is(a, button) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
+  width: 100%;
+  margin-top: 0;
+  padding: 12px 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--pc-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.pc-secondary-note .pc-privacy-tools :is(a, button):not(:last-child) {
+  border-bottom: 1px solid #69533318;
+}
+.pc-secondary-note .pc-privacy-tools :is(a, button):hover {
+  text-decoration: none;
+  color: #947031;
+}
+.pc-secondary-note .pc-privacy-tools :is(a, button) .design-icon {
+  color: #a08a5f;
+  flex-shrink: 0;
 }
 .pc-secondary-row > div {
   min-width: 0;
@@ -438,6 +467,9 @@
 }
 .pc-secondary-switch-row:first-child {
   padding-top: 0;
+}
+.pc-secondary-switch-row:last-of-type {
+  border-bottom: 0;
 }
 .pc-secondary-switch-row span {
   min-width: 0;

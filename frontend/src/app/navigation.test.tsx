@@ -144,6 +144,20 @@ describe("route continuity", () => {
     await elapse(50);
     expect(top).toBe(600);
   });
+  it("keeps the current scroll position for explicit tab navigation", async () => {
+    await mount("/me");
+    await elapse();
+    window.scrollTo({ top: 600 });
+    window.dispatchEvent(new Event("scroll"));
+    await act(async () =>
+      navigate("/me/shares", { state: { preserveScroll: true } }),
+    );
+    await elapse(50);
+    expect(top).toBe(600);
+    await go("/favorites");
+    await elapse(50);
+    expect(top).toBe(0);
+  });
 });
 
 describe("authentication return targets", () => {

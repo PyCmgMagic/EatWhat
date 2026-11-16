@@ -1,0 +1,24 @@
+.publish-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.publish-button[aria-busy="true"] {
+  cursor: wait;
+  opacity: 1;
+}
+.publish-button-spinner {
+  flex: none;
+  animation: publish-button-spin 0.9s linear infinite;
+}
+@keyframes publish-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .publish-button-spinner {
+    animation: none;
+  }
+}

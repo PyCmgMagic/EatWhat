@@ -114,9 +114,14 @@ export function ProfileSectionNav({
             section === "help" &&
             item.to === "/feedback/mine" &&
             pathname === "/feedback"
-              ? { feedbackReturnTo: pathname + search, feedbackSource: "/help" }
-              : undefined
+              ? {
+                  preserveScroll: true,
+                  feedbackReturnTo: pathname + search,
+                  feedbackSource: "/help",
+                }
+              : { preserveScroll: true }
           }
+          preventScrollReset
         >
           {item.label}
         </Link>

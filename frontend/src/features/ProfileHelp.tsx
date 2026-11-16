@@ -64,7 +64,11 @@ const questions = [
 ];
 const categories = ["全部", "分享与收藏", "账号与消息", "反馈"];
 
-export default function ProfileHelp() {
+export default function ProfileHelp({
+  showHeader = true,
+}: {
+  showHeader?: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("全部");
   const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
@@ -80,7 +84,7 @@ export default function ProfileHelp() {
   );
   return (
     <section className="profile-help">
-      <ProfileHelpHeader />
+      {showHeader && <ProfileHelpHeader />}
       <div className="profile-help-search">
         <Icon name="search" size={21} />
         <label

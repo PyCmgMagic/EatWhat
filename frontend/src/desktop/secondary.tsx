@@ -8,6 +8,8 @@ import { errorMessage } from "../api/client";
 import { mediaUrl } from "../api/models";
 import "./secondary.css";
 import { ToastError } from "../components/feedback";
+import { isRetiredV2 } from "../app/retired-routes";
+import { settingsNavGroups } from "../features/settings-nav";
 import SettingsPageHeader from "../features/SettingsPageHeader";
 
 export const secondaryTitles: Record<string, string> = {
@@ -111,34 +113,10 @@ export function SettingsShell({ children }: { children: ReactNode }) {
   const embedded = useContext(ProfileWorkspaceContext);
   if (embedded)
     return <section className="pc-secondary-body">{children}</section>;
-  const groups = [
-    {
-      title: "账号",
-      items: [
-        ["/settings/account", "账号与安全", "verify"],
-        ["/verify", "学生认证", "verify"],
-        ["/settings/password", "修改密码", "lock"],
-        ["/settings/bind-phone", "绑定手机号", "phone"],
-      ],
-    },
-    {
-      title: "偏好",
-      items: [
-        ["/settings/privacy", "隐私设置", "lock"],
-        ["/settings/preferences", "口味偏好", "utensils"],
-        ["/settings/notifications", "通知偏好", "bell"],
-        ["/settings/blocked", "屏蔽名单", "me"],
-      ],
-    },
-    {
-      title: "更多",
-      items: [
-        ["/settings/about", "关于我们", "bowl"],
-        ["/data-notice", "数据存放说明", "document"],
-        ["/feedback", "意见反馈", "comment"],
-      ],
-    },
-  ];
+  const groups = settingsNavGroups.map((group) => ({
+    title: group.title,
+    items: group.items.filter((item) => !isRetiredV2(item.to)),
+  }));
   return (
     <div className="pc-secondary-layout">
       <aside className="pc-secondary-rail">
@@ -149,7 +127,7 @@ export function SettingsShell({ children }: { children: ReactNode }) {
         {groups.map((g) => (
           <nav key={g.title} aria-label={g.title + "设置"}>
             <p>{g.title}</p>
-            {g.items.map(([to, name, icon]) => (
+            {g.items.map(({ to, name, icon }) => (
               <Link
                 key={to}
                 to={to}

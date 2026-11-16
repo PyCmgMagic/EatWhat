@@ -12,6 +12,7 @@ import {
   type ReactElement,
 } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useReturnTo } from "../../app/navigation";
 import { DesignIcon as Icon } from "../../mobile/ui";
 import { ContentSkeleton } from "../../components/LoadingSkeleton";
 import {
@@ -100,8 +101,12 @@ export function Shell({
     /^\/features(?:\?|$)/.test(location.state.featuresReturnTo)
       ? location.state.featuresReturnTo
       : undefined;
+  // In-app arrivals remember their source, so 返回 lands where the user came
+  // from; cold opens fall back to the fixed target.
+  const backTo = featuresReturnTo ?? useReturnTo(back);
   const workspaceSectionPage = [
     "/features",
+    "/me/growth",
     "/announcements",
     "/feedback",
     "/feedback/mine",
@@ -209,7 +214,7 @@ export function Shell({
           <header className="v4-heading">
             {showBreadcrumb && (
               <div className="v4-breadcrumb">
-                <Link to={featuresReturnTo ?? back}>
+                <Link to={backTo}>
                   <Icon name="back" size={15} />
                   返回
                 </Link>

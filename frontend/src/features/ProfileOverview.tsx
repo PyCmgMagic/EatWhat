@@ -1,18 +1,14 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { BRAND_SLOGAN } from "../app/brand";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
-import { ProfileEditLink } from "../app/profile-navigation";
 import { isDemo } from "../app/runtime";
 import { mediaUrl, money, type Food } from "../api/models";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { visualFor } from "../mobile/catalog";
-import { peopleHref } from "./profile-people";
 import { useFoodImageRefresh } from "./media";
 import { AccessWelcome } from "../components/AccessWelcome";
 import { DishIllustration } from "../components/DishIllustration";
-import ProfileGrowth from "./ProfileGrowth";
 import "./profile-overview.css";
 
 function FoodPhoto({ food }: { food: Food }) {
@@ -42,6 +38,33 @@ function FoodPhoto({ food }: { food: Food }) {
         <Icon name="bowl" size={32} />
       )}
     </span>
+  );
+}
+
+function DishCard({
+  food,
+  showLikes = false,
+}: {
+  food: Food;
+  showLikes?: boolean;
+}) {
+  return (
+    <Link to={`/foods/${food.id}`} className="profile-overview-dish-card">
+      <FoodPhoto food={food} />
+      <div className="profile-overview-food-heading">
+        <h3>{food.name || "未命名菜品"}</h3>
+        <strong>{money(food.price)}</strong>
+      </div>
+      <div className="profile-overview-dish-meta">
+        <span>{food.restaurantName || "餐厅信息待补充"}</span>
+        {showLikes && food.likesCount != null && (
+          <span className="profile-overview-dish-likes">
+            <Icon name="heart" size={13} />
+            {food.likesCount}
+          </span>
+        )}
+      </div>
+    </Link>
   );
 }
 
@@ -82,25 +105,16 @@ function CollectionState({
 
 export default function ProfileOverview() {
   const { api, user, session } = useApp();
-  const location = useLocation();
-  const [avatarFailed, setAvatarFailed] = useState(false);
-  const avatar = mediaUrl(user?.avatar);
-  useEffect(() => setAvatarFailed(false), [avatar]);
   useEffect(() => {
     document.title = "我的 · 山软今天吃什么";
   }, []);
-  const stats = useQuery({
-    queryKey: ["user", user?.id],
-    queryFn: () => api.otherUser(user!.id!),
-    enabled: !!session && !!user?.id,
-  });
   const favorites = useQuery({
     queryKey: ["foods", "profile-overview-favorites", user?.id],
     queryFn: () => api.favorites(1),
     enabled: !!session && !!user?.id,
   });
   const shares = useQuery({
-    queryKey: ["foods", "profile-overview-shares", user?.id],
+    queryKey: ["foods", "mine", 1],
     queryFn: () => api.myFoods(1),
     enabled: !!session && !!user?.id,
   });
@@ -111,83 +125,63 @@ export default function ProfileOverview() {
   const shareItems = (shares.data?.items ?? [])
     .filter((food) => food.id)
     .slice(0, 3);
-  const statValue = (value: number | null | undefined) =>
-    stats.isPending ? (
-      <span className="profile-overview-stat-loading" aria-label="正在加载" />
-    ) : (
-      (value ?? "—")
-    );
   return (
     <div className="profile-overview">
-      <div className="profile-overview-summary">
-        <header className="profile-overview-identity">
-          <span className="profile-overview-avatar" aria-hidden="true">
-            {avatar && !avatarFailed ? (
-              <img src={avatar} alt="" onError={() => setAvatarFailed(true)} />
-            ) : (
-              user?.displayName?.slice(0, 1) || "食"
-            )}
-          </span>
-          <div className="profile-overview-intro">
-            <span className="profile-overview-eyebrow">个人总览</span>
-            <h1>{user?.displayName || "我的"}</h1>
-            <p>{user?.signature || BRAND_SLOGAN}</p>
-            <ProfileGrowth />
-          </div>
-          <ProfileEditLink className="profile-overview-edit">
-            <Icon name="edit" size={17} />
-            编辑资料
-          </ProfileEditLink>
-        </header>
-        <div className="profile-overview-social" aria-label="个人统计">
-          <div>
-            <strong>{statValue(stats.data?.earnedLikes)}</strong>
-            <span>获赞</span>
-          </div>
-          <Link to="/me/shares">
-            <strong>{statValue(stats.data?.uploadedFoodsCount)}</strong>
-            <span>分享的菜</span>
-          </Link>
-          <Link
-            to={peopleHref("/me", location.search, "fans")}
-            state={{ profilePeopleFrom: location.key }}
-            preventScrollReset
-            aria-label="查看我的粉丝"
-          >
-            <strong>{statValue(stats.data?.fansCount)}</strong>
-            <span>粉丝</span>
-          </Link>
-          <Link
-            to={peopleHref("/me", location.search, "follow")}
-            state={{ profilePeopleFrom: location.key }}
-            preventScrollReset
-            aria-label="查看我的关注"
-          >
-            <strong>{statValue(stats.data?.followingsCount)}</strong>
-            <span>关注</span>
-          </Link>
-          {stats.isError && (
-            <button
-              className="profile-overview-stat-retry"
-              onClick={() => void stats.refetch()}
-            >
-              重新加载统计
-            </button>
-          )}
-        </div>
-      </div>
-
       <div className="profile-overview-columns">
+        <section
+          className="profile-overview-uploads"
+          aria-labelledby="profile-recent-shares"
+        >
+          <div className="profile-overview-section-heading">
+            <div className="profile-overview-section-title">
+              <h2 id="profile-recent-shares">最近上传</h2>
+              {shares.data?.totalItems != null && (
+                <span>{shares.data.totalItems} 道</span>
+              )}
+            </div>
+            <Link to="/me/shares">
+              全部上传
+              <Icon name="chevronRight" size={15} />
+            </Link>
+          </div>
+          <CollectionState
+            loading={shares.isPending}
+            error={shares.isError}
+            retry={() => void shares.refetch()}
+          >
+            {shareItems.length ? (
+              <div className="profile-overview-dish-grid">
+                {shareItems.map((food) => (
+                  <DishCard key={food.id} food={food} showLikes />
+                ))}
+              </div>
+            ) : (
+              <div className="profile-overview-empty">
+                <DishIllustration name="yuntun" />
+                <h3>分享你的第一道好菜</h3>
+                <p>记下喜欢的味道，也给其他食友一份参考。</p>
+                <Link to="/publish">
+                  <Icon name="add" size={15} />
+                  分享一道菜
+                </Link>
+              </div>
+            )}
+          </CollectionState>
+        </section>
+
         <section
           className="profile-overview-collection"
           aria-labelledby="profile-recent-favorites"
         >
           <div className="profile-overview-section-heading">
-            <div>
+            <div className="profile-overview-section-title">
               <h2 id="profile-recent-favorites">最近收藏</h2>
+              {favorites.data?.totalItems != null && (
+                <span>{favorites.data.totalItems} 道</span>
+              )}
             </div>
             <Link to="/favorites">
-              查看全部
+              全部收藏
               <Icon name="chevronRight" size={15} />
             </Link>
           </div>
@@ -197,20 +191,9 @@ export default function ProfileOverview() {
             retry={() => void favorites.refetch()}
           >
             {favoriteItems.length ? (
-              <div className="profile-overview-favorites">
+              <div className="profile-overview-dish-grid">
                 {favoriteItems.map((food) => (
-                  <Link
-                    to={`/foods/${food.id}`}
-                    key={food.id}
-                    className="profile-overview-favorite"
-                  >
-                    <FoodPhoto food={food} />
-                    <div className="profile-overview-food-heading">
-                      <h3>{food.name || "未命名菜品"}</h3>
-                      <strong>{money(food.price)}</strong>
-                    </div>
-                    <p>{food.restaurantName || "餐厅信息待补充"}</p>
-                  </Link>
+                  <DishCard key={food.id} food={food} />
                 ))}
               </div>
             ) : (
@@ -229,70 +212,10 @@ export default function ProfileOverview() {
             className="profile-overview-secondary-link"
             to="/restaurants/favorites"
           >
-            <Icon name="store" size={18} />
+            <Icon name="store" size={17} />
             也看看收藏的店
             <Icon name="chevronRight" size={15} />
           </Link>
-        </section>
-
-        <section
-          className="profile-overview-sharing"
-          aria-labelledby="profile-recent-shares"
-        >
-          <div className="profile-overview-section-heading">
-            <div>
-              <h2 id="profile-recent-shares">我的分享</h2>
-            </div>
-            <Link to="/me/shares">
-              查看全部
-              <Icon name="chevronRight" size={15} />
-            </Link>
-          </div>
-          <CollectionState
-            loading={shares.isPending}
-            error={shares.isError}
-            retry={() => void shares.refetch()}
-          >
-            {shareItems.length ? (
-              <div className="profile-overview-shares">
-                {shareItems.map((food) => (
-                  <Link
-                    key={food.id}
-                    to={`/foods/${food.id}`}
-                    className="profile-overview-share"
-                  >
-                    <FoodPhoto food={food} />
-                    <div className="profile-overview-share-copy">
-                      <h3>{food.name || "未命名菜品"}</h3>
-                      <span>{food.restaurantName || "餐厅信息待补充"}</span>
-                      <small>
-                        {money(food.price)}
-                        {food.likesCount != null && (
-                          <>
-                            <i />
-                            {food.likesCount} 人喜欢
-                          </>
-                        )}
-                      </small>
-                    </div>
-                    <Icon name="chevronRight" size={16} />
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="profile-overview-empty">
-                <DishIllustration name="yuntun" />
-                <h3>还没有分享过菜品</h3>
-                <p>从最近吃到的一道好菜开始。</p>
-              </div>
-            )}
-          </CollectionState>
-          <div className="profile-overview-share-actions">
-            <Link className="profile-overview-publish" to="/publish">
-              <Icon name="add" size={17} />
-              分享一道菜
-            </Link>
-          </div>
         </section>
       </div>
     </div>

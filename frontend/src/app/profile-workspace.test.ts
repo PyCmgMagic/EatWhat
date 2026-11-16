@@ -10,7 +10,6 @@ describe("personal workspace information architecture", () => {
       "/me/growth",
       "/history",
       "/settings",
-      "/help",
     ]);
   });
 
@@ -32,12 +31,12 @@ describe("personal workspace information architecture", () => {
     ["/me/details", "/settings"],
     ["/verify", "/settings"],
     ["/auth/account-recovery", "/settings"],
-    ["/help", "/help"],
-    ["/feedback", "/help"],
-    ["/feedback/mine", "/help"],
-    ["/feedback/mine/123", "/help"],
-    ["/reports/new", "/help"],
-    ["/restaurants/correction", "/help"],
+    ["/help", "/settings"],
+    ["/feedback", "/settings"],
+    ["/feedback/mine", "/settings"],
+    ["/feedback/mine/123", "/settings"],
+    ["/reports/new", "/settings"],
+    ["/restaurants/correction", "/settings"],
   ])("keeps %s in its task section %s", (path, section) => {
     expect(profileSection(path)).toBe(section);
   });

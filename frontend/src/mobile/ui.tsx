@@ -86,6 +86,7 @@ export type Draft = {
   shopName?: string;
   restaurantId?: number;
   publishing?: boolean;
+  publishPhase?: "uploading" | "submitting";
   publishUncertain?: boolean;
 };
 export const MobileContext = createContext<MobileState | null>(null);

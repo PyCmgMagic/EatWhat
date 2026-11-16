@@ -1,6 +1,6 @@
 import { useSendSignal } from "../features/useSendSignal";
 import { BRAND_SLOGAN } from "../app/brand";
-import { PersonalizedRecommendation } from "../features/ApiV2";
+import { PersonalizedRecommendation, BlockedListDialog } from "../features/ApiV2";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -295,14 +295,6 @@ function Privacy() {
           follower={q.data.fansVisible}
         />
       )}
-      <div className="pc-secondary-row pc-privacy-tools">
-        <Link className="pc-button light" to="/settings/blocked">
-          屏蔽名单 <Icon name="chevronRight" size={16} />
-        </Link>
-        <Link className="pc-button light" to="/settings/telemetry">
-          使用统计授权 <Icon name="chevronRight" size={16} />
-        </Link>
-      </div>
     </>
   );
 }
@@ -317,6 +309,7 @@ function PrivacyForm({
     [values, setValues] = useState({ following, follower }),
     task = useTask("隐私设置已保存", undefined, ["user"]),
     changed = values.following !== following || values.follower !== follower;
+  const [blockedOpen, setBlockedOpen] = useState(false);
   return (
     <div className="pc-secondary-columns">
       <Section title="关注关系可见性">
@@ -369,7 +362,17 @@ function PrivacyForm({
         <p>
           关闭后，其他同学无法查看对应列表。你依然可以在自己的主页查看和管理关注关系。
         </p>
-        <Link to="/me?people=follow">在我的主页查看关注与粉丝 →</Link>
+        <nav className="pc-privacy-tools" aria-label="其他隐私设置">
+          <button type="button" onClick={() => setBlockedOpen(true)}>
+            屏蔽名单 <Icon name="chevronRight" size={14} />
+          </button>
+          <Link to="/settings/telemetry">
+            使用统计授权 <Icon name="chevronRight" size={14} />
+          </Link>
+        </nav>
+        {blockedOpen && (
+          <BlockedListDialog onClose={() => setBlockedOpen(false)} />
+        )}
       </Note>
     </div>
   );

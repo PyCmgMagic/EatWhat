@@ -19,9 +19,22 @@
 .ew-v2-card p {
   line-height: 1.8;
 }
-.ew-v2-card > a:last-child {
+.ew-v2-card > a:last-child,
+.ew-v2-card > .ew-v2-card-link:last-child {
   display: inline-flex;
   margin-top: 16px;
+}
+.ew-v2-card > .ew-v2-card-link:last-child {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.modal.ew-blocked-dialog {
+  width: min(520px, calc(100vw - 40px));
 }
 .ew-v2-row {
   display: flex;

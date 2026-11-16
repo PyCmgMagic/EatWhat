@@ -29,6 +29,7 @@ import { useFoodImageRefresh } from "./media";
 import "./api-v2.css";
 import "./user-profile.css";
 import { ToastError } from "../components/feedback";
+import { Modal } from "../components/ui";
 
 function RequestError({ error }: { error: unknown }) {
   return (
@@ -379,7 +380,7 @@ export function BlockControl({
     </div>
   );
 }
-export function BlockedUsers() {
+function BlockedList() {
   const { api } = useApp(),
     cache = useQueryClient(),
     [page, setPage] = useState(1);
@@ -390,11 +391,10 @@ export function BlockedUsers() {
   });
   const task = useTask("已解除屏蔽", undefined, ["blocks", "foods"]);
   return (
-    <FeaturePage title="屏蔽名单" back="/settings/privacy">
-      <div className="ew-v2-card">
-        <p className="ew-note">
-          仅自己可见。屏蔽会影响推荐，不会删除历史与收藏。
-        </p>
+    <>
+      <p className="ew-note">
+        仅自己可见。屏蔽会影响推荐，不会删除历史与收藏。
+      </p>
         {q.isPending ? (
           <FeatureState loading kind="rows" />
         ) : q.isError ? (
@@ -442,8 +442,24 @@ export function BlockedUsers() {
           busy={q.isFetching || task.isPending}
           change={setPage}
         />
+      </>
+  );
+}
+export function BlockedUsers() {
+  return (
+    <FeaturePage title="屏蔽名单" back="/settings/privacy">
+      <div className="ew-v2-card">
+        <BlockedList />
       </div>
     </FeaturePage>
+  );
+}
+/** Blocklist opened in place from the privacy settings page. */
+export function BlockedListDialog({ onClose }: { onClose: () => void }) {
+  return (
+    <Modal title="屏蔽名单" onClose={onClose} className="ew-blocked-dialog">
+      <BlockedList />
+    </Modal>
   );
 }
 export function PersonalizedRecommendation() {
@@ -455,6 +471,7 @@ export function PersonalizedRecommendation() {
   });
   const task = useTask("推荐设置已更新");
   const [pending, setPending] = useState<boolean | null>(null);
+  const [blockedOpen, setBlockedOpen] = useState(false);
   return (
     <div className="ew-feature ew-v2-card">
       <div className="ew-v2-row">
@@ -503,7 +520,16 @@ export function PersonalizedRecommendation() {
       {q.isError && (
         <button onClick={() => void q.refetch()}>重试推荐设置</button>
       )}
-      <Link to="/settings/blocked">管理屏蔽名单 →</Link>
+      <button
+        type="button"
+        className="ew-v2-card-link"
+        onClick={() => setBlockedOpen(true)}
+      >
+        管理屏蔽名单 →
+      </button>
+      {blockedOpen && (
+        <BlockedListDialog onClose={() => setBlockedOpen(false)} />
+      )}
     </div>
   );
 }

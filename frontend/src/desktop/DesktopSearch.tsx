@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DesignIcon as Icon } from "../mobile/ui";
 import "./desktop-search.css";
@@ -28,30 +28,165 @@ export default function DesktopSearch() {
   const navigate = useNavigate(),
     location = useLocation(),
     root = useRef<HTMLDivElement>(null),
+    form = useRef<HTMLFormElement>(null),
+    compact = useRef<HTMLButtonElement>(null),
     input = useRef<HTMLInputElement>(null),
+    origin = useRef<DOMRect | null>(null),
+    home = useRef<DOMRect | null>(null),
+    returnAnimation = useRef<Animation | null>(null),
     panelId = useId();
   const [query, setQuery] = useState(""),
     [kind, setKind] = useState<SearchKind>("food"),
     [open, setOpen] = useState(false),
+    [closing, setClosing] = useState(false),
     [recent, setRecent] = useState<RecentSearch[]>(readRecent);
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     setQuery(params.get("q") ?? "");
     setKind(params.get("type") === "shop" ? "shop" : "food");
+    returnAnimation.current?.cancel();
+    setClosing(false);
     setOpen(false);
   }, [location.pathname, location.search]);
   useEffect(() => {
     const close = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpen(false);
-    };
+        if (open && !root.current?.contains(event.target as Node))
+          closeSearch();
+      },
+      escape = (event: KeyboardEvent) => {
+        if (event.key === "Escape" && open) closeSearch();
+      };
     document.addEventListener("pointerdown", close);
-    return () => document.removeEventListener("pointerdown", close);
-  }, []);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [open, closing]);
+  useEffect(
+    () => () => {
+      returnAnimation.current?.cancel();
+    },
+    [],
+  );
+  useLayoutEffect(() => {
+    const element = form.current,
+      previous = origin.current;
+    if (
+      !open ||
+      !element ||
+      !previous ||
+      typeof element.animate !== "function" ||
+      (typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+    )
+      return;
+    const next = element.getBoundingClientRect();
+    if (!previous.width || !next.width) return;
+    const animation = element.animate(
+      [
+        {
+          width: `${previous.width}px`,
+          height: `${previous.height}px`,
+          transform: `translate(${previous.left - next.left}px, ${previous.top - next.top}px)`,
+        },
+        {
+          width: `${next.width}px`,
+          height: `${next.height}px`,
+          transform: "translate(0, 0)",
+        },
+      ],
+      { duration: 280, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+    );
+    animation.onfinish = () => {
+      origin.current = null;
+    };
+    return () => animation.cancel();
+  }, [open]);
+  useLayoutEffect(() => {
+    if (open || !closing) return;
+    const element = form.current,
+      previous = origin.current;
+    if (!element || !previous) {
+      setClosing(false);
+      return;
+    }
+    const next = element.getBoundingClientRect();
+    if (!previous.width || !next.width) {
+      setClosing(false);
+      return;
+    }
+    const animation = element.animate(
+      [
+        {
+          width: `${previous.width}px`,
+          height: `${previous.height}px`,
+          padding: "0px 12px",
+          backgroundColor: "#fff",
+          boxShadow: "0 0 0 1px #e6ddd4, 0 12px 32px rgba(56, 43, 30, 0.1)",
+          transform: `translate(${previous.left - next.left}px, ${previous.top - next.top}px)`,
+        },
+        {
+          width: `${next.width}px`,
+          height: `${next.height}px`,
+          padding: "0px 12px",
+          backgroundColor: "#f4efeb",
+          boxShadow: "0 0 0 0 rgba(216, 197, 160, 0)",
+          transform: "translate(0, 0)",
+        },
+      ],
+      { duration: 220, easing: "cubic-bezier(0.4, 0, 1, 1)" },
+    );
+    returnAnimation.current = animation;
+    animation.onfinish = () => {
+      origin.current = null;
+      returnAnimation.current = null;
+      setClosing(false);
+    };
+    return () => animation.cancel();
+  }, [open, closing]);
+
+  function showSearch(source?: HTMLElement) {
+    if (closing) return;
+    if (!open) {
+      const rect = (source ?? form.current)?.getBoundingClientRect() ?? null;
+      origin.current = rect;
+      home.current = rect;
+    }
+    setOpen(true);
+  }
+
+  function closeSearch() {
+    if (!open || closing) return;
+    input.current?.blur();
+    const element = form.current,
+      target = window.innerWidth > 1250 ? root.current : compact.current;
+    if (
+      !element ||
+      !target ||
+      typeof element.animate !== "function" ||
+      (typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+    ) {
+      setOpen(false);
+      return;
+    }
+    const from = element.getBoundingClientRect(),
+      to = home.current ?? target.getBoundingClientRect();
+    if (!to.width) {
+      setOpen(false);
+      return;
+    }
+    origin.current = from;
+    home.current = to;
+    setClosing(true);
+    setOpen(false);
+  }
 
   function submit(nextKind: SearchKind, value: string) {
     const keyword = value.trim();
     if (!keyword) {
-      setOpen(true);
+      showSearch();
       input.current?.focus();
       return;
     }
@@ -83,9 +218,38 @@ export default function DesktopSearch() {
   );
   return (
     <>
-      <div className="pc-header-search-wrap" ref={root} data-open={open}>
+      <div
+        className="pc-header-search-wrap"
+        ref={root}
+        data-open={open}
+        data-closing={closing}
+      >
+        {(open || closing) && (
+          <button
+            type="button"
+            tabIndex={-1}
+            className="pc-header-search-backdrop"
+            aria-label="关闭搜索"
+            onClick={closeSearch}
+          />
+        )}
         <form
+          ref={form}
           className="pc-header-search"
+          style={
+            closing && !open && home.current
+              ? {
+                  position: "fixed",
+                  zIndex: 102,
+                  top: home.current.top,
+                  left: home.current.left,
+                  translate: "0 0",
+                  display: "flex",
+                  width: home.current.width,
+                  height: home.current.height,
+                }
+              : undefined
+          }
           role="search"
           onSubmit={(event) => {
             event.preventDefault();
@@ -104,17 +268,12 @@ export default function DesktopSearch() {
             maxLength={64}
             placeholder="搜菜品或店名"
             value={query}
-            onFocus={() => setOpen(true)}
+            onFocus={() => showSearch()}
             onChange={(event) => {
               setQuery(event.target.value);
-              setOpen(true);
+              showSearch();
             }}
             onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                event.preventDefault();
-                setOpen(false);
-                input.current?.blur();
-              }
               if (event.key === "ArrowDown") {
                 event.preventDefault();
                 root.current
@@ -123,7 +282,7 @@ export default function DesktopSearch() {
               }
             }}
           />
-          {query ? (
+          {query && (
             <button
               type="button"
               aria-label="清空搜索关键词"
@@ -134,13 +293,18 @@ export default function DesktopSearch() {
             >
               <Icon name="close" size={15} />
             </button>
-          ) : (
-            <button aria-label="开始搜索">
-              <Icon name="chevronRight" size={16} />
-            </button>
           )}
+          <button
+            className="pc-header-search-submit"
+            aria-label={`搜索${kind === "shop" ? "店铺" : "菜品"}`}
+          >
+            <span className="sr-only">
+              搜索{kind === "shop" ? "店铺" : "菜品"}
+            </span>
+            <Icon name="search" size={17} />
+          </button>
         </form>
-        {open && (
+        {(open || closing) && (
           <div
             className="pc-header-search-panel"
             id={panelId}
@@ -210,25 +374,19 @@ export default function DesktopSearch() {
                 ))}
               </section>
             )}
-            <div className="pc-header-search-panel-footer">
-              <span>Enter 搜索{kind === "shop" ? "店铺" : "菜品"}</span>
-              <button type="button" onClick={() => submit(kind, query)}>
-                搜索{kind === "shop" ? "店铺" : "菜品"}
-                <Icon name="chevronRight" size={15} />
-              </button>
-            </div>
           </div>
         )}
       </div>
       <button
+        ref={compact}
         className="pc-compact-search pc-icon-button"
         type="button"
         aria-label="搜索菜品或店名"
         aria-expanded={open}
         aria-controls={panelId}
-        onClick={() => {
-          setOpen(true);
-          input.current?.focus();
+        onClick={(event) => {
+          showSearch(event.currentTarget);
+          requestAnimationFrame(() => input.current?.focus());
         }}
       >
         <Icon name="search" size={21} />

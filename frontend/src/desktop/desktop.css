@@ -254,6 +254,103 @@ html:has(body.desktop-mode) {
   height: 100%;
   object-fit: cover;
 }
+.pc-account {
+  position: relative;
+  flex: none;
+}
+.pc-account-trigger {
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  transition: box-shadow 150ms;
+}
+.pc-account-trigger:hover,
+.pc-account-trigger[aria-expanded="true"] {
+  box-shadow: 0 0 0 4px #ffcb4540;
+}
+.pc-account-trigger:focus-visible {
+  outline: 2px solid #9b7627;
+  outline-offset: 3px;
+}
+.pc-account-popover {
+  position: absolute;
+  z-index: 100;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 238px;
+  padding: 10px;
+  border: 1px solid #eee7df;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 16px 42px #382b1e1f;
+  animation: pc-account-popover-in 150ms ease-out;
+}
+.pc-account-summary {
+  padding: 9px 12px 14px;
+  border-bottom: 1px solid #f0eae4;
+}
+.pc-account-summary strong,
+.pc-account-summary span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pc-account-summary strong {
+  color: var(--pc-ink);
+  font-size: 15px;
+}
+.pc-account-summary span {
+  margin-top: 4px;
+  color: var(--pc-muted);
+  font-size: 11px;
+}
+.pc-account-links {
+  display: grid;
+  padding: 6px 0;
+}
+.pc-account-popover a,
+.pc-account-logout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--pc-ink);
+  font-size: 13px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+.pc-account-popover a:hover,
+.pc-account-logout:hover {
+  background: #f7f3ef;
+}
+.pc-account-popover-footer {
+  padding-top: 6px;
+  border-top: 1px solid #f0eae4;
+}
+.pc-account-logout {
+  color: #9d4b3d;
+}
+.pc-account-logout:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+@keyframes pc-account-popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .pc-main {
   max-width: 1512px;
   margin: 0 auto;

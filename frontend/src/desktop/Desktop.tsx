@@ -4,9 +4,9 @@ import { SupplementPrice } from "../features/SupplementPrice";
 import { useFeedbackState } from "../components/feedback";
 import { BRAND_SLOGAN } from "../app/brand";
 import { foodAuthor } from "../api/models";
-import ProfileRail from "./ProfileRail";
 import ProfileOverview from "../features/ProfileOverview";
-import ProfileHelp from "../features/ProfileHelp";
+import ProfileSpaceHeader from "../features/ProfileSpaceHeader";
+import HelpFeedback, { isHelpFeedbackPath } from "../features/HelpFeedback";
 import DesktopRouteSkeleton from "./DesktopRouteSkeleton";
 import { ProfileSectionNav } from "../features/ProfileSectionNav";
 import { unreadCount } from "../api/notifications";
@@ -54,6 +54,7 @@ import "./desktop.css";
 import "./nearby.css";
 import "./profile-workspace.css";
 import "./profile-shell.css";
+import "./profile-space.css";
 import {
   ProfileWorkspaceContext,
   ProfileNavigationGuardContext,
@@ -239,7 +240,7 @@ export default function DesktopExperience({
   );
 }
 function DesktopHeader() {
-  const { user, session, api } = useApp(),
+  const { session, api } = useApp(),
     location = useLocation();
   const unread = useQuery({
     queryKey: ["notifications", "unread"],
@@ -319,20 +320,102 @@ function DesktopHeader() {
             <Icon name="add" size={20} />
             <span>发布一道菜</span>
           </Link>
-          <LoginLink
-            to={session ? "/me" : "/auth"}
-            className="pc-user-avatar"
-            aria-label={session ? "我的主页" : "登录"}
-          >
-            {user?.avatar && mediaUrl(user.avatar) ? (
-              <img src={mediaUrl(user.avatar)} alt="" />
-            ) : (
-              (user?.displayName?.slice(0, 1) ?? <Icon name="me" size={20} />)
-            )}
-          </LoginLink>
+          <HeaderAccount />
         </div>
       </div>
     </header>
+  );
+}
+function HeaderAccount() {
+  const { user, session, signOut, toast } = useApp(),
+    navigate = useNavigate(),
+    location = useLocation(),
+    root = useRef<HTMLDivElement>(null),
+    trigger = useRef<HTMLButtonElement>(null),
+    [open, setOpen] = useState(false),
+    [busy, setBusy] = useState(false);
+  useEffect(() => setOpen(false), [location.pathname, location.search]);
+  useEffect(() => {
+    if (!open) return;
+    const closeOutside = (event: PointerEvent) => {
+        if (!root.current?.contains(event.target as Node)) setOpen(false);
+      },
+      closeEscape = (event: KeyboardEvent) => {
+        if (event.key !== "Escape") return;
+        setOpen(false);
+        trigger.current?.focus();
+      };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeEscape);
+    };
+  }, [open]);
+  const avatar = mediaUrl(user?.avatar);
+  if (!session)
+    return (
+      <LoginLink to="/auth" className="pc-user-avatar" aria-label="登录">
+        <Icon name="me" size={20} />
+      </LoginLink>
+    );
+  return (
+    <div className="pc-account" ref={root}>
+      <button
+        ref={trigger}
+        type="button"
+        className="pc-user-avatar pc-account-trigger"
+        aria-label="打开账户菜单"
+        aria-expanded={open}
+        aria-controls="pc-account-popover"
+        onClick={() => setOpen((value) => !value)}
+      >
+        {avatar ? (
+          <img src={avatar} alt="" />
+        ) : (
+          (user?.displayName?.slice(0, 1) ?? <Icon name="me" size={20} />)
+        )}
+      </button>
+      {open && (
+        <div id="pc-account-popover" className="pc-account-popover">
+          <div className="pc-account-summary">
+            <strong>{user?.displayName || "我的账号"}</strong>
+            <span>
+              {user?.verified ? "学生身份已认证" : "今天也要好好吃饭"}
+            </span>
+          </div>
+          <div className="pc-account-links">
+            <Link to="/me">
+              <Icon name="me" size={18} /> 个人主页
+            </Link>
+            <Link to="/settings">
+              <Icon name="settings" size={18} /> 账号设置
+            </Link>
+          </div>
+          <div className="pc-account-popover-footer">
+            <button
+              type="button"
+              className="pc-account-logout"
+              disabled={busy}
+              onClick={async () => {
+                if (busy) return;
+                setBusy(true);
+                try {
+                  await signOut();
+                  navigate("/auth");
+                } catch (error) {
+                  setBusy(false);
+                  toast(errorMessage(error), { tone: "error" });
+                }
+              }}
+            >
+              <Icon name="logout" size={18} />
+              {busy ? "正在退出…" : "退出登录"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 function DesktopFooter() {
@@ -387,24 +470,22 @@ function ProfileWorkspace({
   return (
     <ProfileWorkspaceContext.Provider value>
       <ProfileNavigationGuardContext.Provider value={navigationGuard}>
-        <div className="pc-profile-layout pc-profile-workspace">
-          <ProfileRail
-            activeSection={section}
-            allowNavigate={(destination) =>
-              destination === location.pathname + location.search ||
-              (navigationGuard.current?.(destination) ?? true)
-            }
-          />
+        <div className="pc-profile-space profile-overview">
+          <ProfileSpaceHeader />
           <div
             ref={content}
             id="profile-workspace-panel"
-            className="pc-profile-workspace-content"
+            className="pc-profile-space-content"
             role="region"
             aria-label="个人中心内容"
             tabIndex={-1}
           >
             <MotionRegion
-              changeKey={location.pathname}
+              changeKey={
+                isHelpFeedbackPath(location.pathname)
+                  ? "/help"
+                  : location.pathname
+              }
               order={profileSections.findIndex((item) => item.to === section)}
             >
               <Suspense fallback={<DesktopRouteSkeleton />}>
@@ -432,7 +513,7 @@ function DesktopPage({
         <DesktopShares />
       </DesktopGate>
     );
-  if (loc.pathname === "/help") return <ProfileHelp />;
+  if (isHelpFeedbackPath(loc.pathname)) return <HelpFeedback />;
   if (isV4Path(loc.pathname)) return <V4Routes key={loc.pathname} />;
   if (/^\/foods\/\d+\/edit$/.test(loc.pathname)) return <EditFood />;
   if (isShopEditPath(loc.pathname)) return <EditRestaurant />;
@@ -1845,19 +1926,25 @@ export function DesktopShares() {
       placeholderData: keepPreviousData,
     });
   useEffect(() => {
-    document.title = "我的分享 · 山软今天吃什么";
-  }, []);
+    document.title = `${tab === "comments" ? "我的评论" : "我的分享"} · 山软今天吃什么`;
+  }, [tab]);
   return (
-    <section className="pc-profile-content profile-shares">
+    <section className="pc-profile-content profile-shares" data-tab={tab}>
       <header className="pc-library-heading">
         <div>
-          <h1>我的分享</h1>
-          <p>记录吃过的好味道，也分享给下一位食友。</p>
+          <h1>{tab === "comments" ? "我的评论" : "我的分享"}</h1>
+          <p>
+            {tab === "comments"
+              ? "回看自己的用餐感受，也看看每一条分享的审核状态。"
+              : "记录吃过的好味道，也分享给下一位食友。"}
+          </p>
         </div>
-        <Link to="/publish" className="profile-shares-publish">
-          <Icon name="add" size={19} />
-          分享一道菜
-        </Link>
+        {tab !== "comments" && (
+          <Link to="/publish" className="profile-shares-publish">
+            <Icon name="add" size={19} />
+            分享一道菜
+          </Link>
+        )}
       </header>
       <div className="pc-section-toolbar">
         <ProfileSectionNav section="shares" />

@@ -1,0 +1,219 @@
+import { useEffect, useState, type CSSProperties } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useLocation } from "react-router-dom";
+import { BRAND_SLOGAN } from "../app/brand";
+import { ProfileEditLink } from "../app/profile-navigation";
+import { profileSection } from "../app/profile-workspace";
+import { isDemo } from "../app/runtime";
+import { mediaUrl } from "../api/models";
+import { DesignIcon as Icon } from "../mobile/ui";
+import { visualFor } from "../mobile/catalog";
+import { useApp } from "../app/state";
+import { FoodCover } from "../components/FoodCover";
+import { useFoodPhoto } from "./media";
+import { peopleHref } from "./profile-people";
+import ProfileGrowth from "./ProfileGrowth";
+import { useMyProfileCover } from "./useMyProfileCover";
+import "./profile-overview.css";
+
+const tabs = [
+  { key: "home", to: "/me", label: "主页", icon: "me" },
+  { key: "uploads", to: "/me/shares", label: "上传", icon: "bowl" },
+  { key: "favorites", to: "/favorites", label: "收藏", icon: "bookmark" },
+  {
+    key: "comments",
+    to: "/me/shares?tab=comments",
+    label: "评论",
+    icon: "comment",
+  },
+  { key: "history", to: "/history", label: "足迹", icon: "history" },
+  { key: "growth", to: "/me/growth", label: "成长", icon: "hot" },
+  { key: "settings", to: "/settings", label: "设置", icon: "settings" },
+] as const;
+
+export default function ProfileSpaceHeader() {
+  const { api, user, session } = useApp();
+  const location = useLocation();
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  const avatar = mediaUrl(user?.avatar);
+  useEffect(() => setAvatarFailed(false), [avatar]);
+  const stats = useQuery({
+    queryKey: ["user", user?.id],
+    queryFn: () => api.otherUser(user!.id!),
+    enabled: !!session && !!user?.id,
+  });
+  const favorites = useQuery({
+    queryKey: ["foods", "profile-overview-favorites", user?.id],
+    queryFn: () => api.favorites(1),
+    enabled: !!session && !!user?.id,
+  });
+  const {
+    cover: profileCover,
+    fallback: defaultProfileCover,
+    pending: profileCoverPending,
+  } = useMyProfileCover(!!session && !!user?.id);
+  const profileCoverSrc = mediaUrl(profileCover.pictureUrl?.[0]);
+  const profilePhoto = useFoodPhoto(profileCoverSrc);
+  const displayedProfileCover = profilePhoto.unavailable
+    ? defaultProfileCover
+    : profileCover;
+  const profileVisual = visualFor(displayedProfileCover, isDemo);
+  const heroVisual = profileCoverPending
+    ? {
+        stage: "#E8E1D8",
+        on: "#231C18",
+        ghost: "rgba(35,28,24,0.08)",
+      }
+    : profileVisual;
+  const section = profileSection(location.pathname);
+  const activeTab =
+    location.pathname === "/me/shares" &&
+    new URLSearchParams(location.search).get("tab") === "comments"
+      ? "comments"
+      : section === "/me"
+        ? "home"
+        : section === "/me/shares"
+          ? "uploads"
+          : section === "/favorites"
+            ? "favorites"
+            : section === "/history"
+              ? "history"
+              : section === "/me/growth"
+                ? "growth"
+                : section === "/settings"
+                  ? "settings"
+                  : undefined;
+  const statValue = (value: number | null | undefined) =>
+    stats.isPending ? (
+      <span className="profile-overview-stat-loading" aria-label="正在加载" />
+    ) : (
+      (value ?? "—")
+    );
+  return (
+    <>
+      <section
+        className="profile-overview-hero"
+        aria-labelledby="profile-overview-name"
+        aria-busy={profileCoverPending}
+        style={
+          {
+            "--profile-stage": heroVisual.stage,
+            "--profile-on": heroVisual.on,
+            "--profile-ghost": heroVisual.ghost,
+          } as CSSProperties
+        }
+      >
+        <div
+          className="profile-overview-cover"
+          data-cover-kind={
+            displayedProfileCover === defaultProfileCover
+              ? "illustration"
+              : "photo"
+          }
+          data-cover-loading={profileCoverPending || undefined}
+          aria-hidden="true"
+        >
+          {profileCoverPending ? (
+            <span className="profile-overview-cover-loading" />
+          ) : displayedProfileCover === defaultProfileCover ? (
+            <img
+              src={mediaUrl(defaultProfileCover.pictureUrl?.[0])}
+              alt=""
+              draggable={false}
+            />
+          ) : (
+            <FoodCover
+              src={profileCoverSrc}
+              crop={displayedProfileCover.coverCrop}
+              alt=""
+              draggable={false}
+              onError={profilePhoto.onError}
+            />
+          )}
+        </div>
+        <div className="profile-overview-hero-top">
+          <span className="profile-overview-eyebrow">我的美食档案</span>
+          <ProfileEditLink className="profile-overview-edit">
+            <Icon name="edit" size={17} />
+            编辑资料
+          </ProfileEditLink>
+        </div>
+        <header className="profile-overview-identity">
+          <span className="profile-overview-avatar" aria-hidden="true">
+            {avatar && !avatarFailed ? (
+              <img src={avatar} alt="" onError={() => setAvatarFailed(true)} />
+            ) : (
+              user?.displayName?.slice(0, 1) || "食"
+            )}
+          </span>
+          <div className="profile-overview-intro">
+            <h1 id="profile-overview-name">{user?.displayName || "我的"}</h1>
+            <p>{user?.signature || BRAND_SLOGAN}</p>
+            <ProfileGrowth compact />
+          </div>
+        </header>
+        <div className="profile-overview-social" aria-label="个人统计">
+          <div>
+            <strong>{statValue(stats.data?.earnedLikes)}</strong>
+            <span>获赞</span>
+          </div>
+          <Link to="/me/shares">
+            <strong>{statValue(stats.data?.uploadedFoodsCount)}</strong>
+            <span>上传的菜</span>
+          </Link>
+          <Link
+            to={peopleHref("/me", "", "fans")}
+            state={{ profilePeopleFrom: location.key }}
+            preventScrollReset
+            aria-label="查看我的粉丝"
+          >
+            <strong>{statValue(stats.data?.fansCount)}</strong>
+            <span>粉丝</span>
+          </Link>
+          <Link
+            to={peopleHref("/me", "", "follow")}
+            state={{ profilePeopleFrom: location.key }}
+            preventScrollReset
+            aria-label="查看我的关注"
+          >
+            <strong>{statValue(stats.data?.followingsCount)}</strong>
+            <span>关注</span>
+          </Link>
+          {stats.isError && (
+            <button
+              className="profile-overview-stat-retry"
+              onClick={() => void stats.refetch()}
+            >
+              重新加载统计
+            </button>
+          )}
+        </div>
+      </section>
+      <div className="profile-overview-tabbar">
+        <nav className="profile-overview-tabs" aria-label="个人中心功能">
+          {tabs.map((tab) => (
+            <Link
+              key={tab.key}
+              to={tab.to}
+              aria-current={activeTab === tab.key ? "page" : undefined}
+              aria-controls="profile-workspace-panel"
+              state={{ preserveScroll: true }}
+              preventScrollReset
+            >
+              <Icon name={tab.icon} size={19} />
+              {tab.label}
+              {tab.key === "uploads" &&
+                stats.data?.uploadedFoodsCount != null && (
+                  <span>{stats.data.uploadedFoodsCount}</span>
+                )}
+              {tab.key === "favorites" &&
+                favorites.data?.totalItems != null && (
+                  <span>{favorites.data.totalItems}</span>
+                )}
+            </Link>
+          ))}
+        </nav>
+      </div>
+    </>
+  );
+}

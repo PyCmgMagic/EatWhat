@@ -63,7 +63,7 @@ import "@fontsource-variable/noto-sans-sc";
 import "@fontsource-variable/bricolage-grotesque";
 import "./mobile.css";
 import DesktopExperience from "../desktop/Desktop";
-import ProfileHelp from "../features/ProfileHelp";
+import HelpFeedback, { isHelpFeedbackPath } from "../features/HelpFeedback";
 import { profileSection } from "../app/profile-workspace";
 import { Catalog } from "../features/Catalog";
 import { PasswordByCode, RecommendationControls } from "../features/Account";
@@ -328,7 +328,7 @@ function MobileWorkspace() {
             ".mobile-viewport, .ew-mobile-feature, .mobile-page-native",
           )
         : null,
-    loc.pathname,
+    isHelpFeedbackPath(loc.pathname) ? "/help" : loc.pathname,
     0,
     // Animate page content only; the shared navigation stays mounted outside it.
     "opacity",
@@ -487,9 +487,11 @@ function MobileWorkspace() {
                   loc.pathname === "/me/shares" &&
                   new URLSearchParams(loc.search).get("tab") === "comments" ? (
                   <MobileMyComments />
-                ) : !desktop && !reference && loc.pathname === "/help" ? (
+                ) : !desktop &&
+                  !reference &&
+                  isHelpFeedbackPath(loc.pathname) ? (
                   <div className="ew-mobile-feature profile-mobile-page">
-                    <ProfileHelp />
+                    <HelpFeedback />
                   </div>
                 ) : !desktop &&
                   !reference &&
