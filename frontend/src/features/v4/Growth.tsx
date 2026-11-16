@@ -91,7 +91,6 @@ export default function Growth() {
                 ))}
               </ul>
               <p className="growth-rule">
-                升到 Lv.10 获得称号"老吃家"，会显示在你的主页和评论旁。
                 无需签到或领取，升级不扣经验；发布的内容因违规被删除时，会扣回它获得的经验。
               </p>
             </section>
