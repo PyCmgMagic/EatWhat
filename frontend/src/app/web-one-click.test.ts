@@ -266,8 +266,44 @@ describe("web one-click login", () => {
     }
   });
 
+  it("preserves negative carrier codes from live-shaped CU and CT failures", async () => {
+    const log = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const server = sdk({
+        getLoginToken: (o: any) =>
+          o.error({
+            code: 600011,
+            content: [
+              { vender: "CM", code: "103111" },
+              { vender: "CU", code: "-2", msg: "private-message" },
+              { vender: "CT", result: -30408, msg: "private-message" },
+            ],
+          }),
+      });
+      await expect(
+        webOneClickToken(
+          {
+            webOneClickToken: async () => ({ accessToken: "a", jwtToken: "j" }),
+          },
+          server as any,
+        ),
+      ).rejects.toThrow("600011；CM:103111；CU:-2；CT:-30408");
+      expect(log).toHaveBeenCalledWith(
+        "phone_auth_error",
+        expect.objectContaining({
+          carriers: ["CM:103111", "CU:-2", "CT:-30408"],
+        }),
+      );
+      expect(JSON.stringify(log.mock.calls)).not.toContain("private-message");
+    } finally {
+      log.mockRestore();
+    }
+  });
+
   it.each([
     [null, ""],
+    [[{ vender: "CT", result: "-13800000000" }], "CT:NO_CODE"],
+    [[{ vender: "CU", code: "-2-private-token" }], "CU:NO_CODE"],
     [
       [
         {

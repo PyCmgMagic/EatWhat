@@ -134,7 +134,7 @@ function carrierCodes(content: unknown): string[] {
           typeof value === "string" || typeof value === "number",
       )
       .map(String)
-      .filter((value) => /^\d{1,8}$/.test(value));
+      .filter((value) => /^-?\d{1,8}$/.test(value));
     const unique = [...new Set(codes)];
     const reason =
       typeof entry.msg === "string" && entry.msg.includes("script资源加载失败")
