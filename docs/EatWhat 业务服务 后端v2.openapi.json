@@ -7610,9 +7610,6 @@
           "policyVersion" : {
             "type" : "string"
           },
-          "deviceName" : {
-            "type" : "string"
-          },
           "installId" : {
             "type" : "string",
             "format" : "uuid"
@@ -7629,9 +7626,6 @@
             "minLength" : 0
           },
           "policyVersion" : {
-            "type" : "string"
-          },
-          "deviceName" : {
             "type" : "string"
           },
           "installId" : {
@@ -7662,9 +7656,6 @@
             "type" : "string"
           },
           "deletionKey" : {
-            "type" : "string"
-          },
-          "deviceName" : {
             "type" : "string"
           },
           "installId" : {
@@ -7719,9 +7710,6 @@
             "type" : "string"
           },
           "deletionKey" : {
-            "type" : "string"
-          },
-          "deviceName" : {
             "type" : "string"
           },
           "installId" : {

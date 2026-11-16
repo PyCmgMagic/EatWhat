@@ -3124,14 +3124,12 @@ export interface components {
         WebOneClickLogin: {
             spToken: string;
             policyVersion?: string;
-            deviceName?: string;
             /** Format: uuid */
             installId?: string;
         };
         OneClickLogin: {
             accessToken: string;
             policyVersion?: string;
-            deviceName?: string;
             /** Format: uuid */
             installId?: string;
         };
@@ -3142,7 +3140,6 @@ export interface components {
             device: "WEB" | "APP";
             policyVersion?: string;
             deletionKey?: string;
-            deviceName?: string;
             /** Format: uuid */
             installId?: string;
         };
@@ -3160,7 +3157,6 @@ export interface components {
             device: "WEB" | "APP";
             policyVersion?: string;
             deletionKey?: string;
-            deviceName?: string;
             /** Format: uuid */
             installId?: string;
         };
