@@ -32,6 +32,8 @@ type PhoneNumberServer = {
         btnText: string;
         isHideLogo: boolean;
         manualClose: boolean;
+        /** Render the carrier authorization page as a dialog, not full screen. */
+        isDialog?: boolean;
       };
       watch: (status: number) => void;
     },
@@ -536,6 +538,7 @@ export async function webOneClickToken(
                       btnText: "登录 / 注册",
                       isHideLogo: true,
                       manualClose: true,
+                      isDialog: true,
                     },
                     success: (raw) => {
                       const reply = parse(raw);

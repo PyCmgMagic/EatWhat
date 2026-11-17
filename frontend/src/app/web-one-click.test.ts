@@ -52,6 +52,9 @@ describe("web one-click login", () => {
       webOneClickToken(api, server as any, undefined, () => order.push("available")),
     ).resolves.toBe("sp-1");
     expect(order).toEqual(["check", "available", "auth_page"]);
+    expect(server.getLoginToken.mock.calls[0][0].authPageOption).toMatchObject({
+      isDialog: true,
+    });
     expect(server.checkLoginAvailable).toHaveBeenCalledTimes(1);
   });
 
