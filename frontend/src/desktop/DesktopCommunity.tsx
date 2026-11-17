@@ -2,7 +2,7 @@ import "../features/user-level.css";
 import { UserTitle } from "../components/UserTitle";
 import { userTitle } from "../api/growth";
 import { FieldMark } from "../features/FieldMark";
-import { boundedText, submissionPath } from "../api/content-rules";
+import { boundedText } from "../api/content-rules";
 import { BlockControl, UserFoods } from "../features/ApiV2";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -12,13 +12,7 @@ import { ProfileEditLink } from "../app/profile-navigation";
 import { useArea } from "../app/area";
 import { isDemo } from "../app/runtime";
 import { resultUncertain } from "../api/client";
-import {
-  mediaUrl,
-  money,
-  parseId,
-  type Food,
-  type Notification,
-} from "../api/models";
+import { mediaUrl, money, parseId, type Food } from "../api/models";
 import { useTask } from "../components/useTask";
 import { useMobile, DesignIcon as Icon } from "../mobile/ui";
 import { SlidingTabs } from "./motion";
@@ -29,7 +23,6 @@ import { demoDishes, visualFor } from "../mobile/catalog";
 import { stageCode } from "../api/food-display";
 import { DishIllustration } from "../components/DishIllustration";
 import "./friend-profile.css";
-import { historyTime } from "./history";
 import RestaurantLocationField, {
   requireShopLocation,
 } from "../features/RestaurantLocationField";
@@ -37,198 +30,14 @@ import type { MapPoint } from "../features/map-geometry";
 import { mealTimes, priceBands, shopKinds } from "../api/v2-vocab";
 import "./new-shop.css";
 import { PageSkeleton } from "../components/LoadingSkeleton";
-import { ProfileSectionNav } from "../features/ProfileSectionNav";
 import "../features/profile-activity.css";
 import {
   ShopTraitsFields,
   defaultShopTraits,
   type ShopTraits,
 } from "../features/ShopTraits";
-import {
-  Avatar,
-  PageHead,
-  Pager,
-  Section,
-  State,
-  TaskError,
-} from "./secondary";
+import { PageHead, Section, State, TaskError } from "./secondary";
 
-function notificationLink(n: Notification) {
-  const id = parseId(String(n.targetId ?? ""));
-  if (!id) return undefined;
-  const type = n.targetType?.toLowerCase();
-  return type === "food"
-    ? `/foods/${id}`
-    : type === "restaurant"
-      ? `/restaurants/${id}`
-      : undefined;
-}
-export function DesktopNotifications() {
-  const { api } = useApp(),
-    [page, setPage] = useState(1),
-    [filter, setFilter] = useState("all"),
-    q = useQuery({
-      queryKey: ["notifications", "list", page],
-      queryFn: () => api.notifications(page),
-    }),
-    unread = useQuery({
-      queryKey: ["notifications", "unread"],
-      queryFn: () => api.unread(),
-    }),
-    task = useTask(undefined, undefined, ["notifications"]);
-  const rows =
-    q.data?.items?.filter((n) => filter !== "unread" || n.read !== true) ?? [];
-  const list = useRef<HTMLDivElement>(null);
-  useContentMotion(
-    list,
-    `${filter}:${page}`,
-    filter === "all" ? 0 : 1,
-    "opacity",
-  );
-  return (
-    <div
-      className="pc-secondary-notifications profile-legacy-messages"
-      data-pc-secondary="notifications"
-    >
-      <PageHead
-        title="消息通知"
-        action={
-          <button
-            className="pc-button light"
-            disabled={task.isPending || !unread.data}
-            onClick={() => task.run(() => api.readAll())}
-          >
-            <Icon name="check" size={17} />
-            全部标为已读
-          </button>
-        }
-      />
-      <ProfileSectionNav section="messages" />
-      <div className="profile-legacy-message-body">
-        <section className="profile-legacy-message-panel" aria-label="互动消息">
-          <div className="pc-secondary-list-toolbar">
-            <SlidingTabs label="通知筛选" active={filter}>
-              {[
-                { id: "all", name: "全部消息" },
-                { id: "unread", name: "本页未读" },
-              ].map((x) => (
-                <button
-                  key={x.id}
-                  role="tab"
-                  aria-selected={filter === x.id}
-                  tabIndex={filter === x.id ? 0 : -1}
-                  onClick={() => setFilter(x.id)}
-                >
-                  {x.name}
-                </button>
-              ))}
-            </SlidingTabs>
-            <span className="profile-message-unread-count">
-              {unread.data == null
-                ? ""
-                : unread.data > 0
-                  ? `${unread.data} 条未读`
-                  : "消息都已读完"}
-            </span>
-          </div>
-          <TaskError error={task.error} />
-          {q.isPending || q.isError ? (
-            <State
-              loading={q.isPending}
-              error={q.error}
-              retry={() => void q.refetch()}
-            />
-          ) : rows.length ? (
-            <div className="pc-secondary-message-list" ref={list}>
-              {rows.map((n, i) => {
-                const link = notificationLink(n),
-                  date = historyTime(n.createdAt),
-                  actorId = parseId(String(n.actorId ?? "")),
-                  text =
-                    (
-                      {
-                        like: "赞了你的分享",
-                        favorite: "收藏了你的分享",
-                        follow: "关注了你",
-                        comment: "与你的分享有了新讨论",
-                      } as Record<string, string>
-                    )[n.type?.toLowerCase() ?? ""] || "与你有了新互动";
-                return (
-                  <article
-                    key={n.id ?? i}
-                    className={`pc-secondary-message profile-message-row ${n.read === false ? "unread" : ""}`}
-                  >
-                    <Avatar name={n.actorName} src={n.actorAvatar} />
-                    <div>
-                      <div className="pc-secondary-message-title">
-                        {actorId ? (
-                          <Link to={`/users/${actorId}`}>
-                            {n.actorName || "校园食友"}
-                          </Link>
-                        ) : (
-                          <b>{n.actorName || "校园食友圈"}</b>
-                        )}
-                        <span>{text}</span>
-                      </div>
-                      <time dateTime={date?.toISOString()}>
-                        {date
-                          ? date.toLocaleString("zh-CN", {
-                              month: "long",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "时间待确认"}
-                      </time>
-                      <div className="pc-secondary-inline-actions">
-                        {link && <Link to={link}>查看相关内容 →</Link>}
-                        {n.read === false && n.id && (
-                          <button
-                            disabled={task.isPending}
-                            onClick={() => task.run(() => api.read(n.id!))}
-                          >
-                            标为已读
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    {n.read === false && (
-                      <i className="pc-secondary-unread-dot" />
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-          ) : (
-            <State
-              title={
-                filter === "unread" ? "本页消息都已读完" : "暂时没有新消息"
-              }
-              detail="有新的互动时，会在这里告诉你。"
-            >
-              <Link className="pc-button light" to="/">
-                去发现好味道
-              </Link>
-            </State>
-          )}
-          <Pager
-            page={page}
-            hasNext={q.data?.hasNext}
-            disabled={q.isFetching}
-            onPage={setPage}
-          />
-        </section>
-        <div className="profile-activity-note">
-          <p>“本页未读”筛选当前页的消息，翻页可以继续查看更早的互动。</p>
-          <Link to="/settings/notifications">
-            <Icon name="settings" size={16} />
-            通知偏好
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
 function FriendFoodPhoto({ food }: { food: Food }) {
   const visual = visualFor(food, isDemo);
   const src = mediaUrl(food.pictureUrl?.[0]);
@@ -636,7 +445,7 @@ function StepMark({ index, done }: { index: number; done: boolean }) {
   );
 }
 export function DesktopNewShop() {
-  const { api, user } = useApp(),
+  const { api, user, toast } = useApp(),
     { area } = useArea(),
     m = useMobile(),
     nav = useNavigate(),
@@ -742,7 +551,8 @@ export function DesktopNewShop() {
                   update({ done: true });
                   if (created.revisionId) {
                     shopDrafts.delete(key);
-                    nav(submissionPath(created, "/publish"));
+                    toast("新店已提交，等待审核，可稍后在发布页搜索选择。");
+                    nav("/publish");
                     return;
                   }
                   m.setShopId(created.id);

@@ -72,14 +72,6 @@ export function foodEditBody<
   }
   return body;
 }
-export function submissionPath(
-  result: { revisionId?: string | null },
-  fallback: string,
-) {
-  return result.revisionId
-    ? `/submissions/${encodeURIComponent(result.revisionId)}`
-    : fallback;
-}
 export function restaurantEditBody(
   original: Restaurant,
   patch: Schema["EditRestaurantDTORequest"],

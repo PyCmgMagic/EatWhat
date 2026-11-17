@@ -288,11 +288,11 @@ function UserDrawer({ user: u, onClose }: { user: Row; onClose: () => void }) {
               d = new FormData(form),
               reason = String(d.get("reason") || "").trim(),
               until = String(d.get("until") || "");
-            if (reason)
-              ban.run(async () => {
-                await api.ban(u.id!, reason, fromLocalInput(until));
-                form.reset();
-              });
+            ban.run(async () => {
+              if (!reason) throw new Error("请填写封禁原因。");
+              await api.ban(u.id!, reason, fromLocalInput(until));
+              form.reset();
+            });
           }}
         >
           <Field label="封禁原因" wide>

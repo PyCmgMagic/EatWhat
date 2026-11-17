@@ -175,6 +175,13 @@ function Account() {
           to="/verify"
           action={user?.verified === false ? "去认证" : "查看"}
         />
+        <Row
+          icon="logout"
+          title="注销账号"
+          value="了解注销流程或提交注销申请"
+          to="/settings/delete"
+          action="查看"
+        />
       </section>
     </>
   );

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAdminState } from "../../app/admin-state";
 import { useApp } from "../../app/state";
-import { restaurantEditBody, submissionPath } from "../../api/content-rules";
+import { restaurantEditBody } from "../../api/content-rules";
 import { type Hub, type Restaurant } from "../../api/models";
 import { useTask } from "../../components/useTask";
 import {
@@ -230,7 +230,6 @@ function RestaurantEditor({
   onClose: () => void;
 }) {
   const { api, toast } = useApp(),
-    nav = useNavigate(),
     task = useTask(undefined, onClose, ["admin", "restaurants"]),
     [traits, setTraits] = useState(() =>
       shopTraitsOf(r as Restaurant & Partial<ShopTraits>),
@@ -258,7 +257,6 @@ function RestaurantEditor({
           toast(result?.revisionId ? "修改已提交审核。" : "餐厅资料已更新。", {
             tone: "success",
           });
-          if (result?.revisionId) nav(submissionPath(result, "/admin"));
         });
       }}
       footer={

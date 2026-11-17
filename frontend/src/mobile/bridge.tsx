@@ -10,11 +10,7 @@ import {
 } from "../features/v4/Remote";
 import { useSendSignal } from "../features/useSendSignal";
 import React, { useEffect, useId, useRef, useState, type ReactNode } from "react";
-import {
-  validateFoodDraft,
-  normalizedTag,
-  submissionPath,
-} from "../api/content-rules";
+import { validateFoodDraft, normalizedTag } from "../api/content-rules";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   keepPreviousData,
@@ -251,6 +247,8 @@ export function useDesignBridge(
     ? setHomeCategory
     : setListCategory;
   const [mapShopId, setMapShopId] = useState<number>();
+  const [dismissed, setDismissed] = useState<number[]>([]);
+  const [dismissing, setDismissing] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [avatarCrop, setAvatarCrop] = useState<Draft["images"][number] | null>(
@@ -313,8 +311,13 @@ export function useDesignBridge(
     enabled: ready && browse && homeScreens.has(screen),
   });
   // Dine-in lists the recommended shops; the carousel shows their dishes.
-  const recommendedFoods = recommendations.data?.items,
-    recommendedShops = recommendations.data?.shops ?? null;
+  const recommendedFoods = recommendations.data?.items?.filter(
+      (f) => !dismissed.includes(Number(f.restaurantId)),
+    ),
+    recommendedShops =
+      recommendations.data?.shops?.filter(
+        (s) => !dismissed.includes(Number(s.id)),
+      ) ?? null;
   const categoryRecommendations = useQuery({
     queryKey: [
       "foods",
@@ -844,11 +847,11 @@ export function useDesignBridge(
           m.setFoodId(created.id);
           toast(
             created.revisionId
-              ? "菜品已提交审核，可在我的提交查看进度。"
+              ? "菜品已提交，等待审核。"
               : "菜已发布。",
           );
           if (activeLocation.current === publishingLocation)
-            nav(submissionPath(created, `/foods/${created.id}`));
+            nav(created.revisionId ? "/me/shares" : `/foods/${created.id}`);
         } catch (error) {
           if (creating && resultUncertain(error))
             m.setDraft({ publishUncertain: true });
@@ -1814,6 +1817,54 @@ export function useDesignBridge(
                 {distance}
               </p>
             )}
+            {session && food?.restaurantId && (
+              <button
+                type="button"
+                className="mobile-home-dismiss"
+                disabled={dismissing}
+                onClick={async () => {
+                  const targetShopId = Number(food.restaurantId);
+                  setDismissing(true);
+                  try {
+                    await api.dismissRecommendation(targetShopId);
+                    setDismissed((ids) => [...ids, targetShopId]);
+                    cache.setQueriesData<{
+                      items?: Food[];
+                      shops?: Restaurant[] | null;
+                    }>({ queryKey: ["foods", "mobile-recommend"] }, (prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            items: prev.items?.filter(
+                              (f) => Number(f.restaurantId) !== targetShopId,
+                            ),
+                            shops:
+                              prev.shops?.filter(
+                                (s) => Number(s.id) !== targetShopId,
+                              ) ?? null,
+                          }
+                        : prev,
+                    );
+                    cache.setQueriesData<Food[]>(
+                      { queryKey: ["foods", "mobile-recommend-category"] },
+                      (prev) =>
+                        prev?.filter(
+                          (f) => Number(f.restaurantId) !== targetShopId,
+                        ),
+                    );
+                    toast(
+                      `30 天内不再推荐「${food.restaurantName ?? "这家店"}」`,
+                    );
+                  } catch (e) {
+                    toast(errorMessage(e));
+                  } finally {
+                    setDismissing(false);
+                  }
+                }}
+              >
+                不想吃这家
+              </button>
+            )}
             <p
               className={`mobile-home-price${food?.price == null ? " is-unknown" : ""}`}
             >
@@ -2009,7 +2060,11 @@ export function useDesignBridge(
           );
         const listQuery = category ? categoryRecommendations : recommendations;
         const list =
-            (category ? categoryRecommendations.data : recommendedFoods) ?? [],
+            (category
+              ? categoryRecommendations.data?.filter(
+                  (f) => !dismissed.includes(Number(f.restaurantId)),
+                )
+              : recommendedFoods) ?? [],
           shown = category
             ? list.filter((f) => f.category === category)
             : isDemo

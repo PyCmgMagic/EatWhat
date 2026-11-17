@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAdminState } from "../../app/admin-state";
 import { useApp } from "../../app/state";
-import { foodEditBody, submissionPath } from "../../api/content-rules";
+import { foodEditBody } from "../../api/content-rules";
 import {
   categories,
   foodAuthor,
@@ -235,7 +235,6 @@ export default function Foods() {
 
 function FoodEditor({ food, onClose }: { food: Food; onClose: () => void }) {
   const { api, toast } = useApp(),
-    nav = useNavigate(),
     task = useTask(undefined, onClose, ["foods", "admin"]);
   return (
     <Drawer
@@ -259,7 +258,6 @@ function FoodEditor({ food, onClose }: { food: Food; onClose: () => void }) {
           toast(result?.revisionId ? "修改已提交审核。" : "菜品资料已更新。", {
             tone: "success",
           });
-          if (result?.revisionId) nav(submissionPath(result, "/admin"));
         });
       }}
       footer={

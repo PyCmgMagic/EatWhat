@@ -46,7 +46,7 @@ import {
 } from "../api/food-display";
 
 import { isV4Path } from "../features/v4-paths";
-import { boundedText, submissionPath } from "../api/content-rules";
+import { boundedText } from "../api/content-rules";
 import { RemoteBanner, FeatureAvailability } from "../features/v4/Remote";
 import { MobileComments } from "../features/comments/Comments";
 const V4Routes = lazy(() => import("../features/v4/Routes"));
@@ -787,7 +787,7 @@ function NewShopDetails({ nameHint }: { nameHint: string }) {
 }
 function NewShopDetailsForm({ nameHint }: { nameHint: string }) {
   const active = usePageLifetime();
-  const { api } = useApp(),
+  const { api, toast } = useApp(),
     m = useMobile(),
     nav = useNavigate(),
     { area } = useArea(),
@@ -826,7 +826,8 @@ function NewShopDetailsForm({ nameHint }: { nameHint: string }) {
             });
             if (!active.current) return;
             if (created.revisionId) {
-              nav(submissionPath(created, "/publish"));
+              toast("新店已提交，等待审核。");
+              nav("/publish");
               return;
             }
             // Continue only when no private revision needs approval.

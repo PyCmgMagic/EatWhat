@@ -1,7 +1,7 @@
 import { useFeedbackState } from "../components/feedback";
 import { DishAvailabilityFields } from "../features/DishAvailability";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { validateFoodDraft, submissionPath } from "../api/content-rules";
+import { validateFoodDraft } from "../api/content-rules";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -279,12 +279,12 @@ export default function DesktopPublish() {
       app.refreshMe();
       app.toast(
         created.revisionId
-          ? "提交已受理，请在我的提交中查看审核进度。"
+          ? "菜品已提交，等待审核。"
           : "这道菜已发布，快来看看你的分享。",
       );
       m.setFoodId(created.id);
       if (active.current && routeKey.current === startedAtRoute)
-        nav(submissionPath(created, `/foods/${created.id}`));
+        nav(created.revisionId ? "/me/shares" : `/foods/${created.id}`);
     } catch (e) {
       setError(errorMessage(e));
       setDuplicate(duplicateFoodId(e));

@@ -138,6 +138,10 @@ export function SettingsShell({ children }: { children: ReactNode }) {
                       "/settings/phone",
                       "/settings/devices",
                       "/settings/delete",
+                      "/settings/password",
+                      "/settings/bind-phone",
+                      "/settings/username",
+                      "/verify",
                     ].includes(path))
                     ? "page"
                     : undefined

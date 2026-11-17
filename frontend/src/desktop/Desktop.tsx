@@ -99,9 +99,6 @@ const FoodDiscussion = lazy(() => import("./FoodDiscussion"));
 const MyFoodComments = lazy(() =>
   import("./FoodDiscussion").then((m) => ({ default: m.MyFoodComments })),
 );
-const DesktopTags = lazy(() =>
-  import("./DesktopLibrary").then((m) => ({ default: m.DesktopTags })),
-);
 const DesktopHistory = lazy(() =>
   import("./DesktopLibrary").then((m) => ({ default: m.DesktopHistory })),
 );
@@ -129,11 +126,6 @@ const DesktopSettingsPage = lazy(() =>
   import("./DesktopAccount").then((m) => ({ default: m.DesktopSettingsPage })),
 );
 const SettingsHome = lazy(() => import("../features/SettingsHome"));
-const DesktopNotifications = lazy(() =>
-  import("./DesktopCommunity").then((m) => ({
-    default: m.DesktopNotifications,
-  })),
-);
 const DesktopUser = lazy(() =>
   import("./DesktopCommunity").then((m) => ({ default: m.DesktopUser })),
 );
@@ -159,7 +151,6 @@ const categories = [
     .filter((c) => c.id !== "other")
     .map((c) => ({ key: c.id, name: c.name })),
 ];
-const protectedScreens = new Set(["G-MyTags"]);
 function useTask() {
   const cache = useQueryClient(),
     [busy, setBusy] = useState(false),
@@ -536,12 +527,6 @@ function DesktopPage({
     );
   if (loc.pathname === "/auth" || loc.pathname.startsWith("/auth/"))
     return <NotFound />;
-  if (loc.pathname === "/notifications")
-    return (
-      <DesktopGate verified={false}>
-        <DesktopNotifications />
-      </DesktopGate>
-    );
   if (/^\/users\/\d+$/.test(loc.pathname))
     return (
       <DesktopGate verified={false}>
@@ -610,8 +595,7 @@ function DesktopPage({
   else if (screen === "G-Dish") content = <DesktopDish />;
   else if (screen === "G-Detail") content = <DesktopRestaurant />;
   else if (screen === "G-TagDishes") content = <Catalog favorites />;
-  else if (screen === "G-MyTags" || screen === "G-History")
-    content = screen === "G-MyTags" ? <DesktopTags /> : <DesktopHistory />;
+  else if (screen === "G-History") content = <DesktopHistory />;
   else if (screen === "G-Settings" && loc.pathname === "/settings")
     content = <SettingsHome embedded />;
   else {
@@ -638,7 +622,7 @@ function DesktopPage({
   ].includes(screen) ? (
     content
   ) : (
-    <DesktopGate verified={protectedScreens.has(screen)}>{content}</DesktopGate>
+    <DesktopGate verified={false}>{content}</DesktopGate>
   );
 }
 function DiscussionRedirect() {
@@ -910,7 +894,10 @@ function DesktopHome() {
   });
   useContentMotion(copy, food?.id ?? undefined, n, "y");
   const selection = category
-    ? (categoryQuery.data ?? []).filter((f) => f.category === category)
+    ? (categoryQuery.data ?? []).filter(
+        (f) =>
+          f.category === category && !dismissed.includes(Number(f.restaurantId)),
+      )
     : isDemo
       ? [
           list[4],
@@ -1000,13 +987,7 @@ function DesktopHome() {
             ) : (
               !selection.length &&
               !categoryQuery.isFetching && (
-                <Status
-                  title={
-                    category && categoryQuery.isFetching
-                      ? "正在端上这一组好味道"
-                      : "这一组里，还没有这个口味"
-                  }
-                />
+                <Status title="这一组里，还没有这个口味" />
               )
             )}
           </>
@@ -1093,6 +1074,11 @@ function DesktopHome() {
                             ) ?? null,
                         }
                       : prev,
+                  );
+                  cache.setQueriesData<Food[]>(
+                    { queryKey: ["foods", "mobile-recommend-category"] },
+                    (prev) =>
+                      prev?.filter((f) => Number(f.restaurantId) !== shopId),
                   );
                   toast(
                     `30 天内不再推荐「${food.restaurantName ?? "这家店"}」`,
