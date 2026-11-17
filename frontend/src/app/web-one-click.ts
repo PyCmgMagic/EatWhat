@@ -3,12 +3,17 @@
 
 /** 600000 is success in every callback of the web SDK. */
 const OK = 600000;
+const SDK_VERSION = "2.1.15";
 
 type SdkReply = {
   code?: number | string;
   spToken?: string;
   msg?: string;
   content?: unknown;
+  vender?: unknown;
+  requestId?: unknown;
+  msgId?: unknown;
+  carrier?: unknown;
 };
 type SdkCallbacks = {
   success: (reply: SdkReply | string) => void;
@@ -148,10 +153,107 @@ function carrierCodes(content: unknown): string[] {
   return [...new Set(result)];
 }
 
+function record(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+/** Keep provider correlation IDs only; arbitrary strings can contain credentials. */
+function diagnosticId(value: unknown) {
+  return typeof value === "string" &&
+    /^(?:[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}|[\da-f]{16,64})$/i.test(
+      value,
+    ) &&
+    !/^\d+$/.test(value)
+    ? value
+    : undefined;
+}
+
+function failureReason(values: unknown[]) {
+  const message = values
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.slice(0, 512))
+    .join(" ");
+  if (/script资源加载失败/.test(message)) return "SCRIPT_LOAD_FAILED";
+  if (/(?:TypeError|ReferenceError|SyntaxError):/.test(message))
+    return "SCRIPT_ERROR";
+  if (/timeout|timed\s*out|超时/i.test(message)) return "TIMEOUT";
+  if (/network|failed to fetch|网络/i.test(message)) return "NETWORK_ERROR";
+  return undefined;
+}
+
+/** Supports both the aggregated carrier list and a single carrier callback. */
+function carrierDiagnostics(reply: SdkReply) {
+  const entries = Array.isArray(reply?.content)
+    ? reply.content.slice(0, 3)
+    : [reply];
+  return entries.flatMap((value) => {
+    const entry = record(value);
+    const vendor = entry.vender;
+    if (vendor !== "CM" && vendor !== "CU" && vendor !== "CT") return [];
+    const content = record(entry.content);
+    const carrier = record(entry.carrier);
+    const codes = [
+      ...(value === reply ? [] : [entry.code]),
+      entry.resultCode,
+      entry.result,
+      content.code,
+      content.resultCode,
+      content.result,
+      carrier.carrierSdkCode,
+      carrier.carrierRespCode,
+    ].flatMap((code) =>
+      (typeof code === "string" || typeof code === "number") &&
+      /^-?\d{1,8}$/.test(String(code))
+        ? [String(code)]
+        : [],
+    );
+    const reason = failureReason([
+      entry.msg,
+      entry.message,
+      content.msg,
+      content.message,
+      carrier.carrierSdkMsg,
+    ]);
+    const requestId =
+      diagnosticId(entry.requestId) ?? diagnosticId(content.requestId);
+    const msgId = diagnosticId(entry.msgId) ?? diagnosticId(content.msgId);
+    const carrierTraceId = diagnosticId(carrier.carrierTraceId);
+    return [
+      {
+        vendor,
+        codes: [...new Set(codes)],
+        ...(reason ? { reason } : {}),
+        ...(requestId ? { requestId } : {}),
+        ...(msgId ? { msgId } : {}),
+        ...(carrierTraceId ? { carrierTraceId } : {}),
+      },
+    ];
+  });
+}
+
+function browserContext() {
+  // Extract standard OS/browser versions rather than recording a full custom UA.
+  const ua = navigator.userAgent.slice(0, 512);
+  return {
+    platform:
+      ua.match(
+        /Android [\d.]{1,16}|(?:iPhone|CPU) OS [\d_]{1,16}|Windows NT [\d.]{1,16}|Mac OS X [\d_]{1,16}|HarmonyOS(?: [\d.]{1,16})?/i,
+      )?.[0] ?? "unknown",
+    versions: (
+      ua.match(
+        /(?:UCBrowser|UCWEB|MicroMessenger|MQQBrowser|QQBrowser|EdgA?|OPR|Chrome|CriOS|Firefox|FxiOS|Version|Safari)\/[\d.]{1,32}/gi,
+      ) ?? []
+    ).slice(0, 8),
+  };
+}
+
 function failure(
   reply: SdkReply,
   timing: WebOneClickTiming,
   stage: "environment" | "carrier",
+  connection: string,
 ) {
   // Accept only SDK error codes, never display/log the raw provider message.
   const code =
@@ -170,11 +272,26 @@ function failure(
     "600034": "一键登录凭证已过期，请重新点击一键登录。",
   };
   const carriers = carrierCodes(reply?.content);
+  const requestId = diagnosticId(reply?.requestId);
+  const carrierDetails = carrierDiagnostics(reply);
   console.warn("phone_auth_error", {
     trace: timing.trace,
+    timestamp: new Date().toISOString(),
+    sdkVersion: SDK_VERSION,
     stage,
     code: code ?? "unknown",
     ...(carriers.length ? { carriers } : {}),
+    ...(requestId ? { requestId } : {}),
+    ...(carrierDetails.length ? { carrierDetails } : {}),
+    network: {
+      connection: /^(wifi|cellular|2g|3g|4g|5g|ethernet|none)$/i.test(
+        connection,
+      )
+        ? connection.toLowerCase()
+        : "unknown",
+      online: navigator.onLine,
+    },
+    browser: browserContext(),
   });
   const message =
     (code && messages[code]) ||
@@ -188,7 +305,7 @@ function failure(
  * operator_ui_log_static), hosted with the site. It sets
  * window.PhoneNumberServer, which this page must never overwrite.
  */
-export const SDK_URL = `${import.meta.env.BASE_URL}vendor/numberauth/numberAuth-web-sdk-2.1.15.js`;
+export const SDK_URL = `${import.meta.env.BASE_URL}vendor/numberauth/numberAuth-web-sdk-${SDK_VERSION}.js`;
 
 type SdkWindow = Window & {
   PhoneNumberServer?: new () => PhoneNumberServer;
@@ -238,7 +355,8 @@ export async function webOneClickAvailable(
     const server = await timed(timing, "sdk", () =>
       sdk ? Promise.resolve(sdk) : loadSdk(),
     );
-    if (server.getConnection() === "wifi") return false;
+    const connection = server.getConnection();
+    if (connection === "wifi") return false;
     const { accessToken, jwtToken } = await timed(timing, "token", () =>
       api.webOneClickToken(location.href, timing.trace),
     );
@@ -250,7 +368,7 @@ export async function webOneClickAvailable(
         if (checked) return;
         checked = true;
         if (!available && raw !== undefined)
-          failure(parse(raw), timing, "environment");
+          failure(parse(raw), timing, "environment", connection);
         recordTiming(timing, "environment", start, available ? "ok" : "error");
         resolve(available);
       };
@@ -278,7 +396,8 @@ export async function webOneClickToken(
   const server = await timed(timing, "sdk", () =>
     sdk ? Promise.resolve(sdk) : loadSdk(),
   );
-  if (server.getConnection() === "wifi") throw new Error(WIFI);
+  const connection = server.getConnection();
+  if (connection === "wifi") throw new Error(WIFI);
   const { accessToken, jwtToken } = await timed(timing, "token", () =>
     api.webOneClickToken(location.href, timing.trace),
   );
@@ -292,7 +411,7 @@ export async function webOneClickToken(
         if (checked) return;
         checked = true;
         recordTiming(timing, "environment", start, "error");
-        reject(failure(parse(raw), timing, "environment"));
+        reject(failure(parse(raw), timing, "environment", connection));
       };
       server.checkLoginAvailable({
         accessToken,
@@ -333,10 +452,17 @@ export async function webOneClickToken(
                         reply.spToken.trim()
                       )
                         settle(reply.spToken);
-                      else settle(undefined, failure(reply, timing, "carrier"));
+                      else
+                        settle(
+                          undefined,
+                          failure(reply, timing, "carrier", connection),
+                        );
                     },
                     error: (raw) =>
-                      settle(undefined, failure(parse(raw), timing, "carrier")),
+                      settle(
+                        undefined,
+                        failure(parse(raw), timing, "carrier", connection),
+                      ),
                     watch: (status) => {
                       if (status === 2)
                         settle(

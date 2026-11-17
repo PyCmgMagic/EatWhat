@@ -195,11 +195,14 @@ describe("web one-click login", () => {
             server as any,
           ),
         ).rejects.toThrow(`${message}`);
-        expect(log).toHaveBeenCalledWith("phone_auth_error", {
-          trace: expect.any(String),
-          stage: "carrier",
-          code: String(code),
-        });
+        expect(log).toHaveBeenCalledWith(
+          "phone_auth_error",
+          expect.objectContaining({
+            trace: expect.any(String),
+            stage: "carrier",
+            code: String(code),
+          }),
+        );
         expect(JSON.stringify(log.mock.calls)).not.toMatch(
           /private-reply|private-token/,
         );
@@ -297,6 +300,187 @@ describe("web one-click login", () => {
       );
       expect(JSON.stringify(log.mock.calls)).not.toContain("private-message");
     } finally {
+      log.mockRestore();
+    }
+  });
+
+  it("logs a support report for the carrier failure with correlation IDs and device context", async () => {
+    const log = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const timing = createWebOneClickTiming();
+    const requestId = "12345678-abcd-4321-abcd-123456789abc";
+    const msgId = "abcdef0123456789abcdef0123456789";
+    try {
+      const server = sdk({
+        getLoginToken: (o: any) =>
+          o.error(
+            JSON.stringify({
+              code: 600011,
+              requestId,
+              msg: "private-message",
+              spToken: "private-token",
+              content: [
+                {
+                  vender: "CU",
+                  code: "-2",
+                  msg: "request timeout: private-token",
+                },
+                { vender: "CM", code: "103111", msgId },
+                {
+                  vender: "CT",
+                  result: -30408,
+                  requestId,
+                  carrier: { carrierTraceId: msgId, carrierSdkCode: -30408 },
+                  mobile: "13800000000",
+                },
+              ],
+            }),
+          ),
+      });
+      await expect(
+        webOneClickToken(
+          {
+            webOneClickToken: async () => ({ accessToken: "a", jwtToken: "j" }),
+          },
+          server as any,
+          timing,
+        ),
+      ).rejects.toThrow("600011；CU:-2；CM:103111；CT:-30408");
+      expect(log).toHaveBeenCalledOnce();
+      expect(log).toHaveBeenCalledWith(
+        "phone_auth_error",
+        expect.objectContaining({
+          trace: timing.trace,
+          timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+          sdkVersion: "2.1.15",
+          stage: "carrier",
+          code: "600011",
+          requestId,
+          network: { connection: "cellular", online: navigator.onLine },
+          browser: expect.any(Object),
+          carrierDetails: [
+            { vendor: "CU", codes: ["-2"], reason: "TIMEOUT" },
+            { vendor: "CM", codes: ["103111"], msgId },
+            {
+              vendor: "CT",
+              codes: ["-30408"],
+              requestId,
+              carrierTraceId: msgId,
+            },
+          ],
+        }),
+      );
+      expect(JSON.stringify(log.mock.calls)).not.toMatch(
+        /private-|13800000000/,
+      );
+    } finally {
+      log.mockRestore();
+    }
+  });
+
+  it("logs only validated provider IDs and categorizes script errors without logging URLs", async () => {
+    const log = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      await expect(
+        webOneClickAvailable(
+          {
+            webOneClickToken: async () => ({ accessToken: "a", jwtToken: "j" }),
+          },
+          sdk({
+            checkLoginAvailable: (o: any) =>
+              o.error({
+                code: 600011,
+                requestId: "13800000000",
+                content: [
+                  {
+                    vender: "CM",
+                    msgId: "private-token",
+                    carrier: {
+                      carrierTraceId: "https://private.example/?token=secret",
+                    },
+                    msg: "https://private.example/sdk?token=secret script资源加载失败",
+                  },
+                ],
+              }),
+          }) as any,
+        ),
+      ).resolves.toBe(false);
+      expect(log).toHaveBeenCalledWith(
+        "phone_auth_error",
+        expect.objectContaining({
+          stage: "environment",
+          carrierDetails: [
+            { vendor: "CM", codes: [], reason: "SCRIPT_LOAD_FAILED" },
+          ],
+        }),
+      );
+      expect(JSON.stringify(log.mock.calls)).not.toMatch(
+        /private|secret|13800000000/,
+      );
+    } finally {
+      log.mockRestore();
+    }
+  });
+
+  it("extracts diagnostics from a single carrier SDK failure as well as aggregated failures", async () => {
+    const log = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const userAgent = vi
+      .spyOn(navigator, "userAgent", "get")
+      .mockReturnValue(
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Version/18.0 Mobile/15E148 Safari/604.1 private-value",
+      );
+    const requestId = "12345678-abcd-4321-abcd-123456789abc";
+    const msgId = "abcdef0123456789abcdef0123456789";
+    try {
+      await expect(
+        webOneClickToken(
+          {
+            webOneClickToken: async () => ({ accessToken: "a", jwtToken: "j" }),
+          },
+          sdk({
+            getLoginToken: (o: any) =>
+              o.error({
+                code: 600011,
+                vender: "CU",
+                requestId,
+                carrier: {
+                  carrierTraceId: msgId,
+                  carrierSdkCode: "-2",
+                  carrierRespCode: "100001",
+                  carrierSdkMsg: "network error: private-value",
+                },
+                content: {
+                  result: "-2",
+                  resultCode: "100001",
+                  msgId,
+                  accessToken: "private-value",
+                },
+              }),
+          }) as any,
+        ),
+      ).rejects.toThrow("运营商取号失败");
+      expect(log).toHaveBeenCalledWith(
+        "phone_auth_error",
+        expect.objectContaining({
+          requestId,
+          carrierDetails: [
+            {
+              vendor: "CU",
+              codes: ["100001", "-2"],
+              reason: "NETWORK_ERROR",
+              requestId,
+              msgId,
+              carrierTraceId: msgId,
+            },
+          ],
+          browser: {
+            platform: "iPhone OS 18_0",
+            versions: ["Version/18.0", "Safari/604.1"],
+          },
+        }),
+      );
+      expect(JSON.stringify(log.mock.calls)).not.toContain("private-value");
+    } finally {
+      userAgent.mockRestore();
       log.mockRestore();
     }
   });
