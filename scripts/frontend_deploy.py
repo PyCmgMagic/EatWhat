@@ -18,12 +18,37 @@ import tarfile
 import tempfile
 import time
 from urllib.parse import quote, urlsplit
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 HOST = "64.178.99.89"
 DEFAULT_BASE = "/www/wwwroot/eatwhat-frontend"
 DEFAULT_PUBLIC = "https://eat.v50to.you"
 DEFAULT_API = "https://eat.v50to.you/api/recommend/tags"
+# Last step started, reported when the deployment fails.
+STAGE = "start"
+
+
+def stage(name):
+    global STAGE
+    STAGE = name
+    print("Stage: " + name, flush=True)
+
+
+def describe(error):
+    """Error class and OS reason only; never HTTP bodies, URLs or credentials."""
+    parts = [type(error).__name__]
+    if isinstance(error, HTTPError):
+        parts.append(f"HTTP {error.code}")
+    reason = getattr(error, "reason", None)
+    if isinstance(reason, BaseException):
+        parts.append(type(reason).__name__)
+        error = reason
+    if isinstance(getattr(error, "errno", None), int):
+        parts.append(f"errno {error.errno}")
+    if isinstance(getattr(error, "strerror", None), str):
+        parts.append(error.strerror[:80])
+    return ", ".join(parts)
 MARKER = "deployment.json"
 RELEASE = re.compile(r"[0-9a-f]{40}-[0-9]+-[0-9]+\Z")
 MAX_BYTES = 512 * 1024 * 1024
@@ -137,6 +162,18 @@ def check_api(url):
                 for key in ("categories", "tags", "dislikableTags")),
         "API smoke check expected the backend v2 recommendation tags",
     )
+
+
+def check_api_with_retry(api, attempts=5, delay=3):
+    # The API can be slow or briefly unreachable from the server itself.
+    for attempt in range(1, attempts + 1):
+        try:
+            return check_api(api)
+        except (ValueError, OSError) as error:
+            if attempt == attempts:
+                raise
+            print(f"API check attempt {attempt} failed ({describe(error)}); retrying", flush=True)
+            time.sleep(delay)
 
 
 def check_site(public, target):
@@ -271,9 +308,11 @@ def apply(base, bundle, expected_digest, public, api):
     with deployment_lock(base):
         base = base.resolve(strict=True)
         previous = current_target(base)
-        check_api(api)  # Fail without switching if the existing API is unavailable.
+        stage("check API before deploying")
+        check_api_with_retry(api)  # Fail without switching if the existing API is unavailable.
         with tempfile.TemporaryDirectory(prefix=".prepare-", dir=base / "releases") as temporary:
             candidate = Path(temporary)
+            stage("unpack bundle")
             manifest = unpack(bundle, expected_digest, candidate)
             state = base / "deployment-state.json"
             old_marker = state if state.exists() else previous / MARKER
@@ -282,6 +321,7 @@ def apply(base, bundle, expected_digest, public, api):
                 require(manifest["sequence"] >= old["sequence"], "Refusing a stale workflow deployment")
                 require(manifest["sequence"] != old["sequence"] or manifest["sourceSha"] == old["sourceSha"],
                         "Conflicting build sequence")
+            stage("retain previous assets")
             retain_assets(previous, candidate)
             target = base / "releases" / manifest["release"]
             require(not target.exists(), "Release already exists; rerun the workflow for a new attempt")
@@ -293,6 +333,7 @@ def apply(base, bundle, expected_digest, public, api):
             os.replace(temporary_state, state)
             shutil.copyfile(__file__, base / "frontend_deploy.py")
             # TemporaryDirectory cleanup tolerates the moved directory.
+            stage("activate and verify public site")
             activate(base, target, previous, public, api)
         print("Activated release " + manifest["release"])
 
@@ -340,9 +381,12 @@ def ship(bundle):
                    "StrictHostKeyChecking=yes", "-o", f"UserKnownHostsFile={known}", "-o", "ConnectTimeout=15"]
         def ssh(arguments):
             subprocess.run(["ssh", *options, "-p", port, target, shlex.join(arguments)], check=True)
+        stage("create remote directory")
         ssh(["mkdir", "-p", "--", remote])
+        stage("upload bundle")
         subprocess.run(["scp", *options, "-P", port, str(bundle), str(Path(__file__).resolve()),
                         f"{target}:{remote}/"], check=True)
+        stage("apply on server")
         ssh(["python3", remote + "/frontend_deploy.py", "apply", "--base", base,
              "--bundle", remote + "/" + bundle.name, "--sha256", expected,
              "--public-url", public, "--api-smoke-url", api])
@@ -384,7 +428,10 @@ if __name__ == "__main__":
     try:
         main()
     except (ValueError, RuntimeError) as error:
-        raise SystemExit("Frontend deployment failed: " + str(error))
+        cause = error.__cause__
+        detail = f" ({describe(cause)})" if isinstance(cause, BaseException) else ""
+        raise SystemExit("Frontend deployment failed during " + STAGE + ": " + str(error) + detail)
     except Exception as error:
         # Do not print HTTP bodies, credential-bearing environment values or SSH keys.
-        raise SystemExit("Frontend deployment failed (" + type(error).__name__ + "); inspect the failed step and server state.")
+        raise SystemExit("Frontend deployment failed during " + STAGE + " (" + describe(error)
+                         + "); inspect the failed step and server state.")

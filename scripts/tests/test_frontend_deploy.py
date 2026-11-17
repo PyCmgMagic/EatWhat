@@ -65,9 +65,27 @@ class DeploymentTest(unittest.TestCase):
         self.assertEqual((self.base / "current").resolve(), self.old)
 
     def test_api_failure_does_not_switch(self):
-        with patch.object(deploy, "check_api", side_effect=ValueError("API down")), self.assertRaises(ValueError):
+        with patch.object(deploy, "check_api", side_effect=ValueError("API down")) as check, \
+                patch.object(deploy.time, "sleep"), self.assertRaises(ValueError):
             self.apply()
+        self.assertEqual(check.call_count, 5)
         self.assertEqual((self.base / "current").resolve(), self.old)
+
+    def test_slow_api_before_deploying_is_retried(self):
+        failures = [TimeoutError("timed out"), OSError(110, "Connection timed out")]
+        def check(url):
+            if failures:
+                raise failures.pop(0)
+        with patch.object(deploy, "check_api", side_effect=check), patch.object(deploy, "check_site"), \
+                patch.object(deploy.time, "sleep"):
+            self.apply()
+        self.assertNotEqual((self.base / "current").resolve(), self.old)
+
+    def test_failure_description_has_reason_but_no_url(self):
+        from urllib.error import URLError
+        text = deploy.describe(URLError(OSError(28, "No space left on device")))
+        self.assertEqual(text, "URLError, OSError, errno 28, No space left on device")
+        self.assertNotIn("http", deploy.describe(URLError("https://eat.v50to.you/api")))
 
     def test_public_failure_restores_previous_release(self):
         def check(public, target):
