@@ -20,7 +20,6 @@ import {
   looksLikePhone,
   webOneClickLog,
 } from "../app/web-one-click";
-import "../app/web-one-click.css";
 import { FeaturePage, FeatureState } from "./Catalog";
 import { DesignIcon as Icon, useMobile } from "../mobile/ui";
 import { mealOptions } from "../api/food-display";
@@ -96,11 +95,8 @@ export function PhoneLoginForm({
     [now, setNow] = useState(Date.now()),
     send = useTask(),
     login = useTask();
-  // One-click attempts (automatic or from the button) never show an error:
-  // any failure just leaves the SMS form in place.
-  const [autoPending, setAutoPending] = useState(false);
-  // Set once the carrier check has passed; only then is the button shown.
-  const [oneClickReady, setOneClickReady] = useState(false);
+  // One-click runs once automatically and never shows an error: any failure
+  // just leaves the SMS form in place.
   const autoTried = useRef(false);
   useAuthBusy(send.isPending || login.isPending);
   // Only reads the backend switch. The carrier check runs once, inside the
@@ -143,25 +139,22 @@ export function PhoneLoginForm({
     await signIn(result.session);
     finish("/me", registered ? sessionSignal(result.session) : undefined);
   };
-  const oneClickLogin = async (auto: boolean) => {
+  const oneClickLogin = async () => {
     const timing = createWebOneClickTiming();
     try {
-      const spToken = await webOneClickToken(api, undefined, timing, () =>
-        setOneClickReady(true),
-      );
+      const spToken = await webOneClickToken(api, undefined, timing);
       await signInWith(
         await api.webOneClickLogin(
           { spToken },
           webOneClickTimingHeaders(timing),
         ),
       );
-      webOneClickLog.add("login_ok", { trace: timing.trace, auto });
+      webOneClickLog.add("login_ok", { trace: timing.trace });
     } catch (error) {
       webOneClickLog.add(
         "login_failed",
         {
           trace: timing.trace,
-          auto,
           error: (error instanceof Error
             ? error.message
             : String(error)
@@ -175,16 +168,10 @@ export function PhoneLoginForm({
   // When the backend enables one-click, run the full flow automatically: if
   // the carrier check passes the auth page opens; any failure is swallowed and
   // the SMS form stays as is.
-  const tryOneClick = (auto: boolean) => {
-    setAutoPending(true);
-    oneClickLogin(auto)
-      .catch(() => undefined)
-      .finally(() => setAutoPending(false));
-  };
   useEffect(() => {
     if (webOneClick.data !== true || autoTried.current) return;
     autoTried.current = true;
-    tryOneClick(true);
+    oneClickLogin().catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [webOneClick.data]);
   useEffect(() => {
@@ -215,17 +202,6 @@ export function PhoneLoginForm({
           });
         }}
       >
-        {oneClickReady && (
-          <button
-            type="button"
-            className="ew-web-one-click"
-            disabled={login.isPending || send.isPending || autoPending}
-            onClick={() => tryOneClick(false)}
-          >
-            本机号码一键登录
-            <small>开启移动数据，在授权页补全号码中间 4 位</small>
-          </button>
-        )}
         <label>
           手机号
           <input
