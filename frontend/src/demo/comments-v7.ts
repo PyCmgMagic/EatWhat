@@ -11,6 +11,7 @@ type Row = {
   replyToId: number | null;
   authorId: number;
   authorName: string;
+  authorAvatar?: string | null;
   text: string;
   pictureKeys: string[];
   createdAt: string;
@@ -48,6 +49,7 @@ export function seedComments(foods: Food[], user: User): DemoComments {
       replyToId: rootId ?? null,
       authorId,
       authorName,
+      authorAvatar: authorId === user.id ? (user.avatar ?? null) : null,
       text,
       pictureKeys: pictures,
       createdAt: new Date(Date.now() - id * 3600000).toISOString(),
@@ -159,7 +161,9 @@ function view(s: DemoComments, r: Row) {
     replyToGid: r.replyToId
       ? (s.rows.find((x) => x.id === r.replyToId)?.gid ?? null)
       : null,
+    authorId: r.authorId,
     authorName: r.authorName,
+    authorAvatar: r.authorAvatar ?? null,
     text: r.text,
     likesCount: r.likesCount,
     createdAt: r.createdAt,
@@ -348,6 +352,7 @@ export function handleComments(
           replyToId: rootId ? (body.replyToId ?? rootId) : null,
           authorId: userId,
           authorName: actor.user.displayName || "校园食友",
+          authorAvatar: actor.user.avatar ?? null,
           text: body.text,
           pictureKeys: body.pictureKeys,
           createdAt: new Date().toISOString(),

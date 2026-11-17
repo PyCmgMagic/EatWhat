@@ -28,6 +28,30 @@ beforeEach(() => {
   actor = { user: { ...user }, authenticated: true, admin: false };
 });
 describe("isolated v7 comment lifecycle", () => {
+  it("exposes author profile details on comments and replies", () => {
+    actor.user.avatar = "https://cdn.example.com/avatar/foodie.webp";
+    state = seedComments(foods, actor.user);
+    const own = call("/foods/1/comments").items.find(
+      (row: any) => row.authorId === user.id,
+    );
+    expect(own).toMatchObject({
+      authorId: user.id,
+      authorName: user.displayName,
+      authorAvatar: actor.user.avatar,
+    });
+    const accepted = call(`/foods/1/comments/${own.id}/replies`, {
+      method: "POST",
+      body: { text: "补充一下用餐感受" },
+      headers: { "Idempotency-Key": crypto.randomUUID() },
+    });
+    review(accepted.revisionId, "APPROVE");
+    expect(call(`/comments/${own.id}/replies`).items[0]).toMatchObject({
+      authorId: user.id,
+      authorName: user.displayName,
+      authorAvatar: actor.user.avatar,
+    });
+  });
+
   it("keeps new comments private until approved and exposes rejection reasons only in mine", () => {
     const accepted = post("新评论");
     expect(accepted.moderationStatus).toBe("PENDING");

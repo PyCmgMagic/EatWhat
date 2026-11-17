@@ -6,8 +6,10 @@ import {
 import { boundedText } from "./content-rules";
 import type { Page, Schema } from "./models";
 
-/** authorTitle：作者的满级称号（后端 v2），没有时为 null。 */
+/** 后端 v2 返回的作者主页信息；历史数据可能没有作者。 */
 export type CommentView = Schema["CommentViewResponse"] & {
+  authorId?: number | null;
+  authorAvatar?: string | null;
   authorTitle?: string | null;
 };
 export type CommentSubmission = Schema["CommentQueriesSubmissionResponse"];

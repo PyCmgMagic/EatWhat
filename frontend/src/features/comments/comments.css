@@ -123,6 +123,28 @@
   background: var(--comment-mist, #f4efeb);
   font-weight: 800;
   font-size: 14px;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+}
+.comments-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.comments-author {
+  color: inherit;
+  text-decoration: none;
+}
+a.comments-author:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+a.comments-avatar:focus-visible,
+a.comments-author:focus-visible {
+  outline: 2px solid #a8978a;
+  outline-offset: 3px;
 }
 .comments-row-body {
   flex: 1;
@@ -732,7 +754,9 @@
 .comments-preview-row strong {
   font-size: 13px;
 }
-.comments-preview-body > span {
+.comments-preview-text {
+  color: inherit;
+  text-decoration: none;
   font-size: 14px;
   line-height: 1.8;
   overflow: hidden;

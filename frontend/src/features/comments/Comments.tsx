@@ -314,6 +314,51 @@ function Like({ comment }: { comment: CommentView }) {
   );
 }
 
+function CommentAuthor({
+  comment,
+  avatar = false,
+}: {
+  comment: CommentView;
+  avatar?: boolean;
+}) {
+  const name = comment.authorName || "匿名用户";
+  const authorId = parseId(String(comment.authorId));
+  const src = avatar ? mediaUrl(comment.authorAvatar) : undefined;
+  const [failedSrc, setFailedSrc] = useState<string>();
+  const className = avatar ? "comments-avatar" : "comments-author";
+  const content = avatar ? (
+    src && src !== failedSrc ? (
+      <img
+        src={src}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        onError={() => setFailedSrc(src)}
+      />
+    ) : (
+      Array.from(name)[0]
+    )
+  ) : (
+    <>
+      {name}
+      <UserTitle title={userTitle({ title: comment.authorTitle })} />
+    </>
+  );
+  return authorId ? (
+    <Link
+      className={className}
+      to={`/users/${authorId}`}
+      aria-label={avatar ? `查看${name}的主页` : undefined}
+    >
+      {content}
+    </Link>
+  ) : (
+    <span className={className} aria-hidden={avatar || undefined}>
+      {content}
+    </span>
+  );
+}
+
 function CommentRow({
   comment,
   rootId,
@@ -341,14 +386,11 @@ function CommentRow({
       className={`comments-row${nested ? " is-reply" : ""}`}
       aria-label={`${name}的${nested ? "回复" : "评论"}`}
     >
-      <span className="comments-avatar" aria-hidden="true">
-        {Array.from(name)[0]}
-      </span>
+      <CommentAuthor comment={comment} avatar />
       <div className="comments-row-body">
         <div className="comments-byline">
           <strong>
-            {name}
-            <UserTitle title={userTitle({ title: comment.authorTitle })} />
+            <CommentAuthor comment={comment} />
           </strong>
           <time dateTime={comment.createdAt ?? undefined}>
             {commentTime(comment.createdAt)}
@@ -961,18 +1003,20 @@ export function FoodCommentPreview({ foodId }: { foodId: number }) {
       ) : q.data?.items?.length ? (
         q.data.items.map((row) => (
           <div className="comments-preview-row" key={row.id}>
-            <Link className="comments-preview-main" to={commentsHref(foodId)}>
-              <span className="comments-avatar">
-                {Array.from(row.authorName || "匿名用户")[0]}
-              </span>
-              <span className="comments-preview-body">
+            <div className="comments-preview-main">
+              <CommentAuthor comment={row} avatar />
+              <div className="comments-preview-body">
                 <strong>
-                  {row.authorName || "匿名用户"}
-                  <UserTitle title={userTitle({ title: row.authorTitle })} />
+                  <CommentAuthor comment={row} />
                 </strong>
-                <span>{row.text}</span>
-              </span>
-            </Link>
+                <Link
+                  className="comments-preview-text"
+                  to={commentsHref(foodId)}
+                >
+                  {row.text}
+                </Link>
+              </div>
+            </div>
             <div className="comments-preview-actions">
               <Like comment={row} />
             </div>

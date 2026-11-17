@@ -285,6 +285,39 @@ describe("v2 bridge", () => {
     expect(sent[1].body.priceBand).toBeNull();
   });
 
+  it.each(["/foods/1/comments", "/comments/5/replies"])(
+    "preserves the author's profile details in %s",
+    async (path) => {
+      const { request } = backend(() =>
+        ok({
+          items: [
+            {
+              id: 5,
+              author: {
+                id: 21,
+                displayName: "小山",
+                avatar: PIC,
+                title: "美食家",
+              },
+            },
+            { id: 6, author: null },
+          ],
+        }),
+      );
+      const list = await request<any>(path);
+      expect(list.items[0]).toMatchObject({
+        authorId: 21,
+        authorName: "小山",
+        authorAvatar: PIC,
+        authorTitle: "美食家",
+      });
+      expect(list.items[1]).toMatchObject({
+        authorId: null,
+        authorAvatar: null,
+      });
+    },
+  );
+
   it("answers comment like state from the list and tracks changes", async () => {
     const { request } = backend(({ path }) =>
       path.endsWith("/comments")
