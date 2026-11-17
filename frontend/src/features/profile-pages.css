@@ -18,12 +18,6 @@
   --pp-gap: 18px;
 }
 
-/* 内容卡至少铺满标签栏以下的一屏：短页面也滚得到标签栏吸顶的位置，
-   在空间内切换页面时白色区域才能停在原处不跳动。 */
-.pc-profile-space > .pc-profile-space-content {
-  min-height: calc(100vh - var(--header-height, 94px) - 72px);
-}
-
 /* ---------- 页面骨架 ---------- */
 .pp-page {
   padding: 32px;
