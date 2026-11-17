@@ -355,9 +355,10 @@ button:disabled {
   border-radius: 30px;
   background: transparent;
   box-shadow:
-    0 10px 28px #25201b14,
-    0 3px 8px #25201b0d,
-    0 0 0 0.75px #4b41301c;
+    0 4px 0 -1px #e9e8e56b,
+    0 9px 24px #25201b14,
+    0 2px 5px #25201b0a,
+    0 0 0 0.5px #746d6229;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 2px;
@@ -371,8 +372,9 @@ button:disabled {
   background: #f3f1ed;
   box-shadow:
     inset 0 2px 2px #ffffffd9,
-    inset 1px 0 2px #ffffff80,
-    inset 0 -1.5px 2px #61595024;
+    inset 2px 0 3px #ffffff99,
+    inset -1px 0 2px #ffffff66,
+    inset 0 -2px 2px #625b4f26;
 }
 .design-glass-filter {
   position: absolute;
@@ -387,18 +389,18 @@ button:disabled {
   pointer-events: none;
   z-index: 2;
   /* Bright opposing arcs and a darker equator describe a convex glass edge. */
-  border: 1.25px solid transparent;
+  border: 1.5px solid transparent;
   background: conic-gradient(
       from 125deg,
-      #ffffffd9,
-      #ffffff14 14%,
-      #514c4433 24%,
-      #fff 39%,
-      #fffffff2 49%,
-      #ffffff24 62%,
-      #514c4426 74%,
-      #fffffff2 91%,
-      #ffffffd9
+      #fffffff2,
+      #ffffff26 14%,
+      #555f6540 24%,
+      #ffffff 39%,
+      #dce8ee80 49%,
+      #ffffff1a 62%,
+      #625c5233 74%,
+      #ffffff 91%,
+      #fffffff2
     )
     border-box;
   -webkit-mask:
@@ -414,17 +416,17 @@ button:disabled {
 .design-navigation .design-fab-surface::after {
   content: "";
   position: absolute;
-  inset: 1px;
+  inset: 2px;
   z-index: 2;
   border-radius: inherit;
   pointer-events: none;
   background: radial-gradient(
     ellipse at var(--glass-light-x) var(--glass-light-y),
-    #ffffff80,
-    #ffffff14 42%,
+    #ffffff99,
+    #ffffff0a 42%,
     transparent 68%
   );
-  opacity: 0.5;
+  opacity: 0.4;
 }
 .design-nav-lens {
   position: absolute;
@@ -436,14 +438,12 @@ button:disabled {
   transform-origin: left center;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 22% 0%, #ffffffb3, transparent 60%),
-    linear-gradient(180deg, #a7a39e12, #7d777126 58%, #ffffff4d);
+    radial-gradient(ellipse at 28% 0%, #ffffff66, transparent 65%),
+    linear-gradient(180deg, #b8b6b34d, #dedddb73 65%, #e6e5e366);
   box-shadow:
-    inset 0 1.5px 1px #fffffff2,
-    inset 1px 0 1px #ffffffb3,
-    inset 0 -1px 1px #4e46332b,
-    0 2px 4px #25201b12,
-    0 0 0 0.5px #6e675912;
+    inset 0 1px 2px #7e79761a,
+    inset 0 -1px 1px #ffffffb3,
+    0 0 0 0.75px #ffffffe6;
   transition: scale 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .design-nav-lens::before,
@@ -455,14 +455,13 @@ button:disabled {
   pointer-events: none;
 }
 .design-nav-lens::before {
-  border: 0.75px solid #ffffff80;
-  box-shadow: inset 0 1px 1.5px #ffffffcc;
+  border: 0.5px solid #ffffff66;
 }
 .design-nav-lens::after {
   background: linear-gradient(
     110deg,
     transparent 15%,
-    #ffffffb3 48%,
+    #ffffff80 48%,
     transparent 80%
   );
   opacity: 0;
@@ -472,7 +471,7 @@ button:disabled {
     transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .design-nav-lens[data-flowing="true"]::after {
-  opacity: 0.65;
+  opacity: 0.5;
   transform: translateX(18%);
 }
 .design-nav-lens[data-direction="left"]::after {
@@ -488,16 +487,16 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
+  gap: 2px;
   font-size: 11px;
   font-weight: 400;
-  color: #49433d;
+  color: #302b27;
   background: transparent;
   text-decoration: none;
   line-height: normal;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  text-shadow: 0 1px 2px #ffffffb3;
+  text-shadow: 0 1px 3px #ffffffeb;
   transition: color 140ms ease;
 }
 .design-navigation nav a .design-icon {
@@ -546,9 +545,10 @@ button:disabled {
   place-items: center;
   pointer-events: none;
   box-shadow:
-    0 10px 28px #25201b14,
-    0 3px 8px #25201b0d,
-    0 0 0 0.75px #4b41301c;
+    0 4px 0 -1px #e9e8e56b,
+    0 9px 24px #25201b14,
+    0 2px 5px #25201b0a,
+    0 0 0 0.5px #746d6229;
   transform: translate(0, 0) scale(1, 1);
   transition: transform var(--glass-release-duration, 600ms)
     cubic-bezier(0.2, 0.9, 0.25, 1.08);
@@ -581,7 +581,7 @@ html:not([data-motion-input="keyboard"])
 html:not([data-motion-input="keyboard"])
   .design-fab:active:not(:disabled)
   > .design-fab-surface::after {
-  opacity: 0.85;
+  opacity: 0.65;
   transition-duration: 0ms;
 }
 html[data-motion-input="keyboard"] .design-fab-surface {
@@ -592,13 +592,18 @@ html[data-motion-input="keyboard"] .design-fab-surface {
 ) {
   .design-glass-backdrop {
     background:
-      linear-gradient(160deg, #ffffff80, #ffffff29 45%, #eeece833), #e4e1db14;
-    -webkit-backdrop-filter: blur(10px) saturate(1.5);
-    backdrop-filter: blur(10px) saturate(1.5);
+      linear-gradient(160deg, #ffffff38, #ffffff14 45%, #edf1f02e), #ffffff0a;
+    -webkit-backdrop-filter: blur(8px) saturate(1.2) brightness(1.06);
+    backdrop-filter: blur(8px) saturate(1.2) brightness(1.06);
   }
   .design-glass-backdrop[data-refracting="true"] {
-    -webkit-backdrop-filter: blur(3px) var(--glass-refraction) saturate(1.5);
-    backdrop-filter: blur(3px) var(--glass-refraction) saturate(1.5);
+    -webkit-backdrop-filter: blur(1.6px) var(--glass-refraction) saturate(1.2)
+      brightness(1.06);
+    backdrop-filter: blur(1.6px) var(--glass-refraction) saturate(1.2)
+      brightness(1.06);
+  }
+  .design-fab-surface > .design-glass-backdrop {
+    background: linear-gradient(150deg, #ffffff94, #ffffff38 55%, #f4f5f15c);
   }
 }
 @media (hover: hover) and (pointer: fine) {
@@ -1071,8 +1076,8 @@ html[data-motion-input="keyboard"] .design-fab-surface {
 .mobile-profile-sheet-content {
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  padding: 0 24px var(--mobile-nav-clearance);
+  gap: 20px;
+  padding: 2px 24px var(--mobile-nav-clearance);
   overflow-y: auto;
   overscroll-behavior-y: contain;
   touch-action: pan-y;
@@ -1108,29 +1113,40 @@ html[data-motion-input="keyboard"] .design-fab-surface {
 .mobile-profile-shortcuts > a {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
-  height: 110px;
-  padding: 16px;
-  border-radius: 22px;
+  min-height: 64px;
+  padding: 12px 14px;
+  border-radius: 18px;
   background: #f4f3f1;
   color: #231c18;
   text-decoration: none;
+  transition:
+    background-color 140ms ease,
+    transform 90ms ease;
+}
+.mobile-profile-shortcuts > a:active {
+  background: #ebe8e4;
+  transform: scale(0.985);
+}
+.mobile-profile-shortcuts > a > .design-icon {
+  color: #3d3128;
 }
 .mobile-profile-shortcuts > a > span {
   display: grid;
-  gap: 6px;
+  gap: 2px;
   min-width: 0;
 }
 .mobile-profile-shortcuts strong {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 800;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 .mobile-profile-shortcuts > a > span > span {
   overflow: hidden;
   color: #6e625b;
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1474,7 +1490,15 @@ body:has(
   min-height: 44px;
 }
 .mobile-page-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   padding: 15px 0 25px;
+}
+.mobile-page-more > button {
+  flex: 1;
+  max-width: 180px;
 }
 .mobile-loading {
   padding: 25px;
@@ -1688,6 +1712,10 @@ body:has(
   display: flex;
   align-items: center;
   gap: 6px;
+}
+.mobile-place-chip[data-active] {
+  background: #231c18;
+  color: #fff;
 }
 .mobile-taste-word {
   border: 0;
@@ -2087,6 +2115,29 @@ body:has(
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+.mobile-pick-shop-row {
+  min-height: 72px;
+}
+.mobile-pick-shop-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  line-height: 21px;
+}
+.mobile-pick-shop-address {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 18px;
+}
+.mobile-pick-shop-next {
+  min-width: 0;
+  padding: 0 20px;
+  white-space: nowrap;
+  text-align: center;
 }
 .mobile-publish-destination {
   gap: 16px;

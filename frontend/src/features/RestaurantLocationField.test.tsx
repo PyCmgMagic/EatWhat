@@ -17,7 +17,12 @@ let root: Root, host: HTMLDivElement;
 const change = vi.fn();
 const a = { gcjLng: 117.14, gcjLat: 36.66 },
   b = { gcjLng: 117.15, gcjLat: 36.67 };
-async function render(point?: MapPoint, address = "", disabled = false) {
+async function render(
+  point?: MapPoint,
+  address = "",
+  disabled = false,
+  compact = false,
+) {
   await act(async () => {
     root.render(
       <RestaurantLocationField
@@ -28,6 +33,7 @@ async function render(point?: MapPoint, address = "", disabled = false) {
         address={address}
         onAddressChange={change}
         disabled={disabled}
+        compact={compact}
       />,
     );
   });
@@ -60,6 +66,25 @@ it("requires an actual map point and exposes no coordinate inputs", async () => 
   expect(host.querySelector('input[name="address"]')).not.toBeNull();
   expect(host.textContent).toContain("请在地图选点");
   expect(lookup).not.toHaveBeenCalled();
+});
+it("keeps the compact form quiet until there is useful status to show", async () => {
+  await render(undefined, "", false, true);
+  expect(host.textContent).not.toContain("输入即匹配百度地图地点");
+  expect(host.textContent).not.toContain("核对地址后");
+  expect(
+    host
+      .querySelector('input[type="search"]')
+      ?.getAttribute("aria-describedby"),
+  ).toBeNull();
+  expect(host.textContent).toContain("请在地图选点");
+});
+it("keeps a failed address lookup visible and associated with the compact address field", async () => {
+  lookup.mockRejectedValue(new Error("provider unavailable"));
+  await render(a, "", false, true);
+  const input = host.querySelector('input[name="address"]')!;
+  const hint = document.getElementById(input.getAttribute("aria-describedby")!);
+  expect(hint?.textContent).toContain("未能识别地址");
+  expect(host.textContent).toContain("已选店铺位置");
 });
 it("fills an empty address and updates an earlier automatic suggestion on repick", async () => {
   lookup

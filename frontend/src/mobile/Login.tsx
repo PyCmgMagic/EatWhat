@@ -24,20 +24,16 @@ export default function LoginPage({ desktop }: { desktop: boolean }) {
 
   return (
     <div
-      className={
-        desktop
-          ? "pc-secondary-auth"
-          : recovery
-            ? undefined
-            : "ew-login mobile-auth-page"
-      }
+      className={desktop ? "pc-secondary-auth" : "ew-login mobile-auth-page"}
       data-pc-secondary={desktop ? "auth" : undefined}
       data-screen={
-        desktop || recovery
+        desktop
           ? undefined
-          : phone
-            ? "G-PhoneLogin"
-            : "G-PasswordLogin"
+          : recovery
+            ? "G-ForgotPassword"
+            : phone
+              ? "G-PhoneLogin"
+              : "G-PasswordLogin"
       }
     >
       {desktop ? (
@@ -50,35 +46,39 @@ export default function LoginPage({ desktop }: { desktop: boolean }) {
           <h1>{BRAND_SLOGAN}</h1>
           <DishCarousel />
         </aside>
-      ) : !recovery ? (
+      ) : (
         <>
           <header className="mobile-auth-header">
-            <Link to={"/auth" + suffix} state={state} aria-label="返回">
+            <Link
+              to={(recovery ? "/auth/password" : "/auth") + suffix}
+              state={state}
+              aria-label="返回"
+            >
               <ArrowLeft size={24} aria-hidden="true" />
             </Link>
           </header>
           <div className="mobile-auth-intro">
             <h1>{title}</h1>
             <p>
-              {phone
-                ? "新号码自动注册，已有号码直接登录"
-                : "用手机号、邮箱或用户名都可以"}
+              {recovery
+                ? "用绑定的手机号登录后，即可设置新密码"
+                : phone
+                  ? "新号码自动注册，已有号码直接登录"
+                  : "用手机号、邮箱或用户名都可以"}
             </p>
           </div>
         </>
-      ) : null}
+      )}
       <section
         className={
           desktop
             ? "pc-secondary-auth-content"
-            : recovery
-              ? "ew-mobile-feature"
-              : "mobile-auth-form pc-secondary-auth-content"
+            : "mobile-auth-form pc-secondary-auth-content"
         }
         aria-label={title}
       >
         {recovery ? (
-          <RecoverPassword />
+          <RecoverPassword compact={!desktop} />
         ) : phone ? (
           <PhoneLoginForm embedded compact={!desktop} />
         ) : (
@@ -90,9 +90,13 @@ export default function LoginPage({ desktop }: { desktop: boolean }) {
           </Link>
         )}
       </section>
-      {!desktop && !recovery && (
+      {!desktop && (
         <footer className="mobile-auth-footer">
-          {!phone ? (
+          {recovery ? (
+            <Link to={"/auth/password" + suffix} state={state}>
+              返回密码登录
+            </Link>
+          ) : !phone ? (
             <>
               <p>
                 还没有账号？

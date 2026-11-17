@@ -18,6 +18,7 @@ export type Food = Omit<
   | "restaurantGcjLat"
   | "hubId"
   | "hubName"
+  | "user"
 > &
   Pick<
     Schema["FoodRecommendationVOResponse"],
@@ -26,7 +27,15 @@ export type Food = Omit<
     | "restaurantGcjLat"
     | "hubId"
     | "hubName"
-  >;
+  > & {
+    /** v2 dish details enrich the author with their public profile avatar and title. */
+    user?:
+      | (NonNullable<Schema["FoodVOResponse"]["user"]> & {
+          avatar?: string | null;
+          title?: string | null;
+        })
+      | null;
+  };
 export type Restaurant = Schema["RestaurantResponse"];
 /** Explicit null means no displayable profile; only old responses omit user. */
 export function foodAuthor(

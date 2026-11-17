@@ -83,23 +83,25 @@ const yes = () =>
   host.querySelector<HTMLButtonElement>(".shop-voice-option.is-yes");
 const no = () =>
   host.querySelector<HTMLButtonElement>(".shop-voice-option.is-no");
-const hint = () => host.querySelector(".shop-voice-hint")?.textContent;
+const switchScene = (name: string) =>
+  [
+    ...host.querySelectorAll<HTMLButtonElement>(".shop-voice-scenes button"),
+  ].find((button) => button.textContent === name)!;
 
-it("shows the friend score, the count and the shop traits", async () => {
+it("shows the recommendation rate and count without shop traits or extra copy", async () => {
   await open();
   expect(host.querySelector(".shop-voice-number strong")?.textContent).toBe(
     "86%",
   );
   expect(host.querySelector(".shop-voice-count")?.textContent).toBe(
-    "23 位食友投过票",
+    "23 人评价",
   );
-  expect(
-    [...host.querySelectorAll(".shop-voice-chips li")].map((li) =>
-      li.textContent?.trim(),
-    ),
-  ).toEqual(["米饭炒菜", "15–30 元", "仅堂食", "口味：辣"]);
+  expect(host.querySelector("h2")?.textContent).toBe("食友评价");
+  expect(host.querySelector(".shop-voice-chips")).toBeNull();
+  expect(host.querySelector(".shop-voice-scenes")).toBeNull();
+  expect(host.querySelector(".shop-voice-caption")).toBeNull();
+  expect(host.querySelector(".shop-voice-hint")).toBeNull();
   expect(yes()?.getAttribute("aria-pressed")).toBe("false");
-  expect(hint()).toBe("点一下，帮后面的食友少踩一次雷");
 });
 
 it("records a recommendation for the dine-in scene", async () => {
@@ -119,7 +121,7 @@ it("shows my vote and clears it on a second tap", async () => {
   });
   await open();
   expect(yes()?.getAttribute("aria-pressed")).toBe("true");
-  expect(hint()).toBe("已记下你的评价，再点一次可以取消");
+  expect(yes()?.title).toBe("取消推荐");
   await act(async () => yes()!.click());
   expect(api.rateRestaurantScene).toHaveBeenCalledWith(1, "dine_in", null);
 });
@@ -129,9 +131,8 @@ it("invites guests to sign in instead of showing the vote buttons", async () => 
   await open();
   expect(yes()).toBeNull();
   expect(host.querySelector(".shop-voice-login")?.textContent).toContain(
-    "登录后给这家店投票",
+    "登录后评价",
   );
-  expect(hint()).toBe("登录后就能投票，也会记住你的口味");
 });
 
 it("invites the first vote when nobody has rated the shop yet", async () => {
@@ -141,17 +142,13 @@ it("invites the first vote when nobody has rated the shop yet", async () => {
     myRatings: null,
   });
   await open();
-  expect(host.querySelector(".shop-voice-empty")?.textContent).toBe(
-    "还没有食友投过票",
-  );
+  expect(host.querySelector(".shop-voice-empty")?.textContent).toBe("暂无评价");
   expect(host.querySelector(".shop-voice-meter")).toBeNull();
-  expect(host.querySelector(".shop-voice-caption")?.textContent).toBe(
-    "你的这一票，会是这家店的第一条评价",
-  );
+  expect(host.querySelector(".shop-voice-number")).toBeNull();
   expect(no()).not.toBeNull();
 });
 
-it("votes per scene and shows the delivery score when the shop delivers", async () => {
+it("switches the displayed score and vote target together", async () => {
   api.restaurant.mockResolvedValue({
     ...baseShop,
     deliveryEnabled: true,
@@ -160,22 +157,102 @@ it("votes per scene and shows the delivery score when the shop delivers", async 
   });
   await open();
   expect(
-    [...host.querySelectorAll(".shop-voice-scene")].map((el) => el.textContent),
+    [...host.querySelectorAll(".shop-voice-scenes button")].map(
+      (el) => el.textContent,
+    ),
   ).toEqual(["堂食", "外卖"]);
-  expect(host.querySelector(".shop-voice-other")?.textContent).toBe(
-    "外卖 72% · 9 人",
+  expect(switchScene("堂食").getAttribute("aria-pressed")).toBe("true");
+  await act(async () => switchScene("外卖").click());
+  expect(switchScene("外卖").getAttribute("aria-pressed")).toBe("true");
+  expect(host.querySelector(".shop-voice-number strong")?.textContent).toBe(
+    "72%",
   );
-  const groups = host.querySelectorAll(".shop-voice-options");
-  await act(async () =>
-    groups[1]
-      .querySelector<HTMLButtonElement>(".shop-voice-option.is-no")!
-      .click(),
-  );
+  expect(host.querySelector(".shop-voice-count")?.textContent).toBe("9 人评价");
+  expect(host.querySelectorAll(".shop-voice-options")).toHaveLength(1);
+  expect(
+    host.querySelector(".shop-voice-options")?.getAttribute("aria-label"),
+  ).toBe("我的外卖评价");
+  await act(async () => no()!.click());
   expect(api.rateRestaurantScene).toHaveBeenCalledWith(
     1,
     "delivery",
     "NOT_RECOMMEND",
   );
+});
+
+it("keeps each scene's own vote when switching and cancels only the selected scene", async () => {
+  api.restaurant.mockResolvedValue({
+    ...baseShop,
+    deliveryEnabled: true,
+    delivery: { rate: 0.72, count: 9 },
+    myRatings: { dineIn: "RECOMMEND", delivery: "NOT_RECOMMEND" },
+  });
+  await open();
+  expect(yes()?.getAttribute("aria-pressed")).toBe("true");
+  await act(async () => switchScene("外卖").click());
+  expect(no()?.getAttribute("aria-pressed")).toBe("true");
+  expect(yes()?.getAttribute("aria-pressed")).toBe("false");
+  await act(async () => switchScene("堂食").click());
+  expect(yes()?.getAttribute("aria-pressed")).toBe("true");
+  await act(async () => switchScene("外卖").click());
+  await act(async () => no()!.click());
+  expect(api.rateRestaurantScene).toHaveBeenCalledWith(1, "delivery", null);
+});
+
+it("shows an empty state for delivery without hiding the dine-in result", async () => {
+  auth.signedIn = false;
+  api.restaurant.mockResolvedValue({
+    ...baseShop,
+    deliveryEnabled: true,
+    delivery: { rate: null, count: 0 },
+  });
+  await open();
+  await act(async () => switchScene("外卖").click());
+  expect(host.querySelector(".shop-voice-empty")?.textContent).toBe("暂无评价");
+  expect(host.querySelector(".shop-voice-number")).toBeNull();
+  expect(host.querySelector(".shop-voice-login")).not.toBeNull();
+  await act(async () => switchScene("堂食").click());
+  expect(host.querySelector(".shop-voice-empty")).toBeNull();
+  expect(host.querySelector(".shop-voice-number strong")?.textContent).toBe(
+    "86%",
+  );
+});
+
+it("keeps historical delivery ratings accessible after delivery is disabled", async () => {
+  api.restaurant.mockResolvedValue({
+    ...baseShop,
+    deliveryEnabled: false,
+    delivery: { rate: 0.72, count: 9 },
+  });
+  await open();
+  await act(async () => switchScene("外卖").click());
+  expect(host.querySelector(".shop-voice-number strong")?.textContent).toBe(
+    "72%",
+  );
+});
+
+it("distinguishes zero recommendations from no reviews", async () => {
+  api.restaurant.mockResolvedValue({
+    ...baseShop,
+    dineIn: { rate: 0, count: 2 },
+  });
+  await open();
+  expect(host.querySelector(".shop-voice-number strong")?.textContent).toBe(
+    "0%",
+  );
+  expect(host.querySelector(".shop-voice-count")?.textContent).toBe("2 人评价");
+  expect(host.querySelector(".shop-voice-empty")).toBeNull();
+});
+
+it("does not invent a recommendation percentage when only a count is available", async () => {
+  api.restaurant.mockResolvedValue({
+    ...baseShop,
+    dineIn: { rate: null, count: 2 },
+  });
+  await open();
+  expect(host.querySelector(".shop-voice-number")).toBeNull();
+  expect(host.querySelector(".shop-voice-count")?.textContent).toBe("2 人评价");
+  expect(host.querySelector(".shop-voice-empty")).toBeNull();
 });
 
 it("lights the vote immediately and rolls back with a toast when it fails", async () => {

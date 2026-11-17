@@ -49,8 +49,40 @@
 .mobile-inbox-header > button:disabled {
   opacity: 0.45;
 }
+.mobile-inbox-views {
+  display: inline-flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #f4efeb;
+}
+.mobile-inbox-views > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  color: #6e625b;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.mobile-inbox-views > a[aria-current="page"] {
+  background: #fff;
+  color: #231c18;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(35, 28, 24, 0.08);
+}
+.mobile-inbox-announcements {
+  margin-top: 20px;
+}
+.mobile-inbox-announcements .profile-announcement-intro {
+  display: none;
+}
 .mobile-inbox-count {
-  margin: 16px 0 36px;
+  margin: 16px 0 32px;
   min-height: 22px;
   font-size: 16px;
   line-height: 22px;

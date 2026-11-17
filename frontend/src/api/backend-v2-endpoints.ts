@@ -165,6 +165,11 @@ export const endpoints = {
     "path": "/user/unban/{userId}",
     "access": "admin"
   },
+  "postUserMobileChangeVerifyOld": {
+    "method": "POST",
+    "path": "/user/mobile/change/verify-old",
+    "access": "login"
+  },
   "changeOldCode": {
     "method": "POST",
     "path": "/user/mobile/change/old-code",
@@ -393,6 +398,16 @@ export const endpoints = {
     "method": "POST",
     "path": "/auth/phone/web-one-click/login",
     "access": "public"
+  },
+  "postAuthPhoneVerification": {
+    "method": "POST",
+    "path": "/auth/phone/verification",
+    "access": "login"
+  },
+  "postAuthPhoneVerificationWebToken": {
+    "method": "POST",
+    "path": "/auth/phone/verification/web-token",
+    "access": "login"
   },
   "postAuthPhoneOneClickLogin": {
     "method": "POST",
@@ -721,6 +736,11 @@ export const endpoints = {
     "method": "GET",
     "path": "/auth/phone/web-one-click/config",
     "access": "public"
+  },
+  "getAuthPhoneVerificationConfig": {
+    "method": "GET",
+    "path": "/auth/phone/verification/config",
+    "access": "login"
   },
   "getAuthPhoneOneClickConfig": {
     "method": "GET",

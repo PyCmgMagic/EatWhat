@@ -764,19 +764,32 @@ export function demoTransport(
         return fail(30012, "认证票据无效。");
       person!.verified = true;
       return write();
+    case "postUserMobileChangeVerifyOld":
+      if (!body.phoneVerificationToken && body.code !== "123456")
+        return fail(30005, "旧手机号验证码不正确。");
+      return ok();
     case "changeNewCode":
-      if (body.oldCode && body.oldCode !== "123456")
+      if (
+        body.oldCode &&
+        body.oldCode !== "123456" &&
+        !body.oldPhoneVerificationToken
+      )
         return fail(30005, "旧手机号验证码不正确。");
       return ok();
     case "bindMobile":
     case "changeCommit":
-      if (body.code !== "123456") return fail(30005, "验证码不正确。");
+      if (!body.phoneVerificationToken && body.code !== "123456")
+        return fail(30005, "验证码不正确。");
       person!.phone = body.mobile;
       return write();
     case "changePassword":
     case "passwordReset":
     case "usernameSet":
-      if (name !== "changePassword" && body.code !== "123456")
+      if (
+        name !== "changePassword" &&
+        !body.phoneVerificationToken &&
+        body.code !== "123456"
+      )
         return fail(30005, "验证码不正确。");
       if (name === "changePassword" && body.oldPassword !== person?.password)
         return fail(30004, "旧密码错误。");
@@ -1047,7 +1060,9 @@ export function demoTransport(
         hubId: state.hubs[0]?.id,
         hubName: state.hubs[0]?.name,
       };
-      return write(updateShop(updated, shop ? "edit" : "create"));
+      const revision = updateShop(updated, shop ? "edit" : "create");
+      // RestaurantDtos.Created only returns id; revisionId belongs to Edited.
+      return write(name === "addRestaurant" ? { id: updated.id } : revision);
     }
     case "history":
       return ok(paged((state.history[id] ?? []).map((item) => item.revision)));
@@ -1078,7 +1093,19 @@ export function demoTransport(
         paged(
           state.people
             .filter(
-              (person) => matches(person.displayName) || matches(person.phone),
+              (person) =>
+                (!q.keyword ||
+                  matches(person.displayName) ||
+                  matches(person.userName) ||
+                  matches(person.phone) ||
+                  matches(person.studentId)) &&
+                (!q.role || person.role === q.role) &&
+                (q.verified === undefined ||
+                  Boolean(person.verified) ===
+                    (q.verified === true || q.verified === "true")) &&
+                (q.banned === undefined ||
+                  Boolean(person.banned) ===
+                    (q.banned === true || q.banned === "true")),
             )
             .map(({ password: _password, ...person }) => person),
         ),
@@ -1599,7 +1626,11 @@ export function demoTransport(
     case "postAuthAccountDeleteCode":
       return ok();
     case "postAuthAccountDelete":
-      if (person?.phone && body.code !== "123456")
+      if (
+        person?.phone &&
+        !body.phoneVerificationToken &&
+        body.code !== "123456"
+      )
         return fail(30005, "验证码不正确。");
       return ok({
         deleteAt: Date.now() + 7 * 86400000,
@@ -1627,6 +1658,66 @@ export function demoTransport(
         rolling30ActiveUsers: 27,
         timezone: "Asia/Shanghai",
       });
+    case "getAdminEngagementStatsRange": {
+      const days = [6, 5, 4, 3, 2, 1, 0].map((offset) => ({
+        date: new Date(Date.now() - offset * 86400000)
+          .toISOString()
+          .slice(0, 10),
+        activeUsers: Math.max(1, state.people.length - (offset % 2)),
+      }));
+      return ok({
+        from: String(q.from ?? days[0].date),
+        to: String(q.to ?? days[days.length - 1].date),
+        days,
+        timezone: "Asia/Shanghai",
+      });
+    }
+    case "getAdminSummaryTrend": {
+      const count = Math.min(90, Math.max(1, Number(q.days) || 7));
+      const verified = state.people.filter((p) => p.verified).length;
+      const days = Array.from({ length: count }, (_, idx) => {
+        const offset = count - 1 - idx;
+        return {
+          date: new Date(Date.now() - offset * 86400000)
+            .toISOString()
+            .slice(0, 10),
+          newUsers: idx === count - 1 ? 1 : 0,
+          verifiedUsers: verified,
+        };
+      });
+      return ok({ days, timezone: "Asia/Shanghai" });
+    }
+    case "getAdminContentStats": {
+      const count = Math.min(90, Math.max(1, Number(q.days) || 7));
+      const days = Array.from({ length: count }, (_, idx) => {
+        const offset = count - 1 - idx;
+        return {
+          date: new Date(Date.now() - offset * 86400000)
+            .toISOString()
+            .slice(0, 10),
+          foods: idx === count - 1 ? 1 : 0,
+          restaurants: idx === count - 1 ? 1 : 0,
+        };
+      });
+      return ok({
+        totalFoods: state.foods.length,
+        todayFoods: 1,
+        totalRestaurants: state.shops.length,
+        todayRestaurants: 1,
+        days,
+        timezone: "Asia/Shanghai",
+      });
+    }
+    case "getAdminFeedbackCasesCounts": {
+      const open = state.feedback.filter((item) => item.status === "OPEN");
+      return ok({
+        total: open.length,
+        feedback: open.filter((item) => item.kind === "FEEDBACK").length,
+        catalogError: open.filter((item) => item.kind === "CATALOG_ERROR")
+          .length,
+        report: open.filter((item) => item.kind === "REPORT").length,
+      });
+    }
     case "getAdminAiSettings":
     case "putAdminAiSettings":
       return ok({
@@ -1750,6 +1841,11 @@ export function demoTransport(
     case "getAuthPhoneWebOneClickConfig":
     case "getAuthPhoneOneClickConfig":
       return ok({ enabled: false });
+    case "getAuthPhoneVerificationConfig":
+      return ok({ webEnabled: false, appEnabled: false });
+    case "postAuthPhoneVerificationWebToken":
+    case "postAuthPhoneVerification":
+      return fail(20007, "演示模式未开启本机号码校验，请使用短信验证。");
     case "presign":
     case "presignBatch":
     case "complete":

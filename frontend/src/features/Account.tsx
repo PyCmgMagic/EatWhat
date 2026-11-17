@@ -2,9 +2,8 @@ import { Select } from "../components/Select";
 import { BRAND_SLOGAN } from "../app/brand";
 import { Utensils } from "lucide-react";
 import { useSendSignal } from "./useSendSignal";
-import { PasswordConflictRequest } from "./ApiV2";
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { authNext } from "../app/navigation";
 import { useQuery, useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { useApp } from "../app/state";
@@ -25,6 +24,7 @@ import { DesignIcon as Icon, useMobile } from "../mobile/ui";
 import { mealOptions } from "../api/food-display";
 import "./latest.css";
 import "./preferences.css";
+import "./auth-recovery.css";
 import { SceneToggle } from "./SceneToggle";
 import { LocationControl } from "./LocationControl";
 import { priceBands } from "../api/v2-vocab";
@@ -155,10 +155,10 @@ export function PhoneLoginForm({
         "login_failed",
         {
           trace: timing.trace,
-          error: (error instanceof Error
-            ? error.message
-            : String(error)
-          ).slice(0, 200),
+          error: (error instanceof Error ? error.message : String(error)).slice(
+            0,
+            200,
+          ),
         },
         "warn",
       );
@@ -277,25 +277,42 @@ export function PhoneLoginForm({
     </div>
   );
 }
-export function RecoverPassword() {
-  const loc = useLocation();
+export function RecoverPassword({ compact = false }: { compact?: boolean }) {
+  const { location: loc } = useAuthFlow();
   const suffix = authNext(loc.search);
   return (
-    <FeaturePage title="找回密码" back={"/auth/password" + suffix}>
-      <div className="ew-form-panel">
-        <h2>先用手机验证码登录</h2>
-        <p>
-          如果账号已绑定可用手机号，可以先登录，再设置新密码。没有可用绑定手机号时，请联系管理员协助。
-        </p>
+    <div className="pc-secondary-form ew-auth-recovery">
+      {!compact && (
+        <div className="ew-auth-intro">
+          <h2>找回密码</h2>
+          <p>用绑定的手机号登录后，即可设置新密码。</p>
+        </div>
+      )}
+      <Link
+        className="pc-button ew-auth-submit"
+        to="/auth/register?next=%2Fsettings%2Fpassword"
+        state={loc.state}
+      >
+        用手机号找回
+        <Icon name="chevronRight" size={17} />
+      </Link>
+      <details className="ew-auth-recovery-help">
+        <summary>
+          手机号无法使用？
+          <Icon name="chevronDown" size={15} />
+        </summary>
+        <p>请联系管理员协助找回账号。</p>
+      </details>
+      {!compact && (
         <Link
-          className="ew-button"
-          to="/auth/register?next=%2Fsettings%2Fpassword"
+          className="ew-auth-recovery-back"
+          to={"/auth/password" + suffix}
+          state={loc.state}
         >
-          手机登录后设置密码
+          返回密码登录
         </Link>
-      </div>
-      <PasswordConflictRequest />
-    </FeaturePage>
+      )}
+    </div>
   );
 }
 export function PasswordByCode() {

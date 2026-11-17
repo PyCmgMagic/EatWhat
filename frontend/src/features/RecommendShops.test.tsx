@@ -81,7 +81,10 @@ it("shows each shop with its signature dishes in one card", async () => {
   );
   const [first, second] = host.querySelectorAll(".rec-shop-card");
   expect(first.querySelector("h3")?.textContent).toBe("一口面馆");
-  expect(first.textContent).toContain("420 米 · 软件园商圈");
+  expect(first.querySelector(".rec-shop-distance")?.textContent).toBe("420 米");
+  expect(first.querySelector(".rec-shop-place")?.textContent).toBe(
+    "软件园商圈",
+  );
   expect(first.textContent).toContain("堂食推荐 90% · 8 人评价");
   expect(
     [...first.querySelectorAll(".rec-shop-traits li")].map(
@@ -99,7 +102,9 @@ it("shows each shop with its signature dishes in one card", async () => {
   ]);
   expect(dishes[1].textContent).toContain("价格待补充");
   // Featured dishes show their score; only marked ones carry the badge.
-  expect(dishes[0].textContent).toContain("4.6 分 · 12 人评分");
+  expect(
+    dishes[0].querySelector(".rec-shop-dish-score")?.getAttribute("aria-label"),
+  ).toBe("4.6 分 · 12 人评分");
   expect(dishes[0].querySelector(".rec-shop-dish-badge")?.textContent).toBe(
     "招牌",
   );
@@ -109,8 +114,11 @@ it("shows each shop with its signature dishes in one card", async () => {
     "/restaurants/9",
   );
   // A shop with no dish to show is still listed (the backend only demotes it).
-  expect(second.textContent).toContain("还没有可展示的菜");
-  expect(second.textContent).toContain("还没有堂食评价");
+  expect(second.textContent).toContain("暂无菜品");
+  expect(second.textContent).toContain("暂无堂食评价");
+  expect(
+    dishes[1].querySelector('[role="img"]')?.getAttribute("aria-label"),
+  ).toContain("暂无实拍图片");
 
   await act(async () => dishes[0].click());
   expect(openFood).toHaveBeenCalledWith(expect.objectContaining({ id: 2 }));
@@ -118,6 +126,36 @@ it("shows each shop with its signature dishes in one card", async () => {
     second.querySelector<HTMLAnchorElement>(".rec-shop-head")!.click(),
   );
   expect(openShop).toHaveBeenCalledWith(expect.objectContaining({ id: 10 }));
+});
+
+it("keeps the branch and full shop name accessible and uses the active scene's ratings", async () => {
+  await act(async () =>
+    root.render(
+      <MemoryRouter>
+        <RecommendShopList
+          scene="delivery"
+          shops={[
+            shop({
+              name: "又见炊烟(高新软件园店)",
+              dineIn: { rate: 1, count: 1 },
+              delivery: { rate: 0, count: 2 },
+              signatureFoods: [{ id: 1, name: "锅包肉", price: 46 }],
+            }),
+          ]}
+        />
+      </MemoryRouter>,
+    ),
+  );
+  expect(host.querySelector("h3")?.textContent).toBe("又见炊烟");
+  expect(host.querySelector(".rec-shop-place")?.textContent).toBe(
+    "高新软件园店",
+  );
+  expect(host.querySelector(".rec-shop-head")?.getAttribute("aria-label")).toBe(
+    "查看又见炊烟(高新软件园店)",
+  );
+  expect(host.querySelector(".rec-shop-rating")?.textContent).toBe(
+    "外卖推荐 0% · 2 人评价",
+  );
 });
 
 it("formats distance and the dine-in rate", () => {

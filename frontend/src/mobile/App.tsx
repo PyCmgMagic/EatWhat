@@ -48,10 +48,7 @@ import {
 import { isV4Path } from "../features/v4-paths";
 import { boundedText, submissionPath } from "../api/content-rules";
 import { RemoteBanner, FeatureAvailability } from "../features/v4/Remote";
-import {
-  MobileComments,
-  MobileMyComments,
-} from "../features/comments/Comments";
+import { MobileComments } from "../features/comments/Comments";
 const V4Routes = lazy(() => import("../features/v4/Routes"));
 const ApiV2Routes = lazy(() => import("../features/ApiV2Routes"));
 const LoginPage = lazy(() => import("./Login"));
@@ -62,6 +59,7 @@ import { Gate } from "../components/ui";
 import "@fontsource-variable/noto-sans-sc";
 import "@fontsource-variable/bricolage-grotesque";
 import "./mobile.css";
+import "./new-shop.css";
 import DesktopExperience from "../desktop/Desktop";
 import HelpFeedback, { isHelpFeedbackPath } from "../features/HelpFeedback";
 import { profileSection } from "../app/profile-workspace";
@@ -186,11 +184,30 @@ function MobileWorkspace() {
   }, [clock]);
   const images = useRef(draft.images);
   images.current = draft.images;
+  const photoEdit = useRef(draft.photoEdit);
+  photoEdit.current = draft.photoEdit;
+  const previousPhotoRoute = useRef(loc.pathname);
+  useEffect(() => {
+    const leaving =
+      previousPhotoRoute.current === "/publish/crop" &&
+      loc.pathname !== "/publish/crop";
+    previousPhotoRoute.current = loc.pathname;
+    const pending = photoEdit.current;
+    if (leaving && pending) {
+      URL.revokeObjectURL(pending.url);
+      setDraftState((current) =>
+        current.photoEdit === pending
+          ? { ...current, photoEdit: undefined }
+          : current,
+      );
+    }
+  }, [loc.pathname]);
   useEffect(
     () => () => {
       for (const image of images.current) {
         if (image.url.startsWith("blob:")) URL.revokeObjectURL(image.url);
       }
+      if (photoEdit.current) URL.revokeObjectURL(photoEdit.current.url);
     },
     [],
   );
@@ -484,11 +501,6 @@ function MobileWorkspace() {
                   <MobileComments />
                 ) : !desktop &&
                   !reference &&
-                  loc.pathname === "/me/shares" &&
-                  new URLSearchParams(loc.search).get("tab") === "comments" ? (
-                  <MobileMyComments />
-                ) : !desktop &&
-                  !reference &&
                   isHelpFeedbackPath(loc.pathname) ? (
                   <div className="ew-mobile-feature profile-mobile-page">
                     <HelpFeedback />
@@ -503,6 +515,10 @@ function MobileWorkspace() {
                   <Gate verified={false}>
                     <MobileNotifications />
                   </Gate>
+                ) : !desktop &&
+                  !reference &&
+                  loc.pathname === "/announcements" ? (
+                  <MobileNotifications />
                 ) : !desktop && !reference && isV4Path(loc.pathname) ? (
                   <div className="ew-mobile-feature">
                     <V4Routes key={loc.pathname} />
@@ -558,8 +574,9 @@ function MobileWorkspace() {
                   ) ? (
                   <FeatureAvailability name="newShop">
                     <NewShopDetails
-                      draft={draft}
-                      nameHint={draft.shopName ?? ""}
+                      nameHint={
+                        draft.restaurantId ? "" : (draft.shopName ?? "")
+                      }
                     />
                   </FeatureAvailability>
                 ) : reference &&
@@ -761,26 +778,14 @@ function MobileWorkspace() {
   );
 }
 
-function NewShopDetails({
-  draft,
-  nameHint,
-}: {
-  draft: Draft;
-  nameHint: string;
-}) {
+function NewShopDetails({ nameHint }: { nameHint: string }) {
   return (
     <Gate>
-      <NewShopDetailsForm draft={draft} nameHint={nameHint} />
+      <NewShopDetailsForm nameHint={nameHint} />
     </Gate>
   );
 }
-function NewShopDetailsForm({
-  draft,
-  nameHint,
-}: {
-  draft: Draft;
-  nameHint: string;
-}) {
+function NewShopDetailsForm({ nameHint }: { nameHint: string }) {
   const active = usePageLifetime();
   const { api } = useApp(),
     m = useMobile(),
@@ -794,12 +799,15 @@ function NewShopDetailsForm({
     [address, setAddress] = useState(""),
     [traits, setTraits] = useState(defaultShopTraits);
   return (
-    <div className="mobile-page-native">
-      <Link to="/publish" aria-label="返回">
-        <DesignIcon name="back" />
-      </Link>
-      <h1>添加一家店</h1>
+    <main className="mobile-page-native mobile-new-shop">
+      <header className="mobile-new-shop-header">
+        <Link to="/publish" aria-label="返回">
+          <DesignIcon name="back" size={22} />
+        </Link>
+        <h1>添加一家店</h1>
+      </header>
       <form
+        className="mobile-new-shop-form"
         onSubmit={async (e) => {
           e.preventDefault();
           if (busy || uncertain) return;
@@ -836,7 +844,7 @@ function NewShopDetailsForm({
           }
         }}
       >
-        <label>
+        <label className="mobile-new-shop-name">
           <span>
             店名
             <FieldMark required />
@@ -846,11 +854,14 @@ function NewShopDetailsForm({
             value={name}
             onChange={(event) => setName(event.target.value)}
             maxLength={20}
+            placeholder="输入店铺名称"
+            autoComplete="off"
             disabled={busy || uncertain}
             required
           />
         </label>
         <RestaurantLocationField
+          compact
           name={name}
           onNameChange={setName}
           point={position}
@@ -866,16 +877,20 @@ function NewShopDetailsForm({
           value={traits}
           onChange={setTraits}
           disabled={busy || uncertain}
+          compact
+          showDeliveryNote={false}
         />
         {uncertain && (
           <p className="mobile-error">
             提交结果尚未确认，请返回列表核实，避免重复创建。
           </p>
         )}
-        <PrimaryButton disabled={busy || uncertain || !position}>
-          {busy ? "正在提交…" : position ? "提交新店" : "请先在地图选点"}
-        </PrimaryButton>
+        <footer className="mobile-new-shop-footer">
+          <PrimaryButton disabled={busy || uncertain || !position}>
+            {busy ? "正在添加…" : "添加并继续"}
+          </PrimaryButton>
+        </footer>
       </form>
-    </div>
+    </main>
   );
 }

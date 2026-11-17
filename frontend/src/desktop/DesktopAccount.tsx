@@ -14,8 +14,7 @@ import { isDemo } from "../app/runtime";
 import { classifyAuth } from "../api/service";
 import { useTask } from "../components/useTask";
 import { DesignIcon as Icon } from "../mobile/ui";
-import { MobileBinding } from "../pages/ProfileExtras";
-import { VerificationMethods } from "../features/AccountExtras";
+import { MobileBinding, VerificationMethods } from "../features/AccountExtras";
 import { PasswordByCode, SsoStart } from "../features/Account";
 import "../features/student-verification.css";
 import {

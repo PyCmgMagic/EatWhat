@@ -68,11 +68,13 @@ export function ShopTraitsFields({
   onChange,
   disabled,
   compact,
+  showDeliveryNote = true,
 }: {
   value: ShopTraits;
   onChange: (next: ShopTraits) => void;
   disabled?: boolean;
   compact?: boolean;
+  showDeliveryNote?: boolean;
 }) {
   const set = (patch: Partial<ShopTraits>) => onChange({ ...value, ...patch });
   const options = useShopOptions();
@@ -199,9 +201,11 @@ export function ShopTraitsFields({
           </label>
         ))}
       </div>
-      <p className="shop-edit-delivery-note">
-        外卖按菜品设置：发布或编辑菜品时勾选“这道菜可以点外卖”。
-      </p>
+      {showDeliveryNote && (
+        <p className="shop-edit-delivery-note">
+          外卖按菜品设置：发布或编辑菜品时勾选“这道菜可以点外卖”。
+        </p>
+      )}
     </fieldset>
   );
 }

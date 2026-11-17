@@ -4,9 +4,12 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AiTagSuggest, draftPictureKeys } from "./AiTagSuggest";
 
-const { suggest } = vi.hoisted(() => ({ suggest: vi.fn() }));
+const { suggest, toast } = vi.hoisted(() => ({
+  suggest: vi.fn(),
+  toast: vi.fn(),
+}));
 vi.mock("../app/state", () => ({
-  useApp: () => ({ api: { suggestDishTags: suggest } }),
+  useApp: () => ({ api: { suggestDishTags: suggest }, toast }),
 }));
 
 const tastes = ["辣", "麻", "甜", "酸", "清淡"].map((name, i) => ({
@@ -43,6 +46,7 @@ beforeEach(() => {
   document.body.append(host);
   root = createRoot(host);
   suggest.mockReset();
+  toast.mockReset();
   apply.mockReset();
 });
 afterEach(async () => {
@@ -121,4 +125,21 @@ it("uploads only the first three local photos and reuses existing keys", async (
   expect(keys).toEqual(["foods/old.png", "foods/1.png", "foods/2.png"]);
   expect(upload.mock.calls[0][0]).toEqual(files.slice(0, 2));
   expect([...save.mock.calls[0][0].keys()]).toEqual(files.slice(0, 2));
+});
+
+it("keeps compact autofill functional and reports its result outside the field label", async () => {
+  suggest.mockResolvedValue({ category: "菜", tags: ["辣", "麻"] });
+  await click({ category: "staple", tagIds: [] }, { compact: true });
+  expect(apply).toHaveBeenCalledWith("side_dish", [1, 2]);
+  expect(toast).toHaveBeenCalledWith("已填写分类和口味，可继续调整。", {
+    tone: "info",
+  });
+  expect(host.querySelector("b, small")).toBeNull();
+});
+
+it("reports errors from compact autofill without filling any fields", async () => {
+  suggest.mockRejectedValue(new Error("暂时无法分析"));
+  await click({ category: "staple", tagIds: [] }, { compact: true });
+  expect(apply).not.toHaveBeenCalled();
+  expect(toast).toHaveBeenCalledWith("暂时无法分析", { tone: "error" });
 });

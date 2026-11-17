@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { beforeEach, afterEach, it, expect, vi } from "vitest";
 vi.mock("../features/access", () => ({ useActionAccess: () => () => true }));
@@ -13,6 +13,7 @@ import { useDesignBridge } from "./bridge";
 import { MobileContext, type Draft, type MobileState } from "./ui";
 import type { Bridge, Controller, Values } from "./types";
 import { PrivateImages } from "../features/v4/Community";
+import * as photos from "./photos";
 
 let host: HTMLDivElement, root: Root, cache: QueryClient;
 let creates: number;
@@ -115,11 +116,109 @@ function ImageHost() {
     </>
   );
 }
-function Harness({ page }: { page: "publish" | "image" }) {
+function PhotoWorkflowHost() {
+  const location = useLocation();
+  const [draft, setDraft] = useState<Draft>({
+    name: "测试菜品",
+    price: "",
+    category: "staple",
+    description: "",
+    images: [],
+    stage: "#F3C46E",
+    tags: [],
+  });
+  const [state, setState] = useState({
+    cat: 0,
+    desc: "",
+    ox: 0,
+    oy: 0,
+    zoom: 1,
+  });
+  const controller = {
+    state,
+    setState: (patch: object) =>
+      setState((current) => ({ ...current, ...patch })),
+  } as unknown as Controller;
+  const mobile = {
+    foodId: 1,
+    shopId: 7,
+    draft,
+    setDraft: (patch: Partial<Draft>) =>
+      setDraft((current) => ({ ...current, ...patch })),
+    panel: null,
+    notice: noop,
+    setFoodId: noop,
+    setShopId: noop,
+    openPanel: noop,
+    closePanel: noop,
+  } as unknown as MobileState;
+  return (
+    <MobileContext.Provider value={mobile}>
+      <PhotoWorkflowScreen
+        controller={controller}
+        crop={location.pathname === "/publish/crop"}
+      />
+      <output data-testid="photo-count">{draft.images.length}</output>
+      <output data-testid="photo-pending">{String(!!draft.photoEdit)}</output>
+      <output data-testid="photo-route">{location.pathname}</output>
+    </MobileContext.Provider>
+  );
+}
+function PhotoWorkflowScreen({
+  controller,
+  crop,
+}: {
+  controller: Controller;
+  crop: boolean;
+}) {
+  const screen = crop ? "G-Crop" : "G-AddDish";
+  const bridge = useDesignBridge(screen, controller, { cats: [] }, false);
+  if (crop)
+    return (
+      <>
+        {["取消", "完成"].map((text) => {
+          const props = { href: "G-AddDish.dc.html", "data-testid": text };
+          bridge.node({
+            screen,
+            node: {
+              id: -1,
+              tag: "a",
+              attrs: { href: "G-AddDish.dc.html" },
+              children: [text],
+            },
+            props,
+            children: [text],
+            text,
+            scope: {},
+          });
+          return (
+            <a key={text} {...props}>
+              {text}
+            </a>
+          );
+        })}
+      </>
+    );
+  return (
+    <>
+      {bridge.node({
+        screen,
+        node: { id: 19, tag: "div", attrs: {}, children: [] },
+        props: {},
+        children: [null, null],
+        text: "",
+        scope: {},
+      })}
+    </>
+  );
+}
+function Harness({ page }: { page: "publish" | "image" | "photo" }) {
   const app = useApp();
   cache = useQueryClient();
   return app.user ? (
-    page === "publish" ? (
+    page === "photo" ? (
+      <PhotoWorkflowHost />
+    ) : page === "publish" ? (
       <BridgeDraftHost />
     ) : (
       <ImageHost />
@@ -210,7 +309,90 @@ afterEach(async () => {
     writeSession(null);
   });
   host.remove();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
+});
+
+async function renderPhotoWorkflow() {
+  Object.defineProperty(URL, "createObjectURL", {
+    configurable: true,
+    value: vi.fn(() => `blob:photo-${crypto.randomUUID()}`),
+  });
+  const image = new File(["photo"], "photo.jpg", { type: "image/jpeg" });
+  vi.spyOn(photos, "adjustPhoto").mockResolvedValue({
+    file: image,
+    colors: ["#F3C46E"],
+  });
+  const click = HTMLInputElement.prototype.click;
+  vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(function (
+    this: HTMLInputElement,
+  ) {
+    if (this.type !== "file") return click.call(this);
+    Object.defineProperty(this, "files", { value: [image] });
+    this.dispatchEvent(new Event("change"));
+  });
+  await act(async () =>
+    root.render(
+      <AppProvider>
+        <MemoryRouter initialEntries={["/publish/dish"]}>
+          <Harness page="photo" />
+        </MemoryRouter>
+      </AppProvider>,
+    ),
+  );
+  await spin(() => !!host.querySelector('[aria-label="添加菜品照片"]'));
+}
+
+it("discards a cancelled new photo instead of adding it to the publishing draft", async () => {
+  await renderPhotoWorkflow();
+  await click('[aria-label="添加菜品照片"]');
+  await spin(
+    () =>
+      host.querySelector('[data-testid="photo-route"]')?.textContent ===
+      "/publish/crop",
+  );
+  expect(host.querySelector('[data-testid="photo-count"]')?.textContent).toBe(
+    "0",
+  );
+  await click('[data-testid="取消"]');
+  expect(host.querySelector('[data-testid="photo-route"]')?.textContent).toBe(
+    "/publish/dish",
+  );
+  expect(host.querySelector('[data-testid="photo-count"]')?.textContent).toBe(
+    "0",
+  );
+  expect(host.querySelector('[data-testid="photo-pending"]')?.textContent).toBe(
+    "false",
+  );
+});
+
+it("edits a thumbnail without deleting it and deletes only through its separate remove button", async () => {
+  await renderPhotoWorkflow();
+  await click('[aria-label="添加菜品照片"]');
+  await spin(() => !!host.querySelector('[data-testid="完成"]'));
+  await click('[data-testid="完成"]');
+  await spin(() => !!host.querySelector('[aria-label="编辑第 1 张照片"]'));
+  const original = host
+    .querySelector(".mobile-publish-photo img")
+    ?.getAttribute("src");
+  await click('[aria-label="编辑第 1 张照片"]');
+  await spin(() => !!host.querySelector('[data-testid="取消"]'));
+  expect(host.querySelector('[data-testid="photo-count"]')?.textContent).toBe(
+    "1",
+  );
+  await click('[data-testid="取消"]');
+  await spin(() => !!host.querySelector('[aria-label="移除第 1 张照片"]'));
+  expect(
+    host.querySelector(".mobile-publish-photo img")?.getAttribute("src"),
+  ).toBe(original);
+  expect(host.querySelector("button button")).toBeNull();
+  await click('[aria-label="移除第 1 张照片"]');
+  expect(host.querySelector('[data-testid="photo-count"]')?.textContent).toBe(
+    "0",
+  );
+  expect(host.querySelector('[data-testid="photo-route"]')?.textContent).toBe(
+    "/publish/dish",
+  );
 });
 it("retains the uncertain mobile submission guard when the editor remounts", async () => {
   await act(async () =>
@@ -447,4 +629,141 @@ it("advances the mobile carousel once per action without state updates on every 
   expect(host.querySelector('[data-testid="home-index"]')!.textContent).toBe(
     "2",
   );
+});
+
+it("keeps selected category and description across G-AddDish remounts when submitting", async () => {
+  let submittedBody: Record<string, unknown> | undefined;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string, init?: RequestInit) => {
+      const path = String(url).split("?")[0];
+      if (path.endsWith("/user/info")) return ok(account);
+      if (path.endsWith("/foods/tags/system")) return ok([]);
+      if (path.includes("/restaurant/detail/"))
+        return ok({ id: 7, name: "测试店铺" });
+      if (path.endsWith("/foods/upload")) {
+        submittedBody = JSON.parse(String(init?.body ?? "{}"));
+        return ok({ id: 99 });
+      }
+      return ok({ items: [], hasNext: false });
+    }),
+  );
+  function AddDishRemountHost() {
+    const [version, setVersion] = useState(0);
+    const [draft, setDraft] = useState<Draft>({
+      name: "测试甜品",
+      price: "12",
+      category: "staple",
+      description: "",
+      tags: [],
+      stage: "#F3C46E",
+      images: [
+        {
+          file: new File(["image"], "dish.png", { type: "image/png" }),
+          url: "https://private.invalid/dish.png",
+          key: "foods/uploaded-dish",
+        },
+      ],
+    });
+    const mobile = {
+      foodId: 1,
+      shopId: 7,
+      setFoodId: noop,
+      setShopId: noop,
+      panel: null,
+      openPanel: noop,
+      closePanel: noop,
+      notice: noop,
+      confirm: noop,
+      go: noop,
+      draft,
+      setDraft: (patch: Partial<Draft>) =>
+        setDraft((current) => ({ ...current, ...patch })),
+      setTagId: noop,
+      meal: "晚饭",
+      mealAuto: true,
+      mealKey: "auto:dinner",
+      setMeal: noop,
+      setMealAuto: noop,
+      noteServedMeal: noop,
+      scene: "dine_in",
+      setScene: noop,
+    } as MobileState;
+    function AddDishBody() {
+      const controller = {
+        state: { cat: 0, desc: "" },
+        setState: noop,
+      } as unknown as Controller;
+      const bridge = useDesignBridge(
+        "G-AddDish",
+        controller,
+        { cats: [] },
+        false,
+      );
+      const publishControl = bridge.node({
+        screen: "G-AddDish",
+        node: { id: -1, tag: "a", attrs: {}, children: [] },
+        props: { href: "G-Dish.dc.html", "data-testid": "publish-remount" },
+        children: [],
+        scope: {},
+        text: "发布",
+      });
+      return (
+        <>
+          <button
+            data-testid="pick-soup"
+            onClick={() => bridge.values.cats[3]?.pick()}
+          >
+            选汤品
+          </button>
+          <button
+            data-testid="type-desc"
+            onClick={() =>
+              bridge.values.setDesc({ target: { value: "清甜解暑" } })
+            }
+          >
+            写描述
+          </button>
+          {publishControl}
+        </>
+      );
+    }
+    return (
+      <MobileContext.Provider value={mobile}>
+        <AddDishBody key={version} />
+        <button data-testid="remount-add" onClick={() => setVersion((v) => v + 1)}>
+          裁图后返回
+        </button>
+      </MobileContext.Provider>
+    );
+  }
+  await act(async () =>
+    root.render(
+      <AppProvider>
+        <MemoryRouter>
+          <AddDishRemountHost />
+        </MemoryRouter>
+      </AppProvider>,
+    ),
+  );
+  await spin(() => Boolean(host.querySelector('[data-testid="pick-soup"]')));
+  await act(async () => {
+    host
+      .querySelector<HTMLButtonElement>('[data-testid="pick-soup"]')!
+      .click();
+    host.querySelector<HTMLButtonElement>('[data-testid="type-desc"]')!.click();
+  });
+  await act(async () => {
+    host
+      .querySelector<HTMLButtonElement>('[data-testid="remount-add"]')!
+      .click();
+  });
+  await act(async () => {
+    host
+      .querySelector<HTMLAnchorElement>('[data-testid="publish-remount"]')!
+      .click();
+  });
+  await spin(() => Boolean(submittedBody));
+  expect(submittedBody?.category).toBe("汤");
+  expect(submittedBody?.description).toBe("清甜解暑");
 });

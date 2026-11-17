@@ -20,6 +20,7 @@ import { useActionAccess } from "../features/access";
 import { LiquidGlass } from "./LiquidGlass";
 import { useLiquidLens } from "./useLiquidLens";
 import { lensDuration, liquidReleaseEasing } from "./liquid-lens-motion";
+import type { DraftPhoto, DraftPhotoEdit } from "./draft-photo-edit";
 import {
   DishIllustration,
   type DishIllustrationName,
@@ -65,13 +66,8 @@ export type Draft = {
   price: string;
   category: string;
   description: string;
-  images: {
-    file: File;
-    url: string;
-    key?: string;
-    original?: File;
-    framing?: { x: number; y: number; zoom: number };
-  }[];
+  images: DraftPhoto[];
+  photoEdit?: DraftPhotoEdit;
   stage: string;
   tags: string[];
   tagInput?: string;
@@ -236,7 +232,14 @@ export function DesignNavigation({
             to={n.path}
             aria-current={active === n.key ? "page" : undefined}
           >
-            <DesignIcon name={n.icon} size={22} />
+            <DesignIcon
+              name={
+                n.key === "home" && active === n.key
+                  ? "discoverSelected"
+                  : n.icon
+              }
+              size={22}
+            />
             {n.label}
           </Link>
         ))}

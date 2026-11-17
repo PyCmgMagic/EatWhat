@@ -117,6 +117,8 @@ import { foodCategories, type V2Food } from "../api/v2-vocab";
 import { useFoodImageRefresh, useFoodPhoto } from "../features/media";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
 import { FoodCover } from "../components/FoodCover";
+import { UserAvatar } from "../components/UserAvatar";
+import { UserTitle } from "../components/UserTitle";
 import { FoodReportDialog } from "../features/FoodReportDialog";
 import { FoodRating } from "../features/FoodRating";
 import { availabilityText } from "../features/DishAvailability";
@@ -833,6 +835,7 @@ function DesktopHome() {
   const remote = useRemoteConfig(),
     batchSize = recommendationBatchSize(remote.data);
   const { api, session, toast } = useApp(),
+    cache = useQueryClient(),
     [dismissed, setDismissed] = useState<number[]>([]),
     [dismissing, setDismissing] = useState(false),
     m = useMobile(),
@@ -954,6 +957,7 @@ function DesktopHome() {
           shopList.length ? (
             <RecommendShopList
               shops={shopList}
+              scene={m.scene}
               onOpenShop={(shop) => shop.id && m.setShopId(shop.id)}
               onOpenFood={(dish) => {
                 if (dish.id) m.setFoodId(dish.id);
@@ -1073,6 +1077,23 @@ function DesktopHome() {
                 try {
                   await api.dismissRecommendation(shopId);
                   setDismissed((ids) => [...ids, shopId]);
+                  cache.setQueriesData<{
+                    items?: Food[];
+                    shops?: Restaurant[] | null;
+                  }>({ queryKey: ["foods", "mobile-recommend"] }, (prev) =>
+                    prev
+                      ? {
+                          ...prev,
+                          items: prev.items?.filter(
+                            (f) => Number(f.restaurantId) !== shopId,
+                          ),
+                          shops:
+                            prev.shops?.filter(
+                              (s) => Number(s.id) !== shopId,
+                            ) ?? null,
+                        }
+                      : prev,
+                  );
                   toast(
                     `30 天内不再推荐「${food.restaurantName ?? "这家店"}」`,
                   );
@@ -1728,13 +1749,19 @@ function DesktopDish() {
                 <div className="pc-contributor">
                   {foodAuthor(food).id ? (
                     <Link to={`/users/${foodAuthor(food).id}`}>
-                      <span className="pc-user-avatar">
-                        {foodAuthor(food).name?.slice(0, 1) ?? "食"}
-                      </span>
+                      <UserAvatar
+                        className="pc-user-avatar"
+                        avatar={food.user?.avatar}
+                        name={foodAuthor(food).name}
+                      />
                       <b>{foodAuthor(food).name ?? "同学"}</b>
+                      <UserTitle title={food.user?.title} />
                     </Link>
                   ) : (
-                    <b>{foodAuthor(food).name ?? "校园食友"}</b>
+                    <>
+                      <b>{foodAuthor(food).name ?? "校园食友"}</b>
+                      <UserTitle title={food.user?.title} />
+                    </>
                   )}
                   <span>分享了这道菜</span>
                 </div>

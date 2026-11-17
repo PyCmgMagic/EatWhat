@@ -238,33 +238,43 @@
   opacity: 0.45;
 }
 
-/* v2 publish and edit: AI suggestion for category and tastes. */
-.mobile-publish-ai {
-  display: grid;
+/* Optional autofill action belongs beside the dish name, ahead of its results. */
+.mobile-publish-name-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  justify-items: start;
-}
-.mobile-publish-ai b {
-  font-size: 13px;
-  font-weight: 400;
+  min-height: 44px;
   color: #6e625b;
+  font-size: 13px;
+}
+.mobile-publish-name-heading > label {
+  margin: 0;
+  font: inherit;
+}
+.mobile-publish-ai {
+  display: flex;
+  align-items: center;
+  flex: none;
 }
 .mobile-publish-ai button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   min-height: 44px;
-  padding: 8px 16px;
-  border: 1px solid #231c18;
+  padding: 0 8px;
+  border: 0;
   border-radius: 22px;
-  background: #fff;
+  background: transparent;
   color: #231c18;
   font: inherit;
+  font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
 }
 .mobile-publish-ai button:disabled {
-  border-color: #e6ded8;
   color: #9a8b80;
 }
-.mobile-publish-ai small {
-  font-size: 12px;
-  line-height: 18px;
-  color: #6e625b;
+.mobile-publish-ai button:hover:not(:disabled) {
+  background: #f4efeb;
 }

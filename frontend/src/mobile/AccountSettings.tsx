@@ -70,6 +70,10 @@ function AccountContent() {
           to="/verify"
         />
       </nav>
+      <nav className="mobile-account-group" aria-label="账号管理">
+        <h2>更多管理</h2>
+        <AccountRow icon="logout" label="注销账号" to="/settings/delete" />
+      </nav>
     </div>
   );
 }

@@ -1221,7 +1221,11 @@ export function RestaurantActions({
     await cache.invalidateQueries({ queryKey: ["restaurants"] });
   };
   const scenes = ratingScenes.filter(
-    (scene) => scene.id === "dine_in" || v2Shop?.deliveryEnabled,
+    (scene) =>
+      scene.id === "dine_in" ||
+      v2Shop?.deliveryEnabled ||
+      (v2Shop?.delivery?.count ?? 0) > 0 ||
+      Boolean(v2Shop?.myRatings?.delivery),
   );
   const facts = shop
     ? [

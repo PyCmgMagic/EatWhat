@@ -300,17 +300,14 @@ export function Hubs() {
   const { api, toast } = useApp(),
     [page, setPage] = useAdminState("hubs.page", 1),
     [edit, setEdit] = useState<Hub | true | null>(null),
-    [action, setAction] = useState<{
-      hub: Hub;
-      kind: "delete" | "rebind";
-    } | null>(null),
+    [deleting, setDeleting] = useState<Hub | null>(null),
     q = useQuery({ queryKey: ["hubs", page], queryFn: () => api.hubs(page) }),
-    task = useTask(undefined, () => setAction(null), ["hubs", "admin"]);
+    task = useTask(undefined, () => setDeleting(null), ["hubs", "admin"]);
   return (
     <>
       <div className="ew-admin-toolbar">
         <span className="ew-admin-toolbar-note">
-          区域决定餐厅归属与「附近」范围；修改边界后需单独重算餐厅归属。
+          区域决定餐厅归属与「附近」范围；新增、编辑或删除边界后会自动更新餐厅归属。
         </span>
         <button className="ew-admin-btn is-primary" onClick={() => setEdit(true)}>
           <Icon name="add" size={16} />
@@ -360,12 +357,6 @@ export function Hubs() {
                     <td>
                       <div className="ew-admin-row-actions">
                         <button
-                          className="ew-admin-btn is-small"
-                          onClick={() => setAction({ hub: h, kind: "rebind" })}
-                        >
-                          重算归属
-                        </button>
-                        <button
                           className="ew-admin-icon-btn"
                           aria-label={`编辑 ${h.name}`}
                           title="编辑"
@@ -377,7 +368,7 @@ export function Hubs() {
                           className="ew-admin-icon-btn is-danger"
                           aria-label={`删除 ${h.name}`}
                           title="删除"
-                          onClick={() => setAction({ hub: h, kind: "delete" })}
+                          onClick={() => setDeleting(h)}
                         >
                           <Icon name="delete" size={17} />
                         </button>
@@ -403,32 +394,21 @@ export function Hubs() {
           onClose={() => setEdit(null)}
         />
       )}
-      {action && (
+      {deleting && (
         <Confirm
-          danger={action.kind === "delete"}
+          danger
           busy={task.isPending}
-          title={
-            action.kind === "delete"
-              ? `删除「${action.hub.name}」？`
-              : `重算「${action.hub.name}」的餐厅归属？`
-          }
-          confirmLabel={action.kind === "delete" ? "删除区域" : "开始重算"}
-          onClose={() => setAction(null)}
+          title={`删除「${deleting.name}」？`}
+          confirmLabel="删除区域"
+          onClose={() => setDeleting(null)}
           onConfirm={() =>
             task.run(async () => {
-              if (action.kind === "delete") {
-                await api.deleteHub(action.hub.id!);
-                toast("区域已删除", { tone: "success" });
-              } else {
-                const count = await api.rebindHub(action.hub.id!);
-                toast(`已重算，影响 ${count} 家餐厅`, { tone: "success" });
-              }
+              await api.deleteHub(deleting.id!);
+              toast("区域已删除", { tone: "success" });
             })
           }
         >
-          {action.kind === "delete"
-            ? "请核实删除对餐厅查询与已有归属的影响。"
-            : "会按区域边界重新绑定餐厅归属，请先确认边界准确。"}
+          请核实删除对餐厅查询与已有归属的影响；删除后会自动重新计算相关餐厅归属。
         </Confirm>
       )}
     </>
@@ -454,7 +434,14 @@ function HubEditor({ hub: h, onClose }: { hub?: Hub; onClose: () => void }) {
             } catch {
               throw new Error("区域边界不是有效的 JSON。");
             }
-            if (!["MultiPolygon", "Polygon", "Feature"].includes(parsed.type!))
+            if (
+              ![
+                "MultiPolygon",
+                "Polygon",
+                "Feature",
+                "FeatureCollection",
+              ].includes(parsed.type!)
+            )
               throw new Error("请填写有效的区域 GeoJSON。");
           }
           const body = {
@@ -485,13 +472,16 @@ function HubEditor({ hub: h, onClose }: { hub?: Hub; onClose: () => void }) {
         <Coordinates lng={h?.gcjLng} lat={h?.gcjLat} />
         <Field
           label="区域边界 GeoJSON"
-          hint="选填。留空不修改已有边界；保存后餐厅归属仍需单独重算。"
+          hint="选填。清空将移除已有边界；保存后会自动重新计算餐厅归属。"
           wide
         >
           <textarea
             name="boundary"
             rows={8}
             className="is-mono"
+            defaultValue={
+              h?.boundary ? JSON.stringify(h.boundary, null, 2) : ""
+            }
             placeholder='{"type":"Polygon","coordinates":[…]}'
           />
         </Field>

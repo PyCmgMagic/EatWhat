@@ -1,0 +1,120 @@
+.mobile-publish-photos {
+  min-width: 0;
+}
+.mobile-publish-photos > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: #6e625b;
+}
+.mobile-publish-photos h2 {
+  margin: 0;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 400;
+}
+.mobile-publish-photos > header > span {
+  font:
+    600 14px "Bricolage Grotesque Variable",
+    sans-serif;
+}
+.mobile-publish-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.mobile-publish-photo,
+.mobile-publish-photo-add {
+  position: relative;
+  min-width: 0;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: #f4efeb;
+  overflow: hidden;
+}
+.mobile-publish-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mobile-publish-photo {
+  overflow: visible;
+}
+.mobile-publish-photo-edit {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  overflow: hidden;
+}
+.mobile-publish-photo-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  width: 44px;
+  height: 44px;
+  padding: 4px;
+  border: 0;
+  border-radius: 0 14px 0 0;
+  background: transparent;
+  color: #231c18;
+}
+.mobile-publish-photo-close,
+.mobile-publish-photo-edit-mark {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffffed;
+  color: #231c18;
+}
+.mobile-publish-photo-edit-mark {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  background: #231c18bf;
+  color: white;
+}
+.mobile-publish-photo-cover {
+  position: absolute;
+  left: 5px;
+  bottom: 5px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: #231c18bf;
+  color: white;
+  font-size: 11px;
+  line-height: 16px;
+}
+.mobile-publish-photo-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1.5px dashed #b5a79c;
+  background: #faf8f5;
+  color: #231c18;
+  font-size: 12px;
+}
+.mobile-publish-photo-add.is-empty {
+  grid-column: 1 / -1;
+  min-height: 88px;
+  aspect-ratio: auto;
+  flex-direction: row;
+  gap: 8px;
+  font-size: 14px;
+}

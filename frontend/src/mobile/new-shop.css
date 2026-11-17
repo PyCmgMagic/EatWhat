@@ -1,0 +1,239 @@
+.mobile-page-native.mobile-new-shop {
+  --new-shop-ink: #231c18;
+  --new-shop-muted: #6e625b;
+  --new-shop-line: #e9e2da;
+  --new-shop-field: #f7f4f0;
+  --new-shop-selected: #fff0c3;
+  max-width: 520px;
+  padding: 0 20px;
+  color: var(--new-shop-ink);
+}
+.mobile-new-shop-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  min-height: 76px;
+  margin-inline: -20px;
+  padding: max(8px, env(safe-area-inset-top)) 12px 8px;
+  border-bottom: 1px solid #f2eeea;
+  background: #fff;
+}
+.mobile-new-shop-header > a {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  color: inherit;
+  text-decoration: none;
+}
+.mobile-new-shop-header > h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.4;
+  text-align: center;
+}
+.mobile-new-shop-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: calc(100dvh - 76px);
+  padding-top: 24px;
+}
+.mobile-new-shop .mobile-new-shop-name {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  color: var(--new-shop-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.mobile-new-shop .ew-field-mark {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 400;
+}
+.mobile-new-shop .mobile-new-shop-name > input,
+.mobile-new-shop .restaurant-location-address > input {
+  width: 100%;
+  min-width: 0;
+  height: 52px;
+  padding: 12px 14px;
+  border: 1px solid var(--new-shop-line);
+  border-radius: 14px;
+  background: var(--new-shop-field);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--new-shop-ink);
+}
+.mobile-new-shop input::placeholder {
+  color: #8e8177;
+  font-weight: 400;
+}
+.mobile-new-shop .restaurant-location-field {
+  gap: 12px;
+  margin: 0;
+}
+.mobile-new-shop .restaurant-location-heading h2 {
+  font-size: 14px;
+  font-weight: 700;
+}
+.mobile-new-shop .restaurant-location-heading .ew-field-mark {
+  margin-left: 0;
+}
+.mobile-new-shop .restaurant-location-status {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+.mobile-new-shop .restaurant-place-search-bar {
+  border-color: var(--new-shop-line);
+  background: var(--new-shop-field);
+}
+.mobile-new-shop .restaurant-place-search-bar input {
+  font-size: 16px;
+}
+.mobile-new-shop .restaurant-location-field .restaurant-map-picker {
+  height: 224px;
+  border-color: var(--new-shop-line);
+  border-radius: 18px;
+  overflow: hidden;
+}
+.mobile-new-shop .restaurant-map-zoom button {
+  width: 44px;
+  height: 44px;
+}
+.mobile-new-shop .restaurant-map-locate {
+  min-height: 44px;
+}
+.mobile-new-shop .restaurant-location-address {
+  gap: 10px;
+  margin: 4px 0 0;
+  color: var(--new-shop-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.mobile-page-native.mobile-new-shop .ew-shop-traits {
+  gap: 24px;
+  margin: 0;
+  padding-top: 24px;
+  border-top: 1px solid var(--new-shop-line);
+}
+.mobile-page-native.mobile-new-shop .ew-shop-traits .ew-meals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  align-items: stretch;
+}
+.mobile-page-native.mobile-new-shop .ew-shop-traits [data-trait="meals"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.mobile-page-native.mobile-new-shop .ew-shop-traits [data-trait="tags"] {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.mobile-page-native.mobile-new-shop .ew-meals > b {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.mobile-new-shop .shop-edit-limit {
+  color: var(--new-shop-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.mobile-page-native.mobile-new-shop .ew-meals > label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 46px;
+  margin: 0;
+  padding: 10px 8px;
+  border: 1px solid var(--new-shop-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--new-shop-muted);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: center;
+  white-space: normal;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease-out,
+    border-color 160ms ease-out;
+}
+.mobile-page-native.mobile-new-shop .ew-meals > label > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  clip-path: inset(50%);
+}
+.mobile-page-native.mobile-new-shop .ew-meals > label:has(input:checked) {
+  border-color: #dab15c;
+  background: var(--new-shop-selected);
+  color: var(--new-shop-ink);
+  font-weight: 700;
+}
+.mobile-page-native.mobile-new-shop .ew-meals > label:has(input:disabled) {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.mobile-new-shop :is(input, a, button):focus-visible,
+.mobile-new-shop .ew-meals > label:has(input:focus-visible) {
+  outline: 2px solid #94651c;
+  outline-offset: 3px;
+}
+.mobile-new-shop .restaurant-place-search-bar input:focus-visible {
+  outline: none;
+}
+.mobile-new-shop-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 0 -20px;
+  padding: 12px 20px max(16px, env(safe-area-inset-bottom));
+  border-top: 1px solid #f2eeea;
+  background: #fff;
+}
+.mobile-new-shop-footer .design-button {
+  min-height: 52px;
+  margin: 0;
+  border-radius: 18px;
+  font-size: 15px;
+}
+.mobile-new-shop-footer .design-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+@media (hover: hover) {
+  .mobile-new-shop-header > a:hover {
+    background: var(--new-shop-field);
+  }
+  .mobile-page-native.mobile-new-shop
+    .ew-meals
+    > label:not(:has(input:disabled)):hover {
+    border-color: #bb9a65;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-page-native.mobile-new-shop .ew-meals > label {
+    transition: none;
+  }
+}

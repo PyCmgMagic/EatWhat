@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 import { useApp } from "../app/state";
 import { errorMessage } from "../api/client";
 import type { Category } from "../api/models";
@@ -61,6 +62,7 @@ export function AiTagSuggest({
   current,
   onApply,
   disabled,
+  compact = false,
   className = "ew-feature ew-meals ew-ai-suggest",
 }: {
   restaurantId?: number | null;
@@ -74,16 +76,34 @@ export function AiTagSuggest({
   current: { category?: string | null; tagIds: number[] };
   onApply: (category: Category | undefined, tagIds: number[]) => void;
   disabled?: boolean;
+  compact?: boolean;
   className?: string;
 }) {
-  const { api } = useApp(),
+  const { api, toast } = useApp(),
     [busy, setBusy] = useState(""),
     [note, setNote] = useState("");
+  const report = (
+    message: string,
+    short = message,
+    tone: "info" | "error" = "info",
+  ) => {
+    if (compact) toast(short, { tone });
+    else setNote(message);
+  };
   return (
     <div className={className}>
-      <b>AI 建议</b>
+      {!compact && <b>AI 建议</b>}
       <button
         type="button"
+        aria-label={compact ? "AI 帮填分类和口味" : undefined}
+        aria-busy={!!busy}
+        title={
+          compact
+            ? !name.trim()
+              ? "先填写菜名"
+              : "根据菜名和照片填写分类和口味"
+            : undefined
+        }
         disabled={disabled || !!busy || !name.trim()}
         onClick={async () => {
           setNote("");
@@ -105,7 +125,7 @@ export function AiTagSuggest({
               .filter((id): id is number => typeof id === "number")
               .slice(0, MAX_DISH_TAGS);
             if (!category && !tagIds.length) {
-              setNote("AI 没有给出可用的建议。");
+              report("AI 没有给出可用的建议。");
               return;
             }
             // The model is told to leave tastes empty when the dish has no
@@ -124,10 +144,13 @@ export function AiTagSuggest({
                   : ""
                 : `已按建议把分类改为「${name}」，`;
               if (!sameCategory) onApply(category, []);
-              setNote(
+              report(
                 chosen
                   ? `💡 ${prefix}AI 没识别出明显口味，不过如果你吃着觉得「${chosen}」，按你的感觉来就好！`
                   : `💡 ${prefix}口味不用刻意选哦～`,
+                sameCategory
+                  ? "未识别出明显口味，保留当前选择。"
+                  : "已填写分类，保留已选口味。",
               );
               return;
             }
@@ -135,28 +158,40 @@ export function AiTagSuggest({
               tagIds.length === current.tagIds.length &&
               tagIds.every((id) => current.tagIds.includes(id));
             if (sameCategory && sameTags) {
-              setNote("AI 看过了：现在的分类和口味不用改。");
+              report(
+                "AI 看过了：现在的分类和口味不用改。",
+                "当前分类和口味无需调整。",
+              );
               return;
             }
             onApply(category, tagIds);
-            setNote("已按建议填写，可以再调整。");
+            report(
+              "已按建议填写，可以再调整。",
+              "已填写分类和口味，可继续调整。",
+            );
           } catch (error) {
-            setNote(errorMessage(error));
+            report(errorMessage(error), errorMessage(error), "error");
           } finally {
             setBusy("");
           }
         }}
       >
-        {busy ||
-          (pictures
-            ? "根据菜名和照片填写分类和口味"
-            : "根据菜名填写分类和口味")}
+        {compact && <Sparkles size={14} aria-hidden="true" />}
+        {compact
+          ? busy
+            ? "分析中…"
+            : "AI 帮填"
+          : busy ||
+            (pictures
+              ? "根据菜名和照片填写分类和口味"
+              : "根据菜名填写分类和口味")}
       </button>
-      {note ? (
-        <small role="status">{note}</small>
-      ) : (
-        !name.trim() && <small>先填写菜名</small>
-      )}
+      {!compact &&
+        (note ? (
+          <small role="status">{note}</small>
+        ) : (
+          !name.trim() && <small>先填写菜名</small>
+        ))}
     </div>
   );
 }

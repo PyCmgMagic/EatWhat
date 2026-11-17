@@ -9,7 +9,7 @@ import {
   recommendationBatchSize,
 } from "../features/v4/Remote";
 import { useSendSignal } from "../features/useSendSignal";
-import React, { useEffect, useRef, useState, type ReactNode } from "react";
+import React, { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
   validateFoodDraft,
   normalizedTag,
@@ -45,7 +45,12 @@ import {
   type Restaurant,
 } from "../api/models";
 import { validateFiles } from "../api/validation";
-import { foodCategories, MAX_DISH_TAGS } from "../api/v2-vocab";
+import {
+  foodCategories,
+  MAX_DISH_TAGS,
+  priceBands,
+  type V2Shop,
+} from "../api/v2-vocab";
 import type { Bridge, Controller, NodeView, Values } from "./types";
 import {
   useMobile,
@@ -68,6 +73,7 @@ import { AiTagSuggest, draftPictureKeys } from "../features/AiTagSuggest";
 import { DishDuplicateHint } from "../features/DishDuplicateHint";
 import { screenRoutes, panelScreens, pendingScreens } from "./routes";
 import { adjustPhoto, saveVisual } from "./photos";
+import { applyPhotoEdit } from "./draft-photo-edit";
 import { photoFraming, type PhotoFraming } from "./photo-framing";
 import { createPhotoGesture, MAX_PHOTO_ZOOM } from "./photo-gesture";
 import {
@@ -84,6 +90,7 @@ import { DishAvailabilityFields } from "../features/DishAvailability";
 import ProfileSheet from "./ProfileSheet";
 import ProfileGrowth from "../features/ProfileGrowth";
 import SheetHandle from "./SheetHandle";
+import DishPhotoPicker from "./DishPhotoPicker";
 import HomeOrbit from "./HomeOrbit";
 import TagPanel from "./TagPanel";
 import AvatarSourceSheet from "./AvatarSourceSheet";
@@ -185,6 +192,10 @@ export function useDesignBridge(
   // Latest draft, for callbacks that finish after later edits (photo uploads).
   const draftRef = useRef(m.draft);
   draftRef.current = m.draft;
+  const dishNameId = useId();
+  const photoEdit = m.draft.photoEdit;
+  const photoOpening = useRef(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const orbitMotion = useRef({
     scheduler: createHeroOrbitScheduler(),
     angle: 0,
@@ -664,28 +675,68 @@ export function useDesignBridge(
       } else throw new Error(result.message);
     });
   }
-  async function chooseFiles(crop = true) {
-    const files = await pickFiles(false);
-    if (!files.length) return;
+  async function preparePhotoEditor(
+    source: File,
+    framing: PhotoFraming,
+    page: string,
+    targetUrl?: string,
+  ) {
+    const suggested = await adjustPhoto(source, framing);
+    if (activeLocation.current !== page) return;
+    m.setDraft({
+      photoEdit: {
+        source,
+        url: URL.createObjectURL(source),
+        targetUrl,
+        framing,
+        candidates: suggested.colors,
+      },
+    });
+    nav("/publish/crop");
+  }
+  async function chooseFiles() {
+    if (photoOpening.current || busy || publishUncertain) return;
+    photoOpening.current = true;
+    const page = location.key;
     try {
-      validateFiles(files, m.draft.images.length);
-      m.setDraft({
-        images: [
-          ...m.draft.images,
-          ...files.map((file) => ({ file, url: URL.createObjectURL(file) })),
-        ],
-      });
-      const suggested = await adjustPhoto(files[0], { x: 0, y: 0, zoom: 1 });
-      m.setDraft({ candidates: suggested.colors });
-      if (crop) nav("/publish/crop");
+      const files = await pickFiles(false);
+      if (!files.length || activeLocation.current !== page) return;
+      validateFiles(files, draftRef.current.images.length);
+      setPhotoBusy(true);
+      await preparePhotoEditor(files[0], { x: 0, y: 0, zoom: 1 }, page);
     } catch (e) {
-      m.notice(errorMessage(e));
+      if (activeLocation.current === page) m.notice(errorMessage(e));
+    } finally {
+      photoOpening.current = false;
+      if (activeLocation.current === page) setPhotoBusy(false);
+    }
+  }
+  async function editPhoto(index: number) {
+    if (photoOpening.current || busy || publishUncertain) return;
+    const image = draftRef.current.images[index];
+    if (!image) return;
+    photoOpening.current = true;
+    setPhotoBusy(true);
+    const page = location.key;
+    try {
+      await preparePhotoEditor(
+        image.original ?? image.file,
+        image.framing ?? { x: 0, y: 0, zoom: 1 },
+        page,
+        image.url,
+      );
+    } catch (e) {
+      if (activeLocation.current === page) m.notice(errorMessage(e));
+    } finally {
+      photoOpening.current = false;
+      if (activeLocation.current === page) setPhotoBusy(false);
     }
   }
   async function publish() {
     if (
       publishLock.current ||
       busy ||
+      photoBusy ||
       uncertain ||
       m.draft.publishing ||
       m.draft.publishUncertain ||
@@ -694,10 +745,6 @@ export function useDesignBridge(
       return;
     publishLock.current = true;
     const publishingLocation = location.key;
-    m.setDraft({
-      description: String(controller.state.desc ?? m.draft.description),
-      category: categoryCodes[controller.state.cat ?? 0],
-    });
     try {
       await run(async () => {
         const draft = {
@@ -705,10 +752,7 @@ export function useDesignBridge(
           tags: withDraftTags(m.draft.tags, m.draft.tagInput ?? ""),
           tagInput: "",
         };
-        validateFoodDraft({
-          ...draft,
-          description: String(controller.state.desc ?? draft.description),
-        });
+        validateFoodDraft(draft);
         if (!draft.name.trim()) throw new Error("写一个菜名，再发布。");
         if (!draft.images.length) throw new Error("先加一张你拍的照片。");
         if (!shopId) throw new Error("先选一家店。");
@@ -764,9 +808,8 @@ export function useDesignBridge(
             restaurantId: shopId,
             name: draft.name.trim(),
             price,
-            description:
-              String(controller.state.desc ?? draft.description) || undefined,
-            category: categoryCodes[controller.state.cat ?? 0] as Category,
+            description: draft.description || undefined,
+            category: (draft.category || "staple") as Category,
             pictureUrl: images.map((i) => i.key!),
             systemTagIds: draft.systemTagIds,
             signature: !!draft.signature,
@@ -1160,7 +1203,7 @@ export function useDesignBridge(
     }));
   }
   if (screen === "G-Crop" && !reference) {
-    const choices = m.draft.candidates ?? ["#8F5B24", "#A8321C", "#D9632B"];
+    const choices = photoEdit?.candidates ?? ["#8F5B24", "#A8321C", "#D9632B"];
     const selected = controller.state.color ?? 0;
     const names = [
       "暖汤",
@@ -1534,7 +1577,7 @@ export function useDesignBridge(
           label="发布"
           pending={busy}
           phase={m.draft.publishPhase}
-          disabled={busy || uncertain || publishUncertain}
+          disabled={busy || photoBusy || uncertain || publishUncertain}
           style={{ ...st, border: 0, width: "100%" }}
           onClick={() => void publish()}
         />
@@ -1767,7 +1810,8 @@ export function useDesignBridge(
               <p className="mobile-home-distance">
                 {area?.source === "device"
                   ? "距你"
-                  : `距${area?.name || "所选位置"}`} {distance}
+                  : `距${area?.name || "所选位置"}`}{" "}
+                {distance}
               </p>
             )}
             <p
@@ -1938,6 +1982,7 @@ export function useDesignBridge(
             >
               <RecommendShopList
                 shops={recommendedShops}
+                scene={m.scene}
                 onOpenShop={(shop) => shop.id && m.setShopId(shop.id)}
                 onOpenFood={(dish) => {
                   if (dish.id) m.setFoodId(dish.id);
@@ -2155,12 +2200,25 @@ export function useDesignBridge(
         );
       if (id === 10)
         p.onClick = () => void sharing.share(r.name ?? "山软今天吃什么");
-      if (id === 12)
+      if (id === 12) {
+        const traits = r as typeof r & V2Shop;
+        const facts = [
+          ...(traits.categories ?? []),
+          priceBands.find((band) => band.id === r.priceBand)?.name,
+          traits.deliveryEnabled ? "可外卖" : "仅堂食",
+          ...(traits.tags ?? []),
+        ].filter((fact): fact is string => Boolean(fact));
         return (
           <section {...p} className="mobile-restaurant-copy" style={undefined}>
             {view.children}
+            <ul className="mobile-restaurant-traits" aria-label="店铺特点">
+              {facts.map((fact, index) => (
+                <li key={`${fact}-${index}`}>{fact}</li>
+              ))}
+            </ul>
           </section>
         );
+      }
       if (id === 17) {
         p.className = "mobile-restaurant-stats";
         p.style = undefined;
@@ -2299,41 +2357,53 @@ export function useDesignBridge(
             <DishDuplicateHint restaurantId={shopId} name={m.draft.name} />
           </>
         );
+      if (id === 27)
+        return (
+          <div {...p}>
+            <div className="mobile-publish-name-heading">
+              <label htmlFor={dishNameId}>菜名</label>
+              <AiTagSuggest
+                compact
+                className="mobile-publish-ai"
+                restaurantId={shopId}
+                name={m.draft.name}
+                description={m.draft.description}
+                tagOptions={systemTags.data ?? []}
+                pictures={() =>
+                  draftPictureKeys(m.draft.images, app.uploadMany, (keys) =>
+                    m.setDraft({
+                      images: draftRef.current.images.map((image) =>
+                        !image.key && keys.has(image.file)
+                          ? { ...image, key: keys.get(image.file) }
+                          : image,
+                      ),
+                    }),
+                  )
+                }
+                current={{
+                  category: m.draft.category || "staple",
+                  tagIds: m.draft.systemTagIds ?? [],
+                }}
+                disabled={busy || photoBusy || publishUncertain}
+                onApply={(category, tagIds) => {
+                  if (category) {
+                    controller.setState({
+                      cat: Math.max(0, categoryCodes.indexOf(category)),
+                    });
+                    m.setDraft({ category });
+                  }
+                  if (tagIds.length) m.setDraft({ systemTagIds: tagIds });
+                }}
+              />
+            </div>
+            {view.children.slice(1)}
+          </div>
+        );
+      if (id === 31)
+        p.style = { ...st, display: "flex", alignItems: "center", minHeight: 44 };
       if (id === 45)
         return (
           <div className="mobile-publish-tag-groups">
-            <AiTagSuggest
-              className="mobile-publish-ai"
-              restaurantId={shopId}
-              name={m.draft.name}
-              description={String(controller.state.desc ?? m.draft.description)}
-              tagOptions={systemTags.data ?? []}
-              pictures={() =>
-                draftPictureKeys(m.draft.images, app.uploadMany, (keys) =>
-                  m.setDraft({
-                    images: draftRef.current.images.map((image) =>
-                      !image.key && keys.has(image.file)
-                        ? { ...image, key: keys.get(image.file) }
-                        : image,
-                    ),
-                  }),
-                )
-              }
-              current={{
-                category: categoryCodes[controller.state.cat ?? 0],
-                tagIds: m.draft.systemTagIds ?? [],
-              }}
-              disabled={busy || publishUncertain}
-              onApply={(category, tagIds) => {
-                if (category) {
-                  controller.setState({
-                    cat: Math.max(0, categoryCodes.indexOf(category)),
-                  });
-                  m.setDraft({ category });
-                }
-                if (tagIds.length) m.setDraft({ systemTagIds: tagIds });
-              }}
-            />
             <fieldset className="mobile-publish-tags">
               <legend>口味，最多 {MAX_DISH_TAGS} 个，可选</legend>
               <div>
@@ -2417,109 +2487,37 @@ export function useDesignBridge(
             className="mobile-publish-fields"
             style={{ ...st, bottom: 96, overflowY: "auto", paddingBottom: 24 }}
           >
-            {view.children}
+            {view.children.slice(0, 2)}
+            <DishPhotoPicker
+              images={m.draft.images}
+              disabled={busy || photoBusy || publishUncertain}
+              onAdd={() => void chooseFiles()}
+              onEdit={(index) => void editPhoto(index)}
+              onRemove={(index) => {
+                const image = draftRef.current.images[index];
+                if (!image) return;
+                m.setDraft({
+                  images: draftRef.current.images.filter((_, i) => i !== index),
+                });
+                if (image.url.startsWith("blob:")) URL.revokeObjectURL(image.url);
+              }}
+            />
+            {view.children.slice(2)}
           </div>
         );
       if (id === 2) {
         p.style = {
           ...st,
           background: m.draft.stage,
-          cursor: m.draft.images.length ? "default" : "pointer",
         };
-        if (!m.draft.images.length) {
-          p.role = "button";
-          p.tabIndex = 0;
-          p["aria-label"] = "添加菜品照片";
-          p.onClick = () => void chooseFiles();
-          p.onKeyDown = (e: any) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              void chooseFiles();
-            }
-          };
-        }
+        p["aria-hidden"] = true;
       }
       if (
         [4, 5, 9].includes(id) &&
         ["#C9442B", "#A8321C", "#8F5B24"].includes(m.draft.stage)
       )
         p.style = { ...st, color: "#fff" };
-      if (id === 15)
-        return (
-          <span {...p}>
-            {m.draft.images.length}
-            <span style={{ fontWeight: 600 }}> / 9</span>
-          </span>
-        );
-      if (id === 18) p.style = { ...st, background: m.draft.stage };
-      if (id === 10)
-        return (
-          <div
-            {...p}
-            style={{
-              ...st,
-              right: 20,
-              overflowX: "auto",
-              padding: "3px 0",
-              top: 211,
-            }}
-          >
-            {m.draft.images.map((img, i) => (
-              <button
-                key={img.url}
-                type="button"
-                aria-label={`移除第 ${i + 1} 张照片`}
-                onClick={() =>
-                  m.setDraft({
-                    images: m.draft.images.filter((_, j) => j !== i),
-                  })
-                }
-                style={{
-                  position: "relative",
-                  flex: "0 0 56px",
-                  width: 56,
-                  height: 56,
-                  padding: 0,
-                  border: 0,
-                  borderRadius: 16,
-                  overflow: "hidden",
-                  boxShadow: "0 0 0 3px #fff",
-                }}
-              >
-                <img
-                  src={img.url}
-                  alt={`照片 ${i + 1}，点击移除`}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              </button>
-            ))}
-            <button
-              type="button"
-              aria-label="再加一张照片"
-              onClick={() => void chooseFiles()}
-              style={{
-                flex: "0 0 56px",
-                height: 56,
-                border: "1.5px dashed #231c1873",
-                borderRadius: 16,
-                background: "#ffffff4d",
-                color: "#231c18",
-              }}
-            >
-              <DesignIcon name="add" size={22} />
-            </button>
-            <span
-              style={{
-                fontFamily: "Bricolage Grotesque Variable",
-                fontSize: 14,
-                fontWeight: 800,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {m.draft.images.length} / 9
-            </span>
-          </div>
-        );
+      if (id === 10 || id === 17) return null;
       if (tag === "img" && String(n.attrs.src).includes("yuntun")) {
         if (!m.draft.images.length) return null;
         p.src = m.draft.images[0].url;
@@ -2532,6 +2530,7 @@ export function useDesignBridge(
       }
       if (id === 29) {
         delete p.defaultValue;
+        p.id = dishNameId;
         p.value = m.draft.name;
         p.maxLength = 64;
         p.onChange = (e: any) => m.setDraft({ name: e.target.value });
@@ -2653,6 +2652,36 @@ export function useDesignBridge(
         p.onClick = () => unavailable("消息按类型查询");
     }
     if (screen === "G-PickShop") {
+      if (n.attrs.role === "radio") {
+        p.className = `${p.className ?? ""} mobile-pick-shop-row`;
+        p.style = { ...p.style, height: "auto", padding: "8px 12px 8px 10px" };
+      }
+      if (tag === "span" && n.children.includes("{{r.name}}")) {
+        p.className = `${p.className ?? ""} mobile-pick-shop-name`;
+        p.title = view.scope.r?.name;
+      }
+      if (tag === "span" && n.children.includes("{{r.hub}}"))
+        return (
+          <span
+            {...p}
+            className={`${p.className ?? ""} mobile-pick-shop-address`}
+            style={{ ...p.style, display: "block" }}
+            title={view.scope.r?.hub}
+          >
+            {view.scope.r?.hub}
+          </span>
+        );
+      if (tag === "a" && n.attrs.href === "G-AddDish.dc.html")
+        return (
+          <a
+            {...p}
+            className={`${p.className ?? ""} mobile-pick-shop-next`}
+            aria-label={`下一步，填写菜品${m.shopId ? `，已选择${values.chosen}` : ""}`}
+          >
+            下一步，填写菜品
+            <DesignIcon name="chevronRight" size={17} />
+          </a>
+        );
       if (id === 15) p.style = { ...p.style, bottom: 168, paddingBottom: 12 };
       if (id === 27) p.style = { ...p.style, top: "auto", bottom: 108 };
       if (tag === "span" && clean(text).includes("离你近的排在前面"))
@@ -2662,8 +2691,19 @@ export function useDesignBridge(
         p.value = search;
         p.onChange = (e: any) => setSearch(e.target.value);
       }
-      if (id === 15 && !shops.data?.items?.length)
-        return <div {...p}>{shopList()}</div>;
+      if (id === 15)
+        return (
+          <div {...p}>
+            {shops.data?.items?.length ? (
+              <>
+                {view.children}
+                <More />
+              </>
+            ) : (
+              shopList()
+            )}
+          </div>
+        );
     }
     if (screen === "G-Search" && id === 43)
       return <div {...p}>{shopList()}</div>;
@@ -2761,14 +2801,14 @@ export function useDesignBridge(
         return (
           <div className="mobile-profile-shortcuts">
             <Link to="/favorites">
-              <DesignIcon name="bookmark" size={25} />
+              <DesignIcon name="bookmark" size={20} />
               <span>
                 <strong>收藏夹</strong>
                 <span>收藏的菜和店</span>
               </span>
             </Link>
             <Link to="/history">
-              <DesignIcon name="history" size={25} />
+              <DesignIcon name="history" size={20} />
               <span>
                 <strong>足迹</strong>
                 <span>看过的菜和店</span>
@@ -3022,7 +3062,7 @@ export function useDesignBridge(
       screen === "G-Crop" &&
       tag === "img" &&
       String(n.attrs.src).includes("luosi") &&
-      m.draft.images.length
+      photoEdit
     ) {
       const preview = String(n.attrs.src).includes("sq_luosi");
       const layout = photoFraming(
@@ -3035,7 +3075,7 @@ export function useDesignBridge(
         },
         preview ? 100 : 300,
       ).image;
-      p.src = m.draft.images.at(-1)!.url;
+      p.src = photoEdit.url;
       p.alt = preview ? "首页裁剪预览" : "所选照片";
       p.onLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
         const image = event.currentTarget;
@@ -3072,6 +3112,7 @@ export function useDesignBridge(
       if (tag === "input" && p.type === "range") {
         p.min = 1;
         p.max = MAX_PHOTO_ZOOM;
+        p.disabled = busy;
       }
     }
     if (screen === "G-Crop" && tag === "span" && clean(text) === "柳州螺蛳粉")
@@ -3080,7 +3121,8 @@ export function useDesignBridge(
       screen === "G-PanelPlace" &&
       n.attrs.role === "radiogroup" &&
       n.attrs["aria-label"] === "校区"
-    )
+    ) {
+      const campusActive = area?.source === "campus" && !!campusId;
       return (
         <div
           className="mobile-place-picker"
@@ -3089,17 +3131,23 @@ export function useDesignBridge(
         >
           <Select
             aria-label="推荐校区"
-            value={campusId ? String(campusId) : ""}
+            value={campusActive ? String(campusId) : ""}
             disabled={busy}
             onChange={(event) => {
               const next = Number(event.currentTarget.value);
               if (Number.isFinite(next) && next > 0) selectCampus(next);
             }}
           >
-            {!campusList.data && (
+            {!campusList.data ? (
               <option value="" disabled={campusList.isError}>
                 {campusList.isError ? "校区暂时加载失败" : "正在加载校区…"}
               </option>
+            ) : (
+              !campusActive && (
+                <option value="" disabled>
+                  选择校区（当前使用附近区域）
+                </option>
+              )
             )}
             {campusList.data
               ?.filter((c) => c.open !== false && c.id != null)
@@ -3109,32 +3157,39 @@ export function useDesignBridge(
                 </option>
               ))}
           </Select>
-          {hubs.data?.items?.map((h) => (
-            <button
-              key={h.id}
-              className="mobile-place-chip"
-              disabled={!h.id || busy}
-              onClick={() =>
-                void run(async () => {
-                  const detail = await api.hubDetail(h.id!);
-                  if (detail.id !== h.id || !hasCoordinates(detail))
-                    throw new Error("区域详情缺少有效坐标，请重试或使用定位。");
-                  selectArea({
-                    name: detail.name ?? "所选区域",
-                    gcjLng: detail.gcjLng!,
-                    gcjLat: detail.gcjLat!,
-                    hubId: detail.id!,
-                    source: "hub",
-                  });
-                  m.closePanel();
-                })
-              }
-            >
-              {h.name}
-            </button>
-          ))}
+          {hubs.data?.items?.map((h) => {
+            const activeHub = area?.source === "hub" && area?.hubId === h.id;
+            return (
+              <button
+                key={h.id}
+                className="mobile-place-chip"
+                aria-pressed={activeHub}
+                data-active={activeHub || undefined}
+                disabled={!h.id || busy}
+                onClick={() =>
+                  void run(async () => {
+                    const detail = await api.hubDetail(h.id!);
+                    if (detail.id !== h.id || !hasCoordinates(detail))
+                      throw new Error("区域详情缺少有效坐标，请重试或使用定位。");
+                    selectArea({
+                      name: detail.name ?? "所选区域",
+                      gcjLng: detail.gcjLng!,
+                      gcjLat: detail.gcjLat!,
+                      hubId: detail.id!,
+                      source: "hub",
+                    });
+                    m.closePanel();
+                  })
+                }
+              >
+                {h.name}
+              </button>
+            );
+          })}
           <button
             className="mobile-place-chip"
+            aria-pressed={area?.source === "device"}
+            data-active={area?.source === "device" || undefined}
             disabled={busy}
             onClick={locate}
           >
@@ -3143,6 +3198,7 @@ export function useDesignBridge(
           </button>
         </div>
       );
+    }
     if (screen === "G-PanelPlace" && scope.m?.name && tag === "button")
       p.onClick = () => {
         m.setMeal(scope.m.name);
@@ -3264,20 +3320,37 @@ export function useDesignBridge(
   };
 
   function More() {
-    const d = (
+    const query = (
       ["G-Nearby", "G-PickShop", "G-Search"].includes(screen)
-        ? shops.data
+        ? shops
         : screen === "G-Me" && category === "收藏"
-          ? favorites.data
-          : relevant?.data
-    ) as any;
-    return d?.hasNext ? (
+          ? favorites
+          : relevant
+    ) as { data?: { hasNext?: boolean }; isFetching?: boolean } | null;
+    const hasNext = !!query?.data?.hasNext;
+    if (!hasNext && page <= 1) return null;
+    return (
       <div className="mobile-page-more">
-        <PrimaryButton light onClick={() => setPage((p) => p + 1)}>
-          下一页
-        </PrimaryButton>
+        {page > 1 && (
+          <PrimaryButton
+            light
+            disabled={query?.isFetching}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            上一页
+          </PrimaryButton>
+        )}
+        {hasNext && (
+          <PrimaryButton
+            light
+            disabled={query?.isFetching}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            下一页
+          </PrimaryButton>
+        )}
       </div>
-    ) : null;
+    );
   }
   function shopList() {
     if (shops.isPending) return <ContentSkeleton kind="rows" count={4} />;
@@ -3411,31 +3484,56 @@ export function useDesignBridge(
       void chooseFiles();
       return;
     }
-    if (
-      screen === "G-Crop" &&
-      target === "G-AddDish.dc.html" &&
-      label !== "取消"
-    ) {
+    if (screen === "G-Crop" && target === "G-AddDish.dc.html") {
+      if (busy) return;
+      const edit = draftRef.current.photoEdit;
+      if (label === "取消") {
+        if (edit) URL.revokeObjectURL(edit.url);
+        m.setDraft({ photoEdit: undefined });
+        nav("/publish/dish");
+        return;
+      }
+      const page = location.key;
       void run(async () => {
-        const image = m.draft.images.at(-1);
-        if (!image) throw new Error("先选择一张照片。");
-        const result = await adjustPhoto(image.file, {
-          x: controller.state.ox ?? 0,
-          y: controller.state.oy ?? 0,
-          zoom: controller.state.zoom ?? 1,
-        });
-        const images = [...m.draft.images];
-        images[images.length - 1] = {
-          file: result.file,
-          url: URL.createObjectURL(result.file),
-        };
-        URL.revokeObjectURL(image.url);
+        if (!edit) throw new Error("先选择一张照片。");
+        const framing = photoFraming(
+          controller.state.photoWidth ?? 300,
+          controller.state.photoHeight ?? 300,
+          {
+            x: controller.state.ox ?? 0,
+            y: controller.state.oy ?? 0,
+            zoom: controller.state.zoom ?? 1,
+          },
+        ).crop;
+        const result = await adjustPhoto(edit.source, framing);
+        if (
+          activeLocation.current !== page ||
+          draftRef.current.photoEdit !== edit
+        )
+          return;
+        const url = URL.createObjectURL(result.file);
+        let images: Draft["images"];
+        try {
+          images = applyPhotoEdit(
+            draftRef.current.images,
+            edit,
+            result.file,
+            url,
+            framing,
+          );
+        } catch (failure) {
+          URL.revokeObjectURL(url);
+          throw failure;
+        }
         m.setDraft({
           images,
-          stage: (m.draft.candidates ?? ["#8F5B24", "#A8321C", "#D9632B"])[
-            controller.state.color ?? 0
-          ],
+          candidates: edit.candidates,
+          stage: edit.candidates[controller.state.color ?? 0] ?? m.draft.stage,
+          photoEdit: undefined,
         });
+        URL.revokeObjectURL(edit.url);
+        if (edit.targetUrl?.startsWith("blob:"))
+          URL.revokeObjectURL(edit.targetUrl);
         nav("/publish/dish");
       });
       return;
@@ -3606,7 +3704,7 @@ export function useDesignBridge(
     );
   if (accountPending || (!denied && screen !== "G-Me" && relevant?.isPending))
     before = <MobilePageSkeleton screen={screen} />;
-  if (!denied && screen === "G-Crop" && !m.draft.images.length)
+  if (!denied && screen === "G-Crop" && !photoEdit)
     before = (
       <div className="mobile-status">
         <h2>先选择一张照片</h2>
@@ -3748,7 +3846,7 @@ export function useDesignBridge(
         !!relevant?.isError &&
         !relevant.data &&
         !homeScreens.has(screen)) ||
-      (screen === "G-Crop" && !m.draft.images.length),
+      (screen === "G-Crop" && !photoEdit),
   };
 }
 // v2 dish categories, in the order of the publish chips.

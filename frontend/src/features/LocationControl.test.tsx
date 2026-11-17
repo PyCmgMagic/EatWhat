@@ -124,9 +124,10 @@ it("shows the remembered place and offers campuses as presets", async () => {
   expect(optionLabels()).toEqual(["软件园附近", "软件园校区", "舜华路校区"]);
   await choose("舜华路校区");
   expect(localStorage.getItem("eatwhat-campus")).toBe("2");
-  expect(JSON.parse(localStorage.getItem("eatwhat-area")!).name).toBe(
-    "舜华路校区",
-  );
+  expect(JSON.parse(localStorage.getItem("eatwhat-area")!)).toMatchObject({
+    name: "舜华路校区",
+    source: "campus",
+  });
   expect(trigger().textContent).toContain("舜华路校区");
 });
 

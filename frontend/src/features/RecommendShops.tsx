@@ -1,9 +1,17 @@
 import { Link } from "react-router-dom";
+import { ArrowUpRight, Star } from "lucide-react";
 import type { Food, Restaurant } from "../api/models";
 import { mediaUrl, money } from "../api/models";
 import { stagePalette } from "../api/food-display";
-import { priceBands, type DishRating } from "../api/v2-vocab";
+import {
+  priceBands,
+  ratingScenes,
+  type DishRating,
+  type RecommendScene,
+  type V2Shop,
+} from "../api/v2-vocab";
 import { FoodCover } from "../components/FoodCover";
+import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
 import { useFoodPhoto } from "./media";
 import { ratingText } from "./FoodRating";
 import "./recommend-shops.css";
@@ -19,11 +27,7 @@ export type Signature = NonNullable<Restaurant["signatureFoods"]>[number] & {
   rating?: DishRating | null;
 };
 /** Fields of the v2 recommendation card the v1 shop type does not declare. */
-type Card = Restaurant & {
-  dineIn?: { rate?: number | null; count?: number | null } | null;
-  categories?: string[] | null;
-  tags?: string[] | null;
-};
+type Card = Restaurant & V2Shop;
 
 export function distanceText(meters?: number | null) {
   if (meters == null) return "";
@@ -40,7 +44,7 @@ export function dineInText(shop: Card) {
   return `堂食推荐 ${Math.round(rate * 100)}% · ${count} 人评价`;
 }
 
-function DishThumb({
+function FeaturedDish({
   dish,
   onOpen,
 }: {
@@ -58,31 +62,59 @@ function DishThumb({
         onClick={() => onOpen?.(dish)}
       >
         <span
-          className="rec-shop-dish-plate"
+          className="rec-shop-dish-photo"
           style={{
             background:
               (dish.stageColor &&
-                stagePalette[dish.stageColor as keyof typeof stagePalette]) ||
+                `color-mix(in srgb, ${stagePalette[dish.stageColor as keyof typeof stagePalette] ?? "#F4EFEB"} 16%, white)`) ||
               "#F4EFEB",
           }}
         >
-          {!photo.unavailable && (
-            <FoodCover
-              className="rec-shop-cover"
-              src={src}
-              crop={dish.coverCrop}
-              alt={dish.name ?? "代表菜"}
-              loading="lazy"
-              decoding="async"
-              onError={photo.onError}
-            />
+          {photo.unavailable ? (
+            <FoodPhotoFallback failed={photo.failed} />
+          ) : (
+            <span className="rec-shop-dish-image">
+              <FoodCover
+                className="rec-shop-cover"
+                src={src}
+                crop={dish.coverCrop}
+                alt={dish.name ?? "代表菜"}
+                loading="lazy"
+                decoding="async"
+                onError={photo.onError}
+              />
+            </span>
           )}
           {dish.signature && <span className="rec-shop-dish-badge">招牌</span>}
         </span>
-        <span className="rec-shop-dish-name">{dish.name}</span>
-        {score && <span className="rec-shop-dish-score">{score}</span>}
-        <span className="rec-shop-dish-price">
-          {dish.price == null ? "价格待补充" : money(dish.price)}
+        <span className="rec-shop-dish-info">
+          <span className="rec-shop-dish-name">{dish.name}</span>
+          <span className="rec-shop-dish-meta">
+            <span
+              className={`rec-shop-dish-price${dish.price == null ? " is-missing" : ""}`}
+            >
+              {dish.price == null ? (
+                "价格待补充"
+              ) : (
+                <>
+                  <span>¥</span>
+                  <strong>{money(dish.price).slice(1)}</strong>
+                </>
+              )}
+            </span>
+            {score && (
+              <span
+                className="rec-shop-dish-score"
+                role="img"
+                aria-label={score}
+                title={score}
+              >
+                <Star size={12} aria-hidden="true" />
+                <strong>{dish.rating!.score!.toFixed(1)}</strong>
+                <span>· {dish.rating!.count} 人</span>
+              </span>
+            )}
+          </span>
         </span>
       </Link>
     </li>
@@ -92,10 +124,12 @@ function DishThumb({
 /** One recommended shop with up to three featured dishes under it. */
 export function RecommendShopCard({
   shop,
+  scene = "dine_in",
   onOpenShop,
   onOpenFood,
 }: {
   shop: Restaurant;
+  scene?: RecommendScene;
   onOpenShop?: (shop: Restaurant) => void;
   onOpenFood?: (dish: Signature) => void;
 }) {
@@ -103,24 +137,36 @@ export function RecommendShopCard({
   const dishes = (shop.signatureFoods ?? [])
     .filter((dish) => dish.id != null)
     .slice(0, 3) as Signature[];
-  const place = [distanceText(shop.distanceMeters), shop.hubName]
-    .filter(Boolean)
-    .join(" · ");
+  const distance = distanceText(shop.distanceMeters);
+  const identity = /^(.*?)\s*[（(]([^）)]+)[）)]$/.exec(shop.name ?? "");
+  const name = identity?.[1]?.trim() || shop.name;
+  const branch = identity?.[2]?.trim();
+  const place = branch || shop.hubName;
+  const currentScene =
+    ratingScenes.find((item) => item.id === scene) ?? ratingScenes[0];
+  const stat = card[currentScene.key];
+  const count = stat?.count ?? 0;
   const traits = [
     priceBands.find((band) => band.id === shop.priceBand)?.name,
-    ...(card.categories ?? []),
-    ...(card.tags ?? []),
+    ...(card.categories ?? []).slice(0, 1),
+    ...(card.tags ?? []).slice(0, 1),
   ].filter((value): value is string => !!value);
   return (
     <article className="rec-shop-card">
       <Link
         to={`/restaurants/${shop.id}`}
         className="rec-shop-head"
+        aria-label={`查看${shop.name ?? "店铺"}`}
         onClick={() => onOpenShop?.(shop)}
       >
-        <h3>{shop.name}</h3>
-        {place && <p className="rec-shop-place">{place}</p>}
-        <p className="rec-shop-rating">{dineInText(card)}</p>
+        <div className="rec-shop-identity">
+          <h3>{name}</h3>
+          {place && <span className="rec-shop-place">{place}</span>}
+        </div>
+        <span className="rec-shop-direction">
+          <ArrowUpRight size={18} aria-hidden="true" />
+          {distance && <span className="rec-shop-distance">{distance}</span>}
+        </span>
         {traits.length > 0 && (
           <ul className="rec-shop-traits" aria-label="店铺特点">
             {traits.map((trait) => (
@@ -130,26 +176,58 @@ export function RecommendShopCard({
         )}
       </Link>
       {dishes.length ? (
-        <ul className="rec-shop-dishes" aria-label={`${shop.name}的代表菜`}>
+        <ul
+          className="rec-shop-dishes"
+          data-count={dishes.length}
+          aria-label={`${shop.name}的代表菜`}
+        >
           {dishes.map((dish) => (
-            <DishThumb key={dish.id} dish={dish} onOpen={onOpenFood} />
+            <FeaturedDish key={dish.id} dish={dish} onOpen={onOpenFood} />
           ))}
         </ul>
       ) : (
-        <p className="rec-shop-no-dish">
-          这个时段还没有可展示的菜，进店看看菜单吧
-        </p>
+        <Link
+          className="rec-shop-no-dish"
+          to={`/restaurants/${shop.id}`}
+          onClick={() => onOpenShop?.(shop)}
+        >
+          <span>暂无菜品</span>
+          <span>
+            查看店铺 <ArrowUpRight size={15} aria-hidden="true" />
+          </span>
+        </Link>
       )}
+      <p className="rec-shop-rating">
+        {count > 0 ? (
+          <>
+            <span>
+              {currentScene.name}
+              {stat?.rate == null ? (
+                ""
+              ) : (
+                <>
+                  推荐 <strong>{Math.round(stat.rate * 100)}%</strong>
+                </>
+              )}
+            </span>
+            <span className="rec-shop-rating-count"> · {count} 人评价</span>
+          </>
+        ) : (
+          <span className="rec-shop-unrated">暂无{currentScene.name}评价</span>
+        )}
+      </p>
     </article>
   );
 }
 
 export function RecommendShopList({
   shops,
+  scene = "dine_in",
   onOpenShop,
   onOpenFood,
 }: {
   shops: Restaurant[];
+  scene?: RecommendScene;
   onOpenShop?: (shop: Restaurant) => void;
   onOpenFood?: (dish: Signature) => void;
 }) {
@@ -159,6 +237,7 @@ export function RecommendShopList({
         <RecommendShopCard
           key={shop.id}
           shop={shop}
+          scene={scene}
           onOpenShop={onOpenShop}
           onOpenFood={onOpenFood}
         />

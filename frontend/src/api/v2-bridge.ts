@@ -656,7 +656,12 @@ const routes: [string, RegExp, Handler][] = [
       const userName = body.userName ?? body.username;
       await call("/auth/username/set", {
         ...options,
-        body: { userName, code: body.code, newPassword: body.newPassword },
+        body: {
+          userName,
+          code: body.code,
+          phoneVerificationToken: body.phoneVerificationToken,
+          newPassword: body.newPassword,
+        },
       });
       const user = await call("/user/info", { method: "GET" });
       return {
@@ -948,13 +953,18 @@ const routes: [string, RegExp, Handler][] = [
     /^\/foods\/detail\/(\d+)$/,
     async ({ match, call }) => {
       const dish = food(await call(match.input!));
-      // v2 dishes carry only the poster's id; the old page shows their name.
+      // v2 dishes carry only the poster's id; enrich their display profile.
       if (dish?.accountId) {
         const author = await call("/user/userInfo", {
           query: { userId: dish.accountId },
         }).catch(() => null);
-        if (author?.displayName)
-          dish.user = { id: dish.accountId, displayName: author.displayName };
+        if (author)
+          dish.user = {
+            id: dish.accountId,
+            displayName: author.displayName ?? null,
+            avatar: author.avatar ?? null,
+            ...(author.title !== undefined ? { title: author.title } : {}),
+          };
       }
       return dish;
     },
@@ -1276,7 +1286,14 @@ const routes: [string, RegExp, Handler][] = [
     async ({ match, query, call }) => {
       const q = { ...query };
       delete q.campusId;
-      if (Array.isArray(q.categories)) delete q.categories;
+      if (Array.isArray(q.categories)) {
+        const valid = q.categories.filter(
+          (c: unknown) =>
+            typeof c === "string" && c.length > 0 && !(c in oldToNewCategory),
+        );
+        if (valid.length) q.categories = valid;
+        else delete q.categories;
+      }
       if (q.sort === "FOOD_COUNT" || q.sort === "RECOMMENDATION_RATE")
         delete q.sort;
       return page(await call(match.input!, { query: q }), restaurant);
@@ -1809,6 +1826,13 @@ export function bridgeToV2(live: Transport): Transport {
   };
   return async (path, options) => {
     const method = (options.method ?? "GET").toUpperCase();
+    if (
+      method === "POST" &&
+      /^\/auth\/(?:login|register|logout|phone\/login|phone\/web-one-click\/login|phone\/one-click\/login)$/.test(
+        path,
+      )
+    )
+      likes.clear();
     const route = routes.find(
       ([m, pattern]) =>
         new RegExp(`^(?:${m})$`).test(method) && pattern.test(path),

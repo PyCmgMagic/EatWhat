@@ -1,5 +1,7 @@
 import { foodAuthor } from "../api/models";
 import { FoodCover } from "../components/FoodCover";
+import { UserAvatar } from "../components/UserAvatar";
+import { UserTitle } from "../components/UserTitle";
 import {
   useEffect,
   useRef,
@@ -100,15 +102,18 @@ export default function DishDetail({
     onLike();
   };
   const restaurantId = parseId(String(food.restaurantId));
-  const authorId = foodAuthor(food).id;
+  const { id: authorId, name: authorName } = foodAuthor(food);
   const tags = food.systemTags ?? [];
   const author = (
     <>
-      <span className="mobile-avatar">
-        {foodAuthor(food).name?.slice(0, 1) || "食"}
-      </span>
+      <UserAvatar
+        className="mobile-avatar"
+        avatar={food.user?.avatar}
+        name={authorName}
+      />
       <span className="dish-author-copy">
-        <strong>{foodAuthor(food).name || "校园食友"}</strong>
+        <strong>{authorName}</strong>
+        <UserTitle title={food.user?.title} />
         <small>{sharedAt ? `${sharedAt}分享` : "菜品分享者"}</small>
       </span>
       {authorId && <DesignIcon name="chevronRight" size={16} />}

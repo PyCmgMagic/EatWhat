@@ -72,14 +72,6 @@ export function LocationControl() {
           if (!chosen) return;
           // A preset is both the feed's campus and the place it is measured from.
           selectCampus(id);
-          const { name, gcjLng, gcjLat } = chosen;
-          if (typeof gcjLng === "number" && typeof gcjLat === "number")
-            selectArea({
-              name: name ?? "所选校区",
-              gcjLng,
-              gcjLat,
-              source: "hub",
-            });
         }}
       >
         <optgroup label="当前位置">

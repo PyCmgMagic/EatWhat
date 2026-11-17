@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useApp } from "../app/state";
 import { useReturnTo } from "../app/navigation";
 import { useTask } from "../components/useTask";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
+import { AnnouncementsPanel } from "../features/v4/Remote";
 import { historyTime } from "../desktop/history";
 import { DesignIcon } from "./ui";
 import {
@@ -77,8 +78,10 @@ function NotificationRow({
 }
 
 export default function MobileNotifications() {
-  const { api } = useApp(),
+  const { api, session } = useApp(),
     cache = useQueryClient(),
+    { pathname } = useLocation(),
+    isAnnouncements = pathname === "/announcements",
     back = useReturnTo("/");
   const [column, setColumn] = useState<NotificationColumn>("ALL"),
     [page, setPage] = useState(1);
@@ -90,18 +93,20 @@ export default function MobileNotifications() {
   const messages = useQuery({
     queryKey: ["notification-cards", "mobile", column, page],
     queryFn: () => api.notificationCards({ column, page, pageSize: 20 }),
+    enabled: !isAnnouncements && !!session,
   });
   const unread = useQuery({
     queryKey: ["notification-cards", "unread"],
     queryFn: () => api.unreadCards(),
+    enabled: !isAnnouncements && !!session,
   });
   const unreadCount =
     typeof unread.data?.members === "number"
       ? Math.max(0, unread.data.members)
       : undefined;
   useEffect(() => {
-    document.title = "消息 · 山软今天吃什么";
-  }, []);
+    document.title = `${isAnnouncements ? "站点公告" : "消息"} · 山软今天吃什么`;
+  }, [isAnnouncements]);
   const markRead = (item: NotificationCard) => {
     if (item.unreadMemberCount && item.id)
       task.run(() => api.readCard(item.id!));
@@ -117,30 +122,55 @@ export default function MobileNotifications() {
           <DesignIcon name="back" size={24} />
         </Link>
         <h1>消息</h1>
-        <button
-          disabled={task.isPending || !unreadCount}
-          onClick={() =>
-            task.run(async () => {
-              await api.readAll();
-              cache.setQueryData(["notification-cards", "unread"], {
-                ...unread.data,
-                members: 0,
-                cards: 0,
-              });
-              cache.setQueryData(["notifications", "unread"], 0);
-            })
-          }
-        >
-          全部已读
-        </button>
+        {!isAnnouncements && session && (
+          <button
+            disabled={task.isPending || !unreadCount}
+            onClick={() =>
+              task.run(async () => {
+                await api.readAll();
+                cache.setQueryData(["notification-cards", "unread"], {
+                  ...unread.data,
+                  members: 0,
+                  cards: 0,
+                });
+                cache.setQueryData(["notifications", "unread"], 0);
+              })
+            }
+          >
+            全部已读
+          </button>
+        )}
       </header>
-      <p className="mobile-inbox-count" aria-live="polite">
-        {unreadCount !== undefined
-          ? `${unreadCount} 条未读`
-          : unread.isPending
-            ? "\u00a0"
-            : "未读数量暂未加载"}
-      </p>
+      <nav className="mobile-inbox-views" aria-label="消息栏目">
+        <Link
+          to="/notifications"
+          aria-current={!isAnnouncements ? "page" : undefined}
+        >
+          互动通知
+        </Link>
+        <Link
+          to="/announcements"
+          aria-current={isAnnouncements ? "page" : undefined}
+        >
+          站点公告
+        </Link>
+      </nav>
+      {isAnnouncements ? (
+        <section
+          className="mobile-inbox-announcements"
+          aria-label="站点公告"
+        >
+          <AnnouncementsPanel />
+        </section>
+      ) : (
+        <>
+          <p className="mobile-inbox-count" aria-live="polite">
+            {unreadCount !== undefined
+              ? `${unreadCount} 条未读`
+              : unread.isPending
+                ? "\u00a0"
+                : "未读数量暂未加载"}
+          </p>
       <div
         className="mobile-inbox-tabs"
         role="tablist"
@@ -232,7 +262,9 @@ export default function MobileNotifications() {
             </button>
           </nav>
         )}
-      </div>
+          </div>
+        </>
+      )}
     </main>
   );
 }

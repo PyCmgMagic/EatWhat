@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import { useReturnTo } from "../../app/navigation";
 import { useArea } from "../../app/area";
 import { useDebouncedSearch } from "../../app/search";
-import { categories } from "../../api/models";
+import { useShopOptions } from "../shop-options";
 import { RestaurantCard } from "./Cards";
 import { DesignIcon as Icon } from "../../mobile/ui";
 import { Shell, Field, QueryView, Pager } from "./shared";
 export default function Directory() {
   const returnTo = useReturnTo("/nearby");
+  const { categories: shopCategories } = useShopOptions();
   const [params, setParams] = useSearchParams();
   const setFilter = (key: string, value: string) =>
     setParams(
@@ -33,7 +34,17 @@ export default function Directory() {
       setFilter("recommended", value ? "1" : "");
   const favoritesOnly = params.get("favorites") === "1",
     setFavorites = (value: boolean) => setFilter("favorites", value ? "1" : "");
-  const sort = params.get("sort") ?? "FOOD_COUNT",
+  const { api, session } = useApp(),
+    { area, ready = true } = useArea(),
+    [expanded, setExpanded] = useState(false),
+    search = useDebouncedSearch(keyword);
+  const rawSort = params.get("sort");
+  const sort =
+    rawSort === "NEWEST" || (rawSort === "DISTANCE" && area)
+      ? rawSort
+      : area
+        ? "DISTANCE"
+        : "NEWEST",
     setSort = (value: string) => setFilter("sort", value);
   const page = Math.max(1, Number(params.get("page")) || 1);
   const setPage = (value: number) =>
@@ -42,10 +53,6 @@ export default function Directory() {
       next.set("page", String(value));
       return next;
     });
-  const { api, session } = useApp(),
-    { area, ready = true } = useArea(),
-    [expanded, setExpanded] = useState(false),
-    search = useDebouncedSearch(keyword);
   const areaKey = JSON.stringify(area),
     previousArea = useRef(areaKey);
   const areaChanged = previousArea.current !== areaKey;
@@ -57,14 +64,12 @@ export default function Directory() {
   }, [areaKey]);
   const query = {
     keyword: search || undefined,
-    categories: category
-      ? [category as Exclude<(typeof categories)[number]["id"], "">]
-      : undefined,
+    categories: (category ? [category] : undefined) as never,
     priceBand:
       (priceBand as "UNDER_15" | "FROM_15_TO_30" | "OVER_30") || undefined,
     recommendedOnly: recommendedOnly || undefined,
     favoritesOnly: favoritesOnly || undefined,
-    sort: sort as "FOOD_COUNT" | "DISTANCE" | "NEWEST" | "RECOMMENDATION_RATE",
+    sort: sort as "DISTANCE" | "NEWEST",
     page,
     pageSize: 12,
   };
@@ -125,9 +130,10 @@ export default function Directory() {
                 value={category}
                 onChange={(e) => change(() => setCategory(e.target.value))}
               >
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label}
+                <option value="">全部分类</option>
+                {shopCategories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
                   </option>
                 ))}
               </select>
@@ -148,10 +154,8 @@ export default function Directory() {
                 value={sort}
                 onChange={(e) => change(() => setSort(e.target.value))}
               >
-                <option value="FOOD_COUNT">菜品多的优先</option>
-                <option value="NEWEST">最新店铺</option>
-                <option value="RECOMMENDATION_RATE">推荐率优先</option>
                 {area && <option value="DISTANCE">距离优先</option>}
+                <option value="NEWEST">最新店铺</option>
               </select>
             </Field>
             <div className="v4-filter-checks">

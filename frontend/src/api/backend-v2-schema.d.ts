@@ -413,6 +413,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/user/mobile/change/verify-old": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 【需登录】验证换绑前的当前手机号 */
+        post: operations["postUserMobileChangeVerifyOld"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/user/mobile/change/old-code": {
         parameters: {
             query?: never;
@@ -1162,6 +1179,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/phone/verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 【需登录】核验本机号码并获取业务操作凭据 */
+        post: operations["postAuthPhoneVerification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/phone/verification/web-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 【需登录】获取网页本机号码校验鉴权 Token */
+        post: operations["postAuthPhoneVerificationWebToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/phone/one-click/login": {
         parameters: {
             query?: never;
@@ -1341,7 +1392,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 【需登录，同意前可用】注销账号（手机验证码或密码确认，立即生效、不可恢复） */
+        /** 【需登录，同意前可用】申请注销账号（短信、号码核验或密码确认，7天冷静期） */
         post: operations["postAuthAccountDelete"];
         delete?: never;
         options?: never;
@@ -2202,6 +2253,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/phone/verification/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 【需登录】查询本机号码校验开关 */
+        get: operations["getAuthPhoneVerificationConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/phone/one-click/config": {
         parameters: {
             query?: never;
@@ -2827,13 +2895,19 @@ export interface components {
             /** Format: int64 */
             timestamp?: number;
         };
+        VerifyOldMobile: {
+            code?: string;
+            phoneVerificationToken?: string;
+        };
         SendNewMobileCode: {
             oldCode?: string;
             mobile: string;
+            oldPhoneVerificationToken?: string;
         };
         BindMobile: {
             mobile: string;
-            code: string;
+            code?: string;
+            phoneVerificationToken?: string;
         };
         SendBindCode: {
             mobile: string;
@@ -3072,7 +3146,8 @@ export interface components {
         };
         SetUsername: {
             userName?: string;
-            code: string;
+            code?: string;
+            phoneVerificationToken?: string;
             newPassword?: string;
         };
         SendEmail: {
@@ -3127,6 +3202,42 @@ export interface components {
             /** Format: uuid */
             installId?: string;
         };
+        Verify: {
+            /** @enum {string} */
+            scene: "BIND" | "CHANGE_OLD" | "CHANGE_NEW" | "RESET_PASSWORD" | "SET_USERNAME" | "DELETE_ACCOUNT";
+            /** @enum {string} */
+            client: "WEB" | "APP";
+            mobile?: string;
+            token: string;
+        };
+        Proof: {
+            phoneVerificationToken?: string;
+            /** Format: int32 */
+            expiresIn?: number;
+        };
+        ResultProof: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["Proof"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        WebTokenRequest: {
+            url: string;
+        };
+        ResultWebToken: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["WebToken"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        WebToken: {
+            accessToken?: string;
+            jwtToken?: string;
+        };
         OneClickLogin: {
             accessToken: string;
             policyVersion?: string;
@@ -3147,7 +3258,8 @@ export interface components {
             mobile: string;
         };
         ResetPassword: {
-            code: string;
+            code?: string;
+            phoneVerificationToken?: string;
             newPassword: string;
         };
         Login: {
@@ -3184,6 +3296,7 @@ export interface components {
         DeleteAccount: {
             code?: string;
             password?: string;
+            phoneVerificationToken?: string;
             deleteComments?: boolean;
         };
         DeletionRequested: {
@@ -4184,6 +4297,18 @@ export interface components {
         };
         WebOneClickConfig: {
             enabled?: boolean;
+        };
+        Config: {
+            webEnabled?: boolean;
+            appEnabled?: boolean;
+        };
+        ResultConfig: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["Config"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
         };
         OneClickConfig: {
             enabled?: boolean;
@@ -5652,6 +5777,30 @@ export interface operations {
             };
         };
     };
+    postUserMobileChangeVerifyOld: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyOldMobile"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultVoid"];
+                };
+            };
+        };
+    };
     changeOldCode: {
         parameters: {
             query?: never;
@@ -6723,6 +6872,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultSaTokenInfo"];
+                };
+            };
+        };
+    };
+    postAuthPhoneVerification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Verify"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultProof"];
+                };
+            };
+        };
+    };
+    postAuthPhoneVerificationWebToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebTokenRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultWebToken"];
                 };
             };
         };
@@ -8256,6 +8453,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultWebOneClickConfig"];
+                };
+            };
+        };
+    };
+    getAuthPhoneVerificationConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultConfig"];
                 };
             };
         };

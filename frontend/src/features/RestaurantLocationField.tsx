@@ -21,6 +21,7 @@ export default function RestaurantLocationField(props: {
   name: string;
   onNameChange: (name: string) => void;
   disabled?: boolean;
+  compact?: boolean;
 }) {
   const id = useId();
   const current = useRef(props);
@@ -153,6 +154,20 @@ export default function RestaurantLocationField(props: {
     };
   }, [lng, lat, focusPoint]);
 
+  const showSearchStatus =
+    !props.compact ||
+    ["waiting", "loading", "error", "ready"].includes(searchState);
+  const addressHint =
+    [...props.name].length > 20 || [...props.address].length > 30
+      ? "地图提供的信息较长，请将店名简化至 20 字、地址简化至 30 字，保留门牌或楼层。"
+      : lookup === "loading"
+        ? "正在识别所选位置的地址…"
+        : lookup === "missing"
+          ? "位置已保留，未能识别地址，请补充门牌、楼层或窗口。"
+          : props.compact
+            ? ""
+            : "核对地址后，可补充楼层、门牌或食堂窗口，最多 30 字。";
+
   return (
     <section
       className="restaurant-location-field"
@@ -178,11 +193,13 @@ export default function RestaurantLocationField(props: {
           )}
         </span>
       </div>
-      <p className="restaurant-location-hint">
-        {props.point
-          ? "位置已标记，拖动图钉可微调。"
-          : "搜店名快速定位，也可以直接在地图上选点。"}
-      </p>
+      {!props.compact && (
+        <p className="restaurant-location-hint">
+          {props.point
+            ? "位置已标记，拖动图钉可微调。"
+            : "搜店名快速定位，也可以直接在地图上选点。"}
+        </p>
+      )}
       <div
         className="restaurant-place-search"
         role="search"
@@ -194,7 +211,9 @@ export default function RestaurantLocationField(props: {
             type="search"
             aria-label="搜索店名或地址"
             placeholder="搜索店名、地址或地标"
-            aria-describedby={`${id}-search-status`}
+            aria-describedby={
+              showSearchStatus ? `${id}-search-status` : undefined
+            }
             value={keyword}
             maxLength={100}
             enterKeyHint="search"
@@ -227,23 +246,25 @@ export default function RestaurantLocationField(props: {
             {searchState === "loading" ? "搜索中…" : "搜索"}
           </button>
         </div>
-        <p
-          className="restaurant-location-hint"
-          id={`${id}-search-status`}
-          role="status"
-        >
-          {searchState === "waiting"
-            ? "正在匹配地点…"
-            : searchState === "loading"
-              ? "正在搜索百度地图…"
-              : searchState === "error"
-                ? searchError
-                : searchState === "ready" && !places.length
-                  ? "没有找到这个地点，试试加上商圈或街道名，也可以在地图上选点。"
-                  : searchState === "selected"
-                    ? `已填入“${chosenPlace.current?.name}”的位置和店铺信息，请核对后提交。`
-                    : "输入即匹配百度地图地点，选中后填入店铺信息。"}
-        </p>
+        {showSearchStatus && (
+          <p
+            className="restaurant-location-hint"
+            id={`${id}-search-status`}
+            role="status"
+          >
+            {searchState === "waiting"
+              ? "正在匹配地点…"
+              : searchState === "loading"
+                ? "正在搜索百度地图…"
+                : searchState === "error"
+                  ? searchError
+                  : searchState === "ready" && !places.length
+                    ? "没有找到这个地点，试试加上商圈或街道名，也可以在地图上选点。"
+                    : searchState === "selected"
+                      ? `已填入“${chosenPlace.current?.name}”的位置和店铺信息，请核对后提交。`
+                      : "输入即匹配百度地图地点，选中后填入店铺信息。"}
+          </p>
+        )}
         {places.length > 0 && (
           <ul
             className="restaurant-place-results"
@@ -294,23 +315,23 @@ export default function RestaurantLocationField(props: {
           disabled={props.disabled}
           required
           maxLength={30}
-          placeholder="选点后自动填入，可补充门牌、楼层或窗口"
-          aria-describedby={`${id}-address-hint`}
+          placeholder={
+            props.compact
+              ? "门牌、楼层或食堂窗口"
+              : "选点后自动填入，可补充门牌、楼层或窗口"
+          }
+          aria-describedby={addressHint ? `${id}-address-hint` : undefined}
         />
       </label>
-      <p
-        className="restaurant-location-hint"
-        id={`${id}-address-hint`}
-        aria-live="polite"
-      >
-        {[...props.name].length > 20 || [...props.address].length > 30
-          ? "地图提供的信息较长，请将店名简化至 20 字、地址简化至 30 字，保留门牌或楼层。"
-          : lookup === "loading"
-            ? "正在识别所选位置的地址…"
-            : lookup === "missing"
-              ? "位置已保留，未能识别地址，请补充门牌、楼层或窗口。"
-              : "核对地址后，可补充楼层、门牌或食堂窗口，最多 30 字。"}
-      </p>
+      {addressHint && (
+        <p
+          className="restaurant-location-hint"
+          id={`${id}-address-hint`}
+          aria-live="polite"
+        >
+          {addressHint}
+        </p>
+      )}
     </section>
   );
 }

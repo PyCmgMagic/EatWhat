@@ -770,61 +770,6 @@ export function UsernameSetup() {
     </FeaturePage>
   );
 }
-export function PasswordConflictRequest() {
-  const suffix = authNext(useLocation().search);
-  const { api } = useApp(),
-    getSignal = useSendSignal(),
-    task = useTask();
-  const [sent, setSent] = useState(false);
-  return (
-    <div className="ew-form-panel ew-v2-card">
-      <h2>密码冲突恢复</h2>
-      <p>
-        如果账号因密码安全冲突无法登录，可以申请恢复邮件。此功能需由服务端开启。
-      </p>
-      {sent ? (
-        <p role="status">
-          请求已受理。若账号符合条件，请检查绑定邮箱，并在链接有效期内设置新密码。
-        </p>
-      ) : (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const value = String(
-              new FormData(e.currentTarget).get("identifier"),
-            ).trim();
-            task.run(async () => {
-              await api.passwordConflictChallenge(value, getSignal());
-              setSent(true);
-            });
-          }}
-        >
-          <label>
-            账号标识
-            <input
-              name="identifier"
-              maxLength={64}
-              required
-              placeholder="输入账号标识"
-            />
-          </label>
-          <RequestError error={task.error} />
-          <button className="ew-button" disabled={task.isPending}>
-            {task.isPending ? "正在验证并发送…" : "发送恢复邮件"}
-          </button>
-        </form>
-      )}
-      {isDemo && sent && (
-        <p className="ew-note">
-          本地演示恢复令牌：demo-recovery-token（不发送邮件）
-        </p>
-      )}
-      <Link to={"/auth/password-conflict/reset" + suffix}>
-        已有恢复令牌？设置新密码 →
-      </Link>
-    </div>
-  );
-}
 export function PasswordConflictReset() {
   const { api } = useApp(),
     loc = useLocation(),

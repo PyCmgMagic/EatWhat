@@ -1267,6 +1267,38 @@
         } ]
       }
     },
+    "/user/mobile/change/verify-old" : {
+      "post" : {
+        "tags" : [ "账号 · Contact" ],
+        "summary" : "【需登录】验证换绑前的当前手机号",
+        "operationId" : "verifyOldMobile",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VerifyOldMobile"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
     "/user/mobile/change/old-code" : {
       "post" : {
         "tags" : [ "账号 · Contact" ],
@@ -2795,6 +2827,70 @@
         "summary" : "网页一键登录（未注册自动建号）"
       }
     },
+    "/auth/phone/verification" : {
+      "post" : {
+        "tags" : [ "账号 · PhoneVerification" ],
+        "summary" : "【需登录】核验本机号码并获取业务操作凭据",
+        "operationId" : "verify",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Verify"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultProof"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
+    "/auth/phone/verification/web-token" : {
+      "post" : {
+        "tags" : [ "账号 · PhoneVerification" ],
+        "summary" : "【需登录】获取网页本机号码校验鉴权 Token",
+        "operationId" : "webToken",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/WebTokenRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultWebToken"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
     "/auth/phone/one-click/login" : {
       "post" : {
         "tags" : [ "账号 · OneClickAuth" ],
@@ -3128,7 +3224,7 @@
     "/auth/account/delete" : {
       "post" : {
         "tags" : [ "账号 · Contact" ],
-        "summary" : "【需登录，同意前可用】注销账号（手机验证码或密码确认，立即生效、不可恢复）",
+        "summary" : "【需登录，同意前可用】申请注销账号（短信、号码核验或密码确认，7天冷静期）",
         "operationId" : "deleteAccount",
         "requestBody" : {
           "content" : {
@@ -5358,7 +5454,7 @@
       "get" : {
         "tags" : [ "账号 · Verification" ],
         "summary" : "【需登录】查询已完成的认证类型",
-        "operationId" : "verify",
+        "operationId" : "verify_1",
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -5433,6 +5529,28 @@
           }
         },
         "summary" : "查询网页一键登录开关"
+      }
+    },
+    "/auth/phone/verification/config" : {
+      "get" : {
+        "tags" : [ "账号 · PhoneVerification" ],
+        "summary" : "【需登录】查询本机号码校验开关",
+        "operationId" : "config",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultConfig"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
       }
     },
     "/auth/phone/one-click/config" : {
@@ -6780,6 +6898,19 @@
           }
         }
       },
+      "VerifyOldMobile" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "pattern" : "^\\d{6}$"
+          },
+          "phoneVerificationToken" : {
+            "type" : "string",
+            "pattern" : "^[A-Za-z0-9_-]{43}$"
+          }
+        }
+      },
       "SendNewMobileCode" : {
         "type" : "object",
         "properties" : {
@@ -6791,6 +6922,10 @@
             "type" : "string",
             "minLength" : 1,
             "pattern" : "^1[3-9]\\d{9}$"
+          },
+          "oldPhoneVerificationToken" : {
+            "type" : "string",
+            "pattern" : "^[A-Za-z0-9_-]{43}$"
           }
         },
         "required" : [ "mobile" ]
@@ -6805,11 +6940,14 @@
           },
           "code" : {
             "type" : "string",
-            "minLength" : 1,
             "pattern" : "^\\d{6}$"
+          },
+          "phoneVerificationToken" : {
+            "type" : "string",
+            "pattern" : "^[A-Za-z0-9_-]{43}$"
           }
         },
-        "required" : [ "code", "mobile" ]
+        "required" : [ "mobile" ]
       },
       "SendBindCode" : {
         "type" : "object",
@@ -7468,16 +7606,18 @@
           },
           "code" : {
             "type" : "string",
-            "minLength" : 1,
             "pattern" : "^\\d{6}$"
+          },
+          "phoneVerificationToken" : {
+            "type" : "string",
+            "pattern" : "^[A-Za-z0-9_-]{43}$"
           },
           "newPassword" : {
             "type" : "string",
             "maxLength" : 64,
             "minLength" : 6
           }
-        },
-        "required" : [ "code" ]
+        }
       },
       "SendEmail" : {
         "type" : "object",
@@ -7617,6 +7757,101 @@
         },
         "required" : [ "spToken" ]
       },
+      "Verify" : {
+        "type" : "object",
+        "properties" : {
+          "scene" : {
+            "type" : "string",
+            "enum" : [ "BIND", "CHANGE_OLD", "CHANGE_NEW", "RESET_PASSWORD", "SET_USERNAME", "DELETE_ACCOUNT" ]
+          },
+          "client" : {
+            "type" : "string",
+            "enum" : [ "WEB", "APP" ]
+          },
+          "mobile" : {
+            "type" : "string",
+            "pattern" : "^1[3-9]\\d{9}$"
+          },
+          "token" : {
+            "type" : "string",
+            "maxLength" : 8192,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "client", "scene", "token" ]
+      },
+      "Proof" : {
+        "type" : "object",
+        "properties" : {
+          "phoneVerificationToken" : {
+            "type" : "string"
+          },
+          "expiresIn" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "ResultProof" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/Proof"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "WebTokenRequest" : {
+        "type" : "object",
+        "properties" : {
+          "url" : {
+            "type" : "string",
+            "maxLength" : 1024,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "url" ]
+      },
+      "ResultWebToken" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/WebToken"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "WebToken" : {
+        "type" : "object",
+        "properties" : {
+          "accessToken" : {
+            "type" : "string"
+          },
+          "jwtToken" : {
+            "type" : "string"
+          }
+        }
+      },
       "OneClickLogin" : {
         "type" : "object",
         "properties" : {
@@ -7681,8 +7916,11 @@
         "properties" : {
           "code" : {
             "type" : "string",
-            "minLength" : 1,
             "pattern" : "^\\d{6}$"
+          },
+          "phoneVerificationToken" : {
+            "type" : "string",
+            "pattern" : "^[A-Za-z0-9_-]{43}$"
           },
           "newPassword" : {
             "type" : "string",
@@ -7690,7 +7928,7 @@
             "minLength" : 6
           }
         },
-        "required" : [ "code", "newPassword" ]
+        "required" : [ "newPassword" ]
       },
       "Login" : {
         "type" : "object",
@@ -7788,6 +8026,10 @@
           },
           "password" : {
             "type" : "string"
+          },
+          "phoneVerificationToken" : {
+            "type" : "string",
+            "pattern" : "^[A-Za-z0-9_-]{43}$"
           },
           "deleteComments" : {
             "type" : "boolean"
@@ -10373,6 +10615,36 @@
         "properties" : {
           "enabled" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "Config" : {
+        "type" : "object",
+        "properties" : {
+          "webEnabled" : {
+            "type" : "boolean"
+          },
+          "appEnabled" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "ResultConfig" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/Config"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },

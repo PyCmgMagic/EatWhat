@@ -1,7 +1,9 @@
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 
-// A rounded-rectangle normal map bends the live backdrop only at the bevel.
-// The flat centre stays undistorted; there is no noise or screenshot of the page.
+// Sample the live backdrop through a convex capsule: a gently magnified centre
+// flows into a steeper rim. No copied page content or captured frames are used.
+const refractionScale = 40;
+
 function bevelMap(width: number, height: number) {
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -10,7 +12,7 @@ function bevelMap(width: number, height: number) {
   if (!context) return undefined;
   const image = context.createImageData(width, height);
   const radius = height / 2;
-  const bevel = Math.min(12, radius * 0.45);
+  const bevel = Math.min(13, radius * 0.44);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const px = x + 0.5 - width / 2;
@@ -23,9 +25,13 @@ function bevelMap(width: number, height: number) {
       const bend = Math.sin(t * Math.PI * 0.5) ** 2;
       const nx = (Math.max(qx, 0) / (length || 1)) * Math.sign(px);
       const ny = (qy / (length || 1)) * Math.sign(py);
+      // Inward sampling enlarges the scene. The rim's curved normal adds the
+      // compression at the edge that distinguishes glass from a uniform blur.
+      const dx = -px * 0.045 - nx * bend * 11;
+      const dy = -py * 0.2 - ny * bend * 11;
       const offset = (y * width + x) * 4;
-      image.data[offset] = 128 + nx * bend * 127;
-      image.data[offset + 1] = 128 + ny * bend * 127;
+      image.data[offset] = 255 * (0.5 + dx / refractionScale);
+      image.data[offset + 1] = 255 * (0.5 + dy / refractionScale);
       image.data[offset + 2] = 128;
       image.data[offset + 3] = 255;
     }
@@ -40,9 +46,12 @@ export function LiquidGlass() {
   const [map, setMap] = useState<string>();
 
   useEffect(() => {
-    // WebKit and Firefox don't render backdrop displacement reliably. Keep their
-    // CSS glass fallback rather than selecting a filter they cannot display.
-    if (!/\b(Chrome|Chromium|Edg)\//.test(navigator.userAgent)) return;
+    // DevTools can use an iPhone/Safari UA while still running Chromium.
+    // Check its runtime marker too; real WebKit/Firefox keep the CSS fallback.
+    const chromium =
+      "chrome" in window ||
+      /\b(Chrome|HeadlessChrome|Chromium|Edg)\//.test(navigator.userAgent);
+    if (!chromium) return;
     const element = surface.current;
     if (!element || typeof ResizeObserver === "undefined") return;
     const transparency = matchMedia("(prefers-reduced-transparency: reduce)");
@@ -111,7 +120,7 @@ export function LiquidGlass() {
               <feDisplacementMap
                 in="SourceGraphic"
                 in2="bevel"
-                scale="16"
+                scale={refractionScale}
                 xChannelSelector="R"
                 yChannelSelector="G"
               />

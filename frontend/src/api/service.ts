@@ -244,15 +244,22 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         query: { mobile },
         signal,
       }),
-    resetPassword: (body: Schema["ResetPasswordByCodeDTORequest"]) =>
-      post("/auth/password/reset", body),
+    resetPassword: (
+      body:
+        | Schema["ResetPasswordByCodeDTORequest"]
+        | V2["schemas"]["ResetPassword"],
+    ) => post("/auth/password/reset", body),
     ssoStart: () =>
       data<Schema["SsoStartVOResponse"]>("/auth/sdu", { method: "POST" }),
     ssoStartAlias: () => data<Schema["SsoStartVOResponse"]>("/auth/sdu"),
     /** Backend v2 binds the school result only after this one-time ticket is confirmed. */
     ssoConfirm: (ticket: string) =>
       request<void>("/auth/sdu/confirm", { method: "POST", body: { ticket } }),
-    setUsername: (body: Schema["SetLoginUsernameDTORequest"]) =>
+    setUsername: (
+      body:
+        | Schema["SetLoginUsernameDTORequest"]
+        | V2["schemas"]["SetUsername"],
+    ) =>
       data<Schema["LoginUsernameVOResponse"]>("/auth/username/set", {
         method: "POST",
         body,
@@ -550,29 +557,73 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
     deleteAccount: (body: {
       code?: string;
       password?: string;
+      phoneVerificationToken?: string;
       deleteComments: boolean;
     }) =>
       data<{ deleteAt: number; deletionKey: string }>("/auth/account/delete", {
         method: "POST",
         body,
       }),
-    // Backend v2 phone change: old-phone code, new-phone code, then commit.
+    /** Backend v2 phone verification (Alibaba Cloud Number Auth) for logged-in actions. */
+    phoneVerificationConfig: () =>
+      data<{ webEnabled?: boolean; appEnabled?: boolean }>(
+        "/auth/phone/verification/config",
+      ),
+    phoneVerificationWebToken: (url: string) =>
+      data<{ accessToken?: string; jwtToken?: string }>(
+        "/auth/phone/verification/web-token",
+        { method: "POST", body: { url } },
+      ),
+    phoneVerify: (body: {
+      scene:
+        | "BIND"
+        | "CHANGE_OLD"
+        | "CHANGE_NEW"
+        | "RESET_PASSWORD"
+        | "SET_USERNAME"
+        | "DELETE_ACCOUNT";
+      client: "WEB" | "APP";
+      token: string;
+      mobile?: string;
+    }) =>
+      data<{ phoneVerificationToken?: string; expiresIn?: number }>(
+        "/auth/phone/verification",
+        { method: "POST", body },
+      ),
+    // Backend v2 phone change: old-phone code/verification, new-phone code/verification, then commit.
     mobileChangeOldCode: (signal?: AbortSignal) =>
       sendVerified("/user/mobile/change/old-code", { method: "POST", signal }),
+    mobileChangeVerifyOld: (body: {
+      code?: string;
+      phoneVerificationToken?: string;
+    }) => post("/user/mobile/change/verify-old", body),
     mobileChangeNewCode: (
       mobile: string,
-      oldCode: string,
+      oldCode?: string,
       signal?: AbortSignal,
+      oldPhoneVerificationToken?: string,
     ) =>
       sendVerified("/user/mobile/change/new-code", {
         method: "POST",
-        body: { mobile, oldCode },
+        body: { mobile, oldCode, oldPhoneVerificationToken },
         signal,
       }),
-    mobileChangeCommit: (mobile: string, code: string) =>
-      post("/user/mobile/change/commit", { mobile, code }),
-    bindMobile: (mobile: string, code: string) =>
-      post("/user/bindMobile", { mobile, code }),
+    mobileChangeCommit: (
+      mobile: string,
+      code?: string,
+      phoneVerificationToken?: string,
+    ) =>
+      post("/user/mobile/change/commit", {
+        mobile,
+        code,
+        phoneVerificationToken,
+      }),
+    bindMobile: (
+      mobile: string,
+      code?: string,
+      phoneVerificationToken?: string,
+    ) =>
+      post("/user/bindMobile", { mobile, code, phoneVerificationToken }),
     summary: () => data<Schema["SummaryVOResponse"]>("/admin/summary"),
     adminRestaurants: (page = 1, keyword?: string) =>
       data<Page<Restaurant>>("/restaurant/list", {

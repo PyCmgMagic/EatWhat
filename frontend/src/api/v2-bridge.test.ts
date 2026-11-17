@@ -188,6 +188,37 @@ describe("v2 bridge", () => {
     });
   });
 
+  it.each(["Maycry", "", null])(
+    "keeps the dish author's avatar even with display name %j",
+    async (displayName) => {
+      const { transport, sent } = backend(({ path }) =>
+        path === "/user/userInfo"
+          ? ok({ id: 21, displayName, avatar: PIC })
+          : ok({ id: 7, accountId: 21, name: "甜品" }),
+      );
+      const dish = await createApi(transport).food(7);
+      expect(dish.user).toEqual({ id: 21, displayName, avatar: PIC });
+      expect(sent.map((s) => s.path)).toEqual([
+        "/foods/detail/7",
+        "/user/userInfo",
+      ]);
+      expect(sent[1].query).toEqual({ userId: 21 });
+    },
+  );
+
+  it("still opens the dish when the author's profile is unavailable", async () => {
+    const { transport } = backend(({ path }) =>
+      path === "/user/userInfo"
+        ? { code: 40401, msg: "用户不可用", data: null }
+        : ok({ id: 7, accountId: 21, name: "甜品" }),
+    );
+    expect(await createApi(transport).food(7)).toMatchObject({
+      id: 7,
+      name: "甜品",
+      user: { id: 21, displayName: null },
+    });
+  });
+
   it("leaves a dish's meal times and delivery alone unless the form sets them", async () => {
     const { request, sent } = backend(({ path }) =>
       path === "/foods/detail/5"

@@ -248,7 +248,13 @@
 }
 .mobile-settings-page
   .mobile-settings-content
-  :is(button:not(.v4-toggle), .pc-button, .ew-button, .btn, .v4-button) {
+  :is(
+    button:not(.v4-toggle):not(.text-link):not(.ew-icon-btn),
+    .pc-button,
+    .ew-button,
+    .btn,
+    .v4-button
+  ) {
   min-height: 48px;
   max-width: 100%;
   padding: 12px 18px;
@@ -260,6 +266,53 @@
     600 15px/1.5 "Noto Sans SC Variable",
     sans-serif;
   text-decoration: none;
+}
+.mobile-settings-page .mobile-settings-content .text-link {
+  justify-self: start;
+  min-height: 36px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: #231c18;
+  font:
+    600 14px/1.5 "Noto Sans SC Variable",
+    sans-serif;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  :is(.pc-auth-password, .ew-auth-password)
+  button {
+  min-height: 36px;
+  width: 36px;
+  padding: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #6e625b;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  .ew-verification-methods-heading
+  button {
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 17px;
+  font-size: 13px;
+}
+.mobile-settings-page
+  .mobile-settings-content
+  .pc-privacy-tools
+  button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #f8f5f2;
+  font-size: 14px;
 }
 .mobile-settings-page
   .mobile-settings-content
