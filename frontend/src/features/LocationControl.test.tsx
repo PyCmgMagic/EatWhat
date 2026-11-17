@@ -45,7 +45,6 @@ const campuses = [
   },
 ];
 const getPosition = vi.fn<Geolocation["getCurrentPosition"]>();
-const permission = vi.fn(() => Promise.resolve({ state: "prompt" }));
 const position = {
   coords: { longitude: 117.134, latitude: 36.667 },
 } as GeolocationPosition;
@@ -61,6 +60,7 @@ async function mount() {
       </QueryClientProvider>,
     );
   });
+  await settle();
   await settle();
 }
 async function settle() {
@@ -98,10 +98,8 @@ beforeEach(() => {
   api.locateHub.mockReset().mockResolvedValue(null);
   address.mockReset().mockResolvedValue("济南市历城区舜华路1号");
   getPosition.mockReset();
-  permission.mockReset().mockResolvedValue({ state: "prompt" });
   vi.stubGlobal("navigator", {
     geolocation: { getCurrentPosition: getPosition },
-    permissions: { query: permission },
   });
   host = document.createElement("div");
   document.body.append(host);
@@ -132,14 +130,17 @@ it("shows the remembered place and offers campuses as presets", async () => {
   expect(trigger().textContent).toContain("舜华路校区");
 });
 
-it("asks for the position only when the visitor asks for it", async () => {
+it("allows a manual retry after the startup request fails", async () => {
   await mount();
-  expect(getPosition).not.toHaveBeenCalled();
+  expect(getPosition).toHaveBeenCalledOnce();
   expect(trigger().textContent).toContain("软件园校区");
+  await act(() =>
+    getPosition.mock.calls[0][1]?.({ code: 1 } as GeolocationPositionError),
+  );
   await openMenu();
   await choose("使用当前位置");
-  expect(getPosition).toHaveBeenCalledOnce();
-  await act(async () => getPosition.mock.calls[0][0](position));
+  expect(getPosition).toHaveBeenCalledTimes(2);
+  await act(async () => getPosition.mock.calls[1][0](position));
   await settle();
   expect(trigger().textContent).toContain("济南市历城区舜华路1号");
   expect(JSON.parse(localStorage.getItem("eatwhat-area")!)).toMatchObject({
@@ -148,8 +149,7 @@ it("asks for the position only when the visitor asks for it", async () => {
   });
 });
 
-it("uses an already allowed position without prompting or asking", async () => {
-  permission.mockResolvedValue({ state: "granted" });
+it("requests the position on startup before the visitor opens the control", async () => {
   await mount();
   expect(getPosition).toHaveBeenCalledOnce();
   await act(async () => getPosition.mock.calls[0][0](position));
@@ -158,7 +158,6 @@ it("uses an already allowed position without prompting or asking", async () => {
 });
 
 it("keeps the campus preset when the position is denied", async () => {
-  permission.mockResolvedValue({ state: "granted" });
   await mount();
   await act(() =>
     getPosition.mock.calls[0][1]?.({ code: 1 } as GeolocationPositionError),

@@ -1467,7 +1467,6 @@ function DesktopNearby() {
         <section className="pc-map" aria-label="附近餐厅地图">
           <div className="pc-map-surface">
             <RestaurantMap
-              autoLocate
               restaurants={shops}
               selectedId={current?.id ?? undefined}
               onSelect={(shop) => setSelected(shop.id!)}

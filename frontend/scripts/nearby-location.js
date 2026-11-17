@@ -127,10 +127,11 @@ async function validateNearbyLocation(page) {
       p.locator('.restaurant-map-canvas[data-map-state="ready"]').waitFor();
     try {
       await p.goto(base + "/?demo=0#/");
+      await p.waitForFunction(() => window.__geoCalls === 1);
       await p.locator("body").ariaSnapshot();
       assert(
-        (await p.evaluate(() => window.__geoCalls)) === 0,
-        "Home requested location",
+        (await p.evaluate(() => window.__geoCalls)) === 1,
+        "Startup requested location more than once",
       );
       const search = p.waitForResponse((response) => {
         const url = new URL(response.url());
@@ -192,6 +193,9 @@ async function validateNearbyLocation(page) {
       });
       await navigate("附近");
       await p
+        .getByRole("button", { name: "回到我的位置", exact: true })
+        .click();
+      await p
         .getByText("未获取到位置，请允许浏览器定位或手动选择区域。", {
           exact: true,
         })
@@ -199,7 +203,7 @@ async function validateNearbyLocation(page) {
       await rows.first().waitFor();
       assert(
         (await p.evaluate(() => window.__geoCalls)) === 2,
-        "Denied request retried automatically",
+        "Manual request did not report denial",
       );
       await p.evaluate(() => {
         window.__geoMode = "native";
@@ -227,6 +231,9 @@ async function validateNearbyLocation(page) {
         window.__geoMode = "pending";
       });
       await navigate("附近");
+      await p
+        .getByRole("button", { name: "回到我的位置", exact: true })
+        .click();
       await p.waitForFunction(() => window.__geoCalls === 4);
       await p.getByText("正在定位…", { exact: true }).waitFor();
       const before = await p.evaluate(() =>
@@ -241,15 +248,14 @@ async function validateNearbyLocation(page) {
           before,
         "Late permission result changed area after leaving",
       );
-      const beforeEditorCalls = await p.evaluate(() => window.__geoCalls);
       await p.goto(base + "/?demo=0#/restaurants/new");
       await loaded();
       assert(
-        (await p.evaluate(() => window.__geoCalls)) === beforeEditorCalls,
-        "Shop position editor requested location automatically",
+        (await p.evaluate(() => window.__geoCalls)) === 1,
+        "Shop position editor added a second startup location request",
       );
       checks.push(
-        `${width}px: leaving ignores late results; shop editor remains manual`,
+        `${width}px: leaving ignores late results; editor startup locates only once`,
       );
       assert(
         writes.length === 0,

@@ -12,6 +12,7 @@ import { useApp } from "./state";
 import { isDemo } from "./runtime";
 import { hasCoordinates, wgsToGcj } from "../api/models";
 import { errorMessage } from "../api/client";
+import { useDeviceLocation } from "../features/useDeviceLocation";
 import {
   ErrorState,
   Gate,
@@ -173,17 +174,19 @@ export function AreaProvider({ children }: { children: ReactNode }) {
     rememberArea(a);
     setOpen(false);
   }
+  const ready =
+    area !== null ||
+    (!campuses.isPending &&
+      !campuses.data?.some(
+        (c) => c.open !== false && c.id && hasCoordinates(c),
+      ));
+  useDeviceLocation({ area, selectArea: select, autoLocate: ready && !isDemo });
   return (
     <Context.Provider
       value={{
         area,
         // Wait for the default point before consuming a personalized batch.
-        ready:
-          area !== null ||
-          (!campuses.isPending &&
-            !campuses.data?.some(
-              (c) => c.open !== false && c.id && hasCoordinates(c),
-            )),
+        ready,
         openArea: () => setOpen(true),
         selectArea: select,
         campusId,

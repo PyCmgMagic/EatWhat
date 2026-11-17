@@ -1,24 +1,14 @@
-import { useEffect, useState } from "react";
 import { MapPin } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Select } from "../components/Select";
 import { useArea } from "../app/area";
 import { useApp } from "../app/state";
-import { isDemo } from "../app/runtime";
 import { useDeviceLocation } from "./useDeviceLocation";
 import "./location-control.css";
 
 const HERE = "here";
 const AREA = "area";
 const CAMPUS = "campus:";
-
-/** True only when the browser already lets us read the position without asking. */
-function alreadyAllowed() {
-  return navigator.permissions
-    ?.query({ name: "geolocation" as PermissionName })
-    .then((status) => status.state === "granted")
-    .catch(() => false);
-}
 
 /**
  * The place the recommendation feed is read from.
@@ -34,23 +24,10 @@ export function LocationControl() {
     queryFn: () => api.campuses(),
     staleTime: 300_000,
   });
-  // A remembered place wins. Only a returning visitor who already granted
-  // location is upgraded silently; asking here would prompt on every page load.
-  const [autoLocate, setAutoLocate] = useState(false);
-  useEffect(() => {
-    if (area || isDemo || !navigator.geolocation) return;
-    let active = true;
-    void alreadyAllowed().then((allowed) => {
-      if (active && allowed) setAutoLocate(true);
-    });
-    return () => {
-      active = false;
-    };
-  }, [area]);
   const { locate, locating } = useDeviceLocation({
     area,
     selectArea,
-    autoLocate,
+    autoLocate: false,
   });
 
   const options = (campuses.data ?? []).filter((c) => c.open !== false);

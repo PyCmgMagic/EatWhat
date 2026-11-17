@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { useArea } from "../app/area";
 import type { Restaurant } from "../api/models";
-import { isDemo } from "../app/runtime";
 import { mapPoint, type MapPoint } from "./map-geometry";
 import { DesignIcon } from "../mobile/ui";
 import { useDeviceLocation } from "./useDeviceLocation";
@@ -20,12 +19,10 @@ export type RestaurantMapProps = {
   onCenterChange?: (point: MapPoint) => void;
   onPick?: (point: MapPoint) => void;
   disabled?: boolean;
-  autoLocate?: boolean;
 };
 
 export default function RestaurantMap({
   restaurants = noRestaurants,
-  autoLocate = false,
   ...props
 }: RestaurantMapProps) {
   const { api } = useApp();
@@ -44,7 +41,7 @@ export default function RestaurantMap({
     {
       area,
       selectArea,
-      autoLocate: autoLocate && !isDemo,
+      autoLocate: false,
       disabled: props.disabled,
     },
   );

@@ -10,6 +10,9 @@ const { api, address } = vi.hoisted(() => ({
   address: vi.fn(),
 }));
 vi.mock("./state", () => ({ useApp: () => ({ api }) }));
+vi.mock("../components/feedback", () => ({
+  useFeedbackState: () => ["", vi.fn()],
+}));
 vi.mock("./runtime", () => ({ isDemo: false }));
 vi.mock("../api/baidu-map", () => ({ addressForMapPoint: address }));
 
@@ -19,6 +22,10 @@ const device: Area = {
   gcjLat: 36.667,
   source: "device",
 };
+const getPosition = vi.fn<Geolocation["getCurrentPosition"]>();
+const position = {
+  coords: { longitude: 117.134, latitude: 36.667 },
+} as GeolocationPosition;
 let root: Root, host: HTMLDivElement, cache: QueryClient;
 let areaState: ReturnType<typeof useArea>;
 function Harness() {
@@ -36,6 +43,8 @@ async function mount(area: Area | null = device) {
       </QueryClientProvider>,
     );
   });
+  await settle();
+  await settle();
 }
 async function settle() {
   await act(async () => {
@@ -48,6 +57,10 @@ beforeEach(() => {
   api.campuses.mockReset().mockResolvedValue([]);
   api.locateHub.mockReset().mockResolvedValue(null);
   address.mockReset().mockResolvedValue("济南市历城区舜华路1号");
+  getPosition.mockReset();
+  vi.stubGlobal("navigator", {
+    geolocation: { getCurrentPosition: getPosition },
+  });
   host = document.createElement("div");
   root = createRoot(host);
   cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -56,6 +69,18 @@ afterEach(() => {
   act(() => root.unmount());
   cache.clear();
   vi.unstubAllGlobals();
+});
+
+it("requests device position on startup and uses it instead of the saved area", async () => {
+  await mount({ ...device, name: "手选区域", source: "hub" });
+  expect(getPosition).toHaveBeenCalledOnce();
+  await act(async () => getPosition.mock.calls[0][0](position));
+  await settle();
+  expect(areaState.area?.source).toBe("device");
+  expect(areaState.area?.gcjLng).not.toBe(position.coords.longitude);
+  expect(JSON.parse(localStorage.getItem("eatwhat-area")!)).toEqual(
+    areaState.area,
+  );
 });
 
 it("restores a saved device location with its recognized area name", async () => {

@@ -1440,7 +1440,6 @@ export function useDesignBridge(
           </header>
           <div className="mobile-nearby-map">
             <RestaurantMap
-              autoLocate
               restaurants={restaurants}
               selectedId={selected?.id ?? undefined}
               onSelect={(r) => {
