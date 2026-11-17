@@ -105,7 +105,7 @@ import { useReturnTo } from "../app/navigation";
 import { useDiscoveryCategory } from "../app/discovery-category";
 import { useProfileReturnTo } from "../app/profile-navigation";
 import "./restaurant-detail.css";
-import { RecommendShopList } from "../features/RecommendShops";
+import { distanceText, RecommendShopList } from "../features/RecommendShops";
 import { FoodReportDialog } from "../features/FoodReportDialog";
 import { RestaurantCorrectionDialog } from "../features/RestaurantCorrectionDialog";
 import { useShareLink } from "../features/useShareLink";
@@ -1757,14 +1757,19 @@ export function useDesignBridge(
             carouselFoods.length) %
           carouselFoods.length;
         const food = carouselFoods[index];
+        const distance = distanceText(food?.distanceMeters) || values.s.dist;
         return (
           <section {...p} className="mobile-home-copy" ref={recommendationCopy}>
             <h1>{food?.name}</h1>
             <p className="mobile-home-shop">
               {food?.restaurantName || "餐厅信息待补充"}
             </p>
-            {values.s.dist && (
-              <p className="mobile-home-distance">{values.s.dist}</p>
+            {distance && (
+              <p className="mobile-home-distance">
+                {area?.source === "device"
+                  ? "距你"
+                  : `距${area?.name || "所选位置"}`} {distance}
+              </p>
             )}
             <p
               className={`mobile-home-price${food?.price == null ? " is-unknown" : ""}`}

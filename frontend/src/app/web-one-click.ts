@@ -1,5 +1,6 @@
 // H5 one-click login: the carrier authorization page asks for the middle four
 // digits and explicit consent, then the backend exchanges spToken for a number.
+import { recordPhoneAuthLog } from "./phone-auth-logs";
 
 /** 600000 is success in every callback of the web SDK. */
 const OK = 600000;
@@ -95,7 +96,11 @@ export const webOneClickLog = {
     detail: Record<string, unknown> = {},
     level: "info" | "warn" = "info",
   ) {
-    console[level]("phone_auth_" + event, detail);
+    // Share sanitized SDK errors and timings with the page's log viewer while
+    // keeping the full diagnostic history available for vConsole replay.
+    if (event === "timing") recordPhoneAuthLog("phone_auth_timing", detail);
+    else if (event === "error") recordPhoneAuthLog("phone_auth_error", detail);
+    else console[level]("phone_auth_" + event, detail);
     logEntries = [
       ...logEntries.slice(-199),
       { at: Date.now(), level, event, detail },

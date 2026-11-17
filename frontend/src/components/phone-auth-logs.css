@@ -1,0 +1,87 @@
+.phone-auth-log-entry {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+.phone-auth-log-entry > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 4px;
+  border: 0;
+  background: transparent;
+  color: #6e625b;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.phone-auth-log-entry > button:focus-visible {
+  outline: 2px solid #30251f;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.modal.phone-auth-log-dialog {
+  padding: 0;
+  width: min(640px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 32px);
+  color: #231c18;
+  background: #fff;
+}
+.phone-auth-log-dialog .modal-pad {
+  padding: 24px;
+}
+.phone-auth-log-dialog .phone-auth-log-content {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: clamp(180px, 48dvh, 440px);
+  min-height: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid #e6ded8;
+  border-radius: 12px;
+  background: #faf7f3;
+  color: #30251f;
+  font:
+    12px/1.7 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+  overflow-wrap: anywhere;
+  resize: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.phone-auth-log-dialog .phone-auth-log-content:focus {
+  outline: 2px solid #30251f;
+  outline-offset: 2px;
+}
+.phone-auth-log-empty {
+  padding: 48px 0;
+  text-align: center;
+  color: #6e625b;
+  font-size: 14px;
+}
+.phone-auth-log-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+.phone-auth-log-actions .btn {
+  min-height: 44px;
+}
+.phone-auth-log-status {
+  margin: 12px 0 0;
+  color: #6e625b;
+  font-size: 13px;
+}
+@media (max-width: 600px) {
+  .phone-auth-log-dialog .modal-pad {
+    padding: 20px 16px max(20px, env(safe-area-inset-bottom));
+  }
+}

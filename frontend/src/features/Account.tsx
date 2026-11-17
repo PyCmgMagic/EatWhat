@@ -33,6 +33,7 @@ import { LocationControl } from "./LocationControl";
 import { priceBands } from "../api/v2-vocab";
 import { useShopOptions } from "./shop-options";
 import { rememberVerificationReturn } from "../app/verification-return";
+import { PhoneAuthLogViewer } from "../components/PhoneAuthLogViewer";
 
 const AUTO_MEAL = "auto";
 export function RecommendationControls() {
@@ -280,6 +281,7 @@ export function PhoneLoginForm({
                   : "不可用"
         }
       />
+      <PhoneAuthLogViewer />
       {!compact && (
         <>
           <p className="ew-note">验证码 5 分钟有效，请勿向他人透露。</p>
