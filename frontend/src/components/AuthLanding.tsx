@@ -4,6 +4,7 @@ import { BRAND_SLOGAN } from "../app/brand";
 import { localDestination } from "../app/navigation";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { DishCarousel } from "./DishCarousel";
+import { AuthPageCurl } from "./AuthPageCurl";
 import { Modal } from "./ui";
 import "./auth-landing.css";
 
@@ -35,7 +36,8 @@ export default function AuthLanding({ desktop }: { desktop: boolean }) {
         aria-labelledby="auth-landing-title"
       >
         <Link className="auth-landing-browse" to={returnTo} replace>
-          先逛逛？
+          <AuthPageCurl />
+          <span>先逛逛？</span>
         </Link>
         <div className="auth-landing-intro">
           <span>山软</span>
@@ -44,12 +46,13 @@ export default function AuthLanding({ desktop }: { desktop: boolean }) {
             <br />
             吃什么
           </h1>
-          <p>{BRAND_SLOGAN}</p>
+          <p>
+            {BRAND_SLOGAN}
+            <span className="auth-landing-thought" aria-hidden="true">
+              🤔
+            </span>
+          </p>
         </div>
-        <span className="auth-landing-fold" aria-hidden="true">
-          <span className="auth-landing-fold-back" />
-          <span className="auth-landing-fold-flap" />
-        </span>
         <DishCarousel />
       </section>
 

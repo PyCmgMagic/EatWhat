@@ -1,6 +1,6 @@
 .auth-landing {
   --auth-ink: #231c18;
-  --auth-yellow: #f5c76f;
+  --auth-yellow: #ffc766;
   position: relative;
   color: var(--auth-ink);
   font-family: "Noto Sans SC Variable", sans-serif;
@@ -38,19 +38,47 @@
 .auth-landing-browse {
   position: absolute;
   z-index: 4;
-  top: 28px;
-  right: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  color: #4b3d30;
-  font-size: 15px;
+  top: 0;
+  right: 0;
+  display: block;
+  width: 280px;
+  aspect-ratio: 240 / 190;
+  color: #625b54;
+  font-size: 17px;
   font-weight: 650;
   text-decoration: none;
+  touch-action: manipulation;
 }
-.auth-landing-browse:hover {
-  text-decoration: underline;
+.auth-landing-browse > span {
+  position: absolute;
+  top: 48px;
+  right: 25px;
+}
+.auth-page-curl {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform-origin: 100% 0;
+  transition: transform 280ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+.auth-page-curl-paper {
+  filter: drop-shadow(-2px 4px 2px #80571920);
+}
+.auth-page-curl-pupils {
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.auth-landing-browse:active .auth-page-curl {
+  transform: scale(1.015, 0.985);
+  transition-duration: 0ms;
+}
+@media (hover: hover) and (pointer: fine) {
+  .auth-landing-browse:hover .auth-page-curl {
+    transform: scale(1.025, 0.96);
+  }
+  .auth-landing-browse:hover .auth-page-curl-pupils {
+    transform: translate(-2px, 2px);
+  }
 }
 .auth-landing-intro {
   position: relative;
@@ -75,58 +103,11 @@
   font-size: 17px;
   font-weight: 500;
 }
-.auth-landing-fold {
-  position: absolute;
-  z-index: 1;
-  top: 0;
-  right: 0;
-  width: 210px;
-  height: 155px;
-  filter: drop-shadow(-5px 7px 7px #8b612622);
-  pointer-events: none;
-}
-.auth-landing-fold-back,
-.auth-landing-fold-flap {
-  position: absolute;
-  inset: 0;
-  clip-path: polygon(42% 0, 100% 0, 100% 100%, 62% 82%);
-  clip-path: path("M 88 0 H 210 V 155 L 130 127 Q 108 117 88 0 Z");
-  transform-origin: 100% 0;
-}
-.auth-landing-fold-back {
-  background: #b48b50;
-  opacity: 0.3;
-  transform: translate(3px, 4px);
-}
-.auth-landing-fold-flap {
-  background: linear-gradient(145deg, #fff 0%, #fffdf9 72%, #eee4d4 100%);
-  animation: auth-fold-enter 520ms cubic-bezier(0.22, 1, 0.36, 1);
-  transition: transform 240ms ease-out;
-}
-.auth-landing-fold-flap::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    transparent 64%,
-    #9b6c2b12 65%,
-    #ffffff80 67%,
-    transparent 70%
-  );
-}
-.auth-landing-stage:hover .auth-landing-fold-flap {
-  transform: translate(7px, -4px) scaleX(0.94);
-}
-@keyframes auth-fold-enter {
-  from {
-    opacity: 0;
-    transform: translate(24px, -10px) scaleX(0.25);
-  }
-  to {
-    opacity: 1;
-    transform: translate(0, 0) scaleX(1);
-  }
+.auth-landing-thought {
+  display: inline-block;
+  margin-left: 7px;
+  font-size: 0.95em;
+  vertical-align: 0.02em;
 }
 .auth-landing-sheet {
   position: relative;
@@ -157,21 +138,17 @@
   font-size: 16px;
   font-weight: 650;
   cursor: pointer;
-  transition:
-    background 150ms,
-    transform 150ms,
-    box-shadow 150ms;
+  touch-action: manipulation;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.auth-landing-actions > button:hover {
-  background: linear-gradient(180deg, #44372f, #271e1a);
-  box-shadow:
-    inset 0 1px 0 #ffffff24,
-    inset 0 -2px 0 #00000045,
-    0 9px 20px #231c1830;
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .auth-landing-actions > button:hover {
+    transform: translateY(-2px);
+  }
 }
 .auth-landing-actions > button:active {
-  transform: translateY(1px);
+  transform: translateY(2px) scale(0.985);
+  transition-duration: 0ms;
 }
 .auth-landing-consent {
   display: flex;
@@ -309,6 +286,7 @@
   box-shadow: 0 10px 36px #6e4c2414;
 }
 .auth-landing.is-mobile {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -320,37 +298,97 @@
 }
 .is-mobile .auth-landing-stage {
   flex: 1;
-  min-height: max(470px, calc(100dvh - 260px));
+  min-height: max(calc(100cqw + 150px), calc(100svh - 240px));
+}
+.is-mobile .auth-landing-stage::before,
+.is-mobile .auth-landing-stage::after {
+  left: -90cqw;
+  top: 55%;
+  width: 280cqw;
+  height: 280cqw;
+}
+.is-mobile .auth-landing-stage::after {
+  top: calc(55% + 50px);
 }
 .is-mobile .auth-landing-intro {
-  padding: 100px 26px 0;
+  padding: clamp(96px, 12.4svh, 130px) 6.7cqw 0;
 }
 .is-mobile .auth-landing-intro > span {
-  font-size: 17px;
+  font-size: clamp(21px, 6.15cqw, 30px);
+  line-height: 1.35;
+  font-weight: 850;
 }
 .is-mobile .auth-landing-intro h1 {
-  font-size: 62px;
-  line-height: 1.04;
+  margin-top: 9px;
+  font-size: clamp(54px, 16.5cqw, 82px);
+  line-height: 1.08;
   letter-spacing: -2px;
 }
 .is-mobile .auth-landing-intro p {
-  margin-top: 16px;
-  font-size: 15px;
+  margin-top: 22px;
+  font-size: clamp(15px, 4.4cqw, 20px);
+  line-height: 1.5;
 }
-.is-mobile .auth-landing-fold {
-  scale: 0.72;
+.is-mobile .auth-landing-browse {
+  width: 61.5%;
+  font-size: clamp(15px, 4.4cqw, 20px);
+}
+.is-mobile .auth-landing-browse > span {
+  top: max(12cqw, calc(env(safe-area-inset-top) + 18px));
+  right: 5.6cqw;
 }
 .is-mobile .auth-dish-carousel {
-  --dish-size: 220px;
-  --dish-radius: 430px;
-  --dish-offset: 276px;
+  --dish-size: 78cqw;
+  --dish-radius: 154cqw;
+  --dish-offset: calc(var(--dish-radius) - 64px);
 }
 .is-mobile .auth-landing-sheet {
   flex: none;
-  min-height: 248px;
+  min-height: 250px;
   margin-top: -34px;
-  padding: 24px 20px max(26px, env(safe-area-inset-bottom));
-  border-radius: 30px 30px 0 0;
+  padding: 23px 5.6cqw max(30px, env(safe-area-inset-bottom));
+  border-radius: 38px 38px 0 0;
+}
+.is-mobile .auth-landing-actions {
+  gap: 15px;
+}
+.is-mobile .auth-landing-actions > button {
+  min-height: 56px;
+  background: #291f1b;
+  box-shadow:
+    inset 0 -3px 0 #130e0c,
+    0 8px 14px #231c1826;
+  font-size: 17px;
+}
+.is-mobile .auth-landing-consent {
+  gap: 9px;
+  margin-top: 22px;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.is-mobile .auth-landing-consent input {
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+}
+@media (max-height: 720px) {
+  .is-mobile .auth-landing-stage {
+    min-height: max(430px, calc(110cqw + 80px));
+  }
+  .is-mobile .auth-landing-intro {
+    padding-top: 64px;
+  }
+  .is-mobile .auth-landing-intro h1 {
+    font-size: clamp(50px, 15.3cqw, 72px);
+  }
+  .is-mobile .auth-landing-intro p {
+    margin-top: 14px;
+  }
+  .is-mobile .auth-landing-sheet {
+    min-height: 230px;
+    padding-top: 20px;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
 }
 @media (max-width: 900px) {
   .is-desktop .auth-landing-intro {
@@ -390,10 +428,15 @@
 @media (prefers-reduced-motion: reduce) {
   .auth-landing-actions > button,
   .auth-landing-consent input::before,
-  .auth-landing-fold-flap {
+  .auth-page-curl,
+  .auth-page-curl-pupils {
     transition: none;
   }
-  .auth-landing-fold-flap {
-    animation: none;
+  .auth-landing-actions > button:active,
+  .auth-landing-actions > button:hover,
+  .auth-landing-browse:active .auth-page-curl,
+  .auth-landing-browse:hover .auth-page-curl,
+  .auth-landing-browse:hover .auth-page-curl-pupils {
+    transform: none;
   }
 }
