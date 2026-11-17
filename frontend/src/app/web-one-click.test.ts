@@ -73,6 +73,33 @@ describe("web one-click login", () => {
     expect(server.getLoginToken).not.toHaveBeenCalled();
   });
 
+  it("falls back to SMS when 其他号码登录 is tapped in the dialog", async () => {
+    const api = {
+      webOneClickToken: vi.fn(async () => ({ accessToken: "a", jwtToken: "j" })),
+    };
+    const server = sdk({
+      getLoginToken: vi.fn((o: any) => {
+        // The SDK renders customView.element into the dialog.
+        const zone = document.createElement("div");
+        zone.innerHTML = o.authPageOption.customView.element;
+        document.body.append(zone);
+        expect(o.authPageOption).toMatchObject({
+          isDialog: true,
+          showCustomView: true,
+          btnText: "本机号码一键登录",
+        });
+        queueMicrotask(() =>
+          zone.querySelector<HTMLButtonElement>("button")!.click(),
+        );
+      }),
+    });
+    await expect(webOneClickToken(api, server as any)).rejects.toThrow(
+      "已取消一键登录",
+    );
+    expect(server.closeLoginPage).toHaveBeenCalled();
+    document.body.innerHTML = "";
+  });
+
   it("continues when the network type is unknown", async () => {
     const api = {
       webOneClickToken: vi.fn(async () => ({ accessToken: "a", jwtToken: "j" })),
@@ -192,7 +219,7 @@ describe("web one-click login", () => {
         expect(inCallback).toBe(true);
         expect(o.authPageOption).toMatchObject({
           manualClose: true,
-          btnText: "登录 / 注册",
+          btnText: "本机号码一键登录",
         });
         o.success({ code: "600000", spToken: "authorized-token" });
       },

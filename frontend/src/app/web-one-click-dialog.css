@@ -1,0 +1,188 @@
+/*
+ * Carrier one-click page (Aliyun web SDK, isDialog) as a bottom sheet.
+ * The SDK injects its own stylesheet after ours, so every rule is prefixed
+ * with "html body" to win on specificity. Never hide .dialog-title, .close or
+ * ".agreement a": the SDK checks they are visible and fails with 600030.
+ */
+html body .dialog-type-container {
+  position: fixed;
+  inset: 0;
+  background: rgba(35, 28, 24, 0.45);
+  animation: ew-oc-fade 0.2s ease-out;
+}
+
+html body .dialog-type-container .dialog-type-inner-content {
+  top: auto;
+  bottom: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  right: 0;
+  padding: 20px 24px calc(20px + env(safe-area-inset-bottom));
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -8px 32px rgba(35, 28, 24, 0.12);
+  transform: none;
+  color: #231c18;
+  font-family: inherit;
+  animation: ew-oc-rise 0.25s ease-out;
+}
+
+/* Visual order: close, number, provider line, button, other, agreement. */
+html body .dialog-type-container .close {
+  order: 0;
+}
+html body .dialog-type-container .number-con-wrap {
+  order: 1;
+}
+html body .dialog-type-container .dialog-title {
+  order: 2;
+}
+html body .dialog-type-container .submit-btn {
+  order: 3;
+}
+html body .dialog-type-container .custom-view-box {
+  order: 4;
+}
+html body .dialog-type-container .agreement {
+  order: 5;
+}
+
+html body .dialog-type-container .close-btn {
+  width: 32px;
+  height: 32px;
+  margin: 0 -4px 0 0;
+}
+html body .dialog-type-container .close-btn::before,
+html body .dialog-type-container .close-btn::after {
+  top: 4px;
+  left: 15px;
+  width: 2px;
+  height: 24px;
+  border-radius: 1px;
+  background-color: #6e625b;
+}
+
+html body .dialog-type-container .number-con-wrap {
+  margin: 16px auto 0;
+}
+html body .dialog-type-container .number-con {
+  height: auto;
+  font-size: 34px;
+  line-height: 44px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #231c18;
+  font-family: inherit;
+}
+html body .dialog-type-container .number-con div {
+  margin: 0 4px;
+  font-family: inherit;
+}
+html body .dialog-type-container .number-con input {
+  width: 26px;
+  height: 40px;
+  margin: 0 3px;
+  font-size: 30px;
+  font-weight: 600;
+  color: #231c18;
+  background: transparent;
+  border-bottom: 2px solid #231c18;
+  font-family: inherit;
+  caret-color: #231c18;
+}
+
+html body .dialog-type-container .dialog-title {
+  margin: 12px 0 0;
+  font-size: 15px;
+  line-height: 22px;
+  color: #6e625b;
+}
+
+html body .dialog-type-container .submit-btn,
+html body .dialog-type-container .submit-btn.submit-protocol-front {
+  width: 100%;
+  height: 56px;
+  margin: 32px 0 0;
+  padding: 0;
+  border-radius: 999px;
+  background: #231c18;
+  color: #fff;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+html body .dialog-type-container .submit-btn.submit-disabled {
+  opacity: 0.45;
+}
+
+html body .dialog-type-container .custom-view-box {
+  display: flex;
+  justify-content: center;
+  align-self: stretch;
+  margin-top: 4px;
+  text-align: center;
+}
+html body .dialog-type-container .ew-one-click-other {
+  all: unset;
+  display: block;
+  padding: 12px 24px;
+  color: #231c18;
+  font-size: 16px;
+  line-height: 24px;
+  cursor: pointer;
+}
+html body .dialog-type-container .ew-one-click-other:focus-visible {
+  outline: 2px solid #231c18;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+html body .dialog-type-container .agreement {
+  align-items: center;
+  justify-content: center;
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+html body .dialog-type-container .agreement .agree-content,
+html body .dialog-type-container .agreement a {
+  font-size: 13px;
+  line-height: 20px;
+  color: #6e625b;
+}
+html body .dialog-type-container .agreement a {
+  color: #231c18;
+}
+html body .dialog-type-container .agreement .checke-0,
+html body .dialog-type-container .agreement .checke-1 {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  box-sizing: border-box;
+}
+html body .dialog-type-container .agreement .checke-0 {
+  border: 1.5px solid #8a7e76;
+}
+html body .dialog-type-container .agreement .checke-1 svg g {
+  fill: #231c18;
+}
+
+@keyframes ew-oc-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes ew-oc-rise {
+  from {
+    transform: translateY(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html body .dialog-type-container,
+  html body .dialog-type-container .dialog-type-inner-content {
+    animation: none;
+  }
+}

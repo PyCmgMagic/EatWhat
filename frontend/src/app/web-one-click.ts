@@ -1,6 +1,7 @@
 // H5 one-click login: the carrier authorization page asks for the middle four
 // digits and explicit consent, then the backend exchanges spToken for a number.
 import { recordPhoneAuthLog } from "./phone-auth-logs";
+import "./web-one-click-dialog.css";
 
 /** 600000 is success in every callback of the web SDK. */
 const OK = 600000;
@@ -34,6 +35,9 @@ type PhoneNumberServer = {
         manualClose: boolean;
         /** Render the carrier authorization page as a dialog, not full screen. */
         isDialog?: boolean;
+        /** Adds `customView.element` (HTML) into the page's #custom-zone. */
+        showCustomView?: boolean;
+        customView?: { element?: string };
       };
       watch: (status: number) => void;
     },
@@ -476,6 +480,27 @@ function logTokens(
   );
 }
 
+const CANCELLED = "已取消一键登录，可继续使用短信或密码登录。";
+export const OTHER_NUMBER_CLASS = "ew-one-click-other";
+
+/**
+ * The carrier page as a bottom sheet (styled in web-one-click-dialog.css).
+ * The SDK rejects the login (600030) if the title, close button or agreement
+ * links are hidden, so the title stays visible and carries the provider line;
+ * the stylesheet moves it under the number.
+ */
+export const AUTH_PAGE_OPTION = {
+  navText: "由运营商提供认证服务",
+  btnText: "本机号码一键登录",
+  isHideLogo: true,
+  manualClose: true,
+  isDialog: true,
+  showCustomView: true,
+  customView: {
+    element: `<button type="button" class="${OTHER_NUMBER_CLASS}">其他号码登录</button>`,
+  },
+};
+
 /**
  * Runs the web SDK and returns the carrier spToken for the backend. The page
  * address goes to the backend, which only accepts the configured site.
@@ -525,21 +550,25 @@ export async function webOneClickToken(
               () =>
                 new Promise<string>((done, fail) => {
                   let finished = false;
+                  // "其他号码登录" in the dialog: closes it and falls back to SMS.
+                  const onOther = (event: MouseEvent) => {
+                    if (
+                      event.target instanceof Element &&
+                      event.target.closest(`.${OTHER_NUMBER_CLASS}`)
+                    )
+                      settle(undefined, new Error(CANCELLED));
+                  };
+                  document.addEventListener("click", onOther);
                   const settle = (token?: string, error?: Error) => {
                     if (finished) return;
                     finished = true;
+                    document.removeEventListener("click", onOther);
                     if (token) done(token);
                     else fail(error);
                   };
                   server.getLoginToken({
                     timeout: 5, // SDK timeout is measured in seconds.
-                    authPageOption: {
-                      navText: "本机号码一键登录",
-                      btnText: "登录 / 注册",
-                      isHideLogo: true,
-                      manualClose: true,
-                      isDialog: true,
-                    },
+                    authPageOption: AUTH_PAGE_OPTION,
                     success: (raw) => {
                       const reply = parse(raw);
                       if (
@@ -558,12 +587,7 @@ export async function webOneClickToken(
                         status: Number(status),
                       });
                       if (status === 2)
-                        settle(
-                          undefined,
-                          new Error(
-                            "已取消一键登录，可继续使用短信或密码登录。",
-                          ),
-                        );
+                        settle(undefined, new Error(CANCELLED));
                     },
                   });
                 }),
