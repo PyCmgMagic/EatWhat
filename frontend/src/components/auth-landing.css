@@ -260,30 +260,41 @@
   color: #fff;
 }
 .auth-landing.is-desktop {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   max-width: 1240px;
   margin: 0 auto;
   overflow: hidden;
   border-radius: 30px;
+  background: #fff;
   box-shadow: 0 16px 45px #6e4c2412;
 }
-.is-desktop .auth-landing-stage {
-  min-height: clamp(390px, 52vh, 490px);
+.auth-landing.is-desktop .auth-landing-stage {
+  min-width: 0;
+  min-height: clamp(520px, 68svh, 640px);
 }
 .is-desktop .auth-landing-intro {
-  padding: 72px 0 0 64px;
+  padding: 64px 48px 0;
+}
+.is-desktop .auth-landing-browse {
+  width: clamp(180px, 18vw, 240px);
 }
 .is-desktop .auth-dish-carousel {
   --dish-size: 235px;
   --dish-radius: 430px;
-  --dish-offset: 270px;
-  left: 34%;
+  --dish-offset: calc(var(--dish-radius) - 150px);
 }
 .is-desktop .auth-landing-sheet {
-  width: min(680px, calc(100% - 48px));
-  margin: -68px auto 28px;
-  padding: 26px 34px 24px;
-  border-radius: 28px;
-  box-shadow: 0 10px 36px #6e4c2414;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(30px, 4vw, 56px);
+}
+.is-desktop .auth-landing-sheet > * {
+  width: 100%;
+  max-width: 420px;
+  margin-inline: auto;
 }
 .auth-landing.is-mobile {
   container-type: inline-size;
@@ -391,8 +402,14 @@
   }
 }
 @media (max-width: 900px) {
+  .auth-landing.is-desktop {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .auth-landing.is-desktop .auth-landing-stage {
+    min-height: 390px;
+  }
   .is-desktop .auth-landing-intro {
-    padding-left: 40px;
+    padding: 40px 32px 0;
   }
   .is-desktop .auth-landing-intro h1 {
     font-size: 62px;
@@ -400,7 +417,11 @@
   .is-desktop .auth-dish-carousel {
     --dish-size: 190px;
     --dish-radius: 350px;
+    --dish-offset: calc(var(--dish-radius) - 100px);
     left: 28%;
+  }
+  .is-desktop .auth-landing-sheet {
+    padding: 32px;
   }
 }
 @media (max-width: 600px) {
@@ -415,9 +436,6 @@
   }
 }
 @media (max-height: 700px) and (min-width: 901px) {
-  .is-desktop .auth-landing-stage {
-    min-height: 370px;
-  }
   .is-desktop .auth-landing-intro {
     padding-top: 48px;
   }

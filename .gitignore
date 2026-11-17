@@ -18,3 +18,4 @@ __pycache__/
 
 # Nested checkout of the standalone backend repository (Orbithy/EatWhat).
 /EatWhat_backend/
+/EatWhat-backend/
