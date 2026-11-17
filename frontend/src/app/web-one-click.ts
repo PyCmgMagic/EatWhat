@@ -73,6 +73,51 @@ export function webOneClickTimingHeaders(timing: WebOneClickTiming) {
   };
 }
 
+export type WebOneClickLogEntry = {
+  at: number;
+  level: "info" | "warn";
+  event: string;
+  detail: Record<string, unknown>;
+};
+
+let logEntries: WebOneClickLogEntry[] = [];
+
+/**
+ * Diagnostics for one-click login, written to the console as
+ * "phone_auth_<event>" and kept so the Console button (vConsole) on the phone
+ * sign-in form can replay what happened before it was opened. Never add SDK
+ * replies, phone numbers or authentication tokens.
+ */
+export const webOneClickLog = {
+  snapshot: () => logEntries,
+  add(
+    event: string,
+    detail: Record<string, unknown> = {},
+    level: "info" | "warn" = "info",
+  ) {
+    console[level]("phone_auth_" + event, detail);
+    logEntries = [
+      ...logEntries.slice(-199),
+      { at: Date.now(), level, event, detail },
+    ];
+  },
+  clear() {
+    logEntries = [];
+  },
+  /** Prints the kept entries again, for a console that was opened late. */
+  replay() {
+    for (const entry of logEntries)
+      console[entry.level](
+        `phone_auth_${entry.event} (${new Date(entry.at).toLocaleTimeString()})`,
+        entry.detail,
+      );
+  },
+};
+
+function errorText(error: unknown) {
+  return (error instanceof Error ? error.message : String(error)).slice(0, 200);
+}
+
 async function timed<T>(
   timing: WebOneClickTiming,
   stage: "sdk" | "token" | "environment" | "carrier",
@@ -101,7 +146,7 @@ function recordTiming(
     Math.max(0, Math.round(performance.now() - start)),
   );
   // Never include SDK replies, errors, phone numbers or authentication tokens.
-  console.info("phone_auth_timing", {
+  webOneClickLog.add("timing", {
     trace: timing.trace,
     stage,
     elapsedMs: timing[stage],
@@ -274,25 +319,30 @@ function failure(
   const carriers = carrierCodes(reply?.content);
   const requestId = diagnosticId(reply?.requestId);
   const carrierDetails = carrierDiagnostics(reply);
-  console.warn("phone_auth_error", {
-    trace: timing.trace,
-    timestamp: new Date().toISOString(),
-    sdkVersion: SDK_VERSION,
-    stage,
-    code: code ?? "unknown",
-    ...(carriers.length ? { carriers } : {}),
-    ...(requestId ? { requestId } : {}),
-    ...(carrierDetails.length ? { carrierDetails } : {}),
-    network: {
-      connection: /^(wifi|cellular|2g|3g|4g|5g|ethernet|none)$/i.test(
-        connection,
-      )
-        ? connection.toLowerCase()
-        : "unknown",
-      online: navigator.onLine,
+  // Also kept for the Console button, which replays it in vConsole.
+  webOneClickLog.add(
+    "error",
+    {
+      trace: timing.trace,
+      timestamp: new Date().toISOString(),
+      sdkVersion: SDK_VERSION,
+      stage,
+      code: code ?? "unknown",
+      ...(carriers.length ? { carriers } : {}),
+      ...(requestId ? { requestId } : {}),
+      ...(carrierDetails.length ? { carrierDetails } : {}),
+      network: {
+        connection: /^(wifi|cellular|2g|3g|4g|5g|ethernet|none)$/i.test(
+          connection,
+        )
+          ? connection.toLowerCase()
+          : "unknown",
+        online: navigator.onLine,
+      },
+      browser: browserContext(),
     },
-    browser: browserContext(),
-  });
+    "warn",
+  );
   const message =
     (code && messages[code]) ||
     "本机号码一键登录没有完成，请用短信验证码登录。";
@@ -355,11 +405,12 @@ export async function webOneClickAvailable(
     const server = await timed(timing, "sdk", () =>
       sdk ? Promise.resolve(sdk) : loadSdk(),
     );
-    const connection = server.getConnection();
+    const connection = logConnection(server, timing);
     if (connection === "wifi") return false;
     const { accessToken, jwtToken } = await timed(timing, "token", () =>
       api.webOneClickToken(location.href, timing.trace),
     );
+    logTokens(accessToken, jwtToken, timing);
     if (!accessToken || !jwtToken) return false;
     return await new Promise<boolean>((resolve) => {
       const start = performance.now();
@@ -370,6 +421,11 @@ export async function webOneClickAvailable(
         if (!available && raw !== undefined)
           failure(parse(raw), timing, "environment", connection);
         recordTiming(timing, "environment", start, available ? "ok" : "error");
+        webOneClickLog.add(
+          "available",
+          { trace: timing.trace, available },
+          available ? "info" : "warn",
+        );
         resolve(available);
       };
       server.checkLoginAvailable({
@@ -379,9 +435,41 @@ export async function webOneClickAvailable(
         error: (raw) => finish(false, raw),
       });
     });
-  } catch {
+  } catch (error) {
+    webOneClickLog.add(
+      "check_failed",
+      { trace: timing.trace, error: errorText(error) },
+      "warn",
+    );
     return false;
   }
+}
+
+function logConnection(server: PhoneNumberServer, timing: WebOneClickTiming) {
+  const connection = server.getConnection();
+  webOneClickLog.add(
+    "connection",
+    { trace: timing.trace, connection: String(connection).slice(0, 20) },
+    connection === "wifi" ? "warn" : "info",
+  );
+  return connection;
+}
+
+function logTokens(
+  accessToken: string | undefined,
+  jwtToken: string | undefined,
+  timing: WebOneClickTiming,
+) {
+  // Only whether the backend returned each token, never the values.
+  webOneClickLog.add(
+    "token",
+    {
+      trace: timing.trace,
+      accessToken: !!accessToken,
+      jwtToken: !!jwtToken,
+    },
+    accessToken && jwtToken ? "info" : "warn",
+  );
 }
 
 /**
@@ -396,11 +484,12 @@ export async function webOneClickToken(
   const server = await timed(timing, "sdk", () =>
     sdk ? Promise.resolve(sdk) : loadSdk(),
   );
-  const connection = server.getConnection();
+  const connection = logConnection(server, timing);
   if (connection === "wifi") throw new Error(WIFI);
   const { accessToken, jwtToken } = await timed(timing, "token", () =>
     api.webOneClickToken(location.href, timing.trace),
   );
+  logTokens(accessToken, jwtToken, timing);
   if (!accessToken || !jwtToken)
     throw new Error("本机号码一键登录暂时不可用，请用短信验证码登录。");
   try {
@@ -464,6 +553,10 @@ export async function webOneClickToken(
                         failure(parse(raw), timing, "carrier", connection),
                       ),
                     watch: (status) => {
+                      webOneClickLog.add("auth_page", {
+                        trace: timing.trace,
+                        status: Number(status),
+                      });
                       if (status === 2)
                         settle(
                           undefined,

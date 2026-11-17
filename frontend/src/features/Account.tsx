@@ -19,7 +19,9 @@ import {
   webOneClickToken,
   webOneClickAvailable,
   looksLikePhone,
+  webOneClickLog,
 } from "../app/web-one-click";
+import { WebOneClickConsole } from "../app/WebOneClickConsole";
 import "../app/web-one-click.css";
 import { FeaturePage, FeatureState } from "./Catalog";
 import { DesignIcon as Icon, useMobile } from "../mobile/ui";
@@ -100,7 +102,24 @@ export function PhoneLoginForm({
   const webOneClick = useQuery({
     queryKey: ["auth", "web-one-click-availability"],
     queryFn: async () => {
-      const config = await api.webOneClickConfig();
+      const config = await api.webOneClickConfig().catch((error: unknown) => {
+        webOneClickLog.add(
+          "config_failed",
+          {
+            error: (error instanceof Error
+              ? error.message
+              : String(error)
+            ).slice(0, 200),
+          },
+          "warn",
+        );
+        throw error;
+      });
+      webOneClickLog.add(
+        "config",
+        { enabled: config.enabled === true },
+        config.enabled ? "info" : "warn",
+      );
       return config.enabled ? webOneClickAvailable(api) : false;
     },
     enabled: looksLikePhone(),
@@ -153,13 +172,33 @@ export function PhoneLoginForm({
             onClick={() => {
               login.run(async () => {
                 const timing = createWebOneClickTiming();
-                const spToken = await webOneClickToken(api, undefined, timing);
-                await signInWith(
-                  await api.webOneClickLogin(
-                    { spToken },
-                    webOneClickTimingHeaders(timing),
-                  ),
-                );
+                try {
+                  const spToken = await webOneClickToken(
+                    api,
+                    undefined,
+                    timing,
+                  );
+                  await signInWith(
+                    await api.webOneClickLogin(
+                      { spToken },
+                      webOneClickTimingHeaders(timing),
+                    ),
+                  );
+                  webOneClickLog.add("login_ok", { trace: timing.trace });
+                } catch (error) {
+                  webOneClickLog.add(
+                    "login_failed",
+                    {
+                      trace: timing.trace,
+                      error: (error instanceof Error
+                        ? error.message
+                        : String(error)
+                      ).slice(0, 200),
+                    },
+                    "warn",
+                  );
+                  throw error;
+                }
               });
             }}
           >
@@ -228,6 +267,19 @@ export function PhoneLoginForm({
           {login.isPending ? "正在登录…" : "登录 / 注册"}
         </button>
       </form>
+      <WebOneClickConsole
+        status={
+          !looksLikePhone()
+            ? "未检测（非手机浏览器）"
+            : webOneClick.isFetching
+              ? "检测中"
+              : webOneClick.isError
+                ? "检测出错"
+                : webOneClick.data
+                  ? "可用"
+                  : "不可用"
+        }
+      />
       {!compact && (
         <>
           <p className="ew-note">验证码 5 分钟有效，请勿向他人透露。</p>

@@ -6,6 +6,7 @@ import {
   webOneClickToken,
   webOneClickAvailable,
   looksLikePhone,
+  webOneClickLog,
 } from "./web-one-click";
 
 function sdk(overrides: Record<string, unknown> = {}) {
@@ -62,12 +63,11 @@ describe("web one-click login", () => {
       expect(headers["X-Phone-Auth-Timing"]).toMatch(
         /^sdk=\d{1,6},token=\d{1,6},environment=\d{1,6},carrier=\d{1,6}$/,
       );
-      expect(log.mock.calls.map((call) => call[1].stage)).toEqual([
-        "sdk",
-        "token",
-        "environment",
-        "carrier",
-      ]);
+      expect(
+        log.mock.calls
+          .filter((call) => call[0] === "phone_auth_timing")
+          .map((call) => call[1].stage),
+      ).toEqual(["sdk", "token", "environment", "carrier"]);
       expect(JSON.stringify(log.mock.calls)).not.toMatch(
         /secret-a|secret-j|sp-1/,
       );
@@ -595,5 +595,51 @@ describe("web one-click login", () => {
     expect(
       looksLikePhone("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"),
     ).toBe(false);
+  });
+
+  it("keeps a diagnostics log for the Console button without any token", async () => {
+    webOneClickLog.clear();
+    const api = {
+      webOneClickToken: vi.fn(async () => ({
+        accessToken: "secret-a",
+        jwtToken: "secret-j",
+      })),
+    };
+    const quiet = [
+      vi.spyOn(console, "info").mockImplementation(() => {}),
+      vi.spyOn(console, "warn").mockImplementation(() => {}),
+    ];
+    try {
+      await expect(
+        webOneClickAvailable(
+          api,
+          sdk({
+            checkLoginAvailable: (o: any) => o.error({ code: 600025 }),
+          }) as any,
+        ),
+      ).resolves.toBe(false);
+      await expect(webOneClickToken(api, sdk() as any)).resolves.toBe("sp-1");
+    } finally {
+      quiet.forEach((spy) => spy.mockRestore());
+    }
+    const entries = webOneClickLog.snapshot();
+    expect(entries.map((entry) => entry.event)).toEqual(
+      expect.arrayContaining([
+        "connection",
+        "token",
+        "error",
+        "available",
+        "timing",
+      ]),
+    );
+    expect(
+      entries.find((entry) => entry.event === "error")?.detail,
+    ).toMatchObject({ code: "600025" });
+    const text = JSON.stringify(entries);
+    expect(text).not.toContain("secret-a");
+    expect(text).not.toContain("secret-j");
+    expect(text).not.toContain("sp-1");
+    webOneClickLog.clear();
+    expect(webOneClickLog.snapshot()).toEqual([]);
   });
 });

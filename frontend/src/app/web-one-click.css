@@ -41,3 +41,31 @@
   min-height: 52px;
   border-radius: 999px;
 }
+/* Console: opens vConsole to troubleshoot one-click login on a phone. The
+   rule resets what the sign-in pages apply to their buttons. */
+.ew-one-click-console {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  min-height: 32px;
+  margin: 12px auto 0;
+  padding: 0 12px;
+  color: #8a7e76;
+  font:
+    12px/32px ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.ew-one-click-console:focus-visible {
+  outline: 2px solid #30251f;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.ew-one-click-console:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
