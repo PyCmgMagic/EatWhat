@@ -53,8 +53,8 @@ function scrollScreenTo(top: number) {
 function profilePinY() {
   const bar = document.querySelector<HTMLElement>(".profile-overview-tabbar");
   const panel = document.getElementById("profile-workspace-panel");
-  // No tab bar means no desktop profile space (phone layout): start at the top.
-  if (!bar || !panel) return 0;
+  // No tab bar means no desktop profile space (phone layout).
+  if (!bar || !panel) return null;
   const stickyTop = Number.parseFloat(getComputedStyle(bar).top) || 0;
   const contentTop = panel.getBoundingClientRect().top + window.scrollY;
   return Math.max(
@@ -89,17 +89,22 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
       const preserveScroll =
         (loc.state as { preserveScroll?: boolean } | null)?.preserveScroll ===
         true;
-      const alignTabs =
+      const tabSwitch =
         (loc.state as { alignTabs?: boolean } | null)?.alignTabs === true;
-      // Links inside the profile space (a settings row, 管理, a sub-page's 返回)
-      // swap the content in place: the white card stays exactly where it was.
-      // Past the point where the tab bar pins, the card looks the same at any
-      // depth, so the new page starts from its top right under the pinned bar.
-      const withinProfile =
-        !!previous &&
-        !alignTabs &&
+      // Moving around inside the desktop profile space (a tab, a settings row,
+      // 管理, a sub-page's 返回) swaps the content in place: the white card stays
+      // exactly where it was. Past the point where the tab bar pins, the card
+      // looks the same at any depth, so the new page starts from its top right
+      // under the pinned bar.
+      const pinY =
+        previous &&
+        !preserveScroll &&
         profileSection(previous.address.split("?")[0]) !== null &&
-        profileSection(loc.pathname) !== null;
+        profileSection(loc.pathname) !== null
+          ? profilePinY()
+          : null;
+      const inSpace = pinY !== null;
+      const alignTabs = tabSwitch && !inSpace;
       entry = {
         address,
         back:
@@ -111,8 +116,8 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
               : previous?.address),
         windowY: preserveScroll
           ? window.scrollY
-          : withinProfile
-            ? Math.min(window.scrollY, profilePinY())
+          : inSpace
+            ? Math.min(window.scrollY, pinY)
             : 0,
         panelY: preserveScroll
           ? (document.getElementById("profile-workspace-panel")?.scrollTop ?? 0)
@@ -120,10 +125,14 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
         screenY: preserveScroll ? screenScrollTop() : 0,
         alignTabs,
       };
+      // Inside the space only the browser's own back/forward returns to a
+      // remembered position; a click never moves the card.
       if (
         action === "POP" ||
-        previous?.back === address ||
-        (loc.state as { workspaceSwitch?: boolean } | null)?.workspaceSwitch
+        (!inSpace &&
+          (previous?.back === address ||
+            (loc.state as { workspaceSwitch?: boolean } | null)
+              ?.workspaceSwitch))
       ) {
         const saved = positions.current.get(address);
         if (saved) entry = { ...saved, back: saved.back };
