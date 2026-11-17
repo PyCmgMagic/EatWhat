@@ -143,6 +143,50 @@ class DeploymentTest(unittest.TestCase):
             self.assertFalse((candidate / "assets/withdrawn-abcdefgh.png").exists())
             self.old = candidate
 
+    def fake_release(self, number, chunk_in_live=True):
+        release = self.base / "releases" / f"{'b' * 40}-{number}-1"
+        (release / "assets").mkdir(parents=True)
+        chunk = f"assets/r{number}-abcdefgh.js"
+        (release / chunk).write_text(f"chunk {number}")
+        (release / "index.html").write_text(f'<script src="/{chunk}"></script>')
+        if chunk_in_live:  # Earlier deployers carried every chunk forward.
+            (self.old / chunk).write_text(f"chunk {number}")
+        os.utime(release, (1000 + number, 1000 + number))
+        return release
+
+    def test_prunes_old_releases_uploads_and_their_chunks(self):
+        releases = [self.fake_release(n) for n in range(7)]
+        (self.base / "releases/.prepare-crashed").mkdir()
+        upload = self.base / "incoming" / self.release
+        upload.mkdir(parents=True)
+        os.replace(self.bundle, upload / self.bundle.name)
+        self.bundle = upload / self.bundle.name
+        stale = self.base / "incoming/old-upload"
+        stale.mkdir()
+        (stale / "site.tar.gz").write_bytes(b"old")
+        with patch.object(deploy, "check_api"), patch.object(deploy, "check_site"):
+            self.apply()
+        kept = sorted(p.name for p in (self.base / "releases").iterdir())
+        # Live (bootstrap) + the newest KEEP_RELEASES - 1 others + the new release.
+        expected = sorted(["bootstrap", self.release, *(r.name for r in releases[-(deploy.KEEP_RELEASES - 1):])])
+        self.assertEqual(kept, expected)
+        self.assertFalse(stale.exists())
+        self.assertFalse(upload.exists())
+        target = (self.base / "current").resolve()
+        self.assertEqual(target.name, self.release)
+        self.assertTrue((target / "assets/r6-abcdefgh.js").exists())
+        self.assertFalse((target / "assets/r0-abcdefgh.js").exists())
+        self.assertEqual((target / "assets/old-abcdefgh.js").read_text(), "old chunk")
+
+    def test_failed_deployment_keeps_live_release(self):
+        for n in range(7):
+            self.fake_release(n)
+        with patch.object(deploy, "check_api"), patch.object(deploy, "check_site", side_effect=ValueError("bad")), \
+                patch.object(deploy.time, "sleep"), self.assertRaises(RuntimeError):
+            self.apply()
+        self.assertEqual((self.base / "current").resolve(), self.old)
+        self.assertTrue((self.old / "index.html").is_file())
+
     def malicious_bundle(self, name, kind=None):
         with tarfile.open(self.bundle, "w:gz") as archive:
             for path, data in [("manifest.json", b'{}'), (name, b'bad')]:

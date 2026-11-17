@@ -212,7 +212,46 @@ def current_target(base):
     return target
 
 
-def build_assets(release):
+# Releases kept before each deployment, counting the live one (the new release
+# is added on top). Older ones are deleted so the disk does not fill up, which
+# also limits rollback to these. "bootstrap" is never deleted.
+KEEP_RELEASES = 5
+
+
+def prune(base, previous, bundle=None):
+    releases = base / "releases"
+    removed = 0
+    for path in releases.iterdir():
+        # Leftovers of interrupted deployments (we hold the deployment lock).
+        if path.name.startswith(".prepare-") and path.is_dir() and not path.is_symlink():
+            shutil.rmtree(path)
+    candidates = sorted(
+        (p for p in releases.iterdir()
+         if RELEASE.fullmatch(p.name) and p.is_dir() and not p.is_symlink() and p != previous),
+        key=lambda p: p.stat().st_mtime, reverse=True)
+    for path in candidates[KEEP_RELEASES - 1:]:
+        shutil.rmtree(path)
+        removed += 1
+    incoming = base / "incoming"
+    if incoming.is_dir() and not incoming.is_symlink():
+        keep = bundle.resolve().parent if bundle else None
+        for path in incoming.iterdir():
+            if path.resolve() == keep:
+                continue
+            if path.is_dir() and not path.is_symlink():
+                shutil.rmtree(path)
+            else:
+                path.unlink()
+    print(f"Pruned {removed} old release(s); keeping at most {KEEP_RELEASES}", flush=True)
+
+
+def remove_upload(base, bundle):
+    upload = bundle.resolve().parent
+    if upload.parent == (base / "incoming").resolve() and upload.is_dir():
+        shutil.rmtree(upload, ignore_errors=True)
+
+
+def build_assets(release, include_retained=True):
     manifest = release / ".vite/manifest.json"
     if manifest.is_file():
         names = set()
@@ -223,20 +262,23 @@ def build_assets(release):
         index = release / "index.html"
         names = set(re.findall(r'(?:src|href)=["\']/([^"\']+)["\']', index.read_text())) if index.is_file() else set()
     retained = release / ".vite/retained-assets.json"
-    if retained.is_file():
+    if include_retained and retained.is_file():
         names.update(json.loads(retained.read_bytes()))
     return {n for n in names if n.startswith("assets/") and re.search(r"-[A-Za-z0-9_-]{8}\.[^/]+$", n)}
 
 
 def retain_assets(previous, candidate):
     # Already-open pages can still lazy-load chunks from earlier releases.
-    generated = build_assets(previous)
-    if previous.parent.name == "releases" and not (previous / ".vite/retained-assets.json").exists():
-        # Older deployers copied chunks forward without recording their origin.
-        # Recover only names attested by an existing release's build manifest.
+    if previous.parent.name == "releases":
+        # Only chunks built by releases still on the server (see prune), so
+        # carried-forward assets stop growing with every deployment.
+        generated = build_assets(previous, include_retained=False)
         for release in previous.parent.iterdir():
-            if not release.is_symlink() and (release / ".vite/manifest.json").is_file():
-                generated.update(build_assets(release))
+            if not release.is_symlink() and release.is_dir() and (
+                    RELEASE.fullmatch(release.name) or release.name == "bootstrap"):
+                generated.update(build_assets(release, include_retained=False))
+    else:
+        generated = build_assets(previous)
     carried = set()
     for path in (previous / "assets").rglob("*"):
         require(not path.is_symlink(), "Symlink in previous assets")
@@ -310,6 +352,8 @@ def apply(base, bundle, expected_digest, public, api):
         previous = current_target(base)
         stage("check API before deploying")
         check_api_with_retry(api)  # Fail without switching if the existing API is unavailable.
+        stage("prune old releases")
+        prune(base, previous, bundle)
         with tempfile.TemporaryDirectory(prefix=".prepare-", dir=base / "releases") as temporary:
             candidate = Path(temporary)
             stage("unpack bundle")
@@ -335,6 +379,7 @@ def apply(base, bundle, expected_digest, public, api):
             # TemporaryDirectory cleanup tolerates the moved directory.
             stage("activate and verify public site")
             activate(base, target, previous, public, api)
+        remove_upload(base, bundle)
         print("Activated release " + manifest["release"])
 
 
