@@ -37,6 +37,8 @@ type PhoneNumberServer = {
     },
   ): void;
   closeLoginPage(): void;
+  /** Network type from navigator.connection: "wifi", "cellular" or "unknown". */
+  getConnection?(): string;
   setUploadEnable?(enabled: boolean): void;
   setLoggerEnable?(enabled: boolean): void;
 };
@@ -392,6 +394,21 @@ export async function loadSdk(): Promise<PhoneNumberServer> {
   return sdk;
 }
 
+/**
+ * One-click needs mobile data. Only a definite "wifi" stops the flow; browsers
+ * without navigator.connection (iOS Safari) report "unknown" and continue.
+ */
+function onWifi(server: PhoneNumberServer, timing: WebOneClickTiming) {
+  let type = "unknown";
+  try {
+    type = server.getConnection?.() ?? "unknown";
+  } catch {
+    // Treat a failing check as unknown and let checkLoginAvailable decide.
+  }
+  webOneClickLog.add("connection", { trace: timing.trace, type });
+  return type === "wifi";
+}
+
 export async function webOneClickAvailable(
   api: WebOneClickApi,
   sdk?: PhoneNumberServer,
@@ -401,6 +418,7 @@ export async function webOneClickAvailable(
     const server = await timed(timing, "sdk", () =>
       sdk ? Promise.resolve(sdk) : loadSdk(),
     );
+    if (onWifi(server, timing)) return false;
     const { accessToken, jwtToken } = await timed(timing, "token", () =>
       api.webOneClickToken(location.href, timing.trace),
     );
@@ -468,6 +486,7 @@ export async function webOneClickToken(
   const server = await timed(timing, "sdk", () =>
     sdk ? Promise.resolve(sdk) : loadSdk(),
   );
+  if (onWifi(server, timing)) throw new Error(WIFI);
   const { accessToken, jwtToken } = await timed(timing, "token", () =>
     api.webOneClickToken(location.href, timing.trace),
   );

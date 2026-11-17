@@ -23,7 +23,7 @@ npx --yes --package @playwright/cli playwright-cli -s=eatwhat-v2 run-code --file
 
 复现失败后，在浏览器控制台筛选 `phone_auth_`。将 `phone_auth_error` 对象及相同 `trace` 的 `phone_auth_timing` 日志交给阿里云支持；正式构建也保留这些日志。
 
-手机登录页的「查看日志」可直接查看、复制或清空相同的诊断日志；自动复制不可用时，可长按选中的内容复制。日志只保留当前标签页内存中的最近 100 条，刷新即清空，不上传或写入本地存储。
+进入手机登录页时先显示短信验证码表单，随后在后台检测一键登录：先用 SDK 的 `getConnection()` 排除 Wi-Fi，再调用 `checkLoginAvailable`，可用则自动弹出运营商授权页。任何一步失败都静默处理，不弹提示，继续使用短信验证码登录；诊断只写入浏览器控制台。
 
 错误日志包含时间、SDK 版本、失败阶段、运营商错误码、浏览器版本及网络状态；提供商返回符合 UUID/十六进制格式的 `requestId`、`msgId`、`carrierTraceId` 时也会保留。运营商错误消息只归类为超时、网络或脚本错误，不输出原文、手机号、页面地址或认证凭据。未获得提供商 ID 时，可结合时间和本地 `trace` 排查。
 

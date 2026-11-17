@@ -11,10 +11,7 @@ import {
 
 function sdk(overrides: Record<string, unknown> = {}) {
   return {
-    // The page must leave network detection to checkLoginAvailable.
-    getConnection: vi.fn(() => {
-      throw new Error("getConnection must not be called");
-    }),
+    getConnection: vi.fn(() => "cellular"),
     closeLoginPage: vi.fn(),
     checkLoginAvailable: vi.fn((o: any) => o.success({ code: 600000 })),
     getLoginToken: vi.fn((o: any) =>
@@ -25,6 +22,25 @@ function sdk(overrides: Record<string, unknown> = {}) {
 }
 
 describe("web one-click login", () => {
+  it("skips one-click on Wi-Fi before requesting tokens", async () => {
+    const api = {
+      webOneClickToken: vi.fn(async () => ({ accessToken: "a", jwtToken: "j" })),
+    };
+    const server = sdk({ getConnection: vi.fn(() => "wifi") });
+    await expect(webOneClickAvailable(api, server as any)).resolves.toBe(false);
+    await expect(webOneClickToken(api, server as any)).rejects.toThrow("Wi-Fi");
+    expect(api.webOneClickToken).not.toHaveBeenCalled();
+    expect(server.checkLoginAvailable).not.toHaveBeenCalled();
+  });
+
+  it("continues when the network type is unknown", async () => {
+    const api = {
+      webOneClickToken: vi.fn(async () => ({ accessToken: "a", jwtToken: "j" })),
+    };
+    const server = sdk({ getConnection: vi.fn(() => "unknown") });
+    await expect(webOneClickAvailable(api, server as any)).resolves.toBe(true);
+  });
+
   it("passes the backend tokens to the SDK and returns the carrier spToken", async () => {
     const api = {
       webOneClickToken: vi.fn(async () => ({

@@ -21,7 +21,6 @@ import {
   looksLikePhone,
   webOneClickLog,
 } from "../app/web-one-click";
-import { WebOneClickConsole } from "../app/WebOneClickConsole";
 import "../app/web-one-click.css";
 import { FeaturePage, FeatureState } from "./Catalog";
 import { DesignIcon as Icon, useMobile } from "../mobile/ui";
@@ -33,7 +32,6 @@ import { LocationControl } from "./LocationControl";
 import { priceBands } from "../api/v2-vocab";
 import { useShopOptions } from "./shop-options";
 import { rememberVerificationReturn } from "../app/verification-return";
-import { PhoneAuthLogViewer } from "../components/PhoneAuthLogViewer";
 
 const AUTO_MEAL = "auto";
 export function RecommendationControls() {
@@ -99,6 +97,10 @@ export function PhoneLoginForm({
     [now, setNow] = useState(Date.now()),
     send = useTask(),
     login = useTask();
+  // One-click attempts (automatic or from the button) never show an error:
+  // any failure just leaves the SMS form in place.
+  const [autoPending, setAutoPending] = useState(false);
+  const autoTried = useRef(false);
   useAuthBusy(send.isPending || login.isPending);
   const webOneClick = useQuery({
     queryKey: ["auth", "web-one-click-availability"],
@@ -137,6 +139,47 @@ export function PhoneLoginForm({
     await signIn(result.session);
     finish("/me", registered ? sessionSignal(result.session) : undefined);
   };
+  const oneClickLogin = async (auto: boolean) => {
+    const timing = createWebOneClickTiming();
+    try {
+      const spToken = await webOneClickToken(api, undefined, timing);
+      await signInWith(
+        await api.webOneClickLogin(
+          { spToken },
+          webOneClickTimingHeaders(timing),
+        ),
+      );
+      webOneClickLog.add("login_ok", { trace: timing.trace, auto });
+    } catch (error) {
+      webOneClickLog.add(
+        "login_failed",
+        {
+          trace: timing.trace,
+          auto,
+          error: (error instanceof Error
+            ? error.message
+            : String(error)
+          ).slice(0, 200),
+        },
+        "warn",
+      );
+      throw error;
+    }
+  };
+  // Once one-click is confirmed available, open the carrier authorization
+  // page automatically. Any failure is swallowed: the SMS form stays as is.
+  const tryOneClick = (auto: boolean) => {
+    setAutoPending(true);
+    oneClickLogin(auto)
+      .catch(() => undefined)
+      .finally(() => setAutoPending(false));
+  };
+  useEffect(() => {
+    if (webOneClick.data !== true || autoTried.current) return;
+    autoTried.current = true;
+    tryOneClick(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webOneClick.data]);
   useEffect(() => {
     if (until <= Date.now()) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
@@ -169,39 +212,8 @@ export function PhoneLoginForm({
           <button
             type="button"
             className="ew-web-one-click"
-            disabled={login.isPending || send.isPending}
-            onClick={() => {
-              login.run(async () => {
-                const timing = createWebOneClickTiming();
-                try {
-                  const spToken = await webOneClickToken(
-                    api,
-                    undefined,
-                    timing,
-                  );
-                  await signInWith(
-                    await api.webOneClickLogin(
-                      { spToken },
-                      webOneClickTimingHeaders(timing),
-                    ),
-                  );
-                  webOneClickLog.add("login_ok", { trace: timing.trace });
-                } catch (error) {
-                  webOneClickLog.add(
-                    "login_failed",
-                    {
-                      trace: timing.trace,
-                      error: (error instanceof Error
-                        ? error.message
-                        : String(error)
-                      ).slice(0, 200),
-                    },
-                    "warn",
-                  );
-                  throw error;
-                }
-              });
-            }}
+            disabled={login.isPending || send.isPending || autoPending}
+            onClick={() => tryOneClick(false)}
           >
             本机号码一键登录
             <small>开启移动数据，在授权页补全号码中间 4 位</small>
@@ -268,20 +280,6 @@ export function PhoneLoginForm({
           {login.isPending ? "正在登录…" : "登录 / 注册"}
         </button>
       </form>
-      <WebOneClickConsole
-        status={
-          !looksLikePhone()
-            ? "未检测（非手机浏览器）"
-            : webOneClick.isFetching
-              ? "检测中"
-              : webOneClick.isError
-                ? "检测出错"
-                : webOneClick.data
-                  ? "可用"
-                  : "不可用"
-        }
-      />
-      <PhoneAuthLogViewer />
       {!compact && (
         <>
           <p className="ew-note">验证码 5 分钟有效，请勿向他人透露。</p>

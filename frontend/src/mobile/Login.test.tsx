@@ -47,14 +47,11 @@ afterEach(async () => {
 });
 
 describe("phone login password entry", () => {
-  it("keeps the diagnostic entry outside the form when one-click login is unavailable", async () => {
+  it("shows no test console or log viewer on the phone login form", async () => {
     await render("#/auth/register");
-    const logs = container.querySelector<HTMLButtonElement>(
-      ".phone-auth-log-entry > button",
-    )!;
-    expect(logs.textContent).toContain("查看日志");
-    expect(logs.getAttribute("aria-haspopup")).toBe("dialog");
-    expect(logs.closest("form")).toBeNull();
+    expect(container.querySelector(".phone-auth-log-entry")).toBeNull();
+    expect(container.querySelector(".ew-one-click-console")).toBeNull();
+    expect(container.textContent).not.toContain("查看日志");
   });
 
   it("opens the password login page instead of the login method chooser", async () => {
