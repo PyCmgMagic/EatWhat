@@ -18,6 +18,12 @@
   --pp-gap: 18px;
 }
 
+/* 卡片外层至少占满标签栏以下的一屏：短页面的白色卡片照常按内容收尾，
+   但页面总能滚到标签栏吸顶的位置，在空间内切换时白色区域不会被拉动。 */
+.pc-profile-space-body {
+  min-height: calc(100vh - var(--header-height, 94px) - 72px);
+}
+
 /* ---------- 页面骨架 ---------- */
 .pp-page {
   padding: 32px;

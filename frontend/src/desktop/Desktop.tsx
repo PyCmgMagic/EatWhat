@@ -473,26 +473,29 @@ function ProfileWorkspace({
       <ProfileNavigationGuardContext.Provider value={navigationGuard}>
         <div className="pc-profile-space profile-overview">
           <ProfileSpaceHeader />
-          <div
-            ref={content}
-            id="profile-workspace-panel"
-            className="pc-profile-space-content"
-            role="region"
-            aria-label="个人中心内容"
-            tabIndex={-1}
-          >
-            <MotionRegion
-              changeKey={
-                isHelpFeedbackPath(location.pathname)
-                  ? "/help"
-                  : location.pathname
-              }
-              order={profileSections.findIndex((item) => item.to === section)}
+          {/* 外层只负责撑出滚动空间，白色卡片仍按内容高度收尾。 */}
+          <div className="pc-profile-space-body">
+            <div
+              ref={content}
+              id="profile-workspace-panel"
+              className="pc-profile-space-content"
+              role="region"
+              aria-label="个人中心内容"
+              tabIndex={-1}
             >
-              <Suspense fallback={<DesktopRouteSkeleton />}>
-                {children}
-              </Suspense>
-            </MotionRegion>
+              <MotionRegion
+                changeKey={
+                  isHelpFeedbackPath(location.pathname)
+                    ? "/help"
+                    : location.pathname
+                }
+                order={profileSections.findIndex((item) => item.to === section)}
+              >
+                <Suspense fallback={<DesktopRouteSkeleton />}>
+                  {children}
+                </Suspense>
+              </MotionRegion>
+            </div>
           </div>
         </div>
       </ProfileNavigationGuardContext.Provider>
