@@ -33,6 +33,43 @@ describe("web one-click login", () => {
     expect(server.checkLoginAvailable).not.toHaveBeenCalled();
   });
 
+  it("opens the auth page from the same check that reports availability", async () => {
+    const api = {
+      webOneClickToken: vi.fn(async () => ({ accessToken: "a", jwtToken: "j" })),
+    };
+    const order: string[] = [];
+    const server = sdk({
+      checkLoginAvailable: vi.fn((o: any) => {
+        order.push("check");
+        o.success({ code: 600000 });
+      }),
+      getLoginToken: vi.fn((o: any) => {
+        order.push("auth_page");
+        o.success(JSON.stringify({ code: 600000, spToken: "sp-1" }));
+      }),
+    });
+    await expect(
+      webOneClickToken(api, server as any, undefined, () => order.push("available")),
+    ).resolves.toBe("sp-1");
+    expect(order).toEqual(["check", "available", "auth_page"]);
+    expect(server.checkLoginAvailable).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not report availability when the carrier check fails", async () => {
+    const api = {
+      webOneClickToken: vi.fn(async () => ({ accessToken: "a", jwtToken: "j" })),
+    };
+    const onAvailable = vi.fn();
+    const server = sdk({
+      checkLoginAvailable: vi.fn((o: any) => o.error({ code: 600011 })),
+    });
+    await expect(
+      webOneClickToken(api, server as any, undefined, onAvailable),
+    ).rejects.toThrow();
+    expect(onAvailable).not.toHaveBeenCalled();
+    expect(server.getLoginToken).not.toHaveBeenCalled();
+  });
+
   it("continues when the network type is unknown", async () => {
     const api = {
       webOneClickToken: vi.fn(async () => ({ accessToken: "a", jwtToken: "j" })),

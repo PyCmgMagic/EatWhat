@@ -17,7 +17,6 @@ import {
   createWebOneClickTiming,
   webOneClickTimingHeaders,
   webOneClickToken,
-  webOneClickAvailable,
   looksLikePhone,
   webOneClickLog,
 } from "../app/web-one-click";
@@ -100,10 +99,15 @@ export function PhoneLoginForm({
   // One-click attempts (automatic or from the button) never show an error:
   // any failure just leaves the SMS form in place.
   const [autoPending, setAutoPending] = useState(false);
+  // Set once the carrier check has passed; only then is the button shown.
+  const [oneClickReady, setOneClickReady] = useState(false);
   const autoTried = useRef(false);
   useAuthBusy(send.isPending || login.isPending);
+  // Only reads the backend switch. The carrier check runs once, inside the
+  // automatic attempt below, so the auth page opens from that same check
+  // instead of a second SDK run racing the first one.
   const webOneClick = useQuery({
-    queryKey: ["auth", "web-one-click-availability"],
+    queryKey: ["auth", "web-one-click-config"],
     queryFn: async () => {
       const config = await api.webOneClickConfig().catch((error: unknown) => {
         webOneClickLog.add(
@@ -123,7 +127,7 @@ export function PhoneLoginForm({
         { enabled: config.enabled === true },
         config.enabled ? "info" : "warn",
       );
-      return config.enabled ? webOneClickAvailable(api) : false;
+      return config.enabled === true;
     },
     enabled: looksLikePhone(),
     gcTime: 0,
@@ -142,7 +146,9 @@ export function PhoneLoginForm({
   const oneClickLogin = async (auto: boolean) => {
     const timing = createWebOneClickTiming();
     try {
-      const spToken = await webOneClickToken(api, undefined, timing);
+      const spToken = await webOneClickToken(api, undefined, timing, () =>
+        setOneClickReady(true),
+      );
       await signInWith(
         await api.webOneClickLogin(
           { spToken },
@@ -166,8 +172,9 @@ export function PhoneLoginForm({
       throw error;
     }
   };
-  // Once one-click is confirmed available, open the carrier authorization
-  // page automatically. Any failure is swallowed: the SMS form stays as is.
+  // When the backend enables one-click, run the full flow automatically: if
+  // the carrier check passes the auth page opens; any failure is swallowed and
+  // the SMS form stays as is.
   const tryOneClick = (auto: boolean) => {
     setAutoPending(true);
     oneClickLogin(auto)
@@ -208,7 +215,7 @@ export function PhoneLoginForm({
           });
         }}
       >
-        {webOneClick.data === true && (
+        {oneClickReady && (
           <button
             type="button"
             className="ew-web-one-click"

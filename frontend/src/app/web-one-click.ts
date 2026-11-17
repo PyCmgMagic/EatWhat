@@ -482,6 +482,8 @@ export async function webOneClickToken(
   api: WebOneClickApi,
   sdk?: PhoneNumberServer,
   timing = createWebOneClickTiming(),
+  /** Called once checkLoginAvailable passes, right before the auth page opens. */
+  onAvailable?: () => void,
 ): Promise<string> {
   const server = await timed(timing, "sdk", () =>
     sdk ? Promise.resolve(sdk) : loadSdk(),
@@ -511,6 +513,7 @@ export async function webOneClickToken(
           if (Number(parse(raw).code) !== OK) return failed(raw);
           checked = true;
           recordTiming(timing, "environment", start, "ok");
+          onAvailable?.();
           // Start authorization inside the authentication callback, as required
           // by the SDK. Closing the page must also release the login button.
           resolve(
