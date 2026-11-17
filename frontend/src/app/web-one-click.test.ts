@@ -11,7 +11,10 @@ import {
 
 function sdk(overrides: Record<string, unknown> = {}) {
   return {
-    getConnection: () => "cellular",
+    // The page must leave network detection to checkLoginAvailable.
+    getConnection: vi.fn(() => {
+      throw new Error("getConnection must not be called");
+    }),
     closeLoginPage: vi.fn(),
     checkLoginAvailable: vi.fn((o: any) => o.success({ code: 600000 })),
     getLoginToken: vi.fn((o: any) =>
@@ -98,14 +101,6 @@ describe("web one-click login", () => {
     } finally {
       log.mockRestore();
     }
-  });
-
-  it("stops before asking the backend when the phone is on Wi-Fi", async () => {
-    const api = { webOneClickToken: vi.fn() };
-    await expect(
-      webOneClickToken(api, sdk({ getConnection: () => "wifi" }) as any),
-    ).rejects.toThrow("关闭 Wi-Fi");
-    expect(api.webOneClickToken).not.toHaveBeenCalled();
   });
 
   it("explains failed carrier checks and never resolves without a token", async () => {
@@ -355,7 +350,7 @@ describe("web one-click login", () => {
           stage: "carrier",
           code: "600011",
           requestId,
-          network: { connection: "cellular", online: navigator.onLine },
+          network: { online: navigator.onLine },
           browser: expect.any(Object),
           carrierDetails: [
             { vendor: "CU", codes: ["-2"], reason: "TIMEOUT" },
@@ -548,14 +543,6 @@ describe("web one-click login", () => {
     expect(server.getLoginToken).not.toHaveBeenCalled();
   });
 
-  it("hides the entry on Wi-Fi without requesting carrier credentials", async () => {
-    const api = { webOneClickToken: vi.fn() };
-    await expect(
-      webOneClickAvailable(api, sdk({ getConnection: () => "wifi" }) as any),
-    ).resolves.toBe(false);
-    expect(api.webOneClickToken).not.toHaveBeenCalled();
-  });
-
   it("hides the entry when the carrier rejects or cannot precheck", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     try {
@@ -624,13 +611,7 @@ describe("web one-click login", () => {
     }
     const entries = webOneClickLog.snapshot();
     expect(entries.map((entry) => entry.event)).toEqual(
-      expect.arrayContaining([
-        "connection",
-        "token",
-        "error",
-        "available",
-        "timing",
-      ]),
+      expect.arrayContaining(["token", "error", "available", "timing"]),
     );
     expect(
       entries.find((entry) => entry.event === "error")?.detail,

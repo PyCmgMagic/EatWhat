@@ -60,7 +60,6 @@ async function carrierFailure() {
         }),
       },
       {
-        getConnection: () => "cellular",
         closeLoginPage: () => {},
         checkLoginAvailable: (options) => options.success({ code: 600000 }),
         getLoginToken: (options) =>

@@ -37,7 +37,6 @@ type PhoneNumberServer = {
     },
   ): void;
   closeLoginPage(): void;
-  getConnection(): string;
   setUploadEnable?(enabled: boolean): void;
   setLoggerEnable?(enabled: boolean): void;
 };
@@ -303,7 +302,6 @@ function failure(
   reply: SdkReply,
   timing: WebOneClickTiming,
   stage: "environment" | "carrier",
-  connection: string,
 ) {
   // Accept only SDK error codes, never display/log the raw provider message.
   const code =
@@ -336,14 +334,7 @@ function failure(
       ...(carriers.length ? { carriers } : {}),
       ...(requestId ? { requestId } : {}),
       ...(carrierDetails.length ? { carrierDetails } : {}),
-      network: {
-        connection: /^(wifi|cellular|2g|3g|4g|5g|ethernet|none)$/i.test(
-          connection,
-        )
-          ? connection.toLowerCase()
-          : "unknown",
-        online: navigator.onLine,
-      },
+      network: { online: navigator.onLine },
       browser: browserContext(),
     },
     "warn",
@@ -410,8 +401,6 @@ export async function webOneClickAvailable(
     const server = await timed(timing, "sdk", () =>
       sdk ? Promise.resolve(sdk) : loadSdk(),
     );
-    const connection = logConnection(server, timing);
-    if (connection === "wifi") return false;
     const { accessToken, jwtToken } = await timed(timing, "token", () =>
       api.webOneClickToken(location.href, timing.trace),
     );
@@ -424,7 +413,7 @@ export async function webOneClickAvailable(
         if (checked) return;
         checked = true;
         if (!available && raw !== undefined)
-          failure(parse(raw), timing, "environment", connection);
+          failure(parse(raw), timing, "environment");
         recordTiming(timing, "environment", start, available ? "ok" : "error");
         webOneClickLog.add(
           "available",
@@ -448,16 +437,6 @@ export async function webOneClickAvailable(
     );
     return false;
   }
-}
-
-function logConnection(server: PhoneNumberServer, timing: WebOneClickTiming) {
-  const connection = server.getConnection();
-  webOneClickLog.add(
-    "connection",
-    { trace: timing.trace, connection: String(connection).slice(0, 20) },
-    connection === "wifi" ? "warn" : "info",
-  );
-  return connection;
 }
 
 function logTokens(
@@ -489,8 +468,6 @@ export async function webOneClickToken(
   const server = await timed(timing, "sdk", () =>
     sdk ? Promise.resolve(sdk) : loadSdk(),
   );
-  const connection = logConnection(server, timing);
-  if (connection === "wifi") throw new Error(WIFI);
   const { accessToken, jwtToken } = await timed(timing, "token", () =>
     api.webOneClickToken(location.href, timing.trace),
   );
@@ -505,7 +482,7 @@ export async function webOneClickToken(
         if (checked) return;
         checked = true;
         recordTiming(timing, "environment", start, "error");
-        reject(failure(parse(raw), timing, "environment", connection));
+        reject(failure(parse(raw), timing, "environment"));
       };
       server.checkLoginAvailable({
         accessToken,
@@ -546,17 +523,10 @@ export async function webOneClickToken(
                         reply.spToken.trim()
                       )
                         settle(reply.spToken);
-                      else
-                        settle(
-                          undefined,
-                          failure(reply, timing, "carrier", connection),
-                        );
+                      else settle(undefined, failure(reply, timing, "carrier"));
                     },
                     error: (raw) =>
-                      settle(
-                        undefined,
-                        failure(parse(raw), timing, "carrier", connection),
-                      ),
+                      settle(undefined, failure(parse(raw), timing, "carrier")),
                     watch: (status) => {
                       webOneClickLog.add("auth_page", {
                         trace: timing.trace,
