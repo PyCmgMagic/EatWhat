@@ -132,6 +132,58 @@ it.each([false, true])(
   },
 );
 
+it("adds, switches and cancels a reaction from the mobile comment list", async () => {
+  const setCommentReaction = vi
+    .fn()
+    .mockResolvedValueOnce([{ reaction: "HEART", count: 1, selected: true }])
+    .mockResolvedValueOnce([{ reaction: "LAUGH", count: 1, selected: true }])
+    .mockResolvedValueOnce([]);
+  const app = {
+    user: { id: 10, verified: true },
+    session: { tokenName: "test", tokenValue: "token" },
+    api: { setCommentReaction },
+  } as unknown as AppState;
+  cache.setQueryData(["comments", "list", 10, 71, "MOST_USEFUL", 1], {
+    items: [{ id: 8, authorName: "食友", text: "好吃", reactions: [] }],
+    totalItems: 1,
+  });
+  await act(() =>
+    root.render(
+      <MemoryRouter initialEntries={["/comments?foodId=71"]}>
+        <QueryClientProvider client={cache}>
+          <AppContext.Provider value={app}>
+            <MobileComments />
+          </AppContext.Provider>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    ),
+  );
+  const button = (label: string) =>
+    host.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
+  const respond = async (label: string) => {
+    await act(async () => button(label).click());
+    // TanStack Query batches the list update outside the event handler.
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+  };
+  await act(() => button("表情回应").click());
+  await respond("喜欢");
+  expect(button("喜欢，1 人回应").getAttribute("aria-pressed")).toBe("true");
+  expect(button("表情回应").getAttribute("aria-expanded")).toBe("false");
+
+  await act(() => button("表情回应").click());
+  await respond("笑哭");
+  expect(button("喜欢，1 人回应")).toBeNull();
+  expect(button("笑哭，1 人回应").getAttribute("aria-pressed")).toBe("true");
+
+  await respond("笑哭，1 人回应");
+  expect(button("笑哭，1 人回应")).toBeNull();
+  expect(setCommentReaction.mock.calls).toEqual([
+    [8, "HEART", true],
+    [8, "LAUGH", true],
+    [8, "LAUGH", false],
+  ]);
+});
+
 it("returns to the dish with one browser back after publishing", async () => {
   await publish();
   await act(async () =>

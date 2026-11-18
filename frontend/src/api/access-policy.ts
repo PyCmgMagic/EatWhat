@@ -25,11 +25,17 @@ export function actionUnavailable(
     );
 }
 
-export type AccessRequirement = "public" | "login" | "verified";
+export type AccessRequirement =
+  | "public"
+  | "login"
+  | "verified"
+  | "verifiedOrAdmin";
 /** Backend v2 commands the APIv7 document (the generated rules) lacks. */
 const v2Rules = [
   ["PUT", "/foods/{id}/rating", "verified"],
   ["DELETE", "/foods/{id}/rating", "login"],
+  ["PUT", "/comments/{id}/reactions/{reaction}", "verifiedOrAdmin"],
+  ["DELETE", "/comments/{id}/reactions/{reaction}", "login"],
 ] as const;
 const rules = [...requestAccessRules, ...v2Rules].map(
   ([method, path, access]) => ({

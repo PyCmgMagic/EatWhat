@@ -2,6 +2,11 @@ import { endpoints } from "../api/backend-v2-endpoints";
 import type { Operation, V2Schema } from "../api/backend-v2";
 import type { Envelope, RequestOptions } from "../api/client";
 
+import {
+  commentReactionOptions,
+  type CommentReactionType,
+} from "../api/comments";
+
 type Shop = V2Schema["Restaurant"] & { id: number; name: string };
 type DemoFood = V2Schema["FoodV2"] & {
   id: number;
@@ -38,6 +43,7 @@ type Data = {
   foodRatings: Record<number, Record<number, number>>;
   comments: DemoComment[];
   commentLikes: Record<number, number[]>;
+  commentReactions: Record<number, Record<number, CommentReactionType>>;
   feedback: V2Schema["CaseView"][];
   notifications: V2Schema["NotificationCard"][];
   pushCategories: Record<string, boolean>;
@@ -277,6 +283,7 @@ function seed(): Data {
       },
     ],
     commentLikes: {},
+    commentReactions: {},
     feedback: [],
     notifications: [
       {
@@ -652,7 +659,16 @@ export function demoTransport(
   const withCommentViewer = (comment: DemoComment) => ({
     ...comment,
     isLiked: uid ? idList(state.commentLikes).includes(comment.id) : null,
+    reactions: reactionsFor(comment.id),
   });
+  const reactionsFor = (id: number) => {
+    const choices = state.commentReactions[id] ?? {};
+    const values = Object.values(choices);
+    return commentReactionOptions.flatMap(({ reaction }) => {
+      const count = values.filter((value) => value === reaction).length;
+      return count ? [{ reaction, count, selected: choices[user] === reaction }] : [];
+    });
+  };
   const updateShop = (updated: Shop, action: string, restoredFrom?: number) => {
     const revisions = (state.history[updated.id] ??= []);
     const revisionId = (revisions[0]?.revision.id ?? 0) + 1;
@@ -1404,9 +1420,32 @@ export function demoTransport(
       );
       if (name === "putCommentsByIdLike") state.commentLikes[user].push(id);
       return write();
+    case "putCommentsByIdReactionsByReaction":
+    case "deleteCommentsByIdReactionsByReaction": {
+      const comment = state.comments.find((value) => value.id === id);
+      if (!comment) return fail(10001, "评论不存在");
+      const reaction = commentReactionOptions.find(
+        (option) => option.reaction === params?.reaction,
+      )?.reaction;
+      if (!reaction) return fail(10001, "参数无效");
+      const choices = (state.commentReactions[id] ??= {});
+      if (name === "putCommentsByIdReactionsByReaction") {
+        const author = comment.author?.id;
+        if (author != null && (state.blocks[user]?.includes(author) || state.blocks[author]?.includes(user)))
+          return fail(40002, "无法回应这条评论");
+        choices[user] = reaction;
+      } else if (choices[user] === reaction) {
+        delete choices[user];
+      }
+      return write(reactionsFor(id));
+    }
     case "deleteCommentsByCommentId":
       state.comments = state.comments.filter(
-        (comment) => comment.id !== commentId && comment.rootId !== commentId,
+        (comment) => {
+          const keep = comment.id !== commentId && comment.rootId !== commentId;
+          if (!keep) delete state.commentReactions[comment.id];
+          return keep;
+        },
       );
       return write();
     case "getFoodsByFoodIdGallery":

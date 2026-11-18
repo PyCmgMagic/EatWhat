@@ -265,6 +265,52 @@ a.comments-author:focus-visible {
   font-size: 11px !important;
   text-decoration: underline;
 }
+.comments-reactions {
+  margin-top: 2px;
+}
+.comments-preview-row:has(> .comments-reactions) {
+  flex-wrap: wrap;
+}
+.comments-preview-row > .comments-reactions {
+  flex: 1 0 calc(100% - 42px);
+  margin-inline-start: 42px;
+}
+.comments-reaction-buttons,
+.comments-reaction-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.comments-reaction-picker {
+  margin-top: 4px;
+}
+.comments-reactions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 4px 8px;
+  border: 1px solid #eee1db;
+  border-radius: 12px;
+  background: #fbf8f6;
+  color: var(--comment-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.comments-reactions button[aria-pressed="true"] {
+  border-color: #c86652;
+  background: #fff0e9;
+  color: #a8321c;
+}
+.comments-reactions button:disabled {
+  cursor: wait;
+}
+.comments-reaction-picker button {
+  font-size: 19px;
+}
 .comments-replies {
   background: #fbf8f6;
   border-radius: 14px;
