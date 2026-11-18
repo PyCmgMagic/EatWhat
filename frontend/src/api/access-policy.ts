@@ -32,6 +32,7 @@ export type AccessRequirement =
   | "verifiedOrAdmin";
 /** Backend v2 commands the APIv7 document (the generated rules) lacks. */
 const v2Rules = [
+  ["GET", "/foods/likes", "login"],
   ["PUT", "/foods/{id}/rating", "verified"],
   ["DELETE", "/foods/{id}/rating", "login"],
   ["PUT", "/comments/{id}/reactions/{reaction}", "verifiedOrAdmin"],

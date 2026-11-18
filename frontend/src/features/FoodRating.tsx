@@ -15,6 +15,14 @@ export function ratingText(rating?: DishRating | null) {
   return `${rating.score.toFixed(1)} 分 · ${count} 人评分`;
 }
 
+const SCORE_LABELS: Record<number, string> = {
+  1: "不合口味",
+  2: "一般",
+  3: "还行",
+  4: "推荐",
+  5: "超赞",
+};
+
 /**
  * The dish's average score and the viewer's own 1-5 rating. A like means
  * "I want to eat this"; the rating is the opinion after eating it.
@@ -29,7 +37,8 @@ export function FoodRating({ food }: { food: Food }) {
     { rating, myRating } = food as Food & V2Food;
   if (!id) return null;
   const mine = myRating ?? 0,
-    count = rating?.count ?? 0;
+    count = rating?.count ?? 0,
+    activeScore = hover || mine;
   const send = async (score: number | null) => {
     if (busy) return;
     if (
@@ -63,55 +72,72 @@ export function FoodRating({ food }: { food: Food }) {
   };
   return (
     <section className="food-rating" aria-label="菜品评分">
-      <div className="food-rating-summary">
-        {count && rating?.score != null ? (
-          <>
-            <strong>{rating.score.toFixed(1)}</strong>
-            <span>分 · {count} 人评分</span>
-          </>
-        ) : (
-          <span>还没有人评分</span>
-        )}
-      </div>
-      <div className="food-rating-mine">
-        <div
-          className="food-rating-stars"
-          role="group"
-          aria-label="我的评分"
-          onMouseLeave={() => setHover(0)}
-        >
-          {[1, 2, 3, 4, 5].map((score) => (
-            <button
-              key={score}
-              type="button"
-              className={score <= (hover || mine) ? "is-on" : undefined}
-              aria-label={`打 ${score} 分`}
-              aria-pressed={mine === score}
-              disabled={busy}
-              onMouseEnter={() => setHover(score)}
-              onClick={() => {
-                if (score !== mine) void send(score);
-              }}
-            >
-              <Star size={24} aria-hidden="true" />
-            </button>
-          ))}
+      <div className="food-rating-top">
+        <div className="food-rating-summary">
+          {count && rating?.score != null ? (
+            <>
+              <div className="food-rating-score">
+                <strong>{rating.score.toFixed(1)}</strong>
+                <span>/ 5</span>
+              </div>
+              <div className="food-rating-meta">
+                <span>食友评分</span>
+                <small>{count} 人已评</small>
+              </div>
+            </>
+          ) : (
+            <div className="food-rating-empty">
+              <strong>暂无评分</strong>
+              <span>吃过这道菜？点亮星星打个分</span>
+            </div>
+          )}
         </div>
-        {mine ? (
-          <p>
-            你打了 {mine} 分
-            <button
-              type="button"
-              className="food-rating-undo"
-              disabled={busy}
-              onClick={() => void send(null)}
-            >
-              撤销
-            </button>
-          </p>
-        ) : (
-          <p>吃过这道菜？点星星打个分</p>
-        )}
+        <div className="food-rating-status">
+          {hover ? (
+            <span className="food-rating-hint">
+              {hover} 分 · {SCORE_LABELS[hover]}
+            </span>
+          ) : mine ? (
+            <>
+              <span className="food-rating-mine-badge">
+                已评 {mine} 分 · {SCORE_LABELS[mine]}
+              </span>
+              <button
+                type="button"
+                className="food-rating-undo"
+                disabled={busy}
+                onClick={() => void send(null)}
+              >
+                撤销
+              </button>
+            </>
+          ) : (
+            <span className="food-rating-hint">点击星星评分</span>
+          )}
+        </div>
+      </div>
+      <div
+        className="food-rating-stars"
+        role="group"
+        aria-label="我的评分"
+        onMouseLeave={() => setHover(0)}
+      >
+        {[1, 2, 3, 4, 5].map((score) => (
+          <button
+            key={score}
+            type="button"
+            className={score <= activeScore ? "is-on" : undefined}
+            aria-label={`打 ${score} 分`}
+            aria-pressed={mine === score}
+            disabled={busy}
+            onMouseEnter={() => setHover(score)}
+            onClick={() => {
+              if (score !== mine) void send(score);
+            }}
+          >
+            <Star size={22} strokeWidth={1.85} aria-hidden="true" />
+          </button>
+        ))}
       </div>
     </section>
   );

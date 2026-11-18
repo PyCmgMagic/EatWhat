@@ -238,6 +238,20 @@ function Pictures({
   );
 }
 
+export function defaultVisibleReplies(
+  replyCount: number,
+  contextCount = 2,
+) {
+  if (replyCount <= 0) return 0;
+  if (contextCount <= 1) return replyCount <= 3 ? replyCount : 2;
+  return replyCount <= 2 ? replyCount : 1;
+}
+
+export function fullReplyPreviewLimit(replyCount: number) {
+  if (replyCount <= 0) return 0;
+  return replyCount <= 3 ? replyCount : 2;
+}
+
 function Like({ comment }: { comment: CommentView }) {
   const { api, user, session } = useApp(),
     cache = useQueryClient(),
@@ -259,10 +273,26 @@ function Like({ comment }: { comment: CommentView }) {
     return () => observer.disconnect();
   }, []);
   const key = ["comments", "like", user?.id ?? "guest", comment.id];
+  const initialLiked = comment.isLiked;
   const q = useQuery({
     queryKey: key,
     queryFn: ({ signal }) => api.commentLike(comment.id!, signal),
-    enabled: visible && !!session && !!user && !user.banned && !!comment.id,
+    enabled:
+      visible &&
+      !!session &&
+      !!user &&
+      !user.banned &&
+      !!comment.id &&
+      initialLiked == null,
+    initialData:
+      initialLiked == null || !comment.id
+        ? undefined
+        : {
+            commentId: comment.id,
+            liked: initialLiked === true,
+            likesCount: comment.likesCount ?? 0,
+            authorLikesCount: null,
+          },
     retry: false,
   });
   const task = useCommentCommand<
@@ -280,26 +310,38 @@ function Like({ comment }: { comment: CommentView }) {
     },
   );
   const liked = q.data?.liked === true;
-  const likes = q.data?.likesCount ?? comment.likesCount;
+  const likes = q.data?.likesCount ?? comment.likesCount ?? 0;
+  const toggleLike = async () => {
+    if (!access(false) || !comment.id) return;
+    const nextLiked = !liked;
+    const previous = cache.getQueryData(key);
+    cache.setQueryData(key, {
+      commentId: comment.id,
+      liked: nextLiked,
+      likesCount: Math.max(0, likes + (nextLiked ? 1 : -1)),
+      authorLikesCount: null,
+    });
+    const settled = await task.run(nextLiked);
+    if (!settled) cache.setQueryData(key, previous);
+  };
   return (
     <div ref={ref} className="comments-like">
       <button
         type="button"
-        aria-label={liked ? "取消觉得有用" : "觉得这条评论有用"}
+        aria-label={liked ? "取消点赞" : "点赞"}
         aria-pressed={liked}
-        disabled={task.busy || (!!session && (q.isPending || q.isError))}
-        onClick={() => {
-          if (access(false)) void task.run(!liked);
-        }}
+        disabled={
+          task.busy ||
+          (!!session && initialLiked == null && (q.isPending || q.isError))
+        }
+        onClick={() => void toggleLike()}
       >
-        <Icon name={liked ? "heartOn" : "heart"} size={18} />
-        <span>有用</span>
-        {likes != null && likes > 0 && (
-          <b className="comments-like-count">{likes}</b>
-        )}
+        <Icon name={liked ? "heartOn" : "heart"} size={17} />
+        {likes > 0 && <b className="comments-like-count">{likes}</b>}
       </button>
-      {q.isError && (
+      {q.isError && initialLiked == null && (
         <button
+          type="button"
           onClick={() => void q.refetch()}
           className="comments-retry-like"
         >
@@ -376,11 +418,31 @@ function CommentRow({
   const { api, user } = useApp();
   const [expanded, setExpanded] = useState(false),
     [page, setPage] = useState(1);
+  const knownReplyCount =
+    !nested && typeof comment.replyCount === "number"
+      ? comment.replyCount
+      : null;
+  const defaultLimit =
+    knownReplyCount != null ? fullReplyPreviewLimit(knownReplyCount) : 0;
   const replies = useQuery({
     queryKey: ["comments", "replies", user?.id ?? "guest", comment.id, page],
     queryFn: ({ signal }) => api.commentReplies(comment.id!, page, 20, signal),
-    enabled: expanded && !nested && !!comment.id,
+    enabled: !nested && !!comment.id && (expanded || defaultLimit > 0),
   });
+  const totalReplies = replies.data?.totalItems ?? knownReplyCount;
+  const items = replies.data?.items ?? [];
+  const visibleReplies = expanded
+    ? items
+    : defaultLimit > 0
+      ? items.slice(0, defaultLimit)
+      : [];
+  const hasCollapsedMore =
+    !expanded && totalReplies != null && totalReplies > defaultLimit;
+  const showToggle =
+    !nested &&
+    (knownReplyCount == null
+      ? true
+      : knownReplyCount > defaultLimit || expanded);
   const name = comment.authorName || "匿名用户";
   return (
     <article
@@ -397,7 +459,14 @@ function CommentRow({
             {commentTime(comment.createdAt)}
           </time>
         </div>
-        <p className="comments-text">{comment.text}</p>
+        <p className="comments-text">
+          {nested && comment.replyTo?.displayName && (
+            <span className="comments-reply-target">
+              回复 @{comment.replyTo.displayName}：
+            </span>
+          )}
+          {comment.text}
+        </p>
         <Pictures images={comment.images ?? []} refresh={refresh} />
         <div className="comments-actions">
           <Like comment={comment} />
@@ -410,17 +479,24 @@ function CommentRow({
             <Icon name="comment" size={17} />
             回复
           </button>
-          {!nested && (
+          {showToggle && (
             <button
               type="button"
               aria-expanded={expanded}
-              onClick={() => setExpanded((v) => !v)}
+              onClick={() => {
+                if (expanded) setPage(1);
+                setExpanded((v) => !v);
+              }}
             >
               {expanded
-                ? "收起回复"
-                : replies.data?.totalItems != null
-                  ? `查看回复 ${replies.data.totalItems}`
-                  : "查看回复"}
+                ? defaultLimit > 0
+                  ? "收起更多回复"
+                  : "收起回复"
+                : defaultLimit > 0 && hasCollapsedMore
+                  ? `展开其余 ${totalReplies! - defaultLimit} 条回复`
+                  : totalReplies != null
+                    ? `查看回复 ${totalReplies}`
+                    : "查看回复"}
               <Icon name={expanded ? "chevronUp" : "chevronDown"} size={15} />
             </button>
           )}
@@ -428,11 +504,11 @@ function CommentRow({
         {comment.id != null && comment.reactions && (
           <CommentReactions commentId={comment.id} reactions={comment.reactions} />
         )}
-        {expanded && !nested && (
+        {!nested && (expanded || defaultLimit > 0) && (
           <div className="comments-replies">
             <QueryState query={replies}>
-              {replies.data?.items?.length
-                ? replies.data.items.map((reply) => (
+              {visibleReplies.length
+                ? visibleReplies.map((reply) => (
                     <CommentRow
                       key={reply.id}
                       comment={reply}
@@ -443,15 +519,16 @@ function CommentRow({
                     />
                   ))
                 : !replies.isPending &&
-                  !replies.isError && (
-                    <p className="comments-muted">还没有回复。</p>
-                  )}
-              <Pager
-                page={page}
-                hasNext={replies.data?.hasNext}
-                onChange={setPage}
-                busy={replies.isFetching}
-              />
+                  !replies.isError &&
+                  expanded && <p className="comments-muted">还没有回复。</p>}
+              {expanded && (
+                <Pager
+                  page={page}
+                  hasNext={replies.data?.hasNext}
+                  onChange={setPage}
+                  busy={replies.isFetching}
+                />
+              )}
             </QueryState>
           </div>
         )}
@@ -857,7 +934,7 @@ export function FoodDiscussion({
               <div className="comments-sort" aria-label="评论排序">
                 {(
                   [
-                    ["MOST_USEFUL", "最有用"],
+                    ["MOST_USEFUL", "最热"],
                     ["NEWEST", "最新"],
                   ] as const
                 ).map(([value, label]) => (
@@ -982,6 +1059,60 @@ function Gallery({
   );
 }
 
+function PreviewReplies({
+  foodId,
+  comment,
+  rootCount,
+}: {
+  foodId: number;
+  comment: CommentView;
+  rootCount: number;
+}) {
+  const { api, user } = useApp();
+  const replyCount = comment.replyCount ?? 0;
+  const limit = defaultVisibleReplies(replyCount, rootCount);
+  const q = useQuery({
+    queryKey: ["comments", "replies", user?.id ?? "guest", comment.id, "preview"],
+    queryFn: ({ signal }) => api.commentReplies(comment.id!, 1, 3, signal),
+    enabled: limit > 0 && !!comment.id,
+  });
+  if (limit <= 0) return null;
+  const shown = (q.data?.items ?? []).slice(0, limit);
+  const total = q.data?.totalItems ?? replyCount;
+  if (!shown.length && q.isError) return null;
+  if (!shown.length && !q.isPending) return null;
+  return (
+    <div className="comments-preview-replies">
+      {shown.map((reply) => (
+        <div className="comments-preview-reply" key={reply.id}>
+          <div className="comments-preview-reply-copy">
+            <strong>
+              <CommentAuthor comment={reply} />
+            </strong>
+            <Link className="comments-preview-reply-text" to={commentsHref(foodId)}>
+              {reply.replyTo?.displayName &&
+                reply.replyTo.id !== comment.authorId && (
+                  <span className="comments-reply-target">
+                    回复 @{reply.replyTo.displayName}：
+                  </span>
+                )}
+              {reply.text}
+            </Link>
+          </div>
+          <div className="comments-preview-actions">
+            <Like comment={reply} />
+          </div>
+        </div>
+      ))}
+      {total > shown.length && (
+        <Link className="comments-preview-more-replies" to={commentsHref(foodId)}>
+          查看全部 {total} 条回复 <Icon name="chevronRight" size={14} />
+        </Link>
+      )}
+    </div>
+  );
+}
+
 export function FoodCommentPreview({ foodId }: { foodId: number }) {
   const { api, user } = useApp();
   const q = useQuery({
@@ -989,6 +1120,7 @@ export function FoodCommentPreview({ foodId }: { foodId: number }) {
     queryFn: ({ signal }) =>
       api.foodComments(foodId, "MOST_USEFUL", 1, 2, signal),
   });
+  const items = q.data?.items ?? [];
   return (
     <section className="comments-preview">
       <div className="comments-preview-heading">
@@ -1004,29 +1136,36 @@ export function FoodCommentPreview({ foodId }: { foodId: number }) {
         <ContentSkeleton kind="rows" count={2} />
       ) : q.isError ? (
         <p className="comments-muted">{commentError(q.error)}</p>
-      ) : q.data?.items?.length ? (
-        q.data.items.map((row) => (
-          <div className="comments-preview-row" key={row.id}>
-            <div className="comments-preview-main">
-              <CommentAuthor comment={row} avatar />
-              <div className="comments-preview-body">
-                <strong>
-                  <CommentAuthor comment={row} />
-                </strong>
-                <Link
-                  className="comments-preview-text"
-                  to={commentsHref(foodId)}
-                >
-                  {row.text}
-                </Link>
+      ) : items.length ? (
+        items.map((row) => (
+          <div className="comments-preview-item" key={row.id}>
+            <div className="comments-preview-row">
+              <div className="comments-preview-main">
+                <CommentAuthor comment={row} avatar />
+                <div className="comments-preview-body">
+                  <strong>
+                    <CommentAuthor comment={row} />
+                  </strong>
+                  <Link
+                    className="comments-preview-text"
+                    to={commentsHref(foodId)}
+                  >
+                    {row.text}
+                  </Link>
+                </div>
               </div>
-            </div>
-            <div className="comments-preview-actions">
-              <Like comment={row} />
+              <div className="comments-preview-actions">
+                <Like comment={row} />
+              </div>
             </div>
             {row.id != null && row.reactions && (
               <CommentReactions commentId={row.id} reactions={row.reactions} />
             )}
+            <PreviewReplies
+              foodId={foodId}
+              comment={row}
+              rootCount={items.length}
+            />
           </div>
         ))
       ) : (

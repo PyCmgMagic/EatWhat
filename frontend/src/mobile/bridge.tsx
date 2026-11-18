@@ -9,7 +9,8 @@ import {
   recommendationBatchSize,
 } from "../features/v4/Remote";
 import { useSendSignal } from "../features/useSendSignal";
-import React, { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useFoodReaction } from "../features/food-reactions";
+import React, { useEffect, useRef, useState, type ReactNode } from "react";
 import { validateFoodDraft, normalizedTag } from "../api/content-rules";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -215,7 +216,6 @@ export function useDesignBridge(
   // Latest draft, for callbacks that finish after later edits (photo uploads).
   const draftRef = useRef(m.draft);
   draftRef.current = m.draft;
-  const dishNameId = useId();
   const photoEdit = m.draft.photoEdit;
   const photoOpening = useRef(false);
   const [photoBusy, setPhotoBusy] = useState(false);
@@ -604,6 +604,15 @@ export function useDesignBridge(
       heroWithoutDish && !recommendedShops?.length,
     shopsWithoutDish = heroWithoutDish && !!recommendedShops?.length;
   const liveFood = detail.data;
+  const reactions = useFoodReaction({
+    foodId,
+    food: liveFood,
+    onError: (e) => {
+      setError(errorMessage(e));
+      setDuplicate(duplicateFoodId(e));
+      if (resultUncertain(e)) setUncertain(true);
+    },
+  });
   async function run(fn: () => Promise<unknown>, success?: string) {
     if (busy) return;
     setBusy(true);
@@ -675,8 +684,7 @@ export function useDesignBridge(
     );
   };
   async function toggleFavorite() {
-    if (!liveFood) return;
-    await run(() => api.favorite(foodId, liveFood.isFavorite === true));
+    await reactions.toggle("favorite");
   }
   async function login(mockAccount = false) {
     await run(async () => {
@@ -1160,7 +1168,7 @@ export function useDesignBridge(
       dist: "",
       hub: r.address ?? "",
       tint: "#F4EFEB",
-      img: mediaUrl(r.pictureUrl?.[0]) ?? "/prototype/assets/dishes/yuntun.svg",
+      img: mediaUrl(r.pictureUrl?.[0]) ?? "/assets/restaurants/shop.svg",
       ...qstyle(r.id === m.shopId),
       bg: r.id === m.shopId ? "#FFF0C3" : "#F4EFEB",
       ring: r.id === m.shopId ? "#231C18" : "#D9D0C9",
@@ -2201,19 +2209,13 @@ export function useDesignBridge(
           demo={isDemo}
           sharedAt={relativeTime(liveFood.createdAt)}
           likeDisabled={
-            busy ||
-            (!!session && user?.verified === true && liveFood.isLiked == null)
+            !!session && user?.verified === true && liveFood.isLiked == null
           }
           favoriteDisabled={
-            busy ||
-            (!!session &&
-              user?.verified === true &&
-              liveFood.isFavorite == null)
+            !!session && user?.verified === true && liveFood.isFavorite == null
           }
-          onLike={() => {
-            void run(() => api.like(foodId, liveFood.isLiked === true));
-          }}
-          onFavorite={() => void toggleFavorite()}
+          onLike={() => reactions.toggle("like")}
+          onFavorite={() => reactions.toggle("favorite")}
           onShare={() => void sharing.share(liveFood.name ?? "山软今天吃什么")}
           onTags={() => {
             if (
@@ -2259,6 +2261,7 @@ export function useDesignBridge(
           </div>
         );
       if (id === 3) {
+        p.src = mediaUrl(r.pictureUrl?.[0]) ?? "/assets/restaurants/shop.svg";
         p.className = "mobile-restaurant-art";
         p.style = undefined;
       }
@@ -2280,8 +2283,10 @@ export function useDesignBridge(
             </div>
           </header>
         );
-      if (id === 10)
+      if (id === 10) {
         p.onClick = () => void sharing.share(r.name ?? "山软今天吃什么");
+        p.style = { ...st, background: undefined };
+      }
       if (id === 12) {
         const traits = r as typeof r & V2Shop;
         const facts = [
@@ -2308,7 +2313,10 @@ export function useDesignBridge(
       if (id === 23)
         return (
           <div {...p} className="mobile-restaurant-sheet" style={undefined}>
-            {view.children}
+            {view.children[0]}
+            {view.children[1]}
+            {view.children[3]}
+            {view.children[2]}
           </div>
         );
       if (id === 25)
@@ -2443,11 +2451,18 @@ export function useDesignBridge(
             <DishDuplicateHint restaurantId={shopId} name={m.draft.name} />
           </>
         );
-      if (id === 27)
+      if (id === 40 && !reference)
         return (
-          <div {...p}>
-            <div className="mobile-publish-name-heading">
-              <label htmlFor={dishNameId}>菜名</label>
+          <>
+            <div className="mobile-publish-ai-card">
+              <div className="mobile-publish-ai-copy">
+                <strong>AI 帮填分类与口味</strong>
+                <span>
+                  {m.draft.name.trim()
+                    ? "结合菜名和照片自动匹配，填后可微调"
+                    : "填好上方菜名后，可一键自动识别"}
+                </span>
+              </div>
               <AiTagSuggest
                 compact
                 className="mobile-publish-ai"
@@ -2482,8 +2497,8 @@ export function useDesignBridge(
                 }}
               />
             </div>
-            {view.children.slice(1)}
-          </div>
+            {React.createElement(tag, p, ...view.children)}
+          </>
         );
       if (id === 31)
         p.style = { ...st, display: "flex", alignItems: "center", minHeight: 44 };
@@ -2636,7 +2651,6 @@ export function useDesignBridge(
       if (id === 10 || id === 17) return null;
       if (id === 29) {
         delete p.defaultValue;
-        p.id = dishNameId;
         p.value = m.draft.name;
         p.maxLength = 64;
         p.onChange = (e: any) => m.setDraft({ name: e.target.value });
@@ -2758,6 +2772,52 @@ export function useDesignBridge(
         p.onClick = () => unavailable("消息按类型查询");
     }
     if (screen === "G-PickShop") {
+      if (!reference) {
+        if (id === 1)
+          return (
+            <div
+              {...p}
+              className={`${p.className ?? ""} mobile-pick-shop-screen`}
+              style={undefined}
+            >
+              <div className="mobile-pick-shop-top">
+                {view.children[0]}
+                {view.children[1]}
+                {view.children[2]}
+                {view.children[3]}
+              </div>
+              <div className="mobile-pick-shop-body">
+                {view.children[4]}
+                {view.children[5]}
+              </div>
+              {view.children[6]}
+            </div>
+          );
+        if (id === 2) {
+          p.className = `${p.className ?? ""} mobile-pick-shop-header`;
+          p.style = undefined;
+        }
+        if (id === 8) {
+          p.className = `${p.className ?? ""} mobile-pick-shop-title`;
+          p.style = undefined;
+        }
+        if (id === 9) {
+          p.className = `${p.className ?? ""} mobile-pick-shop-search`;
+          p.style = undefined;
+        }
+        if (id === 13) {
+          p.className = `${p.className ?? ""} mobile-pick-shop-area`;
+          p.style = undefined;
+        }
+        if (id === 27) {
+          p.className = `${p.className ?? ""} mobile-pick-shop-create`;
+          p.style = undefined;
+        }
+        if (id === 29) {
+          p.className = `${p.className ?? ""} mobile-pick-shop-footer`;
+          p.style = undefined;
+        }
+      }
       if (n.attrs.role === "radio") {
         p.className = `${p.className ?? ""} mobile-pick-shop-row`;
         p.style = { ...p.style, height: "auto", padding: "8px 12px 8px 10px" };
@@ -2788,8 +2848,13 @@ export function useDesignBridge(
             <DesignIcon name="chevronRight" size={17} />
           </a>
         );
-      if (id === 15) p.style = { ...p.style, bottom: 168, paddingBottom: 12 };
-      if (id === 27) p.style = { ...p.style, top: "auto", bottom: 108 };
+      if (reference) {
+        if (id === 15) p.style = { ...p.style, bottom: 168, paddingBottom: 12 };
+        if (id === 27) p.style = { ...p.style, top: "auto", bottom: 108 };
+      } else if (id === 15) {
+        p.className = `${p.className ?? ""} mobile-pick-shop-list`;
+        p.style = undefined;
+      }
       if (tag === "span" && clean(text).includes("离你近的排在前面"))
         return <span {...p}>当前查询区域：{area?.name ?? "待选择"}</span>;
       if (tag === "input") {
@@ -2911,6 +2976,13 @@ export function useDesignBridge(
               <span>
                 <strong>收藏夹</strong>
                 <span>收藏的菜和店</span>
+              </span>
+            </Link>
+            <Link to="/likes">
+              <DesignIcon name="heart" size={20} />
+              <span>
+                <strong>赞过的菜</strong>
+                <span>点过赞的菜品</span>
               </span>
             </Link>
             <Link to="/history">

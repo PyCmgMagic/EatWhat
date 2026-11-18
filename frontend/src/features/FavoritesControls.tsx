@@ -27,7 +27,7 @@ export function FavoritesFilters({
   const count =
     Number(food && budgetActive) +
     Number(!!filters.hubId) +
-    Number(!favorites && !!filters.category);
+    Number(!!filters.category);
   const [expanded, setExpanded] = useState(count > 0);
   const panelId = useId();
   return (
@@ -61,7 +61,7 @@ export function FavoritesFilters({
     >
       <div className="favorites-search-row">
         <label className="favorites-search">
-          <Search size={19} aria-hidden="true" />
+          <Search size={17} aria-hidden="true" />
           <input
             name="q"
             aria-label={
@@ -70,27 +70,23 @@ export function FavoritesFilters({
             defaultValue={filters.keyword}
             placeholder={
               favorites
-                ? "搜搜收藏里想吃的菜"
+                ? "搜索收藏菜品…"
                 : food
                   ? "例如：云吞、麻辣香锅"
                   : "输入店铺名称"
             }
             maxLength={64}
           />
+          {favorites && (
+            <button
+              type="submit"
+              className="ew-button favorites-inline-submit"
+              aria-label="搜索收藏"
+            >
+              搜索
+            </button>
+          )}
         </label>
-        {favorites && (
-          <Select
-            name="category"
-            aria-label="菜品分类"
-            defaultValue={filters.category}
-          >
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.id ? category.label : "全部分类"}
-              </option>
-            ))}
-          </Select>
-        )}
         <button
           type="button"
           className="favorites-filter-toggle"
@@ -98,22 +94,24 @@ export function FavoritesFilters({
           aria-controls={panelId}
           onClick={() => setExpanded((value) => !value)}
         >
-          <SlidersHorizontal size={16} aria-hidden="true" />
+          <SlidersHorizontal size={15} aria-hidden="true" />
           筛选{count > 0 && <span>{count}</span>}
         </button>
-        <button className="ew-button favorites-search-submit">搜索</button>
         {!favorites && (
-          <button
-            type="button"
-            className="favorites-reset catalog-reset"
-            onClick={reset}
-          >
-            重置
-          </button>
+          <>
+            <button className="ew-button favorites-search-submit">搜索</button>
+            <button
+              type="button"
+              className="favorites-reset catalog-reset"
+              onClick={reset}
+            >
+              重置
+            </button>
+          </>
         )}
       </div>
       <div className="favorites-advanced" id={panelId} hidden={!expanded}>
-        {!favorites && food && (
+        {food && (
           <label className="catalog-category">
             <span>菜品分类</span>
             <Select
@@ -180,9 +178,14 @@ export function FavoritesFilters({
           </div>
         </div>
         {favorites && (
-          <button type="button" className="favorites-reset" onClick={reset}>
-            重置筛选
-          </button>
+          <div className="favorites-advanced-actions">
+            <button type="button" className="favorites-reset" onClick={reset}>
+              重置筛选
+            </button>
+            <button type="submit" className="ew-button favorites-apply-submit">
+              应用筛选
+            </button>
+          </div>
         )}
       </div>
     </form>

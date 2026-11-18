@@ -8,7 +8,13 @@ import { AppContext, type AppState } from "../../app/state";
 import { createApi } from "../../api/service";
 import { bridgeToV2 } from "../../api/v2-bridge";
 import type { V2Schema } from "../../api/backend-v2";
-import { FoodCommentPreview, FoodDiscussion, MobileComments } from "./Comments";
+import {
+  defaultVisibleReplies,
+  FoodCommentPreview,
+  FoodDiscussion,
+  fullReplyPreviewLimit,
+  MobileComments,
+} from "./Comments";
 
 vi.mock("../../app/runtime", () => ({
   isDemo: false,
@@ -204,4 +210,101 @@ it("keeps preview comment text linked to the dish's discussion", async () => {
   expect(text).toBeTruthy();
   await act(async () => text.click());
   expect(locationText()).toBe("/comments?foodId=71");
+});
+
+it("computes dynamic reply visibility thresholds cleanly", () => {
+  expect(defaultVisibleReplies(0, 1)).toBe(0);
+  expect(defaultVisibleReplies(3, 1)).toBe(3);
+  expect(defaultVisibleReplies(5, 1)).toBe(2);
+  expect(defaultVisibleReplies(2, 2)).toBe(2);
+  expect(defaultVisibleReplies(5, 2)).toBe(1);
+  expect(fullReplyPreviewLimit(0)).toBe(0);
+  expect(fullReplyPreviewLimit(3)).toBe(3);
+  expect(fullReplyPreviewLimit(6)).toBe(2);
+});
+
+it("shows replies by default in preview and discussion without 有用 copy on like buttons", async () => {
+  const api = createApi(
+    bridgeToV2(async (path) => {
+      if (path.endsWith("/comments"))
+        return {
+          code: 0,
+          data: {
+            items: [
+              {
+                id: 8,
+                foodId: 71,
+                rootId: null,
+                author,
+                text: "汤鲜面筋道",
+                likeCount: 2,
+                replyCount: 4,
+                isLiked: true,
+                createdAt: 1794888000000,
+              },
+            ],
+            totalItems: 1,
+            hasNext: false,
+          },
+        };
+      return {
+        code: 0,
+        data: {
+          items: [1, 2, 3, 4].map((n) => ({
+            id: 100 + n,
+            foodId: 71,
+            rootId: 8,
+            author: replyAuthor,
+            replyTo: n === 2 ? author : null,
+            text: `第 ${n} 条回复`,
+            likeCount: 0,
+            isLiked: false,
+            createdAt: 1794888000000 + n * 1000,
+          })),
+          totalItems: 4,
+          hasNext: false,
+        },
+      };
+    }),
+  );
+  const app = { api, session: null, toast: vi.fn() } as unknown as AppState;
+  await act(async () =>
+    root.render(
+      <MemoryRouter initialEntries={["/foods/71"]}>
+        <QueryClientProvider client={cache}>
+          <AppContext.Provider value={app}>
+            <FoodCommentPreview foodId={71} />
+          </AppContext.Provider>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    ),
+  );
+  const waitUntil = async (fn: () => boolean) => {
+    for (let i = 0; i < 40 && !fn(); i++)
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      });
+    expect(fn()).toBe(true);
+  };
+  await waitUntil(() => host.querySelectorAll(".comments-preview-reply").length === 2);
+  expect(host.textContent).not.toContain("有用");
+  expect(host.querySelector(".comments-like button")?.getAttribute("aria-label")).toBe("取消点赞");
+  expect(host.querySelectorAll(".comments-preview-reply")).toHaveLength(2);
+  expect(host.textContent).toContain("查看全部 4 条回复");
+
+  await act(async () =>
+    root.render(
+      <MemoryRouter initialEntries={["/foods/71"]}>
+        <QueryClientProvider client={cache}>
+          <AppContext.Provider value={app}>
+            <FoodDiscussion food={{ id: 71, name: "招牌云吞" }} />
+          </AppContext.Provider>
+        </QueryClientProvider>
+      </MemoryRouter>,
+    ),
+  );
+  await waitUntil(() => host.querySelectorAll(".comments-row.is-reply").length === 2);
+  expect(host.querySelectorAll(".comments-row.is-reply")).toHaveLength(2);
+  expect(host.textContent).toContain("展开其余 2 条回复");
+  expect(host.textContent).toContain("回复 @小山：");
 });

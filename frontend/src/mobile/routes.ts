@@ -206,6 +206,7 @@ const nativeTitles: Record<string, string> = {
   "/help": "帮助与反馈",
   "/restaurants/new/details": "填写店铺信息",
   "/restaurants/favorites": "收藏的店铺",
+  "/likes": "赞过的菜",
   "/restaurants/directory": "店铺目录",
   "/auth/username-register": "手机登录 / 注册",
   "/auth/password-conflict/reset": "恢复登录密码",

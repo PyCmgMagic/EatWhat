@@ -7,7 +7,14 @@ import {
 import type { DishServing } from "../api/service";
 import { Select } from "../components/Select";
 import { foodEditBody } from "../api/content-rules";
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../app/state";
@@ -17,12 +24,19 @@ import {
   categories,
   mediaUrl,
   parseId,
+  type Category,
   type Food,
   type Schema,
 } from "../api/models";
 import { duplicateFoodId, errorMessage, resultUncertain } from "../api/client";
+import { validateFiles } from "../api/validation";
 import { FoodPhotoPicker, type EditableFoodPhoto } from "./FoodPhotoPicker";
-import { MAX_DISH_TAGS, tasteTags, type V2Food } from "../api/v2-vocab";
+import {
+  foodCategories,
+  MAX_DISH_TAGS,
+  tasteTags,
+  type V2Food,
+} from "../api/v2-vocab";
 import { stagePalette, publishDisplay, type Stage } from "../api/food-display";
 import { isDemo } from "../app/runtime";
 import {
@@ -30,12 +44,30 @@ import {
   usePageLifetime,
   useSessionDraft,
 } from "../app/drafts";
+import { Modal } from "../components/ui";
+import DishPhotoPicker from "../mobile/DishPhotoPicker";
+import { DesignIcon as Icon } from "../mobile/ui";
+import "../mobile/tag-panel.css";
 import { FeaturePage, FeatureState } from "./Catalog";
 import "./latest.css";
 import "./edit-food.css";
 import { AiTagSuggest, draftPictureKeys } from "./AiTagSuggest";
 
-export function EditFood() {
+const STAGE_NAMES: Record<Stage, string> = {
+  broth: "暖汤",
+  mango: "芒果",
+  bamboo: "竹色",
+  chili: "辣橙",
+  tomato: "番茄",
+  redoil: "红油",
+  soy: "酱色",
+  porcelain: "瓷蓝",
+  matcha: "抹茶",
+};
+
+const DARK_STAGES = new Set<string>(["#C9442B", "#A8321C", "#8F5B24"]);
+
+export function EditFood({ mobile = false }: { mobile?: boolean }) {
   const { api, session, user } = useApp(),
     loc = useLocation(),
     id = parseId(loc.pathname.match(/^\/foods\/(\d+)\/edit$/)?.[1]),
@@ -49,12 +81,14 @@ export function EditFood() {
   const originPath = origin.split("?")[0];
   const back =
     originPath === detailPath ||
-    ["/me", "/favorites", "/search", "/history"].includes(originPath)
+    ["/me", "/favorites", "/likes", "/search", "/history"].includes(originPath)
       ? origin
       : detailPath;
   const detailReturn = originPath === detailPath ? origin : detailPath;
+  const wrapState = (node: ReactNode) =>
+    mobile ? <div className="ew-mobile-feature">{node}</div> : node;
   if (!session)
-    return (
+    return wrapState(
       <FeaturePage title="编辑菜品">
         <LoginLink
           className="ew-button"
@@ -62,39 +96,51 @@ export function EditFood() {
         >
           登录后编辑
         </LoginLink>
-      </FeaturePage>
+      </FeaturePage>,
     );
   if (!user?.verified || user.banned)
-    return (
+    return wrapState(
       <FeaturePage title="编辑菜品">
         <FeatureState empty="完成学生认证后，可以修改菜品" />
         <Link className="ew-button" to="/verify">
           查看认证状态
         </Link>
-      </FeaturePage>
+      </FeaturePage>,
     );
   if (!id)
-    return (
+    return wrapState(
       <FeaturePage title="编辑菜品">
         <FeatureState empty="菜品编号无效" />
-      </FeaturePage>
+      </FeaturePage>,
     );
-  return (
-    <FeaturePage title="编辑这道菜" back={back}>
-      {q.isPending || q.isError ? (
+  if (q.isPending || q.isError)
+    return wrapState(
+      <FeaturePage title="编辑这道菜" back={back}>
         <FeatureState
           loading={q.isPending}
           error={q.error}
           retry={() => void q.refetch()}
         />
-      ) : (
-        <EditForm
-          key={id}
-          food={q.data}
-          back={back}
-          detailReturn={detailReturn}
-        />
-      )}
+      </FeaturePage>,
+    );
+  if (mobile)
+    return (
+      <EditForm
+        key={id}
+        food={q.data}
+        back={back}
+        detailReturn={detailReturn}
+        mobile
+      />
+    );
+  return (
+    <FeaturePage title="编辑这道菜" back={back}>
+      <EditForm
+        key={id}
+        food={q.data}
+        back={back}
+        detailReturn={detailReturn}
+      />
     </FeaturePage>
   );
 }
@@ -102,18 +148,23 @@ function EditForm({
   food,
   back,
   detailReturn,
+  mobile = false,
 }: {
   food: Food;
   back: string;
   detailReturn: string;
+  mobile?: boolean;
 }) {
   const { api, uploadMany, toast, user } = useApp(),
     nav = useNavigate(),
     cache = useQueryClient(),
     locked = useRef(false),
+    mobileFiles = useRef<HTMLInputElement>(null),
+    nameId = useId(),
     [duplicate, setDuplicate] = useState<number>(),
     [busy, setBusy] = useState(false),
     [uncertain, setUncertain] = useState(false),
+    [previewPhoto, setPreviewPhoto] = useState<number | null>(null),
     [error, setError] = useFeedbackState();
   const active = usePageLifetime();
   const draftKey = `food:${user?.id}:${food.id}:v2s`;
@@ -188,132 +239,442 @@ function EditForm({
     window.addEventListener("beforeunload", leave);
     return () => window.removeEventListener("beforeunload", leave);
   }, [dirty]);
-  return (
-    <form
-      className="ew-edit ew-edit-form"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        if (locked.current || uncertain) return;
-        locked.current = true;
-        setBusy(true);
-        setError("");
-        try {
-          if (!name.trim()) throw new Error("请填写菜名。");
-          if (food.price != null && price === "")
-            throw new Error("价格不能为空，请填写有效价格。");
-          const body: Omit<Schema["EditFoodDTORequest"], "mealTimes"> & {
-            systemTagIds?: number[];
-            signature?: boolean;
-          } & DishServing = {
-            name: name.trim(),
-            description:
-              description !== (food.description ?? "")
-                ? description
-                : undefined,
-            category:
-              category && category !== food.category ? category : undefined,
-            price: price === "" ? undefined : Number(price),
-            systemTagIds: tagsChanged
-              ? tags.map((tag) => tasteTags.indexOf(tag) + 1)
-              : undefined,
-            signature: signatureChanged ? signature : undefined,
-            mealTimes: mealTimesChanged ? serving.mealTimes : undefined,
-            deliveryEnabled: deliveryChanged
-              ? serving.deliveryEnabled
-              : undefined,
-          };
-          // v2 saves the stage colour together with its two alternates.
-          if (stageChanged && stage) {
-            const palette = publishDisplay(
-              stagePalette[stage],
-              food.stageAlternates?.map((x) => stagePalette[x]),
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (locked.current || uncertain) return;
+    locked.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      if (!name.trim()) throw new Error("请填写菜名。");
+      if (food.price != null && price === "")
+        throw new Error("价格不能为空，请填写有效价格。");
+      const body: Omit<Schema["EditFoodDTORequest"], "mealTimes"> & {
+        systemTagIds?: number[];
+        signature?: boolean;
+      } & DishServing = {
+        name: name.trim(),
+        description:
+          description !== (food.description ?? "") ? description : undefined,
+        category:
+          category && category !== food.category ? category : undefined,
+        price: price === "" ? undefined : Number(price),
+        systemTagIds: tagsChanged
+          ? tags.map((tag) => tasteTags.indexOf(tag) + 1)
+          : undefined,
+        signature: signatureChanged ? signature : undefined,
+        mealTimes: mealTimesChanged ? serving.mealTimes : undefined,
+        deliveryEnabled: deliveryChanged
+          ? serving.deliveryEnabled
+          : undefined,
+      };
+      // v2 saves the stage colour together with its two alternates.
+      if (stageChanged && stage) {
+        const palette = publishDisplay(
+          stagePalette[stage],
+          food.stageAlternates?.map((x) => stagePalette[x]),
+        );
+        body.stageColor = palette.stageColor;
+        body.stageAlternates = palette.stageAlternates;
+      }
+      if (photosChanged) {
+        if (!photos.length) throw new Error("至少保留一张照片。");
+        const next = [...photos];
+        const pending = next
+          .map((photo, index) => ({ photo, index }))
+          .filter(({ photo }) => photo.file && !photo.key);
+        if (pending.length)
+          await uploadMany(
+            pending.map(({ photo }) => photo.file!),
+            "foods",
+            (index, key) => {
+              const original = pending[index].index;
+              next[original] = { ...next[original], key };
+              setPhotos([...next]);
+            },
+          );
+        for (let i = 0; i < next.length; i++) {
+          if (
+            !next[i].key ||
+            (!isDemo && !next[i].key!.startsWith("foods/"))
+          )
+            throw new Error(
+              "历史图片暂时不能直接改写，请保留原图片，或移除后重新上传替换。",
             );
-            body.stageColor = palette.stageColor;
-            body.stageAlternates = palette.stageAlternates;
-          }
-          if (photosChanged) {
-            if (!photos.length) throw new Error("至少保留一张照片。");
-            const next = [...photos];
-            const pending = next
-              .map((photo, index) => ({ photo, index }))
-              .filter(({ photo }) => photo.file && !photo.key);
-            if (pending.length)
-              await uploadMany(
-                pending.map(({ photo }) => photo.file!),
-                "foods",
-                (index, key) => {
-                  const original = pending[index].index;
-                  next[original] = { ...next[original], key };
-                  setPhotos([...next]);
-                },
-              );
-            for (let i = 0; i < next.length; i++) {
-              if (
-                !next[i].key ||
-                (!isDemo && !next[i].key!.startsWith("foods/"))
-              )
-                throw new Error(
-                  "历史图片暂时不能直接改写，请保留原图片，或移除后重新上传替换。",
-                );
-            }
-            body.pictureUrl = next.map((p) => p.key!);
-            // Adding or removing secondary photos must not recrop the cover.
-            if (next[0].key !== food.pictureKeys?.[0])
-              body.coverCrop = { centerX: 0.5, centerY: 0.5, diameter: 1 };
-          }
-          await api.editMyFood(food.id!, foodEditBody(food, body));
-          clearFields();
-          clearPhotos();
-          photos.forEach((p) => {
-            if (p.url.startsWith("blob:")) URL.revokeObjectURL(p.url);
-          });
-          await cache.invalidateQueries({ queryKey: ["foods"] });
-          // Backend v2 publishes edits at once (the revision id is only the
-          // edit-history entry), so go back to the dish.
-          toast("菜品已更新");
-          if (active.current) nav(detailReturn);
-        } catch (err) {
-          setError(errorMessage(err));
-          setDuplicate(duplicateFoodId(err));
-          if (resultUncertain(err)) setUncertain(true);
-        } finally {
-          locked.current = false;
-          setBusy(false);
         }
-      }}
-    >
+        body.pictureUrl = next.map((p) => p.key!);
+        // Adding or removing secondary photos must not recrop the cover.
+        if (next[0].key !== food.pictureKeys?.[0])
+          body.coverCrop = { centerX: 0.5, centerY: 0.5, diameter: 1 };
+      }
+      await api.editMyFood(food.id!, foodEditBody(food, body));
+      clearFields();
+      clearPhotos();
+      photos.forEach((p) => {
+        if (p.url.startsWith("blob:")) URL.revokeObjectURL(p.url);
+      });
+      await cache.invalidateQueries({ queryKey: ["foods"] });
+      // Backend v2 publishes edits at once (the revision id is only the
+      // edit-history entry), so go back to the dish.
+      toast("菜品已更新");
+      if (active.current) nav(detailReturn);
+    } catch (err) {
+      const msg = errorMessage(err);
+      setError(msg);
+      if (mobile) toast(msg, { tone: "error" });
+      setDuplicate(duplicateFoodId(err));
+      if (resultUncertain(err)) setUncertain(true);
+    } finally {
+      locked.current = false;
+      setBusy(false);
+    }
+  };
+  const addFiles = (files: File[]) => {
+    if (locked.current || uncertain) return;
+    setPhotoDraft((current) => ({
+      photos: [
+        ...current.photos,
+        ...files.map((file) => ({
+          url: URL.createObjectURL(file),
+          file,
+        })),
+      ],
+      changed: true,
+    }));
+    setError("");
+  };
+  const removePhoto = (index: number) => {
+    if (locked.current || uncertain) return;
+    const removed = photos[index];
+    if (removed?.url.startsWith("blob:")) URL.revokeObjectURL(removed.url);
+    setPhotoDraft((current) => ({
+      photos: current.photos.filter((_, i) => i !== index),
+      changed: true,
+    }));
+  };
+  const movePhoto = (source: string, target: string) => {
+    if (locked.current || uncertain) return;
+    setPhotoDraft((current) => {
+      const next = [...current.photos];
+      const from = next.findIndex((item) => item.url === source);
+      const to = next.findIndex((item) => item.url === target);
+      if (from < 0 || to < 0 || from === to) return current;
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return { photos: next, changed: true };
+    });
+  };
+  const aiPictures = () =>
+    draftPictureKeys(photos, uploadMany, (keys) =>
+      setPhotoDraft((d) => ({
+        ...d,
+        photos: d.photos.map((photo) =>
+          !photo.key && photo.file && keys.has(photo.file)
+            ? { ...photo, key: keys.get(photo.file) }
+            : photo,
+        ),
+      })),
+    );
+  const aiCurrent = {
+    category,
+    tagIds: tags.map((tag) => tasteTags.indexOf(tag) + 1),
+  };
+  const aiOptions = tasteTags.map((tag, i) => ({ id: i + 1, name: tag }));
+  const applyAi = (next: Category | undefined, tagIds: number[]) =>
+    updateFields({
+      ...(next ? { category: next } : {}),
+      ...(tagIds.length
+        ? { tags: tagIds.map((id) => tasteTags[id - 1]) }
+        : {}),
+    });
+
+  if (mobile) {
+    const activeStage = stagePalette[stage ?? "broth"];
+    const darkStage = DARK_STAGES.has(activeStage);
+    const cover = photos[0];
+    const toggleTaste = (tag: string) =>
+      updateFields({
+        tags: tags.includes(tag)
+          ? tags.filter((x) => x !== tag)
+          : tags.length < MAX_DISH_TAGS
+            ? [...tags, tag]
+            : tags,
+      });
+    return (
+      <form className="mobile-edit-dish" onSubmit={handleSubmit}>
+        <div
+          className={`mobile-edit-stage${darkStage ? " is-dark" : ""}`}
+          style={{ background: activeStage }}
+        >
+          {cover ? (
+            <img
+              className="mobile-edit-cover"
+              src={cover.url}
+              alt={name || "菜品封面"}
+            />
+          ) : (
+            <button
+              type="button"
+              className="mobile-edit-cover is-empty"
+              disabled={busy || uncertain}
+              onClick={() => mobileFiles.current?.click()}
+            >
+              <Icon name="camera" size={28} />
+              加一张照片
+            </button>
+          )}
+          <header className="mobile-edit-topbar">
+            <Link to={back} aria-label="返回">
+              <Icon name="back" size={24} />
+            </Link>
+            <h1>编辑菜品</h1>
+            <span aria-hidden="true" />
+          </header>
+          <div className="mobile-edit-stage-picker">
+            <span>舞台色</span>
+            <div role="radiogroup" aria-label="舞台色">
+              {(Object.entries(stagePalette) as [Stage, string][]).map(
+                ([key, color]) => {
+                  const selected = stage === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={STAGE_NAMES[key]}
+                      title={STAGE_NAMES[key]}
+                      disabled={busy || uncertain}
+                      className={selected ? "is-selected" : undefined}
+                      style={{ background: color }}
+                      onClick={() => updateFields({ stage: key })}
+                    />
+                  );
+                },
+              )}
+            </div>
+          </div>
+        </div>
+
+        <fieldset
+          className="mobile-edit-sheet"
+          disabled={busy || uncertain}
+        >
+          <span className="mobile-edit-handle" aria-hidden="true" />
+          <div className="mobile-publish-destination">
+            <div className="mobile-publish-destination-label">
+              <span>所属店铺</span>
+              <div>
+                <strong>{food.restaurantName || "所属餐厅"}</strong>
+              </div>
+            </div>
+            {food.restaurantId && (
+              <Link to={`/restaurants/${food.restaurantId}`}>查看店铺</Link>
+            )}
+          </div>
+
+          <div className="mobile-edit-headline">
+            <div className="mobile-edit-name-col">
+              <div className="mobile-publish-name-heading">
+                <label htmlFor={nameId}>菜名</label>
+                <AiTagSuggest
+                  compact
+                  className="mobile-publish-ai"
+                  foodId={food.id ?? undefined}
+                  restaurantId={food.restaurantId}
+                  name={name}
+                  description={description}
+                  tagOptions={aiOptions}
+                  pictures={aiPictures}
+                  current={aiCurrent}
+                  disabled={busy || uncertain}
+                  onApply={applyAi}
+                />
+              </div>
+              <input
+                id={nameId}
+                className="mobile-edit-name-input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="菜品名称"
+                maxLength={64}
+                required
+              />
+            </div>
+            <label className="mobile-edit-price-col">
+              <span>价格</span>
+              <span className="mobile-edit-price-box">
+                <span>¥</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  inputMode="decimal"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  placeholder="选填"
+                />
+              </span>
+            </label>
+          </div>
+
+          <input
+            ref={mobileFiles}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            hidden
+            onChange={(e) => {
+              const files = Array.from(e.currentTarget.files ?? []);
+              e.currentTarget.value = "";
+              if (!files.length) return;
+              try {
+                validateFiles(files, photos.length);
+                addFiles(files);
+              } catch (err) {
+                const msg = errorMessage(err);
+                setError(msg);
+                toast(msg, { tone: "error" });
+              }
+            }}
+          />
+          <DishPhotoPicker
+            images={photos}
+            disabled={busy || uncertain}
+            onAdd={() => mobileFiles.current?.click()}
+            onEdit={(index) => setPreviewPhoto(index)}
+            onMove={movePhoto}
+            onRemove={removePhoto}
+          />
+
+          <label className="mobile-edit-desc">
+            <span>
+              推荐理由
+              <small>{description.length} 字</small>
+            </span>
+            <textarea
+              value={description}
+              rows={3}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="说说这道菜的味道、分量或点单建议（选填）"
+            />
+          </label>
+
+          <fieldset className="mobile-edit-cats">
+            <legend>分类</legend>
+            <div role="radiogroup" aria-label="分类">
+              {foodCategories.map((c) => {
+                const on = category === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    onClick={() => setCategory(c.id)}
+                  >
+                    {c.name}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+
+          <div className="mobile-publish-tag-groups">
+            <fieldset className="mobile-publish-tags">
+              <legend>口味，最多 {MAX_DISH_TAGS} 个，可选</legend>
+              <div>
+                {tasteTags.map((tag) => {
+                  const on = tags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      aria-pressed={on}
+                      disabled={!on && tags.length >= MAX_DISH_TAGS}
+                      onClick={() => toggleTaste(tag)}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+            <fieldset className="mobile-publish-tags">
+              <legend>招牌菜</legend>
+              <div>
+                <button
+                  type="button"
+                  aria-pressed={signature}
+                  onClick={() => updateFields({ signature: !signature })}
+                >
+                  这是这家店的招牌
+                </button>
+              </div>
+            </fieldset>
+            <DishAvailabilityFields
+              variant="chips"
+              value={serving}
+              disabled={busy || uncertain}
+              onChange={(serving) => updateFields({ serving })}
+            />
+          </div>
+
+          {error && (
+            <p className="ew-error mobile-edit-error" role="alert">
+              {error}
+            </p>
+          )}
+          {duplicate && (
+            <Link className="mobile-edit-duplicate" to={`/foods/${duplicate}`}>
+              查看已有菜品（当前修改仍保留） →
+            </Link>
+          )}
+          {uncertain && (
+            <p className="ew-error mobile-edit-error" role="alert">
+              保存结果尚未确认，请返回详情核实后再继续。
+            </p>
+          )}
+        </fieldset>
+
+        <footer className="mobile-edit-bar">
+          <button
+            type="submit"
+            disabled={busy || uncertain || !dirty}
+          >
+            {busy ? "正在保存…" : "保存修改"}
+          </button>
+        </footer>
+
+        {previewPhoto !== null && photos[previewPhoto] && (
+          <Modal
+            title={`第 ${previewPhoto + 1} 张照片${previewPhoto === 0 ? "（封面）" : ""}`}
+            onClose={() => setPreviewPhoto(null)}
+          >
+            <div className="food-photo-modal">
+              <img
+                src={photos[previewPhoto].url}
+                alt={`菜品照片 ${previewPhoto + 1}`}
+              />
+            </div>
+          </Modal>
+        )}
+      </form>
+    );
+  }
+
+  return (
+    <form className="ew-edit ew-edit-form" onSubmit={handleSubmit}>
       <fieldset disabled={busy || uncertain}>
         <div className="ew-edit-columns">
           <section className="ew-edit-col">
             <div className="ew-edit-card" data-card="photos">
               <FoodPhotoPicker
-              photos={photos}
-              disabled={busy || uncertain}
-              onAdd={(files) => {
-                if (locked.current || uncertain) return;
-                setPhotoDraft((current) => ({
-                  photos: [
-                    ...current.photos,
-                    ...files.map((file) => ({
-                      url: URL.createObjectURL(file),
-                      file,
-                    })),
-                  ],
-                  changed: true,
-                }));
-                setError("");
-              }}
-              onRemove={(index) => {
-                if (locked.current || uncertain) return;
-                const removed = photos[index];
-                if (removed?.url.startsWith("blob:"))
-                  URL.revokeObjectURL(removed.url);
-                setPhotoDraft((current) => ({
-                  photos: current.photos.filter((_, i) => i !== index),
-                  changed: true,
-                }));
-              }}
-            />
+                photos={photos}
+                disabled={busy || uncertain}
+                onAdd={addFiles}
+                onRemove={removePhoto}
+              />
             <label>
               舞台色
               <Select
@@ -325,21 +686,7 @@ function EditForm({
                 {!food.stageColor && <option value="">分类默认色</option>}
                 {Object.entries(stagePalette).map(([key, color]) => (
                   <option key={key} value={key} data-color={color}>
-                    {
-                      (
-                        {
-                          broth: "暖汤",
-                          mango: "芒果",
-                          bamboo: "竹色",
-                          chili: "辣橙",
-                          tomato: "番茄",
-                          redoil: "红油",
-                          soy: "酱色",
-                          porcelain: "瓷蓝",
-                          matcha: "抹茶",
-                        } as Record<string, string>
-                      )[key]
-                    }
+                    {STAGE_NAMES[key as Stage]}
                   </option>
                 ))}
               </Select>
@@ -454,37 +801,21 @@ function EditForm({
               restaurantId={food.restaurantId}
               name={name}
               description={description}
-              tagOptions={tasteTags.map((tag, i) => ({ id: i + 1, name: tag }))}
-              pictures={() =>
-                draftPictureKeys(photos, uploadMany, (keys) =>
-                  setPhotoDraft((d) => ({
-                    ...d,
-                    photos: d.photos.map((photo) =>
-                      !photo.key && photo.file && keys.has(photo.file)
-                        ? { ...photo, key: keys.get(photo.file) }
-                        : photo,
-                    ),
-                  })),
-                )
-              }
-              current={{
-                category,
-                tagIds: tags.map((tag) => tasteTags.indexOf(tag) + 1),
-              }}
+              tagOptions={aiOptions}
+              pictures={aiPictures}
+              current={aiCurrent}
               disabled={busy || uncertain}
-              onApply={(next, tagIds) =>
-                updateFields({
-                  ...(next ? { category: next } : {}),
-                  ...(tagIds.length
-                    ? { tags: tagIds.map((id) => tasteTags[id - 1]) }
-                    : {}),
-                })
-              }
+              onApply={applyAi}
             />
             </div>
           </section>
         </div>
       </fieldset>
+      {error && (
+        <p className="ew-error" role="alert">
+          {error}
+        </p>
+      )}
       {duplicate && (
         <Link to={`/foods/${duplicate}`}>查看已有菜品（当前修改仍保留） →</Link>
       )}

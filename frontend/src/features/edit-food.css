@@ -281,7 +281,356 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ew-edit .ew-meals label {
+  .ew-edit .ew-meals label,
+  .mobile-edit-stage,
+  .mobile-edit-stage-picker button,
+  .mobile-edit-cats button {
     transition: none;
+  }
+}
+
+/* 移动端编辑菜品：对齐发布页（G-AddDish）的舞台 + 上滑白卡 + 药丸标签视觉语言 */
+.mobile-edit-dish {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: #fff;
+  color: #231c18;
+  font-family:
+    "Noto Sans SC Variable", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+.mobile-edit-stage {
+  position: relative;
+  height: 280px;
+  overflow: hidden;
+  transition: background-color 220ms ease;
+}
+.mobile-edit-stage.is-dark {
+  color: #fff;
+}
+.mobile-edit-topbar {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  padding: max(14px, env(safe-area-inset-top)) 16px 0 8px;
+}
+.mobile-edit-topbar > a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: inherit;
+  text-decoration: none;
+}
+.mobile-edit-topbar > h1 {
+  margin: 0;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.mobile-edit-cover {
+  position: absolute;
+  top: 64px;
+  right: 18px;
+  width: 172px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  transform: rotate(-6deg);
+}
+img.mobile-edit-cover {
+  object-fit: cover;
+  box-shadow:
+    0 0 0 4px #fff,
+    0 8px 20px rgb(35 28 24 / 18%);
+}
+.mobile-edit-cover.is-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0;
+  border: 2px dashed currentColor;
+  background: rgb(255 255 255 / 22%);
+  color: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mobile-edit-stage-picker {
+  position: absolute;
+  left: 20px;
+  bottom: 42px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: calc(100% - 208px);
+}
+.mobile-edit-stage-picker > span {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.84;
+}
+.mobile-edit-stage-picker > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mobile-edit-stage-picker button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid rgb(255 255 255 / 88%);
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgb(35 28 24 / 18%);
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    box-shadow 140ms ease;
+}
+.mobile-edit-stage-picker button.is-selected {
+  transform: scale(1.16);
+  box-shadow:
+    0 0 0 2px #231c18,
+    0 3px 8px rgb(35 28 24 / 24%);
+}
+.mobile-edit-stage.is-dark .mobile-edit-stage-picker button.is-selected {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 3px 8px rgb(35 28 24 / 30%);
+}
+.mobile-edit-sheet {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  margin: -28px 0 0;
+  padding: 10px 20px calc(116px + env(safe-area-inset-bottom));
+  border: 0;
+  border-radius: 28px 28px 0 0;
+  background: #fff;
+}
+.mobile-edit-handle {
+  align-self: center;
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: #e6ded8;
+}
+.mobile-edit-headline {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+.mobile-edit-name-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mobile-edit-name-input {
+  width: 100%;
+  min-width: 0;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1.5px solid #e6ded8;
+  background: transparent;
+  color: #231c18;
+  font: inherit;
+  font-size: 22px;
+  font-weight: 900;
+}
+.mobile-edit-price-col {
+  flex: 0 0 104px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mobile-edit-price-col > span:first-child {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 13px;
+  color: #6e625b;
+}
+.mobile-edit-price-box {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 40px;
+  border-bottom: 1.5px solid #e6ded8;
+}
+.mobile-edit-price-box > span {
+  font-family: "Bricolage Grotesque Variable", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+.mobile-edit-price-box > input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #231c18;
+  font-family: "Bricolage Grotesque Variable", sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+.mobile-edit-name-input:focus-visible,
+.mobile-edit-price-box > input:focus-visible {
+  outline: none;
+}
+.mobile-edit-name-input:focus-visible {
+  border-bottom-color: #231c18;
+}
+.mobile-edit-price-box:focus-within {
+  border-bottom-color: #231c18;
+}
+.mobile-edit-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mobile-edit-desc > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #6e625b;
+}
+.mobile-edit-desc small {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: #8a7d74;
+}
+.mobile-edit-desc textarea {
+  width: 100%;
+  min-height: 88px;
+  padding: 12px 14px;
+  border: 1px solid #ebe3dc;
+  border-radius: 14px;
+  background: #faf8f5;
+  color: #231c18;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.65;
+  resize: vertical;
+}
+.mobile-edit-desc textarea:focus-visible {
+  outline: 2px solid #231c18;
+  outline-offset: 1px;
+  background: #fff;
+}
+.mobile-edit-cats {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.mobile-edit-cats legend {
+  padding: 0;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #6e625b;
+}
+.mobile-edit-cats > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mobile-edit-cats button {
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 18px;
+  background: #f4efeb;
+  color: #231c18;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+.mobile-edit-cats button[aria-checked="true"] {
+  background: #231c18;
+  color: #fff;
+  font-weight: 600;
+}
+.mobile-edit-duplicate {
+  font-size: 13px;
+  font-weight: 600;
+  color: #a8321c;
+}
+.mobile-edit-error {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #fdeee8;
+  color: #a8321c;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.mobile-edit-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 6;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 520px;
+  box-sizing: border-box;
+  padding: 12px 20px max(24px, env(safe-area-inset-bottom));
+  background: #fff;
+  box-shadow: 0 -1px 0 #efe9e4;
+}
+.mobile-edit-bar button {
+  width: 100%;
+  height: 52px;
+  border: 0;
+  border-radius: 26px;
+  background: linear-gradient(180deg, #3b312b, #231c18);
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 16%),
+    inset 0 -2px 0 rgb(0 0 0 / 28%),
+    0 1px 2px rgb(35 28 24 / 20%),
+    0 6px 14px rgb(35 28 24 / 16%);
+}
+.mobile-edit-bar button:disabled {
+  background: #e6ded8;
+  color: #8a7d74;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.mobile-edit-dish :is(a, button):focus-visible {
+  outline: 2px solid #231c18;
+  outline-offset: 2px;
+}
+@media (max-width: 379px) {
+  .mobile-edit-cover {
+    width: 144px;
+    top: 72px;
+    right: 14px;
+  }
+  .mobile-edit-stage-picker {
+    max-width: calc(100% - 178px);
   }
 }

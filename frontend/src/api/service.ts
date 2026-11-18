@@ -5,7 +5,7 @@ import { compressImage } from "./image-compression";
 import type { Revision } from "../features/v4/EditHistory";
 export type RestaurantFilters = NonNullable<
   operations["RestaurantController_browseRestaurants_get"]["parameters"]["query"]
->;
+> & { kind?: string };
 import type { CaptchaRunner } from "./captcha";
 import type { FoodRated } from "./v2-vocab";
 import type { components as V2 } from "./backend-v2-schema";
@@ -61,6 +61,8 @@ export type RecommendFilters = {
   gcjLat?: number;
   /** v2 scene: dine_in (default) or delivery. */
   scene?: "dine_in" | "delivery";
+  /** v2 shop kind: food, drink, or buffet. */
+  kind?: string;
   category?: string;
   size?: number;
   deviceId?: string;
@@ -419,6 +421,10 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
     favorites: (page = 1, filters?: FoodFilters) =>
       data<Page<Food>>("/foods/favorites", {
         query: { page, pageSize: 12, ...filters },
+      }),
+    likedFoods: (page = 1) =>
+      data<Page<Food>>("/foods/likes", {
+        query: { page, pageSize: 12 },
       }),
     like: (id: number, liked: boolean) =>
       post(`/foods/${id}/${liked ? "unlike" : "like"}`),

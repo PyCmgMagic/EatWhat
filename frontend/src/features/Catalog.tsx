@@ -138,12 +138,13 @@ export function FoodManage({
     <div className={inMenu ? "pc-dish-owner-actions" : "ew-food-manage"}>
       {canEdit && (
         <Link to={`/foods/${food.id}/edit`}>
-          {inMenu && <Icon name="edit" size={16} />}
+          <Icon name="edit" size={inMenu ? 16 : 13} />
           编辑菜品
         </Link>
       )}
       {canDelete && (
         <button
+          type="button"
           onClick={() => {
             if (access(true))
               m.confirm(
@@ -165,16 +166,46 @@ export function FoodManage({
               );
           }}
         >
-          {inMenu && <Icon name="delete" size={16} />}
+          <Icon name="delete" size={inMenu ? 16 : 13} />
           {inMenu ? "删除菜品" : "删除"}
         </button>
       )}
     </div>
   );
 }
-function CollectionAction({ food }: { food: Food }) {
+const CARD_ACTIONS = {
+  favorite: {
+    done: "已取消收藏",
+    icon: "bookmarkOn",
+    status: "已收藏",
+    button: "取消收藏",
+    pending: "正在取消…",
+    ariaPrefix: "取消收藏",
+    run: (api: ReturnType<typeof useApp>["api"], id: number) =>
+      api.favorite(id, true),
+  },
+  like: {
+    done: "已取消点赞",
+    icon: "heart",
+    status: "已点赞",
+    button: "取消点赞",
+    pending: "正在取消…",
+    ariaPrefix: "取消点赞",
+    run: (api: ReturnType<typeof useApp>["api"], id: number) =>
+      api.like(id, true),
+  },
+} as const;
+
+function FoodCardAction({
+  food,
+  kind,
+}: {
+  food: Food;
+  kind: keyof typeof CARD_ACTIONS;
+}) {
   const { api } = useApp();
-  const task = useTask("已取消收藏", undefined, [
+  const copy = CARD_ACTIONS[kind];
+  const task = useTask(copy.done, undefined, [
     "foods",
     "food-tags",
     "my-tags",
@@ -182,18 +213,18 @@ function CollectionAction({ food }: { food: Food }) {
   return (
     <div className="favorites-card-actions">
       <span>
-        <Icon name="bookmarkOn" size={15} />
-        已收藏
+        <Icon name={copy.icon} size={15} />
+        {copy.status}
       </span>
       <button
         type="button"
         disabled={task.isPending || !food.id}
-        aria-label={`取消收藏${food.name ?? "这道菜"}`}
+        aria-label={`${copy.ariaPrefix}${food.name ?? "这道菜"}`}
         onClick={() => {
-          if (food.id) task.run(() => api.favorite(food.id!, true));
+          if (food.id) task.run(() => copy.run(api, food.id!));
         }}
       >
-        {task.isPending ? "正在取消…" : "取消收藏"}
+        {task.isPending ? copy.pending : copy.button}
       </button>
     </div>
   );
@@ -201,16 +232,19 @@ function CollectionAction({ food }: { food: Food }) {
 export function CatalogCard({
   food,
   collection = false,
+  actionKind,
   actions,
 }: {
   food: Food;
   collection?: boolean;
+  actionKind?: keyof typeof CARD_ACTIONS;
   /** 三态：undefined 保持原行为；true 展示管理操作（管理员「管理」模式）；false 只读。 */
   actions?: boolean;
 }) {
   const v = visualFor(food, isDemo),
     src = mediaUrl(food.pictureUrl?.[0]);
   const photo = useFoodPhoto(src);
+  const cardAction = actionKind ?? (collection ? "favorite" : undefined);
   return (
     <article className="ew-food-card">
       <Link to={`/foods/${food.id}`}>
@@ -241,8 +275,8 @@ export function CatalogCard({
           <span>♡ {food.likesCount ?? "—"}</span>
         </p>
       </Link>
-      {collection ? (
-        <CollectionAction food={food} />
+      {cardAction ? (
+        <FoodCardAction food={food} kind={cardAction} />
       ) : actions === false ? null : (
         <FoodManage food={food} anyone={actions === true} />
       )}
@@ -332,6 +366,10 @@ export function Catalog({ favorites = false }: { favorites?: boolean }) {
         : new URLSearchParams(),
     );
   }
+  const showTagFilter =
+    favorites &&
+    !!user?.verified &&
+    ((tags.data?.items?.length ?? 0) > 0 || !!tag || tags.isError);
   if (favorites && !session) return <AccessWelcome />;
   return (
     <div className={`ew-feature${favorites ? " ew-favorites" : " ew-catalog"}`}>
@@ -386,7 +424,7 @@ export function Catalog({ favorites = false }: { favorites?: boolean }) {
         />
       )}
       <div className={favorites ? "favorites-library-bar" : undefined}>
-        {favorites && !!user?.verified && (
+        {showTagFilter && (
           <div className="ew-tag-filter">
             <button
               aria-pressed={!tag}
@@ -448,6 +486,16 @@ export function Catalog({ favorites = false }: { favorites?: boolean }) {
                   ? ""
                   : "查询结果"
                 : `${q.data.totalItems} ${mode === "food" ? "道菜" : "家店"}`}
+            {favorites && filtered && !showTagFilter && (
+              <button
+                type="button"
+                className="favorites-clear-inline"
+                onClick={resetFilters}
+              >
+                <X size={12} aria-hidden="true" />
+                清除筛选
+              </button>
+            )}
           </b>
           {mode === "food" ? (
             <div className="favorites-results-tools">
@@ -520,29 +568,119 @@ export function Catalog({ favorites = false }: { favorites?: boolean }) {
         </div>
       )}
       {!invalid && !q.isError && (page > 1 || q.data?.hasNext) && (
-        <nav className="ew-pager" aria-label="分页">
-          <button
-            disabled={page === 1 || q.isFetching}
-            onClick={() => {
-              const p = new URLSearchParams(params);
-              p.set("page", String(page - 1));
-              setParams(p);
-            }}
-          >
-            上一页
-          </button>
-          <span>第 {page} 页</span>
-          <button
-            disabled={!q.data?.hasNext || q.isFetching}
-            onClick={() => {
-              const p = new URLSearchParams(params);
-              p.set("page", String(page + 1));
-              setParams(p);
-            }}
-          >
-            下一页
-          </button>
-        </nav>
+        <CatalogPager
+          page={page}
+          hasNext={q.data?.hasNext}
+          busy={q.isFetching}
+          onChange={(nextPage) => {
+            const p = new URLSearchParams(params);
+            p.set("page", String(nextPage));
+            setParams(p);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CatalogPager({
+  page,
+  hasNext,
+  busy,
+  onChange,
+}: {
+  page: number;
+  hasNext?: boolean | null;
+  busy: boolean;
+  onChange: (nextPage: number) => void;
+}) {
+  return (
+    <nav className="ew-pager" aria-label="分页">
+      <button disabled={page === 1 || busy} onClick={() => onChange(page - 1)}>
+        上一页
+      </button>
+      <span>第 {page} 页</span>
+      <button disabled={!hasNext || busy} onClick={() => onChange(page + 1)}>
+        下一页
+      </button>
+    </nav>
+  );
+}
+
+export function LikedFoods() {
+  const { api, session } = useApp(),
+    [params, setParams] = useSearchParams(),
+    page = Math.max(1, Number(params.get("page")) || 1),
+    results = useRef<HTMLDivElement>(null);
+  const q = useQuery({
+    queryKey: ["foods", "likes", page],
+    queryFn: () => api.likedFoods(page),
+    enabled: !!session,
+    placeholderData: keepPreviousData,
+  });
+  useContentMotion(
+    results,
+    q.isPlaceholderData ? undefined : `${page}:${q.dataUpdatedAt}`,
+    page,
+    "opacity",
+  );
+  const setPage = (nextPage: number) => {
+    const p = new URLSearchParams(params);
+    if (nextPage <= 1) p.delete("page");
+    else p.set("page", String(nextPage));
+    setParams(p);
+  };
+  if (!session) return <AccessWelcome />;
+  return (
+    <div className="ew-feature ew-favorites">
+      <ProfileCollectionsHeader />
+      <div className="favorites-library-bar">
+        <div className="ew-results-head">
+          <b>
+            <span className="favorites-results-label">赞过的菜品</span>
+            {!q.isPlaceholderData && !q.isError && q.data?.totalItems != null
+              ? `${q.data.totalItems} 道菜`
+              : ""}
+          </b>
+          <div className="favorites-results-tools">
+            {q.isFetching && <span role="status">正在查询…</span>}
+          </div>
+        </div>
+      </div>
+      {q.isPending || (q.isError && !q.data) ? (
+        <FeatureState
+          loading={q.isPending}
+          kind="cards"
+          error={q.error}
+          retry={() => void q.refetch()}
+        />
+      ) : !q.data.items?.length ? (
+        <FeatureState
+          illustration="jiaozi"
+          empty={
+            page > 1
+              ? "这一页没有更多赞过的菜了"
+              : "点赞过的菜品会留在这里，去发现页面挑一挑好味道吧"
+          }
+        />
+      ) : (
+        <div
+          ref={results}
+          className="ew-results"
+          aria-busy={q.isPlaceholderData}
+        >
+          {q.data.items.map((food) => (
+            <CatalogCard key={food.id} food={food} actionKind="like" />
+          ))}
+        </div>
+      )}
+      {!q.isError && (page > 1 || q.data?.hasNext) && (
+        <CatalogPager
+          page={page}
+          hasNext={q.data?.hasNext}
+          busy={q.isFetching}
+          onChange={setPage}
+        />
       )}
     </div>
   );

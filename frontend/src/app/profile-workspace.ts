@@ -22,7 +22,11 @@ export function profileSection(path: string): ProfileSection | null {
   if (path === "/me") return "/me";
   if (path === "/me/shares" || /^\/submissions(?:\/[^/]+)?$/.test(path))
     return "/me/shares";
-  if (path === "/favorites" || path === "/restaurants/favorites")
+  if (
+    path === "/favorites" ||
+    path === "/likes" ||
+    path === "/restaurants/favorites"
+  )
     return "/favorites";
   if (path === "/me/tags" || /^\/me\/tags\/\d+\/foods$/.test(path))
     return "/favorites";

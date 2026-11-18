@@ -364,6 +364,10 @@ export default function ProfileOverview() {
               : undefined
           }
         >
+          <Link to="/likes" state={{ alignTabs: true }}>
+            <Icon name="heart" size={15} />
+            赞过的菜
+          </Link>
           <Link to="/restaurants/favorites" state={{ alignTabs: true }}>
             <Icon name="store" size={15} />
             收藏的店

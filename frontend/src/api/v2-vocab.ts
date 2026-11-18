@@ -27,6 +27,7 @@ export const dislikableTags = ["辣", "麻"];
 export const shopKinds = [
   { id: "food", name: "吃饭" },
   { id: "drink", name: "饮品" },
+  { id: "buffet", name: "自助" },
 ];
 /** Fallback only: pages read the live list with useShopOptions(). */
 export const shopCategories = [

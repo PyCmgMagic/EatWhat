@@ -975,4 +975,53 @@ describe("v2 bridge", () => {
       imageCount: 1,
     });
   });
+
+  it("adapts /foods/likes and forwards buffet kind on restaurant search", async () => {
+    const { request, sent } = backend(({ path }) => {
+      if (path === "/foods/likes")
+        return ok({
+          items: [
+            {
+              id: 8,
+              name: "自助小火锅",
+              category: "主食",
+              price: 39,
+              pictureUrls: [PIC],
+              tags: [],
+              likeCount: 6,
+              isLiked: true,
+              isFavorite: false,
+            },
+          ],
+          hasNext: false,
+          totalItems: 1,
+        });
+      return ok({
+        items: [{ id: 12, name: "校园自助", kind: "buffet", mealTimes: [] }],
+        hasNext: false,
+        totalItems: 1,
+      });
+    });
+    const likes: any = await request("/foods/likes", {
+      query: { page: 2, pageSize: 12 },
+    });
+    expect(sent[0]).toMatchObject({
+      path: "/foods/likes",
+      query: { page: 2, pageSize: 12 },
+    });
+    expect(likes.items[0]).toMatchObject({
+      id: 8,
+      name: "自助小火锅",
+      isLiked: true,
+      likesCount: 6,
+    });
+    const shops: any = await request("/restaurant/search", {
+      query: { kind: "buffet", page: 1, pageSize: 12 },
+    });
+    expect(sent[1]).toMatchObject({
+      path: "/restaurant/search",
+      query: { kind: "buffet", page: 1, pageSize: 12 },
+    });
+    expect(shops.items[0]).toMatchObject({ id: 12, kind: "buffet" });
+  });
 });

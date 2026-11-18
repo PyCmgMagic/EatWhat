@@ -20,7 +20,22 @@
 .mobile-restaurant-toolbar-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
+}
+.mobile-restaurant-toolbar-actions > div {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.mobile-restaurant-toolbar-actions button {
+  border-radius: 50%;
+  background: transparent;
+  transition:
+    background-color 160ms ease-out,
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.mobile-restaurant-toolbar-actions button:is(:hover, :focus-visible) {
+  background: rgb(255 255 255 / 45%);
 }
 .mobile-restaurant-summary {
   display: grid;
@@ -56,7 +71,8 @@
   height: auto;
   aspect-ratio: 1;
   margin-top: 4px;
-  transform: rotate(-12deg);
+  border-radius: 50%;
+  object-fit: cover;
   pointer-events: none;
 }
 .mobile-restaurant-stats {

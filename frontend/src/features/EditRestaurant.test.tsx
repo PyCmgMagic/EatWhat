@@ -115,3 +115,19 @@ it("asks unverified users to verify first", async () => {
   expect(host.textContent).toContain("完成学生认证后，可以修改店铺信息");
   expect(host.querySelector("form")).toBeNull();
 });
+
+it("lets a verified user switch shop kind to buffet", async () => {
+  await open();
+  await act(async () => checkbox("自助").click());
+  const save = host.querySelector<HTMLButtonElement>("button.ew-button")!;
+  expect(save.disabled).toBe(false);
+  await act(async () => save.click());
+  await act(async () => {});
+  expect(api.editRestaurant).toHaveBeenCalledWith(9, {
+    kind: "buffet",
+    priceBand: "FROM_15_TO_30",
+    mealTimes: ["lunch", "dinner", "night"],
+    categories: ["粉面"],
+    tags: [],
+  });
+});

@@ -1235,6 +1235,16 @@ export function demoTransport(
             .map(withFoodViewer),
         ),
       );
+    case "getFoodsLikes":
+      return ok(
+        paged(
+          [...idList(state.foodLikes)]
+            .reverse()
+            .map((fid) => state.foods.find((item) => item.id === fid))
+            .filter((item): item is DemoFood => !!item)
+            .map(withFoodViewer),
+        ),
+      );
     case "getFoodsDetailById": {
       const food = state.foods.find((item) => item.id === id);
       return food ? ok(withFoodViewer(food)) : fail(40015, "菜品不存在。");

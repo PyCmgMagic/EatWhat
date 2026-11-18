@@ -29,7 +29,7 @@ export function RestaurantHeaderFavorite({
       style={{
         ...props.style,
         borderRadius: "50%",
-        background: shop?.isFavorite ? "rgba(255,255,255,.55)" : "none",
+        background: undefined,
       }}
       disabled={
         !shop ||
@@ -49,7 +49,10 @@ export function RestaurantHeaderFavorite({
         );
       }}
     >
-      <DesignIcon name="bookmark" size={22} />
+      <DesignIcon
+        name={shop?.isFavorite ? "bookmarkOn" : "bookmark"}
+        size={22}
+      />
     </button>
   );
 }

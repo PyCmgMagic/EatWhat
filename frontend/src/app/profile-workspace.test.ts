@@ -21,6 +21,7 @@ describe("personal workspace information architecture", () => {
     ["/submissions", "/me/shares"],
     ["/submissions/revision-123", "/me/shares"],
     ["/favorites", "/favorites"],
+    ["/likes", "/favorites"],
     ["/restaurants/favorites", "/favorites"],
     ["/me/tags", "/favorites"],
     ["/me/tags/101/foods", "/favorites"],

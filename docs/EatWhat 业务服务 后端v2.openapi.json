@@ -5198,6 +5198,45 @@
         "summary" : "菜品列表（指定店铺时按菜单顺序）"
       }
     },
+    "/foods/likes" : {
+      "get" : {
+        "tags" : [ "food · Food" ],
+        "summary" : "【需登录】获取本人点赞的菜品（按点赞时间倒序）",
+        "operationId" : "likes",
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultPageResultFoodView"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
     "/foods/favorites" : {
       "get" : {
         "tags" : [ "food · Food" ],

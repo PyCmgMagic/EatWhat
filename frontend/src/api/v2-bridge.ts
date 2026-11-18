@@ -971,7 +971,7 @@ const routes: [string, RegExp, Handler][] = [
   ],
   [
     "GET",
-    /^\/foods\/(list|favorites|my)$/,
+    /^\/foods\/(list|favorites|likes|my)$/,
     async ({ match, query, call }) =>
       page(
         await call(match.input!, {

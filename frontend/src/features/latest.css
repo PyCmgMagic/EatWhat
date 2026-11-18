@@ -245,17 +245,69 @@
   justify-content: space-between;
 }
 .ew-food-manage {
-  display: flex;
-  gap: 18px;
-  font-size: 11px;
-  margin-top: 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f0e8e0;
+  font-size: 12px;
+}
+.ew-food-manage:has(> :only-child) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.ew-food-manage :is(a, button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid #e6ddd3;
+  border-radius: 10px;
+  background: #faf7f3;
+  color: #3d3128;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    transform 90ms ease;
+}
+.ew-food-manage :is(a, button):hover {
+  background: #f2ebe2;
+  border-color: #d8cdc1;
+}
+.ew-food-manage :is(a, button):active {
+  transform: scale(0.98);
 }
 .ew-food-manage button {
-  background: none;
-  border: 0;
-  padding: 0;
-  font-size: 11px;
-  color: #9c422d;
+  border-color: #f0d7d1;
+  background: #fff6f4;
+  color: #a63d28;
+}
+.ew-food-manage button:hover {
+  background: #fdebe7;
+  border-color: #e4c1b8;
+}
+.ew-food-manage :is(a, button):focus-visible {
+  outline: 2px solid #231c18;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ew-food-manage :is(a, button) {
+    transition: none;
+  }
+  .ew-food-manage :is(a, button):active {
+    transform: none;
+  }
 }
 .ew-shop-card {
   padding: 26px;

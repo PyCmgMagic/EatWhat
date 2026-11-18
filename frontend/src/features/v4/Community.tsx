@@ -24,6 +24,7 @@ import {
   priceBands,
   ratingScenes,
   rateText,
+  shopKinds,
   type RatingValue,
   type V2Shop,
 } from "../../api/v2-vocab";
@@ -733,6 +734,9 @@ export function NotificationCardsPanel() {
     if (extra === "new_device_login") return "/settings/devices";
     const t = item.target;
     if (t?.unavailable || !t?.id) return null;
+    const foodId = (d as { foodId?: number | null } | null | undefined)?.foodId;
+    if (["comment", "reply"].includes(item.kind ?? "") && foodId)
+      return `/foods/${foodId}?section=comments`;
     const paths: Record<string, string> = {
       foods: "foods",
       restaurant: "restaurants",
@@ -1243,6 +1247,7 @@ export function RestaurantActions({
   );
   const facts = shop
     ? [
+        shopKinds.find((k) => k.id === v2Shop?.kind)?.name,
         ...(v2Shop?.categories ?? []),
         priceBands.find((p) => p.id === shop.priceBand)?.name,
         v2Shop?.deliveryEnabled ? "可外卖" : "仅堂食",

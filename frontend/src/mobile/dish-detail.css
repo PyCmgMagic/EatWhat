@@ -42,6 +42,7 @@
   gap: 8px;
 }
 .dish-icon-button {
+  position: relative;
   display: grid;
   place-items: center;
   width: 44px;
@@ -51,9 +52,70 @@
   border-radius: 50%;
   background: var(--dish-glass);
   color: inherit;
+  transition:
+    transform 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 180ms ease-out,
+    border-color 180ms ease-out,
+    box-shadow 180ms ease-out;
+}
+.dish-icon-button:active:not(:disabled) {
+  transform: scale(0.92);
+  transition-duration: 70ms;
 }
 .dish-icon-button[aria-pressed="true"] {
   border-color: currentColor;
+}
+.dish-favorite-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dish-favorite:active:not(:disabled) .dish-favorite-icon {
+  transform: scale(0.84);
+  transition-duration: 70ms;
+}
+.dish-favorite-icon::after {
+  content: "";
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  opacity: 0;
+  transform: scale(0.65);
+  pointer-events: none;
+}
+.dish-favorite.is-celebrating .dish-favorite-icon::after {
+  animation: dish-favorite-ring 440ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dish-favorite.is-celebrating .dish-morph-layer.is-filled {
+  animation: dish-bookmark-pop 380ms cubic-bezier(0.22, 1.35, 0.36, 1);
+}
+@keyframes dish-bookmark-pop {
+  0% {
+    transform: scale(0.68) translateY(2px);
+  }
+  48% {
+    transform: scale(1.24) translateY(-2px);
+  }
+  78% {
+    transform: scale(0.95) translateY(0);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes dish-favorite-ring {
+  0% {
+    opacity: 0.48;
+    transform: scale(0.65);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
 }
 .dish-more {
   position: relative;
@@ -244,34 +306,52 @@
 }
 .dish-like {
   transition:
-    transform 120ms cubic-bezier(0.23, 1, 0.32, 1),
-    background-color 160ms ease-out,
-    border-color 160ms ease-out,
-    color 160ms ease-out;
+    transform 150ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 180ms ease-out,
+    border-color 180ms ease-out,
+    color 180ms ease-out;
 }
-.dish-like:active {
-  transform: scale(0.97);
+.dish-like:active:not(:disabled) {
+  transform: scale(0.965);
+  transition-duration: 70ms;
 }
 .dish-like-icon {
   position: relative;
   display: grid;
   place-items: center;
+  width: 20px;
+  height: 20px;
+  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.dish-like-icon > .design-icon {
-  transition: transform 200ms cubic-bezier(0.2, 1.4, 0.4, 1);
+.dish-like:active:not(:disabled) .dish-like-icon {
+  transform: scale(0.84);
+  transition-duration: 70ms;
 }
-.dish-like:active .dish-like-icon > .design-icon {
+.dish-morph-layer {
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+  transition:
+    opacity 160ms ease-out,
+    transform 220ms cubic-bezier(0.22, 1.35, 0.36, 1);
+}
+.dish-morph-layer.is-filled {
+  opacity: 0;
+  transform: scale(0.55);
+}
+[aria-pressed="true"] .dish-morph-layer.is-outline {
+  opacity: 0;
   transform: scale(0.82);
-  transition-duration: 90ms;
 }
-.dish-like[aria-pressed="true"] .dish-like-icon > .design-icon {
-  transform: scale(1.06);
+[aria-pressed="true"] .dish-morph-layer.is-filled {
+  opacity: 1;
+  transform: scale(1);
 }
 /* Halo sits behind the heart; only the celebration keyframes ever show it. */
 .dish-like-icon::after {
   content: "";
   position: absolute;
-  inset: -7px;
+  inset: -8px;
   border-radius: 999px;
   background: radial-gradient(
     circle,
@@ -282,24 +362,27 @@
   transform: scale(0.55);
   pointer-events: none;
 }
-.dish-like.is-celebrating .dish-like-icon > .design-icon {
-  animation: dish-like-heart 320ms cubic-bezier(0.23, 1, 0.32, 1);
+.dish-like.is-celebrating .dish-morph-layer.is-filled {
+  animation: dish-like-heart 400ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .dish-like.is-celebrating .dish-like-icon::after {
   animation: dish-like-halo 480ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 .dish-like.is-celebrating b {
-  animation: dish-like-count 340ms cubic-bezier(0.23, 1, 0.32, 1);
+  animation: dish-like-count 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes dish-like-heart {
   0% {
-    transform: scale(0.6);
+    transform: scale(0.68);
   }
-  55% {
-    transform: scale(1.24);
+  45% {
+    transform: scale(1.28) rotate(-6deg);
+  }
+  76% {
+    transform: scale(0.95) rotate(2deg);
   }
   100% {
-    transform: scale(1.06);
+    transform: scale(1) rotate(0deg);
   }
 }
 @keyframes dish-like-halo {
@@ -314,7 +397,7 @@
 }
 @keyframes dish-like-count {
   0% {
-    transform: translateY(3px) scale(0.84);
+    transform: translateY(4px) scale(0.88);
     opacity: 0.4;
   }
   100% {
@@ -325,11 +408,28 @@
 .dish-like b {
   font-family: "Bricolage Grotesque Variable", sans-serif;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 .dish-like[aria-pressed="true"] {
   color: #a8321c;
   background: #fff1ed;
   border-color: #f2d6cd;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dish-icon-button,
+  .dish-favorite-icon,
+  .dish-like,
+  .dish-like-icon,
+  .dish-morph-layer {
+    transition: none;
+  }
+  .dish-favorite.is-celebrating .dish-favorite-icon::after,
+  .dish-favorite.is-celebrating .dish-morph-layer.is-filled,
+  .dish-like.is-celebrating .dish-morph-layer.is-filled,
+  .dish-like.is-celebrating .dish-like-icon::after,
+  .dish-like.is-celebrating b {
+    animation: none;
+  }
 }
 .dish-actions > .dish-visit {
   background: #231c18;

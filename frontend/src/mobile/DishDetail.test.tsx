@@ -32,7 +32,15 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-async function render(food: Food) {
+async function render(
+  food: Food,
+  handlers: {
+    likeDisabled?: boolean;
+    favoriteDisabled?: boolean;
+    onLike?: () => unknown;
+    onFavorite?: () => unknown;
+  } = {},
+) {
   await act(async () =>
     root.render(
       <MemoryRouter>
@@ -41,10 +49,10 @@ async function render(food: Food) {
           back="/"
           demo={false}
           sharedAt="8 小时前"
-          likeDisabled
-          favoriteDisabled
-          onLike={vi.fn()}
-          onFavorite={vi.fn()}
+          likeDisabled={handlers.likeDisabled ?? true}
+          favoriteDisabled={handlers.favoriteDisabled ?? true}
+          onLike={handlers.onLike ?? vi.fn()}
+          onFavorite={handlers.onFavorite ?? vi.fn()}
           onShare={vi.fn()}
           onTags={vi.fn()}
           onRestaurant={vi.fn()}
@@ -113,4 +121,93 @@ it("keeps an unavailable author's fallback unlinked", async () => {
   expect(host.querySelector(".mobile-avatar img")).toBeNull();
   expect(host.querySelector(".mobile-avatar")?.textContent).toBe("校");
   expect(host.querySelector("a.mobile-contributor")).toBeNull();
+});
+
+it("animates and updates like and favorite immediately before network responses resolve", async () => {
+  let resolveLike!: () => void;
+  let resolveFav!: () => void;
+  const onLike = vi.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        resolveLike = resolve;
+      }),
+  );
+  const onFavorite = vi.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        resolveFav = resolve;
+      }),
+  );
+  await render(
+    { id: 71, isLiked: false, likesCount: 1, isFavorite: false },
+    { likeDisabled: false, favoriteDisabled: false, onLike, onFavorite },
+  );
+
+  const favButton = host.querySelector<HTMLButtonElement>(".dish-favorite")!;
+  const likeButton = host.querySelector<HTMLButtonElement>(".dish-like")!;
+
+  await act(async () => {
+    favButton.click();
+    likeButton.click();
+  });
+
+  expect(onFavorite).toHaveBeenCalledTimes(1);
+  expect(onLike).toHaveBeenCalledTimes(1);
+  expect(favButton.getAttribute("aria-pressed")).toBe("true");
+  expect(favButton.getAttribute("aria-label")).toBe("取消收藏");
+  expect(favButton.classList.contains("is-celebrating")).toBe(true);
+  expect(favButton.disabled).toBe(false);
+
+  expect(likeButton.getAttribute("aria-pressed")).toBe("true");
+  expect(likeButton.getAttribute("aria-label")).toBe("取消喜欢这道菜");
+  expect(likeButton.classList.contains("is-celebrating")).toBe(true);
+  expect(likeButton.querySelector("b")?.textContent).toBe("2");
+  expect(likeButton.disabled).toBe(false);
+
+  await act(async () => {
+    resolveLike();
+    resolveFav();
+  });
+});
+
+it("rolls back optimistic like and favorite state if the standalone handler rejects", async () => {
+  let rejectLike!: (error: Error) => void;
+  let rejectFav!: (error: Error) => void;
+  await render(
+    { id: 71, isLiked: false, likesCount: 3, isFavorite: false },
+    {
+      likeDisabled: false,
+      favoriteDisabled: false,
+      onLike: () =>
+        new Promise<void>((_, reject) => {
+          rejectLike = reject;
+        }),
+      onFavorite: () =>
+        new Promise<void>((_, reject) => {
+          rejectFav = reject;
+        }),
+    },
+  );
+
+  const favButton = host.querySelector<HTMLButtonElement>(".dish-favorite")!;
+  const likeButton = host.querySelector<HTMLButtonElement>(".dish-like")!;
+
+  await act(async () => {
+    favButton.click();
+    likeButton.click();
+  });
+
+  expect(favButton.getAttribute("aria-pressed")).toBe("true");
+  expect(likeButton.querySelector("b")?.textContent).toBe("4");
+
+  await act(async () => {
+    rejectLike(new Error("network down"));
+    rejectFav(new Error("network down"));
+  });
+
+  expect(favButton.getAttribute("aria-pressed")).toBe("false");
+  expect(favButton.classList.contains("is-celebrating")).toBe(false);
+  expect(likeButton.getAttribute("aria-pressed")).toBe("false");
+  expect(likeButton.classList.contains("is-celebrating")).toBe(false);
+  expect(likeButton.querySelector("b")?.textContent).toBe("3");
 });

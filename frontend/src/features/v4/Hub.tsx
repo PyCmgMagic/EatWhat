@@ -38,8 +38,15 @@ const groups = [
         to: "/favorites",
         title: "收藏的菜品",
         detail: "查看收藏与分类",
-        icon: "heart",
+        icon: "bookmark",
         keywords: "我的收藏",
+      },
+      {
+        to: "/likes",
+        title: "赞过的菜品",
+        detail: "回顾点赞过的好味道",
+        icon: "heart",
+        keywords: "喜欢 点赞",
       },
       {
         to: "/me/tags",

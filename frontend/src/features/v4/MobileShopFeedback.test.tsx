@@ -277,3 +277,54 @@ it("lights the vote immediately and rolls back with a toast when it fails", asyn
   expect(yes()?.getAttribute("aria-pressed")).toBe("false");
   expect(toast).toHaveBeenCalled();
 });
+
+it("updates recommendation rate, count, and meter immediately on vote and animates without disabling buttons", async () => {
+  api.restaurant.mockResolvedValue({
+    ...baseShop,
+    dineIn: { rate: null, count: 0 },
+    myRatings: { dineIn: null },
+  });
+  let resolveVote!: () => void;
+  api.rateRestaurantScene.mockReset().mockImplementation(
+    () =>
+      new Promise<null>((resolve) => {
+        resolveVote = () => resolve(null);
+      }),
+  );
+  await open();
+  expect(host.querySelector(".shop-voice-empty")?.textContent).toBe("暂无评价");
+
+  await act(async () => yes()!.click());
+  expect(yes()?.getAttribute("aria-pressed")).toBe("true");
+  expect(yes()?.classList.contains("is-celebrating")).toBe(true);
+  expect(yes()?.disabled).toBe(false);
+  expect(no()?.disabled).toBe(false);
+  expect(host.querySelector(".shop-voice-number strong")?.textContent).toBe(
+    "100%",
+  );
+  expect(host.querySelector(".shop-voice-count")?.textContent).toBe("1 人评价");
+  expect(host.querySelector(".shop-voice-meter > span")?.getAttribute("style")).toContain(
+    "width: 100%",
+  );
+
+  // Switching to 不推荐 while the first request is still pending stays responsive and serializes.
+  await act(async () => no()!.click());
+  expect(no()?.getAttribute("aria-pressed")).toBe("true");
+  expect(no()?.classList.contains("is-celebrating")).toBe(true);
+  expect(host.querySelector(".shop-voice-number strong")?.textContent).toBe(
+    "0%",
+  );
+  expect(api.rateRestaurantScene).toHaveBeenCalledTimes(1);
+
+  await act(async () => {
+    resolveVote();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  });
+  expect(api.rateRestaurantScene).toHaveBeenCalledTimes(2);
+  expect(api.rateRestaurantScene).toHaveBeenNthCalledWith(
+    2,
+    1,
+    "dine_in",
+    "NOT_RECOMMEND",
+  );
+});

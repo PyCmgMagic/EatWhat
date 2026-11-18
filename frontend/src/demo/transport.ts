@@ -975,6 +975,11 @@ export const demoTransport: Transport = async (path, options) => {
       ),
       q,
     );
+  else if (path === "/foods/likes")
+    result = paginate(
+      s.foods.filter((f) => f.isLiked),
+      q,
+    );
   else if (path === "/foods/my")
     result = paginate(
       s.foods.filter((f) => f.accountId === 10),

@@ -237,6 +237,7 @@ export async function readBackendV2() {
     "/foods/my",
     "/foods/by-user/{userId}",
     "/foods/favorites",
+    "/foods/likes",
   ])
     response(path, "get", "ResultPageResultFoodV2");
 
@@ -469,7 +470,7 @@ export async function readBackendV2() {
 }
 
 const { spec, endpoints, callbacks } = await readBackendV2();
-if (Object.keys(endpoints).length !== 168 || callbacks.length !== 8) {
+if (Object.keys(endpoints).length !== 169 || callbacks.length !== 8) {
   throw new Error(
     "Backend v2 operation count changed; review the client coverage.",
   );

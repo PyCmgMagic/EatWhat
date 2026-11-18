@@ -687,6 +687,11 @@ export const endpoints = {
     "path": "/foods/list",
     "access": "public"
   },
+  "getFoodsLikes": {
+    "method": "GET",
+    "path": "/foods/likes",
+    "access": "login"
+  },
   "getFoodsFavorites": {
     "method": "GET",
     "path": "/foods/favorites",

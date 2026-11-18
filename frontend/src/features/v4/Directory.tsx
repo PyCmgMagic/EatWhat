@@ -6,6 +6,7 @@ import { useReturnTo } from "../../app/navigation";
 import { useArea } from "../../app/area";
 import { useDebouncedSearch } from "../../app/search";
 import { useShopOptions } from "../shop-options";
+import { shopKinds } from "../../api/v2-vocab";
 import { RestaurantCard } from "./Cards";
 import { DesignIcon as Icon } from "../../mobile/ui";
 import { Shell, Field, QueryView, Pager } from "./shared";
@@ -25,6 +26,8 @@ export default function Directory() {
     );
   const keyword = params.get("q") ?? "",
     setKeyword = (value: string) => setFilter("q", value);
+  const kind = params.get("kind") ?? "",
+    setKind = (value: string) => setFilter("kind", value);
   const category = params.get("category") ?? "",
     setCategory = (value: string) => setFilter("category", value);
   const priceBand = params.get("price") ?? "",
@@ -64,6 +67,7 @@ export default function Directory() {
   }, [areaKey]);
   const query = {
     keyword: search || undefined,
+    kind: kind || undefined,
     categories: (category ? [category] : undefined) as never,
     priceBand:
       (priceBand as "UNDER_15" | "FROM_15_TO_30" | "OVER_30") || undefined,
@@ -88,9 +92,13 @@ export default function Directory() {
   function change(fn: () => void) {
     fn();
   }
-  const active = [category, priceBand, recommendedOnly, favoritesOnly].filter(
-    Boolean,
-  ).length;
+  const active = [
+    kind,
+    category,
+    priceBand,
+    recommendedOnly,
+    favoritesOnly,
+  ].filter(Boolean).length;
   return (
     <Shell title="找一家店" back={returnTo}>
       <div className="v4-directory-layout">
@@ -125,6 +133,19 @@ export default function Directory() {
             <Icon name="search" size={18} />
           </div>
           <div className="v4-filter-controls">
+            <Field label="类型">
+              <select
+                value={kind}
+                onChange={(e) => change(() => setKind(e.target.value))}
+              >
+                <option value="">全部类型</option>
+                {shopKinds.map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
             <Field label="分类">
               <select
                 value={category}
@@ -186,6 +207,7 @@ export default function Directory() {
                   setParams((previous) => {
                     const next = new URLSearchParams(previous);
                     for (const key of [
+                      "kind",
                       "category",
                       "price",
                       "recommended",

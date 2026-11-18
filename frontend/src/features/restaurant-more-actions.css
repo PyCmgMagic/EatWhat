@@ -15,18 +15,30 @@
   width: 44px;
   height: 44px;
   padding: 0;
-  border: 1px solid transparent;
+  border: 0;
   border-radius: 50%;
-  background: #ffffff59;
+  background: transparent;
   color: inherit;
   cursor: pointer;
   list-style: none;
+  transition:
+    background-color 160ms ease-out,
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.restaurant-more.is-desktop > .restaurant-more-trigger {
+  border: 1px solid transparent;
+  background: #ffffff59;
+}
+.restaurant-more-trigger:active {
+  transform: scale(0.92);
+}
+.restaurant-more-trigger:hover,
+.restaurant-more-trigger:focus-visible,
+.restaurant-more[open] > summary {
+  background: rgb(255 255 255 / 45%);
 }
 .restaurant-more-trigger::-webkit-details-marker {
   display: none;
-}
-.restaurant-more[open] > summary {
-  border-color: currentColor;
 }
 .restaurant-more-panel {
   position: absolute;

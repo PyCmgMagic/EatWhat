@@ -2067,6 +2067,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/foods/likes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 【需登录】获取本人点赞的菜品（按点赞时间倒序） */
+        get: operations["getFoodsLikes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/foods/favorites": {
         parameters: {
             query?: never;
@@ -8247,6 +8264,29 @@ export interface operations {
                 sort?: string;
                 scene?: string;
                 mealTime?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultPageResultFoodV2"];
+                };
+            };
+        };
+    };
+    getFoodsLikes: {
+        parameters: {
+            query?: {
                 page?: number;
                 pageSize?: number;
             };

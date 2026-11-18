@@ -32,6 +32,9 @@ export type CommentView = Schema["CommentViewResponse"] & {
   authorAvatar?: string | null;
   authorTitle?: string | null;
   reactions?: CommentReaction[];
+  replyCount?: number | null;
+  isLiked?: boolean | null;
+  replyTo?: { id?: number | null; displayName?: string | null } | null;
 };
 export type CommentSubmission = Schema["CommentQueriesSubmissionResponse"];
 export type CommentImage = Schema["CommentGalleryImageViewResponse"];

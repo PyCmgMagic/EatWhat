@@ -309,10 +309,22 @@
   pointer-events: none;
 }
 .mobile-user-food-card {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 .mobile-user-food-card > a {
   display: block;
+  flex: 1;
+}
+.mobile-user-food-card .ew-food-manage {
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+.mobile-user-food-card .ew-food-manage :is(a, button) {
+  min-height: 36px;
+  padding: 0 9px;
 }
 .mobile-user-food-photo {
   display: grid;

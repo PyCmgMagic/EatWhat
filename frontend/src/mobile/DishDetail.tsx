@@ -19,6 +19,7 @@ import {
   type Restaurant,
 } from "../api/models";
 import { useFoodImageRefresh } from "../features/media";
+import { useCelebration } from "../features/food-reactions";
 import { DesignIcon } from "./ui";
 import { DishMoreActions } from "./DishMoreActions";
 import { visualFor } from "./catalog";
@@ -36,14 +37,83 @@ type Props = {
   sharedAt: string;
   likeDisabled: boolean;
   favoriteDisabled: boolean;
-  onLike: () => void;
-  onFavorite: () => void;
+  onLike: () => unknown;
+  onFavorite: () => unknown;
   onShare: () => void;
   onTags: () => void;
   onRestaurant: () => void;
   management: ReactNode;
   footer: ReactNode;
 };
+
+function useOptimisticReaction(
+  serverValue: boolean,
+  onToggle: () => unknown,
+) {
+  const [pending, setPending] = useState<boolean | null>(null);
+  const active = pending ?? serverValue;
+  const celebration = useCelebration(480);
+  const prevServer = useRef(serverValue);
+
+  useEffect(() => {
+    if (pending === null) return;
+    if (pending === serverValue) {
+      setPending(null);
+      return;
+    }
+    // The request never came back: fall back to the server value.
+    const timer = window.setTimeout(() => setPending(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [pending, serverValue]);
+
+  useEffect(() => {
+    if (prevServer.current && !serverValue && pending === null) {
+      celebration.stop();
+    }
+    prevServer.current = serverValue;
+  }, [serverValue, pending, celebration]);
+
+  const toggle = () => {
+    const next = !active;
+    if (next) celebration.trigger();
+    else celebration.stop();
+    setPending(next === serverValue ? null : next);
+    const result = onToggle();
+    if (result && typeof (result as Promise<unknown>).catch === "function") {
+      void (result as Promise<unknown>).catch(() => {
+        setPending(null);
+        celebration.stop();
+      });
+    }
+  };
+
+  return { active, celebrating: celebration.celebrating, toggle };
+}
+
+function MorphReactionIcon({
+  outline,
+  filled,
+  size,
+  className,
+}: {
+  outline: string;
+  filled: string;
+  size: number;
+  className: string;
+}) {
+  // Mount both SVG masks together so activation pops smoothly without waiting
+  // for a lazy mask image fetch or swapping DOM nodes mid-transition.
+  return (
+    <span className={className} aria-hidden="true">
+      <span className="dish-morph-layer is-outline">
+        <DesignIcon name={outline} size={size} />
+      </span>
+      <span className="dish-morph-layer is-filled">
+        <DesignIcon name={filled} size={size} />
+      </span>
+    </span>
+  );
+}
 
 export default function DishDetail({
   food,
@@ -64,43 +134,14 @@ export default function DishDetail({
   const visual = visualFor(food, demo),
     src = mediaUrl(food.pictureUrl?.[0]);
   const renewImage = useFoodImageRefresh();
-  // Liking answers the tap immediately (filled heart, +1) and reconciles with
-  // the server value; the celebration only fires on the false → true edge.
-  const serverLiked = food.isLiked === true,
-    [pendingLike, setPendingLike] = useState<boolean | null>(null),
-    liked = pendingLike ?? serverLiked,
-    [celebrating, setCelebrating] = useState(false),
-    wasLiked = useRef(serverLiked);
-  const likesCount =
+  const serverLiked = food.isLiked === true;
+  const like = useOptimisticReaction(serverLiked, onLike);
+  const favorite = useOptimisticReaction(food.isFavorite === true, onFavorite);
+  const likesCount = Math.max(
+    0,
     (food.likesCount ?? 0) +
-    (pendingLike === null || pendingLike === serverLiked
-      ? 0
-      : serverLiked
-        ? -1
-        : 1);
-  useEffect(() => {
-    if (pendingLike === null) return;
-    if (pendingLike === serverLiked) {
-      setPendingLike(null);
-      return;
-    }
-    // The request never came back: fall back to the server value.
-    const timer = window.setTimeout(() => setPendingLike(null), 5000);
-    return () => window.clearTimeout(timer);
-  }, [pendingLike, serverLiked]);
-  useEffect(() => {
-    const justLiked = liked && !wasLiked.current;
-    wasLiked.current = liked;
-    if (!justLiked) return;
-    setCelebrating(true);
-    const timer = window.setTimeout(() => setCelebrating(false), 520);
-    return () => window.clearTimeout(timer);
-  }, [liked]);
-  const likeNow = () => {
-    if (pendingLike !== null) return;
-    setPendingLike(!liked);
-    onLike();
-  };
+      (like.active === serverLiked ? 0 : like.active ? 1 : -1),
+  );
   const restaurantId = parseId(String(food.restaurantId));
   const { id: authorId, name: authorName } = foodAuthor(food);
   const tags = food.systemTags ?? [];
@@ -155,14 +196,16 @@ export default function DishDetail({
           <div className="dish-toolbar-actions">
             <button
               type="button"
-              className="dish-icon-button"
-              aria-label={food.isFavorite ? "取消收藏" : "收藏"}
-              aria-pressed={food.isFavorite === true}
+              className={`dish-icon-button dish-favorite${favorite.celebrating ? " is-celebrating" : ""}`}
+              aria-label={favorite.active ? "取消收藏" : "收藏"}
+              aria-pressed={favorite.active}
               disabled={favoriteDisabled}
-              onClick={onFavorite}
+              onClick={favorite.toggle}
             >
-              <DesignIcon
-                name={food.isFavorite ? "bookmarkOn" : "bookmark"}
+              <MorphReactionIcon
+                className="dish-favorite-icon"
+                outline="bookmark"
+                filled="bookmarkOn"
                 size={22}
               />
             </button>
@@ -233,16 +276,19 @@ export default function DishDetail({
         <div className="dish-actions">
           <button
             type="button"
-            className={`dish-like${celebrating ? " is-celebrating" : ""}`}
-            aria-label={liked ? "取消喜欢这道菜" : "喜欢这道菜"}
-            aria-pressed={liked}
+            className={`dish-like${like.celebrating ? " is-celebrating" : ""}`}
+            aria-label={like.active ? "取消喜欢这道菜" : "喜欢这道菜"}
+            aria-pressed={like.active}
             disabled={likeDisabled}
-            onClick={likeNow}
+            onClick={like.toggle}
           >
-            <span className="dish-like-icon" aria-hidden>
-              <DesignIcon name={liked ? "heartOn" : "heart"} size={20} />
-            </span>
-            <span>{liked ? "已喜欢" : "喜欢"}</span>
+            <MorphReactionIcon
+              className="dish-like-icon"
+              outline="heart"
+              filled="heartOn"
+              size={20}
+            />
+            <span>{like.active ? "已喜欢" : "喜欢"}</span>
             <b>{food.likesCount == null ? "—" : likesCount}</b>
           </button>
           {restaurantId ? (

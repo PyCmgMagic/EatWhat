@@ -102,10 +102,21 @@ beforeEach(async () => {
                 id: 93,
                 kind: "reply",
                 target: { domain: "comments", id: 5 },
+                data: { foodId: 7 },
                 memberCount: 1,
                 unreadMemberCount: 0,
                 latestAt: Date.now(),
                 actors: [{ id: 25, displayName: "小周", avatar: null }],
+              },
+              {
+                id: 94,
+                kind: "reply",
+                target: { domain: "comments", id: 6 },
+                data: null,
+                memberCount: 1,
+                unreadMemberCount: 0,
+                latestAt: Date.now(),
+                actors: [{ id: 26, displayName: "小吴", avatar: null }],
               },
             ],
             hasNext: false,
@@ -178,6 +189,16 @@ it("links the latest comment actor's avatar separately from the desktop notifica
   const reply = host.querySelector('a[aria-label="查看小周的主页"]');
   expect(reply?.getAttribute("href")).toBe("/users/25");
   expect(reply?.textContent).toBe("小");
+  expect(
+    reply
+      ?.closest("article")
+      ?.querySelector(".profile-message-target")
+      ?.getAttribute("href"),
+  ).toBe("/foods/7?section=comments");
+  const orphanReply = host.querySelector('a[aria-label="查看小吴的主页"]');
+  expect(
+    orphanReply?.closest("article")?.querySelector(".profile-message-target"),
+  ).toBeNull();
 });
 
 it("opens the commenter's profile from the mobile avatar without following the notification content link", async () => {
@@ -188,6 +209,11 @@ it("opens the commenter's profile from the mobile avatar without following the n
   const content = avatar.closest("li")?.querySelector(".mobile-inbox-action");
   expect(content?.getAttribute("href")).toBe("/foods/7");
   expect(content?.contains(avatar)).toBe(false);
+  const replyAction = host
+    .querySelector('.mobile-inbox a[aria-label="查看小周的主页"]')
+    ?.closest("li")
+    ?.querySelector(".mobile-inbox-action");
+  expect(replyAction?.getAttribute("href")).toBe("/foods/7?section=comments");
   await act(async () =>
     avatar.querySelector("img")!.dispatchEvent(new Event("error")),
   );

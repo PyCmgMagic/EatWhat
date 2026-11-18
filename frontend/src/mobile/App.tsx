@@ -53,6 +53,7 @@ const LoginPage = lazy(() => import("./Login"));
 const MobileAccountSettings = lazy(() => import("./AccountSettings"));
 const MobileSettingsPages = lazy(() => import("./SettingsPages"));
 const MobileNotifications = lazy(() => import("./Notifications"));
+const MobileLibrary = lazy(() => import("./MobileLibrary"));
 import { Gate } from "../components/ui";
 import "@fontsource-variable/noto-sans-sc";
 import "@fontsource-variable/bricolage-grotesque";
@@ -337,10 +338,14 @@ function MobileWorkspace() {
     () =>
       !admin && !desktop && !reference && !showIndex
         ? document.querySelector<HTMLElement>(
-            ".mobile-viewport, .ew-mobile-feature, .mobile-page-native",
+            ".mobile-viewport, .ew-mobile-feature, .mobile-page-native, .mobile-library",
           )
         : null,
-    isHelpFeedbackPath(loc.pathname) ? "/help" : loc.pathname,
+    isHelpFeedbackPath(loc.pathname)
+      ? "/help"
+      : ["/favorites", "/likes", "/restaurants/favorites"].includes(loc.pathname)
+        ? "/favorites"
+        : loc.pathname,
     0,
     // Animate page content only; the shared navigation stays mounted outside it.
     "opacity",
@@ -514,6 +519,12 @@ function MobileWorkspace() {
                   !reference &&
                   loc.pathname === "/announcements" ? (
                   <MobileNotifications />
+                ) : !desktop &&
+                  !reference &&
+                  ["/favorites", "/likes", "/restaurants/favorites"].includes(
+                    loc.pathname.replace(/\/+$/, ""),
+                  ) ? (
+                  <MobileLibrary />
                 ) : !desktop && !reference && isV4Path(loc.pathname) ? (
                   <div className="ew-mobile-feature">
                     <V4Routes key={loc.pathname} />
@@ -530,17 +541,15 @@ function MobileWorkspace() {
                   <MobileAccountSettings />
                 ) : loc.pathname === "/follows" ? null : !desktop &&
                   !reference &&
+                  /^\/foods\/\d+\/edit$/.test(loc.pathname) ? (
+                  <EditFood mobile />
+                ) : !desktop &&
+                  !reference &&
                   (loc.pathname === "/search" ||
-                    loc.pathname === "/favorites" ||
-                    /^\/foods\/\d+\/edit$/.test(loc.pathname) ||
                     isShopEditPath(loc.pathname)) ? (
                   <div className="ew-mobile-feature">
                     {loc.pathname === "/search" ? (
                       <Catalog />
-                    ) : loc.pathname === "/favorites" ? (
-                      <Catalog favorites />
-                    ) : /^\/foods\/\d+\/edit$/.test(loc.pathname) ? (
-                      <EditFood />
                     ) : (
                       <EditRestaurant />
                     )}
@@ -581,12 +590,14 @@ function MobileWorkspace() {
                   </div>
                 ) : (
                   <div
-                    className={`mobile-viewport${!reference && ["G2-Home", "G-HomePhoto"].includes(screen) ? " mobile-fluid-home" : ""}${!reference && screen === "G-Dish" ? " mobile-fluid-detail" : ""}${!reference && screen === "G-Detail" ? " mobile-fluid-restaurant" : ""}${!reference && screen === "G-EditProfile" ? " mobile-fluid-profile-edit" : ""}${!reference && screen === "G-Me" ? " mobile-fluid-profile" : ""}`}
+                    className={`mobile-viewport${!reference && ["G2-Home", "G-HomePhoto"].includes(screen) ? " mobile-fluid-home" : ""}${!reference && screen === "G-Dish" ? " mobile-fluid-detail" : ""}${!reference && screen === "G-Detail" ? " mobile-fluid-restaurant" : ""}${!reference && screen === "G-PickShop" ? " mobile-fluid-pick-shop" : ""}${!reference && screen === "G-EditProfile" ? " mobile-fluid-profile-edit" : ""}${!reference && screen === "G-Me" ? " mobile-fluid-profile" : ""}`}
                     style={
                       {
                         minHeight:
                           !reference &&
-                          ["G-Detail", "G-EditProfile"].includes(screen)
+                          ["G-Detail", "G-EditProfile", "G-PickShop"].includes(
+                            screen,
+                          )
                             ? viewport.height
                             : height * scale,
                         maxWidth: reference ? 390 : 520,

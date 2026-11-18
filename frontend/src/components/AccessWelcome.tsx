@@ -20,6 +20,11 @@ function loginReason(path: string) {
       heading: "登录后继续发布",
       detail: "登录后即可分享菜品、添加餐厅。",
     };
+  if (path.startsWith("/likes"))
+    return {
+      heading: "登录后查看赞过的菜",
+      detail: "点赞过的菜品会保存在你的账号中。",
+    };
   if (path.startsWith("/favorites") || path.startsWith("/me/tags"))
     return {
       heading: "登录后查看收藏",

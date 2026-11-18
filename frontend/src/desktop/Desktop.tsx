@@ -1,7 +1,6 @@
 import WorkspaceSwitch from "../admin/WorkspaceSwitch";
 import { RecommendShopList } from "../features/RecommendShops";
 import { SupplementPrice } from "../features/SupplementPrice";
-import { useFeedbackState } from "../components/feedback";
 import { BRAND_SLOGAN } from "../app/brand";
 import { foodAuthor } from "../api/models";
 import ProfileOverview from "../features/ProfileOverview";
@@ -37,6 +36,7 @@ import { useApp } from "../app/state";
 import { LoginLink } from "../app/auth-dialog";
 import { useDebouncedSearch } from "../app/search";
 import { NearbySearchInput } from "../features/NearbySearchInput";
+import { useCelebration, useFoodReaction } from "../features/food-reactions";
 import { useArea } from "../app/area";
 import { isDemo } from "../app/runtime";
 import { errorMessage } from "../api/client";
@@ -102,7 +102,7 @@ const MyFoodComments = lazy(() =>
 const DesktopHistory = lazy(() =>
   import("./DesktopLibrary").then((m) => ({ default: m.DesktopHistory })),
 );
-import { Catalog, FoodManage } from "../features/Catalog";
+import { Catalog, FoodManage, LikedFoods } from "../features/Catalog";
 import { DishMoreActions } from "./DishMoreActions";
 import { RestaurantMoreActions } from "../features/RestaurantMoreActions";
 import { RecommendationControls, Preferences } from "../features/Account";
@@ -151,37 +151,6 @@ const categories = [
     .filter((c) => c.id !== "other")
     .map((c) => ({ key: c.id, name: c.name })),
 ];
-function useTask() {
-  const cache = useQueryClient(),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useFeedbackState();
-  return {
-    busy,
-    error,
-    run: async (fn: () => Promise<unknown>) => {
-      if (busy) return;
-      setBusy(true);
-      setError("");
-      try {
-        await fn();
-        await Promise.all(
-          [
-            "foods",
-            "food-tags",
-            "my-tags",
-            "user",
-            "social",
-            "notifications",
-          ].map((key) => cache.invalidateQueries({ queryKey: [key] })),
-        );
-      } catch (e) {
-        setError(errorMessage(e));
-      } finally {
-        setBusy(false);
-      }
-    },
-  };
-}
 export default function DesktopExperience({
   enabled,
   screen,
@@ -523,6 +492,12 @@ function DesktopPage({
     return (
       <DesktopGate verified={false}>
         <Catalog favorites />
+      </DesktopGate>
+    );
+  if (loc.pathname === "/likes")
+    return (
+      <DesktopGate verified={false}>
+        <LikedFoods />
       </DesktopGate>
     );
   if (loc.pathname === "/auth" || loc.pathname.startsWith("/auth/"))
@@ -1515,11 +1490,10 @@ function DesktopSearch() {
 }
 function DesktopDish() {
   const returnTo = useReturnTo("/");
-  const { api, session, user } = useApp(),
+  const { api, session, user, toast } = useApp(),
     m = useMobile(),
     loc = useLocation(),
     id = parseId(loc.pathname.split("/").pop()) ?? m.foodId,
-    task = useTask(),
     access = useActionAccess();
   const query = useQuery({
       queryKey: ["foods", "detail", id],
@@ -1529,6 +1503,16 @@ function DesktopDish() {
     }),
     food = query.data,
     v = food ? visualFor(food, isDemo) : null;
+  const reactions = useFoodReaction({
+    foodId: id,
+    food,
+    onError: (e) => {
+      const message = errorMessage(e);
+      if (message) toast(message, { tone: "error" });
+    },
+  });
+  const likeCelebration = useCelebration(480);
+  const favCelebration = useCelebration(480);
   const shop = useQuery({
     queryKey: ["restaurants", "detail", food?.restaurantId],
     queryFn: () => api.restaurant(food!.restaurantId!),
@@ -1604,25 +1588,27 @@ function DesktopDish() {
                 </span>
                 <div className="pc-dish-tools">
                   <button
-                    className="pc-icon-button"
+                    type="button"
+                    className={`pc-icon-button pc-dish-favorite${favCelebration.celebrating ? " is-celebrating" : ""}`}
                     aria-label={food.isFavorite ? "取消收藏" : "收藏"}
                     aria-pressed={food.isFavorite === true}
                     disabled={
-                      task.busy ||
-                      (!!session &&
-                        user?.verified === true &&
-                        food.isFavorite == null)
+                      !!session &&
+                      user?.verified === true &&
+                      food.isFavorite == null
                     }
-                    onClick={() =>
-                      void task.run(() =>
-                        api.favorite(id, food.isFavorite === true),
-                      )
-                    }
+                    onClick={() => {
+                      if (food.isFavorite !== true) favCelebration.trigger();
+                      else favCelebration.stop();
+                      void reactions.toggle("favorite");
+                    }}
                   >
-                    <Icon
-                      name={food.isFavorite ? "bookmarkOn" : "bookmark"}
-                      size={20}
-                    />
+                    <span className="pc-reaction-icon" aria-hidden="true">
+                      <Icon
+                        name={food.isFavorite ? "bookmarkOn" : "bookmark"}
+                        size={20}
+                      />
+                    </span>
                   </button>
                   <DishMoreActions
                     key={id}
@@ -1665,20 +1651,23 @@ function DesktopDish() {
               </Link>
               <div className="pc-dish-actions">
                 <button
-                  className="pc-button light"
+                  type="button"
+                  className={`pc-button light pc-dish-like${likeCelebration.celebrating ? " is-celebrating" : ""}`}
+                  aria-label={food.isLiked ? "取消喜欢这道菜" : "喜欢这道菜"}
                   aria-pressed={food.isLiked === true}
                   disabled={
-                    task.busy ||
-                    (!!session &&
-                      user?.verified === true &&
-                      food.isLiked == null)
+                    !!session && user?.verified === true && food.isLiked == null
                   }
-                  onClick={() =>
-                    void task.run(() => api.like(id, food.isLiked === true))
-                  }
+                  onClick={() => {
+                    if (food.isLiked !== true) likeCelebration.trigger();
+                    else likeCelebration.stop();
+                    void reactions.toggle("like");
+                  }}
                 >
-                  <Icon name={food.isLiked ? "heartOn" : "heart"} size={21} />
-                  {food.likesCount ?? "—"}
+                  <span className="pc-reaction-icon" aria-hidden="true">
+                    <Icon name={food.isLiked ? "heartOn" : "heart"} size={21} />
+                  </span>
+                  <b className="pc-dish-like-count">{food.likesCount ?? "—"}</b>
                 </button>
                 <Link
                   className="pc-button"
@@ -1881,7 +1870,7 @@ function DesktopRestaurant() {
               ) : mediaUrl(shop.pictureUrl?.[0]) ? (
                 <img src={mediaUrl(shop.pictureUrl?.[0])} alt="" />
               ) : (
-                <Icon name="store" size={140} />
+                <img src="/assets/restaurants/shop.svg" alt="" />
               )}
             </div>
           </section>

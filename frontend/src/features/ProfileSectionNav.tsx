@@ -10,6 +10,7 @@ const sections = {
     label: "收藏分类",
     items: [
       { to: "/favorites", label: "菜品收藏" },
+      { to: "/likes", label: "赞过的菜" },
       { to: "/restaurants/favorites", label: "餐厅收藏" },
       { to: "/me/tags", label: "标签管理" },
     ],
