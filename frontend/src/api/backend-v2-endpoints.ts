@@ -115,6 +115,16 @@ export const endpoints = {
     "path": "/foods/edit/{id}",
     "access": "verifiedOrAdmin"
   },
+  "putCommentsByIdReactionsByReaction": {
+    "method": "PUT",
+    "path": "/comments/{id}/reactions/{reaction}",
+    "access": "verifiedOrAdmin"
+  },
+  "deleteCommentsByIdReactionsByReaction": {
+    "method": "DELETE",
+    "path": "/comments/{id}/reactions/{reaction}",
+    "access": "login"
+  },
   "putCommentsByIdLike": {
     "method": "PUT",
     "path": "/comments/{id}/like",

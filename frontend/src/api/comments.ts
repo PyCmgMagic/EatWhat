@@ -4,13 +4,34 @@ import {
   type RequestOptions,
 } from "./client";
 import { boundedText } from "./content-rules";
+import type { V2Schema } from "./backend-v2";
 import type { Page, Schema } from "./models";
+
+export type CommentReactionType = NonNullable<V2Schema["Reaction"]["reaction"]>;
+export const commentReactionOptions = [
+  { reaction: "THUMBS_UP", emoji: "👍", label: "赞同" },
+  { reaction: "HEART", emoji: "❤️", label: "喜欢" },
+  { reaction: "LAUGH", emoji: "😂", label: "笑哭" },
+  { reaction: "SURPRISED", emoji: "😮", label: "惊讶" },
+  { reaction: "SAD", emoji: "😢", label: "难过" },
+  { reaction: "YUMMY", emoji: "😋", label: "好吃" },
+] as const satisfies readonly {
+  reaction: CommentReactionType;
+  emoji: string;
+  label: string;
+}[];
+export type CommentReaction = {
+  reaction: CommentReactionType;
+  count: number;
+  selected: boolean;
+};
 
 /** 后端 v2 返回的作者主页信息；历史数据可能没有作者。 */
 export type CommentView = Schema["CommentViewResponse"] & {
   authorId?: number | null;
   authorAvatar?: string | null;
   authorTitle?: string | null;
+  reactions?: CommentReaction[];
 };
 export type CommentSubmission = Schema["CommentQueriesSubmissionResponse"];
 export type CommentImage = Schema["CommentGalleryImageViewResponse"];
@@ -148,6 +169,15 @@ export function createCommentsApi(request: ReturnType<typeof createRequester>) {
         `/comments/${id(commentId)}/like`,
         "DELETE",
         key,
+      ),
+    setCommentReaction: (
+      commentId: number,
+      reaction: CommentReactionType,
+      selected: boolean,
+    ) =>
+      data<CommentReaction[]>(
+        `/comments/${id(commentId)}/reactions/${reaction}`,
+        { method: selected ? "PUT" : "DELETE" },
       ),
     commentModerationQueue: (page = 1, pageSize = 20, signal?: AbortSignal) =>
       data<Page<CommentSubmission>>("/admin/comments/moderation/queue", {

@@ -943,6 +943,82 @@
         } ]
       }
     },
+    "/comments/{id}/reactions/{reaction}" : {
+      "put" : {
+        "tags" : [ "comment · Comment" ],
+        "summary" : "【需角色：verified 或 admin】设置评论表情回应",
+        "operationId" : "react",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "reaction",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "THUMBS_UP", "HEART", "LAUGH", "SURPRISED", "SAD", "YUMMY" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultListReaction"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      },
+      "delete" : {
+        "tags" : [ "comment · Comment" ],
+        "summary" : "【需登录】取消评论表情回应",
+        "operationId" : "removeReaction",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "reaction",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "THUMBS_UP", "HEART", "LAUGH", "SURPRISED", "SAD", "YUMMY" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultListReaction"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
     "/comments/{id}/like" : {
       "put" : {
         "tags" : [ "comment · Comment" ],
@@ -9954,6 +10030,44 @@
           }
         }
       },
+      "Reaction" : {
+        "type" : "object",
+        "properties" : {
+          "reaction" : {
+            "type" : "string",
+            "enum" : [ "THUMBS_UP", "HEART", "LAUGH", "SURPRISED", "SAD", "YUMMY" ]
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "selected" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "ResultListReaction" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Reaction"
+            }
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "Comment" : {
         "type" : "object",
         "properties" : {
@@ -9994,6 +10108,12 @@
           },
           "isLiked" : {
             "type" : "boolean"
+          },
+          "reactions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Reaction"
+            }
           },
           "createdAt" : {
             "type" : "integer",

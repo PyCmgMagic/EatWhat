@@ -291,6 +291,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/comments/{id}/reactions/{reaction}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 【需角色：verified 或 admin】设置评论表情回应 */
+        put: operations["putCommentsByIdReactionsByReaction"];
+        post?: never;
+        /** 【需登录】取消评论表情回应 */
+        delete: operations["deleteCommentsByIdReactionsByReaction"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/comments/{id}/like": {
         parameters: {
             query?: never;
@@ -4047,6 +4065,21 @@ export interface components {
             /** Format: int64 */
             timestamp?: number;
         };
+        Reaction: {
+            /** @enum {string} */
+            reaction?: "THUMBS_UP" | "HEART" | "LAUGH" | "SURPRISED" | "SAD" | "YUMMY";
+            /** Format: int64 */
+            count?: number;
+            selected?: boolean;
+        };
+        ResultListReaction: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["Reaction"][];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
         Comment: {
             /** Format: int64 */
             id?: number;
@@ -4062,6 +4095,7 @@ export interface components {
             /** Format: int64 */
             replyCount?: number;
             isLiked?: boolean | null;
+            reactions?: components["schemas"]["Reaction"][];
             /** Format: int64 */
             createdAt?: number;
         };
@@ -5541,6 +5575,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultEdited"];
+                };
+            };
+        };
+    };
+    putCommentsByIdReactionsByReaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                reaction: "THUMBS_UP" | "HEART" | "LAUGH" | "SURPRISED" | "SAD" | "YUMMY";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultListReaction"];
+                };
+            };
+        };
+    };
+    deleteCommentsByIdReactionsByReaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                reaction: "THUMBS_UP" | "HEART" | "LAUGH" | "SURPRISED" | "SAD" | "YUMMY";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultListReaction"];
                 };
             };
         };

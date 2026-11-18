@@ -6,7 +6,11 @@ import {
 } from "./client";
 import { requestAccess } from "./access-policy";
 
-type Identity = { verified?: boolean | null; banned?: boolean | null };
+type Identity = {
+  verified?: boolean | null;
+  banned?: boolean | null;
+  role?: string | null;
+};
 export type AccessPrompt = {
   reason: "login" | "verification";
   context: string;
@@ -73,7 +77,7 @@ export function withActionAccess(
       const unavailable = deps.unavailable?.(path);
       if (unavailable) throw new ApiError(unavailable, "ACTION_UNAVAILABLE");
       if (!session) blocked("login");
-      if (requirement === "verified") {
+      if (requirement === "verified" || requirement === "verifiedOrAdmin") {
         const user = deps.user() ?? (await deps.loadUser());
         options.signal?.throwIfAborted();
         if (!current())
@@ -86,7 +90,11 @@ export function withActionAccess(
             "账号暂时无法操作，请联系管理员。",
             "USER_DISABLED",
           );
-        if (user.verified !== true) blocked("verification");
+        if (
+          user.verified !== true &&
+          !(requirement === "verifiedOrAdmin" && user.role === "admin")
+        )
+          blocked("verification");
       }
     }
     try {

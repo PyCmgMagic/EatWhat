@@ -43,6 +43,7 @@ import { FoodCover } from "../../components/FoodCover";
 import { ContentSkeleton } from "../../components/LoadingSkeleton";
 import { Gate } from "../../components/ui";
 import { useSurfaceDismiss } from "../../motion/hooks";
+import { CommentReactions } from "./CommentReactions";
 import {
   useCommentCommand,
   useRefreshComments,
@@ -424,6 +425,9 @@ function CommentRow({
             </button>
           )}
         </div>
+        {comment.id != null && comment.reactions && (
+          <CommentReactions commentId={comment.id} reactions={comment.reactions} />
+        )}
         {expanded && !nested && (
           <div className="comments-replies">
             <QueryState query={replies}>
@@ -1020,6 +1024,9 @@ export function FoodCommentPreview({ foodId }: { foodId: number }) {
             <div className="comments-preview-actions">
               <Like comment={row} />
             </div>
+            {row.id != null && row.reactions && (
+              <CommentReactions commentId={row.id} reactions={row.reactions} />
+            )}
           </div>
         ))
       ) : (
