@@ -16,6 +16,7 @@ import {
   useSessionDraft,
 } from "../../app/drafts";
 import { LoginLink } from "../../app/auth-dialog";
+import { UserAvatar } from "../../components/UserAvatar";
 import { shopEditPath } from "../EditRestaurant";
 import { useArea } from "../../app/area";
 import { type Schema, money, mediaUrl } from "../../api/models";
@@ -33,7 +34,10 @@ import {
   ProfileHelpHeader,
   ProfileSectionNav,
 } from "../ProfileSectionNav";
-import { notificationTime } from "../../mobile/notification-model";
+import {
+  notificationCommentActor,
+  notificationTime,
+} from "../../mobile/notification-model";
 import "../profile-activity.css";
 import "./edit-history.css";
 import "./restaurant-actions.css";
@@ -790,6 +794,7 @@ export function NotificationCardsPanel() {
           <section className="profile-message-list" aria-label="互动通知列表">
             {q.data?.items?.map((item) => {
               const link = targetLink(item),
+                commentActor = notificationCommentActor(item),
                 detail = item.data?.detail,
                 extra = detail as SystemDetail | null | undefined,
                 actorNames =
@@ -830,30 +835,39 @@ export function NotificationCardsPanel() {
                   data-unread={!!item.unreadMemberCount || undefined}
                   key={item.id}
                 >
-                  <span
-                    className="profile-activity-symbol"
-                    data-kind={item.kind}
-                  >
-                    <Icon
-                      name={
-                        item.kind === "like"
-                          ? "heart"
-                          : item.kind === "favorite"
-                            ? "bookmark"
-                            : item.kind === "case_result"
-                              ? "feedback"
-                              : item.kind === "moderation_result" ||
-                                  item.kind === "new_device_login" ||
-                                  item.kind === "content_removed" ||
-                                  item.kind === "account_banned"
-                                ? "shield"
-                                : item.kind === "follow"
-                                  ? "follow"
-                                  : "bell"
-                      }
-                      size={23}
+                  {commentActor ? (
+                    <UserAvatar
+                      className="profile-activity-symbol profile-message-avatar"
+                      name={commentActor.name || "校园食友"}
+                      avatar={commentActor.avatar}
+                      profileId={commentActor.id}
                     />
-                  </span>
+                  ) : (
+                    <span
+                      className="profile-activity-symbol"
+                      data-kind={item.kind}
+                    >
+                      <Icon
+                        name={
+                          item.kind === "like"
+                            ? "heart"
+                            : item.kind === "favorite"
+                              ? "bookmark"
+                              : item.kind === "case_result"
+                                ? "feedback"
+                                : item.kind === "moderation_result" ||
+                                    item.kind === "new_device_login" ||
+                                    item.kind === "content_removed" ||
+                                    item.kind === "account_banned"
+                                  ? "shield"
+                                  : item.kind === "follow"
+                                    ? "follow"
+                                    : "bell"
+                        }
+                        size={23}
+                      />
+                    </span>
+                  )}
                   <div className="profile-message-copy">
                     <div className="profile-message-heading">
                       <strong>

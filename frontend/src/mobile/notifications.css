@@ -137,6 +137,15 @@
   width: 100%;
   min-width: 0;
   padding: 10px 0;
+}
+.mobile-inbox-action {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
+  align-items: center;
+  gap: 16px;
+  padding: 0;
   text-decoration: none;
   text-align: left;
   color: inherit;
@@ -159,6 +168,9 @@
   height: 52px;
   border-radius: 50%;
   background: #f4f3f1;
+}
+.mobile-inbox-symbol.user-avatar {
+  font-weight: 700;
 }
 .mobile-inbox-copy {
   display: flex;
@@ -211,7 +223,8 @@
 .mobile-inbox-pages button {
   min-height: 44px;
 }
-.mobile-inbox-row:focus-visible,
+.mobile-inbox-action:focus-visible,
+.mobile-inbox-symbol:focus-visible,
 .mobile-inbox-tabs > button:focus-visible {
   outline-offset: 2px;
 }

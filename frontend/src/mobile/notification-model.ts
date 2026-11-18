@@ -28,6 +28,12 @@ type Detail = {
   reply?: string;
   verdict?: string;
 };
+
+export function notificationCommentActor(item: NotificationCard) {
+  const kind = (item.data?.detail as Detail | undefined)?.type || item.kind;
+  return kind === "comment" || kind === "reply" ? item.actors?.[0] : undefined;
+}
+
 export function notificationView(item: NotificationCard) {
   const detail = (item.data?.detail ?? {}) as Detail;
   const kind = detail.type || item.kind || "system";

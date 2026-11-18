@@ -2,6 +2,9 @@
   overflow: hidden;
   flex: none;
 }
+a.user-avatar {
+  text-decoration: none;
+}
 .user-avatar > img {
   display: block;
   width: 100%;

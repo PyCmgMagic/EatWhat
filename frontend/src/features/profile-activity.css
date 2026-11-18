@@ -563,6 +563,10 @@
   background: #f4f0eb;
   color: #75685b;
 }
+.v4-page[data-route="/notifications"] .profile-message-avatar {
+  border-radius: 50%;
+  font-weight: 700;
+}
 .v4-page[data-route="/notifications"] .profile-message-heading strong {
   font-weight: 650;
 }

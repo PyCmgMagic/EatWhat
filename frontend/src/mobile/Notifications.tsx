@@ -5,11 +5,13 @@ import { useApp } from "../app/state";
 import { useReturnTo } from "../app/navigation";
 import { useTask } from "../components/useTask";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
+import { UserAvatar } from "../components/UserAvatar";
 import { AnnouncementsPanel } from "../features/v4/Remote";
 import { historyTime } from "../desktop/history";
 import { DesignIcon } from "./ui";
 import {
   notificationColumns,
+  notificationCommentActor,
   notificationGroups,
   notificationTime,
   notificationView,
@@ -26,19 +28,15 @@ function NotificationRow({
   onRead: (item: NotificationCard) => void;
 }) {
   const view = notificationView(item);
+  const actor = notificationCommentActor(item);
   const [expanded, setExpanded] = useState(false);
   const content = (
     <>
-      {!!item.unreadMemberCount && (
-        <span
-          className="mobile-inbox-unread-dot"
-          aria-label="未读"
-          role="img"
-        />
+      {!actor && (
+        <span className="mobile-inbox-symbol" aria-hidden="true">
+          <DesignIcon name={view.icon} size={23} />
+        </span>
       )}
-      <span className="mobile-inbox-symbol" aria-hidden="true">
-        <DesignIcon name={view.icon} size={23} />
-      </span>
       <span className="mobile-inbox-copy">
         <span className="mobile-inbox-title">{view.title}</span>
         {view.body && (
@@ -51,10 +49,22 @@ function NotificationRow({
     </>
   );
   return (
-    <li>
+    <li className="mobile-inbox-row" data-expanded={expanded || undefined}>
+      {!!item.unreadMemberCount && (
+        <span className="mobile-inbox-unread-dot" aria-label="未读" role="img" />
+      )}
+      {actor && (
+        <UserAvatar
+          className="mobile-inbox-symbol"
+          name={actor.name || "校园食友"}
+          avatar={actor.avatar}
+          profileId={actor.id}
+          onClick={() => onRead(item)}
+        />
+      )}
       {view.href ? (
         <Link
-          className="mobile-inbox-row"
+          className="mobile-inbox-action"
           to={view.href}
           onClick={() => onRead(item)}
         >
@@ -62,9 +72,9 @@ function NotificationRow({
         </Link>
       ) : (
         <button
-          className="mobile-inbox-row"
+          type="button"
+          className="mobile-inbox-action"
           aria-expanded={expanded}
-          data-expanded={expanded || undefined}
           onClick={() => {
             onRead(item);
             setExpanded(!expanded);
