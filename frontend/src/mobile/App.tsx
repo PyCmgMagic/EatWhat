@@ -1,4 +1,3 @@
-import { useFeedbackState } from "../components/feedback";
 import { Select } from "../components/Select";
 import {
   useEffect,
@@ -25,7 +24,6 @@ import {
   DesignIcon,
   DesignNav,
   PrimaryButton,
-  useMobile,
   type Draft,
 } from "./ui";
 import { useApp } from "../app/state";
@@ -46,7 +44,7 @@ import {
 } from "../api/food-display";
 
 import { isV4Path } from "../features/v4-paths";
-import { boundedText } from "../api/content-rules";
+import { codePoints } from "../api/content-rules";
 import { RemoteBanner, FeatureAvailability } from "../features/v4/Remote";
 import { MobileComments } from "../features/comments/Comments";
 const V4Routes = lazy(() => import("../features/v4/Routes"));
@@ -68,21 +66,18 @@ import { PasswordByCode, RecommendationControls } from "../features/Account";
 import { EditFood } from "../features/EditFood";
 import { EditRestaurant, isShopEditPath } from "../features/EditRestaurant";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
-import { idOf } from "../api/models";
 import { useContentMotion, useExitPresence } from "../motion/hooks";
 import { desktopLayout, editingFlow } from "../app/layout";
 import { isStandaloneLoginPath } from "../app/auth-routes";
 import { NotFound } from "../app/navigation";
 import { useProfileReturnTo } from "../app/profile-navigation";
 import { ProfileDraftProvider } from "../app/profile-draft";
-import { usePageLifetime } from "../app/drafts";
 import { useVisibleViewport } from "../app/viewport";
-import RestaurantLocationField, {
-  requireShopLocation,
-} from "../features/RestaurantLocationField";
+import RestaurantLocationField from "../features/RestaurantLocationField";
+import { NewShopSearch } from "../features/NewShopSearch";
+import { useNewShop } from "../features/useNewShop";
 import SheetHandle from "./SheetHandle";
-import type { MapPoint } from "../features/map-geometry";
-import { ShopTraitsFields, defaultShopTraits } from "../features/ShopTraits";
+import { ShopTraitsFields } from "../features/ShopTraits";
 import {
   ProfilePeopleDialog,
   useLegacyPeopleRedirect,
@@ -573,11 +568,9 @@ function MobileWorkspace() {
                     loc.pathname,
                   ) ? (
                   <FeatureAvailability name="newShop">
-                    <NewShopDetails
-                      nameHint={
-                        draft.restaurantId ? "" : (draft.shopName ?? "")
-                      }
-                    />
+                    <Gate>
+                      <NewShop />
+                    </Gate>
                   </FeatureAvailability>
                 ) : reference &&
                   (manifest as any)[screen]?.preview?.width !== 390 ? (
@@ -778,120 +771,104 @@ function MobileWorkspace() {
   );
 }
 
-function NewShopDetails({ nameHint }: { nameHint: string }) {
+function NewShop() {
+  const flow = useNewShop();
+  const { details, draft, busy } = flow;
+  const longName = codePoints(draft.name.trim()) > 20;
   return (
-    <Gate>
-      <NewShopDetailsForm nameHint={nameHint} />
-    </Gate>
-  );
-}
-function NewShopDetailsForm({ nameHint }: { nameHint: string }) {
-  const active = usePageLifetime();
-  const { api, toast } = useApp(),
-    m = useMobile(),
-    nav = useNavigate(),
-    { area } = useArea(),
-    [error, setError] = useFeedbackState(),
-    [busy, setBusy] = useState(false),
-    [uncertain, setUncertain] = useState(false),
-    [position, setPosition] = useState<MapPoint>(),
-    [name, setName] = useState(nameHint),
-    [address, setAddress] = useState(""),
-    [traits, setTraits] = useState(defaultShopTraits);
-  return (
-    <main className="mobile-page-native mobile-new-shop">
+    <main
+      className="mobile-page-native mobile-new-shop"
+      data-step={details ? "details" : "search"}
+    >
       <header className="mobile-new-shop-header">
-        <Link to="/publish" aria-label="返回">
-          <DesignIcon name="back" size={22} />
-        </Link>
-        <h1>添加一家店</h1>
-      </header>
-      <form
-        className="mobile-new-shop-form"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          if (busy || uncertain) return;
-          const d = new FormData(e.currentTarget);
-          setBusy(true);
-          try {
-            const point = requireShopLocation(position);
-            if (!traits.mealTimes.length)
-              throw new Error("请至少选择一个营业饭点。");
-            const created = await api.createRestaurant({
-              name: boundedText(String(d.get("name")), 20, "店名"),
-              address: boundedText(address, 30, "地址"),
-              ...point,
-              hubId: area?.hubId,
-              ...traits,
-            });
-            if (!active.current) return;
-            if (created.revisionId) {
-              toast("新店已提交，等待审核。");
-              nav("/publish");
-              return;
-            }
-            // Continue only when no private revision needs approval.
-            m.setShopId(idOf(created.id));
-            m.setDraft({
-              restaurantId: created.id,
-              shopName: String(d.get("name")).trim(),
-            });
-            nav("/publish/dish");
-          } catch (e) {
-            setError(errorMessage(e));
-            if (resultUncertain(e)) setUncertain(true);
-          } finally {
-            setBusy(false);
-          }
-        }}
-      >
-        <label className="mobile-new-shop-name">
-          <span>
-            店名
-            <FieldMark required />
-          </span>
-          <input
-            name="name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            maxLength={20}
-            placeholder="输入店铺名称"
-            autoComplete="off"
-            disabled={busy || uncertain}
-            required
-          />
-        </label>
-        <RestaurantLocationField
-          compact
-          name={name}
-          onNameChange={setName}
-          point={position}
-          onPick={(point) => {
-            setPosition(point);
-            setError("");
-          }}
-          address={address}
-          onAddressChange={setAddress}
-          disabled={busy || uncertain}
-        />
-        <ShopTraitsFields
-          value={traits}
-          onChange={setTraits}
-          disabled={busy || uncertain}
-          compact
-          showDeliveryNote={false}
-        />
-        {uncertain && (
-          <p className="mobile-error">
-            提交结果尚未确认，请返回列表核实，避免重复创建。
-          </p>
+        {details ? (
+          <button
+            type="button"
+            onClick={flow.back}
+            disabled={flow.pending}
+            aria-label={draft.uncertain ? "返回发布" : "返回搜店"}
+          >
+            <DesignIcon name="back" size={22} />
+          </button>
+        ) : (
+          <Link to="/publish" aria-label="返回">
+            <DesignIcon name="back" size={22} />
+          </Link>
         )}
-        <footer className="mobile-new-shop-footer">
-          <PrimaryButton disabled={busy || uncertain || !position}>
-            {busy ? "正在添加…" : "添加并继续"}
-          </PrimaryButton>
-        </footer>
-      </form>
+        <h1 id="mobile-new-shop-title">
+          {details ? "填写店铺信息" : "添加一家店"}
+        </h1>
+      </header>
+      {draft.uncertain && (
+        <p className="mobile-error" role="alert">
+          提交结果尚未确认，请返回发布页核实店铺，避免重复添加。
+        </p>
+      )}
+      {details ? (
+        <form
+          ref={flow.formRef}
+          tabIndex={-1}
+          aria-labelledby="mobile-new-shop-title"
+          className="mobile-new-shop-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            flow.submit();
+          }}
+        >
+          <label className="mobile-new-shop-name">
+            <span>
+              店名
+              <FieldMark required />
+            </span>
+            <input
+              name="name"
+              aria-label="店名"
+              aria-describedby={
+                longName ? "mobile-new-shop-name-hint" : undefined
+              }
+              value={draft.name}
+              onChange={(event) => flow.update({ name: event.target.value })}
+              maxLength={20}
+              placeholder="输入店铺名称"
+              autoComplete="off"
+              disabled={busy}
+              required
+            />
+            {longName && (
+              <small id="mobile-new-shop-name-hint">
+                请将店名简化至 20 字以内。
+              </small>
+            )}
+          </label>
+          <RestaurantLocationField
+            place={draft.choice.place}
+            point={draft.point}
+            onPick={(point) => flow.update({ point })}
+            address={draft.address}
+            onAddressChange={(address) => flow.update({ address })}
+            disabled={busy}
+          />
+          <ShopTraitsFields
+            value={draft.traits}
+            onChange={(traits) => flow.update({ traits })}
+            disabled={busy}
+            compact
+            showDeliveryNote={false}
+          />
+          <footer className="mobile-new-shop-footer">
+            <PrimaryButton disabled={!flow.canSubmit}>
+              {flow.pending ? "正在添加…" : "添加并继续"}
+            </PrimaryButton>
+          </footer>
+        </form>
+      ) : (
+        <NewShopSearch
+          keyword={flow.keyword}
+          onKeywordChange={flow.setKeyword}
+          onSelect={flow.select}
+          disabled={busy}
+        />
+      )}
     </main>
   );
 }

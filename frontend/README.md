@@ -236,7 +236,7 @@ PC 标签切换专项使用 `scripts/desktop-tabs.js`，覆盖主导航、首页
 
 全站动效专项为 `scripts/desktop-motion-all.js`、`scripts/desktop-motion-surfaces.js`、`scripts/desktop-motion-touch.js`，命令格式同上。覆盖按钮按压、卡片内图片悬停、PC 跟手拖动、移动端 360ms 转盘、稳定的圆点和分类栏、页面/列表切换、弹窗完整进出场、消息退出文字保留、焦点恢复和滚动锁定；减少动态效果运行时生效，键盘导航即时响应。触屏检查使用独立浏览器上下文，尚未进行实体手机验收。主流程覆盖 8 种宽度 × 6 个页面，记录为 `../output/motion-validation.json`，截图为 `../output/playwright/motion-*.png`。原型生成文件保持原样，适配在 bridge 与共享样式中完成。顶部推荐与分类结果独立，空分类不会移除首页与切换入口。没有新增动效库。
 
-PC 编辑资料与设置页共用页头和分组卡片，头像编辑并入基本资料，昵称、签名、性别、生日和省市同页保存，底部保留保存操作。`/me/details` 同样进入完整编辑页；头像先裁剪和预览，保存时再上传，失败会保留修改并复用已上传 key。专项为 `scripts/desktop-profile.js`、`scripts/desktop-profile-api.js`。新版未约定性别、生日与省市的清空写法，因此当前会提示保留或填写有效值，不提交未经约定的 null。
+PC 编辑资料与设置页共用页头和分组卡片，头像、昵称、签名、性别和生日同页保存。`/me/details` 同样进入完整编辑页。头像先裁剪和预览，保存时再上传，失败会保留修改并复用已上传 key。专项检查见 `scripts/desktop-profile.js` 和 `scripts/desktop-profile-api.js`。清空已填写的性别或生日时，页面会提示填写有效值或取消修改。
 
 菜品上传照片采用与默认插画一致的圆盘布局和浅色舞台背景，列表中不再铺满卡片；图片来源参与插画识别，重名上传图不会被误判。专项使用 `scripts/desktop-food-photos.js`，覆盖四种桌面宽度、推荐与详情、移动端，完成后恢复脚本使用的演示数据。
 

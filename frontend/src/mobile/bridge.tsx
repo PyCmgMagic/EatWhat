@@ -35,7 +35,6 @@ import {
   money,
   parseId,
   hasCoordinates,
-  wgsToGcj,
   type Food,
   type Category,
   type Restaurant,
@@ -101,6 +100,7 @@ import { createHeroOrbitScheduler, heroOrbitStep } from "../motion/hero-orbit";
 import { peopleHref } from "../features/profile-people";
 import { AccessWelcome } from "../components/AccessWelcome";
 import RestaurantMap from "../features/RestaurantMap";
+import { useDeviceLocation } from "../features/useDeviceLocation";
 import { baiduMarkerUrl } from "../features/map-geometry";
 import { RestaurantHeaderFavorite } from "../features/v4/RestaurantHeaderFavorite";
 import { RestaurantMoreActions } from "../features/RestaurantMoreActions";
@@ -169,6 +169,33 @@ function clean(text: string) {
 }
 function matches(view: NodeView, text: string) {
   return clean(view.text) === text;
+}
+
+function PlaceLocateButton({ disabled }: { disabled: boolean }) {
+  const { area, selectionVersion, selectArea } = useArea();
+  const { closePanel } = useMobile();
+  const { locate, locating } = useDeviceLocation({
+    selectionVersion,
+    selectArea: (point) => {
+      selectArea(point);
+      closePanel();
+    },
+    disabled,
+  });
+  const active = area?.source === "device";
+  return (
+    <button
+      type="button"
+      className="mobile-place-chip"
+      aria-pressed={active}
+      data-active={active || undefined}
+      disabled={disabled || locating}
+      onClick={locate}
+    >
+      <DesignIcon name="locate" size={16} />
+      {locating ? "正在定位…" : "使用我的位置"}
+    </button>
+  );
 }
 
 export function useDesignBridge(
@@ -2404,6 +2431,10 @@ export function useDesignBridge(
         };
     }
     if (screen === "G-AddDish") {
+      const photoDisabled = busy || photoBusy || publishUncertain;
+      const darkStage = ["#C9442B", "#A8321C", "#8F5B24"].includes(
+        m.draft.stage,
+      );
       // The name and price row; the duplicate hint goes right under it.
       if (id === 26 && !reference)
         return (
@@ -2545,9 +2576,18 @@ export function useDesignBridge(
             {view.children.slice(0, 2)}
             <DishPhotoPicker
               images={m.draft.images}
-              disabled={busy || photoBusy || publishUncertain}
+              disabled={photoDisabled}
               onAdd={() => void chooseFiles()}
               onEdit={(index) => void editPhoto(index)}
+              onMove={(source, target) => {
+                const images = [...draftRef.current.images];
+                const from = images.findIndex((image) => image.url === source);
+                const to = images.findIndex((image) => image.url === target);
+                if (from < 0 || to < 0 || from === to) return;
+                const [photo] = images.splice(from, 1);
+                images.splice(to, 0, photo);
+                m.setDraft({ images });
+              }}
               onRemove={(index) => {
                 const image = draftRef.current.images[index];
                 if (!image) return;
@@ -2561,28 +2601,39 @@ export function useDesignBridge(
           </div>
         );
       if (id === 2) {
-        p.style = {
-          ...st,
-          background: m.draft.stage,
-        };
-        p["aria-hidden"] = true;
+        const cover = m.draft.images[0];
+        return (
+          <div
+            {...p}
+            style={{
+              ...st,
+              background: m.draft.stage,
+              color: darkStage ? "#fff" : undefined,
+            }}
+          >
+            {cover ? (
+              <img
+                className="mobile-publish-preview"
+                src={cover.url}
+                alt="菜品封面预览"
+              />
+            ) : (
+              <button
+                type="button"
+                className="mobile-publish-preview is-empty"
+                disabled={photoDisabled}
+                onClick={() => void chooseFiles()}
+              >
+                <DesignIcon name="camera" size={32} />
+                加一张照片
+              </button>
+            )}
+          </div>
+        );
       }
-      if (
-        [4, 5, 9].includes(id) &&
-        ["#C9442B", "#A8321C", "#8F5B24"].includes(m.draft.stage)
-      )
+      if ([4, 5, 9].includes(id) && darkStage)
         p.style = { ...st, color: "#fff" };
       if (id === 10 || id === 17) return null;
-      if (tag === "img" && String(n.attrs.src).includes("yuntun")) {
-        if (!m.draft.images.length) return null;
-        p.src = m.draft.images[0].url;
-        p.style = {
-          ...st,
-          borderRadius: "50%",
-          objectFit: "cover",
-          boxShadow: "0 0 0 8px white,0 22px 40px rgba(0,0,0,.3)",
-        };
-      }
       if (id === 29) {
         delete p.defaultValue;
         p.id = dishNameId;
@@ -2594,7 +2645,7 @@ export function useDesignBridge(
       if (id === 34) {
         delete p.defaultValue;
         p.value = m.draft.price;
-        p.placeholder = "选填，不确定可不填";
+        p.placeholder = "选填";
         p.onChange = (e: any) => m.setDraft({ price: e.target.value });
       }
     }
@@ -3241,16 +3292,7 @@ export function useDesignBridge(
               </button>
             );
           })}
-          <button
-            className="mobile-place-chip"
-            aria-pressed={area?.source === "device"}
-            data-active={area?.source === "device" || undefined}
-            disabled={busy}
-            onClick={locate}
-          >
-            <DesignIcon name="locate" size={16} />
-            使用我的位置
-          </button>
+          <PlaceLocateButton disabled={busy} />
         </div>
       );
     }
@@ -3416,28 +3458,6 @@ export function useDesignBridge(
     ) : (
       <MobileEmpty title="还没找到这家店" detail="换个名字，或新建一家店。" />
     );
-  }
-  function locate() {
-    void run(async () => {
-      if (!navigator.geolocation)
-        throw new Error("当前浏览器无法定位，请手选区域。");
-      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(
-          resolve,
-          () => reject(new Error("未获取到位置，请手动选择区域。")),
-          { timeout: 10000, maximumAge: 60000 },
-        ),
-      );
-      const coordinates = wgsToGcj(pos.coords.longitude, pos.coords.latitude);
-      const hub = await api.locateHub(coordinates.gcjLng, coordinates.gcjLat);
-      selectArea({
-        name: hub?.name ? `${hub.name}附近` : "当前位置",
-        ...coordinates,
-        hubId: hub?.id ?? undefined,
-        source: "device",
-      });
-      m.closePanel();
-    });
   }
   async function pickAvatar(source: "camera" | "library") {
     if (!profile || busy) return;

@@ -17,7 +17,8 @@ const CAMPUS = "campus:";
  * stay as presets for when the browser cannot, or should not, locate.
  */
 export function LocationControl() {
-  const { area, selectArea, campusId, selectCampus } = useArea();
+  const { area, selectArea, selectionVersion, campusId, selectCampus } =
+    useArea();
   const { api } = useApp();
   const campuses = useQuery({
     queryKey: ["campuses"],
@@ -25,9 +26,8 @@ export function LocationControl() {
     staleTime: 300_000,
   });
   const { locate, locating } = useDeviceLocation({
-    area,
+    selectionVersion,
     selectArea,
-    autoLocate: false,
   });
 
   const options = (campuses.data ?? []).filter((c) => c.open !== false);

@@ -78,21 +78,12 @@ async (page) => {
       if (width >= 600) {
         await p.goto(base + "#/me/edit");
         await p.locator("body").ariaSnapshot();
-        const province = p.locator("#home-province"), city = p.locator("#home-city");
-        await p.waitForFunction(() => !!document.querySelector("#home-province") && !document.querySelector("#home-province").disabled);
-        await press(province);
-        await bounds("province");
-        await press(p.getByRole("option", { name: "山东省", exact: true }));
-        await p.waitForFunction(() => !document.querySelector("#home-city")?.disabled);
-        await press(city);
-        await bounds("city");
-        await press(p.getByRole("option", { name: "济南市", exact: true }));
-        assert((await city.textContent()).includes("济南"), "city linkage failed");
         await press(p.getByRole("combobox", { name: "性别", exact: true }));
+        await bounds("gender");
         await press(p.getByRole("option", { name: "女", exact: true }));
         assert((await p.locator("#profile-gender-native").inputValue()) === "female", "gender value mismatch");
         if (width === 1440) await p.screenshot({ path: "output/playwright/select-1440-profile.png", fullPage: true });
-        checks.push({ width, flow: "profile gender and province/city linkage" });
+        checks.push({ width, flow: "profile gender" });
       }
 
       for (const route of ["/users/21", "/history", "/foods/1/edit"]) {

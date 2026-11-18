@@ -1,16 +1,15 @@
 // @vitest-environment jsdom
-import { act, useState } from "react";
+import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import RestaurantLocationField, {
   requireShopLocation,
 } from "./RestaurantLocationField";
 import type { MapPoint } from "./map-geometry";
+import type { MapPlace } from "../api/baidu-places";
 
 const { lookup } = vi.hoisted(() => ({ lookup: vi.fn() }));
-const { search } = vi.hoisted(() => ({ search: vi.fn() }));
 vi.mock("../api/baidu-map", () => ({ addressForMapPoint: lookup }));
-vi.mock("../api/baidu-places", () => ({ searchMapPlaces: search }));
 vi.mock("../mobile/ui", () => ({ DesignIcon: () => null }));
 vi.mock("./RestaurantMap", () => ({ default: () => <div>地图</div> }));
 let root: Root, host: HTMLDivElement;
@@ -21,19 +20,17 @@ async function render(
   point?: MapPoint,
   address = "",
   disabled = false,
-  compact = false,
+  place?: MapPlace,
 ) {
   await act(async () => {
     root.render(
       <RestaurantLocationField
-        name=""
-        onNameChange={vi.fn()}
+        place={place}
         point={point}
         onPick={vi.fn()}
         address={address}
         onAddressChange={change}
         disabled={disabled}
-        compact={compact}
       />,
     );
   });
@@ -46,7 +43,6 @@ beforeEach(() => {
   document.body.append(host);
   root = createRoot(host);
   lookup.mockReset();
-  search.mockReset();
   change.mockReset();
 });
 afterEach(async () => {
@@ -62,25 +58,14 @@ it("requires an actual map point and exposes no coordinate inputs", async () => 
     "请先在地图",
   );
   expect(requireShopLocation(a)).toEqual(a);
-  expect(host.querySelectorAll("input").length).toBe(2);
+  expect(host.querySelectorAll("input").length).toBe(1);
   expect(host.querySelector('input[name="address"]')).not.toBeNull();
   expect(host.textContent).toContain("请在地图选点");
   expect(lookup).not.toHaveBeenCalled();
 });
-it("keeps the compact form quiet until there is useful status to show", async () => {
-  await render(undefined, "", false, true);
-  expect(host.textContent).not.toContain("输入即匹配百度地图地点");
-  expect(host.textContent).not.toContain("核对地址后");
-  expect(
-    host
-      .querySelector('input[type="search"]')
-      ?.getAttribute("aria-describedby"),
-  ).toBeNull();
-  expect(host.textContent).toContain("请在地图选点");
-});
-it("keeps a failed address lookup visible and associated with the compact address field", async () => {
+it("associates failed lookup feedback with the address field", async () => {
   lookup.mockRejectedValue(new Error("provider unavailable"));
-  await render(a, "", false, true);
+  await render(a);
   const input = host.querySelector('input[name="address"]')!;
   const hint = document.getElementById(input.getAttribute("aria-describedby")!);
   expect(hint?.textContent).toContain("未能识别地址");
@@ -152,199 +137,20 @@ it("does not mutate form data after submission has locked it", async () => {
   ).toBe(true);
 });
 
-function SearchForm() {
-  const [name, setName] = useState("待查店名"),
-    [address, setAddress] = useState("");
-  const [point, setPoint] = useState<MapPoint>();
-  return (
-    <RestaurantLocationField
-      name={name}
-      onNameChange={setName}
-      address={address}
-      onAddressChange={setAddress}
-      point={point}
-      onPick={setPoint}
-    />
-  );
-}
-async function beginSearch() {
-  await act(async () => root.render(<SearchForm />));
-  const input = host.querySelector('input[type="search"]')!;
-  const enter = new KeyboardEvent("keydown", {
-    key: "Enter",
-    bubbles: true,
-    cancelable: true,
-  });
-  await act(async () => {
-    input.dispatchEvent(enter);
-  });
-  expect(enter.defaultPrevented).toBe(true);
-}
-it("fills a POI's precise address and prevents reverse geocoding from replacing it", async () => {
-  search.mockResolvedValue([
-    { id: "1", name: "云吞店", address: "舜华路1号二层", point: a },
-  ]);
-  await beginSearch();
-  const result = host.querySelector<HTMLButtonElement>(
-    ".restaurant-place-results button",
-  )!;
-  expect(result.type).toBe("button");
-  await act(async () => result.click());
+it("keeps a POI address and loads the map only when requested", async () => {
+  const place = { id: "1", name: "云吞店", address: "舜华路1号二层", point: a };
+  await render(a, place.address, false, place);
   expect(host.querySelector<HTMLInputElement>('[name="address"]')?.value).toBe(
-    "舜华路1号二层",
+    place.address,
   );
-  expect(host.textContent).toContain("已选店铺位置");
-  expect(host.textContent).toContain("已填入“云吞店”");
+  const toggle = host.querySelector("button")!;
+  expect(toggle.textContent).toContain("调整位置");
+  expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  expect(host.querySelector(".restaurant-map-picker")?.textContent).toBe("");
+  await act(async () => toggle.click());
+  expect(toggle.getAttribute("aria-expanded")).toBe("true");
+  expect(host.querySelector(".restaurant-map-picker")?.textContent).toBe(
+    "地图",
+  );
   expect(lookup).not.toHaveBeenCalled();
-});
-it("ignores a result that arrives after the user changes the query", async () => {
-  let finish!: (value: unknown) => void;
-  search.mockReturnValue(
-    new Promise((resolve) => {
-      finish = resolve;
-    }),
-  );
-  await beginSearch();
-  const input = host.querySelector<HTMLInputElement>('input[type="search"]')!;
-  await act(async () => {
-    Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    )!.set!.call(input, "新关键词");
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  await act(async () =>
-    finish([{ id: "old", name: "旧结果", address: "旧地址", point: a }]),
-  );
-  expect(host.querySelector(".restaurant-place-results")).toBeNull();
-  expect(host.textContent).not.toContain("旧结果");
-});
-it("leaves map selection available after an empty search", async () => {
-  search.mockResolvedValue([]);
-  await beginSearch();
-  expect(host.textContent).toContain("没有找到这个地点");
-  expect(host.textContent).toContain("地图");
-  expect(host.textContent).toContain("请在地图选点");
-});
-
-async function typeKeyword(value: string) {
-  const input = host.querySelector<HTMLInputElement>('input[type="search"]')!;
-  await act(async () => {
-    Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      "value",
-    )!.set!.call(input, value);
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-}
-async function advance(ms: number) {
-  await act(async () => {
-    await vi.advanceTimersByTimeAsync(ms);
-  });
-}
-it("matches after typing pauses and cancels the pending match when cleared", async () => {
-  vi.useFakeTimers();
-  search.mockResolvedValue([]);
-  await act(async () => root.render(<SearchForm />));
-  await typeKeyword("三");
-  await advance(200);
-  await typeKeyword("三江源");
-  await advance(200);
-  expect(search).not.toHaveBeenCalled();
-  await advance(100);
-  expect(search).toHaveBeenCalledExactlyOnceWith(
-    "三江源",
-    undefined,
-    expect.any(AbortSignal),
-  );
-  await typeKeyword("三江源牛肉面");
-  await typeKeyword("");
-  await advance(1000);
-  expect(search).toHaveBeenCalledTimes(1);
-  expect(host.querySelector(".restaurant-place-results")).toBeNull();
-});
-it("waits for a committed Chinese composition and Enter does not duplicate it", async () => {
-  vi.useFakeTimers();
-  search.mockResolvedValue([]);
-  await act(async () => root.render(<SearchForm />));
-  const input = host.querySelector('input[type="search"]')!;
-  await act(async () => {
-    input.dispatchEvent(
-      new CompositionEvent("compositionstart", { bubbles: true }),
-    );
-  });
-  await typeKeyword("sanjiangyuan");
-  await advance(1000);
-  await act(async () => {
-    input.dispatchEvent(
-      new KeyboardEvent("keydown", {
-        key: "Enter",
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
-  });
-  expect(search).not.toHaveBeenCalled();
-  await typeKeyword("三江源");
-  await act(async () => {
-    input.dispatchEvent(
-      new CompositionEvent("compositionend", { bubbles: true, data: "三江源" }),
-    );
-  });
-  await act(async () => {
-    input.dispatchEvent(
-      new KeyboardEvent("keydown", {
-        key: "Enter",
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
-  });
-  await advance(1000);
-  expect(search).toHaveBeenCalledExactlyOnceWith(
-    "三江源",
-    undefined,
-    expect.any(AbortSignal),
-  );
-});
-it("keeps a selected place closed instead of searching its filled-in name again", async () => {
-  vi.useFakeTimers();
-  search.mockResolvedValue([
-    { id: "1", name: "三江源牛肉面", address: "舜华路1号", point: a },
-  ]);
-  await act(async () => root.render(<SearchForm />));
-  await typeKeyword("三江源");
-  await advance(300);
-  await act(async () =>
-    host
-      .querySelector<HTMLButtonElement>(".restaurant-place-results button")!
-      .click(),
-  );
-  await advance(1000);
-  expect(search).toHaveBeenCalledTimes(1);
-  expect(host.querySelector(".restaurant-place-results")).toBeNull();
-  expect(host.textContent).toContain("已填入“三江源牛肉面”");
-});
-it("keeps the newest automatic matches when older searches finish last", async () => {
-  vi.useFakeTimers();
-  let finishOld!: (value: unknown) => void;
-  search
-    .mockReturnValueOnce(
-      new Promise((resolve) => {
-        finishOld = resolve;
-      }),
-    )
-    .mockResolvedValueOnce([
-      { id: "new", name: "三江源牛肉面", address: "新地址", point: a },
-    ]);
-  await act(async () => root.render(<SearchForm />));
-  await typeKeyword("三江");
-  await advance(300);
-  await typeKeyword("三江源");
-  await advance(300);
-  await act(async () =>
-    finishOld([{ id: "old", name: "旧查询结果", address: "旧地址", point: b }]),
-  );
-  expect(host.textContent).toContain("三江源牛肉面");
-  expect(host.textContent).not.toContain("旧查询结果");
 });

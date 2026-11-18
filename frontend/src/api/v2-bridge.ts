@@ -945,7 +945,7 @@ const routes: [string, RegExp, Handler][] = [
   ],
   ["POST", /^\/user\/cancellation/, gone("注销账号")],
   [".*", /^\/user\/mobile\/commands/, gone("此版本的换绑手机号流程")],
-  ["GET", /^\/api\/location\//, emptyList],
+  ["GET", /^\/api\/location\//, gone("家乡省市")],
 
   // ---- dishes
   [

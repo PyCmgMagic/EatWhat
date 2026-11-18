@@ -87,7 +87,10 @@ async function validateRestaurantLocationPicker(page) {
               json: { code: 900, msg: "测试：请保留信息后重试" },
             });
           data = { id: 901 };
-        } else if (url.pathname === "/api/user/activity") data = null;
+        } else if (
+          ["/api/user/activity", "/api/device/register"].includes(url.pathname)
+        )
+          data = null;
         else if (url.pathname === "/api/restaurant/detail/901")
           data = { ...creates.at(-1), id: 901 };
         else
@@ -132,10 +135,17 @@ async function validateRestaurantLocationPicker(page) {
       await p
         .getByRole("heading", { name: "添加一家店", exact: true })
         .waitFor();
-      const name = p.getByLabel(width < 600 ? "店名" : "店铺名称", {
+      await p
+        .getByRole("button", { name: "搜不到？手动添加", exact: true })
+        .click();
+      const name = p.getByLabel(width < 640 ? "店名" : "店铺名称", {
         exact: true,
       });
       const address = p.getByLabel("详细地址", { exact: true });
+      const submit = p.getByRole("button", {
+        name: width < 640 ? "添加并继续" : "提交新店",
+        exact: true,
+      });
       await name.fill("地图选点验收小店");
       await address.fill("软件园食堂二层");
       assert(
@@ -144,16 +154,8 @@ async function validateRestaurantLocationPicker(page) {
           .count()) === 0,
         "Coordinate inputs remain",
       );
-      assert(
-        await p
-          .getByRole("button", { name: "请先在地图选点", exact: true })
-          .isDisabled(),
-        "Unselected location can submit",
-      );
+      assert(await submit.isDisabled(), "Unselected location can submit");
       await name.evaluate((input) => input.form.requestSubmit());
-      await p
-        .getByText("请先在地图上选择店铺位置。", { exact: true })
-        .waitFor();
       assert(creates.length === 0, "Missing location reached create API");
       await p
         .locator('.restaurant-map-canvas[data-map-state="ready"]')
@@ -163,9 +165,7 @@ async function validateRestaurantLocationPicker(page) {
         .click();
       await p.locator(".restaurant-map-device-dot").waitFor();
       assert(
-        await p
-          .getByRole("button", { name: "请先在地图选点", exact: true })
-          .isDisabled(),
+        await submit.isDisabled(),
         "Device position silently became shop position",
       );
       checks.push(
@@ -184,9 +184,7 @@ async function validateRestaurantLocationPicker(page) {
         "from the current-location dot",
       );
       assert(
-        await p
-          .getByRole("button", { name: "请先在地图选点", exact: true })
-          .isDisabled(),
+        await submit.isDisabled(),
         "Panning silently selected a shop position",
       );
       const background = await canvas.boundingBox();
@@ -215,7 +213,7 @@ async function validateRestaurantLocationPicker(page) {
         "Map coordinates were not converted to GCJ02",
       );
       await p.waitForFunction(
-        () => !document.body.innerText.includes("正在识别所选位置的地址"),
+        () => !document.body.innerText.includes("正在识别地址"),
       );
       const suggested = await address.inputValue();
       assert(
@@ -232,9 +230,6 @@ async function validateRestaurantLocationPicker(page) {
         { steps: 8 },
       );
       await p.mouse.up();
-      await p.waitForFunction(
-        () => !document.body.innerText.includes("正在识别所选位置的地址"),
-      );
       const selected = await readPoint();
       assert(
         Math.abs(first.gcjLng - selected.gcjLng) > 0.000001 ||
@@ -274,7 +269,7 @@ async function validateRestaurantLocationPicker(page) {
         `${width}px: real Baidu map click/drag, address ${suggested ? "autofill" : "fallback"}, manual detail preservation and responsive layout`,
       );
 
-      await p.getByRole("button", { name: "提交新店", exact: true }).click();
+      await submit.click();
       await p.getByText("测试：请保留信息后重试", { exact: true }).waitFor();
       assert(
         (await address.inputValue()) === "软件园食堂二层3号窗口",
@@ -285,7 +280,7 @@ async function validateRestaurantLocationPicker(page) {
         "Failed create lost name",
       );
       rejectCreate = false;
-      await p.getByRole("button", { name: "提交新店", exact: true }).click();
+      await submit.click();
       await p.waitForURL("**#/publish/dish");
       const body = creates.at(-1);
       assert(

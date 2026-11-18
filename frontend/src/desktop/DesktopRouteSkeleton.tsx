@@ -128,7 +128,7 @@ function ProfileEditorSkeleton() {
         </Section>
         <Section title="更多资料">
           <div className="pc-profile-fields">
-            {["性别", "生日", "家乡省份", "家乡城市"].map((label) => (
+            {["性别", "生日"].map((label) => (
               <div className="pc-profile-field" key={label}>
                 <label>{label}</label>
                 <Skeleton height={42} />

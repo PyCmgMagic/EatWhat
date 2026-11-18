@@ -27,7 +27,7 @@ export const secondaryTitles: Record<string, string> = {
   "/data-notice": "数据存放说明",
   "/follows": "关注与粉丝",
   "/restaurants/new": "添加一家店",
-  "/restaurants/new/details": "添加一家店",
+  "/restaurants/new/details": "填写店铺信息",
   "/auth": "欢迎回来",
   "/auth/password": "密码登录",
   "/auth/username-register": "手机登录 / 注册",

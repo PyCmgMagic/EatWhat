@@ -102,15 +102,16 @@ async (page) => {
     await loaded();
     await p.evaluate(() => Object.defineProperty(navigator, "geolocation", { configurable: true, value: { getCurrentPosition: (success, failure) => failure({ code: 1 }) } }));
     await p.getByRole("button", { name: "回到我的位置", exact: true }).click();
-    await p.getByText("未获取到位置，请允许浏览器定位或手动选择区域。", { exact: true }).waitFor();
+    await p.getByText("定位权限被拒绝，请在浏览器的站点设置中允许定位，并检查系统是否允许浏览器访问位置。", { exact: true }).waitFor();
     checks.push("Tile failures are retryable without losing the list; denied location is reported honestly");
     for (const width of [390, 1440]) {
       await p.setViewportSize({ width, height: 1000 });
-      await p.goto(base + "#/restaurants/new");
+      await p.goto(base + "#/restaurants/new/details");
       await p.reload();
       await loaded();
       if (await p.locator('input[name="lng"], input[name="lat"]').count()) throw new Error("Manual coordinate fields remain");
-      if (!await p.getByRole('button', {name:'请先在地图选点',exact:true}).isDisabled()) throw new Error("Campus center silently became a shop location");
+      const submit = p.getByRole('button', {name:width < 640 ? '添加并继续' : '提交新店',exact:true});
+      if (!await submit.isDisabled()) throw new Error("Campus center silently became a shop location");
       const picked = () => p.evaluate(async () => {
         const marker = window.__baiduTestMap.getOverlays().find(o => o.getTitle?.() === '店铺位置，可拖动调整');
         const value = marker.getPosition();
@@ -126,9 +127,9 @@ async (page) => {
       await p.mouse.move(pin.x + pin.width / 2, pin.y + pin.height / 2); await p.mouse.down(); await p.mouse.move(pin.x + 40, pin.y + 40, { steps: 8 }); await p.mouse.up();
       const afterDrag = await picked();
       if (afterDrag.gcjLng === selectedLng && afterDrag.gcjLat === selectedLat) throw new Error("Dragging the picked pin did not update coordinates");
-      await p.getByLabel(width < 600 ? "店名" : "店铺名称", { exact: true }).fill(`地图选点验收${width}`);
+      await p.getByLabel(width < 640 ? "店名" : "店铺名称", { exact: true }).fill(`地图选点验收${width}`);
       await p.getByLabel("详细地址", { exact: true }).fill("验收地址，不会写入真实后端");
-      await p.getByRole("button", { name: "提交新店", exact: true }).click();
+      await submit.click();
       await p.waitForURL("**#/publish/dish");
       if (creations[creations.length - 1]?.gcjLng == null) throw new Error("Picked coordinates were omitted from the create request");
       checks.push(`${width}px: map click/drag fills GCJ02 coordinates; isolated create request preserves the picked point`);

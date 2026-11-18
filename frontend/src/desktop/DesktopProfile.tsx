@@ -3,7 +3,6 @@ import { Select } from "../components/Select";
 import { useContext, useEffect, useRef, useState, type FormEvent } from "react";
 import { ProfileNavigationGuardContext } from "../app/profile-workspace";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { Crop, Undo2 } from "lucide-react";
 import { useApp } from "../app/state";
 import { errorMessage } from "../api/client";
@@ -51,15 +50,6 @@ export default function DesktopProfile() {
   const clearError = profileClearError(form, saved);
   const nameInvalid =
     form.name.trim().length < 2 || form.name.trim().length > 12;
-  const provinces = useQuery({
-    queryKey: ["provinces"],
-    queryFn: () => app.api.provinces(),
-  });
-  const cities = useQuery({
-    queryKey: ["cities", form.province],
-    queryFn: () => app.api.cities(form.province!),
-    enabled: form.province !== null,
-  });
   const avatarUrl = avatar?.url || mediaUrl(app.user?.avatar);
   const saveStatus = busy ? phase : notice || (dirty ? "有修改尚未保存" : "");
   const unknownBirthday = form.birthday === undefined;
@@ -362,81 +352,7 @@ export default function DesktopProfile() {
                   <p>已设置生日，重新选择可修改，留空会保留。</p>
                 )}
               </div>
-              <div className="pc-profile-field">
-                <label htmlFor="home-province">家乡省份</label>
-                <Select
-                  id="home-province"
-                  value={form.province ?? ""}
-                  disabled={provinces.isPending || provinces.isError}
-                  onChange={(e) =>
-                    change({
-                      province: Number(e.target.value) || null,
-                      city: null,
-                    })
-                  }
-                >
-                  <option value="">暂不填写</option>
-                  {form.province &&
-                    !provinces.data?.some((p) => p.id === form.province) && (
-                      <option value={form.province}>已保存的省份</option>
-                    )}
-                  {provinces.data
-                    ?.filter((p) => p.id)
-                    .map((p) => (
-                      <option key={p.id} value={p.id!}>
-                        {p.name}
-                      </option>
-                    ))}
-                </Select>
-              </div>
-              <div className="pc-profile-field">
-                <label htmlFor="home-city">家乡城市</label>
-                <Select
-                  id="home-city"
-                  value={form.city ?? ""}
-                  disabled={
-                    !form.province || cities.isPending || cities.isError
-                  }
-                  onChange={(e) =>
-                    change({ city: Number(e.target.value) || null })
-                  }
-                >
-                  <option value="">
-                    {form.province ? "选择城市（选填）" : "先选择省份"}
-                  </option>
-                  {form.city &&
-                    !cities.data?.some((c) => c.id === form.city) && (
-                      <option value={form.city}>已保存的城市</option>
-                    )}
-                  {cities.data
-                    ?.filter((c) => c.id)
-                    .map((c) => (
-                      <option key={c.id} value={c.id!}>
-                        {c.name}
-                      </option>
-                    ))}
-                </Select>
-              </div>
             </div>
-            {(provinces.error || (form.province && cities.error)) && (
-              <div className="pc-profile-dictionary-error" role="alert">
-                {provinces.error
-                  ? "省份列表暂时无法加载"
-                  : "城市列表暂时无法加载"}
-                ，已保存的家乡会保留。
-                <button
-                  type="button"
-                  className="pc-profile-action"
-                  onClick={() =>
-                    void (provinces.error
-                      ? provinces.refetch()
-                      : cities.refetch())
-                  }
-                >
-                  重新加载
-                </button>
-              </div>
-            )}
           </Section>
         </fieldset>
         <footer ref={saveBar} className="pc-profile-savebar">

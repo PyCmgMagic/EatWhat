@@ -1,5 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { useApp } from "../app/state";
 import { Select } from "../components/Select";
 import { PROFILE_SIGNATURE_LIMIT, type ProfileForm } from "../desktop/profile";
 import "./profile-editor.css";
@@ -25,16 +23,6 @@ export default function ProfileEditor({
   onSave: () => void;
   onCancel: () => void;
 }) {
-  const { api } = useApp();
-  const provinces = useQuery({
-    queryKey: ["provinces"],
-    queryFn: () => api.provinces(),
-  });
-  const cities = useQuery({
-    queryKey: ["cities", form.province],
-    queryFn: () => api.cities(form.province!),
-    enabled: !!form.province,
-  });
   const today = new Date();
   const maxDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
@@ -151,76 +139,6 @@ export default function ProfileEditor({
                 <small>已有生日会保留，重新选择可修改。</small>
               )}
             </div>
-          </div>
-          <div className="mobile-profile-editor-field">
-            <label htmlFor="home-province">家乡，选填</label>
-            <div className="mobile-profile-editor-pair">
-              <Select
-                id="home-province"
-                aria-label="家乡省份"
-                value={form.province ?? ""}
-                disabled={provinces.isPending || provinces.isError}
-                onChange={(event) =>
-                  onChange({
-                    province: Number(event.target.value) || null,
-                    city: null,
-                  })
-                }
-              >
-                <option value="">选择省份</option>
-                {form.province &&
-                  !provinces.data?.some(
-                    (province) => province.id === form.province,
-                  ) && <option value={form.province}>已保存的省份</option>}
-                {provinces.data
-                  ?.filter((province) => province.id)
-                  .map((province) => (
-                    <option key={province.id} value={province.id!}>
-                      {province.name}
-                    </option>
-                  ))}
-              </Select>
-              <Select
-                aria-label="家乡城市"
-                value={form.city ?? ""}
-                disabled={!form.province || cities.isPending || cities.isError}
-                onChange={(event) =>
-                  onChange({ city: Number(event.target.value) || null })
-                }
-              >
-                <option value="">
-                  {form.province ? "选择城市" : "先选择省份"}
-                </option>
-                {form.city &&
-                  !cities.data?.some((city) => city.id === form.city) && (
-                    <option value={form.city}>已保存的城市</option>
-                  )}
-                {cities.data
-                  ?.filter((city) => city.id)
-                  .map((city) => (
-                    <option key={city.id} value={city.id!}>
-                      {city.name}
-                    </option>
-                  ))}
-              </Select>
-            </div>
-            {(provinces.isError || (form.province && cities.isError)) && (
-              <small className="mobile-profile-dictionary-status" role="status">
-                {provinces.isError
-                  ? "省份列表暂时无法加载"
-                  : "城市列表暂时无法加载"}
-                <button
-                  type="button"
-                  onClick={() =>
-                    void (provinces.isError
-                      ? provinces.refetch()
-                      : cities.refetch())
-                  }
-                >
-                  重试
-                </button>
-              </small>
-            )}
           </div>
         </fieldset>
       </form>

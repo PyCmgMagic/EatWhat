@@ -2,12 +2,10 @@ import { describe, expect, it } from "vitest";
 import { profileChanges, profileForm, profileClearError } from "./profile";
 
 describe("desktop profile updates", () => {
-  it("does not overwrite a timestamp birthday or unavailable location when editing a nickname", () => {
+  it("does not overwrite a timestamp birthday or gender when editing a nickname", () => {
     const saved = profileForm({
       displayName: "原有昵称",
       birthday: 946684800000,
-      hometownProvinceId: 81,
-      hometownCityId: 91,
       gender: "custom",
     });
     expect(profileChanges({ ...saved, name: " 新的昵称 " }, saved)).toEqual({
@@ -24,8 +22,6 @@ describe("desktop profile updates", () => {
       birthday: 946684800000,
       gender: "female",
       signature: "好好吃饭",
-      hometownProvinceId: 1,
-      hometownCityId: 2,
     });
     expect(
       profileChanges(
@@ -34,8 +30,6 @@ describe("desktop profile updates", () => {
           birthday: "",
           gender: "",
           signature: "",
-          province: null,
-          city: null,
         },
         saved,
       ),
@@ -43,17 +37,8 @@ describe("desktop profile updates", () => {
       birthday: undefined,
       signature: "",
     });
-    expect(profileClearError({ ...saved, city: null }, saved)).toContain(
+    expect(profileClearError({ ...saved, birthday: "" }, saved)).toContain(
       "清空",
     );
-  });
-  it("clears the old city when selecting another province", () => {
-    const saved = profileForm({ hometownProvinceId: 1, hometownCityId: 2 });
-    expect(
-      profileChanges({ ...saved, province: 3, city: null }, saved),
-    ).toEqual({ hometownProvinceId: 3 });
-    expect(
-      profileClearError({ ...saved, province: 3, city: null }, saved),
-    ).toContain("清空");
   });
 });

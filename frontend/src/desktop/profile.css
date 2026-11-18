@@ -240,17 +240,6 @@
 .pc-profile-field > p.pc-profile-invalid {
   color: #a6402c;
 }
-.pc-profile-dictionary-error {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 12px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: #fbf3e5;
-  margin-top: 12px;
-  font-size: 12px;
-}
 .pc-profile-savebar {
   display: flex;
   align-items: center;

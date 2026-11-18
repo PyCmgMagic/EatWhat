@@ -767,6 +767,18 @@ describe("v2 bridge", () => {
     expect(sent).toHaveLength(0);
   });
 
+  it("reports the missing hometown dictionaries without calling v2", async () => {
+    const { transport, sent } = backend(() => undefined);
+    const api = createApi(transport);
+    for (const lookup of [() => api.provinces(), () => api.cities(1)]) {
+      await expect(lookup()).rejects.toMatchObject({
+        code: "FEATURE_RETIRED",
+        status: 404,
+      });
+    }
+    expect(sent).toHaveLength(0);
+  });
+
   it("asks for policy consent at sign-in and retries with the version", async () => {
     const { transport, sent } = backend(({ path, body }) =>
       path === "/auth/consent/policy"

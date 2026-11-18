@@ -31,7 +31,7 @@ async (page) => {
   }
   checks.push('通知、隐私、他人主页的移动端源画板保留');
   await page.setViewportSize({width:1440,height:1000});
-  for(const [path,name,selector] of [['/settings/account','account','.pc-secondary-identity'],['/settings/password','password','input[name=old]'],['/settings/bind-phone','binding','#bind-mobile'],['/verify','verify','.pc-secondary-verification'],['/restaurants/new','new-shop','input[aria-label="店铺名称"]'],['/follows','follows','.pc-secondary-list-toolbar'],['/settings/devices','devices','.pc-secondary-availability']]){
+  for(const [path,name,selector] of [['/settings/account','account','.pc-secondary-identity'],['/settings/password','password','input[name=old]'],['/settings/bind-phone','binding','#bind-mobile'],['/verify','verify','.pc-secondary-verification'],['/restaurants/new','new-shop','input[type="search"][aria-label="搜索店名或地址"]'],['/follows','follows','.pc-secondary-list-toolbar'],['/settings/devices','devices','.pc-secondary-availability']]){
    await page.goto(base+'/?demo=1&view=desktop#'+path);await page.locator(selector).waitFor();await page.screenshot({path:'output/playwright/pc-secondary-'+name+'.png'});
   }
   await page.evaluate(()=>localStorage.setItem('eatwhat-demo-session','null'));await page.reload();

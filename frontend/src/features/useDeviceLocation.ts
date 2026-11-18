@@ -4,11 +4,24 @@ import { wgsToGcj } from "../api/models";
 import { useFeedbackState } from "../components/feedback";
 
 type Options = {
-  area: Area | null;
+  selectionVersion: number;
   selectArea: (area: Area) => void;
-  autoLocate: boolean;
+  autoLocate?: boolean;
   disabled?: boolean;
 };
+
+function locationErrorMessage(code: number) {
+  switch (code) {
+    case 1:
+      return "定位权限被拒绝，请在浏览器的站点设置中允许定位，并检查系统是否允许浏览器访问位置。";
+    case 2:
+      return "未获取到位置，请开启设备定位后重试，或手动选择区域。";
+    case 3:
+      return "定位超时，可以重试或手动选择区域。";
+    default:
+      return "无法获取位置，请重试或手动选择区域。";
+  }
+}
 
 export function useDeviceLocation(options: Options) {
   const current = useRef(options);
@@ -31,12 +44,27 @@ export function useDeviceLocation(options: Options) {
 
   const locate = useCallback(() => {
     if (!mounted.current || current.current.disabled || pending.current) return;
+    if (window.isSecureContext === false) {
+      setLocationError("当前页面无法申请定位权限，请使用 HTTPS 地址打开网站。");
+      return;
+    }
+    const { featurePolicy } = document as Document & {
+      featurePolicy?: { allowsFeature: (name: string) => boolean };
+    };
+    if (featurePolicy?.allowsFeature("geolocation") === false) {
+      setLocationError(
+        window.top === window
+          ? "此网站的权限策略禁用了定位，请手动选择区域。"
+          : "当前嵌入页面无法定位，请在浏览器中直接打开网站。",
+      );
+      return;
+    }
     if (!navigator.geolocation) {
       setLocationError("浏览器不支持定位，请选择区域。");
       return;
     }
     const id = ++requestId.current,
-      startingArea = current.current.area,
+      startingSelection = current.current.selectionVersion,
       startingPage =
         window.location.pathname + window.location.hash.split("?")[0];
     pending.current = true;
@@ -54,7 +82,7 @@ export function useDeviceLocation(options: Options) {
         window.location.pathname + window.location.hash.split("?")[0];
       return (
         !current.current.disabled &&
-        current.current.area === startingArea &&
+        current.current.selectionVersion === startingSelection &&
         page === startingPage
       );
     };
@@ -79,25 +107,40 @@ export function useDeviceLocation(options: Options) {
         },
         (error) => {
           if (!finish()) return;
-          setLocationError(
-            error.code === 3
-              ? "定位超时，可以重试或手动选择区域。"
-              : "未获取到位置，请允许浏览器定位或手动选择区域。",
-          );
+          setLocationError(locationErrorMessage(error.code));
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+        { timeout: 10000, maximumAge: 60000 },
       );
     } catch {
       if (finish())
-        setLocationError("无法发起定位，请允许浏览器定位或手动选择区域。");
+        setLocationError("无法发起定位，请检查浏览器和系统的定位设置。");
     }
   }, []);
 
   useEffect(() => {
-    if (!options.autoLocate || options.disabled) return;
-    // Defer one task so StrictMode's effect replay does not ask twice.
-    const timer = setTimeout(locate, 0);
-    return () => clearTimeout(timer);
+    if (!options.autoLocate || options.disabled || !navigator.permissions)
+      return;
+    let active = true;
+    const startingSelection = current.current.selectionVersion;
+    // Without a known grant, the first request must run in the click handler.
+    void (async () => {
+      try {
+        const { state } = await navigator.permissions.query({
+          name: "geolocation",
+        });
+        if (
+          active &&
+          state === "granted" &&
+          current.current.selectionVersion === startingSelection
+        )
+          locate();
+      } catch {
+        // Some browsers expose the API without supporting geolocation queries.
+      }
+    })();
+    return () => {
+      active = false;
+    };
   }, [options.autoLocate, options.disabled, locate]);
 
   return { locate, locating, locationError, deviceRevision };

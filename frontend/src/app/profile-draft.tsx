@@ -48,8 +48,6 @@ function useProfileDraftState(editing: boolean) {
       sign: saved.signature,
       gender: saved.gender,
       birthday: saved.birthday,
-      province: saved.province,
-      city: saved.city,
     });
   const [form, setForm, clearForm] = useSessionDraft<ProfileForm>(
     key,
@@ -59,8 +57,6 @@ function useProfileDraftState(editing: boolean) {
           signature: legacy.sign,
           gender: legacy.gender,
           birthday: legacy.birthday,
-          province: legacy.province,
-          city: legacy.city,
         }
       : saved,
   );

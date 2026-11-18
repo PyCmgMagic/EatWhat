@@ -10,7 +10,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "./state";
 import { isDemo } from "./runtime";
-import { hasCoordinates, wgsToGcj } from "../api/models";
+import { hasCoordinates } from "../api/models";
 import { errorMessage } from "../api/client";
 import { useDeviceLocation } from "../features/useDeviceLocation";
 import {
@@ -58,6 +58,7 @@ const Context = createContext<{
   ready: boolean;
   openArea: () => void;
   selectArea: (area: Area) => void;
+  selectionVersion: number;
   campusId?: number;
   selectCampus: (id: number) => void;
 }>({
@@ -65,6 +66,7 @@ const Context = createContext<{
   ready: false,
   openArea: () => {},
   selectArea: () => {},
+  selectionVersion: 0,
   selectCampus: () => {},
 });
 export function useArea() {
@@ -85,7 +87,8 @@ export function AreaProvider({ children }: { children: ReactNode }) {
     }
   });
   const [area, setArea] = useState<Area | null>(initialArea),
-    [open, setOpen] = useState(false);
+    [open, setOpen] = useState(false),
+    [selectionVersion, setSelectionVersion] = useState(0);
   useEffect(() => {
     const available = campuses.data?.filter(
       (c) => c.open !== false && c.id && hasCoordinates(c),
@@ -170,6 +173,7 @@ export function AreaProvider({ children }: { children: ReactNode }) {
     };
   }, [area, api]);
   function select(a: Area) {
+    setSelectionVersion((version) => version + 1);
     setArea(a);
     rememberArea(a);
     setOpen(false);
@@ -180,7 +184,11 @@ export function AreaProvider({ children }: { children: ReactNode }) {
       !campuses.data?.some(
         (c) => c.open !== false && c.id && hasCoordinates(c),
       ));
-  useDeviceLocation({ area, selectArea: select, autoLocate: ready && !isDemo });
+  useDeviceLocation({
+    selectionVersion,
+    selectArea: select,
+    autoLocate: ready && !isDemo,
+  });
   return (
     <Context.Provider
       value={{
@@ -189,6 +197,7 @@ export function AreaProvider({ children }: { children: ReactNode }) {
         ready,
         openArea: () => setOpen(true),
         selectArea: select,
+        selectionVersion,
         campusId,
         selectCampus,
       }}
@@ -196,19 +205,23 @@ export function AreaProvider({ children }: { children: ReactNode }) {
       {children}
       {open && (
         <Modal title="从哪里开始找好吃的？" onClose={() => setOpen(false)}>
-          <AreaPicker onSelect={select} />
+          <AreaPicker />
         </Modal>
       )}
     </Context.Provider>
   );
 }
-function AreaPicker({ onSelect }: { onSelect: (area: Area) => void }) {
+function AreaPicker() {
+  const { selectionVersion, selectArea } = useArea();
   const { api } = useApp(),
     [page, setPage] = useState(1),
-    [locating, setLocating] = useState(false),
     [selecting, setSelecting] = useState<number>(),
-    [deviceArea, setDeviceArea] = useState<Area>(),
-    [error, setError] = useFeedbackState();
+    [, setError] = useFeedbackState();
+  const { locate, locating } = useDeviceLocation({
+    selectionVersion,
+    selectArea,
+    disabled: selecting !== undefined,
+  });
   const active = useRef(true);
   useEffect(() => {
     active.current = true;
@@ -220,47 +233,6 @@ function AreaPicker({ onSelect }: { onSelect: (area: Area) => void }) {
     queryKey: ["hubs", page],
     queryFn: () => api.hubs(page),
   });
-  function locate() {
-    setLocating(true);
-    setError("");
-    if (!navigator.geolocation) {
-      setError("当前浏览器不支持定位，请选择下方区域。");
-      setLocating(false);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      async (p) => {
-        try {
-          const coordinates = wgsToGcj(p.coords.longitude, p.coords.latitude);
-          const point: Area = {
-            name: "我的当前位置",
-            ...coordinates,
-            source: "device",
-          };
-          setDeviceArea(point);
-          const hub = await api.locateHub(
-            coordinates.gcjLng,
-            coordinates.gcjLat,
-          );
-          if (active.current)
-            onSelect({
-              ...point,
-              name: hub?.name ? `${hub.name}附近` : point.name,
-              hubId: hub?.id ?? undefined,
-            });
-        } catch (e) {
-          if (active.current) setError(errorMessage(e));
-        } finally {
-          if (active.current) setLocating(false);
-        }
-      },
-      () => {
-        setError("未获取到位置，请允许浏览器定位或手动选择区域。");
-        setLocating(false);
-      },
-      { timeout: 10000, maximumAge: 60000 },
-    );
-  }
   return (
     <>
       <p className="muted modal-description">
@@ -272,18 +244,9 @@ function AreaPicker({ onSelect }: { onSelect: (area: Area) => void }) {
         onClick={locate}
       >
         <Icon name="pin" />
-        {locating ? "正在定位并识别所属区域…" : "使用我的位置"}
+        {locating ? "正在定位…" : "使用我的位置"}
       </button>
 
-      {error && deviceArea && (
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => onSelect(deviceArea)}
-        >
-          仅使用当前位置
-        </button>
-      )}
       <div className="area-list">
         {hubs.isPending ? (
           <Loading />
@@ -298,7 +261,6 @@ function AreaPicker({ onSelect }: { onSelect: (area: Area) => void }) {
               onClick={async () => {
                 setSelecting(h.id!);
                 setError("");
-                setDeviceArea(undefined);
                 try {
                   const detail = await api.hubDetail(h.id!);
                   if (detail.id !== h.id || !hasCoordinates(detail))
@@ -306,7 +268,7 @@ function AreaPicker({ onSelect }: { onSelect: (area: Area) => void }) {
                       "区域详情缺少有效坐标，请重试或使用设备定位。",
                     );
                   if (active.current)
-                    onSelect({
+                    selectArea({
                       name: detail.name || "所选区域",
                       gcjLng: detail.gcjLng!,
                       gcjLat: detail.gcjLat!,

@@ -196,9 +196,10 @@ async function validateNearbyLocation(page) {
         .getByRole("button", { name: "回到我的位置", exact: true })
         .click();
       await p
-        .getByText("未获取到位置，请允许浏览器定位或手动选择区域。", {
-          exact: true,
-        })
+        .getByText(
+          "定位权限被拒绝，请在浏览器的站点设置中允许定位，并检查系统是否允许浏览器访问位置。",
+          { exact: true },
+        )
         .waitFor();
       await rows.first().waitFor();
       assert(
@@ -248,7 +249,7 @@ async function validateNearbyLocation(page) {
           before,
         "Late permission result changed area after leaving",
       );
-      await p.goto(base + "/?demo=0#/restaurants/new");
+      await p.goto(base + "/?demo=0#/restaurants/new/details");
       await loaded();
       assert(
         (await p.evaluate(() => window.__geoCalls)) === 1,

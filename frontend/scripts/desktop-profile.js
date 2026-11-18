@@ -35,8 +35,7 @@ async function validateDesktopProfile(browserPage) {
     await page.getByRole('button', {name:'使用这个头像',exact:true}).click();
     await page.getByRole('button', {name:'调整取景',exact:true}).waitFor();
     if (!(await page.getByAltText('头像预览').getAttribute('src')).startsWith('blob:')) throw new Error('没有本地头像预览');
-    await selectValue('家乡省份','1');
-    await selectValue('家乡城市','2');
+    if (await page.getByRole('combobox', {name:/家乡/}).count()) throw new Error('桌面演示仍显示家乡选项');
     await selectValue('性别','female');
     await page.locator('#profile-birthday').fill('2002-09-14');
     for (const width of [1024,1280,1440,1920]) {
@@ -59,14 +58,15 @@ async function validateDesktopProfile(browserPage) {
     await page.getByRole('button', {name:'返回个人主页',exact:true}).click();
     await page.getByRole('heading', {name:'好好吃饭呀',exact:true}).waitFor();
     await page.goto(base+'/me/details'); await page.locator('#nick').waitFor();
-    if (await page.locator('#sign').inputValue()!=='今天想吃一碗热汤' || await page.locator('#home-city').locator('..').locator('select').inputValue()!=='2') throw new Error('合并资料未正确回读');
+    if (await page.locator('#sign').inputValue()!=='今天想吃一碗热汤' || await page.locator('#profile-birthday').inputValue()!=='2002-09-14') throw new Error('合并资料未正确回读');
     checks.push('头像就地裁剪和取消、同页完整保存、个人主页与原补充资料入口回读');
     await page.goto('http://127.0.0.1:5173/?demo=1&persona=unverified&view=desktop#/me/edit');
     await page.locator('#nick').waitFor(); checks.push('未认证用户可编辑资料');
     await page.goto('about:blank'); await page.setViewportSize({width:390,height:844}); await page.goto('http://127.0.0.1:5173/?demo=1#/me/edit');
-    await page.locator('#nick').waitFor(); await page.getByRole('link',{name:'性别、生日和家乡',exact:true}).waitFor();
+    await page.locator('#nick').waitFor(); await page.getByRole('combobox',{name:'性别，选填',exact:true}).waitFor();
+    if (await page.getByRole('combobox', {name:/家乡/}).count()) throw new Error('移动演示仍显示家乡选项');
     if (await page.locator('.pc-profile-editor').count()) throw new Error('移动端误用桌面编辑器');
-    checks.push('移动端原型编辑流程保留');
+    checks.push('移动端编辑资料与两端演示的家乡选项检查');
     if(errors.length) throw new Error(errors.join('\n'));
     return {checks,widths,narrowDesktopPreview:760,pageErrors:errors};
   } finally {

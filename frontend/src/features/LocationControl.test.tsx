@@ -100,6 +100,7 @@ beforeEach(() => {
   getPosition.mockReset();
   vi.stubGlobal("navigator", {
     geolocation: { getCurrentPosition: getPosition },
+    permissions: { query: vi.fn().mockResolvedValue({ state: "granted" }) },
   });
   host = document.createElement("div");
   document.body.append(host);
@@ -148,6 +149,22 @@ it("allows a manual retry after the startup request fails", async () => {
     ...wgsToGcj(117.134, 36.667),
     source: "device",
   });
+});
+
+it("waits for a click before requesting a permission the visitor has not granted", async () => {
+  vi.stubGlobal("navigator", {
+    geolocation: { getCurrentPosition: getPosition },
+    permissions: { query: vi.fn().mockResolvedValue({ state: "prompt" }) },
+  });
+  await mount();
+  expect(getPosition).not.toHaveBeenCalled();
+  await openMenu();
+  expect(getPosition).not.toHaveBeenCalled();
+  await choose("使用当前位置");
+  expect(getPosition).toHaveBeenCalledOnce();
+  await act(async () => getPosition.mock.calls[0][0](position));
+  await settle();
+  expect(trigger().textContent).toContain("济南市历城区舜华路1号");
 });
 
 it("requests the position on startup before the visitor opens the control", async () => {

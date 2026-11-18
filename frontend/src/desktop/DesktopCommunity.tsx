@@ -2,19 +2,17 @@ import "../features/user-level.css";
 import { UserTitle } from "../components/UserTitle";
 import { userTitle } from "../api/growth";
 import { FieldMark } from "../features/FieldMark";
-import { boundedText } from "../api/content-rules";
+import { codePoints } from "../api/content-rules";
 import { BlockControl, UserFoods } from "../features/ApiV2";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState, type CSSProperties } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { ProfileEditLink } from "../app/profile-navigation";
-import { useArea } from "../app/area";
 import { isDemo } from "../app/runtime";
-import { resultUncertain } from "../api/client";
 import { mediaUrl, money, parseId, type Food } from "../api/models";
 import { useTask } from "../components/useTask";
-import { useMobile, DesignIcon as Icon } from "../mobile/ui";
+import { DesignIcon as Icon } from "../mobile/ui";
 import { SlidingTabs } from "./motion";
 import { useContentMotion } from "../motion/hooks";
 import { peopleHref } from "../features/profile-people";
@@ -23,20 +21,14 @@ import { demoDishes, visualFor } from "../mobile/catalog";
 import { stageCode } from "../api/food-display";
 import { DishIllustration } from "../components/DishIllustration";
 import "./friend-profile.css";
-import RestaurantLocationField, {
-  requireShopLocation,
-} from "../features/RestaurantLocationField";
-import type { MapPoint } from "../features/map-geometry";
-import { mealTimes, priceBands, shopKinds } from "../api/v2-vocab";
+import RestaurantLocationField from "../features/RestaurantLocationField";
+import { NewShopSearch } from "../features/NewShopSearch";
+import { useNewShop } from "../features/useNewShop";
 import "./new-shop.css";
 import { PageSkeleton } from "../components/LoadingSkeleton";
 import "../features/profile-activity.css";
-import {
-  ShopTraitsFields,
-  defaultShopTraits,
-  type ShopTraits,
-} from "../features/ShopTraits";
-import { PageHead, Section, State, TaskError } from "./secondary";
+import { ShopTraitsFields } from "../features/ShopTraits";
+import { PageHead, State, TaskError } from "./secondary";
 
 function FriendFoodPhoto({ food }: { food: Food }) {
   const visual = visualFor(food, isDemo);
@@ -428,269 +420,104 @@ export function DesktopUser() {
   );
 }
 
-type ShopDraft = {
-  name: string;
-  address: string;
-  traits: ShopTraits;
-  point?: MapPoint;
-  uncertain: boolean;
-  done: boolean;
-};
-const shopDrafts = new Map<string, ShopDraft>();
-function StepMark({ index, done }: { index: number; done: boolean }) {
-  return (
-    <span className="pc-new-shop-step-mark" aria-hidden="true">
-      {done ? <Icon name="check" size={15} /> : index}
-    </span>
-  );
-}
 export function DesktopNewShop() {
-  const { api, user, toast } = useApp(),
-    { area } = useArea(),
-    m = useMobile(),
-    nav = useNavigate(),
-    key = `${isDemo ? "demo" : "live"}:${user?.id ?? ""}`,
-    [draft, setDraft] = useState<ShopDraft>(
-      () =>
-        shopDrafts.get(key) ?? {
-          name: m.draft.restaurantId ? "" : (m.draft.shopName ?? ""),
-          address: "",
-          traits: defaultShopTraits(),
-          uncertain: false,
-          done: false,
-        },
-    ),
-    task = useTask(),
-    locked = useRef(false);
-  function update(patch: Partial<ShopDraft>) {
-    setDraft((d) => {
-      const next = { ...d, ...patch };
-      shopDrafts.set(key, next);
-      return next;
-    });
-  }
-  const dirty = !!(draft.name || draft.address || draft.point) && !draft.done;
-  useEffect(() => {
-    if (!dirty) return;
-    const leave = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-    window.addEventListener("beforeunload", leave);
-    return () => window.removeEventListener("beforeunload", leave);
-  }, [dirty]);
-  const busy = task.isPending || draft.uncertain,
-    hasName = !!draft.name.trim(),
-    hasPlace = !!draft.point && !!draft.address.trim(),
-    hasMeals = !!draft.traits.mealTimes.length,
-    checks = [
-      { name: "店名", done: hasName },
-      { name: "地图选点", done: !!draft.point },
-      { name: "详细地址", done: !!draft.address.trim() },
-      { name: "营业饭点", done: hasMeals },
-    ],
-    traitNames = [
-      shopKinds.find((k) => k.id === draft.traits.kind)?.name,
-      priceBands.find((p) => p.id === draft.traits.priceBand)?.name,
-      ...mealTimes
-        .filter((t) => draft.traits.mealTimes.includes(t.id))
-        .map((t) => t.name),
-      ...draft.traits.categories,
-      ...draft.traits.tags,
-    ].filter((name): name is string => !!name);
+  const flow = useNewShop(true);
+  const { details, draft, busy } = flow;
+  const longName = codePoints(draft.name.trim()) > 20;
+
   return (
     <div className="pc-secondary-new-shop" data-pc-secondary="new-shop">
       <PageHead
-        title={draft.done ? "新店已提交" : "添加一家店"}
+        title={details ? "填写店铺信息" : "添加一家店"}
         back="/publish"
-        crumb="发布一道菜"
+        crumb={details && !draft.uncertain ? "返回搜店" : "发布一道菜"}
+        onBack={details ? flow.back : undefined}
+        backDisabled={flow.pending}
       />
-      {draft.done ? (
-        <Section title="提交完成">
-          <State
-            title="新店信息已提交"
-            detail="回到发布页，搜索并选择这家店后，就可以继续添加菜品。"
-          >
-            <button
-              className="pc-button"
-              onClick={() => {
-                m.setDraft({ shopName: draft.name });
-                shopDrafts.delete(key);
-                nav("/publish");
-              }}
-            >
-              回到发布页选店
-            </button>
-          </State>
-        </Section>
-      ) : (
+      {draft.uncertain && (
+        <p className="pc-secondary-error" role="alert">
+          提交结果尚未确认，请返回发布页核实店铺，避免重复添加。
+        </p>
+      )}
+      {details ? (
         <div className="pc-new-shop">
           <form
+            ref={flow.formRef}
+            tabIndex={-1}
+            aria-label="填写店铺信息"
             id="new-shop-form"
             className="pc-new-shop-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (locked.current || draft.uncertain) return;
-              locked.current = true;
-              task.run(async () => {
-                try {
-                  const name = boundedText(draft.name, 20, "店名"),
-                    address = boundedText(draft.address, 30, "地址");
-                  if (!name || !address)
-                    throw new Error("请填写店名和详细地址。");
-                  const point = requireShopLocation(draft.point);
-                  if (!draft.traits.mealTimes.length)
-                    throw new Error("请至少选择一个营业饭点。");
-                  const created = await api.createRestaurant({
-                    name,
-                    address,
-                    ...point,
-                    hubId: area?.hubId,
-                    ...draft.traits,
-                  });
-                  update({ done: true });
-                  if (created.revisionId) {
-                    shopDrafts.delete(key);
-                    toast("新店已提交，等待审核，可稍后在发布页搜索选择。");
-                    nav("/publish");
-                    return;
-                  }
-                  m.setShopId(created.id);
-                  m.setDraft({ shopName: name, restaurantId: created.id });
-                  shopDrafts.delete(key);
-                  nav("/publish/dish");
-                } catch (error) {
-                  if (resultUncertain(error)) update({ uncertain: true });
-                  throw error;
-                } finally {
-                  locked.current = false;
-                }
-              });
+            onSubmit={(event) => {
+              event.preventDefault();
+              flow.submit();
             }}
           >
-            <section className="pc-new-shop-step" data-done={hasName}>
-              <StepMark index={1} done={hasName} />
-              <label className="pc-new-shop-name">
-                <span className="pc-new-shop-step-title">
-                  这家店叫什么
-                  <FieldMark required />
-                </span>
-                <input
-                  aria-label="店铺名称"
-                  value={draft.name}
-                  maxLength={20}
-                  onChange={(e) => update({ name: e.target.value })}
-                  disabled={busy}
-                  required
-                  placeholder="例如：西门口的那家云吞店"
-                />
-                <small>
-                  写同学们平时叫的名字，最多 20
-                  字。下面搜索地点时选中结果，也会自动填入。
-                </small>
-              </label>
-            </section>
-            <section className="pc-new-shop-step" data-done={hasPlace}>
-              <StepMark index={2} done={hasPlace} />
-              <RestaurantLocationField
-                name={draft.name}
-                onNameChange={(name) => update({ name })}
-                point={draft.point}
-                onPick={(point) => {
-                  update({ point });
-                  task.reset();
-                }}
-                address={draft.address}
-                onAddressChange={(address) => update({ address })}
+            <label className="pc-new-shop-name">
+              <span>
+                店名
+                <FieldMark required />
+              </span>
+              <input
+                name="name"
+                aria-label="店铺名称"
+                aria-describedby={
+                  longName ? "pc-new-shop-name-hint" : undefined
+                }
+                value={draft.name}
+                maxLength={20}
+                onChange={(event) => flow.update({ name: event.target.value })}
                 disabled={busy}
+                required
+                autoComplete="off"
+                placeholder="输入店铺名称"
               />
-            </section>
-            <section className="pc-new-shop-step" data-done={hasMeals}>
-              <StepMark index={3} done={hasMeals} />
-              <div className="pc-new-shop-traits">
-                <h2 className="pc-new-shop-step-title">这家店的特点</h2>
-                <p>用于推荐和筛选，除类型和营业饭点外都可以先不填。</p>
-                <ShopTraitsFields
-                  value={draft.traits}
-                  onChange={(traits) => update({ traits })}
-                  disabled={busy}
-                />
-              </div>
-            </section>
-            <TaskError error={task.error} />
-            {draft.uncertain && (
-              <div className="pc-secondary-error" role="alert">
-                提交结果还未确认。请先返回发布页搜索这家店，核实结果，避免重复创建。本次提交已暂停。
-              </div>
-            )}
-          </form>
-          <aside className="pc-new-shop-side">
-            <div className="pc-new-shop-summary">
-              <span className="pc-new-shop-eyebrow">即将添加</span>
-              <div className="pc-new-shop-card">
-                <span className="pc-new-shop-card-icon">
-                  <Icon name="store" size={22} />
-                </span>
-                <div>
-                  <strong data-empty={!hasName}>
-                    {draft.name.trim() || "还没有店名"}
-                  </strong>
-                  <small>
-                    {draft.address.trim() ||
-                      (draft.point
-                        ? "位置已标记，请补充详细地址"
-                        : "在地图上选点后显示地址")}
-                  </small>
-                </div>
-              </div>
-              {traitNames.length > 0 && (
-                <ul className="pc-new-shop-chips" aria-label="已选特点">
-                  {traitNames.map((name) => (
-                    <li key={name}>{name}</li>
-                  ))}
-                </ul>
+              {longName && (
+                <small id="pc-new-shop-name-hint">
+                  请将店名简化至 20 字以内。
+                </small>
               )}
-              <ul className="pc-new-shop-checks" aria-live="polite">
-                {checks.map((item) => (
-                  <li key={item.name} data-done={item.done}>
-                    <Icon name={item.done ? "check" : "add"} size={13} />
-                    {item.name}
-                  </li>
-                ))}
-              </ul>
-              <button
-                className="pc-button"
-                form="new-shop-form"
-                disabled={busy || !draft.point}
-              >
-                {task.isPending
-                  ? "正在提交…"
-                  : draft.point
-                    ? "提交新店"
-                    : "请先在地图选点"}
-                <Icon name="check" size={17} />
-              </button>
-              <p className="pc-new-shop-keep">未提交内容在本次访问中保留</p>
-            </div>
-            <div className="pc-new-shop-tip">
-              <Icon name="search" size={18} />
+            </label>
+            <RestaurantLocationField
+              place={draft.choice.place}
+              point={draft.point}
+              onPick={(point) => flow.update({ point })}
+              address={draft.address}
+              onAddressChange={(address) => flow.update({ address })}
+              disabled={busy}
+            />
+            <ShopTraitsFields
+              value={draft.traits}
+              onChange={(traits) => flow.update({ traits })}
+              disabled={busy}
+            />
+          </form>
+          <aside className="pc-new-shop-summary">
+            <div className="pc-new-shop-card">
+              <span className="pc-new-shop-card-icon">
+                <Icon name="store" size={22} />
+              </span>
               <div>
-                <strong>先找一找，再添加</strong>
-                <p>同一家店可能已经被其他同学添加，先搜索可以避免重复。</p>
-                <Link to="/publish">返回发布页搜索 →</Link>
+                <strong>{draft.name.trim() || "待填写店名"}</strong>
+                {draft.address.trim() && <small>{draft.address.trim()}</small>}
               </div>
             </div>
-            <div className="pc-new-shop-tip">
-              <Icon name="pin" size={18} />
-              <div>
-                <strong>把图钉放在店铺入口</strong>
-                <p>
-                  位置越准确，同学越容易找到。提交后回到发布页选中这家店，就能继续发布菜品。
-                </p>
-              </div>
-            </div>
+            <button
+              className="pc-button"
+              type="submit"
+              form="new-shop-form"
+              disabled={!flow.canSubmit}
+            >
+              {flow.pending ? "正在提交…" : "提交新店"}
+            </button>
           </aside>
         </div>
+      ) : (
+        <NewShopSearch
+          keyword={flow.keyword}
+          onKeywordChange={flow.setKeyword}
+          onSelect={flow.select}
+          disabled={busy}
+        />
       )}
     </div>
   );

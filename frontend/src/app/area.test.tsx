@@ -6,7 +6,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AreaProvider, useArea, type Area } from "./area";
 
 const { api, address } = vi.hoisted(() => ({
-  api: { campuses: vi.fn(), locateHub: vi.fn() },
+  api: { campuses: vi.fn(), hubs: vi.fn(), locateHub: vi.fn() },
   address: vi.fn(),
 }));
 vi.mock("./state", () => ({ useApp: () => ({ api }) }));
@@ -55,11 +55,13 @@ beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   localStorage.clear();
   api.campuses.mockReset().mockResolvedValue([]);
+  api.hubs.mockReset().mockResolvedValue({ items: [] });
   api.locateHub.mockReset().mockResolvedValue(null);
   address.mockReset().mockResolvedValue("济南市历城区舜华路1号");
   getPosition.mockReset();
   vi.stubGlobal("navigator", {
     geolocation: { getCurrentPosition: getPosition },
+    permissions: { query: vi.fn().mockResolvedValue({ state: "granted" }) },
   });
   host = document.createElement("div");
   root = createRoot(host);
@@ -67,6 +69,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   act(() => root.unmount());
+  host.remove();
   cache.clear();
   vi.unstubAllGlobals();
 });
@@ -161,6 +164,37 @@ const campuses = [
   },
   { id: 2, name: "中心", gcjLng: 117.055, gcjLat: 36.673, isDefault: false },
 ];
+
+it("uses the picker position when the default campus loads during the permission prompt", async () => {
+  Object.defineProperties(HTMLDialogElement.prototype, {
+    showModal: { configurable: true, value: vi.fn() },
+    close: { configurable: true, value: vi.fn() },
+  });
+  let finishCampuses!: (value: typeof campuses) => void;
+  api.campuses.mockReturnValue(
+    new Promise((resolve) => {
+      finishCampuses = resolve;
+    }),
+  );
+  api.locateHub.mockRejectedValue(new Error("区域查询失败"));
+  vi.stubGlobal("navigator", {
+    geolocation: { getCurrentPosition: getPosition },
+    permissions: { query: vi.fn().mockResolvedValue({ state: "prompt" }) },
+  });
+  document.body.append(host);
+  await mount(null);
+  await act(async () => areaState.openArea());
+  const button = host.querySelector<HTMLButtonElement>("dialog .btn-primary");
+  expect(button?.textContent).toContain("使用我的位置");
+  act(() => button!.click());
+  expect(getPosition).toHaveBeenCalledOnce();
+  await act(async () => finishCampuses(campuses));
+  await settle();
+  expect(areaState.area?.source).toBe("campus");
+  await act(async () => getPosition.mock.calls[0][0](position));
+  expect(areaState.area?.source).toBe("device");
+  expect(host.querySelector("dialog")).toBeNull();
+});
 
 it("waits for the default campus and uses its coordinates without a hub lookup", async () => {
   let finish!: (value: typeof campuses) => void;

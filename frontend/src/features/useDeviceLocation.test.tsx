@@ -2,7 +2,6 @@
 import { act, StrictMode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import type { Area } from "../app/area";
 import { wgsToGcj } from "../api/models";
 import { useDeviceLocation } from "./useDeviceLocation";
 
@@ -13,34 +12,31 @@ const selectArea = vi.fn();
 const position = {
   coords: { longitude: 117.134, latitude: 36.667 },
 } as GeolocationPosition;
-const manualArea: Area = {
-  name: "手选区域",
-  source: "hub",
-  hubId: 2,
-  gcjLng: 117.1,
-  gcjLat: 36.6,
-};
 function Harness({
-  area = null,
+  selectionVersion = 0,
   autoLocate = true,
   disabled = false,
 }: {
-  area?: Area | null;
+  selectionVersion?: number;
   autoLocate?: boolean;
   disabled?: boolean;
 }) {
-  state = useDeviceLocation({ area, autoLocate, disabled, selectArea });
+  state = useDeviceLocation({
+    selectionVersion,
+    autoLocate,
+    disabled,
+    selectArea,
+  });
   return null;
 }
-function render(props: Parameters<typeof Harness>[0] = {}) {
-  act(() =>
+async function render(props: Parameters<typeof Harness>[0] = {}) {
+  await act(async () =>
     root.render(
       <StrictMode>
         <Harness {...props} />
       </StrictMode>,
     ),
   );
-  act(() => vi.runOnlyPendingTimers());
 }
 function succeed(index = 0) {
   act(() => getPosition.mock.calls[index][0](position));
@@ -54,28 +50,26 @@ beforeEach(() => {
   (
     globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true;
-  vi.useFakeTimers();
   window.history.replaceState(null, "", "/#/nearby");
   getPosition.mockReset();
   selectArea.mockReset();
   vi.stubGlobal("navigator", {
     geolocation: { getCurrentPosition: getPosition },
+    permissions: { query: vi.fn().mockResolvedValue({ state: "granted" }) },
   });
   host = document.createElement("div");
   root = createRoot(host);
 });
 afterEach(() => {
   act(() => root.unmount());
-  vi.clearAllTimers();
-  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
-it("requests on entry once in StrictMode and publishes converted device coordinates", () => {
-  render();
+it("refreshes once in StrictMode when permission is granted and publishes converted coordinates", async () => {
+  await render();
   expect(getPosition).toHaveBeenCalledOnce();
   expect(state.locating).toBe(true);
-  render();
+  await render();
   act(() => state.locate());
   expect(getPosition).toHaveBeenCalledOnce();
   succeed();
@@ -86,25 +80,25 @@ it("requests on entry once in StrictMode and publishes converted device coordina
   });
   expect(state.locating).toBe(false);
   expect(state.deviceRevision).toBe(1);
-  render();
+  await render();
   expect(getPosition).toHaveBeenCalledOnce();
 });
 
-it("does not locate automatically for other maps, but retains the manual action", () => {
-  render({ autoLocate: false });
+it("does not locate automatically for other maps, but retains the manual action", async () => {
+  await render({ autoLocate: false });
   expect(getPosition).not.toHaveBeenCalled();
   act(() => state.locate());
   succeed();
   expect(selectArea).toHaveBeenCalledOnce();
 });
 
-it("keeps existing area after denial, does not loop, and allows manual retry", () => {
-  render({ area: manualArea });
+it("keeps existing area after denial, does not loop, and allows manual retry", async () => {
+  await render();
   fail(1);
-  expect(state.locationError).toContain("允许浏览器定位");
+  expect(state.locationError).toContain("站点设置");
   expect(state.locating).toBe(false);
   expect(selectArea).not.toHaveBeenCalled();
-  render({ area: manualArea });
+  await render();
   expect(getPosition).toHaveBeenCalledOnce();
   act(() => state.locate());
   expect(state.locationError).toBe("");
@@ -112,28 +106,44 @@ it("keeps existing area after denial, does not loop, and allows manual retry", (
   expect(selectArea).toHaveBeenCalledOnce();
 });
 
-it("reports timeout without replacing the selected area", () => {
-  render({ area: manualArea });
+it("reports timeout without replacing the selected area", async () => {
+  await render();
   fail(3);
   expect(state.locationError).toContain("定位超时");
   expect(selectArea).not.toHaveBeenCalled();
 });
 
-it("does not overwrite an area chosen while the permission prompt was open", () => {
-  render();
-  render({ area: manualArea });
+it("explains why a LAN HTTP page cannot prompt for permission", async () => {
+  vi.stubGlobal("isSecureContext", false);
+  await render({ autoLocate: false });
+  act(() => state.locate());
+  expect(getPosition).not.toHaveBeenCalled();
+  expect(state.locationError).toContain("HTTPS");
+});
+
+it("reports unavailable device coordinates separately from a permission denial", async () => {
+  await render({ autoLocate: false });
+  act(() => state.locate());
+  fail(2);
+  expect(state.locationError).toContain("设备定位");
+  expect(state.locationError).not.toContain("权限");
+});
+
+it("does not overwrite an area chosen while the permission prompt was open", async () => {
+  await render();
+  await render({ selectionVersion: 1 });
   succeed();
   expect(selectArea).not.toHaveBeenCalled();
   expect(state.locating).toBe(false);
   expect(state.deviceRevision).toBe(0);
 });
 
-it("ignores late completion after leaving, and locates on the next entry", () => {
-  render();
+it("ignores late completion after leaving, and locates on the next entry", async () => {
+  await render();
   act(() => root.render(null));
   succeed();
   expect(selectArea).not.toHaveBeenCalled();
-  render();
+  await render();
   expect(getPosition).toHaveBeenCalledTimes(2);
   succeed(0);
   expect(state.locating).toBe(true);
@@ -142,34 +152,35 @@ it("ignores late completion after leaving, and locates on the next entry", () =>
   expect(selectArea).toHaveBeenCalledOnce();
 });
 
-it("does not locate or accept a result while disabled", () => {
-  render({ disabled: true });
+it("does not locate or accept a result while disabled", async () => {
+  await render({ disabled: true });
   act(() => state.locate());
   expect(getPosition).not.toHaveBeenCalled();
-  render({ disabled: false });
+  await render({ disabled: false });
   expect(getPosition).toHaveBeenCalledOnce();
-  render({ disabled: true });
+  await render({ disabled: true });
   succeed();
   expect(selectArea).not.toHaveBeenCalled();
 });
 
-it("ignores results as soon as navigation starts, even before unmount", () => {
-  render();
+it("ignores results as soon as navigation starts, even before unmount", async () => {
+  await render();
   window.history.replaceState(null, "", "/#/");
   succeed();
   expect(selectArea).not.toHaveBeenCalled();
 });
 
-it("keeps locating when only nearby filters change", () => {
-  render();
+it("keeps locating when only nearby filters change", async () => {
+  await render();
   window.history.replaceState(null, "", "/#/nearby?q=面&page=2");
   succeed();
   expect(selectArea).toHaveBeenCalledOnce();
 });
 
-it("handles unsupported browsers and synchronous permission failures", () => {
+it("handles unsupported browsers and synchronous permission failures", async () => {
   vi.stubGlobal("navigator", {});
-  render();
+  await render();
+  act(() => state.locate());
   expect(state.locationError).toContain("不支持定位");
   expect(state.locating).toBe(false);
   vi.stubGlobal("navigator", {

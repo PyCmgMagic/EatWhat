@@ -26,7 +26,7 @@ export default function RestaurantMap({
   ...props
 }: RestaurantMapProps) {
   const { api } = useApp();
-  const { area, campusId, selectArea } = useArea();
+  const { area, campusId, selectArea, selectionVersion } = useArea();
   const campuses = useQuery({
     queryKey: ["campuses"],
     queryFn: () => api.campuses(),
@@ -37,14 +37,11 @@ export default function RestaurantMap({
     campuses.data?.find((c) => c.isDefault) ??
     campuses.data?.[0];
   const center = mapPoint(area) ?? mapPoint(campus);
-  const { locate, locating, locationError, deviceRevision } = useDeviceLocation(
-    {
-      area,
-      selectArea,
-      autoLocate: false,
-      disabled: props.disabled,
-    },
-  );
+  const { locate, locating, deviceRevision } = useDeviceLocation({
+    selectionVersion,
+    selectArea,
+    disabled: props.disabled,
+  });
   const missing = restaurants.filter((r) => !mapPoint(r)).length;
   return (
     <div
