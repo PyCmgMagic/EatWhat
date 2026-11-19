@@ -138,7 +138,11 @@ export function useNewShop(rememberDraft = false) {
           return;
         }
         m.setShopId(created.id);
-        m.setDraft({ restaurantId: created.id, shopName: name });
+        m.setDraft({
+          restaurantId: created.id,
+          shopName: name,
+          restaurantPicked: true,
+        });
         nav("/publish/dish", { replace: true });
       } catch (error) {
         if (resultUncertain(error)) update({ uncertain: true });

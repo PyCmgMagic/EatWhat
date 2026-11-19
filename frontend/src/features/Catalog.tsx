@@ -41,6 +41,7 @@ import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { AccessWelcome } from "../components/AccessWelcome";
 import { FavoritesEmpty, FavoritesFilters } from "./FavoritesControls";
 import { ProfileCollectionsHeader } from "./ProfileSectionNav";
+import { ProfilePageHead } from "./ProfilePage";
 import SettingsPageHeader from "./SettingsPageHeader";
 import { useTask } from "../components/useTask";
 import { X } from "lucide-react";
@@ -633,20 +634,15 @@ export function LikedFoods() {
   if (!session) return <AccessWelcome />;
   return (
     <div className="ew-feature ew-favorites">
-      <ProfileCollectionsHeader />
-      <div className="favorites-library-bar">
-        <div className="ew-results-head">
-          <b>
-            <span className="favorites-results-label">赞过的菜品</span>
-            {!q.isPlaceholderData && !q.isError && q.data?.totalItems != null
-              ? `${q.data.totalItems} 道菜`
-              : ""}
-          </b>
-          <div className="favorites-results-tools">
-            {q.isFetching && <span role="status">正在查询…</span>}
-          </div>
-        </div>
-      </div>
+      <ProfilePageHead
+        title="赞过的菜"
+        detail="只有你自己看得见"
+        count={
+          !q.isPlaceholderData && !q.isError && q.data?.totalItems != null
+            ? `${q.data.totalItems} 道菜`
+            : undefined
+        }
+      />
       {q.isPending || (q.isError && !q.data) ? (
         <FeatureState
           loading={q.isPending}

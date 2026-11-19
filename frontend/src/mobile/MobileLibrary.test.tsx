@@ -4,7 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import MobileLibrary from "./MobileLibrary";
+import MobileLibrary, { MobileLikedFoods } from "./MobileLibrary";
 
 const { api, toast, session, user } = vi.hoisted(() => ({
   api: {
@@ -104,7 +104,7 @@ function renderAt(path: string) {
           <Routes>
             <Route path="/favorites" element={<MobileLibrary />} />
             <Route path="/restaurants/favorites" element={<MobileLibrary />} />
-            <Route path="/likes" element={<MobileLibrary />} />
+            <Route path="/likes" element={<MobileLikedFoods />} />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
@@ -112,17 +112,19 @@ function renderAt(path: string) {
   );
 }
 
-it("renders history-style collections and switches cleanly across dish, shop, and liked tabs", async () => {
-  await renderAt("/favorites");
+it("keeps dish and shop tabs in favorites without requesting liked dishes", async () => {
+  await renderAt("/favorites?tag=7");
   await waitForText("招牌牛筋面");
   expect(host.querySelector(".mobile-library-header h1")?.textContent).toBe(
     "收藏夹",
   );
   expect(host.textContent).toContain("只有你自己看得见");
+  expect(api.favorites).toHaveBeenCalledWith(1, { myCustomTagIds: [7] });
 
   const tabs = host.querySelectorAll<HTMLButtonElement>(
     '.mobile-library-tabs button[role="tab"]',
   );
+  expect(Array.from(tabs, (tab) => tab.textContent)).toEqual(["菜", "店"]);
   expect(tabs[0].getAttribute("aria-selected")).toBe("true");
 
   await act(async () => tabs[1].click());
@@ -133,18 +135,19 @@ it("renders history-style collections and switches cleanly across dish, shop, an
       .click(),
   );
   expect(api.unfavoriteRestaurant).toHaveBeenCalledWith(21);
+  expect(api.likedFoods).not.toHaveBeenCalled();
+});
 
-  await act(async () =>
-    host
-      .querySelectorAll<HTMLButtonElement>(
-        '.mobile-library-tabs button[role="tab"]',
-      )[2]
-      .click(),
-  );
+it("opens liked dishes independently with its own rows and unlike action", async () => {
+  await renderAt("/likes");
   await waitForText("大切鹅肝");
   expect(host.querySelector(".mobile-library-header h1")?.textContent).toBe(
     "赞过的菜",
   );
+  expect(host.querySelector('[role="tablist"]')).toBeNull();
+  expect(host.querySelector('a[href="/me/tags"]')).toBeNull();
+  expect(api.favorites).not.toHaveBeenCalled();
+  expect(api.favoriteRestaurants).not.toHaveBeenCalled();
   await act(async () =>
     host
       .querySelector<HTMLButtonElement>(
@@ -155,9 +158,10 @@ it("renders history-style collections and switches cleanly across dish, shop, an
   expect(api.like).toHaveBeenCalledWith(31, true);
 });
 
-it("shows login prompt inside the unified mobile library when signed out", async () => {
+it("offers to return to liked dishes after signing in", async () => {
   session.current = null;
   await renderAt("/likes");
   expect(host.textContent).toContain("登录后查看赞过的菜");
+  expect(host.querySelector('a[href="/auth?next=%2Flikes"]')).not.toBeNull();
   expect(api.likedFoods).not.toHaveBeenCalled();
 });

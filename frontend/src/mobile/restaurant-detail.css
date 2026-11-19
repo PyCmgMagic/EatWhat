@@ -39,16 +39,21 @@
 }
 .mobile-restaurant-summary {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(84px, 25vw, 128px);
-  align-items: start;
-  gap: 16px;
-  margin-top: 24px;
+  grid-template-columns: minmax(0, 1fr) min(42%, clamp(106px, calc(50vw - 54px), 168px));
+  grid-template-areas:
+    "copy art"
+    "stats stats"
+    "traits traits";
+  align-items: center;
+  gap: 8px clamp(10px, 2.5vw, 16px);
+  margin-top: 18px;
 }
 .mobile-restaurant-copy {
+  grid-area: copy;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  gap: 12px;
+  gap: 10px;
 }
 .mobile-restaurant-name {
   margin: 0;
@@ -64,18 +69,21 @@
   font-size: 13px;
   font-weight: 500;
   line-height: 1.7;
+  text-wrap: balance;
   overflow-wrap: anywhere;
 }
 .mobile-restaurant-art {
+  grid-area: art;
+  display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 1;
-  margin-top: 4px;
   border-radius: 50%;
   object-fit: cover;
   pointer-events: none;
 }
 .mobile-restaurant-stats {
+  grid-area: stats;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -83,6 +91,7 @@
   font-size: 13px;
 }
 .mobile-restaurant-traits {
+  grid-area: traits;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;

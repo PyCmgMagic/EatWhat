@@ -11,11 +11,13 @@ export function NewShopSearch({
   onKeywordChange,
   onSelect,
   disabled,
+  desktop = false,
 }: {
   keyword: string;
   onKeywordChange: (value: string) => void;
   onSelect: (place?: MapPlace) => void;
   disabled?: boolean;
+  desktop?: boolean;
 }) {
   const { area } = useArea();
   const input = useRef<HTMLInputElement>(null);
@@ -60,99 +62,134 @@ export function NewShopSearch({
 
   return (
     <div className="new-shop-search">
-      <form
-        className="new-shop-search-bar"
-        role="search"
-        aria-label="百度地图搜店"
-        onSubmit={(event) => {
-          event.preventDefault();
-          search();
-        }}
-      >
-        <DesignIcon name="search" size={22} />
-        <input
-          ref={input}
-          type="search"
-          aria-label="搜索店名或地址"
-          placeholder="搜店名或地址"
-          value={keyword}
-          maxLength={100}
-          enterKeyHint="search"
-          autoComplete="off"
-          disabled={disabled}
-          onChange={(event) => onKeywordChange(event.target.value)}
-          onCompositionStart={() => setComposing(true)}
-          onCompositionEnd={(event) => {
-            onKeywordChange(event.currentTarget.value);
-            setComposing(false);
-          }}
-          onKeyDown={(event) => {
-            if (event.key !== "Enter") return;
-            if (event.nativeEvent.isComposing || event.keyCode === 229) return;
+      <div className="new-shop-search-main">
+        {desktop && (
+          <h2 className="new-shop-map-heading">
+            <span>
+              <DesignIcon name="pin" size={23} />
+            </span>
+            地图搜店
+          </h2>
+        )}
+        <form
+          className="new-shop-search-bar"
+          role="search"
+          aria-label="百度地图搜店"
+          onSubmit={(event) => {
             event.preventDefault();
             search();
           }}
-        />
-        {keyword && (
-          <button
-            type="button"
-            className="new-shop-search-clear"
-            aria-label="清空搜索"
+        >
+          <DesignIcon name="search" size={22} />
+          <input
+            ref={input}
+            type="search"
+            aria-label="搜索店名或地址"
+            placeholder="搜店名或地址"
+            value={keyword}
+            maxLength={100}
+            enterKeyHint="search"
+            autoComplete="off"
             disabled={disabled}
-            onClick={() => {
-              onKeywordChange("");
-              setSettled("");
-              input.current?.focus();
+            onChange={(event) => onKeywordChange(event.target.value)}
+            onCompositionStart={() => setComposing(true)}
+            onCompositionEnd={(event) => {
+              onKeywordChange(event.currentTarget.value);
+              setComposing(false);
             }}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter") return;
+              if (event.nativeEvent.isComposing || event.keyCode === 229)
+                return;
+              event.preventDefault();
+              search();
+            }}
+          />
+          {keyword && (
+            <button
+              type="button"
+              className="new-shop-search-clear"
+              aria-label="清空搜索"
+              disabled={disabled}
+              onClick={() => {
+                onKeywordChange("");
+                setSettled("");
+                input.current?.focus();
+              }}
+            >
+              <DesignIcon name="close" size={18} />
+            </button>
+          )}
+          {(desktop || term) && (
+            <button
+              type="submit"
+              className="new-shop-search-submit"
+              disabled={!term || disabled || composing || matches.isFetching}
+            >
+              {matches.isError ? "重试" : "搜索"}
+            </button>
+          )}
+        </form>
+        <p className="new-shop-search-status" role="status">
+          {message}
+        </p>
+        {!!places?.length && (
+          <ul
+            className="restaurant-place-results"
+            aria-label="百度地图搜索结果"
           >
-            <DesignIcon name="close" size={18} />
-          </button>
+            {places.map((place) => (
+              <li key={place.id}>
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => onSelect(place)}
+                >
+                  <span className="new-shop-result-pin">
+                    <DesignIcon name="pin" size={19} />
+                  </span>
+                  <span className="new-shop-result-name">
+                    <strong>{place.name}</strong>
+                    {place.address && <small>{place.address}</small>}
+                  </span>
+                  <DesignIcon name="chevronRight" size={17} />
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
-        {term && (
-          <button
-            type="submit"
-            className="new-shop-search-submit"
-            disabled={disabled || composing || matches.isFetching}
-          >
-            {matches.isError ? "重试" : "搜索"}
-          </button>
-        )}
-      </form>
-      <p className="new-shop-search-status" role="status">
-        {message}
-      </p>
-      {!!places?.length && (
-        <ul className="restaurant-place-results" aria-label="百度地图搜索结果">
-          {places.map((place) => (
-            <li key={place.id}>
-              <button
-                type="button"
-                disabled={disabled}
-                onClick={() => onSelect(place)}
-              >
-                <span className="new-shop-result-pin">
-                  <DesignIcon name="pin" size={19} />
-                </span>
-                <span className="new-shop-result-name">
-                  <strong>{place.name}</strong>
-                  {place.address && <small>{place.address}</small>}
-                </span>
-                <DesignIcon name="chevronRight" size={17} />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      </div>
       <button
         type="button"
         className="new-shop-search-manual"
         disabled={disabled}
         onClick={() => onSelect()}
       >
-        <span>
-          <DesignIcon name="add" size={17} />
-        </span>
-        搜不到？手动添加
+        {desktop ? (
+          <>
+            <span className="new-shop-manual-art">
+              <img
+                src="/assets/restaurants/campus-storefront.webp"
+                alt=""
+                width={768}
+                height={512}
+              />
+            </span>
+            <span className="new-shop-manual-action">
+              手动添加
+              <span className="new-shop-manual-arrow">
+                <DesignIcon name="chevronRight" size={19} />
+              </span>
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="new-shop-manual-plus">
+              <DesignIcon name="add" size={17} />
+            </span>
+            搜不到？手动添加
+          </>
+        )}
       </button>
     </div>
   );

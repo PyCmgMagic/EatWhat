@@ -115,7 +115,12 @@ beforeEach(() => {
                 action: "create",
                 editor: { id: 9, displayName: "Maycry" },
                 createdAt: 1763200000000,
-                changes: [{ field: "name", to: "哀记云饺" }],
+                changes: [
+                  { field: "name", to: "哀记云饺" },
+                  { field: "gcjLng", to: 117.134 },
+                  { field: "poi", to: "fixture-map-place-id" },
+                  { field: "kind", to: "food" },
+                ],
               },
             ],
             hasNext: false,
@@ -185,6 +190,10 @@ it("opens the shop history in a dialog instead of leaving the page", async () =>
   expect(dialog!.textContent).toContain("哀记云饺");
   expect(dialog!.textContent).toContain("Maycry");
   expect(dialog!.textContent).toContain("当前版本");
+  expect(dialog!.textContent).toContain("经营信息");
+  expect(dialog!.textContent).toContain("吃饭");
+  expect(dialog!.textContent?.match(/地图位置/g)).toHaveLength(1);
+  expect(dialog!.textContent).not.toContain("fixture-map-place-id");
   expect(location).toBe("/restaurants/1");
 });
 

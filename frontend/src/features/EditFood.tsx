@@ -37,7 +37,7 @@ import {
   tasteTags,
   type V2Food,
 } from "../api/v2-vocab";
-import { stagePalette, publishDisplay, type Stage } from "../api/food-display";
+import { stagePalette, publishDisplay, stageNames, type Stage } from "../api/food-display";
 import { isDemo } from "../app/runtime";
 import {
   useMemoryDraft,
@@ -52,18 +52,6 @@ import { FeaturePage, FeatureState } from "./Catalog";
 import "./latest.css";
 import "./edit-food.css";
 import { AiTagSuggest, draftPictureKeys } from "./AiTagSuggest";
-
-const STAGE_NAMES: Record<Stage, string> = {
-  broth: "暖汤",
-  mango: "芒果",
-  bamboo: "竹色",
-  chili: "辣橙",
-  tomato: "番茄",
-  redoil: "红油",
-  soy: "酱色",
-  porcelain: "瓷蓝",
-  matcha: "抹茶",
-};
 
 const DARK_STAGES = new Set<string>(["#C9442B", "#A8321C", "#8F5B24"]);
 
@@ -442,8 +430,8 @@ function EditForm({
                       type="button"
                       role="radio"
                       aria-checked={selected}
-                      aria-label={STAGE_NAMES[key]}
-                      title={STAGE_NAMES[key]}
+                      aria-label={stageNames[key]}
+                      title={stageNames[key]}
                       disabled={busy || uncertain}
                       className={selected ? "is-selected" : undefined}
                       style={{ background: color }}
@@ -686,7 +674,7 @@ function EditForm({
                 {!food.stageColor && <option value="">分类默认色</option>}
                 {Object.entries(stagePalette).map(([key, color]) => (
                   <option key={key} value={key} data-color={color}>
-                    {STAGE_NAMES[key as Stage]}
+                    {stageNames[key as Stage]}
                   </option>
                 ))}
               </Select>

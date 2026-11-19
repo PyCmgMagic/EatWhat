@@ -25,6 +25,7 @@ import {
   DesignNav,
   PrimaryButton,
   type Draft,
+  type DraftPatch,
 } from "./ui";
 import { useApp } from "../app/state";
 import { isAdminPath } from "../app/admin-routes";
@@ -54,6 +55,11 @@ const MobileAccountSettings = lazy(() => import("./AccountSettings"));
 const MobileSettingsPages = lazy(() => import("./SettingsPages"));
 const MobileNotifications = lazy(() => import("./Notifications"));
 const MobileLibrary = lazy(() => import("./MobileLibrary"));
+const MobileLikedFoods = lazy(() =>
+  import("./MobileLibrary").then((module) => ({
+    default: module.MobileLikedFoods,
+  })),
+);
 import { Gate } from "../components/ui";
 import "@fontsource-variable/noto-sans-sc";
 import "@fontsource-variable/bricolage-grotesque";
@@ -63,7 +69,7 @@ import DesktopExperience from "../desktop/Desktop";
 import HelpFeedback, { isHelpFeedbackPath } from "../features/HelpFeedback";
 import { profileSection } from "../app/profile-workspace";
 import { Catalog } from "../features/Catalog";
-import { PasswordByCode, RecommendationControls } from "../features/Account";
+import { RecommendationControls } from "../features/Account";
 import { EditFood } from "../features/EditFood";
 import { EditRestaurant, isShopEditPath } from "../features/EditRestaurant";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
@@ -103,7 +109,6 @@ const emptyDraft: Draft = {
   category: "staple",
   description: "",
   images: [],
-  stage: "#F3C46E",
   tags: [],
   tagInput: "",
 };
@@ -179,6 +184,33 @@ function MobileWorkspace() {
     };
   }, [clock]);
   const images = useRef(draft.images);
+  const hasPublishDraft = !!(
+    draft.name ||
+    draft.price ||
+    draft.description ||
+    draft.images.length ||
+    draft.category !== emptyDraft.category ||
+    draft.stage ||
+    draft.photoEdit ||
+    draft.tags.length ||
+    draft.tagInput ||
+    draft.systemTagIds?.length ||
+    draft.signature ||
+    draft.mealTimes?.length ||
+    draft.deliveryEnabled ||
+    draft.restaurantPicked ||
+    draft.publishing ||
+    draft.publishUncertain
+  );
+  useEffect(() => {
+    if (!hasPublishDraft) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [hasPublishDraft]);
   images.current = draft.images;
   const photoEdit = useRef(draft.photoEdit);
   photoEdit.current = draft.photoEdit;
@@ -331,6 +363,10 @@ function MobileWorkspace() {
             ? "me"
             : null;
   const navigationPresence = useExitPresence(navigationSection);
+  const mobileLibraryPath = loc.pathname.replace(/\/+$/, "");
+  const mobileFavorites = ["/favorites", "/restaurants/favorites"].includes(
+    mobileLibraryPath,
+  );
   useEffect(() => {
     setPanel(null);
   }, [loc.pathname]);
@@ -343,7 +379,7 @@ function MobileWorkspace() {
         : null,
     isHelpFeedbackPath(loc.pathname)
       ? "/help"
-      : ["/favorites", "/likes", "/restaurants/favorites"].includes(loc.pathname)
+      : mobileFavorites
         ? "/favorites"
         : loc.pathname,
     0,
@@ -380,8 +416,11 @@ function MobileWorkspace() {
     go: (name: string) =>
       nav(reference ? "/reference/" + name : (screenRoutes[name] ?? "/")),
     draft,
-    setDraft: (patch: Partial<Draft>) =>
-      setDraftState((d) => ({ ...d, ...patch })),
+    setDraft: (patch: DraftPatch) =>
+      setDraftState((d) => ({
+        ...d,
+        ...(typeof patch === "function" ? patch(d) : patch),
+      })),
     tagId,
     setTagId,
     meal: mealName(mealSlot) ?? "晚饭",
@@ -521,9 +560,9 @@ function MobileWorkspace() {
                   <MobileNotifications />
                 ) : !desktop &&
                   !reference &&
-                  ["/favorites", "/likes", "/restaurants/favorites"].includes(
-                    loc.pathname.replace(/\/+$/, ""),
-                  ) ? (
+                  mobileLibraryPath === "/likes" ? (
+                  <MobileLikedFoods />
+                ) : !desktop && !reference && mobileFavorites ? (
                   <MobileLibrary />
                 ) : !desktop && !reference && isV4Path(loc.pathname) ? (
                   <div className="ew-mobile-feature">
@@ -864,7 +903,6 @@ function NewShop() {
             onChange={(traits) => flow.update({ traits })}
             disabled={busy}
             compact
-            showDeliveryNote={false}
           />
           <footer className="mobile-new-shop-footer">
             <PrimaryButton disabled={!flow.canSubmit}>

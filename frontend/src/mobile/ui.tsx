@@ -42,7 +42,7 @@ export type MobileState = {
   ) => void;
   go: (screen: string) => void;
   draft: Draft;
-  setDraft: (patch: Partial<Draft>) => void;
+  setDraft: (patch: DraftPatch) => void;
   tagId?: number;
   setTagId: (id?: number) => void;
   /** Name of the meal slot in use, e.g. 晚饭. */
@@ -68,7 +68,8 @@ export type Draft = {
   description: string;
   images: DraftPhoto[];
   photoEdit?: DraftPhotoEdit;
-  stage: string;
+  /** Explicit stage choice. Without one, follow the cover's first recommendation. */
+  stage?: string;
   tags: string[];
   tagInput?: string;
   systemTagIds?: number[];
@@ -78,13 +79,14 @@ export type Draft = {
   mealTimes?: string[];
   deliveryEnabled?: boolean;
   crop?: { x: number; y: number; zoom: number };
-  candidates?: string[];
   shopName?: string;
   restaurantId?: number;
+  restaurantPicked?: boolean;
   publishing?: boolean;
   publishPhase?: "uploading" | "submitting";
   publishUncertain?: boolean;
 };
+export type DraftPatch = Partial<Draft> | ((current: Draft) => Partial<Draft>);
 export const MobileContext = createContext<MobileState | null>(null);
 export const DesignRegistryContext = createContext<Record<string, any>>({});
 export function useMobile() {

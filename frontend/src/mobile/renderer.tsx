@@ -58,7 +58,6 @@ export class DesignController extends Component<any, any> {
           ox: edit.framing.x,
           oy: edit.framing.y,
           zoom: edit.framing.zoom,
-          color: Math.max(0, edit.candidates.indexOf(props.draft.stage)),
         });
       }
       if (props.screen === "G-Search")

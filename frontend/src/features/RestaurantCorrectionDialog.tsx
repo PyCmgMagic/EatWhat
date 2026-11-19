@@ -38,13 +38,12 @@ export function RestaurantCorrectionDialog({
   return (
     <Modal
       title="店铺信息有误"
-      className="food-report-modal"
+      className="food-report-modal restaurant-feedback-modal"
       onClose={onClose}
       dismissible={!task.busy}
     >
       <p className="food-report-description">
-        正在反馈 <strong>{restaurantName || "这家店"}</strong> 的信息问题。
-        补充正确信息或具体情况，能帮助我们更快核实。
+        正在反馈 <strong>{restaurantName || "这家店"}</strong>
       </p>
       <form
         className="food-report-form"
@@ -86,7 +85,7 @@ export function RestaurantCorrectionDialog({
               className="field"
               value={draft.text}
               maxLength={textLimit}
-              placeholder="请补充正确的店名、位置或其他具体情况…"
+              placeholder="补充正确的店名、位置或其他信息"
               onChange={(event) =>
                 setDraft((current) => ({
                   ...current,

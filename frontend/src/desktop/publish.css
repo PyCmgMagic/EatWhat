@@ -1,73 +1,160 @@
 .pc-composer {
-  max-width: 1416px;
-  margin: 0 auto;
+  --composer-ink: #2a211b;
+  --composer-muted: #6f6156;
+  --composer-line: #e6ded4;
+  --composer-surface: #fcfaf7;
+  --composer-yellow: #ffcf58;
+  --composer-accent-ink: #765017;
+  --composer-focus: #9b6216;
+  --composer-card-padding: clamp(18px, 2vw, 28px);
+  max-width: 1140px;
+  margin-inline: auto;
+  color: var(--composer-ink);
 }
 .pc-composer-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  margin: 0 0 22px;
+  margin-bottom: 22px;
 }
-.pc-composer-heading .pc-breadcrumb {
-  margin: 0 0 8px;
-  font-size: 11px;
+.pc-composer-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--composer-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.pc-composer-back:hover {
+  color: var(--composer-ink);
 }
 .pc-composer-heading h1 {
-  margin: 0;
-  font-size: 29px;
-  line-height: 1.4;
+  margin: 9px 0 0;
+  font-size: clamp(28px, 3vw, 41px);
   font-weight: 900;
-  letter-spacing: -1px;
+  line-height: 1.25;
+  letter-spacing: -0.045em;
 }
-.pc-composer-draft {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: #8a7e76;
-  font-size: 11px;
-  flex-shrink: 0;
-}
-.pc-composer-draft i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #9dbf7a;
-}
-.pc-composer-layout {
+.pc-composer-editor {
   display: grid;
-  grid-template-columns: 250px minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   align-items: start;
+  gap: 16px;
 }
-.pc-composer-shops {
-  display: flex;
-  flex-direction: column;
-  position: sticky;
-  top: 114px;
-  min-height: 0;
-  padding: 20px 16px 16px;
+.pc-composer-details {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.pc-composer-editor fieldset {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  min-inline-size: 0;
+}
+.pc-composer-editor
+  :is(.pc-composer-shops, .pc-composer-photo-section, .pc-composer-fields) {
+  padding: var(--composer-card-padding);
+  border: 1px solid var(--composer-line);
+  border-radius: 20px;
   background: #fff;
-  border-radius: 24px;
 }
 .pc-composer-section-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4px;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 .pc-composer-section-title h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 800;
+  line-height: 1.4;
 }
-.pc-required {
-  color: #a75e24;
-  font-size: 10px;
+.pc-composer .pc-required {
+  color: var(--composer-accent-ink);
+  font-size: 11px;
   font-weight: 500;
 }
-.pc-required.is-selected {
-  color: #718357;
+.pc-composer-editor :is(button, a):focus-visible,
+.pc-composer-back:focus-visible {
+  outline: 2px solid var(--composer-focus);
+  outline-offset: 3px;
+}
+.pc-composer-editor button:disabled {
+  cursor: default;
+}
+
+.pc-composer-shops .pc-composer-section-title {
+  margin-bottom: 10px;
+}
+.pc-composer-editor .pc-composer-shops {
+  padding-block: 16px;
+}
+.pc-composer-selected {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.pc-composer-selected-copy {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.pc-composer-selected strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.pc-composer-selected small {
+  display: block;
+  color: var(--composer-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  margin-top: 3px;
+}
+.pc-composer-shop-photo {
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #f9eed7;
+  color: var(--composer-accent-ink);
+}
+.pc-composer-shop-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.pc-composer-shop-toggle,
+.pc-composer-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 40px;
+  flex-shrink: 0;
+  padding: 0 12px;
+  border: 1px solid var(--composer-line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--composer-ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+.pc-composer-shop-toggle:hover:enabled,
+.pc-composer-save:hover:enabled {
+  background: var(--composer-surface);
+  border-color: #cbbdaf;
+}
+.pc-composer-shop-toggle .design-icon {
+  transition: transform 180ms ease-out;
+}
+.pc-composer-shop-toggle[aria-expanded="true"] .design-icon {
+  transform: rotate(180deg);
 }
 .pc-composer-shop-picker {
   display: grid;
@@ -82,35 +169,40 @@
   overflow: hidden;
 }
 .pc-composer-shop-picker-content {
-  display: flex;
-  flex-direction: column;
-  padding-top: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  padding: 4px;
+  margin-inline: -4px;
 }
-.pc-composer-area {
-  border: 0;
-  padding: 10px 4px;
-  background: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: #6e625b;
-  text-align: left;
+.pc-composer-selected
+  + .pc-composer-shop-picker
+  .pc-composer-shop-picker-content {
+  padding-top: 15px;
 }
-.pc-composer-area .design-icon:last-child {
-  margin-left: auto;
-}
+.pc-composer-area,
 .pc-composer-search {
   display: flex;
   align-items: center;
-  gap: 7px;
-  height: 38px;
-  flex-shrink: 0;
-  padding: 0 11px;
-  background: #f7f4f1;
-  border-radius: 12px;
-  margin: 4px 0 12px;
-  color: #8a7e76;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--composer-line);
+  border-radius: 10px;
+  background: var(--composer-surface);
+  color: var(--composer-muted);
+  font-size: 12px;
+}
+.pc-composer-area {
+  grid-area: 1 / 2;
+  max-width: 186px;
+  text-align: left;
+}
+.pc-composer-search {
+  grid-area: 1 / 1;
+}
+.pc-composer-search:focus-within {
+  border-color: var(--composer-focus);
 }
 .pc-composer-search input {
   width: 100%;
@@ -118,176 +210,106 @@
   border: 0;
   outline: 0;
   background: none;
-  color: #231c18;
-  font-size: 12px;
+  color: var(--composer-ink);
+  font-size: 13px;
 }
 .pc-composer-search button {
-  padding: 0;
+  display: grid;
+  place-items: center;
+  padding: 3px;
   border: 0;
+  border-radius: 4px;
   background: none;
-  display: flex;
 }
 .pc-composer-shop-list {
-  min-height: 0;
-  max-height: clamp(150px, calc(100dvh - 360px), 420px);
+  max-height: 215px;
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  scrollbar-color: #d9d0c9 transparent;
-  margin: 0 -5px;
-  padding: 0 5px;
+  scrollbar-color: #d0c2b4 transparent;
+  margin-inline: -4px;
+  padding: 4px;
+}
+.pc-composer-shop-picker-content
+  > :not(.pc-composer-search, .pc-composer-area) {
+  grid-column: 1 / -1;
 }
 .pc-composer-shop {
   display: flex;
   align-items: center;
-  gap: 9px;
-  width: 100%;
-  padding: 11px 8px;
-  border: 0;
-  background: transparent;
-  border-radius: 14px;
-  text-align: left;
-  margin-bottom: 4px;
-  transition: background-color 150ms;
-}
-.pc-composer-shop[aria-checked="true"] {
-  background: #f8f0e0;
-}
-.pc-composer-shop:hover {
-  background: #f7f4f1;
-}
-.pc-composer-shop[aria-checked="true"]:hover {
-  background: #f8edda;
-}
-.pc-composer-shop-photo {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  background: #f4efeb;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.pc-composer-shop-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-.pc-composer-shop > span:nth-child(2) {
-  min-width: 0;
-  flex: 1;
-}
-.pc-composer-shop strong {
-  display: block;
-  font-size: 12px;
-  font-weight: 700;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.pc-composer-shop small {
-  display: block;
-  font-size: 10px;
-  color: #8a7e76;
-  margin-top: 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.pc-composer-radio {
-  width: 16px;
-  height: 16px;
-  border: 1px solid #d9d0c9;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-.pc-composer-shop[aria-checked="true"] .pc-composer-radio {
-  background: #231c18;
-  border-color: #231c18;
-  color: white;
-}
-.pc-composer-selected {
-  display: flex;
-  align-items: center;
   gap: 10px;
-  margin-top: 14px;
-  padding: 0 2px;
-}
-.pc-composer-selected-copy {
-  flex: 1;
-  min-width: 0;
-}
-.pc-composer-selected strong {
-  display: block;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-.pc-composer-selected small {
-  display: block;
-  font-size: 10px;
-  color: #8a7e76;
-  line-height: 1.7;
-  margin-top: 3px;
-  overflow-wrap: anywhere;
-}
-.pc-composer-shop-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  min-width: 48px;
-  min-height: 40px;
-  flex-shrink: 0;
-  padding: 6px 2px;
+  width: 100%;
+  padding: 8px;
   border: 0;
   border-radius: 10px;
   background: transparent;
-  color: #8f5b24;
-  font: inherit;
+  text-align: left;
+  transition: background-color 150ms;
+}
+.pc-composer-shop:hover:enabled {
+  background: var(--composer-surface);
+}
+.pc-composer-shop[aria-checked="true"],
+.pc-composer-shop[aria-checked="true"]:hover:enabled {
+  background: #fff3d4;
+}
+.pc-composer-shop > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.pc-composer-shop :is(strong, small) {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pc-composer-shop strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+.pc-composer-shop small {
+  margin-top: 3px;
+  color: var(--composer-muted);
   font-size: 11px;
-  cursor: pointer;
 }
-.pc-composer-shop-toggle:hover {
-  background: #f8f0e0;
+.pc-composer-radio {
+  display: grid;
+  place-items: center;
+  flex: 0 0 17px;
+  height: 17px;
+  border: 1px solid #bcb0a3;
+  border-radius: 50%;
 }
-.pc-composer-shop-toggle .design-icon {
-  transition: transform 180ms ease-out;
-}
-.pc-composer-shop-toggle[aria-expanded="true"] .design-icon {
-  transform: rotate(180deg);
-}
-.pc-composer-shop-toggle:focus-visible {
-  outline: 2px solid #d8b27a;
-  outline-offset: 2px;
-}
-html[data-motion-input="keyboard"] .pc-composer-shop-picker,
-html[data-motion-input="keyboard"] .pc-composer-shop-toggle .design-icon {
-  transition: none;
+.pc-composer-shop[aria-checked="true"] .pc-composer-radio {
+  border-color: var(--composer-ink);
+  background: var(--composer-ink);
+  color: #fff;
 }
 .pc-composer-new-shop {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
-  margin: 7px 4px 0;
-  font-size: 11px;
-  color: #6e625b;
+  gap: 4px;
+  justify-self: start;
+  padding: 5px 0;
+  color: var(--composer-accent-ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+.pc-composer-new-shop:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .pc-composer-list-message {
+  padding: 10px 8px;
+  color: var(--composer-muted);
   font-size: 12px;
-  line-height: 1.8;
-  padding: 20px 8px;
-  color: #8a7e76;
+  line-height: 1.6;
 }
 .pc-composer-list-message button {
   display: block;
+  padding: 6px 0;
   background: none;
   border: 0;
-  padding: 8px 0;
   font-size: 12px;
   text-decoration: underline;
 }
@@ -296,328 +318,399 @@ html[data-motion-input="keyboard"] .pc-composer-shop-toggle .design-icon {
   justify-content: center;
   align-items: center;
   gap: 10px;
-  font-size: 11px;
-  margin: 12px 0;
+  margin-top: 8px;
+  font-size: 12px;
 }
 .pc-composer-shop-pages button {
-  border: 0;
-  border-radius: 10px;
-  background: #f4efeb;
-  padding: 7px;
+  padding: 7px 9px;
+  border: 1px solid var(--composer-line);
+  border-radius: 8px;
+  background: var(--composer-surface);
   font: inherit;
 }
-.pc-composer-editor {
-  background: white;
-  border-radius: 24px;
-  padding: 24px;
-  display: grid;
-  grid-template-columns: minmax(220px, 340px) minmax(0, 1fr);
-  column-gap: 28px;
-  align-items: start;
+html[data-motion-input="keyboard"] .pc-composer-shop-picker,
+html[data-motion-input="keyboard"] .pc-composer-shop-toggle .design-icon {
+  transition: none;
 }
-.pc-composer-editor fieldset {
-  margin: 0;
-  border: 0;
-  padding: 0;
-  min-width: 0;
+
+.pc-composer-photo-count {
+  color: var(--composer-muted);
+  font:
+    500 13px/1 "Bricolage Grotesque Variable",
+    sans-serif;
+  font-variant-numeric: tabular-nums;
 }
-.pc-composer-editor legend {
-  padding: 0;
-  width: 100%;
-  margin-bottom: 16px;
-  font-size: 17px;
-  font-weight: 800;
-}
-.pc-composer-editor legend > span {
-  font-size: 10px;
-  font-weight: 400;
-  color: #8a7e76;
-  margin-left: 8px;
+.pc-composer-photo-count strong {
+  color: var(--composer-ink);
 }
 .pc-composer-stage {
-  height: 278px;
+  display: grid;
+  place-items: center;
   position: relative;
-  border-radius: 20px;
+  width: 100%;
+  aspect-ratio: 1.25;
+  min-height: 210px;
   overflow: hidden;
-  transition: background-color 180ms;
+  border: 1px solid color-mix(in srgb, var(--composer-stage-color) 40%, #e7dccc);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--composer-stage-color) 20%, #faf7f1);
+}
+.pc-composer-stage[data-has-image="true"] {
+  background: var(--composer-stage-color);
 }
 .pc-composer-stage.is-dragging {
-  outline: 2px dashed #231c18;
-  outline-offset: -8px;
-}
-.pc-composer-stage.is-dark {
-  color: white;
-}
-.pc-composer-stage.is-dark .pc-composer-empty-photo {
-  color: white;
-  border-color: #ffffff70;
-}
-.pc-composer-stage.is-dark .pc-composer-empty-photo > span:last-child {
-  color: #ffffffb0;
-}
-.pc-app .pc-composer-crop-button {
-  color: #231c18;
-}
-.pc-composer-cover {
-  width: 204px;
-  height: 204px;
-  border-radius: 50%;
-  border: 7px solid white;
-  object-fit: cover;
-  position: absolute;
-  left: 50%;
-  top: 44%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 12px 22px #231c1820;
+  outline: 2px dashed var(--composer-focus);
+  outline-offset: -6px;
 }
 .pc-composer-empty-photo {
-  border: 1.5px dashed #231c1845;
-  border-radius: 50%;
-  background: #ffffff26;
-  color: #231c18;
-  width: 180px;
-  height: 180px;
+  display: grid;
   position: absolute;
-  top: 45%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: var(--composer-ink);
+  padding: 0;
+}
+.pc-composer-editor .pc-composer-empty-photo:focus-visible {
+  outline-offset: -4px;
+}
+.pc-composer-upload-plate {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 9px;
+  gap: 6px;
+  width: clamp(142px, 53%, 197px);
+  aspect-ratio: 1;
+  position: relative;
+  border: 1px solid #e7dcc9;
+  border-radius: 50%;
+  background: #fffdfa;
+  box-shadow:
+    inset 0 0 0 6px #fff,
+    0 10px 22px #53330c12;
+  transition: transform 180ms ease-out;
 }
-.pc-composer-empty-photo strong {
-  font-size: 13px;
-  font-weight: 700;
+.pc-composer-upload-plate::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 1px dashed #d6c8b3;
+  border-radius: inherit;
 }
-.pc-composer-empty-photo > span:last-child {
-  font-size: 10px;
-  color: #6e512f;
+.pc-composer-empty-photo:enabled:hover .pc-composer-upload-plate,
+.pc-composer-stage.is-dragging .pc-composer-upload-plate {
+  transform: translateY(-3px);
+}
+.pc-composer-upload-plate > .design-icon {
+  margin-bottom: 3px;
+  color: var(--composer-accent-ink);
+}
+.pc-composer-upload-plate strong {
+  font-size: 14px;
+  font-weight: 750;
+}
+.pc-composer-upload-plate small {
+  font-size: 11px;
+  color: var(--composer-muted);
+}
+.pc-composer-cover {
+  display: block;
+  width: min(66%, 234px);
+  aspect-ratio: 1;
+  border: 6px solid #fff;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 12px 24px #231c1826;
 }
 .pc-composer-crop-button {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 5px;
   position: absolute;
-  right: 12px;
-  top: 12px;
-  padding: 7px 9px;
-  border: 0;
-  border-radius: 16px;
-  background: #ffffffdc;
-  color: #231c18;
-  font-size: 10px;
+  right: 10px;
+  bottom: 10px;
+  padding: 8px 10px;
+  border: 1px solid #fff;
+  border-radius: 8px;
+  background: #fffdf9;
+  color: var(--composer-ink);
+  font-size: 12px;
+  font-weight: 600;
 }
 .pc-composer-preview-name {
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 14px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
   gap: 10px;
-  font-size: 13px;
-  font-weight: 700;
+  margin-top: 12px;
+  font-size: 15px;
+  font-weight: 750;
 }
 .pc-composer-preview-name > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .pc-composer-preview-name > strong {
-  font: 800 23px/1 "Bricolage Grotesque Variable";
+  font:
+    800 21px/1 "Bricolage Grotesque Variable",
+    sans-serif;
   flex-shrink: 0;
 }
 .pc-composer-thumbnails {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 12px;
+  gap: 9px;
+  margin-top: 13px;
 }
-.pc-composer-thumbnails > button {
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  border: 1.5px solid transparent;
-  border-radius: 11px;
+.pc-composer-thumbnail,
+.pc-composer-add-photo {
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  border-radius: 10px;
+}
+.pc-composer-thumbnail {
   position: relative;
-  background: #f7f4f1;
+}
+.pc-composer-thumbnail-preview {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
   overflow: hidden;
+  background: var(--composer-surface);
 }
-.pc-composer-thumbnails > button[aria-pressed="true"] {
-  border-color: #231c18;
+.pc-composer-thumbnail-preview[aria-pressed="true"]:not(:focus-visible) {
+  outline: 2px solid var(--composer-ink);
+  outline-offset: 1px;
 }
-.pc-composer-thumbnails img {
+.pc-composer-thumbnail-preview[draggable="true"] {
+  cursor: grab;
+  user-select: none;
+}
+.pc-composer-thumbnail[data-dragging] {
+  opacity: 0.5;
+}
+.pc-composer-thumbnail[data-drop-target] {
+  outline: 2px solid var(--composer-focus);
+  outline-offset: 2px;
+}
+.pc-composer-thumbnail-preview img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.pc-composer-thumbnails > button > span:not(.design-icon) {
+.pc-composer-cover-label {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  inset: auto 0 0;
   color: #fff;
-  background: #231c18a0;
-  font-size: 9px;
+  background: #231c18c2;
+  font-size: 10px;
   line-height: 16px;
 }
-.pc-composer-thumbnails > button.pc-composer-add-photo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed #c8bbb1;
-  gap: 1px;
+.pc-composer-thumbnail-remove {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--composer-ink);
+  box-shadow: 0 1px 4px #231c1847;
 }
-.pc-composer-thumbnails
-  > button.pc-composer-add-photo
-  > span:not(.design-icon) {
-  position: static;
-  color: #8a7e76;
-  background: transparent;
-  font: 500 9px "Bricolage Grotesque Variable";
+.pc-composer-thumbnail-remove:hover:enabled {
+  background: #fff1e9;
+  color: #9a3026;
+}
+.pc-composer-add-photo {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px dashed #bcb0a3;
+  background: var(--composer-surface);
+  color: var(--composer-accent-ink);
 }
 .pc-composer-photo-actions {
   display: flex;
-  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 14px;
   margin-top: 9px;
+  color: var(--composer-muted);
+  font-size: 11px;
 }
 .pc-composer-photo-actions button {
+  padding: 3px 0;
   border: 0;
   background: none;
-  padding: 3px 0;
-  color: #6e625b;
-  font-size: 10px;
+  color: var(--composer-accent-ink);
+  font: inherit;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 .pc-composer-photo-help {
-  font-size: 10px;
-  color: #8a7e76;
-  line-height: 1.8;
-  margin: 10px 0 15px;
+  margin: 10px 0 16px;
+  color: var(--composer-muted);
+  font-size: 11px;
+  line-height: 1.65;
 }
 .pc-composer-palette {
-  border-top: 1px solid #efe9e4;
+  display: grid;
+  gap: 9px;
   padding-top: 12px;
+  border-top: 1px solid var(--composer-line);
 }
-.pc-composer-palette > div:first-child {
+.pc-composer-palette-heading {
   display: flex;
   align-items: center;
-  gap: 9px;
-  margin-bottom: 10px;
+  justify-content: space-between;
+  gap: 12px;
 }
 .pc-composer-palette strong {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
 }
-.pc-composer-palette > div:first-child > span {
-  font-size: 10px;
-  color: #8a7e76;
-}
-.pc-composer-palette [role="group"] {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  padding: 3px;
-}
-.pc-composer-palette [role="group"] > button {
-  width: 23px;
-  height: 23px;
+.pc-composer-palette-toggle {
+  padding: 4px 0;
   border: 0;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  padding: 0;
-}
-.pc-composer-palette [aria-pressed="true"] {
-  outline: 1.5px solid #231c18;
-  outline-offset: 3px;
-}
-.pc-composer-palette > small {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #8a7e76;
-  font-size: 10px;
-  margin-top: 10px;
-}
-.pc-composer-palette > small > button {
-  width: 14px;
-  height: 14px;
-  border: 0;
-  border-radius: 50%;
-  padding: 0;
-}
-.pc-composer-name-price {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 110px;
-  gap: 14px;
-  margin-bottom: 18px;
-}
-.pc-composer-fields label,
-.pc-composer-kind > span {
+  background: transparent;
+  color: var(--composer-muted);
   font-size: 12px;
   font-weight: 600;
 }
-.pc-composer-fields label > span:not(.pc-required) {
-  font-size: 10px;
-  color: #8a7e76;
-  font-weight: 400;
-  margin-left: 3px;
+.pc-composer-palette-toggle:is(:hover, :focus-visible) {
+  color: var(--composer-ink);
 }
-.pc-composer-fields input,
-.pc-composer-fields textarea {
-  width: 100%;
-  border: 1px solid #e6ded8;
-  border-radius: 12px;
-  color: #231c18;
+.pc-composer-stage-picks,
+.pc-composer-stage-colors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.pc-composer-stage-picks button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--composer-line);
+  border-radius: 999px;
   background: #fff;
-  padding: 10px 12px;
-  font-family: inherit;
+  color: var(--composer-ink);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.pc-composer-stage-picks button:is(:hover, [aria-pressed="true"]) {
+  border-color: var(--composer-ink);
+  background: #f8f3ed;
+}
+.pc-composer-stage-picks button > span:first-child {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #231c181a;
+  border-radius: 50%;
+}
+.pc-composer-stage-colors[hidden] {
+  display: none;
+}
+.pc-composer-stage-colors button[aria-pressed] {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #231c181a;
+  border-radius: 50%;
+}
+.pc-composer-stage-colors [aria-pressed="true"] {
+  outline: 1px solid var(--composer-ink);
+  outline-offset: 2px;
+}
+.pc-composer-stage-current {
+  color: var(--composer-muted);
+  font-size: 12px;
+}
+
+.pc-composer-name-price {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(84px, 24%);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.pc-composer-fields label,
+.pc-composer-kind-heading > span,
+.pc-composer-options .ew-meals > b {
   font-size: 13px;
+  font-weight: 700;
+}
+.pc-composer-fields label > span:not(.pc-required),
+.pc-composer-options b > small {
+  margin-left: 3px;
+  color: var(--composer-muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+.pc-composer-fields :is(input[name="name"], textarea),
+.pc-composer-price {
+  margin-top: 6px;
+  border: 1px solid var(--composer-line);
+  border-radius: 9px;
+  background: var(--composer-surface);
+}
+.pc-composer-fields :is(input[name="name"], textarea, input[name="price"]) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 11px;
   outline: 0;
-  margin-top: 8px;
-  transition: border-color 150ms;
+  color: var(--composer-ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
 }
-.pc-composer-fields input:focus,
-.pc-composer-fields textarea:focus {
-  border-color: #9d7c59;
-  box-shadow: 0 0 0 3px #f3c46e24;
+.pc-composer-fields :is(input, textarea)::placeholder,
+.pc-composer-search input::placeholder {
+  color: #796e64;
+  opacity: 1;
 }
-.pc-composer-fields input {
-  height: 43px;
+.pc-composer-fields :is(input[name="name"], input[name="price"]) {
+  height: 42px;
+}
+.pc-composer-fields :is(input[name="name"], textarea):focus,
+.pc-composer-price:focus-within {
+  border-color: var(--composer-focus);
+  box-shadow: 0 0 0 2px #ffcf5852;
 }
 .pc-composer-price {
   display: flex;
   align-items: center;
-  margin-top: 8px;
-  border: 1px solid #e6ded8;
-  border-radius: 12px;
   padding-left: 11px;
 }
-.pc-composer-price:focus-within {
-  border-color: #9d7c59;
-  box-shadow: 0 0 0 3px #f3c46e24;
-}
 .pc-composer-price > span {
-  font: 600 16px "Bricolage Grotesque Variable";
-  color: #8a7e76;
+  color: var(--composer-muted);
+  font:
+    650 16px "Bricolage Grotesque Variable",
+    sans-serif;
 }
-.pc-composer-price input {
-  margin: 0;
-  border: 0;
+.pc-composer-fields .pc-composer-price input {
+  height: 40px;
   padding-left: 6px;
-  height: 41px;
-  box-shadow: none !important;
-}
-/* The spin buttons crowd the narrow price box. */
-.pc-composer-price input {
-  min-width: 0;
+  border: 0;
+  background: transparent;
   appearance: textfield;
   -moz-appearance: textfield;
 }
@@ -627,251 +720,275 @@ html[data-motion-input="keyboard"] .pc-composer-shop-toggle .design-icon {
   margin: 0;
 }
 .pc-composer-kind {
-  margin-bottom: 18px;
+  margin-bottom: 15px;
 }
-.pc-composer-kind > div {
+.pc-composer-kind-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.pc-composer-kind-heading .ew-ai-suggest {
+  margin: 0;
+}
+.pc-composer-kind-heading .ew-ai-suggest button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 3px 8px;
+  border: 1px solid #eeddb7;
+  border-radius: 7px;
+  background: #fff6e2;
+  color: var(--composer-accent-ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+.pc-composer-kind-heading .ew-ai-suggest button:hover:enabled {
+  background: #ffedc7;
+}
+.pc-composer-kind-heading .ew-ai-suggest button:disabled {
+  opacity: 1;
+  border-color: var(--composer-line);
+  background: var(--composer-surface);
+  color: var(--composer-muted);
+}
+.pc-composer-kind [role="radiogroup"],
+.pc-composer-options .ew-meals {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin-top: 10px;
+  align-items: center;
+  gap: 6px;
 }
-.pc-composer-kind button {
-  border: 1px solid #efe9e4;
-  border-radius: 10px;
-  background: #faf8f6;
-  padding: 7px 12px;
-  font-size: 11px;
-  min-width: 52px;
+.pc-composer-kind [role="radio"],
+.pc-composer-options .ew-meals > :is(label, button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 33px;
+  padding: 4px 10px;
+  border: 1px solid var(--composer-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--composer-ink);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  transition:
+    background-color 140ms,
+    border-color 140ms;
 }
-.pc-composer-kind button[aria-checked="true"] {
-  background: #231c18;
-  border-color: #231c18;
-  color: #fff;
+.pc-composer-kind [role="radio"]:hover:enabled,
+.pc-composer-options .ew-meals > label:has(input:enabled):hover {
+  border-color: #beaa94;
+}
+.pc-composer-kind [aria-checked="true"],
+.pc-composer-options .ew-meals > label:has(input:checked) {
+  border-color: #d6aa52;
+  background: #fff0cc;
+  color: #583b16;
+  font-weight: 700;
 }
 .pc-composer-description {
   display: block;
 }
 .pc-composer-description textarea {
-  min-height: 110px;
+  min-height: 84px;
   resize: vertical;
-  line-height: 1.8;
+  line-height: 1.65;
 }
-.pc-composer-tags {
-  margin: 16px 0 18px;
-}
-.pc-composer-tags-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.pc-composer-tags-heading > span {
-  color: #8a7e76;
-  font-size: 11px;
-}
-.pc-composer-tag-list {
+.pc-composer-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
+  gap: 13px 6px;
+  margin-top: 17px;
+  padding-top: 14px;
+  border-top: 1px solid var(--composer-line);
 }
-.pc-composer-tag-list li {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  max-width: 100%;
-  padding: 3px 4px 3px 10px;
-  border: 1px solid #ead9bb;
-  border-radius: 999px;
-  background: #faf2e1;
-  color: #715027;
-  font-size: 12px;
-  line-height: 1.6;
-}
-.pc-composer-tag-list li > span:not(.design-icon) {
-  overflow-wrap: anywhere;
-}
-.pc-composer-tag-list button {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  color: #715027;
-  cursor: pointer;
-}
-.pc-composer-tag-list button:hover {
-  background: #eedfc4;
-}
-.pc-composer-tag-entry {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-  margin-top: 10px;
-}
-.pc-composer-tag-entry input {
-  min-width: 0;
-  flex: 1;
+.pc-composer-options .ew-meals {
   margin: 0;
 }
-.pc-composer-tag-add {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  flex-shrink: 0;
-  padding: 0 13px;
-  min-height: 43px;
-  border: 1px solid #ead9bb;
-  border-radius: 12px;
-  background: #faf2e1;
-  color: #715027;
-  font:
-    600 12px "Noto Sans SC Variable",
-    sans-serif;
+.pc-composer-options .pc-composer-tastes,
+.pc-composer-options [aria-label="供应饭点"] {
+  flex-basis: 100%;
+}
+.pc-composer-options [aria-label="外卖"] > b {
+  display: none;
+}
+.pc-composer-options .ew-meals > b {
+  flex-basis: 100%;
+  line-height: 1.45;
+}
+.pc-composer-options .ew-meals > small {
+  color: var(--composer-muted);
+  font-size: 11px;
+}
+.pc-composer-options .ew-meals > label {
+  position: relative;
   cursor: pointer;
 }
-.pc-composer-tag-add:hover:not(:disabled) {
-  background: #f4e4c6;
+.pc-composer-options .ew-meals input[type="checkbox"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
 }
-.pc-composer-tag-add:disabled {
-  opacity: 0.45;
+.pc-composer-options .ew-meals > label:has(input:disabled) {
+  opacity: 0.48;
   cursor: default;
 }
-.pc-composer-tag-add:focus-visible,
-.pc-composer-tag-list button:focus-visible {
-  outline: 2px solid #d8b27a;
+.pc-composer-options .ew-meals > label:has(input:focus-visible) {
+  outline: 2px solid var(--composer-focus);
   outline-offset: 2px;
 }
-.pc-composer-tags > p,
-.pc-composer-tags-empty {
-  margin: 8px 0 0;
-  color: #8a7e76;
-  font-size: 10px;
-  line-height: 1.8;
-}
-.pc-composer-recap {
-  background: #faf7f2;
-  border-radius: 13px;
-  padding: 14px;
-  margin-top: 18px;
-}
-.pc-composer-recap > span {
-  color: #a28c74;
-  font-size: 10px;
-  display: block;
-  margin-bottom: 7px;
-}
-.pc-composer-recap strong {
-  font-size: 13px;
-  display: block;
-  font-weight: 700;
-}
-.pc-composer-recap small {
-  font-size: 11px;
-  color: #8a7e76;
-  display: block;
-  margin-top: 5px;
-  line-height: 1.7;
-  overflow-wrap: anywhere;
-}
+
 .pc-composer-submit {
-  grid-column: 1/-1;
+  grid-column: 1 / -1;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  border-top: 1px solid #efe9e4;
-  margin-top: 22px;
-  padding: 16px 0 0;
-  position: sticky;
-  bottom: 12px;
+  gap: 10px 16px;
+  padding: 10px 12px 10px 17px;
+  border: 1px solid var(--composer-line);
+  border-radius: 15px;
   background: #fff;
-  z-index: 3;
-  box-shadow: 0 -10px 12px #ffffffed;
+  box-shadow: 0 6px 18px #2a211b0d;
 }
 .pc-composer-submit > div:last-child {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  flex-shrink: 0;
-  gap: 14px;
+  gap: 8px;
+  margin-left: auto;
 }
-.pc-composer-submit .pc-button {
-  min-height: 44px;
-  height: 44px;
-  min-width: 145px;
+.pc-composer-publish {
+  min-height: 41px;
+  padding: 0 15px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--composer-yellow);
+  color: var(--composer-ink);
   font-size: 13px;
-  padding: 0 18px;
+  font-weight: 800;
+  white-space: nowrap;
 }
-.pc-composer-save {
-  border: 0;
-  background: none;
-  color: #6e625b;
-  font-size: 11px;
-  padding: 9px 0;
+.pc-composer-publish:hover:enabled {
+  background: #ffc23b;
+}
+.pc-composer-publish:disabled:not([aria-busy="true"]) {
+  border-color: var(--composer-line);
+  background: #f0ebe5;
+  color: var(--composer-muted);
 }
 .pc-composer-checks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 11px;
+  font-size: 12px;
+  color: var(--composer-muted);
 }
 .pc-composer-checks > span {
-  display: flex;
-  gap: 4px;
+  display: inline-flex;
   align-items: center;
-  color: #b5a79c;
-  font-size: 10px;
+  gap: 6px;
 }
 .pc-composer-checks > span[data-done="true"] {
-  color: #6c8056;
-}
-.pc-composer-checks small {
-  flex-basis: 100%;
-  color: #8a7e76;
-  font-size: 10px;
-  line-height: 1.5;
+  color: #49653b;
 }
 .pc-composer-error {
-  grid-column: 1/-1;
-  margin-top: 16px;
+  grid-column: 1 / -1;
+  padding: 12px 16px;
   border: 1px solid #e4c8bf;
   border-radius: 12px;
-  padding: 12px;
   background: #fff7f3;
-  font-size: 12px;
   color: #a8321c;
+  font-size: 12px;
   line-height: 1.8;
 }
-.pc-composer-error p {
-  margin: 0;
-}
 .pc-composer-error a {
-  text-decoration: underline;
   display: block;
   width: fit-content;
   margin: 6px 0;
+  text-decoration: underline;
 }
 .pc-composer-error label {
   display: flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
   margin-top: 10px;
 }
 .pc-composer-error button {
+  margin-top: 8px;
+  padding: 6px 9px;
   border: 1px solid #e4c8bf;
   border-radius: 8px;
-  background: white;
-  padding: 6px 9px;
+  background: #fff;
   font-size: 11px;
-  margin-top: 8px;
 }
+
+@media (max-width: 800px) {
+  .pc-composer-editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-composer-stage {
+    max-height: 340px;
+  }
+}
+@media (max-width: 480px) {
+  .pc-composer-editor,
+  .pc-composer-details {
+    gap: 12px;
+  }
+  .pc-composer-selected {
+    gap: 9px;
+  }
+  .pc-composer-shop-toggle {
+    padding-inline: 8px;
+  }
+  .pc-composer-shop-picker-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pc-composer-area {
+    grid-area: 2 / 1;
+    max-width: none;
+  }
+  .pc-composer-area .design-icon:last-child {
+    margin-left: auto;
+  }
+  .pc-composer-submit > div:last-child {
+    width: 100%;
+  }
+  .pc-composer-publish {
+    flex: 1;
+  }
+}
+@media (pointer: coarse) {
+  .pc-composer-editor
+    :is(
+      .pc-composer-save,
+      .pc-composer-publish,
+      .pc-composer-shop,
+      .pc-composer-shop-toggle,
+      .pc-composer-kind [role="radio"],
+      .pc-composer-options .ew-meals > label
+    ) {
+    min-height: 44px;
+  }
+  .pc-composer-stage-colors button[aria-pressed] {
+    width: 27px;
+    height: 27px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pc-composer *,
+  .pc-crop-dialog * {
+    transition: none !important;
+  }
+}
+
 .pc-crop-dialog {
   border: 0;
   border-radius: 26px;
@@ -997,136 +1114,4 @@ html[data-motion-input="keyboard"] .pc-composer-shop-toggle .design-icon {
   height: 44px;
   min-width: 110px;
   font-size: 13px;
-}
-@media (max-width: 1250px) {
-  .pc-composer-layout {
-    grid-template-columns: 220px minmax(0, 1fr);
-    gap: 16px;
-  }
-  .pc-composer-editor {
-    padding: 20px;
-    column-gap: 20px;
-    grid-template-columns: minmax(210px, 0.85fr) minmax(0, 1.15fr);
-  }
-  .pc-composer-stage {
-    height: 260px;
-  }
-  .pc-composer-cover {
-    width: 190px;
-    height: 190px;
-  }
-  .pc-composer-name-price {
-    grid-template-columns: minmax(0, 1fr) 95px;
-    gap: 10px;
-  }
-  .pc-composer-kind button {
-    padding: 7px 10px;
-    min-width: 48px;
-  }
-  .pc-composer-heading h1 {
-    font-size: 27px;
-  }
-  .pc-composer-draft {
-    font-size: 10px;
-  }
-  .pc-composer-submit > div:last-child {
-    gap: 9px;
-  }
-  .pc-composer-submit .pc-button {
-    min-width: 130px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .pc-composer *,
-  .pc-crop-dialog * {
-    transition: none !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* 招牌 / 供应饭点 / 外卖 / 口味标签：复选框组 → 与「菜品分类」一致的选项块。
-   `.pc-composer-fields input` 的文本框尺寸不能落到这些复选框上。 */
-.pc-composer-fields .ew-meals {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 7px;
-  margin-top: 18px;
-}
-.pc-composer-fields .ew-meals > b {
-  flex-basis: 100%;
-  margin-bottom: 3px;
-  font-size: 12px;
-  font-weight: 600;
-}
-.pc-composer-fields .ew-meals > small {
-  flex-basis: 100%;
-  margin: 0;
-  color: #8a7e76;
-  font-size: 11px;
-}
-.pc-composer-fields .ew-meals:not(.ew-ai-suggest) label {
-  position: relative;
-  display: inline-flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  min-width: 52px;
-  min-height: 32px;
-  padding: 0 12px;
-  border: 1px solid #efe9e4;
-  border-radius: 10px;
-  background: #faf8f6;
-  color: #231c18;
-  font-size: 11px;
-  font-weight: 400;
-  line-height: 1;
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    background-color 140ms ease-out,
-    border-color 140ms ease-out,
-    color 140ms ease-out;
-}
-.pc-composer-fields .ew-meals label:hover {
-  border-color: #d8cbbc;
-}
-.pc-composer-fields .ew-meals label input[type="checkbox"] {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  opacity: 0;
-  cursor: inherit;
-}
-.pc-composer-fields .ew-meals label:has(input:checked) {
-  border-color: #231c18;
-  background: #231c18;
-  color: #fff;
-}
-.pc-composer-fields .ew-meals label:has(input:disabled) {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.pc-composer-fields .ew-meals label:has(input:focus-visible) {
-  outline: 2px solid #d8b27a;
-  outline-offset: 2px;
-}
-.pc-composer-fields .ew-ai-suggest > b {
-  flex-basis: auto;
-  margin: 0 4px 0 0;
-}
-.pc-composer-fields .ew-ai-suggest > small {
-  flex-basis: auto;
-}
-.pc-composer-fields .ew-meals > button {
-  padding: 7px 12px;
-  border: 1px solid #efe9e4;
-  border-radius: 10px;
-  background: #faf8f6;
-  font-size: 11px;
 }

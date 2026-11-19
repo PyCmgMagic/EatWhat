@@ -1,9 +1,29 @@
 import { useFeedbackState } from "../components/feedback";
-import { useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent,
+} from "react";
 import { DesignIcon as Icon, type Draft } from "../mobile/ui";
 import { adjustPhoto } from "../mobile/photos";
+import { photoFraming, type PhotoFraming } from "../mobile/photo-framing";
+import { MAX_PHOTO_ZOOM } from "../mobile/photo-gesture";
 import { errorMessage } from "../api/client";
 import { useSurfaceDismiss } from "../motion/hooks";
+
+const originalFraming = { x: 0, y: 0, zoom: 1 };
+
+function frameBounds(element: HTMLElement) {
+  const bounds = element.getBoundingClientRect();
+  return {
+    centreX: bounds.left + bounds.width / 2,
+    centreY: bounds.top + bounds.height / 2,
+    scale: (bounds.width * element.clientWidth) / (element.offsetWidth * 300),
+    height: bounds.height,
+  };
+}
 
 export default function CropDialog({
   image,
@@ -16,7 +36,7 @@ export default function CropDialog({
   onClose: () => void;
   onApply: (
     result: Awaited<ReturnType<typeof adjustPhoto>>,
-    framing: { x: number; y: number; zoom: number },
+    framing: PhotoFraming,
   ) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null),
@@ -25,10 +45,8 @@ export default function CropDialog({
       id: number;
       x: number;
       y: number;
-      ox: number;
-      oy: number;
     } | null>(null);
-  const [crop, setCrop] = useState(image.framing ?? { x: 0, y: 0, zoom: 1 });
+  const [crop, setCrop] = useState(image.framing ?? originalFraming);
   const [size, setSize] = useState({ width: 300, height: 300 }),
     [url, setUrl] = useState(""),
     [frameSize, setFrameSize] = useState(300);
@@ -37,6 +55,12 @@ export default function CropDialog({
   const isAvatar = variant === "avatar";
   const source = image.original ?? image.file;
   const dismiss = useSurfaceDismiss(dialog, onClose);
+  const constrain = useCallback(
+    (framing: PhotoFraming) =>
+      photoFraming(size.width, size.height, framing).crop,
+    [size.width, size.height],
+  );
+  const layout = photoFraming(size.width, size.height, crop, frameSize).image;
   useEffect(() => {
     if (!frame.current) return;
     const observer = new ResizeObserver(([entry]) => {
@@ -54,14 +78,56 @@ export default function CropDialog({
       dialog.current?.close();
     };
   }, [source]);
-  function position(x: number, y: number, zoom = crop.zoom) {
-    const maxX = Math.max(0, (size.width * zoom - 300) / 2),
-      maxY = Math.max(0, (size.height * zoom - 300) / 2);
-    return {
-      x: Math.max(-maxX, Math.min(maxX, x)),
-      y: Math.max(-maxY, Math.min(maxY, y)),
-      zoom,
+  useEffect(() => {
+    const element = frame.current;
+    if (!element) return;
+    const zoomWithWheel = (event: WheelEvent) => {
+      const { deltaMode, deltaY } = event;
+      if (busy || !deltaY || event.ctrlKey || event.metaKey) return;
+      event.preventDefault();
+      const { centreX, centreY, scale, height } = frameBounds(element);
+      const delta = deltaY * (deltaMode === 1 ? 16 : deltaMode === 2 ? height : 1);
+      const anchorX = (event.clientX - centreX) / scale;
+      const anchorY = (event.clientY - centreY) / scale;
+      setCrop((current) => {
+        const zoom = Math.max(
+          1,
+          Math.min(MAX_PHOTO_ZOOM, current.zoom * Math.exp(-delta * 0.0025)),
+        );
+        if (zoom === current.zoom) return current;
+        const ratio = zoom / current.zoom;
+        return constrain({
+          x: anchorX + (current.x - anchorX) * ratio,
+          y: anchorY + (current.y - anchorY) * ratio,
+          zoom,
+        });
+      });
     };
+    element.addEventListener("wheel", zoomWithWheel, { passive: false });
+    return () => element.removeEventListener("wheel", zoomWithWheel);
+  }, [busy, constrain]);
+
+  function endDrag(event: PointerEvent<HTMLDivElement>) {
+    if (pointer.current?.id === event.pointerId) pointer.current = null;
+  }
+  function movePhoto(event: PointerEvent<HTMLDivElement>) {
+    const last = pointer.current;
+    if (!last || last.id !== event.pointerId || busy) return;
+    const { scale } = frameBounds(event.currentTarget);
+    const x = event.clientX;
+    const y = event.clientY;
+    pointer.current = {
+      id: event.pointerId,
+      x,
+      y,
+    };
+    setCrop((current) =>
+      constrain({
+        ...current,
+        x: current.x + (x - last.x) / scale,
+        y: current.y + (y - last.y) / scale,
+      }),
+    );
   }
   return (
     <dialog
@@ -76,11 +142,7 @@ export default function CropDialog({
       <header>
         <div>
           <h2 id="pc-crop-title">{isAvatar ? "调整头像" : "调整菜品照片"}</h2>
-          <p>
-            {isAvatar
-              ? "拖动照片或用方向键调整位置。"
-              : "拖动照片，把好吃的放在画面中间。"}
-          </p>
+          <p id="pc-crop-input-help">滚轮缩放，按住照片拖动。</p>
         </div>
         <button
           type="button"
@@ -100,6 +162,7 @@ export default function CropDialog({
             tabIndex={0}
             role="group"
             aria-label="照片取景，拖动或使用方向键调整"
+            aria-describedby="pc-crop-input-help"
             onKeyDown={(event) => {
               if (
                 busy ||
@@ -110,52 +173,45 @@ export default function CropDialog({
                 return;
               event.preventDefault();
               const d = event.shiftKey ? 15 : 5;
-              setCrop(
-                position(
-                  crop.x +
+              setCrop((current) =>
+                constrain({
+                  ...current,
+                  x:
+                    current.x +
                     (event.key === "ArrowLeft"
                       ? -d
                       : event.key === "ArrowRight"
                         ? d
                         : 0),
-                  crop.y +
+                  y:
+                    current.y +
                     (event.key === "ArrowUp"
                       ? -d
                       : event.key === "ArrowDown"
                         ? d
                         : 0),
-                ),
+                }),
               );
             }}
             onPointerDown={(event) => {
-              if (busy || !event.isPrimary || event.button !== 0) return;
+              if (
+                busy ||
+                !event.isPrimary ||
+                event.button !== 0 ||
+                pointer.current
+              )
+                return;
               pointer.current = {
                 id: event.pointerId,
                 x: event.clientX,
                 y: event.clientY,
-                ox: crop.x,
-                oy: crop.y,
               };
               event.currentTarget.setPointerCapture(event.pointerId);
             }}
-            onPointerMove={(event) => {
-              const start = pointer.current;
-              if (!start || start.id !== event.pointerId) return;
-              const scale =
-                (event.currentTarget.getBoundingClientRect().width - 4) / 300;
-              setCrop(
-                position(
-                  start.ox + (event.clientX - start.x) / scale,
-                  start.oy + (event.clientY - start.y) / scale,
-                ),
-              );
-            }}
-            onPointerUp={() => {
-              pointer.current = null;
-            }}
-            onPointerCancel={() => {
-              pointer.current = null;
-            }}
+            onPointerMove={movePhoto}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+            onLostPointerCapture={endDrag}
           >
             {url && (
               <img
@@ -163,18 +219,13 @@ export default function CropDialog({
                 alt={isAvatar ? "待裁剪的头像" : "待裁剪的菜品照片"}
                 draggable={false}
                 onLoad={(event) => {
-                  const img = event.currentTarget,
-                    min = Math.min(img.naturalWidth, img.naturalHeight);
+                  const img = event.currentTarget;
                   setSize({
-                    width: (img.naturalWidth / min) * 300,
-                    height: (img.naturalHeight / min) * 300,
+                    width: img.naturalWidth,
+                    height: img.naturalHeight,
                   });
                 }}
-                style={{
-                  width: (size.width * frameSize) / 300,
-                  height: (size.height * frameSize) / 300,
-                  transform: `translate(-50%,-50%) translate3d(${(crop.x * frameSize) / 300}px,${(crop.y * frameSize) / 300}px,0) scale(${crop.zoom})`,
-                }}
+                style={layout}
               />
             )}
             <span aria-hidden="true" className="pc-crop-crosshair" />
@@ -197,13 +248,14 @@ export default function CropDialog({
             id="pc-crop-zoom"
             type="range"
             min="1"
-            max="3"
+            max={MAX_PHOTO_ZOOM}
             step="0.05"
             value={crop.zoom}
             disabled={busy}
-            onChange={(event) =>
-              setCrop(position(crop.x, crop.y, Number(event.target.value)))
-            }
+            onChange={(event) => {
+              const zoom = Number(event.target.value);
+              setCrop((current) => constrain({ ...current, zoom }));
+            }}
           />
           <button
             type="button"
@@ -212,7 +264,7 @@ export default function CropDialog({
               busy ||
               (isAvatar && crop.x === 0 && crop.y === 0 && crop.zoom === 1)
             }
-            onClick={() => setCrop({ x: 0, y: 0, zoom: 1 })}
+            onClick={() => setCrop(originalFraming)}
           >
             恢复原始取景
           </button>

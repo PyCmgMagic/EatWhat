@@ -452,63 +452,103 @@ export function DesktopNewShop() {
               flow.submit();
             }}
           >
-            <label className="pc-new-shop-name">
-              <span>
-                店名
-                <FieldMark required />
-              </span>
-              <input
-                name="name"
-                aria-label="店铺名称"
-                aria-describedby={
-                  longName ? "pc-new-shop-name-hint" : undefined
-                }
-                value={draft.name}
-                maxLength={20}
-                onChange={(event) => flow.update({ name: event.target.value })}
-                disabled={busy}
-                required
-                autoComplete="off"
-                placeholder="输入店铺名称"
-              />
-              {longName && (
-                <small id="pc-new-shop-name-hint">
-                  请将店名简化至 20 字以内。
-                </small>
-              )}
-            </label>
-            <RestaurantLocationField
-              place={draft.choice.place}
-              point={draft.point}
-              onPick={(point) => flow.update({ point })}
-              address={draft.address}
-              onAddressChange={(address) => flow.update({ address })}
-              disabled={busy}
-            />
-            <ShopTraitsFields
-              value={draft.traits}
-              onChange={(traits) => flow.update({ traits })}
-              disabled={busy}
-            />
-          </form>
-          <aside className="pc-new-shop-summary">
-            <div className="pc-new-shop-card">
-              <span className="pc-new-shop-card-icon">
-                <Icon name="store" size={22} />
-              </span>
-              <div>
-                <strong>{draft.name.trim() || "待填写店名"}</strong>
-                {draft.address.trim() && <small>{draft.address.trim()}</small>}
-              </div>
-            </div>
-            <button
-              className="pc-button"
-              type="submit"
-              form="new-shop-form"
-              disabled={!flow.canSubmit}
+            <section
+              className="pc-new-shop-section"
+              aria-labelledby="pc-new-shop-basics-title"
             >
-              {flow.pending ? "正在提交…" : "提交新店"}
-            </button>
+              <h2 id="pc-new-shop-basics-title">
+                <span>
+                  <Icon name="pin" size={19} />
+                </span>
+                店名与位置
+              </h2>
+              <label className="pc-new-shop-name">
+                <span>
+                  店名
+                  <FieldMark required />
+                </span>
+                <input
+                  name="name"
+                  aria-label="店铺名称"
+                  aria-describedby={
+                    longName ? "pc-new-shop-name-hint" : undefined
+                  }
+                  value={draft.name}
+                  maxLength={20}
+                  onChange={(event) =>
+                    flow.update({ name: event.target.value })
+                  }
+                  disabled={busy}
+                  required
+                  autoComplete="off"
+                  placeholder="输入店铺名称"
+                />
+                {longName && (
+                  <small id="pc-new-shop-name-hint">
+                    请将店名简化至 20 字以内。
+                  </small>
+                )}
+              </label>
+              <RestaurantLocationField
+                place={draft.choice.place}
+                point={draft.point}
+                onPick={(point) => flow.update({ point })}
+                address={draft.address}
+                onAddressChange={(address) => flow.update({ address })}
+                disabled={busy}
+              />
+            </section>
+            <section
+              className="pc-new-shop-section"
+              aria-labelledby="pc-new-shop-traits-title"
+            >
+              <h2 id="pc-new-shop-traits-title">
+                <span>
+                  <Icon name="tag" size={19} />
+                </span>
+                经营信息
+              </h2>
+              <ShopTraitsFields
+                value={draft.traits}
+                onChange={(traits) => flow.update({ traits })}
+                disabled={busy}
+                compact
+              />
+            </section>
+          </form>
+          <aside
+            className="pc-new-shop-summary"
+            aria-labelledby="pc-new-shop-preview-title"
+          >
+            <div className="pc-new-shop-preview-art">
+              <img
+                src="/assets/restaurants/campus-storefront.webp"
+                alt=""
+                width={768}
+                height={512}
+              />
+            </div>
+            <div className="pc-new-shop-preview-copy">
+              <h2 id="pc-new-shop-preview-title">店铺预览</h2>
+              <strong>{draft.name.trim() || "待填写店名"}</strong>
+              {draft.address.trim() && (
+                <p>
+                  <Icon name="pin" size={16} />
+                  {draft.address.trim()}
+                </p>
+              )}
+            </div>
+            <div className="pc-new-shop-preview-footer">
+              <button
+                className="pc-button"
+                type="submit"
+                form="new-shop-form"
+                disabled={!flow.canSubmit}
+              >
+                {flow.pending ? "正在提交…" : "提交新店"}
+                <Icon name="chevronRight" size={17} />
+              </button>
+            </div>
           </aside>
         </div>
       ) : (
@@ -517,6 +557,7 @@ export function DesktopNewShop() {
           onKeywordChange={flow.setKeyword}
           onSelect={flow.select}
           disabled={busy}
+          desktop
         />
       )}
     </div>

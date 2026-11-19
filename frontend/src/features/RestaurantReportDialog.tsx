@@ -40,13 +40,12 @@ export function RestaurantReportDialog({
   return (
     <Modal
       title="举报店铺"
-      className="food-report-modal"
+      className="food-report-modal restaurant-feedback-modal"
       onClose={onClose}
       dismissible={!task.busy}
     >
       <p className="food-report-description">
         正在举报 <strong>{restaurantName || "这家店"}</strong>
-        ，请选择问题类型。补充细节能帮助我们更快核实。
       </p>
       <form
         className="food-report-form"
@@ -89,7 +88,7 @@ export function RestaurantReportDialog({
               className="field"
               value={draft.text}
               maxLength={textLimit}
-              placeholder="补充一些细节，帮助我们更准确地了解问题…"
+              placeholder="补充问题细节"
               onChange={(event) =>
                 setDraft((current) => ({
                   ...current,

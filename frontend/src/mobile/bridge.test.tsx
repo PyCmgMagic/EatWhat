@@ -319,6 +319,7 @@ async function renderPhotoWorkflow() {
     value: vi.fn(() => `blob:photo-${crypto.randomUUID()}`),
   });
   const image = new File(["photo"], "photo.jpg", { type: "image/jpeg" });
+  vi.spyOn(photos, "recommendPhotoStage").mockResolvedValue(["#F3C46E"]);
   vi.spyOn(photos, "adjustPhoto").mockResolvedValue({
     file: image,
     colors: ["#F3C46E"],

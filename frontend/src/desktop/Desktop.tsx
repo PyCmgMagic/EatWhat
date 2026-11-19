@@ -1933,26 +1933,22 @@ export function DesktopShares() {
   }, [tab]);
   return (
     <section className="pc-profile-content profile-shares" data-tab={tab}>
-      <ProfilePageHead
-        title={tab === "comments" ? "我的评论" : "我的上传"}
-        count={
-          tab !== "comments" && query.data?.totalItems != null
-            ? `${query.data.totalItems} 道`
-            : undefined
-        }
-        detail={
-          tab === "comments"
-            ? "写过的用餐感受都在这里，也能看到每条评论的审核状态。"
-            : "你分享给食友的菜品，随时可以回来补充和修改。"
-        }
-      >
-        {tab !== "comments" && (
+      {tab === "uploads" && (
+        <ProfilePageHead
+          title="我的上传"
+          count={
+            query.data?.totalItems != null
+              ? `${query.data.totalItems} 道`
+              : undefined
+          }
+          detail="你分享给食友的菜品，随时可以回来补充和修改。"
+        >
           <Link to="/publish" className="pp-button">
             <Icon name="add" size={17} />
             分享一道菜
           </Link>
-        )}
-      </ProfilePageHead>
+        </ProfilePageHead>
+      )}
       {tab !== "comments" && query.isPlaceholderData && (
         <p className="pc-tab-loading" role="status">
           正在切换内容…
@@ -1971,8 +1967,15 @@ export function DesktopShares() {
         className="pc-profile-tab-content"
       >
         {tab === "comments" ? (
-          <Suspense fallback={<ContentSkeleton kind="rows" count={3} />}>
-            <MyFoodComments />
+          <Suspense
+            fallback={
+              <div className="comments-journal">
+                <ProfilePageHead title="我的评论" />
+                <ContentSkeleton kind="rows" count={3} />
+              </div>
+            }
+          >
+            <MyFoodComments journal />
           </Suspense>
         ) : (
           <>

@@ -121,7 +121,6 @@ async function validateSettingsPages(page) {
     "/settings/devices",
     "/settings/phone",
     "/settings/delete",
-    "/settings/notifications",
     "/settings/telemetry",
     "/settings/preferences",
     "/verify",
@@ -144,7 +143,7 @@ async function validateSettingsPages(page) {
         await open(path);
         const layout = await p.evaluate(() => {
           const page = document.querySelector(".mobile-settings-page"),
-            h = page.querySelector(".mobile-account-heading h1"),
+            h = page.querySelector(":scope > .settings-page-head h1"),
             rect = page.getBoundingClientRect();
           const controls = [
             ...page.querySelectorAll("input, textarea, select, button"),
@@ -168,7 +167,7 @@ async function validateSettingsPages(page) {
         assert(
           layout.x === 0 &&
             layout.width === width &&
-            layout.title === "34px" &&
+            layout.title === "28px" &&
             layout.bg === "rgb(255, 255, 255)" &&
             layout.scroll <= width + 1 &&
             !layout.controls.length,
@@ -180,7 +179,7 @@ async function validateSettingsPages(page) {
         );
         assert(
           await p
-            .locator(".mobile-account-heading a")
+            .locator(".mobile-settings-page > .settings-page-head a.settings-page-back")
             .getAttribute("href")
             ?.then((h) => h?.startsWith("#/")),
           "Missing back target",
@@ -190,7 +189,6 @@ async function validateSettingsPages(page) {
           [
             "/settings/privacy",
             "/settings/password",
-            "/settings/notifications",
             "/settings/phone",
           ].includes(path)
         )
@@ -221,13 +219,13 @@ async function validateSettingsPages(page) {
     assert(!personalized, "Personalization did not persist");
     await open("/settings/password");
     await p
-      .locator('.pc-secondary-form input[name="old"]')
+      .locator('.password-settings-form input[name="old"]')
       .fill("mock-old-password");
     await p
-      .locator('.pc-secondary-form input[name="password"]')
+      .locator('.password-settings-form input[name="password"]')
       .fill("mock-new-password");
     await p
-      .locator('.pc-secondary-form input[name="confirm"]')
+      .locator('.password-settings-form input[name="confirm"]')
       .fill("mock-other-password");
     await p.getByRole("button", { name: "更新密码", exact: true }).click();
     await p.getByText("两次输入的新密码不一致。", { exact: true }).waitFor();
@@ -235,31 +233,26 @@ async function validateSettingsPages(page) {
       !writes.some((x) => x.path.includes("changePassword")),
       "Invalid password form submitted",
     );
-    await open("/settings/notifications");
-    await p.getByRole("heading", { name: "敬请期待", exact: true }).waitFor();
-    assert(
-      (await p
-        .locator(".notification-coming-soon .dish-illustration img")
-        .count()) === 1,
-      "Notification placeholder has no dish artwork",
-    );
+    await p.goto(base + "/settings/notifications");
+    await p.waitForURL("**#/settings");
     assert(
       !writes.some((x) => x.path.startsWith("/api/push/")),
       "Unreleased notifications sent a write",
     );
     await open("/settings/preferences");
     await p
-      .getByRole("textbox", { name: "喜欢的口味", exact: true })
-      .fill("清淡、鲜香");
+      .getByRole("group", { name: "喜欢的口味", exact: true })
+      .getByText("甜", { exact: true })
+      .click();
     await p.getByRole("button", { name: "保存口味偏好", exact: true }).click();
     await p.waitForFunction(() =>
       document.body.innerText.includes("口味偏好已更新"),
     );
-    assert(preferences.likedTags.includes("鲜香"), "Preferences did not save");
+    assert(preferences.likedTags.includes("甜") && preferences.likedTags.includes("清淡"), "Preferences did not save");
     await open("/settings/delete");
     assert(
       await p
-        .getByRole("button", { name: "提交注销申请", exact: true })
+        .getByRole("button", { name: "申请注销", exact: true })
         .isDisabled(),
       "Cancellation confirmation bypassed",
     );
@@ -278,18 +271,19 @@ async function validateSettingsPages(page) {
       "Verification return target lost",
     );
     checks.push(
-      "Mocked interactions: visibility/personalization/preferences save, notification coming-soon view, password validation, cancellation gate, verification return",
+      "Mocked interactions: visibility/personalization/preferences save, retired notification route, password validation, cancellation gate, verification return",
     );
     await p.setViewportSize({ width: 1280, height: 900 });
     await p.goto(base + "/settings/privacy");
-    await p.locator(".pc-secondary-switch-row").first().waitFor();
+    await p.getByRole("switch", { name: "公开我的关注列表", exact: true }).waitFor();
     assert(
       (await p.locator(".mobile-settings-page").count()) === 0,
       "Desktop layout replaced",
     );
     assert(errors.length === 0, errors.join("\n"));
     assert(
-      writes.length === 3,
+      JSON.stringify(writes.filter((write) => write.path !== "/api/device/register").map((write) => write.path)) ===
+        JSON.stringify(["/api/user/changePrivacy", "/api/user/recommendation-settings", "/api/user/recommendation-profile/preferences"]),
       "Unexpected API writes: " + JSON.stringify(writes),
     );
     return {

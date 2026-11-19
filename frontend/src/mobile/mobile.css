@@ -2338,3 +2338,22 @@ body:has(
 .mobile-page-native .ew-shop-traits .ew-meals label:has(input:disabled) {
   color: #b5a79c;
 }
+.crop-follow-cover {
+  align-self: flex-start;
+  min-height: 28px;
+  padding: 2px 9px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: #fff;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  cursor: pointer;
+}
+.crop-follow-cover[aria-pressed="true"] {
+  background: #fff0c3;
+  border-color: #fff0c3;
+  color: #34291e;
+}

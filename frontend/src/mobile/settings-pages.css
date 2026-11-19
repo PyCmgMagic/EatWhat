@@ -111,7 +111,7 @@
 }
 .mobile-settings-page
   .mobile-settings-content
-  :is(.pc-secondary-switch-row, .ew-v2-row, .v4-preference-row) {
+  :is(.ew-v2-row, .v4-preference-row) {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
@@ -123,34 +123,28 @@
 }
 .mobile-settings-page
   .mobile-settings-content
-  :is(
-    .pc-secondary-switch-row > span,
-    .ew-v2-row > div,
-    .v4-preference-row > div
-  ) {
+  :is(.ew-v2-row > div, .v4-preference-row > div) {
   flex: 1;
   min-width: 0;
 }
 .mobile-settings-page
   .mobile-settings-content
-  :is(.pc-secondary-switch-row b, .ew-v2-row h3, .v4-row strong) {
+  :is(.ew-v2-row h3, .v4-row strong) {
   margin: 0;
   font-size: 16px;
   font-weight: 500;
 }
 .mobile-settings-page
   .mobile-settings-content
-  :is(
-    .pc-secondary-switch-row small,
-    .ew-v2-row .ew-note,
-    .v4-preference-row p
-  ) {
+  :is(.ew-v2-row .ew-note, .v4-preference-row p) {
   display: block;
   margin: 4px 0 0;
   font-size: 13px;
   line-height: 20px;
 }
-.mobile-settings-page .mobile-settings-content input[role="switch"] {
+.mobile-settings-page
+  .mobile-settings-content
+  input[role="switch"]:where(:not(.privacy-settings *)) {
   appearance: none;
   position: relative;
   flex: 0 0 52px;
@@ -164,7 +158,9 @@
   background: #e6ded8;
   cursor: pointer;
 }
-.mobile-settings-page .mobile-settings-content input[role="switch"]::before {
+.mobile-settings-page
+  .mobile-settings-content
+  input[role="switch"]:where(:not(.privacy-settings *))::before {
   content: "";
   position: absolute;
   top: 3px;
@@ -176,12 +172,14 @@
   box-shadow: 0 1px 3px #231c1840;
   transform: none;
 }
-.mobile-settings-page .mobile-settings-content input[role="switch"]:checked {
+.mobile-settings-page
+  .mobile-settings-content
+  input[role="switch"]:where(:not(.privacy-settings *)):checked {
   background: #231c18;
 }
 .mobile-settings-page
   .mobile-settings-content
-  input[role="switch"]:checked::before {
+  input[role="switch"]:where(:not(.privacy-settings *)):checked::before {
   transform: translateX(20px);
 }
 .mobile-settings-page
@@ -221,7 +219,7 @@
     input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
     textarea,
     select
-  ) {
+  ):where(:not(.password-settings *)) {
   width: 100%;
   min-width: 0;
   min-height: 52px;
@@ -254,7 +252,7 @@
     .ew-button,
     .btn,
     .v4-button
-  ) {
+  ):where(:not(.modal-close, .password-settings *, .privacy-settings *)) {
   min-height: 48px;
   max-width: 100%;
   padding: 12px 18px;
@@ -299,20 +297,6 @@
   padding: 6px 12px;
   border-radius: 17px;
   font-size: 13px;
-}
-.mobile-settings-page
-  .mobile-settings-content
-  .pc-privacy-tools
-  button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  min-height: 44px;
-  padding: 10px 14px;
-  border-radius: 14px;
-  background: #f8f5f2;
-  font-size: 14px;
 }
 .mobile-settings-page
   .mobile-settings-content

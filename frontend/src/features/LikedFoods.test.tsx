@@ -134,6 +134,8 @@ it("lists liked dishes and lets the user unlike one", async () => {
     ),
   );
   await waitForText("招牌牛肉面");
+  expect(host.querySelector("h1")?.textContent).toContain("赞过的菜");
+  expect(host.querySelector('[aria-label="收藏分类"]')).toBeNull();
   expect(host.textContent).toContain("1 道菜");
   const button = host.querySelector<HTMLButtonElement>(
     'button[aria-label="取消点赞招牌牛肉面"]',

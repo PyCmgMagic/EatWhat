@@ -562,11 +562,7 @@
   margin: 20px 0 18px;
 }
 
-/* 评论、收藏、餐厅收藏沿用各自组件里的空状态结构，这里对齐到同一种版式。 */
-.pc-profile-space-content
-  .profile-shares[data-tab="comments"]
-  .comments-my-list
-  > .comments-state,
+/* 收藏、餐厅收藏沿用各自组件里的空状态结构，这里对齐到同一种版式。 */
 .pc-profile-space-content .v4-page[data-route="/restaurants/favorites"] .v4-state,
 .pc-profile-space-content .ew-favorites .favorites-empty {
   flex-direction: column;
@@ -584,35 +580,6 @@
     #faf7f3 100%
   );
   text-align: center;
-}
-.pc-profile-space-content
-  .profile-shares[data-tab="comments"]
-  .comments-my-list
-  > .comments-state
-  > svg {
-  margin-bottom: 16px;
-}
-.pc-profile-space-content
-  .profile-shares[data-tab="comments"]
-  .comments-my-list
-  > .comments-state
-  > p {
-  margin: 0;
-  color: #2e251e;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-.pc-profile-space-content
-  .profile-shares[data-tab="comments"]
-  .comments-my-list
-  > .comments-state
-  > a {
-  min-height: 42px;
-  margin-top: 20px;
-  background: var(--pp-accent);
-  color: #2e251e;
-  box-shadow: none;
 }
 .pc-profile-space-content
   .v4-page[data-route="/restaurants/favorites"]

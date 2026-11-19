@@ -71,7 +71,7 @@ async (page) => {
       const link = nav.locator('a[href="#' + path + '"]');
       await link.scrollIntoViewIfNeeded();
       const box = await link.boundingBox();
-      assert(box && box.height >= 44, 'Missing or undersized tab at ' + width);
+      assert(box && box.height >= (mobile ? 44 : 34), 'Missing or undersized tab at ' + width);
       assert(await link.evaluate(el => {
         const rect = el.getBoundingClientRect();
         return el.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
@@ -87,9 +87,9 @@ async (page) => {
       await p.evaluate(() => document.fonts.ready);
       await nav.evaluate(el => { el.dataset.stabilityProbe = 'kept'; });
       // A cold module stays blocked: selection must still respond to one tap.
-      const moduleRequest = p.waitForRequest(request => new URL(request.url()).pathname === '/src/features/v4/Community.tsx');
+      const moduleRequest = p.waitForRequest(request => new URL(request.url()).pathname === '/src/features/v4/Community.tsx').catch(() => null);
       await tap('/feedback');
-      await moduleRequest;
+      assert(await moduleRequest, 'Feedback module was not requested at ' + width);
       await p.getByRole('status', { name: '正在加载内容', exact: true }).waitFor();
       await tap('/feedback/mine');
       await tap('/help');
@@ -101,10 +101,14 @@ async (page) => {
       await textarea.waitFor();
       const draft = '切换标签后保留的反馈草稿 ' + width;
       await textarea.fill(draft);
-      await p.locator('input[type="file"]').setInputFiles({
-        name: 'feedback-draft.png', mimeType: 'image/png',
-        buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jOu4AAAAASUVORK5CYII=', 'base64'),
+      const screenshot = await p.evaluate(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 768;
+        canvas.height = 512;
+        return canvas.toDataURL('image/png').split(',')[1];
       });
+      const attachment = { name: 'feedback-draft.png', mimeType: 'image/png', buffer: Buffer.from(screenshot, 'base64') };
+      await p.locator('input[type="file"]').setInputFiles(attachment);
       for (let i = 0; i < 12; i++) {
         const path = ['/feedback/mine', '/help', '/feedback'][i % 3];
         await tap(path);
@@ -113,7 +117,9 @@ async (page) => {
         if (path === '/feedback') await textarea.waitFor();
       }
       assert(await textarea.inputValue() === draft, 'Draft text lost at ' + width);
-      await p.locator('.v4-upload-files').getByText('feedback-draft.png', { exact: true }).waitFor();
+      const thumbnail = p.getByRole('button', { name: '预览第 1 张截图', exact: true });
+      await thumbnail.waitFor();
+      assert(await thumbnail.getAttribute('title') === 'feedback-draft.png', 'Attachment lost at ' + width);
       assert(await nav.getAttribute('data-stability-probe') === 'kept', 'Navigation remounted on a tab change');
       assert(await p.getByRole('heading', { name: '帮助与反馈', exact: true }).count() === 1, 'Repeated page heading');
       await p.goBack();
@@ -126,6 +132,32 @@ async (page) => {
       if (width === 390 || width === 1440) {
         await p.screenshot({ path: 'output/playwright/help-feedback-' + width + '.png', fullPage: true });
       }
+      await p.locator('input[type="file"]').setInputFiles([
+        { name: 'damaged.png', mimeType: 'image/png', buffer: Buffer.from('broken') },
+        { ...attachment, name: 'second.png' },
+      ]);
+      await p.getByText(/无法读取截图.*damaged\.png/).waitFor();
+      const second = p.getByRole('button', { name: '预览第 2 张截图', exact: true });
+      assert(await second.getAttribute('title') === 'second.png', 'Invalid screenshot took a slot');
+      await thumbnail.click();
+      const preview = p.getByRole('dialog', { name: '截图预览 · 1 / 2', exact: true });
+      await preview.waitFor();
+      const fits = await preview.evaluate((el) => {
+        const pad = el.querySelector('.modal-pad'), box = pad.getBoundingClientRect();
+        const image = el.querySelector('img').getBoundingClientRect(), css = getComputedStyle(pad);
+        return image.width > 0 && image.left >= box.left + parseFloat(css.paddingLeft) - 1
+          && image.right <= box.right - parseFloat(css.paddingRight) + 1 && el.scrollWidth <= el.clientWidth + 1;
+      });
+      assert(fits, 'Screenshot clipped at ' + width);
+      await p.keyboard.press('Escape');
+      await preview.waitFor({ state: 'hidden' });
+      const remove = p.getByRole('button', { name: '移除第 1 张截图', exact: true });
+      await remove.press('Enter');
+      await second.waitFor({ state: 'hidden' });
+      assert(await thumbnail.evaluate((el) => el === document.activeElement), 'Next screenshot did not receive focus');
+      await remove.press('Enter');
+      await thumbnail.waitFor({ state: 'hidden' });
+      assert(await p.getByRole('button', { name: '添加截图', exact: true }).evaluate((el) => el === document.activeElement), 'Add screenshot did not receive focus');
       await tap('/feedback/mine');
       await p.getByText(item.text, { exact: true }).click();
       await p.getByRole('heading', { name: '反馈处理进度', exact: true }).waitFor();

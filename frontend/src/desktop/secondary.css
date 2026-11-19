@@ -206,40 +206,6 @@
 .pc-settings-account .pc-secondary-text-link {
   min-height: 44px;
 }
-.pc-secondary-note .pc-privacy-tools {
-  display: grid;
-  margin-top: 18px;
-  padding-top: 8px;
-  border-top: 1px solid #69533320;
-}
-.pc-secondary-note .pc-privacy-tools :is(a, button) {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-  margin-top: 0;
-  padding: 12px 0;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 650;
-  color: var(--pc-ink);
-  text-align: left;
-  cursor: pointer;
-}
-.pc-secondary-note .pc-privacy-tools :is(a, button):not(:last-child) {
-  border-bottom: 1px solid #69533318;
-}
-.pc-secondary-note .pc-privacy-tools :is(a, button):hover {
-  text-decoration: none;
-  color: #947031;
-}
-.pc-secondary-note .pc-privacy-tools :is(a, button) .design-icon {
-  color: #a08a5f;
-  flex-shrink: 0;
-}
 .pc-secondary-row > div {
   min-width: 0;
 }
@@ -455,64 +421,6 @@
   font-size: 12px;
   color: #3b6843;
   margin: 0;
-}
-.pc-secondary-switch-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 21px 0;
-  border-bottom: 1px solid var(--pc-line);
-  cursor: pointer;
-}
-.pc-secondary-switch-row:first-child {
-  padding-top: 0;
-}
-.pc-secondary-switch-row:last-of-type {
-  border-bottom: 0;
-}
-.pc-secondary-switch-row span {
-  min-width: 0;
-}
-.pc-secondary-switch-row b {
-  font-size: 14px;
-}
-.pc-secondary-switch-row small {
-  display: block;
-  font-size: 12px;
-  color: var(--pc-muted);
-  margin-top: 6px;
-  line-height: 1.8;
-}
-.pc-secondary-switch-row input {
-  appearance: none;
-  width: 42px;
-  height: 24px;
-  background: #d8d1ca;
-  border: 0;
-  border-radius: 15px;
-  position: relative;
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background 160ms;
-}
-.pc-secondary-switch-row input:before {
-  content: "";
-  position: absolute;
-  left: 3px;
-  top: 3px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: white;
-  box-shadow: 0 1px 3px #231c1820;
-  transition: transform 160ms;
-}
-.pc-secondary-switch-row input:checked {
-  background: #efbc31;
-}
-.pc-secondary-switch-row input:checked:before {
-  transform: translateX(18px);
 }
 .pc-secondary-verification {
   display: flex;
@@ -1184,8 +1092,6 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pc-secondary-switch-row input,
-  .pc-secondary-switch-row input:before,
   .pc-secondary-rail nav a {
     transition: none;
   }

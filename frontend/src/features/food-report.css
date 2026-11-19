@@ -105,3 +105,82 @@
     flex: 1;
   }
 }
+
+/* The shared dialog also has an outer inset. These forms use the inset on
+   .modal-pad for the header, fields, and footer. */
+dialog.restaurant-feedback-modal {
+  --feedback-block-inset: 20px;
+  --feedback-inline-inset: 24px;
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border-radius: 24px;
+  overscroll-behavior: contain;
+}
+.restaurant-feedback-modal > .modal-pad {
+  padding: var(--feedback-block-inset) var(--feedback-inline-inset);
+}
+.restaurant-feedback-modal > .modal-pad > h2 {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  margin: 0 48px 8px 0;
+  color: #231c18;
+  font-size: 22px;
+  font-weight: 850;
+  line-height: 1.35;
+}
+.restaurant-feedback-modal > .modal-pad > .modal-close {
+  position: absolute;
+  inset: var(--feedback-block-inset) var(--feedback-inline-inset) auto auto;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #f4efeb;
+  color: #231c18;
+}
+.restaurant-feedback-modal .modal-close:focus-visible {
+  outline: 2px solid #8e621f;
+  outline-offset: 2px;
+}
+.restaurant-feedback-modal.modal .food-report-description {
+  margin-bottom: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.restaurant-feedback-modal .food-report-form fieldset {
+  gap: 12px;
+}
+.restaurant-feedback-modal .food-report-field {
+  gap: 6px;
+}
+.restaurant-feedback-modal .food-report-form textarea {
+  min-height: 90px;
+  padding: 10px 12px;
+  line-height: 1.55;
+}
+.restaurant-feedback-modal .ew-select > .ew-select-trigger {
+  min-height: 44px;
+  padding: 10px 12px;
+}
+.restaurant-feedback-modal .food-report-form .modal-actions {
+  gap: 8px;
+  margin: 0;
+}
+.restaurant-feedback-modal .modal-actions .btn {
+  min-width: 0;
+  padding-inline: 12px;
+}
+@media (max-width: 600px) {
+  dialog.restaurant-feedback-modal {
+    --feedback-block-inset: 16px;
+    --feedback-inline-inset: 18px;
+  }
+  .restaurant-feedback-modal > .modal-pad > h2 {
+    font-size: 20px;
+  }
+}

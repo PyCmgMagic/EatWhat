@@ -175,7 +175,6 @@
   flex-wrap: wrap;
   justify-content: flex-end;
 }
-.pc-composer-heading,
 .pc-library-heading,
 .pc-secondary-head,
 .pc-page-heading {
@@ -332,21 +331,6 @@
   .pc-secondary-sticky,
   .pc-secondary-user-card {
     top: 100px;
-  }
-  .pc-composer-shops {
-    top: 100px;
-  }
-  .pc-composer-editor {
-    grid-template-columns: minmax(200px, 0.85fr) minmax(0, 1.15fr);
-  }
-  .pc-composer-stage {
-    height: 270px;
-  }
-  .pc-composer-submit {
-    flex-wrap: wrap;
-  }
-  .pc-composer-submit > div:last-child {
-    margin-left: auto;
   }
   .food-discussion-layout {
     grid-template-columns: minmax(0, 1fr) 280px;
@@ -599,33 +583,6 @@
   .pc-history-grid {
     gap: 16px;
   }
-  .pc-composer-layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 20px;
-  }
-  .pc-composer-shops {
-    position: static;
-    height: auto;
-    min-height: 0;
-    padding: 20px;
-  }
-  .pc-composer-shop-list {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    max-height: 240px;
-    min-height: 100px;
-  }
-  .pc-composer-editor {
-    grid-template-columns: 240px minmax(0, 1fr);
-    padding: 24px;
-    gap: 24px;
-  }
-  .pc-composer-submit {
-    margin-top: 0;
-  }
-  .pc-composer-heading {
-    align-items: flex-start;
-  }
   .ew-catalog-filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
@@ -861,8 +818,7 @@
   }
   .pc-page-heading,
   .pc-secondary-head,
-  .pc-library-heading,
-  .pc-composer-heading {
+  .pc-library-heading {
     gap: 16px;
     flex-wrap: wrap;
     margin-bottom: 20px;
@@ -870,7 +826,6 @@
   .pc-page-heading h1,
   .pc-secondary-head h1,
   .pc-library-heading h1,
-  .pc-composer-heading h1,
   .ew-head h1 {
     font-size: 25px;
   }
@@ -1058,32 +1013,6 @@
   .pc-library-search {
     width: 100%;
   }
-  .pc-composer-shop-list {
-    grid-template-columns: minmax(0, 1fr);
-    max-height: 220px;
-  }
-  .pc-composer-editor {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 22px;
-    padding: 20px;
-  }
-  .pc-composer-submit {
-    position: static;
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .pc-composer-submit > div:last-child {
-    margin: 0;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-  }
-  .pc-composer-submit .pc-button {
-    min-width: 0;
-    flex: 1;
-  }
-  .pc-composer-draft {
-    white-space: normal;
-  }
   .pc-crop-dialog {
     padding: 20px;
     width: calc(100vw - 24px);
@@ -1173,7 +1102,6 @@
   .pc-header {
     position: relative;
   }
-  .pc-composer-shops,
   .pc-secondary-rail,
   .pc-secondary-sticky,
   .food-comment-composer {
@@ -1182,13 +1110,6 @@
   .pc-secondary-user-card {
     position: relative;
     top: auto;
-  }
-  .pc-composer-shops {
-    height: auto;
-    min-height: 0;
-  }
-  .pc-composer-shop-list {
-    max-height: 240px;
   }
   .profile-people-dialog {
     height: calc(100dvh - 24px);
@@ -1251,14 +1172,7 @@
   }
 }
 @media (pointer: coarse) {
-  .pc-app
-    :is(
-      .pc-icon-button,
-      .pc-secondary-rail nav a,
-      .pc-profile-menu > a,
-      .pc-composer-shop,
-      .pc-composer-kind button
-    ),
+  .pc-app :is(.pc-icon-button, .pc-secondary-rail nav a, .pc-profile-menu > a),
   .profile-people-close,
   .profile-people-footer button {
     min-height: 44px;
@@ -1301,13 +1215,6 @@
   }
   .pc-secondary-rail nav a {
     padding: 12px 9px;
-  }
-  .pc-composer-shop-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .pc-composer-editor {
-    grid-template-columns: 200px minmax(0, 1fr);
-    gap: 20px;
   }
 }
 

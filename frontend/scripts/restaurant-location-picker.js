@@ -136,7 +136,10 @@ async function validateRestaurantLocationPicker(page) {
         .getByRole("heading", { name: "添加一家店", exact: true })
         .waitFor();
       await p
-        .getByRole("button", { name: "搜不到？手动添加", exact: true })
+        .getByRole("button", {
+          name: width < 640 ? "搜不到？手动添加" : "手动添加",
+          exact: true,
+        })
         .click();
       const name = p.getByLabel(width < 640 ? "店名" : "店铺名称", {
         exact: true,

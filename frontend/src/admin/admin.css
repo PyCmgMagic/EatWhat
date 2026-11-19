@@ -1866,11 +1866,6 @@ a.ew-admin-stat:hover {
   outline: 2px solid var(--ad-ink);
   outline-offset: 2px;
 }
-.ew-admin-traits .shop-edit-delivery-note {
-  color: var(--ad-muted);
-  font-size: 12px;
-}
-
 .ew-admin-panel-body > * {
   min-width: 0;
 }

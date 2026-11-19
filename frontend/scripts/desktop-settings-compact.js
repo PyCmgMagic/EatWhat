@@ -62,7 +62,7 @@ async function validateDesktopSettingsCompact(page) {
     assert(await account.locator('a[href="#/settings/password"]').innerText()==="去设置","Unset password has the wrong action");
     checks.push("Account detail: five rows, masked phone, unset username/password and unverified state");
     await p.goto(base+"/?demo=0&view=desktop#/settings/privacy");
-    await p.getByRole("link",{name:"屏蔽名单",exact:true}).waitFor();
+    await p.getByRole("button",{name:"屏蔽名单",exact:true}).waitFor();
     await p.getByRole("link",{name:"使用统计授权",exact:true}).waitFor();
     await p.goto(base+"/?demo=0&view=desktop#/settings/about");
     await p.getByRole("link",{name:"数据说明",exact:true}).waitFor();

@@ -11,6 +11,17 @@ export const stagePalette = {
   matcha: "#9DBF7A",
 } as const;
 export type Stage = keyof typeof stagePalette;
+export const stageNames: Record<Stage, string> = {
+  broth: "暖汤",
+  mango: "芒果",
+  bamboo: "竹色",
+  chili: "辣橙",
+  tomato: "番茄",
+  redoil: "红油",
+  soy: "酱色",
+  porcelain: "瓷蓝",
+  matcha: "抹茶",
+};
 export function stageCode(hex: string): Stage {
   return (
     (Object.keys(stagePalette) as Stage[]).find(

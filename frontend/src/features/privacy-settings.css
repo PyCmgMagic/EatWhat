@@ -1,0 +1,194 @@
+.privacy-settings {
+  --privacy-ink: #2e251e;
+  --privacy-muted: #6e625b;
+  --privacy-line: #e7dfd6;
+  --privacy-surface: #faf7f4;
+  --privacy-focus: #8e621f;
+  display: grid;
+  align-items: start;
+  gap: 14px;
+  max-width: 980px;
+  color: var(--privacy-ink);
+}
+.privacy-settings-side {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.privacy-settings-card {
+  min-width: 0;
+  padding: clamp(16px, 2.5vw, 24px);
+  border: 1px solid var(--privacy-line);
+  border-radius: 20px;
+  background: #fff;
+}
+.privacy-settings .privacy-settings-card > .privacy-settings-title {
+  margin: 0 0 10px;
+  color: var(--privacy-ink);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+.privacy-settings :is(button, input) {
+  font: inherit;
+}
+.privacy-settings :is(a, button, input):focus-visible {
+  outline: 2px solid var(--privacy-focus);
+  outline-offset: 3px;
+}
+.privacy-settings button:enabled {
+  cursor: pointer;
+}
+.privacy-settings-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  min-width: 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.privacy-settings-row strong {
+  font-weight: 650;
+}
+.privacy-settings-switch-row {
+  justify-content: space-between;
+  padding: 9px 0;
+  cursor: pointer;
+}
+.privacy-settings-switch-row + .privacy-settings-switch-row {
+  border-top: 1px solid var(--privacy-line);
+}
+.privacy-settings-switch-row:has(input:disabled) {
+  cursor: default;
+}
+.privacy-settings-row-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.privacy-settings-row-copy > span {
+  color: var(--privacy-muted);
+  font-size: 12px;
+}
+.privacy-settings-switch-row input {
+  appearance: none;
+  position: relative;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 27px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #bcb0a4;
+  border-radius: 999px;
+  background: #e8dfd6;
+  cursor: inherit;
+}
+.privacy-settings-switch-row input::before {
+  content: "";
+  position: absolute;
+  inset: 2px auto auto 2px;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px #2e251e33;
+}
+.privacy-settings-switch-row input:checked {
+  border-color: var(--privacy-ink);
+  background: var(--privacy-ink);
+}
+.privacy-settings-switch-row input:checked::before {
+  transform: translateX(19px);
+}
+.privacy-settings .privacy-settings-entry {
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--privacy-line);
+  border-radius: 12px;
+  background: var(--privacy-surface);
+  color: var(--privacy-ink);
+  font-size: 15px;
+  text-align: left;
+  text-decoration: none;
+}
+.privacy-settings-entry-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #f7e9cb;
+  color: #735428;
+}
+.privacy-settings-entry > .design-icon:last-child {
+  flex: none;
+  margin-left: auto;
+  color: var(--privacy-muted);
+}
+.privacy-settings-save,
+.privacy-settings-load-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--privacy-muted);
+  font-size: 12px;
+}
+.privacy-settings-save {
+  margin-top: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--privacy-line);
+}
+.privacy-settings-save > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.privacy-settings-save > span[data-saved="true"] {
+  color: #49653b;
+}
+.privacy-settings-save button,
+.privacy-settings-load-error button {
+  min-height: 44px;
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--privacy-ink);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.privacy-settings-save button {
+  margin-left: auto;
+}
+.privacy-settings-save button:disabled,
+.privacy-settings-load-error button {
+  border-color: var(--privacy-line);
+  background: #f0ebe5;
+  color: var(--privacy-muted);
+}
+.privacy-settings-save button:disabled {
+  opacity: 1;
+}
+.privacy-settings-load-error {
+  padding: 6px 0;
+}
+@media (hover: hover) {
+  .privacy-settings .privacy-settings-entry:hover,
+  .privacy-settings-load-error button:hover {
+    border-color: #d3c3b1;
+    background: #f5efe6;
+  }
+  .privacy-settings-save button:hover:enabled {
+    background: #44372c;
+  }
+}
+@media (min-width: 900px) {
+  .pc-app .privacy-settings {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+}

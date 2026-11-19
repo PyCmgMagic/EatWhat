@@ -5,6 +5,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
+import { Quote } from "lucide-react";
 import { UserTitle } from "../../components/UserTitle";
 import { userTitle } from "../../api/growth";
 import {
@@ -42,6 +43,7 @@ import { DesignIcon as Icon } from "../../mobile/ui";
 import { FoodCover } from "../../components/FoodCover";
 import { ContentSkeleton } from "../../components/LoadingSkeleton";
 import { Gate } from "../../components/ui";
+import { ProfileEmpty, ProfilePageHead } from "../ProfilePage";
 import { useSurfaceDismiss } from "../../motion/hooks";
 import { CommentReactions } from "./CommentReactions";
 import {
@@ -1257,7 +1259,13 @@ export function MobileComments() {
   return writing ? <Gate verified={false}>{body}</Gate> : body;
 }
 
-function DeleteSubmission({ row }: { row: CommentSubmission }) {
+function DeleteSubmission({
+  row,
+  showIcon = false,
+}: {
+  row: CommentSubmission;
+  showIcon?: boolean;
+}) {
   const { api } = useApp(),
     refresh = useRefreshComments();
   const [confirming, setConfirming] = useState(false);
@@ -1277,6 +1285,7 @@ function DeleteSubmission({ row }: { row: CommentSubmission }) {
     <>
       {!confirming && !task.pending ? (
         <button className="comments-delete" onClick={() => setConfirming(true)}>
+          {showIcon && <Icon name="delete" size={15} />}
           删除
         </button>
       ) : (
@@ -1304,9 +1313,76 @@ function DeleteSubmission({ row }: { row: CommentSubmission }) {
     </>
   );
 }
+
+function MyCommentRecord({
+  row,
+  journal,
+}: {
+  row: CommentSubmission;
+  journal: boolean;
+}) {
+  const reply = row.kind === "REPLY";
+  const reason = row.reasonMessage || row.reasonCode;
+  const time = (
+    <time dateTime={row.createdAt ?? undefined}>
+      {commentTime(row.createdAt)}
+    </time>
+  );
+  const content = (
+    <>
+      <p className="comments-text">
+        {row.moderationStatus === "DELETED" ? "评论已删除" : row.text}
+      </p>
+      {!!row.imageCount && (
+        <span className="comments-muted">
+          <Icon name="image" size={15} /> {row.imageCount} 张图片
+        </span>
+      )}
+      {row.moderationStatus === "REJECTED" && reason && (
+        <p className="comments-rejection">
+          {journal && <strong>未通过原因</strong>}
+          {reason}
+        </p>
+      )}
+    </>
+  );
+  return (
+    <article
+      className={`comments-submission${journal ? " comments-journal-note" : ""}`}
+    >
+      <header className="comments-submission-heading">
+        {journal && time}
+        {(!journal || reply) && <span>{reply ? "回复" : "评论"}</span>}
+        <span className="comments-status" data-status={row.moderationStatus}>
+          {commentStatus(row.moderationStatus)}
+        </span>
+        {!journal && time}
+      </header>
+      {journal ? (
+        <div className="comments-journal-body">
+          <Quote aria-hidden="true" size={24} />
+          <div>{content}</div>
+        </div>
+      ) : (
+        content
+      )}
+      <footer className="comments-submission-actions">
+        {row.foodId && (
+          <Link to={`/foods/${row.foodId}?section=comments`}>
+            {journal && <Icon name="bowl" size={17} />}
+            查看菜品 <Icon name="chevronRight" size={14} />
+          </Link>
+        )}
+        <DeleteSubmission row={row} showIcon={journal} />
+      </footer>
+    </article>
+  );
+}
+
 export function MyFoodComments({
   emptyState,
-}: { emptyState?: ReactNode } = {}) {
+  journal = false,
+}: { emptyState?: ReactNode; journal?: boolean } = {}) {
   const { api, user } = useApp(),
     [params, setParams] = useSearchParams();
   const page = validPage(params.get("page"));
@@ -1315,58 +1391,43 @@ export function MyFoodComments({
     queryFn: ({ signal }) => api.myCommentSubmissions(page, 20, signal),
     enabled: !!user?.id,
   });
+  const items = q.data?.items ?? [];
+  const total = q.data?.totalItems;
+  const records = items.map((row) => (
+    <MyCommentRecord key={row.revisionId ?? row.id} row={row} journal={journal} />
+  ));
   return (
-    <div className="comments-my-list">
+    <div className={`comments-my-list${journal ? " comments-journal" : ""}`}>
+      {journal && (
+        <ProfilePageHead
+          title="我的评论"
+          count={total && total > 0 ? `${total} 条` : undefined}
+        />
+      )}
       <QueryState query={q}>
-        {!q.data?.items?.length
-          ? (emptyState ?? (
-              <div className="comments-state">
-                <Icon name="comment" size={30} />
-                <p>还没有评论记录。</p>
-                <Link to="/">去发现好味道</Link>
-              </div>
-            ))
-          : q.data.items.map((row) => (
-              <article
-                className="comments-submission"
-                key={row.revisionId ?? row.id}
-              >
-                <div className="comments-submission-heading">
-                  <span>{row.kind === "REPLY" ? "回复" : "评论"}</span>
-                  <span
-                    className="comments-status"
-                    data-status={row.moderationStatus}
-                  >
-                    {commentStatus(row.moderationStatus)}
-                  </span>
-                  <time dateTime={row.createdAt ?? undefined}>
-                    {commentTime(row.createdAt)}
-                  </time>
-                </div>
-                <p className="comments-text">
-                  {row.moderationStatus === "DELETED" ? "评论已删除" : row.text}
-                </p>
-                {!!row.imageCount && (
-                  <span className="comments-muted">
-                    <Icon name="image" size={15} /> {row.imageCount} 张图片
-                  </span>
-                )}
-                {row.moderationStatus === "REJECTED" &&
-                  (row.reasonMessage || row.reasonCode) && (
-                    <p className="comments-rejection">
-                      {row.reasonMessage || row.reasonCode}
-                    </p>
-                  )}
-                <div className="comments-submission-actions">
-                  {row.foodId && (
-                    <Link to={`/foods/${row.foodId}?section=comments`}>
-                      查看菜品 <Icon name="chevronRight" size={14} />
-                    </Link>
-                  )}
-                  <DeleteSubmission row={row} />
-                </div>
-              </article>
-            ))}
+        {items.length ? (
+          journal ? (
+            <div className="comments-journal-grid">{records}</div>
+          ) : (
+            records
+          )
+        ) : (
+          emptyState ??
+          (journal ? (
+            <ProfileEmpty
+              illustration="jiaozi"
+              title={page > 1 ? "这一页没有评论" : "还没写过评论"}
+            >
+              {page === 1 && <Link className="pp-button" to="/">去发现</Link>}
+            </ProfileEmpty>
+          ) : (
+            <div className="comments-state">
+              <Icon name="comment" size={30} />
+              <p>还没有评论记录。</p>
+              <Link to="/">去发现好味道</Link>
+            </div>
+          ))
+        )}
         <Pager
           page={page}
           hasNext={q.data?.hasNext}

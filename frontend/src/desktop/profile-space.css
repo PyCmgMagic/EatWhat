@@ -221,258 +221,161 @@
   border-radius: 20px;
   background: #faf7f3;
 }
-/* 我的评论：单列列表 + 状态色分明的白卡 */
-.pc-profile-space-content
-  .profile-shares[data-tab="comments"]
-  .comments-my-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.profile-shares[data-tab="comments"] > .pc-profile-tab-content {
+  min-height: 0;
+  margin-top: 0;
 }
-.pc-profile-space-content
-  .profile-shares[data-tab="comments"]
-  .comments-my-list
-  > .comments-state,
-.pc-profile-space-content
-  .profile-shares[data-tab="comments"]
-  .comments-my-list
-  > .comments-pager {
-  width: 100%;
+.comments-journal {
+  --note-paper: #fffbf3;
+  --note-stub: #fbf2e3;
+  --note-edge: #ebdcc6;
+  --note-mark: #9b6216;
+  max-width: 1040px;
+  margin-inline: auto;
 }
-.pc-profile-space-content .comments-my-list .comments-submission,
-.pc-profile-space-content .comments-my-list .comments-submission:first-of-type {
+.comments-journal:not(:has(> .comments-journal-grid > :nth-child(2))) {
+  max-width: 744px;
+}
+.comments-journal-grid {
   display: grid;
-  grid-template-columns: 152px minmax(0, 1fr) auto;
-  column-gap: 26px;
-  align-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
+  gap: 18px;
+}
+.comments-journal .comments-journal-note {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   min-width: 0;
-  padding: 18px 24px;
-  border: 1px solid #ece4da;
-  border-radius: 20px;
-  background: #fff;
-  transition:
-    border-color 180ms ease,
-    box-shadow 200ms ease;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--note-edge);
+  border-radius: 18px;
+  background: var(--note-paper);
+  box-shadow: 0 6px 16px rgb(73 45 12 / 5%);
 }
-.pc-profile-space-content .comments-my-list .comments-submission:hover {
-  border-color: #e0d0be;
-  box-shadow: 0 16px 34px -26px rgb(52 39 28 / 55%);
+.comments-journal .comments-submission-heading {
+  padding: 16px clamp(16px, 2.4vw, 24px) 0;
+  gap: 7px 10px;
 }
-.pc-profile-space-content .comments-my-list .comments-submission-heading {
-  grid-column: 1;
-  grid-row: 1 / span 2;
-  align-self: stretch;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 7px;
-  padding-right: 20px;
-  border-right: 1px solid #f4ede5;
-  color: #9a8b7d;
-  font-size: 12px;
-}
-.pc-profile-space-content
-  .comments-my-list
-  .comments-submission-heading
-  > span:first-child {
-  order: 2;
-  color: #a1907d;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-.pc-profile-space-content
-  .comments-my-list
-  .comments-submission-heading
-  > .comments-status {
-  order: 1;
-}
-.pc-profile-space-content
-  .comments-my-list
-  .comments-submission-heading
-  time {
-  order: 3;
+.comments-journal .comments-submission-heading time {
   margin-left: 0;
-  color: #a99a8b;
-  font-size: 11.5px;
+  font-size: 13px;
+  font-weight: 650;
   font-variant-numeric: tabular-nums;
 }
-.pc-profile-space-content .comments-my-list .comments-text {
-  grid-column: 2;
-  max-width: 72ch;
+.comments-journal .comments-submission-heading > span:not(.comments-status) {
+  padding-inline-start: 10px;
+  border-inline-start: 1px solid var(--note-edge);
+}
+.comments-journal .comments-status {
+  margin-inline-start: auto;
+}
+.comments-journal-body {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  min-height: 96px;
+  padding: 18px clamp(16px, 2.4vw, 24px) 22px;
+}
+.comments-journal-body > svg {
+  margin-top: 3px;
+  color: var(--note-mark);
+}
+.comments-journal .comments-text {
   margin: 0;
-  color: #2e251e;
-  font-size: 15px;
-  line-height: 1.85;
+  font-size: clamp(16px, 1.35vw, 20px);
+  font-weight: 550;
+  line-height: 1.75;
 }
-.pc-profile-space-content .comments-my-list .comments-muted {
-  grid-column: 2;
-  margin: 4px 0 0;
-  color: #9a8b7d;
-  font-size: 12px;
+.comments-journal .comments-text:empty {
+  display: none;
 }
-.pc-profile-space-content .comments-my-list .comments-rejection {
-  grid-column: 2 / -1;
-  margin: 10px 0 0;
-  padding: 10px 14px;
-  border: 1px solid #f6ded5;
-  border-radius: 12px;
-  background: #fdf3ef;
-  color: #a8321c;
-  font-size: 13px;
-  line-height: 1.7;
+.comments-journal .comments-muted {
+  margin-top: 8px;
 }
-.pc-profile-space-content .comments-my-list .comments-rejection::before {
-  content: "未通过原因";
-  margin-right: 8px;
-  font-weight: 700;
-  opacity: 0.8;
-}
-.pc-profile-space-content .comments-my-list .comments-submission-actions {
-  grid-column: 3;
-  grid-row: 1;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 0 14px;
-  padding: 0;
-  border: 0;
-}
-.pc-profile-space-content
-  .comments-my-list
-  .comments-submission-actions
-  > a {
-  min-height: 36px;
-  padding: 0 14px;
-  border: 1px solid #ece0d2;
-  border-radius: 999px;
-  background: #fff;
-  color: #5e4b3b;
-  font-size: 12.5px;
-  font-weight: 650;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease;
-}
-.pc-profile-space-content
-  .comments-my-list
-  .comments-submission-actions
-  > a:hover {
-  border-color: #dcc9b3;
-  background: #fffdf8;
-}
-.pc-profile-space-content .comments-my-list .comments-delete {
-  min-height: 36px;
-  padding: 0 12px;
-  border-radius: 999px;
-  color: #9a8b7d;
-  font-size: 12.5px;
-  font-weight: 600;
-  transition:
-    color 160ms ease,
-    background 160ms ease;
-}
-.pc-profile-space-content .comments-my-list .comments-delete:hover {
-  background: #fdf3ef;
-  color: #a8321c;
-}
-.pc-profile-space-content .comments-my-list .comments-confirm {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-  max-width: 360px;
-  padding: 10px 14px;
-  border: 1px solid #f1e3d8;
-  border-radius: 14px;
-  background: #fdf9f4;
-  color: #6e625b;
-  font-size: 12px;
-}
-.pc-profile-space-content .comments-my-list .comments-confirm p {
-  flex: 1 0 100%;
-  margin: 0 0 2px;
-  line-height: 1.7;
-}
-.pc-profile-space-content .comments-my-list .comments-confirm button {
-  min-height: 32px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  color: #a8321c;
-  font-size: 12px;
-  font-weight: 650;
-}
-.pc-profile-space-content .comments-my-list .comments-confirm button:hover {
+.comments-journal .comments-rejection {
+  margin: 12px 0 0;
+  padding: 9px 12px;
+  border-radius: 10px;
   background: #fceee8;
+  overflow-wrap: anywhere;
 }
-.pc-profile-space-content .comments-my-list .comments-confirm button + button {
-  color: #857567;
+.comments-journal .comments-rejection strong {
+  display: block;
+  margin-bottom: 2px;
 }
-.pc-profile-space-content
-  .comments-my-list
-  .comments-confirm
-  button
-  + button:hover {
-  background: #f5efe8;
-  color: #2e251e;
+.comments-journal .comments-submission-actions {
+  position: relative;
+  min-height: 60px;
+  padding: 7px 16px;
+  border-top: 1px dashed #ddc8a7;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  background: var(--note-stub);
 }
-/* 我的评论：空态 */
-.pc-profile-space-content
-  .profile-shares[data-tab="comments"]
-  .comments-my-list
-  > .comments-state {
-  min-height: 340px;
-  gap: 14px;
-  padding: 48px 32px;
-  border-radius: 26px;
-  background: radial-gradient(
-    115% 150% at 80% 16%,
-    #fff3d6 0%,
-    #fcf7f1 50%,
-    #faf7f3 100%
-  );
-  color: #6e625b;
-  font-size: 14px;
-  text-align: center;
-}
-.pc-profile-space-content
-  .profile-shares[data-tab="comments"]
-  .comments-my-list
-  > .comments-state
-  > svg {
-  box-sizing: content-box;
-  width: 30px;
-  height: 30px;
-  padding: 17px;
+.comments-journal .comments-submission-actions::before,
+.comments-journal .comments-submission-actions::after {
+  content: "";
+  position: absolute;
+  top: -7px;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--note-edge);
   border-radius: 50%;
   background: #fff;
-  color: #b4801f;
-  box-shadow: 0 14px 28px -20px rgb(52 39 28 / 60%);
+  pointer-events: none;
 }
-.pc-profile-space-content
-  .profile-shares[data-tab="comments"]
-  .comments-my-list
-  > .comments-state
-  > p {
-  color: #6e625b;
-  font-size: 15px;
+.comments-journal .comments-submission-actions::before {
+  inset-inline-start: -7px;
 }
-.pc-profile-space-content
-  .profile-shares[data-tab="comments"]
-  .comments-my-list
-  > .comments-state
-  > a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 42px;
-  padding: 0 20px;
-  border: 0;
-  border-radius: 999px;
-  background: #231c18;
-  color: #fff;
+.comments-journal .comments-submission-actions::after {
+  inset-inline-end: -7px;
+}
+.comments-journal .comments-submission-actions > a,
+.comments-journal .comments-delete {
+  padding: 0 8px;
+  border-radius: 8px;
   font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-  box-shadow: 0 12px 24px -16px rgb(35 28 24 / 70%);
+  font-weight: 650;
 }
+.comments-journal .comments-submission-actions > a {
+  color: #50361a;
+}
+.comments-journal .comments-submission-actions > a:hover {
+  background: #efdfc5;
+}
+.comments-journal .comments-delete {
+  margin-inline-start: auto;
+}
+.comments-journal .comments-delete:hover {
+  background: #f9e8e0;
+  color: #a8321c;
+}
+.comments-journal .comments-confirm,
+.comments-journal .comments-error {
+  flex: 1 0 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.comments-journal .comments-confirm {
+  max-width: none;
+  border: 1px solid #eddbcd;
+  background: var(--note-paper);
+}
+.comments-journal .comments-confirm button {
+  border-radius: 8px;
+  font-weight: 650;
+}
+.comments-journal .comments-confirm button:hover:enabled {
+  background: #f6e9dd;
+}
+.comments-journal > .comments-state {
+  border: 1px solid var(--note-edge);
+  border-radius: 18px;
+  background: var(--note-paper);
+}
+
 .pc-profile-space-content .ew-favorites {
   padding: 34px 32px 40px;
 }
@@ -1115,10 +1018,7 @@
 }
 @media (max-width: 900px) {
   .pc-profile-space-content .profile-shares-grid,
-  .pc-profile-space-content .ew-favorites .ew-results,
-  .pc-profile-space-content
-    .profile-shares[data-tab="comments"]
-    .comments-my-list {
+  .pc-profile-space-content .ew-favorites .ew-results {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1134,9 +1034,6 @@
   }
   .pc-profile-space-content .profile-shares-grid,
   .pc-profile-space-content .ew-favorites .ew-results,
-  .pc-profile-space-content
-    .profile-shares[data-tab="comments"]
-    .comments-my-list,
   .pc-profile-space-content .pc-history-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1451,71 +1348,6 @@
 .pc-profile-space-content .pc-secondary-body .ew-form-panel {
   width: 100%;
   max-width: none;
-}
-.pc-profile-space-content .pc-secondary-body .ew-password-panel {
-  padding: 24px;
-  border: 1px solid #ebe3da;
-  border-radius: 20px;
-  background: #fff;
-  box-shadow: none;
-}
-.pc-profile-space-content .pc-secondary-body .ew-password-panel :is(form, input) {
-  max-width: 560px;
-}
-/* 只有说明与入口的面板：标题、说明放左，入口做成右侧胶囊行。 */
-.pc-profile-space-content
-  .pc-secondary-body
-  .ew-password-panel:not(:has(form)) {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  column-gap: 24px;
-  row-gap: 6px;
-  padding: 22px 24px;
-}
-.pc-profile-space-content
-  .pc-secondary-body
-  .ew-password-panel:not(:has(form))
-  > h2 {
-  grid-column: 1;
-  grid-row: 1;
-  margin: 0;
-  font-size: 17px;
-}
-.pc-profile-space-content
-  .pc-secondary-body
-  .ew-password-panel:not(:has(form))
-  > p {
-  grid-column: 1;
-  grid-row: 2;
-  margin: 0;
-}
-.pc-profile-space-content
-  .pc-secondary-body
-  .ew-password-panel:not(:has(form))
-  > a {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: 0 18px;
-  border: 1px solid #eadfd4;
-  border-radius: 999px;
-  background: #fff;
-  color: #231c18;
-  font-size: 13px;
-  font-weight: 650;
-  text-decoration: none;
-  white-space: nowrap;
-}
-.pc-profile-space-content
-  .pc-secondary-body
-  .ew-password-panel:not(:has(form))
-  > a:hover {
-  background: #fffaf0;
-  border-color: #dcc8ab;
 }
 .pc-profile-space-content .settings-home-groups {
   align-items: stretch;

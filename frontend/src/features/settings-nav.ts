@@ -33,13 +33,13 @@ export const settingsNavGroups: SettingsNavGroup[] = [
   {
     id: "preferences",
     title: "偏好",
-    detail: "隐私、口味与屏蔽",
+    detail: "隐私、口味与通知",
     items: [
       {
         to: "/settings/privacy",
         name: "隐私设置",
         icon: "eye",
-        hint: "关注关系与推荐偏好",
+        hint: "主页可见性、屏蔽与数据授权",
       },
       {
         to: "/settings/preferences",
@@ -52,12 +52,6 @@ export const settingsNavGroups: SettingsNavGroup[] = [
         name: "通知偏好",
         icon: "bell",
         hint: "接收哪些提醒",
-      },
-      {
-        to: "/settings/blocked",
-        name: "屏蔽名单",
-        icon: "block",
-        hint: "屏蔽后彼此不可见",
       },
     ],
   },

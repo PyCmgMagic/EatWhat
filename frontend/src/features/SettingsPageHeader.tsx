@@ -5,8 +5,6 @@ import "./settings-page-header.css";
 
 const details: Record<string, string> = {
   "/settings": "管理账号安全、隐私偏好与站点服务。",
-  "/settings/password": "使用新的登录密码，保护你的账号与内容。",
-  "/settings/privacy": "决定哪些关注信息可以展示给其他同学。",
   "/settings/preferences": "设置喜欢和不喜欢的口味，让推荐更合心意。",
   "/settings/bind-phone": "完成验证码确认，将手机号与你的账号关联。",
   "/settings/phone": "先验证原手机号，再验证新号码。",

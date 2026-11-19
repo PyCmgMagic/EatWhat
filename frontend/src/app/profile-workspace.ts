@@ -4,6 +4,7 @@ export const profileSections = [
   { to: "/me", name: "个人总览", icon: "me", group: "" },
   { to: "/me/shares", name: "我的分享", icon: "bowl", group: "我的内容" },
   { to: "/favorites", name: "我的收藏", icon: "bookmark", group: "我的内容" },
+  { to: "/likes", name: "赞过的菜", icon: "heart", group: "我的内容" },
   { to: "/me/growth", name: "我的成长", icon: "bowl", group: "我的内容" },
   { to: "/history", name: "浏览足迹", icon: "history", group: "我的内容" },
   { to: "/settings", name: "账号设置", icon: "settings", group: "账号与服务" },
@@ -22,11 +23,8 @@ export function profileSection(path: string): ProfileSection | null {
   if (path === "/me") return "/me";
   if (path === "/me/shares" || /^\/submissions(?:\/[^/]+)?$/.test(path))
     return "/me/shares";
-  if (
-    path === "/favorites" ||
-    path === "/likes" ||
-    path === "/restaurants/favorites"
-  )
+  if (path === "/likes") return "/likes";
+  if (path === "/favorites" || path === "/restaurants/favorites")
     return "/favorites";
   if (path === "/me/tags" || /^\/me\/tags\/\d+\/foods$/.test(path))
     return "/favorites";

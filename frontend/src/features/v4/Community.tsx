@@ -30,6 +30,7 @@ import {
 } from "../../api/v2-vocab";
 import { CatalogCard } from "../Catalog";
 import { RestaurantCorrectionDialog } from "../RestaurantCorrectionDialog";
+import { checkScreenshots, FeedbackScreenshots } from "./FeedbackScreenshots";
 import {
   ProfileCollectionsHeader,
   ProfileHelpHeader,
@@ -97,24 +98,47 @@ export function FeedbackForm({
   });
   const [attachments, setAttachments, clearAttachments] = useMemoryDraft<{
     files: File[];
-    keys: string[];
-  }>(draftKey, { files: [], keys: [] });
+    uploaded: WeakMap<File, string>;
+    checking?: ReturnType<typeof checkScreenshots>;
+  }>(draftKey, { files: [], uploaded: new WeakMap() });
   const { text, reason } = draft;
   const textLimit = kind === "feedback" ? 500 : 2000;
-  const { files, keys } = attachments;
+  const { files, uploaded, checking } = attachments;
   useEffect(() => {
-    if (!files.length) return;
+    if (!files.length && !checking) return;
     const warn = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = "";
     };
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
-  }, [files.length]);
+  }, [files.length, checking]);
+  useEffect(() => {
+    if (!checking) return;
+    let current = true;
+    void checking.then(({ valid, unreadable }) => {
+      if (!current) return;
+      setAttachments((d) =>
+        d.checking === checking
+          ? { ...d, files: [...d.files, ...valid], checking: undefined }
+          : d,
+      );
+      if (unreadable.length) {
+        app.toast(`无法读取截图：${unreadable.join("、")}`, { tone: "error" });
+      }
+    });
+    return () => {
+      current = false;
+    };
+  }, [checking]);
+  const addScreenshots = (added: File[]) => {
+    setAttachments((d) => {
+      if (d.checking) return d;
+      return { ...d, checking: checkScreenshots(added) };
+    });
+  };
   const setText = (text: string) => setDraft((d) => ({ ...d, text }));
   const setReason = (reason: string) => setDraft((d) => ({ ...d, reason }));
-  const setFiles = (files: File[]) => setAttachments((d) => ({ ...d, files }));
-  const setKeys = (keys: string[]) => setAttachments((d) => ({ ...d, keys }));
   const source = location.state?.returnTo;
   const back =
     typeof source === "string" && /^\/(?!\/)/.test(source)
@@ -175,8 +199,10 @@ export function FeedbackForm({
           </p>
         ) : (
           <form
+            aria-busy={!!checking || task.busy}
             onSubmit={(e) => {
               e.preventDefault();
+              if (checking) return;
               void task.run(
                 async (command) => {
                   if (kind === "feedback" && !text.trim())
@@ -184,15 +210,19 @@ export function FeedbackForm({
                   if ([...text].length > textLimit)
                     throw new Error(`内容最多填写 ${textLimit} 个字。`);
                   if (kind === "feedback") {
-                    let uploaded = keys;
-                    if (files.length && keys.length !== files.length) {
-                      uploaded = await app.uploadMany(files, "feedback");
-                      setKeys(uploaded);
+                    const pending = files.filter((file) => !uploaded.has(file));
+                    if (pending.length) {
+                      const keys = await app.uploadMany(
+                        pending,
+                        "feedback",
+                        (index, key) => uploaded.set(pending[index], key),
+                      );
+                      keys.forEach((key, index) => uploaded.set(pending[index], key));
                     }
                     return app.api.createFeedback(
                       {
                         text: text.trim(),
-                        screenshotKeys: uploaded,
+                        screenshotKeys: files.map((file) => uploaded.get(file)!),
                         context: validTarget
                           ? { type: targetType, id: targetId }
                           : undefined,
@@ -267,41 +297,19 @@ export function FeedbackForm({
                 {[...text].length} / {textLimit}
               </span>
               {kind === "feedback" && (
-                <Field label="截图（可选）" hint="最多 3 张图片。">
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    multiple
-                    onChange={(e) => {
-                      const selected = [...(e.target.files ?? [])];
-                      if (
-                        selected.length > 3 ||
-                        selected.some(
-                          (f) =>
-                            !f.type.startsWith("image/") ||
-                            f.size > 8 * 1024 * 1024,
-                        )
-                      ) {
-                        task.say("请选择最多 3 张、每张不超过 8MB 的图片。");
-                        return;
-                      }
-                      setFiles(selected);
-                      setKeys([]);
-                    }}
-                  />
-                </Field>
+                <FeedbackScreenshots
+                  files={files}
+                  disabled={task.busy || task.uncertain || !!checking}
+                  onAdd={addScreenshots}
+                  onRemove={(index) =>
+                    setAttachments((d) => ({
+                      ...d,
+                      files: d.files.filter((_, i) => i !== index),
+                    }))
+                  }
+                />
               )}
-              {!!files.length && (
-                <div className="v4-upload-files">
-                  {files.map((file, i) => (
-                    <span key={i}>
-                      <Icon name="image" size={15} />
-                      {file.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <button className="primary" type="submit">
+              <button className="primary" type="submit" disabled={!!checking}>
                 {task.busy ? "正在提交…" : "提交"}
               </button>
             </fieldset>

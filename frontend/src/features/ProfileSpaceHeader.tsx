@@ -20,6 +20,7 @@ const tabs = [
   { key: "home", to: "/me", label: "主页", icon: "me" },
   { key: "uploads", to: "/me/shares", label: "上传", icon: "bowl" },
   { key: "favorites", to: "/favorites", label: "收藏", icon: "bookmark" },
+  { key: "likes", to: "/likes", label: "赞过", icon: "heart" },
   {
     key: "comments",
     to: "/me/shares?tab=comments",
@@ -85,19 +86,7 @@ export default function ProfileSpaceHeader() {
     location.pathname === "/me/shares" &&
     new URLSearchParams(location.search).get("tab") === "comments"
       ? "comments"
-      : section === "/me"
-        ? "home"
-        : section === "/me/shares"
-          ? "uploads"
-          : section === "/favorites"
-            ? "favorites"
-            : section === "/history"
-              ? "history"
-              : section === "/me/growth"
-                ? "growth"
-                : section === "/settings"
-                  ? "settings"
-                  : undefined;
+      : tabs.find((tab) => tab.to === section)?.key;
   const statValue = (value: number | null | undefined) =>
     stats.isPending ? (
       <span className="profile-overview-stat-loading" aria-label="正在加载" />

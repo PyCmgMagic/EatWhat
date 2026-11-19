@@ -1,12 +1,8 @@
 import { useSendSignal } from "../features/useSendSignal";
 import { BRAND_SLOGAN } from "../app/brand";
-import {
-  PersonalizedRecommendation,
-  BlockedListDialog,
-} from "../features/ApiV2";
+import PrivacySettings from "../features/PrivacySettings";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { useAuthBusy, useAuthFlow } from "../app/auth-dialog";
 import { localDestination } from "../app/navigation";
@@ -15,7 +11,8 @@ import { classifyAuth } from "../api/service";
 import { useTask } from "../components/useTask";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { MobileBinding, VerificationMethods } from "../features/AccountExtras";
-import { PasswordByCode, SsoStart } from "../features/Account";
+import { SsoStart } from "../features/Account";
+import PasswordSettings from "../features/PasswordSettings";
 import "../features/student-verification.css";
 import {
   readVerificationCallback,
@@ -28,7 +25,6 @@ import {
   PendingPage,
   Section,
   SettingsShell,
-  State,
   TaskError,
   pendingPages,
 } from "./secondary";
@@ -187,221 +183,24 @@ function Account() {
   );
 }
 function Password() {
-  const { api, user } = useApp(),
-    task = useTask("密码已更新");
+  const { user } = useApp();
   return (
     <>
       <PageHead
         title={user?.hasPassword === false ? "设置密码" : "修改密码"}
-        detail={
-          user?.hasPassword === false
-            ? "完成账号验证后，设置你的登录密码。"
-            : "使用一个新的密码，保护你的校园美食档案。"
-        }
         back="/settings/account"
         crumb="账号与安全"
       />
-      {user?.hasPassword === false ? (
-        <PasswordByCode />
-      ) : (
-        <>
-          <div className="pc-secondary-columns">
-            <Section title="设置新密码">
-              <form
-                className="pc-secondary-form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const form = e.currentTarget,
-                    d = new FormData(form);
-                  task.run(async () => {
-                    const oldPassword = String(d.get("old") || ""),
-                      newPassword = String(d.get("password") || "");
-                    if (newPassword !== d.get("confirm"))
-                      throw new Error("两次输入的新密码不一致。");
-                    if (oldPassword === newPassword)
-                      throw new Error("新密码需要与当前密码不同。");
-                    await api.changePassword({ oldPassword, newPassword });
-                    form.reset();
-                  });
-                }}
-              >
-                <Field label="当前密码">
-                  <input
-                    name="old"
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                  />
-                </Field>
-                <div className="pc-secondary-field-pair">
-                  <Field label="新密码" hint="6–64 个字符">
-                    <input
-                      name="password"
-                      type="password"
-                      autoComplete="new-password"
-                      minLength={6}
-                      maxLength={64}
-                      required
-                    />
-                  </Field>
-                  <Field label="再次输入新密码">
-                    <input
-                      name="confirm"
-                      type="password"
-                      autoComplete="new-password"
-                      minLength={6}
-                      maxLength={64}
-                      required
-                    />
-                  </Field>
-                </div>
-                <TaskError error={task.error} />
-                <div className="pc-secondary-form-footer">
-                  <Link to="/settings/account">返回账号与安全</Link>
-                  <button className="pc-button" disabled={task.isPending}>
-                    {task.isPending ? "正在更新…" : "更新密码"}
-                  </button>
-                </div>
-                {task.isSuccess && (
-                  <p className="pc-secondary-success" role="status">
-                    密码已更新。
-                  </p>
-                )}
-              </form>
-            </Section>
-            <Note title="记住这个新密码" icon="lock">
-              <p>
-                建议使用与其他网站不同的密码，不要包含学号、生日等容易猜测的信息。
-              </p>
-            </Note>
-          </div>
-          <details className="pc-secondary-section">
-            <summary>使用绑定手机验证码设置密码</summary>
-            <PasswordByCode />
-          </details>
-        </>
-      )}
+      <PasswordSettings key={user?.id} />
     </>
   );
 }
 function Privacy() {
-  const { api, user } = useApp(),
-    q = useQuery({
-      queryKey: ["user", user?.id],
-      queryFn: () => api.otherUser(user!.id!),
-      enabled: !!user?.id,
-    });
   return (
     <>
-      <PageHead
-        title="隐私设置"
-        detail="决定哪些关注信息可以展示给其他同学。"
-        back="/settings"
-        crumb="设置"
-      />
-      <PersonalizedRecommendation />
-      {q.isPending || q.isError ? (
-        <State
-          loading={q.isPending}
-          error={q.error}
-          retry={() => void q.refetch()}
-        />
-      ) : q.data.followingsVisible == null || q.data.fansVisible == null ? (
-        <State
-          title="暂时无法读取公开范围"
-          detail="没有读取到当前设置，请重新加载后再修改。"
-        >
-          <button className="pc-button light" onClick={() => void q.refetch()}>
-            重新加载
-          </button>
-        </State>
-      ) : (
-        <PrivacyForm
-          key={`${user?.id}-${q.data.followingsVisible}-${q.data.fansVisible}`}
-          following={q.data.followingsVisible}
-          follower={q.data.fansVisible}
-        />
-      )}
+      <PageHead title="隐私设置" back="/settings" crumb="设置" />
+      <PrivacySettings />
     </>
-  );
-}
-function PrivacyForm({
-  following,
-  follower,
-}: {
-  following: boolean;
-  follower: boolean;
-}) {
-  const { api } = useApp(),
-    [values, setValues] = useState({ following, follower }),
-    task = useTask("隐私设置已保存", undefined, ["user"]),
-    changed = values.following !== following || values.follower !== follower;
-  const [blockedOpen, setBlockedOpen] = useState(false);
-  return (
-    <div className="pc-secondary-columns">
-      <Section title="关注关系可见性">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            task.run(() => api.privacy(values));
-          }}
-        >
-          {(
-            [
-              {
-                key: "following",
-                title: "公开我的关注列表",
-                detail: "其他同学可以查看你关注的食友。",
-              },
-              {
-                key: "follower",
-                title: "公开我的粉丝列表",
-                detail: "其他同学可以查看关注你的食友。",
-              },
-            ] as const
-          ).map((x) => (
-            <label className="pc-secondary-switch-row" key={x.key}>
-              <span>
-                <b>{x.title}</b>
-                <small>{x.detail}</small>
-              </span>
-              <input
-                role="switch"
-                type="checkbox"
-                checked={values[x.key]}
-                disabled={task.isPending}
-                onChange={(e) =>
-                  setValues({ ...values, [x.key]: e.target.checked })
-                }
-              />
-            </label>
-          ))}
-          <TaskError error={task.error} />
-          <div className="pc-secondary-form-footer">
-            <span>{changed ? "有尚未保存的修改" : "当前设置已保存"}</span>
-            <button className="pc-button" disabled={!changed || task.isPending}>
-              {task.isPending ? "正在保存…" : "保存可见性"}
-            </button>
-          </div>
-        </form>
-      </Section>
-      <Note title="由你决定公开范围" icon="lock">
-        <p>
-          关闭后，其他同学无法查看对应列表。你依然可以在自己的主页查看和管理关注关系。
-        </p>
-        <nav className="pc-privacy-tools" aria-label="其他隐私设置">
-          <button type="button" onClick={() => setBlockedOpen(true)}>
-            屏蔽名单 <Icon name="chevronRight" size={14} />
-          </button>
-          <Link to="/settings/telemetry">
-            使用统计授权 <Icon name="chevronRight" size={14} />
-          </Link>
-        </nav>
-        {blockedOpen && (
-          <BlockedListDialog onClose={() => setBlockedOpen(false)} />
-        )}
-      </Note>
-    </div>
   );
 }
 function Binding() {

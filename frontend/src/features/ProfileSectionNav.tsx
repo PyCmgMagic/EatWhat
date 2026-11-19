@@ -10,7 +10,6 @@ const sections = {
     label: "收藏分类",
     items: [
       { to: "/favorites", label: "菜品收藏" },
-      { to: "/likes", label: "赞过的菜" },
       { to: "/restaurants/favorites", label: "餐厅收藏" },
       { to: "/me/tags", label: "标签管理" },
     ],
@@ -86,10 +85,7 @@ export function ProfileCollectionsHeader({
   const embedded = useContext(ProfileWorkspaceContext);
   if (embedded)
     return (
-      <ProfilePageHead
-        title="我的收藏"
-        detail="喜欢的菜品和想去的餐厅，都留在这里。"
-      >
+      <ProfilePageHead title="我的收藏">
         {action}
         <ProfileSectionNav section="collections" />
       </ProfilePageHead>
@@ -98,7 +94,6 @@ export function ProfileCollectionsHeader({
     <div className="profile-collections-head">
       <header className="profile-section-heading">
         <h1>我的收藏</h1>
-        <p>喜欢的菜品和想去的餐厅，都留在这里。</p>
       </header>
       <ProfileSectionNav section="collections" />
     </div>

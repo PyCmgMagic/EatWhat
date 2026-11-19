@@ -63,13 +63,18 @@ import {
   MobilePageSkeleton,
   Skeleton,
 } from "../components/LoadingSkeleton";
-import { demoDishes, visualFor, stageColors } from "./catalog";
+import { demoDishes, visualFor } from "./catalog";
 import { SceneToggle } from "../features/SceneToggle";
 import { AiTagSuggest, draftPictureKeys } from "../features/AiTagSuggest";
 import { DishDuplicateHint } from "../features/DishDuplicateHint";
 import { screenRoutes, panelScreens, pendingScreens } from "./routes";
-import { adjustPhoto, saveVisual } from "./photos";
-import { applyPhotoEdit } from "./draft-photo-edit";
+import {
+  adjustPhoto,
+  recommendPhotoStage,
+  sampleStageColors,
+  saveVisual,
+} from "./photos";
+import { applyPhotoEdit, draftStage } from "./draft-photo-edit";
 import { photoFraming, type PhotoFraming } from "./photo-framing";
 import { createPhotoGesture, MAX_PHOTO_ZOOM } from "./photo-gesture";
 import {
@@ -79,6 +84,9 @@ import {
   mealOptions,
   mealSlotAt,
   publishDisplay,
+  stageCode,
+  stageNames,
+  stagePalette,
 } from "../api/food-display";
 import { FoodManage } from "../features/Catalog";
 import DishDetail from "./DishDetail";
@@ -217,8 +225,44 @@ export function useDesignBridge(
   const draftRef = useRef(m.draft);
   draftRef.current = m.draft;
   const photoEdit = m.draft.photoEdit;
+  const coverEdit = !!photoEdit && photoEdit.targetUrl === m.draft.images[0]?.url;
   const photoOpening = useRef(false);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [cropImage, setCropImage] = useState<HTMLImageElement | null>(null);
+  const [cropPalette, setCropPalette] = useState<{
+    url: string;
+    colors: string[];
+  }>();
+  const cropX = controller.state.ox ?? 0;
+  const cropY = controller.state.oy ?? 0;
+  const cropZoom = controller.state.zoom ?? 1;
+  useEffect(() => {
+    if (
+      reference ||
+      screen !== "G-Crop" ||
+      !coverEdit ||
+      !photoEdit ||
+      cropImage?.getAttribute("src") !== photoEdit.url
+    )
+      return;
+    const timer = setTimeout(() => {
+      const colors = sampleStageColors(cropImage, {
+        x: cropX,
+        y: cropY,
+        zoom: cropZoom,
+      });
+      setCropPalette({ url: photoEdit.url, colors });
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [reference, screen, coverEdit, photoEdit, cropImage, cropX, cropY, cropZoom]);
+  const cropCandidates =
+    cropPalette && cropPalette.url === photoEdit?.url
+      ? cropPalette.colors
+      : photoEdit?.candidates ?? [];
+  const manualCropStage: string | null | undefined =
+    controller.state.stageChoice === undefined
+      ? m.draft.stage
+      : controller.state.stageChoice;
   const orbitMotion = useRef({
     scheduler: createHeroOrbitScheduler(),
     angle: 0,
@@ -288,7 +332,8 @@ export function useDesignBridge(
   const busy =
     localBusy ||
     !!profile?.phase ||
-    (screen === "G-AddDish" && !!m.draft.publishing);
+    (screen === "G-AddDish" &&
+      (!!m.draft.publishing || m.draft.images.some((photo) => photo.preparing)));
   const active = !reference && !!session,
     verified = active && user?.verified === true && !user?.banned;
   const browse = !reference;
@@ -719,7 +764,7 @@ export function useDesignBridge(
     page: string,
     targetUrl?: string,
   ) {
-    const suggested = await adjustPhoto(source, framing);
+    const candidates = await recommendPhotoStage(source, framing);
     if (activeLocation.current !== page) return;
     m.setDraft({
       photoEdit: {
@@ -727,7 +772,7 @@ export function useDesignBridge(
         url: URL.createObjectURL(source),
         targetUrl,
         framing,
-        candidates: suggested.colors,
+        candidates,
       },
     });
     nav("/publish/crop");
@@ -838,8 +883,9 @@ export function useDesignBridge(
               },
             );
           // Photos uploaded earlier (for the AI suggestion) need it as well.
+          const stage = draftStage(draft);
           for (const image of images)
-            if (image.key) saveVisual(image.key, draft.stage);
+            if (image.key) saveVisual(image.key, stage);
           m.setDraft({ publishPhase: "submitting" });
           creating = true;
           const created = await api.createFood({
@@ -853,7 +899,7 @@ export function useDesignBridge(
             signature: !!draft.signature,
             mealTimes: draft.mealTimes ?? [],
             deliveryEnabled: !!draft.deliveryEnabled,
-            ...publishDisplay(draft.stage, draft.candidates),
+            ...publishDisplay(stage, images[0]?.stageCandidates),
             coverCrop: { centerX: 0.5, centerY: 0.5, diameter: 1 },
           });
           setDone(true);
@@ -870,10 +916,10 @@ export function useDesignBridge(
             signature: false,
             mealTimes: [],
             deliveryEnabled: false,
-            stage: "#F3C46E",
+            stage: undefined,
             crop: undefined,
-            candidates: undefined,
             restaurantId: undefined,
+            restaurantPicked: false,
             shopName: undefined,
             publishing: false,
             publishPhase: undefined,
@@ -1176,7 +1222,11 @@ export function useDesignBridge(
       check: r.id === m.shopId ? 1 : 0,
       pick: () => {
         m.setShopId(r.id!);
-        m.setDraft({ restaurantId: r.id!, shopName: r.name ?? "" });
+        m.setDraft({
+          restaurantId: r.id!,
+          shopName: r.name ?? "",
+          restaurantPicked: true,
+        });
       },
     }));
   }
@@ -1241,30 +1291,21 @@ export function useDesignBridge(
     }));
   }
   if (screen === "G-Crop" && !reference) {
-    const choices = photoEdit?.candidates ?? ["#8F5B24", "#A8321C", "#D9632B"];
-    const selected = controller.state.color ?? 0;
-    const names = [
-      "暖汤",
-      "芒果",
-      "竹色",
-      "辣橙",
-      "番茄",
-      "红油",
-      "酱色",
-      "瓷蓝",
-      "抹茶",
-    ];
-    values.colors = choices.map((hex, i) => ({
-      name: names[stageColors.indexOf(hex)],
+    const selected = manualCropStage ?? cropCandidates[0] ?? stagePalette.broth;
+    const choices = [...new Set([...cropCandidates, selected])];
+    values.colors = choices.map((hex) => ({
+      name: stageNames[stageCode(hex)],
       hex,
-      on: i === selected ? "true" : "false",
-      ring: i === selected ? 3 : 0,
-      ring2: i === selected ? 5 : 0,
-      pick: () => controller.setState({ color: i }),
+      on: hex === selected ? "true" : "false",
+      ring: hex === selected ? 3 : 0,
+      ring2: hex === selected ? 5 : 0,
+      pick: () => {
+        if (!busy) controller.setState({ stageChoice: hex });
+      },
     }));
     values.pick = {
-      hex: choices[selected],
-      on: ["#C9442B", "#A8321C", "#8F5B24"].includes(choices[selected])
+      hex: selected,
+      on: ["#C9442B", "#A8321C", "#8F5B24"].includes(selected)
         ? "#FFFFFF"
         : "#231C18",
     };
@@ -2252,10 +2293,10 @@ export function useDesignBridge(
           >
             <div className="mobile-restaurant-hero">
               {view.children[2]}
-              <div className="mobile-restaurant-summary">
+              <section className="mobile-restaurant-summary">
                 {view.children[3]}
                 {view.children[1]}
-              </div>
+              </section>
             </div>
             {view.children[4]}
           </div>
@@ -2289,6 +2330,7 @@ export function useDesignBridge(
       }
       if (id === 12) {
         const traits = r as typeof r & V2Shop;
+        const [name, address, stats] = view.children;
         const facts = [
           ...(traits.categories ?? []),
           priceBands.find((band) => band.id === r.priceBand)?.name,
@@ -2296,14 +2338,18 @@ export function useDesignBridge(
           ...(traits.tags ?? []),
         ].filter((fact): fact is string => Boolean(fact));
         return (
-          <section {...p} className="mobile-restaurant-copy" style={undefined}>
-            {view.children}
+          <>
+            <div className="mobile-restaurant-copy">
+              {name}
+              {address}
+            </div>
+            {stats}
             <ul className="mobile-restaurant-traits" aria-label="店铺特点">
               {facts.map((fact, index) => (
                 <li key={`${fact}-${index}`}>{fact}</li>
               ))}
             </ul>
-          </section>
+          </>
         );
       }
       if (id === 17) {
@@ -2440,8 +2486,9 @@ export function useDesignBridge(
     }
     if (screen === "G-AddDish") {
       const photoDisabled = busy || photoBusy || publishUncertain;
+      const stage = draftStage(m.draft);
       const darkStage = ["#C9442B", "#A8321C", "#8F5B24"].includes(
-        m.draft.stage,
+        stage,
       );
       // The name and price row; the duplicate hint goes right under it.
       if (id === 26 && !reference)
@@ -2606,8 +2653,12 @@ export function useDesignBridge(
               onRemove={(index) => {
                 const image = draftRef.current.images[index];
                 if (!image) return;
+                const images = draftRef.current.images.filter(
+                  (_, i) => i !== index,
+                );
                 m.setDraft({
-                  images: draftRef.current.images.filter((_, i) => i !== index),
+                  images,
+                  stage: images.length ? draftRef.current.stage : undefined,
                 });
                 if (image.url.startsWith("blob:")) URL.revokeObjectURL(image.url);
               }}
@@ -2622,7 +2673,7 @@ export function useDesignBridge(
             {...p}
             style={{
               ...st,
-              background: m.draft.stage,
+              background: stage,
               color: darkStage ? "#fff" : undefined,
             }}
           >
@@ -3257,6 +3308,7 @@ export function useDesignBridge(
       p.alt = preview ? "首页裁剪预览" : "所选照片";
       p.onLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
         const image = event.currentTarget;
+        if (!preview && coverEdit) setCropImage(image);
         if (
           controller.state.photoWidth !== image.naturalWidth ||
           controller.state.photoHeight !== image.naturalHeight
@@ -3281,6 +3333,20 @@ export function useDesignBridge(
       };
     }
     if (screen === "G-Crop") {
+      if (!coverEdit && (id === 23 || id === 30)) return null;
+      if (tag === "span" && clean(text) === "从照片里推荐") {
+        return (
+          <button
+            type="button"
+            className="crop-follow-cover"
+            aria-pressed={manualCropStage == null}
+            disabled={busy}
+            onClick={() => controller.setState({ stageChoice: null })}
+          >
+            跟随封面
+          </button>
+        );
+      }
       if (tag === "div" && n.attrs.role === "group") {
         p["aria-label"] = "照片取景，单指拖动、双指缩放";
         p.onLostPointerCapture = values.up;
@@ -3623,7 +3689,11 @@ export function useDesignBridge(
         m.notice("先选一家店。");
         return;
       }
-      m.setDraft({ restaurantId: selected.id!, shopName: selected.name ?? "" });
+      m.setDraft({
+        restaurantId: selected.id!,
+        shopName: selected.name ?? "",
+        restaurantPicked: true,
+      });
       nav("/publish/dish");
       return;
     }
@@ -3641,6 +3711,7 @@ export function useDesignBridge(
         return;
       }
       const page = location.key;
+      const pickedStage = controller.state.stageChoice as string | null | undefined;
       void run(async () => {
         if (!edit) throw new Error("先选择一张照片。");
         const framing = photoFraming(
@@ -3664,7 +3735,7 @@ export function useDesignBridge(
           images = applyPhotoEdit(
             draftRef.current.images,
             edit,
-            result.file,
+            result,
             url,
             framing,
           );
@@ -3674,8 +3745,7 @@ export function useDesignBridge(
         }
         m.setDraft({
           images,
-          candidates: edit.candidates,
-          stage: edit.candidates[controller.state.color ?? 0] ?? m.draft.stage,
+          ...(coverEdit && pickedStage !== undefined ? { stage: pickedStage ?? undefined } : {}),
           photoEdit: undefined,
         });
         URL.revokeObjectURL(edit.url);
@@ -3930,7 +4000,7 @@ export function useDesignBridge(
           <p>本地模拟数据，无需账号和密码</p>
         </div>
       )}
-      {screen === "G-Crop" && (
+      {screen === "G-Crop" && coverEdit && (
         <span
           style={{
             position: "absolute",
