@@ -1,4 +1,5 @@
 import { useFeedbackState } from "../components/feedback";
+import { stageSurface } from "../mobile/catalog";
 import {
   DishAvailabilityFields,
   dishAvailabilityOf,
@@ -392,7 +393,7 @@ function EditForm({
       <form className="mobile-edit-dish" onSubmit={handleSubmit}>
         <div
           className={`mobile-edit-stage${darkStage ? " is-dark" : ""}`}
-          style={{ background: activeStage }}
+          style={{ background: stageSurface(activeStage) }}
         >
           {cover ? (
             <img

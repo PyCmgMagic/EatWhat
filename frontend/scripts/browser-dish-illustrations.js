@@ -33,7 +33,7 @@ async (page) => {
       await inspect('.mobile-empty','yuntun','还没有分享过菜');
       await p.getByRole('link',{name:'分享一道菜',exact:true}).click({trial:true});
       if(width===390)await p.screenshot({path:`output/playwright/dish-art-${engine}-my-shares.png`,fullPage:true});
-      await p.getByRole('tab',{name:'收藏 0',exact:true}).click();
+      await p.getByRole('tab',{name:'收藏',exact:true}).click();
       await inspect('.mobile-empty','yangzhi','还没有收藏的菜');
       const discover=p.getByRole('link',{name:'去发现',exact:true});
       assert((await discover.getAttribute('href'))==='#/','Favorite empty state lost its discover action');

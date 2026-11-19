@@ -14,6 +14,7 @@ import {
   type MapPoint,
 } from "./map-geometry";
 import type { RestaurantMapProps } from "./RestaurantMap";
+import { useTheme } from "../theme/appearance";
 
 type Props = RestaurantMapProps & {
   center?: MapPoint;
@@ -26,6 +27,7 @@ function point(api: BaiduNamespace, p: MapPoint) {
 }
 
 export default function BaiduMap(props: Props) {
+  const theme = useTheme();
   const element = useRef<HTMLDivElement>(null),
     map = useRef<BMap.Map | null>(null),
     sdk = useRef<BaiduNamespace | null>(null);
@@ -146,6 +148,10 @@ export default function BaiduMap(props: Props) {
     };
   }, [attempt]);
 
+  useEffect(() => {
+    map.current?.setTheme?.(theme);
+  }, [ready, theme]);
+
   const restaurants = props.restaurants ?? [];
   const extent = JSON.stringify(
     restaurants.map((r) => [r.id, r.gcjLng, r.gcjLat]),
@@ -165,6 +171,12 @@ export default function BaiduMap(props: Props) {
       const bounds = container.getBoundingClientRect();
       const scale = bounds.width / container.clientWidth || 1;
       const desktop = element.current?.closest(".pc-map");
+      const toolbar = element.current
+        ?.closest(".mobile-nearby-screen")
+        ?.querySelector(".mobile-nearby-toolbar");
+      const topMargin = toolbar
+        ? toolbar.getBoundingClientRect().height / scale + 24
+        : desktop ? 88 : 64;
       const card = desktop
         ?.querySelector(".pc-map-selected")
         ?.getBoundingClientRect();
@@ -173,9 +185,8 @@ export default function BaiduMap(props: Props) {
           ? (bounds.bottom - card.top) / scale + 20
           : 0;
       instance.setViewport(points, {
-        // Mobile has much less map height. Desktop also needs to reserve the
-        // actual overlaid card, while tablet cards sit outside the map itself.
-        margins: [desktop ? 88 : 64, 58, Math.max(60, coveredBottom), 28],
+        // Leave pins visible below the phone search bar and above the desktop card.
+        margins: [topMargin, 58, Math.max(60, coveredBottom), 28],
         enableAnimation: false,
       });
     } else if (points.length === 1) instance.centerAndZoom(points[0], 17);

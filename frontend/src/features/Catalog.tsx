@@ -249,7 +249,7 @@ export function CatalogCard({
   return (
     <article className="ew-food-card">
       <Link to={`/foods/${food.id}`}>
-        <div className="ew-food-photo" style={{ background: v.tile }}>
+        <div className="ew-food-photo" style={{ background: v.tileSurface }}>
           {!photo.unavailable ? (
             <FoodCover
               crop={food.coverCrop}

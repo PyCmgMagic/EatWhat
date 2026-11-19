@@ -678,9 +678,10 @@
 @media (min-width: 600px) and (max-width: 767px) {
   .pc-header-inner {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 12px;
   }
+  .pc-header nav { justify-self: center; }
 }
 /* Phones: also usable when a shared link explicitly requests desktop view. */
 @media (max-width: 767px) {

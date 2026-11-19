@@ -77,12 +77,10 @@ export default function ProfileSheet({ children }: { children: ReactNode }) {
 
   useLayoutEffect(() => {
     const element = sheet.current!;
+    const stage = element.parentElement!.querySelector<HTMLElement>(".mobile-profile-stage");
     const measure = () => {
       const height = element.parentElement!.clientHeight;
       const top = parseFloat(getComputedStyle(element).top) || 24;
-      const stage = element.parentElement!.querySelector<HTMLElement>(
-        ".mobile-profile-stage",
-      );
       const collapsed = Math.min(
         stage?.offsetHeight ?? 372,
         Math.max(top + 120, height - 144),
@@ -97,6 +95,7 @@ export default function ProfileSheet({ children }: { children: ReactNode }) {
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element.parentElement!);
+    if (stage) observer.observe(stage);
     return () => {
       observer.disconnect();
       clearTimeout(timer.current);

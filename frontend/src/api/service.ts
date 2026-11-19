@@ -1,11 +1,11 @@
-import type { operations } from "./schema";
+import type { operations } from "./backend-v2-schema";
 import { boundedText, normalizedTag } from "./content-rules";
 import { putImage } from "./storage-upload";
 import { compressImage } from "./image-compression";
 import type { Revision } from "../features/v4/EditHistory";
 export type RestaurantFilters = NonNullable<
-  operations["RestaurantController_browseRestaurants_get"]["parameters"]["query"]
-> & { kind?: string };
+  operations["browse"]["parameters"]["query"]
+>;
 import type { CaptchaRunner } from "./captcha";
 import type { FoodRated } from "./v2-vocab";
 import type { components as V2 } from "./backend-v2-schema";
@@ -117,7 +117,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
   ): Promise<{
     items: Food[];
     mealTime: string | null;
-    /** Dine-in only: the recommended shops, each with its signature dishes. */
+    /** Ranked shops and their featured dishes, when the endpoint returns shop cards. */
     shops: Restaurant[] | null;
   }> => {
     // Deployed servers return data as an array; the checked-in API contract

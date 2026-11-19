@@ -7,6 +7,21 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <meta name="theme-color" content="#f4efeb" />
+    <style>
+      html { background: #f4efeb; color-scheme: light; }
+      html[data-theme="dark"] { background: #0f0f0e; color-scheme: dark; }
+    </style>
+    <script>
+      // Resolve the canvas before the app or its stylesheets can paint.
+      (() => {
+        let saved;
+        try { saved = localStorage.getItem("eatwhat.appearance"); } catch {}
+        const dark = saved === "dark" ||
+          (saved !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        if (dark) document.querySelector('meta[name="theme-color"]').content = "#0f0f0e";
+      })();
+    </script>
     <meta
       name="description"
       content="山软今天吃什么，让每一顿都有小期待。发现校园美食，分享好味道，整理你的想吃清单。"

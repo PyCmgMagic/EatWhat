@@ -20,9 +20,9 @@ function Home() {
   return (
     <>
       <output data-testid="category">{category}</output>
-      <button onClick={() => setCategory("staple")}>主食</button>
-      <button onClick={() => setCategory("snack")}>小吃</button>
-      <button onClick={() => setCategory("")}>今日推荐</button>
+      <button onClick={() => setCategory("drink")}>甜点饮品</button>
+      <button onClick={() => setCategory("buffet")}>自助</button>
+      <button onClick={() => setCategory("food")}>美食</button>
       <Link to="/foods/1">查看菜品</Link>
     </>
   );
@@ -85,33 +85,36 @@ it.each(["返回", "浏览器后退"])(
   "restores the category through %s after discovery remounts",
   async (back) => {
     await mount();
-    await click("主食");
+    await click("甜点饮品");
     await click("查看菜品");
     expect(host.querySelector("a")?.getAttribute("href")).toBe(
-      "/?category=staple",
+      "/?category=drink",
     );
     if (back === "返回") await click("返回");
     else await act(() => navigate(-1));
-    expect(selected()).toBe("staple");
+    expect(selected()).toBe("drink");
   },
 );
 it("restores a direct category URL and preserves other filters when switching or clearing it", async () => {
   await mount("/?category=drink&meal=lunch");
   expect(selected()).toBe("drink");
-  await click("小吃");
-  expect(address()).toBe("/?category=snack&meal=lunch");
-  await click("今日推荐");
-  expect(selected()).toBe("");
+  await click("自助");
+  expect(address()).toBe("/?category=buffet&meal=lunch");
+  await click("美食");
+  expect(selected()).toBe("food");
   expect(address()).toBe("/?meal=lunch");
 });
 it("does not add a browser history entry for each category switch", async () => {
   await mount();
-  await click("主食");
-  await click("小吃");
+  await click("甜点饮品");
+  await click("自助");
   await act(() => navigate(-1));
   expect(address()).toBe("/nearby");
 });
-it("falls back to today's recommendations for unknown categories", async () => {
-  await mount("/?category=unknown");
-  expect(selected()).toBe("");
-});
+it.each(["snack", "unknown"])(
+  "opens the food tab for the old or unknown category %s",
+  async (category) => {
+    await mount(`/?category=${category}`);
+    expect(selected()).toBe("food");
+  },
+);

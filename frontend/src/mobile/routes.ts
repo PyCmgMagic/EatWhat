@@ -62,6 +62,11 @@ export const mobileSettingsPages: Record<
     public?: boolean;
   }
 > = {
+  "/settings/personalization": {
+    title: "个性化",
+    back: "/settings",
+    public: true,
+  },
   "/settings/privacy": { title: "隐私设置", back: "/settings" },
   "/settings/password": { title: "修改密码", back: "/settings/account" },
   "/settings/bind-phone": { title: "绑定手机号", back: "/settings/account" },

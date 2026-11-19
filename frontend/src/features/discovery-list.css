@@ -1,0 +1,130 @@
+.discovery-results {
+  min-width: 0;
+}
+.pc-discovery-sheet .discovery-tabs {
+  margin-bottom: 22px;
+}
+.mobile-home-sheet .rec-shop-list {
+  gap: 0;
+}
+.mobile-home-sheet .rec-shop-card {
+  gap: 12px;
+  padding: 18px 0;
+  border: 0;
+  border-bottom: 1px solid var(--rec-line);
+  border-radius: 0;
+  box-shadow: none;
+}
+.mobile-home-sheet .rec-shop-card:first-child {
+  padding-top: 4px;
+}
+.mobile-home-sheet .rec-shop-head {
+  grid-template-columns: auto auto minmax(0, 1fr);
+  grid-template-areas: "rank identity identity" "rank distance traits";
+  gap: 4px 10px;
+}
+.mobile-home-sheet .rec-shop-head::before {
+  content: attr(data-rank);
+  grid-area: rank;
+  align-self: start;
+  color: var(--night-muted, #c6baaf);
+  font:
+    650 27px/1.3 "Bricolage Grotesque Variable",
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.mobile-home-sheet .rec-shop-identity {
+  grid-area: identity;
+}
+.mobile-home-sheet .rec-shop-head h3 {
+  font-size: 19px;
+}
+.mobile-home-sheet .rec-shop-direction {
+  grid-area: distance;
+  justify-content: center;
+}
+.mobile-home-sheet .rec-shop-direction > svg {
+  display: none;
+}
+.mobile-home-sheet .rec-shop-traits {
+  grid-area: traits;
+  align-self: center;
+}
+.mobile-home-sheet .rec-shop-card .rec-shop-dishes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mobile-home-sheet .rec-shop-card .rec-shop-dishes[data-count] .rec-shop-dish {
+  display: grid;
+  grid-template-columns: 48% minmax(0, 1fr);
+  gap: 14px;
+}
+.mobile-home-sheet
+  .rec-shop-card
+  .rec-shop-dishes[data-count]
+  .rec-shop-dish-photo {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1.6;
+  border-radius: 16px;
+}
+.mobile-home-sheet
+  .rec-shop-card
+  .rec-shop-dishes[data-count]
+  .rec-shop-dish-image {
+  inset: 50% 0 auto;
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+}
+.mobile-home-sheet
+  .rec-shop-card
+  .rec-shop-dishes[data-count]
+  :is(.rec-shop-dish-info, .rec-shop-dish-meta) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+.mobile-home-sheet
+  .rec-shop-card
+  .rec-shop-dishes[data-count]
+  .rec-shop-dish-name {
+  display: -webkit-box;
+  white-space: normal;
+  font-size: 16px;
+}
+.mobile-home-sheet
+  .rec-shop-card
+  .rec-shop-dishes[data-count]
+  .rec-shop-dish-price {
+  align-self: start;
+}
+.mobile-home-sheet
+  .rec-shop-card
+  .rec-shop-dishes[data-count]
+  .rec-shop-dish-price
+  strong {
+  font-size: 24px;
+  font-weight: 800;
+}
+.mobile-home-sheet .rec-shop-rating {
+  padding: 0;
+  border: 0;
+}
+.discovery-status {
+  padding: 24px 8px;
+  text-align: center;
+}
+.discovery-status p {
+  margin: 0 0 8px;
+}
+.discovery-status button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--night-line, #ddd4ca);
+  border-radius: 22px;
+  color: inherit;
+  background: transparent;
+}
+

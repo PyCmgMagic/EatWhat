@@ -1,5 +1,12 @@
 import { ApiError, type RequestOptions, type Query } from "../api/client";
 import {
+  dislikableTags,
+  shopCategories,
+  tasteTags,
+  type V2Food,
+  type V2Shop,
+} from "../api/v2-vocab";
+import {
   mediaUrl,
   type Food,
   type Restaurant,
@@ -38,6 +45,7 @@ type Context = {
   v4?: DemoV4;
   user: User;
   foods: Food[];
+  blocked?: number[];
   restaurants: Restaurant[];
   tags: CustomTag[];
 };
@@ -784,7 +792,9 @@ export function handleV4(
       count: nextCount,
     };
   };
-  const restaurant = (r: Restaurant) => {
+  if (path === "/recommend/tags")
+    return ok({ categories: shopCategories, tags: tasteTags, dislikableTags });
+  const restaurant = (r: Restaurant & V2Shop) => {
     const foods = s.foods.filter((f) => f.restaurantId === r.id),
       prices = foods
         .map((f) => f.price)
@@ -812,7 +822,7 @@ export function handleV4(
       hubName: "软件园校区",
       visibleFoodCount: foods.length,
       medianPrice: median,
-      priceBand:
+      priceBand: r.priceBand !== undefined ? r.priceBand :
         median == null
           ? null
           : median < 15
@@ -846,6 +856,23 @@ export function handleV4(
       stageColor: foods[0]?.stageColor ?? null,
     };
   };
+  if (path === "/foods/recommend" && q.kind) {
+    const eligible = s.foods.filter((food: Food & V2Food) =>
+      !s.blocked?.includes(food.accountId ?? 0) &&
+      (!q.mealTime || !food.mealTimes?.length || food.mealTimes.some((meal) => meal === q.mealTime)) &&
+      (q.scene !== "delivery" || food.deliveryEnabled !== false)
+    );
+    const shops = s.restaurants.map(restaurant)
+      .filter((shop) => (shop.kind ?? "food") === q.kind && !shop.permanentlyClosed &&
+        (q.scene !== "delivery" || shop.deliveryEnabled !== false))
+      .map((shop) => ({
+        ...shop,
+        signatureFoods: eligible.filter((food) => food.restaurantId === shop.id).slice(0, 3)
+          .map((food) => ({ ...food, coverUrl: food.pictureUrl?.[0] })),
+      }));
+    const ids = new Set(shops.map((shop) => shop.id));
+    return ok({ shops, items: eligible.filter((food) => ids.has(food.restaurantId)).slice(0, Number(q.size ?? 8)) });
+  }
   if (
     [
       "/restaurant/favorites",
@@ -863,20 +890,25 @@ export function handleV4(
         (r) =>
           !q.keyword ||
           r.name?.includes(String(q.keyword)) ||
+          r.address?.includes(String(q.keyword)) ||
           r.matchedFoods.length,
       )
+      .filter((r) => !q.kind || r.kind === q.kind)
       .filter((r) => !q.priceBand || r.priceBand === q.priceBand)
-      .filter((r) => !q.recommendedOnly || (r.recommendationRate ?? 0) >= 60)
+      .filter(
+        (r) =>
+          !q.recommendedOnly ||
+          [r.dineIn, r.delivery].some(
+            (stat) => (stat?.count ?? 0) >= 3 && (stat?.rate ?? 0) >= 0.7,
+          ),
+      )
       .filter(
         (r) =>
           !q.categories ||
-          s.foods.some(
-            (f) =>
-              f.restaurantId === r.id &&
-              (Array.isArray(q.categories)
-                ? q.categories
-                : [q.categories]
-              ).includes(f.category ?? ""),
+          r.categories?.some((category) =>
+            Array.isArray(q.categories)
+              ? q.categories.includes(category)
+              : q.categories === category,
           ),
       );
     rows.sort((a, b) =>

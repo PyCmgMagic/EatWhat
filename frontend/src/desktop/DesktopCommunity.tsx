@@ -39,7 +39,7 @@ function FriendFoodPhoto({ food }: { food: Food }) {
   return (
     <span
       className="profile-overview-food-photo"
-      style={{ backgroundColor: visual.tile }}
+      style={{ backgroundColor: visual.tileSurface }}
       data-illustration={!!visual.asset || undefined}
     >
       {src && !failed ? (

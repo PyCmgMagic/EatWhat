@@ -141,10 +141,7 @@ export function DesignNav({ active }: { active: string }) {
             else if (access(true)) void nav("/publish");
           }}
         >
-          <span className="design-fab-surface" aria-hidden="true">
-            <LiquidGlass />
-            <DesignIcon name="add" size={26} />
-          </span>
+          <PublishButtonSurface />
         </button>
       }
     />
@@ -156,6 +153,15 @@ export const mainDestinations = [
   { key: "nearby", path: "/nearby", icon: "nearby", label: "附近" },
   { key: "me", path: "/me", icon: "me", label: "我的" },
 ] as const;
+
+export function PublishButtonSurface() {
+  return (
+    <span className="design-fab-surface" aria-hidden="true">
+      <LiquidGlass />
+      <DesignIcon name="add" size={26} />
+    </span>
+  );
+}
 
 function pressGlass(event: PointerEvent<HTMLElement>) {
   if (
@@ -236,8 +242,8 @@ export function DesignNavigation({
           >
             <DesignIcon
               name={
-                n.key === "home" && active === n.key
-                  ? "discoverSelected"
+                active === n.key && n.key !== "nearby"
+                  ? n.icon + "Selected"
                   : n.icon
               }
               size={22}
@@ -306,8 +312,8 @@ export function FoodTile({
   meta = "shop",
 }: {
   food: Food;
-  visual?: { asset: string; tile: string };
-  meta?: "shop" | "price" | "likes";
+  visual?: { asset: string; tileSurface: string };
+  meta?: "shop" | "price" | "likes" | "profile";
 }) {
   const m = useMobile();
   const src = mediaUrl(food.pictureUrl?.[0]);
@@ -320,7 +326,7 @@ export function FoodTile({
     >
       <div
         className="design-tile-image"
-        style={{ background: visual?.tile ?? "#F4EFEB" }}
+        style={{ background: visual?.tileSurface ?? "var(--mist)" }}
       >
         {!photo.unavailable ? (
           <FoodCover
@@ -361,7 +367,10 @@ export function FoodTile({
       </div>
       <div>
         <h3>{food.name || "未命名菜品"}</h3>
-        <span>
+        {meta === "profile" && food.price != null && (
+          <strong>{money(food.price)}</strong>
+        )}
+        <span className={meta === "profile" ? "profile-food-likes" : undefined}>
           {meta === "shop" ? (
             food.restaurantName || "餐厅信息待补充"
           ) : meta === "price" ? (
@@ -369,6 +378,7 @@ export function FoodTile({
           ) : (
             <>
               <DesignIcon name="heart" size={14} />
+              {meta === "profile" && <span className="sr-only">获赞</span>}
               {food.likesCount ?? "—"}
             </>
           )}
@@ -420,7 +430,7 @@ export function ShopRow({
       role="radio"
       aria-checked={selected}
       onClick={onSelect}
-      style={{ background: selected ? "#F8F3EE" : "transparent" }}
+      style={{ background: selected ? "var(--night-raised, #f8f3ee)" : "transparent" }}
     >
       {content}
     </button>

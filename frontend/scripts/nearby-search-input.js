@@ -64,7 +64,7 @@ async function validateNearbySearchInput(browserPage) {
         .getByText(shop.name, { exact: true });
       await row.waitFor();
       const input = page.getByRole(desktop ? "textbox" : "searchbox", {
-        name: desktop ? "附近搜店名" : "搜店名或菜名",
+        name: desktop ? "附近搜店名" : "搜店名或地址",
         exact: true,
       });
       await input.focus();

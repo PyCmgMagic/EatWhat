@@ -20,6 +20,7 @@ import { LoginLink } from "../app/auth-dialog";
 import { errorMessage } from "../api/client";
 import { Avatar, Icon } from "./kit";
 import WorkspaceSwitch from "./WorkspaceSwitch";
+import { ThemeToggle } from "../theme/AppearanceControl";
 import "./admin.css";
 
 const pages: Record<AdminModuleId, ReturnType<typeof lazy>> = {
@@ -254,6 +255,7 @@ export default function AdminApp() {
             <span>跳转到模块</span>
             <kbd>⌘K</kbd>
           </button>
+          <ThemeToggle />
           <WorkspaceSwitch mode="front" />
         </header>
         <main id="admin-main" className="admin-main" tabIndex={-1}>

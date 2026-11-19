@@ -1,13 +1,11 @@
-import WorkspaceSwitch from "../admin/WorkspaceSwitch";
+import MobileProfile from "./MobileProfile";
 import { useFeedbackState } from "../components/feedback";
-import { BRAND_SLOGAN } from "../app/brand";
 import { unreadCount } from "../api/notifications";
 import { DishIllustration } from "../components/DishIllustration";
 import { Select } from "../components/Select";
-import {
-  useRemoteConfig,
-  recommendationBatchSize,
-} from "../features/v4/Remote";
+import { DiscoveryList } from "../features/DiscoveryList";
+import { useHomeDiscovery } from "../features/useHomeDiscovery";
+import { Frown } from "lucide-react";
 import { useSendSignal } from "../features/useSendSignal";
 import { useFoodReaction } from "../features/food-reactions";
 import React, { useEffect, useRef, useState, type ReactNode } from "react";
@@ -21,7 +19,7 @@ import {
 import { useApp } from "../app/state";
 import { useProfileDraft } from "../app/profile-draft";
 import { useDebouncedSearch } from "../app/search";
-import { NearbySearchInput } from "../features/NearbySearchInput";
+import MobileNearby from "./MobileNearby";
 import { isDemo } from "../app/runtime";
 import { useArea } from "../app/area";
 import {
@@ -63,7 +61,7 @@ import {
   MobilePageSkeleton,
   Skeleton,
 } from "../components/LoadingSkeleton";
-import { demoDishes, visualFor } from "./catalog";
+import { demoDishes, stageSurface, visualFor } from "./catalog";
 import { SceneToggle } from "../features/SceneToggle";
 import { AiTagSuggest, draftPictureKeys } from "../features/AiTagSuggest";
 import { DishDuplicateHint } from "../features/DishDuplicateHint";
@@ -78,7 +76,6 @@ import { applyPhotoEdit, draftStage } from "./draft-photo-edit";
 import { photoFraming, type PhotoFraming } from "./photo-framing";
 import { createPhotoGesture, MAX_PHOTO_ZOOM } from "./photo-gesture";
 import {
-  guestDeviceId,
   mealHours,
   mealName,
   mealOptions,
@@ -91,8 +88,6 @@ import {
 import { FoodManage } from "../features/Catalog";
 import DishDetail from "./DishDetail";
 import { DishAvailabilityFields } from "../features/DishAvailability";
-import ProfileSheet from "./ProfileSheet";
-import ProfileGrowth from "../features/ProfileGrowth";
 import SheetHandle from "./SheetHandle";
 import DishPhotoPicker from "./DishPhotoPicker";
 import HomeOrbit from "./HomeOrbit";
@@ -108,24 +103,19 @@ import { instantMotion } from "../motion/runtime";
 import { createHeroOrbitScheduler, heroOrbitStep } from "../motion/hero-orbit";
 import { peopleHref } from "../features/profile-people";
 import { AccessWelcome } from "../components/AccessWelcome";
-import RestaurantMap from "../features/RestaurantMap";
 import { useDeviceLocation } from "../features/useDeviceLocation";
 import { baiduMarkerUrl } from "../features/map-geometry";
 import { RestaurantHeaderFavorite } from "../features/v4/RestaurantHeaderFavorite";
 import { RestaurantMoreActions } from "../features/RestaurantMoreActions";
 import { useReturnTo } from "../app/navigation";
-import { useDiscoveryCategory } from "../app/discovery-category";
 import { useProfileReturnTo } from "../app/profile-navigation";
 import "./restaurant-detail.css";
-import { distanceText, RecommendShopList } from "../features/RecommendShops";
+import { distanceText } from "../features/RecommendShops";
 import { FoodReportDialog } from "../features/FoodReportDialog";
 import { RestaurantCorrectionDialog } from "../features/RestaurantCorrectionDialog";
 import { useShareLink } from "../features/useShareLink";
-import { useMyProfileCover } from "../features/useMyProfileCover";
-import { MyFoodComments } from "../features/comments/Comments";
-import { useFoodPhoto } from "../features/media";
-import { FoodCover } from "../components/FoodCover";
 import { HomeSearchButton, HomeSearchOverlay } from "./HomeSearch";
+import { ThemeToggle } from "../theme/AppearanceControl";
 import { PublishButton } from "../components/PublishButton";
 
 const FoodExtras = React.lazy(() =>
@@ -220,7 +210,7 @@ export function useDesignBridge(
     nav = useNavigate(),
     location = useLocation(),
     cache = useQueryClient(),
-    { area, selectArea, campusId, selectCampus, ready = true } = useArea();
+    { area, selectArea, campusId, selectCampus } = useArea();
   // Latest draft, for callbacks that finish after later edits (photo uploads).
   const draftRef = useRef(m.draft);
   draftRef.current = m.draft;
@@ -296,30 +286,7 @@ export function useDesignBridge(
     [done, setDone] = useState(false),
     [uncertain, setUncertain] = useState(false),
     [page, setPage] = useState(1),
-    [listCategory, setListCategory] = useState(
-      screen === "G-Me" &&
-        new URLSearchParams(location.search).get("tab") === "favorites"
-        ? "收藏"
-        : "",
-    ),
     [search, setSearch] = useState("");
-  const [homeCategory, setHomeCategory] = useDiscoveryCategory();
-  const profileTab = new URLSearchParams(location.search).get("tab");
-  const category = homeScreens.has(screen)
-    ? homeCategory
-    : screen === "G-Me"
-      ? profileTab === "comments"
-        ? "评论"
-        : profileTab === "favorites"
-          ? "收藏"
-          : "上传"
-      : listCategory;
-  const setCategory = homeScreens.has(screen)
-    ? setHomeCategory
-    : setListCategory;
-  const [mapShopId, setMapShopId] = useState<number>();
-  const [dismissed, setDismissed] = useState<number[]>([]);
-  const [dismissing, setDismissing] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [avatarCrop, setAvatarCrop] = useState<Draft["images"][number] | null>(
@@ -355,85 +322,20 @@ export function useDesignBridge(
   useEffect(() => setReportOpen(false), [screen, foodId]);
   useEffect(() => setCorrectionOpen(false), [screen, shopId]);
   useEffect(() => setAvatarCrop(null), [screen]);
-  const remote = useRemoteConfig(),
-    batchSize = recommendationBatchSize(remote.data);
-  const recommendations = useQuery({
-    queryKey: [
-      "foods",
-      "mobile-recommend",
-      m.mealKey,
-      m.scene,
-      area?.gcjLng,
-      area?.gcjLat,
-      "",
-      batchSize,
-    ],
-    queryFn: async () => {
-      const feed = await api.recommendFeed(batchSize, {
-        mealTime: m.mealTime,
-        scene: m.scene,
-        gcjLng: area?.gcjLng,
-        gcjLat: area?.gcjLat,
-        deviceId: guestDeviceId(),
-      });
-      // Automatic: show the slot the backend actually used.
-      if (!m.mealTime) m.noteServedMeal(feed.mealTime);
-      return { items: feed.items, shops: feed.shops };
-    },
-    enabled: ready && browse && homeScreens.has(screen),
-  });
-  // Dine-in lists the recommended shops; the carousel shows their dishes.
-  const recommendedFoods = recommendations.data?.items?.filter(
-      (f) => !dismissed.includes(Number(f.restaurantId)),
-    ),
-    recommendedShops =
-      recommendations.data?.shops?.filter(
-        (s) => !dismissed.includes(Number(s.id)),
-      ) ?? null;
-  const categoryRecommendations = useQuery({
-    queryKey: [
-      "foods",
-      // Not the main feed's key: that one now holds dishes and shops.
-      "mobile-recommend-category",
-      m.mealKey,
-      m.scene,
-      area?.gcjLng,
-      area?.gcjLat,
-      category,
-      batchSize,
-    ],
-    queryFn: () =>
-      api.recommend(batchSize, {
-        mealTime: m.mealTime,
-        scene: m.scene,
-        gcjLng: area?.gcjLng,
-        gcjLat: area?.gcjLat,
-        category: category || undefined,
-        deviceId: guestDeviceId(),
-      }),
-    enabled: ready && browse && homeScreens.has(screen) && !!category,
-    placeholderData: keepPreviousData,
-  });
-  const recommendationCopy = useRef<HTMLElement>(null),
-    categoryContent = useRef<HTMLDivElement>(null);
-  const recommendationIndex = recommendedFoods?.length
-    ? (((controller.state.n ?? 0) % recommendedFoods.length) +
-        recommendedFoods.length) %
-      recommendedFoods.length
-    : 0;
+  const discovery = useHomeDiscovery(browse && homeScreens.has(screen));
+  const { hero: recommendations, heroFoods: recommendedFoods } = discovery;
+  const recommendationCopy = useRef<HTMLElement>(null);
+  const carouselFoods = screen === "G-HomePhoto" ? recommendedFoods.slice(0, 5) : recommendedFoods;
+  const count = carouselFoods.length;
+  const recommendationIndex = count ? (((controller.state.n ?? 0) % count) + count) % count : 0;
+  const featuredFood = carouselFoods[recommendationIndex];
   useContentMotion(
     recommendationCopy,
     reference
       ? undefined
-      : (recommendedFoods?.[recommendationIndex]?.id ?? undefined),
+      : (featuredFood?.id ?? undefined),
     0,
     "y",
-  );
-  useContentMotion(
-    categoryContent,
-    reference ? undefined : category,
-    0,
-    "opacity",
   );
   const detail = useQuery({
     queryKey: ["foods", "detail", foodId],
@@ -488,27 +390,14 @@ export function useDesignBridge(
       api.favorites(page, {
         myCustomTagIds: favoriteTag ? [favoriteTag] : undefined,
       }),
-    enabled: active && (screen === "G-TagDishes" || screen === "G-Me"),
+    enabled: active && screen === "G-TagDishes",
   });
-  const myFoods = useQuery({
-    queryKey: ["foods", "mine", page],
-    queryFn: () => api.myFoods(page),
-    enabled: active && screen === "G-Me",
-  });
-  const { cover: profileCover, fallback: defaultProfileCover } =
-    useMyProfileCover(active && screen === "G-Me");
-  const profileCoverSrc = mediaUrl(profileCover.pictureUrl?.[0]);
-  const profilePhoto = useFoodPhoto(profileCoverSrc);
-  const displayedProfileCover = profilePhoto.unavailable
-    ? defaultProfileCover
-    : profileCover;
-  const profileVisual = visualFor(displayedProfileCover, isDemo);
   const myTags = useQuery({
     queryKey: ["my-tags", page],
     queryFn: () => api.myTags(page),
     enabled:
       verified &&
-      ["G-Me", "G-MyTags", "G-PanelTag", "G-AddDish", "G-TagDishes"].includes(
+      ["G-MyTags", "G-PanelTag", "G-AddDish", "G-TagDishes"].includes(
         screen,
       ),
   });
@@ -542,7 +431,7 @@ export function useDesignBridge(
     queryKey: ["user", user?.id],
     queryFn: () => api.otherUser(user!.id!),
     enabled:
-      active && !!user?.id && ["G-Me", "G-SettingsPrivacy"].includes(screen),
+      active && !!user?.id && screen === "G-SettingsPrivacy",
   });
   const other = useQuery({
     queryKey: ["user", otherId],
@@ -609,7 +498,7 @@ export function useDesignBridge(
             page,
             pageSize: 12,
           }),
-    enabled: browse && ["G-Nearby", "G-PickShop", "G-Search"].includes(screen),
+    enabled: browse && ["G-PickShop", "G-Search"].includes(screen),
     placeholderData: keepPreviousData,
   });
   const relevant = homeScreens.has(screen)
@@ -618,36 +507,28 @@ export function useDesignBridge(
       ? detail
       : screen === "G-Detail"
         ? restaurant
-        : screen === "G-Me"
-          ? category === "收藏"
+        : screen === "G-MyTags"
+          ? myTags
+          : screen === "G-TagDishes"
             ? favorites
-            : myFoods
-          : screen === "G-MyTags"
-            ? myTags
-            : screen === "G-TagDishes"
-              ? favorites
-              : screen === "G-History"
-                ? history
-                : screen === "G-Follows"
-                  ? follows
-                  : screen === "G-Inbox"
-                    ? notifications
-                    : screen === "G-UserProfile"
-                      ? other
-                      : null;
+            : screen === "G-History"
+              ? history
+              : screen === "G-Follows"
+                ? follows
+                : screen === "G-Inbox"
+                  ? notifications
+                  : screen === "G-UserProfile"
+                    ? other
+                    : null;
   const values: Values = { ...original };
-  const carouselFoods =
-    screen === "G-HomePhoto"
-      ? (recommendedFoods?.slice(0, 5) ?? [])
-      : (recommendedFoods ?? []);
   const heroWithoutDish =
     homeScreens.has(screen) &&
     !recommendations.isPending &&
     carouselFoods.length === 0;
   // Shops without signature dishes are still listed below the empty plate.
   const homeWithoutRecommendations =
-      heroWithoutDish && !recommendedShops?.length,
-    shopsWithoutDish = heroWithoutDish && !!recommendedShops?.length;
+      heroWithoutDish && !discovery.heroHasShops,
+    shopsWithoutDish = heroWithoutDish && !!discovery.heroHasShops;
   const liveFood = detail.data;
   const reactions = useFoodReaction({
     foodId,
@@ -976,7 +857,8 @@ export function useDesignBridge(
       k = N ? ((n % N) + N) % N : 0,
       down = values.down,
       next = values.next;
-    values.s = visualFor(list[k] ?? { name: "", category: "drink" }, isDemo);
+    const visual = visualFor(list[k] ?? { name: "", category: "drink" }, isDemo);
+    values.s = { ...visual, stage: visual.stageSurface };
     values.dots = list.map((_, i) => ({
       w: i === k ? 16 : 5,
       o: i === k ? 1 : 0.4,
@@ -1424,25 +1306,8 @@ export function useDesignBridge(
       st = p.style ?? {},
       tag = n.tag,
       id = n.id;
-    // Entries for features backend v2 does not have (personal tags, push).
-    if (
-      (screen === "G-Me" && id === 28) ||
-      (screen === "G-Settings" && id === 25)
-    )
-      return null;
-    // With 我的标签 gone, 足迹 stands alone: drop the divider that separated
-    // the two entries and let it take the whole row.
-    if (
-      screen === "G-Me" &&
-      tag === "a" &&
-      n.attrs.href === "G-History.dc.html"
-    )
-      p.style = {
-        ...st,
-        boxShadow: "none",
-        paddingLeft: 0,
-        gridColumn: "1 / -1",
-      };
+    if (screen === "G-Me" && id === 1) return <MobileProfile />;
+    if (screen === "G-Settings" && id === 25) return null;
     if (screen === "G-PanelTag" && id === 5) {
       const close = () => (m.panel ? m.closePanel() : nav(`/foods/${foodId}`));
       return (
@@ -1532,105 +1397,9 @@ export function useDesignBridge(
     if (tag === "span" && clean(text) === "待接入")
       return <span {...p}>敬请期待</span>;
     if (screen === "G-Nearby" && id === 1) {
-      const restaurants = shops.data?.items ?? [];
-      const selected =
-        restaurants.find((r) => r.id === mapShopId) ?? restaurants[0];
       return (
         <div {...p} className={`${p.className ?? ""} mobile-nearby-screen`}>
-          <header className="mobile-nearby-toolbar">
-            <div className="mobile-nearby-search">
-              <DesignIcon name="search" size={20} />
-              <NearbySearchInput
-                type="search"
-                label="搜店名或菜名"
-                value={search}
-                onCommit={(value) => {
-                  setSearch(value);
-                  setPage(1);
-                }}
-              />
-            </div>
-            <button
-              type="button"
-              className="mobile-nearby-area"
-              onClick={() => m.openPanel("G-PanelPlace")}
-            >
-              <DesignIcon name="nearby" size={16} />
-              {area?.name ?? "选择查询区域"}
-              <DesignIcon name="chevronDown" size={14} />
-            </button>
-          </header>
-          <div className="mobile-nearby-map">
-            <RestaurantMap
-              restaurants={restaurants}
-              selectedId={selected?.id ?? undefined}
-              onSelect={(r) => {
-                setMapShopId(r.id ?? undefined);
-                document
-                  .getElementById(`mobile-restaurant-${r.id}`)
-                  ?.scrollIntoView({ block: "nearest" });
-              }}
-            />
-          </div>
-          <section className="mobile-nearby-sheet" aria-label="附近店铺列表">
-            <SheetHandle
-              label="附近店铺列表"
-              expandedBelow=".mobile-nearby-toolbar"
-              coveredSiblings=".mobile-nearby-map"
-            />
-            <div className="mobile-nearby-heading">
-              <h1>
-                附近 <span>{shops.data?.totalItems ?? "—"}</span>
-              </h1>
-              <Link
-                to="/restaurants/directory"
-                className="mobile-nearby-directory"
-              >
-                更多筛选 <DesignIcon name="chevronRight" size={14} />
-              </Link>
-            </div>
-            <div className="mobile-nearby-results">
-              {shops.isError && !restaurants.length ? (
-                <MobileEmpty
-                  title="附近的店暂时没加载成功"
-                  detail={errorMessage(shops.error)}
-                  action={
-                    <button
-                      type="button"
-                      className="mobile-inline-link"
-                      onClick={() => void shops.refetch()}
-                    >
-                      重新加载店铺
-                    </button>
-                  }
-                />
-              ) : shops.isPending || !restaurants.length ? (
-                shopList()
-              ) : (
-                restaurants.map((r) => (
-                  <div
-                    key={r.id}
-                    id={`mobile-restaurant-${r.id}`}
-                    className={`mobile-nearby-shop${selected?.id === r.id ? " is-selected" : ""}`}
-                  >
-                    <ShopRow
-                      shop={r}
-                      selected={selected?.id === r.id}
-                      onSelect={() => setMapShopId(r.id ?? undefined)}
-                    />
-                    <Link
-                      to={`/restaurants/${r.id}`}
-                      aria-label={`查看${r.name ?? "店铺"}`}
-                      onClick={() => r.id && m.setShopId(r.id)}
-                    >
-                      看菜单
-                    </Link>
-                  </div>
-                ))
-              )}
-              <More />
-            </div>
-          </section>
+          <MobileNearby />
         </div>
       );
     }
@@ -1804,6 +1573,7 @@ export function useDesignBridge(
           >
             <div
               className="mobile-home-hero"
+              data-food-stage={carouselFoods.length ? values.s.stageTone : undefined}
               style={{ background: values.s.stage }}
             >
               {view.children.slice(0, sheetIndex)}
@@ -1833,12 +1603,8 @@ export function useDesignBridge(
         );
       if (tag === "button" && n.attrs.onclick === "{{next}}")
         p.disabled = busy || carouselFoods.length < 2;
-      if (tag === "a" && n.attrs.href === "G-Dish.dc.html") {
-        const count = carouselFoods.length;
-        const index = (((controller.state.n ?? 0) % count) + count) % count;
-        const food = carouselFoods[index];
-        if (food?.id) p.href = `#/foods/${food.id}`;
-      }
+      if (tag === "a" && n.attrs.href === "G-Dish.dc.html" && featuredFood?.id)
+        p.href = `#/foods/${featuredFood.id}`;
       if (n.attrs.role === "group") {
         p.style = { ...p.style, top: "162px" };
         p.onPointerCancel = () => {
@@ -1848,18 +1614,22 @@ export function useDesignBridge(
         };
       }
       if (tag === "header")
-        return (
-          <>
-            <header {...p} className="mobile-home-toolbar">
-              {view.children}
-            </header>
-            {/* The bar moved into the toolbar; its footprint stays reserved. */}
-            <div className="mobile-home-search-slot" aria-hidden="true" />
-          </>
-        );
+        return <header {...p} className="mobile-home-toolbar">{view.children}</header>;
       if (tag === "div" && st.top === "392px") p.className = "mobile-home-dots";
-      if (tag === "div" && st.top === "414px")
-        p.className = "mobile-home-actions";
+      if (tag === "div" && st.top === "414px" && !heroWithoutDish) {
+        const food = featuredFood;
+        return (
+          <div {...p} className="mobile-home-actions" style={{ ...p.style, color: values.s.on }}>
+            {view.children}
+            {session && food?.restaurantId && (
+              <button type="button" className="mobile-home-dismiss" aria-label="不想吃这家"
+                title="不想吃这家" disabled={discovery.dismissing} onClick={() => void discovery.dismiss(food)}>
+                <Frown size={22} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+        );
+      }
       if (tag === "div" && st.top === "488px")
         p.className = "mobile-home-sheet";
       if (
@@ -1873,79 +1643,22 @@ export function useDesignBridge(
         n.attrs["aria-label"] === "今天吃什么" &&
         !heroWithoutDish
       ) {
-        const index =
-          (((controller.state.n ?? 0) % carouselFoods.length) +
-            carouselFoods.length) %
-          carouselFoods.length;
-        const food = carouselFoods[index];
+        const food = featuredFood;
         const distance = distanceText(food?.distanceMeters) || values.s.dist;
         return (
           <section {...p} className="mobile-home-copy" ref={recommendationCopy}>
             <h1>{food?.name}</h1>
+            <p className={`mobile-home-price${food?.price == null ? " is-unknown" : ""}`}>{money(food?.price)}</p>
             <p className="mobile-home-shop">
+              <DesignIcon name="store" size={16} />
               {food?.restaurantName || "餐厅信息待补充"}
             </p>
             {distance && (
               <p className="mobile-home-distance">
-                {area?.source === "device"
-                  ? "距你"
-                  : `距${area?.name || "所选位置"}`}{" "}
-                {distance}
+                <DesignIcon name="nearby" size={15} />
+                <span title={area?.source === "device" ? "距你" : `距${area?.name || "所选位置"}`}>{distance}</span>
               </p>
             )}
-            {session && food?.restaurantId && (
-              <button
-                type="button"
-                className="mobile-home-dismiss"
-                disabled={dismissing}
-                onClick={async () => {
-                  const targetShopId = Number(food.restaurantId);
-                  setDismissing(true);
-                  try {
-                    await api.dismissRecommendation(targetShopId);
-                    setDismissed((ids) => [...ids, targetShopId]);
-                    cache.setQueriesData<{
-                      items?: Food[];
-                      shops?: Restaurant[] | null;
-                    }>({ queryKey: ["foods", "mobile-recommend"] }, (prev) =>
-                      prev
-                        ? {
-                            ...prev,
-                            items: prev.items?.filter(
-                              (f) => Number(f.restaurantId) !== targetShopId,
-                            ),
-                            shops:
-                              prev.shops?.filter(
-                                (s) => Number(s.id) !== targetShopId,
-                              ) ?? null,
-                          }
-                        : prev,
-                    );
-                    cache.setQueriesData<Food[]>(
-                      { queryKey: ["foods", "mobile-recommend-category"] },
-                      (prev) =>
-                        prev?.filter(
-                          (f) => Number(f.restaurantId) !== targetShopId,
-                        ),
-                    );
-                    toast(
-                      `30 天内不再推荐「${food.restaurantName ?? "这家店"}」`,
-                    );
-                  } catch (e) {
-                    toast(errorMessage(e));
-                  } finally {
-                    setDismissing(false);
-                  }
-                }}
-              >
-                不想吃这家
-              </button>
-            )}
-            <p
-              className={`mobile-home-price${food?.price == null ? " is-unknown" : ""}`}
-            >
-              {money(food?.price)}
-            </p>
           </section>
         );
       }
@@ -2048,45 +1761,10 @@ export function useDesignBridge(
       }
       if (tag === "a" && n.attrs.href === "G-PanelPlace.dc.html")
         return (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              minWidth: 0,
-              flex: "1 1 0",
-              flexWrap: "wrap",
-              rowGap: 0,
-            }}
-          >
-            <a
-              {...p}
-              title={area?.name}
-              style={{
-                ...p.style,
-                minWidth: 0,
-                flex: "1 1 120px",
-                whiteSpace: "nowrap",
-              }}
-            >
-              <DesignIcon name="nearby" size={16} />
-              <span
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  minWidth: 0,
-                  lineHeight: 1.4,
-                }}
-              >
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {isDemo && area?.hubId === 1
-                    ? "软件园"
-                    : (area?.name ?? "选地点")}
-                </span>
-                <span style={{ fontSize: 12, fontWeight: 400, opacity: 0.8 }}>
-                  {m.meal}
-                </span>
-              </span>
+          <>
+            <a {...p} className="mobile-home-location" title={area?.name}>
+              <span>{isDemo && area?.hubId === 1 ? "软件园" : (area?.name ?? "选地点")}</span>
+              <small>{m.meal}</small>
               <DesignIcon name="chevronDown" size={14} />
             </a>
             <SceneToggle
@@ -2095,129 +1773,15 @@ export function useDesignBridge(
               value={m.scene}
               onChange={m.setScene}
             />
+          </>
+        );
+      if (n.attrs.role === "tablist")
+        return <DiscoveryList discovery={discovery} renderDishes={(foods) => (
+          <div className="design-food-grid mobile-data-grid">
+            {foods.map((food) => <FoodTile key={food.id} food={food} visual={visualFor(food, isDemo)} />)}
           </div>
-        );
-      if (tag === "div" && st.gridTemplateColumns?.includes("repeat(2")) {
-        if (!category && recommendedShops)
-          return (
-            <div
-              {...p}
-              ref={categoryContent}
-              className="mobile-shop-feed"
-              style={undefined}
-              aria-busy={recommendations.isFetching}
-            >
-              <RecommendShopList
-                shops={recommendedShops}
-                scene={m.scene}
-                onOpenShop={(shop) => shop.id && m.setShopId(shop.id)}
-                onOpenFood={(dish) => {
-                  if (dish.id) m.setFoodId(dish.id);
-                  if (dish.restaurantId) m.setShopId(dish.restaurantId);
-                }}
-              />
-              {!recommendedShops.length && (
-                <MobileEmpty
-                  title="暂时没有推荐"
-                  detail="换个饭点或地点，也可以逛逛附近。"
-                  illustration="yuntun"
-                  action={
-                    <button
-                      className="mobile-inline-link"
-                      disabled={recommendations.isFetching}
-                      onClick={() => void recommendations.refetch()}
-                    >
-                      <DesignIcon name="shuffle" size={16} /> 刷新推荐
-                    </button>
-                  }
-                />
-              )}
-            </div>
-          );
-        const listQuery = category ? categoryRecommendations : recommendations;
-        const list =
-            (category
-              ? categoryRecommendations.data?.filter(
-                  (f) => !dismissed.includes(Number(f.restaurantId)),
-                )
-              : recommendedFoods) ?? [],
-          shown = category
-            ? list.filter((f) => f.category === category)
-            : isDemo
-              ? [
-                  list[4],
-                  list[5],
-                  ...list.filter((_, i) => i !== 4 && i !== 5),
-                ].filter(Boolean)
-              : list;
-        return (
-          <div
-            {...p}
-            ref={categoryContent}
-            className="design-food-grid mobile-data-grid"
-            aria-busy={listQuery.isFetching}
-          >
-            {listQuery.isFetching && !shown.length && (
-              <ContentSkeleton count={2} />
-            )}
-            {shown.map((f) => (
-              <FoodTile key={f.id} food={f} visual={visualFor(f, isDemo)} />
-            ))}
-            {listQuery.isError ? (
-              <MobileEmpty
-                title="推荐暂时没端上来"
-                detail={errorMessage(listQuery.error)}
-                action={
-                  <button
-                    className="mobile-inline-link"
-                    disabled={listQuery.isFetching}
-                    onClick={() => void listQuery.refetch()}
-                  >
-                    {listQuery.isFetching ? "正在加载推荐…" : "重新加载推荐"}
-                  </button>
-                }
-              />
-            ) : (
-              !shown.length &&
-              !listQuery.isFetching && (
-                <MobileEmpty
-                  title={category ? "这个分类还没有推荐" : "暂时没有推荐"}
-                  detail="换个分类或饭点，也可以逛逛附近。"
-                  illustration="yuntun"
-                  action={
-                    <button
-                      className="mobile-inline-link"
-                      onClick={() => void listQuery.refetch()}
-                    >
-                      <DesignIcon name="shuffle" size={16} /> 刷新推荐
-                    </button>
-                  }
-                />
-              )
-            )}
-          </div>
-        );
-      }
-      if (n.attrs.role === "tab") {
-        // The prototype draws five tabs; show v2's categories in those slots.
-        const slot = ["今日推荐", "主食", "小吃", "饮品", "甜品"].indexOf(
-          clean(text),
-        );
-        const tab = homeTabs[slot];
-        if (tab) {
-          const key = tab.key;
-          p.onClick = () => setCategory(key);
-          p["aria-selected"] = category === key;
-          p.style = {
-            ...st,
-            fontWeight: category === key ? 900 : 400,
-            fontSize: "15px",
-            color: category === key ? "#231C18" : "#6E625B",
-            whiteSpace: "nowrap",
-          };
-          return React.createElement(tag, p, tab.name);
-        }
-      }
+        )} />;
+      if (tag === "div" && st.gridTemplateColumns?.includes("repeat(2")) return null;
       if (tag === "a" && String(n.attrs["aria-label"]).startsWith("通知")) {
         p["aria-label"] = `通知，${unread.data ?? 0} 条未读`;
         // Search entry sits beside the bell, in the toolbar's top-right corner.
@@ -2228,7 +1792,8 @@ export function useDesignBridge(
               open={!!controller.state.searchOpen}
               onOpen={() => controller.setState({ searchOpen: true })}
             />
-            {React.createElement(tag, p, ...view.children)}
+            <ThemeToggle />
+            {React.createElement(tag, { ...p, className: "mobile-home-inbox" }, ...view.children, "消息")}
           </>
         );
       }
@@ -2673,7 +2238,7 @@ export function useDesignBridge(
             {...p}
             style={{
               ...st,
-              background: stage,
+              background: stageSurface(stage),
               color: darkStage ? "#fff" : undefined,
             }}
           >
@@ -2731,6 +2296,27 @@ export function useDesignBridge(
         />
       );
     if (screen === "G-Settings") {
+      if (tag === "nav")
+        return (
+          <nav {...p} className="mobile-settings-menu">
+            {view.children}
+          </nav>
+        );
+      if (tag === "a" && n.attrs.href === "G-SettingsAbout.dc.html")
+        return (
+          <>
+            <Link
+              className="mobile-personalization-link"
+              to="/settings/personalization"
+              style={p.style}
+            >
+              <DesignIcon name="eye" size={22} />
+              <span>个性化</span>
+              <DesignIcon name="chevronRight" size={20} />
+            </Link>
+            <a {...p}>{view.children}</a>
+          </>
+        );
       if (tag === "a" && n.attrs.href === "G-EditProfile.dc.html") {
         const avatar = mediaUrl(user?.avatar);
         return (
@@ -2940,305 +2526,6 @@ export function useDesignBridge(
       return <span {...p}>—</span>;
     if (screen === "G-Search" && tag === "span" && id === 27)
       return <span {...p}>{shops.data?.totalItems ?? "—"}</span>;
-    if (screen === "G-Me") {
-      if (id === 1) {
-        p.className += " mobile-profile-screen";
-        p.style = {
-          ...st,
-          "--profile-stage": profileVisual.stage,
-          "--profile-on": profileVisual.on,
-        };
-      }
-      if (tag === "div" && st.top === "0" && st.height === "400px")
-        return (
-          <div {...p} className="mobile-profile-stage">
-            <div
-              className="mobile-profile-cover"
-              data-cover-kind={
-                displayedProfileCover === defaultProfileCover
-                  ? "illustration"
-                  : "photo"
-              }
-              aria-hidden="true"
-            >
-              {displayedProfileCover === defaultProfileCover ? (
-                <img
-                  src={mediaUrl(defaultProfileCover.pictureUrl?.[0])}
-                  alt=""
-                  draggable={false}
-                />
-              ) : (
-                <FoodCover
-                  src={mediaUrl(displayedProfileCover.pictureUrl?.[0])}
-                  crop={displayedProfileCover.coverCrop}
-                  alt=""
-                  onError={
-                    displayedProfileCover === defaultProfileCover
-                      ? undefined
-                      : profilePhoto.onError
-                  }
-                />
-              )}
-            </div>
-          </div>
-        );
-      if (tag === "div" && st.top === "372px")
-        return <ProfileSheet>{view.children.slice(1)}</ProfileSheet>;
-      if (tag === "section" && st.top === "100px")
-        return (
-          <section {...p} className="mobile-profile-identity">
-            {view.children[0]}
-            <div className="mobile-profile-title-row">
-              {view.children[1]}
-              <ProfileGrowth compact />
-            </div>
-            {view.children.slice(2)}
-          </section>
-        );
-      if (tag === "header" && id === 4)
-        return (
-          <header {...p}>
-            {/* 后台入口排在第一位，其次是编辑资料、设置。 */}
-            <WorkspaceSwitch
-              className="mobile-profile-admin-link"
-              iconSize={24}
-            />
-            {view.children[0]}
-            {view.children[1]}
-          </header>
-        );
-      if (tag === "a" && id === 5)
-        return (
-          <a {...p} aria-label="编辑资料">
-            <DesignIcon name="edit" size={24} />
-          </a>
-        );
-      if (tag === "a" && id === 6)
-        return (
-          <a {...p}>
-            <DesignIcon name="settings" size={24} />
-          </a>
-        );
-      if (id === 27)
-        return (
-          <div className="mobile-profile-shortcuts">
-            <Link to="/favorites">
-              <DesignIcon name="bookmark" size={20} />
-              <span>
-                <strong>收藏夹</strong>
-                <span>收藏的菜和店</span>
-              </span>
-            </Link>
-            <Link to="/likes">
-              <DesignIcon name="heart" size={20} />
-              <span>
-                <strong>赞过的菜</strong>
-                <span>点过赞的菜品</span>
-              </span>
-            </Link>
-            <Link to="/history">
-              <DesignIcon name="history" size={20} />
-              <span>
-                <strong>足迹</strong>
-                <span>看过的菜和店</span>
-              </span>
-            </Link>
-          </div>
-        );
-      if (tag === "div" && st.marginTop === "18px")
-        p.className = "mobile-profile-statistics";
-      // The application shell owns the same floating navigation as home.
-      if (
-        n.children.some(
-          (child) => typeof child !== "string" && child.attrs.name === "G-Nav",
-        )
-      )
-        return null;
-      if (tag === "span" && clean(text) === "12 个，用来给菜分类")
-        return (
-          <span {...p}>{myTags.data?.totalItems ?? "—"} 个，用来给菜分类</span>
-        );
-      if (tag === "h1")
-        return (
-          <h1 {...p} className="mobile-profile-name">
-            {user?.displayName || "同学"}
-          </h1>
-        );
-      if (tag === "p" && clean(text) === "只吃好吃的，也只推荐好吃的")
-        return (
-          <p {...p} className="mobile-profile-signature">
-            {user?.signature || BRAND_SLOGAN}
-          </p>
-        );
-      if (tag === "span" && clean(text) === "天" && st.borderRadius === "50%") {
-        const avatar = mediaUrl(user?.avatar);
-        return (
-          <span
-            {...p}
-            className="mobile-profile-avatar"
-            style={{ ...st, overflow: "hidden" }}
-          >
-            {avatar ? (
-              <img
-                src={avatar}
-                alt="我的头像"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            ) : (
-              user?.displayName?.slice(0, 1) || "食"
-            )}
-          </span>
-        );
-      }
-      if (tag === "span" && clean(text) === "37")
-        return (
-          <span {...p}>
-            {id === 20
-              ? (personal.data?.fansCount ?? "—")
-              : (personal.data?.followingsCount ?? "—")}
-          </span>
-        );
-      if (tag === "span" && clean(text) === "最近看过 26 家")
-        return <span {...p}>看过的店和菜</span>;
-
-      if (tag === "span" && ["187", "42", "16", "23"].includes(clean(text))) {
-        const label = clean(text);
-        const val =
-          label === "187"
-            ? personal.data?.earnedLikes
-            : label === "42"
-              ? personal.data?.uploadedFoodsCount
-              : label === "16"
-                ? personal.data?.fansCount
-                : personal.data?.followingsCount;
-        return (
-          <span {...p}>
-            {personal.isPending ? (
-              <span className="ew-inline-skeleton" aria-label="正在加载统计" />
-            ) : (
-              (val ?? "—")
-            )}
-          </span>
-        );
-      }
-      if (
-        (tag === "button" && [39, 41, 43].includes(id)) ||
-        n.attrs.role === "tab"
-      ) {
-        p.onClick = () => {
-          const params = new URLSearchParams(location.search);
-          params.delete("page");
-          params.set(
-            "tab",
-            id === 43 ? "comments" : id === 41 ? "favorites" : "uploads",
-          );
-          nav(`/me?${params}`, { replace: true });
-          setPage(1);
-        };
-        p["aria-selected"] =
-          category === (id === 43 ? "评论" : id === 41 ? "收藏" : "上传");
-        p.style = {
-          ...st,
-          fontWeight: p["aria-selected"] ? 900 : 400,
-          color: p["aria-selected"] ? "#231C18" : "#6E625B",
-        };
-        if (id === 43) return <button {...p}>评论</button>;
-        return (
-          <button {...p}>
-            {id === 41 ? "收藏" : "上传"}
-            <span
-              style={{
-                fontFamily: "'Bricolage Grotesque Variable'",
-                fontSize: 13,
-                fontWeight: 800,
-              }}
-            >
-              {id === 41
-                ? (favorites.data?.totalItems ?? "—")
-                : (myFoods.data?.totalItems ?? "—")}
-            </span>
-          </button>
-        );
-      }
-      if (tag === "div" && id === 45) {
-        if (category === "评论")
-          return (
-            <div className="mobile-profile-comments">
-              <MyFoodComments
-                emptyState={
-                  <div className="mobile-profile-comments-empty">
-                    <span>
-                      <DesignIcon name="comment" size={34} />
-                    </span>
-                    <h2>还没写过评论</h2>
-                    <Link className="design-button light" to="/">
-                      去发现
-                    </Link>
-                  </div>
-                }
-              />
-            </div>
-          );
-        const query = category === "收藏" ? favorites : myFoods;
-        if (query.isPending)
-          return (
-            <div {...p} className="design-food-grid mobile-data-grid">
-              <ContentSkeleton kind="cards" count={2} />
-            </div>
-          );
-        if (query.isError && !query.data)
-          return (
-            <div {...p} className="design-food-grid mobile-data-grid">
-              <MobileEmpty
-                title="暂时没能加载这些菜"
-                detail={errorMessage(query.error)}
-                action={
-                  <PrimaryButton light onClick={() => void query.refetch()}>
-                    重新加载
-                  </PrimaryButton>
-                }
-              />
-            </div>
-          );
-        const list = category.includes("收藏")
-          ? favorites.data?.items
-          : myFoods.data?.items;
-        return (
-          <div {...p} className="design-food-grid mobile-data-grid">
-            {list?.map((f) => (
-              <FoodTile
-                key={f.id}
-                food={f}
-                meta="likes"
-                visual={visualFor(f, isDemo)}
-              />
-            ))}
-            {list?.length === 0 && (
-              <MobileEmpty
-                illustration={category === "收藏" ? "yangzhi" : "yuntun"}
-                title={
-                  category === "收藏" ? "还没有收藏的菜" : "还没有分享过菜"
-                }
-                detail={
-                  category === "收藏"
-                    ? "去发现，收下你想尝的好味道。"
-                    : "分享今天吃到的好味道，记下你的第一餐。"
-                }
-                action={
-                  <Link
-                    className="design-button light"
-                    to={category === "收藏" ? "/" : "/publish"}
-                  >
-                    {category === "收藏" ? "去发现" : "分享一道菜"}
-                  </Link>
-                }
-              />
-            )}
-            <More />
-          </div>
-        );
-      }
-    }
     if (
       screen === "G-TagDishes" &&
       tag === "div" &&
@@ -3253,7 +2540,7 @@ export function useDesignBridge(
             style={{
               gridColumn: "1/-1",
               fontSize: 12,
-              color: "#6E625B",
+              color: "var(--ink-muted)",
               margin: 0,
             }}
           >
@@ -3465,17 +2752,6 @@ export function useDesignBridge(
       clean(text) === "其他校区开放后会出现在这里"
     )
       return <span {...p}>校区用于推荐，附近区域用于查找店铺。</span>;
-    if (
-      screen === "G-PanelFilter" &&
-      tag === "a" &&
-      clean(text).startsWith("看 ")
-    )
-      p.onClick = (e: any) => {
-        e.preventDefault();
-        m.notice(
-          "当前餐厅搜索不支持价格、评分或只看收藏筛选，选择不会作为已生效条件。",
-        );
-      };
     if (screen === "G-MyTags" && tag === "a" && scope.t?.id)
       p.onClick = (e: any) => {
         e.preventDefault();
@@ -3556,11 +2832,9 @@ export function useDesignBridge(
 
   function More() {
     const query = (
-      ["G-Nearby", "G-PickShop", "G-Search"].includes(screen)
+      ["G-PickShop", "G-Search"].includes(screen)
         ? shops
-        : screen === "G-Me" && category === "收藏"
-          ? favorites
-          : relevant
+        : relevant
     ) as { data?: { hasNext?: boolean }; isFetching?: boolean } | null;
     const hasNext = !!query?.data?.hasNext;
     if (!hasNext && page <= 1) return null;
@@ -3778,12 +3052,7 @@ export function useDesignBridge(
       return;
     }
     if (homeScreens.has(screen) && target === "G-Dish.dc.html") {
-      const list = carouselFoods,
-        k = list.length
-          ? (((controller.state.n ?? 0) % list.length) + list.length) %
-            list.length
-          : 0;
-      const f = list[k];
+      const f = featuredFood;
       if (f?.id) {
         m.setFoodId(f.id);
         if (f.restaurantId) m.setShopId(f.restaurantId);
@@ -3907,7 +3176,6 @@ export function useDesignBridge(
     !denied &&
     relevant?.isError &&
     !relevant.data &&
-    screen !== "G-Me" &&
     !homeScreens.has(screen)
   )
     before = (
@@ -3919,7 +3187,7 @@ export function useDesignBridge(
         </PrimaryButton>
       </div>
     );
-  if (accountPending || (!denied && screen !== "G-Me" && relevant?.isPending))
+  if (accountPending || (!denied && relevant?.isPending))
     before = <MobilePageSkeleton screen={screen} />;
   if (!denied && screen === "G-Crop" && !photoEdit)
     before = (
@@ -4058,23 +3326,13 @@ export function useDesignBridge(
     hideContent:
       !!denied ||
       accountPending ||
-      (screen !== "G-Me" && !!relevant?.isPending) ||
-      (screen !== "G-Me" &&
-        !!relevant?.isError &&
-        !relevant.data &&
-        !homeScreens.has(screen)) ||
+      !!relevant?.isPending ||
+      (!!relevant?.isError && !relevant.data && !homeScreens.has(screen)) ||
       (screen === "G-Crop" && !photoEdit),
   };
 }
 // v2 dish categories, in the order of the publish chips.
 const categoryCodes = foodCategories.map((c) => c.id as string);
-const homeTabs = [
-  { key: "", name: "今日推荐" },
-  // Four slots: the prototype's staple / snack / drink picks, plus v2's 菜.
-  ...foodCategories
-    .filter((c) => ["staple", "side_dish", "snack", "drink"].includes(c.id))
-    .map((c) => ({ key: c.id as string, name: c.name })),
-];
 function resolveHref(
   target: string,
   m: ReturnType<typeof useMobile>,

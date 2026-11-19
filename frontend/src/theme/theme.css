@@ -1,0 +1,483 @@
+/* Dark-only tokens. Legacy declarations retain their original light fallback. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --night-canvas: #0f0f0e;
+  --night-surface: #1a1918;
+  --night-layer: #22211f;
+  --night-raised: #2b2927;
+  --night-line: rgb(255 250 245 / 10%);
+  --night-outline: rgb(255 248 240 / 26%);
+  --night-ink: #f5f2ed;
+  --night-muted: #9c968f;
+  --night-action: #2b2927;
+  --night-gold-soft: #2c2418;
+  --night-gold-solid: #47361a;
+  --night-gold-text: #f3ca74;
+  --night-red-soft: #2e1e1d;
+  --night-red-solid: #5c2723;
+  --night-red-text: #ff9f8e;
+  --night-green-soft: #1b281e;
+  --night-green-solid: #28452f;
+  --night-green-text: #9bd6a4;
+  --night-blue-soft: #1b2530;
+  --night-blue-solid: #263c54;
+  --night-blue-text: #9bcaf5;
+  /* Keep food stages vibrant and appetizing; tone card tiles into dark slate. */
+  --stage-shade: 0%;
+  --tile-shade: 86%;
+  --night-stage-ink: initial;
+  --night-glass: initial;
+  --shadow-float:
+    0 0 0 1px rgb(255 250 245 / 8%),
+    0 12px 32px rgb(0 0 0 / 50%);
+  --shadow-button:
+    inset 0 1px 0 rgb(255 255 255 / 14%),
+    0 2px 8px rgb(0 0 0 / 35%);
+  --shadow-button-pressed:
+    inset 0 1px 0 rgb(255 255 255 / 6%),
+    0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-button-light:
+    inset 0 0 0 1px rgb(255 250 245 / 11%),
+    inset 0 1px 0 rgb(255 255 255 / 6%),
+    0 2px 6px rgb(0 0 0 / 28%);
+  --shadow-button-light-pressed:
+    inset 0 0 0 1px rgb(255 250 245 / 8%),
+    0 1px 2px rgb(0 0 0 / 24%);
+  --shadow-button-outline:
+    inset 0 0 0 1.5px rgb(255 250 245 / 26%),
+    0 1px 3px rgb(0 0 0 / 24%);
+  --shadow-sheet: 0 -10px 28px rgb(0 0 0 / 40%);
+}
+
+/* The recommendation and the dish it opens share the food's chosen colours.
+   The initial values select the foreground and glass paired with that dish. */
+[data-food-stage] {
+  --stage-shade: 0%;
+  --night-stage-ink: initial;
+  --night-glass: initial;
+}
+:root[data-theme="dark"] [data-food-stage="deep"] :is(
+  .pc-hero-secondary, .mobile-home-actions button, .dish-icon-button, .mobile-home-dismiss
+) {
+  /* White labels need a darker surface on tomato, red oil and soy. */
+  --stage-ghost: rgb(35 28 24 / 18%);
+  --night-glass: rgb(35 28 24 / 18%);
+  background-color: rgb(35 28 24 / 18%);
+}
+:root[data-theme="dark"] [data-food-stage] :is(
+  .pc-eyebrow, .pc-hero-dismiss:not(:disabled), .pc-hero-distance,
+  .pc-hero-counter > span:last-child, .mobile-home-distance,
+  .mobile-home-dismiss:not(:disabled)
+) {
+  opacity: 1;
+}
+
+.theme-toggle {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.theme-toggle > svg {
+  position: absolute;
+  width: 21px;
+  height: 21px;
+  stroke-width: 1.8;
+  transition:
+    opacity 160ms ease,
+    transform 200ms ease-out;
+}
+.theme-toggle[aria-checked="false"] > svg:first-child,
+.theme-toggle[aria-checked="true"] > svg:last-child {
+  opacity: 0;
+  transform: rotate(-35deg) scale(0.65);
+}
+@media (hover: hover) {
+  .theme-toggle:hover {
+    background: color-mix(in srgb, currentColor 9%, transparent);
+  }
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+/* --- Dark Mode Refined Surface, Stage & Interactive Polish --- */
+
+:root[data-theme="dark"] :focus-visible {
+  box-shadow: 0 0 0 2px var(--night-canvas);
+}
+
+/* Header, navigation pills & search */
+:root[data-theme="dark"] .pc-header {
+  background: rgb(20 19 18 / 92%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+:root[data-theme="dark"] .pc-brand-symbol,
+:root[data-theme="dark"] .pc-user-avatar {
+  background: #f5c351;
+  color: #1c1610;
+}
+:root[data-theme="dark"] .pc-header nav {
+  background: #121110;
+  box-shadow: inset 0 0 0 1px rgb(255 250 245 / 7%);
+}
+:root[data-theme="dark"] .pc-nav-tabs > .pc-tab-indicator {
+  background: #2b2927;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 10%),
+    0 2px 6px rgb(0 0 0 / 38%);
+}
+:root[data-theme="dark"] .pc-header-search {
+  background: #121110;
+  box-shadow: inset 0 0 0 1px rgb(255 250 245 / 9%);
+}
+:root[data-theme="dark"] .pc-header-search .pc-header-search-submit {
+  background: #2b2927;
+  color: var(--night-ink);
+}
+:root[data-theme="dark"] .pc-header-search .pc-header-search-submit:hover {
+  background: #3a3835;
+}
+:root[data-theme="dark"] .pc-icon-button:hover {
+  background: var(--night-layer);
+}
+:root[data-theme="dark"] .pc-account-popover,
+:root[data-theme="dark"] .pc-header-search-panel {
+  box-shadow:
+    0 0 0 1px rgb(255 250 245 / 8%),
+    0 20px 48px rgb(0 0 0 / 60%);
+}
+
+/* Inverted warm-ivory primary CTAs for crisp hierarchy on dark surfaces */
+:root[data-theme="dark"] :is(
+  .pc-button:not(.light),
+  .pp-button.is-ink,
+  .ew-admin-btn.is-primary,
+  .pc-search-field > button
+) {
+  background: linear-gradient(180deg, #faf7f2, #ebe4d9);
+  color: #161412 !important;
+  border-color: transparent;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 72%),
+    0 4px 12px rgb(0 0 0 / 34%);
+}
+:root[data-theme="dark"] :is(
+  .pc-button:not(.light),
+  .pp-button.is-ink,
+  .ew-admin-btn.is-primary,
+  .pc-search-field > button
+):hover:not(:disabled) {
+  background: linear-gradient(180deg, #ffffff, #f3ede4);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 86%),
+    0 6px 18px rgb(0 0 0 / 42%);
+}
+:root[data-theme="dark"] .pc-button.light {
+  background: var(--night-raised);
+  color: var(--night-ink) !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 250 245 / 11%),
+    inset 0 1px 0 rgb(255 255 255 / 6%),
+    0 2px 8px rgb(0 0 0 / 28%);
+}
+:root[data-theme="dark"] .pc-button.light:hover:not(:disabled) {
+  background: #353330;
+}
+:root[data-theme="dark"] .pc-dish-like[aria-pressed="true"] {
+  background: var(--night-red-soft);
+  color: var(--night-red-text) !important;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 159 142 / 28%),
+    0 2px 8px rgb(0 0 0 / 25%);
+}
+
+/* Scene toggle on dark surfaces */
+:root[data-theme="dark"] .ew-scene-toggle:not([data-tone="stage"]) {
+  background: var(--night-surface);
+  border-color: var(--night-line);
+}
+:root[data-theme="dark"] .ew-scene-toggle:not([data-tone="stage"]) > .ew-scene-thumb {
+  background: #f4f0e8;
+}
+:root[data-theme="dark"]
+  .ew-scene-toggle:not([data-tone="stage"])
+  .ew-scene-thumb-labels > span {
+  color: #161412;
+}
+
+/* Vibrant food stages & stage-internal details */
+:root[data-theme="dark"] :is(
+  [data-food-stage] .pc-plate.is-photo,
+  .dish-plate:not(.is-illustration)
+) {
+  border-color: #fff;
+  background: #fff;
+}
+:root[data-theme="dark"] .pc-drag-hint {
+  z-index: 3;
+  pointer-events: none;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 32%);
+  color: inherit;
+  opacity: 0.85;
+  backdrop-filter: blur(8px);
+}
+:root[data-theme="dark"] [data-food-stage="deep"] .pc-drag-hint {
+  background: rgb(0 0 0 / 24%);
+}
+
+/* Profile hero keeps vibrant food stage once loaded, dark skeleton while loading */
+:root[data-theme="dark"] .profile-overview-hero[aria-busy="true"] {
+  background: var(--night-layer);
+  color: var(--night-ink);
+}
+:root[data-theme="dark"] .profile-overview-hero[aria-busy="true"] .profile-overview-cover {
+  background: var(--night-raised);
+  border-color: var(--night-line);
+}
+:root[data-theme="dark"] .profile-overview-hero:not([aria-busy="true"]) .profile-overview-edit {
+  background: rgb(255 253 248 / 86%);
+  border-color: rgb(255 255 255 / 58%);
+  color: #231c18 !important;
+}
+:root[data-theme="dark"]
+  .profile-overview-hero:not([aria-busy="true"])
+  .profile-overview-edit:hover {
+  background: #fffdf8;
+}
+:root[data-theme="dark"] .profile-overview-hero .profile-overview-avatar {
+  background: #231c18;
+  color: #ffce47;
+  border-color: rgb(255 255 255 / 86%);
+}
+:root[data-theme="dark"]
+  .profile-overview-hero
+  .profile-overview-cover:not([data-cover-kind="illustration"]) {
+  border-color: rgb(255 255 255 / 88%);
+  background: rgb(255 255 255 / 32%);
+}
+
+/* Restaurant hero stays warm golden to match food stages */
+:root[data-theme="dark"] .pc-restaurant-hero {
+  background: linear-gradient(120deg, #f3c46e 0%, #f6d385 100%);
+  color: #231c18;
+}
+:root[data-theme="dark"] .pc-restaurant-hero .pc-eyebrow {
+  color: #6e4c1f;
+}
+:root[data-theme="dark"] .pc-restaurant-stat {
+  background: rgb(255 255 255 / 26%);
+  border-color: rgb(255 255 255 / 38%);
+}
+:root[data-theme="dark"] .pc-restaurant-stat span {
+  color: #5d431f;
+}
+:root[data-theme="dark"] .pc-restaurant-actions .pc-button:not(.light) {
+  background: linear-gradient(180deg, #3b312b, #231c18);
+  color: #fff !important;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 16%),
+    0 8px 20px rgb(35 28 24 / 20%);
+}
+:root[data-theme="dark"] .pc-restaurant-actions .pc-button.light {
+  background: rgb(255 253 248 / 86%);
+  color: #231c18 !important;
+  box-shadow: 0 4px 12px rgb(35 28 24 / 10%);
+}
+
+/* Clean physical transition where dark sheets overlap bright stages */
+:root[data-theme="dark"] :is(
+  .pc-discovery-sheet:not(.is-standalone),
+  .pc-content-sheet:not(.is-standalone),
+  .mobile-home-sheet,
+  .dish-sheet
+) {
+  box-shadow:
+    0 -10px 30px rgb(0 0 0 / 34%),
+    inset 0 1px 0 rgb(255 250 245 / 9%);
+}
+
+/* Food card tiles: deep slate with whisper of dish tint */
+:root[data-theme="dark"] :is(
+  .pc-food-card-image,
+  .ew-food-photo,
+  .mobile-food-card-photo,
+  .rec-shop-dish-photo
+) {
+  box-shadow: inset 0 0 0 1px rgb(255 250 245 / 7%);
+}
+:root[data-theme="dark"] .pc-food-card-image > .pc-plate.is-photo {
+  border-color: rgb(255 250 245 / 20%);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 45%);
+}
+:root[data-theme="dark"] .pc-card-category {
+  background: rgb(15 15 14 / 68%);
+  color: var(--night-ink);
+  border: 1px solid rgb(255 250 245 / 12%);
+  backdrop-filter: blur(8px);
+}
+:root[data-theme="dark"] .pp-pick {
+  border: 1px solid var(--night-line);
+}
+:root[data-theme="dark"] .pp-pick .pp-button.is-quiet {
+  border-color: var(--night-line);
+  background: var(--night-raised);
+}
+:root[data-theme="dark"] .pp-pick .pp-button.is-quiet:hover {
+  background: #353330;
+}
+:root[data-theme="dark"] .pp-pick-photo {
+  box-shadow:
+    0 0 0 6px rgb(255 250 245 / 10%),
+    0 12px 26px rgb(0 0 0 / 42%);
+}
+:root[data-theme="dark"] .pp-pick-loading > span {
+  background: rgb(255 250 245 / 8%);
+}
+
+/* Mobile Liquid Glass dark navigation */
+:root[data-theme="dark"] .design-navigation .design-glass-backdrop,
+:root[data-theme="dark"] .design-navigation .design-fab-surface > .design-glass-backdrop {
+  background: var(--nav-tint);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 14%),
+    inset 0 0 0 0.75px rgb(255 255 255 / 10%);
+  -webkit-backdrop-filter: var(--nav-dark-filter, blur(12px) brightness(0.48) saturate(1.2));
+  backdrop-filter: var(--nav-dark-filter, blur(12px) brightness(0.48) saturate(1.2));
+}
+:root[data-theme="dark"] .design-navigation nav::before,
+:root[data-theme="dark"] .design-navigation .design-fab-surface::before {
+  background: linear-gradient(
+      160deg,
+      rgb(255 255 255 / 22%),
+      rgb(255 255 255 / 5%) 48%,
+      rgb(255 255 255 / 14%)
+    )
+    border-box;
+}
+:root[data-theme="dark"] .design-navigation nav::after,
+:root[data-theme="dark"] .design-navigation .design-fab-surface::after {
+  background: radial-gradient(
+    ellipse at var(--glass-light-x) var(--glass-light-y),
+    rgb(255 255 255 / 14%),
+    transparent 62%
+  );
+}
+:root[data-theme="dark"] .design-navigation .design-fab-surface {
+  box-shadow:
+    0 10px 26px rgb(0 0 0 / 50%),
+    0 2px 6px rgb(0 0 0 / 35%),
+    0 0 0 0.75px rgb(255 255 255 / 10%);
+}
+:root[data-theme="dark"] .design-navigation .design-icon {
+  filter: drop-shadow(0 1px 1px #191714) drop-shadow(0 0 1px #191714);
+}
+:root[data-theme="dark"] .design-navigation nav a {
+  color: var(--night-ink);
+  text-shadow: 0 1px 2px #191714;
+}
+:root[data-theme="dark"] .design-navigation nav a[aria-current="page"] {
+  color: var(--night-ink);
+}
+:root[data-theme="dark"] .design-navigation .design-nav-lens {
+  background: rgb(255 255 255 / 12%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 18%),
+    inset 0 0 0 0.75px rgb(255 255 255 / 10%);
+}
+:root[data-theme="dark"] .design-navigation .design-nav-lens::before {
+  border-color: transparent;
+}
+
+/* Accents, active indicators & switches */
+:root[data-theme="dark"] .pc-motion-tabs:not(.pc-nav-tabs) > .pc-tab-indicator,
+:root[data-theme="dark"] .profile-overview-tabs > a[aria-current="page"]::after,
+:root[data-theme="dark"] .ew-admin-meter i,
+:root[data-theme="dark"] .ew-admin-columns li[data-last] .ew-admin-column-bar {
+  background: var(--night-gold-text);
+}
+:root[data-motion-input="keyboard"] .theme-toggle > svg {
+  transition: none;
+}
+:root[data-theme="dark"] .privacy-settings-switch-row input::before,
+:root[data-theme="dark"] .ew-admin-toggle i {
+  background: var(--night-ink);
+}
+:root[data-theme="dark"] .privacy-settings-switch-row input:checked,
+:root[data-theme="dark"] .ew-admin-toggle[aria-checked="true"] {
+  background: #b88b3b;
+}
+
+/* Capture the final stage colours. The carousel's own 500ms colour tween
+   would otherwise keep playing underneath the snapshot fade. */
+html[data-theme-transition]
+  :is(
+    .pc-hero,
+    .mobile-home-art,
+    .mobile-home-toolbar,
+    .mobile-home-copy,
+    .profile-overview-hero,
+    .mobile-edit-stage
+  ) {
+  transition: none !important;
+}
+html[data-theme-transition]::view-transition {
+  pointer-events: none;
+}
+html[data-theme-transition]::view-transition-group(root) {
+  animation-duration: 200ms;
+}
+html[data-theme-transition]::view-transition-old(root) {
+  animation: none;
+}
+html[data-theme-transition]::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation: theme-appear 200ms ease-out both;
+}
+@keyframes theme-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* Browsers without snapshot transitions can still ease the large surfaces. */
+html[data-theme-changing]
+  :is(
+    body,
+    #root,
+    .pc-app,
+    .pc-header,
+    .mobile-viewport,
+    .design-screen,
+    .mobile-home-hero,
+    .mobile-home-sheet,
+    .admin-app,
+    .settings-home
+  ) {
+  transition:
+    background-color 200ms ease-out,
+    color 200ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle > svg {
+    transition: none;
+  }
+  html[data-theme-transition]::view-transition-group(root),
+  html[data-theme-transition]::view-transition-new(root) {
+    animation-duration: 0s;
+  }
+}

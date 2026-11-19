@@ -4,6 +4,7 @@ import { createApiProxy } from "./config/api-proxy.ts";
 import { createUploadProxy } from "./config/upload-proxy.ts";
 import { UPLOAD_PROXY_PREFIX } from "./src/api/upload-target.ts";
 import { prototypeData } from "./config/prototype-data.ts";
+import { themeStyles } from "./config/theme-styles.ts";
 
 export default defineConfig(({ mode, command, isPreview }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -16,6 +17,7 @@ export default defineConfig(({ mode, command, isPreview }) => {
   const uploadProxy = createUploadProxy(uploadTarget);
   return {
     plugins: [react(), prototypeData()],
+    css: { postcss: { plugins: [themeStyles] } },
     define: {
       "import.meta.env.DEV_UPLOAD_TARGET": JSON.stringify(uploadTarget),
     },

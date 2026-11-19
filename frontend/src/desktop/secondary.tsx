@@ -19,6 +19,7 @@ export const secondaryTitles: Record<string, string> = {
   "/notifications": "通知中心",
   "/verify": "学生认证",
   "/settings/account": "账号与安全",
+  "/settings/personalization": "个性化",
   "/settings/password": "修改密码",
   "/settings/privacy": "隐私设置",
   "/settings/preferences": "口味偏好",

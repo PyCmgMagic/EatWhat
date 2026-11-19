@@ -8,7 +8,7 @@ import {
 import { demoGrowth, demoGrowthProgress, type DemoGrowth } from "./growth";
 import type { Transport, Query } from "../api/client";
 import { ApiError } from "../api/client";
-import type { V2Food } from "../api/v2-vocab";
+import type { V2Food, V2Shop } from "../api/v2-vocab";
 import type {
   Food,
   Restaurant,
@@ -50,13 +50,19 @@ const seedNames = demoDishes.map((d, i) => [
   i === 0 ? 143 : 127,
   tagWords[i],
 ]) as any[];
-const restaurants: Restaurant[] = demoDishes
+const seedShopCategories: Record<number, string[]> = {
+  1: ["面点快餐"], 2: ["米饭炒菜"], 3: [], 4: ["粉面"],
+  5: ["米饭炒菜", "汤粥"], 6: ["火锅麻辣烫"], 7: ["面点快餐"],
+};
+const restaurants: (Restaurant & V2Shop)[] = demoDishes
   .filter(
     (d, i, a) => a.findIndex((x) => x.restaurantId === d.restaurantId) === i,
   )
   .map((d) => ({
     id: d.restaurantId,
     name: d.shop,
+    kind: ["yangzhi", "niandoubao"].includes(d.asset) ? "drink" : "food",
+    categories: seedShopCategories[d.restaurantId],
     address: d.restaurantId === 6 ? "银座商城 3 层" : "万达金街 1 层",
     gcjLng: 117.134 + d.restaurantId * 0.0002,
     gcjLat: 36.667,
@@ -232,6 +238,11 @@ function load(): State {
       localStorage.getItem("eatwhat-demo-prototype-v3") || "null",
     );
     if (raw?.foods && raw?.user && raw?.restaurants && raw?.privacy) {
+      for (const shop of raw.restaurants) {
+        const seedShop = restaurants.find((r) => r.id === shop.id && r.name === shop.name);
+        shop.kind ??= seedShop?.kind ?? "food";
+        shop.categories ??= seedShop?.categories ?? [];
+      }
       if (!raw.schemaVersion) {
         raw.user.displayName ??= raw.user.userName || "校园食友";
         raw.user.hasUsername ??= false;

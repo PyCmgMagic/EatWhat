@@ -154,7 +154,7 @@ async function validateMobileAuthPrototype(page) {
     );
     if ((await p.getByRole("tab", { selected: true }).count()) !== 1)
       throw new Error("Profile selected more than one tab");
-    await p.getByRole("tab", { name: "收藏 0", exact: true }).click();
+    await p.getByRole("tab", { name: "收藏", exact: true }).click();
     await p
       .getByRole("heading", { name: "还没有收藏的菜", exact: true })
       .waitFor();

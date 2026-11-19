@@ -397,7 +397,7 @@ async function validateMapMarkers(page) {
         path: `output/playwright/map-markers-long-name-${width}.png`,
       });
       const search = p.getByRole(width < 600 ? "searchbox" : "textbox", {
-        name: width < 600 ? "搜店名或菜名" : "附近搜店名",
+        name: width < 600 ? "搜店名或地址" : "附近搜店名",
         exact: true,
       });
       await search.fill("没有这家店");

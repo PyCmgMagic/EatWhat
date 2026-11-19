@@ -25,7 +25,7 @@ function FoodPhoto({ food }: { food: Food }) {
   return (
     <span
       className="profile-overview-food-photo"
-      style={{ backgroundColor: visual.tile }}
+      style={{ backgroundColor: visual.tileSurface }}
       data-illustration={!!visual.asset || undefined}
     >
       {src && !failed ? (
@@ -152,7 +152,7 @@ function TodayPick({
       aria-labelledby="profile-today-pick"
       aria-busy={loading}
       style={
-        visual ? ({ "--pp-pick-tile": visual.tile } as CSSProperties) : undefined
+        visual ? ({ "--pp-pick-tile": visual.tileSurface } as CSSProperties) : undefined
       }
     >
       <div className="pp-pick-copy">

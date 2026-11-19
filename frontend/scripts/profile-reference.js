@@ -25,11 +25,27 @@ async function validateProfileReference(page) {
     id: 1,
     displayName: "PyCmg",
     signature: "是啊，吃什么",
-    avatar: "/assets/qa-avatar.png",
+    userName: "pycmg",
+    hasUsername: true,
+    avatar: "/assets/salad.jpg",
     verified: true,
     role: "user",
-    level: 1,
+    level: 3,
   };
+  const dish = {
+    id: 23,
+    name: "锅包肉",
+    category: "staple",
+    price: 46,
+    pictureUrls: ["/assets/chicken.jpg"],
+    likeCount: 1,
+  };
+  const pageOf = (food) => ({
+    ...empty,
+    items: [food],
+    totalItems: 1,
+    totalPages: 1,
+  });
   await context.addInitScript(() =>
     localStorage.setItem(
       "eatwhat-session",
@@ -42,23 +58,22 @@ async function validateProfileReference(page) {
   await context.route("**/*", (route) => {
     const url = new URL(route.request().url());
     if (url.origin !== base) return route.abort();
-    if (url.pathname === "/assets/qa-avatar.png")
-      return route.fulfill({
-        path: "output/playwright/profile-reference-avatar.png",
-      });
     if (!url.pathname.startsWith("/api/")) return route.continue();
     let data = empty;
     if (url.pathname === "/api/user/info") data = user;
     if (url.pathname === "/api/user/userInfo")
       data = {
         ...user,
-        earnedLikes: 0,
-        uploadedFoodsCount: 0,
+        earnedLikes: 1,
+        uploadedFoodsCount: 1,
         fansCount: 0,
-        followingsCount: 0,
+        followingsCount: 2,
       };
-    if (url.pathname === "/api/user/level")
-      data = { level: 1, experience: 10, nextLevelExperience: 30 };
+    if (url.pathname === "/api/user/growth")
+      data = { level: 3, totalExperience: 120 };
+    if (url.pathname === "/api/foods/my") data = pageOf(dish);
+    if (url.pathname === "/api/foods/likes")
+      data = pageOf({ ...dish, id: 42, name: "酸汤面", price: 12 });
     if (url.pathname === "/api/campus/list")
       data = [{ id: 1, name: "软件园", open: true, isDefault: true }];
     if (url.pathname === "/api/remote-config")
@@ -73,12 +88,15 @@ async function validateProfileReference(page) {
     return route.fulfill({ status: 200, json: { code: 0, data } });
   });
   try {
-    await p.goto(`${base}/?demo=0&view=mobile#/me?tab=comments`);
+    await p.goto(`${base}/?demo=0&view=mobile#/me`);
     await p
       .getByRole("heading", { name: user.displayName, exact: true })
       .waitFor();
+    await p.getByRole("heading", { name: dish.name, exact: true }).waitFor();
+    await p.getByText("@pycmg", { exact: true }).waitFor();
+    await p.getByRole("link", { name: /我的成长，等级 3/ }).waitFor();
     await p
-      .getByRole("heading", { name: "还没写过评论", exact: true })
+      .locator('.mobile-profile-cover[data-cover-kind="photo"] img')
       .waitFor();
     await p.evaluate(() => document.fonts.ready);
     await p.screenshot({ path: "output/playwright/profile-reference-420.png" });
@@ -87,6 +105,7 @@ async function validateProfileReference(page) {
       [390, 844],
       [420, 897],
       [520, 932],
+      [568, 320],
     ]) {
       await p.setViewportSize({ width, height });
       await p.waitForFunction(() => {
@@ -122,14 +141,22 @@ async function validateProfileReference(page) {
         throw new Error(
           `${width}px 个人信息溢出或被面板遮挡: ${JSON.stringify(measure)}`,
         );
-      await p.getByRole("tab", { name: "上传 0", exact: true }).click();
-      await p
-        .getByRole("heading", { name: "还没有分享过菜", exact: true })
-        .waitFor();
-      await p.getByRole("tab", { name: "收藏 0", exact: true }).click();
+      await p.getByRole("tab", { name: "上传 1", exact: true }).click();
+      await p.getByRole("heading", { name: dish.name, exact: true }).waitFor();
+      await p.getByText("¥46", { exact: true }).waitFor();
+      if (width === 390)
+        await p.screenshot({
+          path: "output/playwright/profile-reference-390.png",
+        });
+      await p.getByRole("tab", { name: "收藏", exact: true }).click();
       await p
         .getByRole("heading", { name: "还没有收藏的菜", exact: true })
         .waitFor();
+      await p
+        .getByRole("tab", { name: "收藏", exact: true })
+        .press("ArrowRight");
+      await p.getByRole("heading", { name: "酸汤面", exact: true }).waitFor();
+      await p.getByText("¥12", { exact: true }).waitFor();
       await p.getByRole("tab", { name: "评论", exact: true }).click();
       await p
         .getByRole("heading", { name: "还没写过评论", exact: true })
@@ -162,12 +189,8 @@ async function validateProfileReference(page) {
         .getByRole("button", { name: "收起我的内容", exact: true })
         .press("Escape");
       await handle.waitFor();
-      if (width === 390)
-        await p.screenshot({
-          path: "output/playwright/profile-reference-390.png",
-        });
       checks.push(
-        `${width}×${height}: 比例、数据、上传/收藏/评论、刷新保留、面板收展、底栏`,
+        `${width}×${height}: 比例、数据、上传/收藏/赞过/评论、刷新保留、面板收展、底栏`,
       );
     }
     await p.getByRole("link", { name: "编辑资料", exact: true }).click();
@@ -177,6 +200,18 @@ async function validateProfileReference(page) {
       .getByRole("heading", { name: "还没写过评论", exact: true })
       .waitFor();
     checks.push("编辑资料入口和返回时保留评论标签");
+    await p.emulateMedia({ colorScheme: "dark" });
+    await p.waitForFunction(() => {
+      const name = document.querySelector(".mobile-profile-name");
+      const history = document.querySelector(".mobile-profile-history");
+      return (
+        document.documentElement.dataset.theme === "dark" &&
+        name &&
+        history &&
+        getComputedStyle(name).color === getComputedStyle(history).color
+      );
+    });
+    checks.push("深色模式下昵称使用高对比文字颜色");
     if (errors.length) throw new Error(errors.join("\n"));
     return { checks, errors, realBackendRequests: 0 };
   } finally {

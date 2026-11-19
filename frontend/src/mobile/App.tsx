@@ -351,7 +351,9 @@ function MobileWorkspace() {
       : Math.min(520, viewport.width) / 390;
   const height = Math.max(640, viewport.height / scale);
   const navigationSection =
-    ["/me/edit", "/me/details"].includes(loc.pathname) ||
+    ["/me/edit", "/me/details", "/settings/personalization"].includes(
+      loc.pathname,
+    ) ||
     (loc.pathname === "/me/shares" &&
       new URLSearchParams(loc.search).get("tab") === "comments")
       ? null
@@ -466,19 +468,24 @@ function MobileWorkspace() {
   ) {
     const legacy = new URLSearchParams(loc.search);
     const tab = legacy.get("tab");
-    if (["uploads", "comments", "favorites"].includes(tab ?? "")) {
+    if (["uploads", "comments", "favorites", "likes"].includes(tab ?? "")) {
       if (tab !== "comments") legacy.delete("tab");
       return (
         <Navigate
           replace
           to={
-            (tab === "favorites" ? "/favorites" : "/me/shares") +
+            (tab === "favorites" ? "/favorites" : tab === "likes" ? "/likes" : "/me/shares") +
             (legacy.size ? "?" + legacy : "")
           }
           state={loc.state}
         />
       );
     }
+  }
+  if (loc.pathname === "/panels/filter") {
+    return (
+      <Navigate replace to={desktop ? "/restaurants/directory" : "/nearby?filter=1"} />
+    );
   }
   if (!desktop && !reference && loc.pathname === "/me/shares") {
     const params = new URLSearchParams(loc.search);

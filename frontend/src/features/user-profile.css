@@ -14,7 +14,7 @@
   overflow: hidden;
   min-height: 400px;
   padding-bottom: 80px;
-  background: var(--profile-stage);
+  background: color-mix(in srgb, var(--profile-stage), #1b1512 var(--stage-shade, 0%));
   color: var(--profile-on);
 }
 .mobile-user-plate {
@@ -109,7 +109,7 @@
   color: var(--ink);
   font-size: 32px;
   font-weight: 900;
-  box-shadow: 0 0 0 3px var(--profile-stage);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--profile-stage), #1b1512 var(--stage-shade, 0%));
 }
 .mobile-user-avatar img {
   width: 100%;
@@ -126,8 +126,8 @@
   font-weight: 900;
   letter-spacing: -0.5px;
   overflow-wrap: anywhere;
-  background: var(--profile-stage);
-  box-shadow: 5px 0 0 var(--profile-stage);
+  background: color-mix(in srgb, var(--profile-stage), #1b1512 var(--stage-shade, 0%));
+  box-shadow: 5px 0 0 color-mix(in srgb, var(--profile-stage), #1b1512 var(--stage-shade, 0%));
 }
 .mobile-user-caption {
   margin: 2px 0 0;

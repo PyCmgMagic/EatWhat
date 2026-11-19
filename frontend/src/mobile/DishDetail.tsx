@@ -180,9 +180,10 @@ export default function DishDetail({
     <article
       className="design-screen mobile-dish-screen"
       data-screen="G-Dish"
+      data-food-stage={visual.stageTone}
       style={
         {
-          "--dish-stage": visual.stage,
+          "--dish-stage": visual.stageSurface,
           "--dish-ink": visual.on,
           "--dish-glass": visual.ghost,
         } as CSSProperties

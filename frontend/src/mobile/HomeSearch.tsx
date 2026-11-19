@@ -62,14 +62,13 @@ export function HomeSearchButton({
       onClick={onOpen}
     >
       <DesignIcon name="search" size={22} />
+      搜索
     </button>
   );
 }
 
 /**
- * Search bar plus assist dropdown, dropped over the hero from the toolbar. The
- * hero keeps a spacer where the bar used to sit, so opening never shifts the
- * page copy; the surface itself is fixed so its dropdown is never clipped.
+ * The fixed search surface opens below the toolbar without shifting the hero.
  */
 export function HomeSearchOverlay({
   open,

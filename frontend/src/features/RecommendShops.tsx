@@ -66,8 +66,8 @@ function FeaturedDish({
           style={{
             background:
               (dish.stageColor &&
-                `color-mix(in srgb, ${stagePalette[dish.stageColor as keyof typeof stagePalette] ?? "#F4EFEB"} 16%, white)`) ||
-              "#F4EFEB",
+                `color-mix(in srgb, ${stagePalette[dish.stageColor as keyof typeof stagePalette] ?? "var(--night-layer, #F4EFEB)"} 16%, var(--night-layer, white))`) ||
+              "var(--night-layer, #F4EFEB)",
           }}
         >
           {photo.unavailable ? (
@@ -124,11 +124,13 @@ function FeaturedDish({
 /** One recommended shop with up to three featured dishes under it. */
 export function RecommendShopCard({
   shop,
+  rank,
   scene = "dine_in",
   onOpenShop,
   onOpenFood,
 }: {
   shop: Restaurant;
+  rank?: number;
   scene?: RecommendScene;
   onOpenShop?: (shop: Restaurant) => void;
   onOpenFood?: (dish: Signature) => void;
@@ -156,6 +158,7 @@ export function RecommendShopCard({
       <Link
         to={`/restaurants/${shop.id}`}
         className="rec-shop-head"
+        data-rank={rank == null ? undefined : String(rank).padStart(2, "0")}
         aria-label={`查看${shop.name ?? "店铺"}`}
         onClick={() => onOpenShop?.(shop)}
       >
@@ -233,10 +236,11 @@ export function RecommendShopList({
 }) {
   return (
     <div className="rec-shop-list">
-      {shops.map((shop) => (
+      {shops.map((shop, i) => (
         <RecommendShopCard
           key={shop.id}
           shop={shop}
+          rank={i + 1}
           scene={scene}
           onOpenShop={onOpenShop}
           onOpenFood={onOpenFood}

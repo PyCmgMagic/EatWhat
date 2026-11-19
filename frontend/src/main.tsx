@@ -20,8 +20,12 @@ import "./desktop/discussion.css";
 import { MotionEnvironment } from "./motion/hooks";
 import "./responsive.css";
 import "./motion/motion.css";
+import "./theme/theme.css";
+import { initializeAppearance } from "./theme/appearance";
 import { verificationCallbackUrl } from "./app/verification-return";
 
+const stopAppearance = initializeAppearance();
+if (import.meta.hot) import.meta.hot.dispose(stopAppearance);
 const verificationCallback = verificationCallbackUrl(window.location.href);
 if (verificationCallback)
   window.history.replaceState(window.history.state, "", verificationCallback);

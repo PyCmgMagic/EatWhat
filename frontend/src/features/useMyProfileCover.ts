@@ -22,6 +22,7 @@ export function useMyProfileCover(enabled: boolean) {
     cover:
       uploads.data?.items?.find((food) => !!food.pictureUrl?.[0]) ?? fallback,
     fallback,
+    uploadCount: uploads.data?.totalItems,
     pending: !!session && (!user?.id || (enabled && uploads.isPending)),
   };
 }

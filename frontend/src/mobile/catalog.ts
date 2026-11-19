@@ -145,6 +145,10 @@ function savedStage(keys?: string[] | null): string | undefined {
     return undefined;
   }
 }
+export function stageSurface(color: string) {
+  return `color-mix(in srgb, ${color}, #1b1512 var(--stage-shade, 0%))`;
+}
+
 export function visualFor(food: Food, demo = false) {
   // A matching name does not make an uploaded photo a prototype illustration.
   const v = demo
@@ -162,12 +166,15 @@ export function visualFor(food: Food, demo = false) {
     stageColors[2];
   const dark = [stageColors[4], stageColors[5], stageColors[6]].includes(color);
   const name = food.name ?? "这道菜";
+  const tile = v?.tile ?? stageTiles[color] ?? "#F4EFEB";
   return {
     stage: color,
-    on: dark ? "#FFFFFF" : "#231C18",
-    ghost: dark ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.42)",
-    table: dark ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.22)",
-    ring: dark ? "rgba(255,255,255,0.24)" : "rgba(255,255,255,0.55)",
+    stageTone: dark ? "deep" : "light",
+    stageSurface: stageSurface(color),
+    on: `var(--night-stage-ink, ${dark ? "#FFFFFF" : "#231C18"})`,
+    ghost: `var(--night-glass, rgba(255,255,255,${dark ? 0.18 : 0.42}))`,
+    table: `var(--night-glass, rgba(255,255,255,${dark ? 0.08 : 0.22}))`,
+    ring: `var(--night-glass, rgba(255,255,255,${dark ? 0.24 : 0.55}))`,
     solidShadow: dark
       ? "inset 0 -2px 0 rgba(0,0,0,0.16),0 8px 18px rgba(0,0,0,0.16)"
       : "inset 0 1px 0 rgba(255,255,255,0.16),inset 0 -2px 0 rgba(0,0,0,0.28),0 6px 14px rgba(35,28,24,0.16)",
@@ -176,7 +183,8 @@ export function visualFor(food: Food, demo = false) {
     shop: food.restaurantName ?? "餐厅信息待补充",
     dist: v?.dist ?? "",
     price: food.price ?? "—",
-    tile: v?.tile ?? stageTiles[color] ?? "#F4EFEB",
+    tile,
+    tileSurface: `color-mix(in srgb, ${tile}, #141312 var(--tile-shade, 0%))`,
     asset: v?.asset ?? "",
   };
 }

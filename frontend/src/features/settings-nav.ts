@@ -33,8 +33,14 @@ export const settingsNavGroups: SettingsNavGroup[] = [
   {
     id: "preferences",
     title: "偏好",
-    detail: "隐私、口味与通知",
+    detail: "外观、隐私与口味",
     items: [
+      {
+        to: "/settings/personalization",
+        name: "个性化",
+        icon: "eye",
+        hint: "外观与底部导航",
+      },
       {
         to: "/settings/privacy",
         name: "隐私设置",

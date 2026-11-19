@@ -144,7 +144,7 @@ async function validateMobileProfile(page) {
       await p
         .getByRole("heading", { name: "还没有分享过菜", exact: true })
         .waitFor();
-      const grid = await p.locator(".design-food-grid").boundingBox();
+      const grid = await p.getByRole("tabpanel").boundingBox();
       const empty = await p.locator(".mobile-empty").boundingBox();
       if (!grid || !empty || Math.abs(grid.width - empty.width) > 2)
         throw new Error(`empty state does not span the grid at ${width}px`);
@@ -160,7 +160,7 @@ async function validateMobileProfile(page) {
           path: "output/playwright/mobile-profile-empty-fixed.png",
           fullPage: true,
         });
-      await p.getByRole("tab", { name: "收藏 0", exact: true }).click();
+      await p.getByRole("tab", { name: "收藏", exact: true }).click();
       await p
         .getByRole("heading", { name: "还没有收藏的菜", exact: true })
         .waitFor();

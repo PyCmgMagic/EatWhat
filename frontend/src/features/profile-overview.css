@@ -27,7 +27,7 @@
   padding: 26px 32px 58px;
   overflow: hidden;
   border-radius: 28px;
-  background: var(--profile-stage);
+  background: color-mix(in srgb, var(--profile-stage), #1b1512 var(--stage-shade, 0%));
   color: var(--profile-on);
   transition:
     background-color 240ms ease,

@@ -356,7 +356,7 @@ html[data-motion-input="keyboard"] .pc-composer-shop-toggle .design-icon {
   background: color-mix(in srgb, var(--composer-stage-color) 20%, #faf7f1);
 }
 .pc-composer-stage[data-has-image="true"] {
-  background: var(--composer-stage-color);
+  background: color-mix(in srgb, var(--composer-stage-color), #1b1512 var(--stage-shade, 0%));
 }
 .pc-composer-stage.is-dragging {
   outline: 2px dashed var(--composer-focus);

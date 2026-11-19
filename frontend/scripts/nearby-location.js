@@ -166,7 +166,7 @@ async function validateNearbyLocation(page) {
         "Entry requested location more than once",
       );
       const input = p.getByRole(width < 600 ? "searchbox" : "textbox", {
-        name: width < 600 ? "搜店名或菜名" : "附近搜店名",
+        name: width < 600 ? "搜店名或地址" : "附近搜店名",
         exact: true,
       });
       const filtered = p.waitForResponse(

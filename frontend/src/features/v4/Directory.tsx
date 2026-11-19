@@ -68,9 +68,8 @@ export default function Directory() {
   const query = {
     keyword: search || undefined,
     kind: kind || undefined,
-    categories: (category ? [category] : undefined) as never,
-    priceBand:
-      (priceBand as "UNDER_15" | "FROM_15_TO_30" | "OVER_30") || undefined,
+    categories: category ? [category] : undefined,
+    priceBand: priceBand || undefined,
     recommendedOnly: recommendedOnly || undefined,
     favoritesOnly: favoritesOnly || undefined,
     sort: sort as "DISTANCE" | "NEWEST",

@@ -260,7 +260,7 @@ export function DesktopHistory() {
                     <>
                       <span
                         className={`pc-library-thumb ${entry.kind === "restaurant" ? "is-restaurant" : ""}`}
-                        style={{ background: visual.tile }}
+                        style={{ background: visual.tileSurface }}
                       >
                         {src ? (
                           <img src={src} alt="" />

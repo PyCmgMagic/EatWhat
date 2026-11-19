@@ -201,6 +201,10 @@ const rating = (value: unknown) =>
   value === "RECOMMEND" || value === "NOT_RECOMMEND" ? value : null;
 export function restaurant(v: Json | null | undefined): Json | null {
   if (!v) return null;
+  const photos = Array.isArray(v.pictureUrl) ? v.pictureUrl : [v.pictureUrl];
+  const pictures = photos.filter(
+    (url): url is string => typeof url === "string" && url.length > 0,
+  );
   const dineIn = v.dineIn ?? { rate: null, count: 0 };
   const count = (dineIn.count ?? 0) + (v.delivery?.count ?? 0);
   const up =
@@ -253,7 +257,7 @@ export function restaurant(v: Json | null | undefined): Json | null {
       name,
       taggerCount: 1,
     })),
-    coverUrl: v.pictureUrl ?? null,
+    coverUrl: pictures[0] ?? null,
     stageColor: null,
     cityId: null,
     location:
@@ -261,7 +265,7 @@ export function restaurant(v: Json | null | undefined): Json | null {
         ? { type: "Point", coordinates: [v.gcjLng, v.gcjLat], srid: 4326 }
         : null,
     POI: v.poi ?? null,
-    pictureUrl: v.pictureUrl ? [v.pictureUrl] : [],
+    pictureUrl: pictures,
   };
 }
 
@@ -1021,53 +1025,26 @@ const routes: [string, RegExp, Handler][] = [
           .map((dish: Json) => asCategory(food(dish)!, query.category));
       }
       const delivery = query.scene === "delivery";
-      // Dine-in: the list is the recommended shops themselves, each with its
-      // signature dishes; the carousel shows the first signature dish of each
-      // shop. No newest-dish filler, so every item went through the ranking.
-      if (!delivery) {
-        const feed = await call("/recommend", {
-          query: {
-            scene: "dine_in",
-            mealTime: query.mealTime,
-            gcjLng: query.gcjLng,
-            gcjLat: query.gcjLat,
-            page: 1,
-            pageSize: DINE_IN_SHOPS,
-          },
-        });
-        const shops: Json[] = feed?.items ?? [];
-        return {
-          items: shops
-            .filter((shop) => shop.signatureFoods?.length)
-            .map((shop) => signatureDish(shop, shop.signatureFoods[0]))
-            .slice(0, size),
-          shops: shops.map((shop) => restaurant(shop)),
-          mealTime: feed?.mealTime ?? null,
-        };
-      }
-      const [feed, latest] = await Promise.all([
-        call("/recommend", {
-          query: omit(query, ["mealTime", "scene", "gcjLng", "gcjLat"]),
-        }).catch(() => null),
-        // Delivery shows only recommended shops: the newest dishes may come
-        // from shops that do not deliver, so they are not used as filler.
-        delivery
-          ? null
-          : call("/foods/list", { query: { page: 1, pageSize: 50 } }),
-      ]);
-      const known = new Map<number, Json>(
-        (latest?.items ?? []).map((dish: Json) => [dish.id, dish]),
-      );
-      const items: Json[] = [];
-      // Signature dishes of the recommended shops come first, then new dishes.
-      for (const shop of feed?.items ?? [])
-        for (const dish of shop.signatureFoods ?? [])
-          items.push(signatureDish(shop, dish, known.get(dish.id)));
-      for (const dish of known.values())
-        if (items.length < size && !items.some((item) => item.id === dish.id))
-          items.push(food(dish)!);
-      // mealTime: the slot v2 used (it picks one when the request has none).
-      return { items: items.slice(0, size), mealTime: feed?.mealTime ?? null };
+      // The default food tab and the carousel share a batch. Category requests
+      // pass the shop kind to the ranking service in both scenes.
+      const includeShops = !delivery || !!query.kind;
+      const feed = await call("/recommend", {
+        query: {
+          ...omit(query, ["mealTime", "kind", "gcjLng", "gcjLat"]),
+          scene: delivery ? "delivery" : "dine_in",
+          ...(includeShops ? { page: 1, pageSize: DINE_IN_SHOPS } : {}),
+        },
+      });
+      const shops: Json[] = feed?.items ?? [];
+      const items = shops.flatMap((shop) => {
+        const dishes: Json[] = shop.signatureFoods ?? [];
+        return (delivery ? dishes : dishes.slice(0, 1)).map((dish) => signatureDish(shop, dish));
+      });
+      return {
+        items: items.slice(0, size),
+        ...(includeShops ? { shops: shops.map((shop) => restaurant(shop)) } : {}),
+        mealTime: feed?.mealTime ?? null,
+      };
     },
   ],
   [

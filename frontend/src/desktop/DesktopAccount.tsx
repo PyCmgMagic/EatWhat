@@ -1,6 +1,7 @@
 import { useSendSignal } from "../features/useSendSignal";
 import { BRAND_SLOGAN } from "../app/brand";
 import PrivacySettings from "../features/PrivacySettings";
+import Personalization from "../theme/Personalization";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useApp } from "../app/state";
@@ -90,6 +91,11 @@ export function DesktopSettingsPage() {
         <PendingPage path={path} />
       ) : path === "/settings/account" ? (
         <Account />
+      ) : path === "/settings/personalization" ? (
+        <>
+          <PageHead title="个性化" back="/settings" crumb="设置" />
+          <Personalization />
+        </>
       ) : path === "/settings/password" ? (
         <Password />
       ) : path === "/settings/privacy" ? (

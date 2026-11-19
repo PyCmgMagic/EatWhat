@@ -23,12 +23,6 @@
   outline-offset: 1px;
 }
 
-/* Collapsed, the hero still reserves the bar's footprint so nothing shifts. */
-.mobile-home-search-slot {
-  height: 54px;
-  margin-top: 12px;
-}
-
 .ew-home-search {
   position: fixed;
   inset: 0;
@@ -49,7 +43,6 @@
 .ew-home-search[data-exiting] .ew-home-search-scrim {
   opacity: 0;
 }
-/* Same coordinates as the collapsed slot: the bar grows out of its old place. */
 .ew-home-search-layer {
   position: absolute;
   top: calc(max(20px, env(safe-area-inset-top)) + 56px);

@@ -1,5 +1,7 @@
 import WorkspaceSwitch from "../admin/WorkspaceSwitch";
-import { RecommendShopList } from "../features/RecommendShops";
+import { ThemeToggle } from "../theme/AppearanceControl";
+import { DiscoveryList } from "../features/DiscoveryList";
+import { useHomeDiscovery } from "../features/useHomeDiscovery";
 import { SupplementPrice } from "../features/SupplementPrice";
 import { BRAND_SLOGAN } from "../app/brand";
 import { foodAuthor } from "../api/models";
@@ -26,11 +28,9 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { NotFound, useReturnTo } from "../app/navigation";
-import { useDiscoveryCategory } from "../app/discovery-category";
 import {
   keepPreviousData,
   useQuery,
-  useQueryClient,
 } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { LoginLink } from "../app/auth-dialog";
@@ -78,8 +78,6 @@ import {
 import { isV4Path, routeMotionKey } from "../features/v4-paths";
 import {
   FeatureAvailability,
-  useRemoteConfig,
-  recommendationBatchSize,
 } from "../features/v4/Remote";
 const V4Routes = lazy(() => import("../features/v4/Routes"));
 const ApiV2Routes = lazy(() => import("../features/ApiV2Routes"));
@@ -109,7 +107,7 @@ import { RecommendationControls, Preferences } from "../features/Account";
 import { EditFood } from "../features/EditFood";
 import { EditRestaurant, isShopEditPath } from "../features/EditRestaurant";
 import { useActionAccess } from "../features/access";
-import { guestDeviceId, mealCode } from "../api/food-display";
+import { mealCode } from "../api/food-display";
 import { foodCategories, type V2Food } from "../api/v2-vocab";
 import { useFoodImageRefresh, useFoodPhoto } from "../features/media";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
@@ -145,12 +143,6 @@ import { PendingPage, pendingPages, secondaryTitles } from "./secondary";
 const categoryNames: Record<string, string> = Object.fromEntries(
   foodCategories.map((c) => [c.id, c.name]),
 );
-const categories = [
-  { key: "", name: "今日推荐" },
-  ...foodCategories
-    .filter((c) => c.id !== "other")
-    .map((c) => ({ key: c.id, name: c.name })),
-];
 export default function DesktopExperience({
   enabled,
   screen,
@@ -266,6 +258,7 @@ function DesktopHeader() {
         </SlidingTabs>
         <div className="pc-header-actions">
           <HeaderSearch />
+          <ThemeToggle />
           <Link
             className="pc-icon-button"
             to="/notifications"
@@ -530,9 +523,12 @@ function DesktopPage({
         <DesktopSettingsPage key={loc.pathname} />
       </div>
     );
-    return ["/settings/about", "/data-notice", "/feedback"].includes(
-      loc.pathname,
-    ) ? (
+    return [
+      "/settings/about",
+      "/settings/personalization",
+      "/data-notice",
+      "/feedback",
+    ].includes(loc.pathname) ? (
       page
     ) : (
       <DesktopGate verified={false}>{page}</DesktopGate>
@@ -791,204 +787,36 @@ function Plate({
   );
 }
 function DesktopHome() {
-  const remote = useRemoteConfig(),
-    batchSize = recommendationBatchSize(remote.data);
-  const { api, session, toast } = useApp(),
-    cache = useQueryClient(),
-    [dismissed, setDismissed] = useState<number[]>([]),
-    [dismissing, setDismissing] = useState(false),
-    m = useMobile(),
-    { area, ready = true } = useArea(),
-    [n, setN] = useState(0),
-    [category, setCategory] = useDiscoveryCategory(),
+  const discovery = useHomeDiscovery();
+  const { hero: query, heroFoods: list } = discovery;
+  const { session } = useApp(), m = useMobile(), [n, setN] = useState(0),
     pointer = useRef<{ id: number; x: number; radius: number } | null>(null),
     orbitMotion = useRef(createHeroOrbitScheduler()),
     copy = useRef<HTMLDivElement>(null);
   useEffect(() => () => orbitMotion.current.cancel(), []);
-  const query = useQuery({
-      queryKey: [
-        "foods",
-        "mobile-recommend",
-        m.mealKey,
-        m.scene,
-        area?.gcjLng,
-        area?.gcjLat,
-        "",
-        batchSize,
-      ],
-      queryFn: async () => {
-        const feed = await api.recommendFeed(batchSize, {
-          mealTime: m.mealTime,
-          scene: m.scene,
-          gcjLng: area?.gcjLng,
-          gcjLat: area?.gcjLat,
-          deviceId: guestDeviceId(),
-        });
-        // Automatic: show the slot the backend actually used.
-        if (!m.mealTime) m.noteServedMeal(feed.mealTime);
-        return { items: feed.items, shops: feed.shops };
-      },
-      placeholderData: keepPreviousData,
-      enabled: ready,
-    }),
-    // "不想吃这家": v2 skips the shop for 30 days; hide its dishes right away.
-    list = (query.data?.items ?? []).filter(
-      (f) => !dismissed.includes(Number(f.restaurantId)),
-    ),
-    // Dine-in lists the recommended shops; the carousel shows their dishes.
-    shops =
-      query.data?.shops?.filter(
-        (shop) => !dismissed.includes(Number(shop.id)),
-      ) ?? null,
-    index = list.length ? ((n % list.length) + list.length) % list.length : 0,
-    food = list[index],
-    visual = food ? visualFor(food, isDemo) : null;
-  const categoryQuery = useQuery({
-    queryKey: [
-      "foods",
-      // Not the main feed's key: that one now holds dishes and shops.
-      "mobile-recommend-category",
-      m.mealKey,
-      m.scene,
-      area?.gcjLng,
-      area?.gcjLat,
-      category,
-      batchSize,
-    ],
-    queryFn: () =>
-      api.recommend(batchSize, {
-        mealTime: m.mealTime,
-        scene: m.scene,
-        gcjLng: area?.gcjLng,
-        gcjLat: area?.gcjLat,
-        category: category || undefined,
-        deviceId: guestDeviceId(),
-      }),
-    enabled: ready && !!category,
-    placeholderData: keepPreviousData,
-  });
+  const index = list.length ? ((n % list.length) + list.length) % list.length : 0,
+    food = list[index], visual = food ? visualFor(food, isDemo) : null;
   useContentMotion(copy, food?.id ?? undefined, n, "y");
-  const selection = category
-    ? (categoryQuery.data ?? []).filter(
-        (f) =>
-          f.category === category && !dismissed.includes(Number(f.restaurantId)),
-      )
-    : isDemo
-      ? [
-          list[4],
-          list[5],
-          list[0],
-          list[2],
-          ...list.filter((_, i) => ![4, 5, 0, 2].includes(i)),
-        ].filter(Boolean)
-      : list;
   useEffect(() => {
     document.title = "发现 · 山软今天吃什么";
   }, []);
-  const shopList = !category && shops;
   const sheet = (
-    <section
-      className={`pc-discovery-sheet${food && visual ? "" : " is-standalone"}`}
-    >
-      <div className="pc-section-toolbar">
-        <SlidingTabs label="推荐分类" active={category}>
-          {categories.map((c) => (
-            <button
-              key={c.key}
-              role="tab"
-              aria-selected={c.key === category}
-              tabIndex={c.key === category ? 0 : -1}
-              onClick={() => setCategory(c.key)}
-            >
-              {c.name}
-            </button>
-          ))}
-        </SlidingTabs>
-        <span className="pc-small-note">
-          {shopList ? "这几家今天值得一试。" : "这一组好味道，慢慢挑。"}
-        </span>
-      </div>
-      <MotionRegion
-        changeKey={category}
-        order={categories.findIndex((c) => c.key === category)}
-        className="pc-category-content"
-        aria-busy={!!category && categoryQuery.isFetching}
-        reserveSpace
-      >
-        {shopList ? (
-          shopList.length ? (
-            <RecommendShopList
-              shops={shopList}
-              scene={m.scene}
-              onOpenShop={(shop) => shop.id && m.setShopId(shop.id)}
-              onOpenFood={(dish) => {
-                if (dish.id) m.setFoodId(dish.id);
-                if (dish.restaurantId) m.setShopId(dish.restaurantId);
-              }}
-            />
-          ) : (
-            <Status title="暂时没有推荐" detail="换个饭点或地点再看看。">
-              <button
-                className="pc-button light"
-                disabled={query.isFetching}
-                onClick={() => void query.refetch()}
-              >
-                刷新推荐
-              </button>
-            </Status>
-          )
-        ) : (
-          <>
-            {category && categoryQuery.isFetching && !selection.length && (
-              <ContentSkeleton count={4} />
-            )}
-            <div className="pc-food-grid">
-              {selection.map((f) => (
-                <FoodCard key={f.id} food={f} />
-              ))}
-            </div>
-            {category && categoryQuery.isError ? (
-              <Status
-                title="这一组暂时没端上来"
-                detail={errorMessage(categoryQuery.error)}
-              >
-                <button
-                  className="pc-button light"
-                  onClick={() => void categoryQuery.refetch()}
-                >
-                  重新加载
-                </button>
-              </Status>
-            ) : (
-              !selection.length &&
-              !categoryQuery.isFetching && (
-                <Status title="这一组里，还没有这个口味" />
-              )
-            )}
-          </>
-        )}
-      </MotionRegion>
+    <section className={`pc-discovery-sheet${food && visual ? "" : " is-standalone"}`}>
+      <DiscoveryList discovery={discovery} renderDishes={(foods) => (
+        <div className="pc-food-grid">
+          {foods.map((food) => <FoodCard key={food.id} food={food} />)}
+        </div>
+      )} />
     </section>
   );
-  // Shops without signature dishes have nothing for the carousel; list them.
-  if ((!food || !visual) && shops?.length)
-    return (
-      <div className="pc-home">
-        <RecommendationControls />
-        {sheet}
-      </div>
-    );
   if (!food || !visual)
     return (
       <div className="pc-home">
         <RecommendationControls />
-        <QueryStatus
-          query={query}
-          skeleton="home"
-          empty={!query.isPending && !query.error}
-        >
-          <span />
-        </QueryStatus>
+        {query.isPending && <PageSkeleton kind="home" />}
+        {query.isError && discovery.kind !== "food" &&
+          <QueryStatus query={query} skeleton="home"><span /></QueryStatus>}
+        {sheet}
       </div>
     );
   return (
@@ -996,9 +824,10 @@ function DesktopHome() {
       <RecommendationControls />
       <section
         className="pc-hero"
+        data-food-stage={visual.stageTone}
         style={
           {
-            "--stage": visual.stage,
+            "--stage": visual.stageSurface,
             "--stage-on": visual.on,
             "--stage-ghost": visual.ghost,
           } as CSSProperties
@@ -1011,7 +840,6 @@ function DesktopHome() {
           <span>/ {String(list.length).padStart(2, "0")}</span>
         </div>
         <div className="pc-hero-copy" ref={copy}>
-          <span className="pc-eyebrow">今天这顿，就从这里开始</span>
           <h1 title={food.name ?? undefined}>
             {food.name || `${visual.l1}${visual.l2}`}
           </h1>
@@ -1026,44 +854,8 @@ function DesktopHome() {
             <button
               type="button"
               className="pc-hero-dismiss"
-              disabled={dismissing}
-              onClick={async () => {
-                const shopId = Number(food.restaurantId);
-                setDismissing(true);
-                try {
-                  await api.dismissRecommendation(shopId);
-                  setDismissed((ids) => [...ids, shopId]);
-                  cache.setQueriesData<{
-                    items?: Food[];
-                    shops?: Restaurant[] | null;
-                  }>({ queryKey: ["foods", "mobile-recommend"] }, (prev) =>
-                    prev
-                      ? {
-                          ...prev,
-                          items: prev.items?.filter(
-                            (f) => Number(f.restaurantId) !== shopId,
-                          ),
-                          shops:
-                            prev.shops?.filter(
-                              (s) => Number(s.id) !== shopId,
-                            ) ?? null,
-                        }
-                      : prev,
-                  );
-                  cache.setQueriesData<Food[]>(
-                    { queryKey: ["foods", "mobile-recommend-category"] },
-                    (prev) =>
-                      prev?.filter((f) => Number(f.restaurantId) !== shopId),
-                  );
-                  toast(
-                    `30 天内不再推荐「${food.restaurantName ?? "这家店"}」`,
-                  );
-                } catch (error) {
-                  toast(errorMessage(error));
-                } finally {
-                  setDismissing(false);
-                }
-              }}
+              disabled={discovery.dismissing}
+              onClick={() => void discovery.dismiss(food)}
             >
               不想吃这家
             </button>
@@ -1224,7 +1016,7 @@ function FoodCard({ food }: { food: Food }) {
       className="pc-food-card"
       onClick={() => m.setFoodId(food.id!)}
     >
-      <div className="pc-food-card-image" style={{ background: v.tile }}>
+      <div className="pc-food-card-image" style={{ background: v.tileSurface }}>
         {photo.unavailable ? (
           <FoodPhotoFallback category={food.category} failed={photo.failed} />
         ) : (
@@ -1546,8 +1338,9 @@ function DesktopDish() {
           <div className="pc-dish-layout">
             <section
               className="pc-dish-stage"
+              data-food-stage={v.stageTone}
               style={
-                { "--stage": v.stage, "--stage-on": v.on } as CSSProperties
+                { "--stage": v.stageSurface, "--stage-on": v.on } as CSSProperties
               }
             >
               <div className="pc-dish-stage-table" />

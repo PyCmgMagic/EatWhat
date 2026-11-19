@@ -216,7 +216,7 @@
 .mobile-settings-page
   .mobile-settings-content
   :is(
-    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
     textarea,
     select
   ):where(:not(.password-settings *)) {

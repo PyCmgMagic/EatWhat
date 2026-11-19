@@ -14,6 +14,7 @@ import {
 } from "../components/LoadingSkeleton";
 import type { DesignNode, Values, NodeView, Bridge } from "./types";
 import { useDesignBridge } from "./bridge";
+import { themeDeclaration } from "../theme/legacy-colors";
 import { foodCategories } from "../api/v2-vocab";
 import { DesignNav, DesignIcon, DesignRegistryContext, useMobile } from "./ui";
 
@@ -107,7 +108,7 @@ export function interpolate(raw: string | boolean, scope: Values): any {
     String(readBinding(expr, scope) ?? ""),
   );
 }
-export function designStyle(raw: string): React.CSSProperties {
+export function designStyle(raw: string, themed = true): React.CSSProperties {
   const result: Values = {};
   for (const declaration of raw.split(";")) {
     const colon = declaration.indexOf(":");
@@ -115,6 +116,7 @@ export function designStyle(raw: string): React.CSSProperties {
     let key = declaration.slice(0, colon).trim(),
       val = declaration.slice(colon + 1).trim();
     if (!key || !val) continue;
+    if (themed) val = themeDeclaration(key, val);
     if (key === "-webkit-backdrop-filter") key = "WebkitBackdropFilter";
     else if (!key.startsWith("--"))
       key = key.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
@@ -233,7 +235,7 @@ function Tree({
     if (raw.startsWith("hint-")) continue;
     const key = propNames[raw] ?? raw,
       val = interpolate(value, scope);
-    if (key === "style") props.style = designStyle(String(val));
+    if (key === "style") props.style = designStyle(String(val), !bridge.reference && screen !== "G-Crop");
     else if (key === "src") props.src = assets(String(val ?? ""));
     else props[key] = val;
   }

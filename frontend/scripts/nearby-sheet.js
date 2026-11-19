@@ -1,5 +1,5 @@
 async function validateNearbySheet(page) {
-  const base = "http://127.0.0.1:5173";
+  const base = new URL(page.url()).origin;
   const context = await page
     .context()
     .browser()
@@ -192,7 +192,7 @@ async function validateNearbySheet(page) {
     );
 
     await p
-      .getByRole("searchbox", { name: "搜店名或菜名", exact: true })
+      .getByRole("searchbox", { name: "搜店名或地址", exact: true })
       .fill("餐厅 2");
     await p.waitForFunction(
       () => document.querySelectorAll(".mobile-nearby-shop").length === 1,
@@ -203,7 +203,7 @@ async function validateNearbySheet(page) {
       "Search reset the sheet state",
     );
     await p
-      .getByRole("searchbox", { name: "搜店名或菜名", exact: true })
+      .getByRole("searchbox", { name: "搜店名或地址", exact: true })
       .fill("");
     await p.waitForFunction(
       () => document.querySelectorAll(".mobile-nearby-shop").length === 12,
@@ -277,33 +277,29 @@ async function validateNearbySheet(page) {
       "320/390/520px layouts, interrupted animation and reduced motion are usable; navigation remains visible",
     );
     await p.setViewportSize({ width: 390, height: 844 });
-    for (const [route, label] of [
-      ["/restaurants/1", "店铺菜单"],
-      ["/publish/dish", "发布表单"],
-    ]) {
-      await p.goto(base + "/?demo=1#" + route);
-      const existing = p.getByRole("button", {
-        name: new RegExp(`(展开|收起)${label}$`),
-      });
-      await existing.waitFor();
-      const original = await existing.boundingBox();
-      await existing.focus();
-      await p.keyboard.press("ArrowUp");
-      assert(
-        (await existing.getAttribute("aria-expanded")) === "true" &&
-          (await existing.boundingBox()).y < 40,
-        "Existing sheet stopped expanding: " + route,
-      );
-      await p.keyboard.press("ArrowDown");
-      assert(
-        (await existing.getAttribute("aria-expanded")) === "false" &&
-          Math.abs((await existing.boundingBox()).y - original.y) < 2,
-        "Existing sheet did not restore its original position: " + route,
-      );
-    }
-    checks.push(
-      "Shared handle retains the existing restaurant-menu and publishing-form behavior",
+    await p.goto(base + "/?demo=1#/restaurants/1");
+    await p.locator(".mobile-restaurant-menu").getByRole("link").first().click();
+    await p.waitForURL((url) => /^#\/foods\/\d+$/.test(url.hash));
+    checks.push("A dish can be opened from the restaurant menu");
+
+    await p.goto(base + "/?demo=1#/publish/dish");
+    const existing = p.getByRole("button", { name: /(展开|收起)发布表单$/ });
+    await existing.waitFor();
+    const original = await existing.boundingBox();
+    await existing.focus();
+    await p.keyboard.press("ArrowUp");
+    assert(
+      (await existing.getAttribute("aria-expanded")) === "true" &&
+        (await existing.boundingBox()).y < 40,
+      "Publishing sheet stopped expanding",
     );
+    await p.keyboard.press("ArrowDown");
+    assert(
+      (await existing.getAttribute("aria-expanded")) === "false" &&
+        Math.abs((await existing.boundingBox()).y - original.y) < 2,
+      "Publishing sheet did not restore its position",
+    );
+    checks.push("The shared handle still expands and collapses the publishing form");
     assert(!errors.length, "Browser errors: " + errors.join("; "));
     return { checks, errors, realBackendWrites: 0 };
   } catch (error) {

@@ -36,6 +36,7 @@
     "fflate": "^0.8.3",
     "jsdom": "^29.1.1",
     "openapi-typescript": "^7.13.0",
+    "postcss": "^8.5.31",
     "prettier": "^3.9.10",
     "typescript": "~5.9.3",
     "vite": "^8.3.5",

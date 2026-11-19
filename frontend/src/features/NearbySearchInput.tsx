@@ -2,12 +2,14 @@ import { useEffect, useRef, useState, type Ref } from "react";
 
 export function NearbySearchInput({
   label,
+  placeholder = "搜一家店",
   type = "text",
   value,
   onCommit,
   ref,
 }: {
   label: string;
+  placeholder?: string;
   type?: "text" | "search";
   value: string;
   onCommit: (value: string) => void;
@@ -33,7 +35,7 @@ export function NearbySearchInput({
       ref={ref}
       type={type}
       aria-label={label}
-      placeholder="搜一家店"
+      placeholder={placeholder}
       value={composition ?? value}
       autoComplete="off"
       autoCapitalize="none"

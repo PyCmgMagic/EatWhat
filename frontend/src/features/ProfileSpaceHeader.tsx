@@ -77,7 +77,7 @@ export default function ProfileSpaceHeader() {
   const heroVisual = profileCoverPending
     ? {
         stage: "#E8E1D8",
-        on: "#231C18",
+        on: "var(--ink)",
         ghost: "rgba(35,28,24,0.08)",
       }
     : profileVisual;

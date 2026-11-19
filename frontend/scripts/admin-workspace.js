@@ -64,6 +64,8 @@ async function validateAdminWorkspace(page) {
             .locator(".pc-header-actions")
             .getByRole("link", { name: "切换到管理后台", exact: true });
     await frontSwitch.waitFor();
+    if (mobile && width < 600)
+      await frontSwitch.getByText("管理后台", { exact: true }).waitFor();
     const original = await p.evaluate(() => location.hash),
       session = await p.evaluate(() =>
         localStorage.getItem("eatwhat-demo-session"),

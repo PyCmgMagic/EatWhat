@@ -101,7 +101,7 @@ function FoodRow({ food, kind }: { food: Food; kind: "favorites" | "likes" }) {
         <Thumb
           src={src}
           alt={food.name ?? "菜品"}
-          tile={visual.tile}
+          tile={visual.tileSurface}
           crop={food.coverCrop}
           fallbackIcon="bowl"
         />

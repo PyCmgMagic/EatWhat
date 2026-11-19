@@ -154,16 +154,16 @@ export default function RestaurantMarkers(props: Props) {
           height: box.height / scale,
         };
       });
-      const card = surface
-        ?.closest(".pc-map")
-        ?.querySelector(".pc-map-selected")
+      const foreground = surface
+        ?.closest(".pc-map, .mobile-nearby-screen")
+        ?.querySelector(".pc-map-selected, .mobile-nearby-toolbar")
         ?.getBoundingClientRect();
-      if (card)
+      if (foreground)
         reserved.push({
-          x: (card.x - bounds.x) / scale,
-          y: (card.y - bounds.y) / scale,
-          width: card.width / scale,
-          height: card.height / scale,
+          x: (foreground.x - bounds.x) / scale,
+          y: (foreground.y - bounds.y) / scale,
+          width: foreground.width / scale,
+          height: foreground.height / scale,
         });
       if (measurement)
         measurement.font = `600 12px ${getComputedStyle(container).fontFamily}`;

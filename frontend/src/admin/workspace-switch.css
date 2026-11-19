@@ -27,22 +27,6 @@
 .workspace-switch svg {
   flex-shrink: 0;
 }
-.mobile-profile-admin-link {
-  width: 44px;
-  height: 44px;
-  min-height: 44px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-.mobile-profile-admin-link > span:not(.design-icon) {
-  display: none;
-}
-.mobile-profile-admin-link > .design-icon {
-  width: 24px;
-  height: 24px;
-}
 @media (max-width: 1100px) {
   .pc-header-actions .workspace-switch {
     padding-inline: 10px;
