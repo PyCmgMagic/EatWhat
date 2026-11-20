@@ -143,18 +143,46 @@
   gap: 8px;
 }
 .profile-people-person-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   border: 1px solid #efe9e4;
   border-radius: 18px;
   padding: 14px 12px;
   color: inherit;
-  text-decoration: none;
   min-width: 0;
-  transition:
-    background-color 140ms ease-out,
-    border-color 140ms ease-out;
+}
+.profile-people-identity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 44px;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 8px;
+}
+.profile-people-follow {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 16px;
+  background: #ffd13f;
+  color: #231c18;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+.profile-people-follow[aria-pressed="true"] {
+  background: #f4efeb;
+}
+.profile-people-follow:disabled {
+  opacity: 0.65;
+}
+.profile-people-error {
+  grid-column: 1 / -1;
+  color: #9c3429;
 }
 .profile-people-person {
   flex: 1;
@@ -174,7 +202,7 @@
   color: #9a8b80;
   margin-top: 5px;
 }
-.profile-people-person-row > .design-icon {
+.profile-people-identity > .design-icon {
   color: #b5a79c;
 }
 .profile-people-footer {
@@ -225,9 +253,8 @@
   margin-top: 10px;
 }
 @media (hover: hover) and (pointer: fine) {
-  .profile-people-person-row[href]:hover {
-    border-color: #dfceb6;
-    background: #fffaf1;
+  .profile-people-identity[href]:hover strong {
+    text-decoration: underline;
   }
   .profile-people-footer a:hover {
     color: #231c18;

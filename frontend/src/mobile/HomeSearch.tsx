@@ -62,7 +62,7 @@ export function HomeSearchButton({
       onClick={onOpen}
     >
       <DesignIcon name="search" size={22} />
-      搜索
+      <span className="mobile-home-action-label" aria-hidden="true">搜索</span>
     </button>
   );
 }

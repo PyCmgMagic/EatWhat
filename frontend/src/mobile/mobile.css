@@ -81,17 +81,20 @@ button:disabled {
   zoom: 1;
 }
 .mobile-home-screen {
+  --home-safe-top: max(12px, env(safe-area-inset-top));
+  --home-toolbar-height: calc(var(--home-safe-top) + 52px);
   width: 100% !important;
   height: auto !important;
   min-height: 100dvh !important;
   overflow: visible !important;
-  padding-bottom: var(--mobile-nav-clearance);
 }
 .mobile-home-hero {
-  position: relative;
+  position: sticky;
+  top: min(0px, calc(100dvh - var(--mobile-nav-clearance) - var(--home-hero-height, 0px)));
   isolation: isolate;
   overflow: hidden;
-  padding: max(20px, env(safe-area-inset-top)) 20px 50px;
+  margin-top: calc(-1 * var(--home-toolbar-height));
+  padding: var(--home-toolbar-height) 20px 50px;
 }
 .mobile-home-hero .mobile-home-art {
   width: 100% !important;
@@ -132,20 +135,23 @@ button:disabled {
   background: #fff9ef;
 }
 .mobile-home-toolbar {
-  position: relative !important;
-  inset: auto !important;
-  display: grid !important;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
-  grid-template-areas: "location search inbox" "scene . theme";
-  gap: 4px 8px;
+  gap: 6px;
+  height: var(--home-toolbar-height);
+  padding: var(--home-safe-top) 16px 8px;
   align-items: center;
+  transition: color 240ms ease-out, background-color 240ms ease-out;
 }
 .mobile-home-toolbar > div:last-child { display: contents !important; }
 .mobile-home-location {
-  grid-area: location;
   min-width: 0;
   width: fit-content;
   max-width: 100%;
+  gap: 4px !important;
 }
 .mobile-home-location > span:first-child {
   overflow: hidden;
@@ -153,26 +159,47 @@ button:disabled {
   white-space: nowrap;
 }
 .mobile-home-location small { flex: none; font-weight: 500; }
-.mobile-home-toolbar .ew-scene-toggle { grid-area: scene; justify-self: start; }
-.mobile-home-toolbar .ew-home-search-button { grid-area: search; }
-.mobile-home-toolbar .mobile-home-inbox { grid-area: inbox; }
 .mobile-home-toolbar :is(.ew-home-search-button, .mobile-home-inbox) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  width: auto !important;
+  gap: calc(4px * var(--home-labels, 1));
+  width: calc(44px + 1.65em * var(--home-labels, 1)) !important;
   height: 44px !important;
-  padding: 0 12px;
+  padding: 0;
   border-radius: 999px;
   background: rgb(255 255 255 / 18%);
   font-size: 14px;
   font-weight: 600;
 }
-.mobile-home-toolbar .theme-toggle {
-  position: static;
-  grid-area: theme;
-  justify-self: end;
+.mobile-home-action-label {
+  /* Fade both characters before withdrawing their remaining space. */
+  max-width: calc(2em * clamp(0, var(--home-labels, 1) * 2, 1));
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: clamp(0, calc(var(--home-labels, 1) * 2 - 1), 1);
+}
+.mobile-home-bell {
+  position: relative;
+  display: inline-flex;
+}
+.mobile-home-bell > span:not(.design-icon) {
+  top: 0 !important;
+  right: 0 !important;
+}
+.mobile-home-preferences {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.mobile-home-screen .mobile-home-handle {
+  touch-action: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-home-hero { position: relative; top: auto; }
+  .mobile-home-toolbar { --home-labels: 1 !important; transition: none; }
+  .mobile-home-toolbar[data-compact] { --home-labels: 0 !important; }
 }
 .mobile-home-copy,
 .mobile-home-hero .mobile-home-resting-copy {
@@ -240,9 +267,16 @@ button:disabled {
 }
 .mobile-home-screen > .mobile-home-sheet {
   position: relative !important;
+  z-index: 2;
   inset: auto !important;
+  min-height: calc(100dvh - var(--home-toolbar-height));
   margin-top: -28px;
+  padding-bottom: var(--mobile-nav-clearance) !important;
   overflow: visible !important;
+  box-shadow: 0 -3px 14px rgb(35 28 24 / 8%);
+}
+.mobile-home-sheet :is(button, a, [tabindex]) {
+  scroll-margin-top: var(--home-toolbar-height);
 }
 .mobile-home-sheet .mobile-data-grid {
   display: grid;

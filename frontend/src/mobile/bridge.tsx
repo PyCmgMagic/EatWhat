@@ -89,6 +89,7 @@ import { FoodManage } from "../features/Catalog";
 import DishDetail from "./DishDetail";
 import { DishAvailabilityFields } from "../features/DishAvailability";
 import SheetHandle from "./SheetHandle";
+import HomeSheetHandle from "./HomeSheetHandle";
 import DishPhotoPicker from "./DishPhotoPicker";
 import HomeOrbit from "./HomeOrbit";
 import TagPanel from "./TagPanel";
@@ -1374,9 +1375,8 @@ export function useDesignBridge(
             onDismiss={() => controller.setState({ sheet: false })}
           />
         );
+      if (homeScreens.has(screen)) return <HomeSheetHandle />;
       const labels: Record<string, string> = {
-        "G2-Home": "推荐内容",
-        "G-HomePhoto": "推荐内容",
         "G-AddDish": "发布表单",
         "G-UserProfile": "食友分享",
       };
@@ -1566,17 +1566,26 @@ export function useDesignBridge(
             typeof child !== "string" &&
             String(child.attrs.style).includes("top: 488px"),
         );
+        const toolbarIndex = n.children.findIndex(
+          (child) => typeof child !== "string" && child.tag === "header",
+        );
         return (
           <div
             {...p}
             className={`${p.className ?? ""} mobile-home-screen${homeWithoutRecommendations ? " mobile-home-unavailable" : ""}`}
           >
+            {view.children[toolbarIndex]}
             <div
               className="mobile-home-hero"
               data-food-stage={carouselFoods.length ? values.s.stageTone : undefined}
               style={{ background: values.s.stage }}
             >
-              {view.children.slice(0, sheetIndex)}
+              {view.children.slice(0, toolbarIndex)}
+              <div className="mobile-home-preferences" style={{ color: values.s.on }}>
+                <SceneToggle tone="stage" stage={values.s.stage} value={m.scene} onChange={m.setScene} />
+                <ThemeToggle />
+              </div>
+              {view.children.slice(toolbarIndex + 1, sheetIndex)}
             </div>
             {view.children.slice(sheetIndex)}
           </div>
@@ -1614,7 +1623,11 @@ export function useDesignBridge(
         };
       }
       if (tag === "header")
-        return <header {...p} className="mobile-home-toolbar">{view.children}</header>;
+        return (
+          <header {...p} className="mobile-home-toolbar" style={{ color: values.s.on, backgroundColor: values.s.stage }}>
+            {view.children}
+          </header>
+        );
       if (tag === "div" && st.top === "392px") p.className = "mobile-home-dots";
       if (tag === "div" && st.top === "414px" && !heroWithoutDish) {
         const food = featuredFood;
@@ -1761,19 +1774,11 @@ export function useDesignBridge(
       }
       if (tag === "a" && n.attrs.href === "G-PanelPlace.dc.html")
         return (
-          <>
-            <a {...p} className="mobile-home-location" title={area?.name}>
-              <span>{isDemo && area?.hubId === 1 ? "软件园" : (area?.name ?? "选地点")}</span>
-              <small>{m.meal}</small>
-              <DesignIcon name="chevronDown" size={14} />
-            </a>
-            <SceneToggle
-              tone="stage"
-              stage={values.s?.stage}
-              value={m.scene}
-              onChange={m.setScene}
-            />
-          </>
+          <a {...p} className="mobile-home-location" title={area?.name}>
+            <span>{isDemo && area?.hubId === 1 ? "软件园" : (area?.name ?? "选地点")}</span>
+            <small>{m.meal}</small>
+            <DesignIcon name="chevronDown" size={14} />
+          </a>
         );
       if (n.attrs.role === "tablist")
         return <DiscoveryList discovery={discovery} renderDishes={(foods) => (
@@ -1783,8 +1788,6 @@ export function useDesignBridge(
         )} />;
       if (tag === "div" && st.gridTemplateColumns?.includes("repeat(2")) return null;
       if (tag === "a" && String(n.attrs["aria-label"]).startsWith("通知")) {
-        p["aria-label"] = `通知，${unread.data ?? 0} 条未读`;
-        // Search entry sits beside the bell, in the toolbar's top-right corner.
         return (
           <>
             <HomeSearchButton
@@ -1792,8 +1795,10 @@ export function useDesignBridge(
               open={!!controller.state.searchOpen}
               onOpen={() => controller.setState({ searchOpen: true })}
             />
-            <ThemeToggle />
-            {React.createElement(tag, { ...p, className: "mobile-home-inbox" }, ...view.children, "消息")}
+            <a {...p} className="mobile-home-inbox" aria-label={`消息通知，${unread.data ?? 0} 条未读`}>
+              <span className="mobile-home-bell">{view.children}</span>
+              <span className="mobile-home-action-label" aria-hidden="true">消息</span>
+            </a>
           </>
         );
       }

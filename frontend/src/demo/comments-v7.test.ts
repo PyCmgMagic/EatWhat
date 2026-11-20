@@ -28,6 +28,27 @@ beforeEach(() => {
   actor = { user: { ...user }, authenticated: true, admin: false };
 });
 describe("isolated v7 comment lifecycle", () => {
+  it("replaces a viewer's reaction and lets an unverified former voter remove it", () => {
+    const id = state.rows[0].id;
+    const react = (emoji: string, method = "PUT") =>
+      call(`/comments/${id}/reactions/${emoji}`, { method });
+    expect(react("HEART")).toEqual([
+      { reaction: "HEART", count: 1, selected: true },
+    ]);
+    expect(react("YUMMY")).toEqual([
+      { reaction: "YUMMY", count: 1, selected: true },
+    ]);
+    actor.authenticated = false;
+    expect(
+      call("/foods/1/comments").items.find((r: { id: number }) => r.id === id)
+        .reactions,
+    ).toEqual([{ reaction: "YUMMY", count: 1, selected: false }]);
+    actor.authenticated = true;
+    actor.user.verified = false;
+    expect(() => react("HEART")).toThrow(/认证/);
+    expect(react("YUMMY", "DELETE")).toEqual([]);
+  });
+
   it("exposes author profile details on comments and replies", () => {
     actor.user.avatar = "https://cdn.example.com/avatar/foodie.webp";
     state = seedComments(foods, actor.user);

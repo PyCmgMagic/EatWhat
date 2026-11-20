@@ -87,6 +87,7 @@ type State = {
   notifications: Notification[];
   history: { id: number; time: number; type?: "food" | "restaurant" }[];
   following: number[];
+  followers?: number[];
   privacy: { following: boolean; follower: boolean };
   hubs?: Hub[];
   publicTags?: Schema["AdminFoodTagVOResponse"][];
@@ -273,6 +274,34 @@ function save() {
     );
   }
 }
+
+function demoPeople(
+  state: State,
+  subject: number,
+  kind: "followers" | "followings",
+) {
+  const me = state.user.id ?? 10;
+  const followers = state.followers ?? [];
+  if (subject === me) return kind === "followers" ? followers : state.following;
+  const opposite = kind === "followers" ? state.following : followers;
+  return opposite.includes(subject) ? [me] : [];
+}
+
+const demoFanNames: Record<number, string> = {
+  21: "阿圆不想早八",
+  22: "小林爱吃面",
+  23: "阿哲",
+};
+function demoPerson(state: State, id: number) {
+  return {
+    id,
+    displayName: id === state.user.id
+      ? state.user.displayName
+      : demoFanNames[id] ?? state.foods.find(food => food.accountId === id)?.uploaderName ?? "校园食友",
+    isFollowingMe: state.followers?.includes(id) ?? false,
+    isFollowingHim: state.following.includes(id),
+  };
+}
 function recordRestaurantVisit(s: State, id: number) {
   // Loading a dish's restaurant data must not count as visiting that restaurant.
   if (location.hash?.split("?")[0] !== `#/restaurants/${id}`) return;
@@ -316,6 +345,7 @@ export const demoTransport: Transport = async (path, options) => {
   );
   s.schemaVersion = 2;
   s.blocked ??= [];
+  s.followers ??= Object.keys(demoFanNames).map(Number).filter(id => !s.blocked!.includes(id));
   s.personalized ??= true;
   s.policy ??= {
     version: "demo-policy-v1",
@@ -417,6 +447,7 @@ export const demoTransport: Transport = async (path, options) => {
         user: { ...s.user, verified: persona !== "unverified" },
         authenticated: !!readSession(),
         admin: persona === "admin",
+        blocked: s.blocked,
       },
       s.foods,
     );
@@ -486,7 +517,11 @@ export const demoTransport: Transport = async (path, options) => {
   else if (/^\/user\/blocks\/\d+$/.test(path)) {
     const userId = Number(path.split("/").pop());
     if (userId === s.user.id) throw new ApiError("不能屏蔽自己。", 400, 400);
-    if (method === "PUT" && !s.blocked.includes(userId)) s.blocked.push(userId);
+    if (method === "PUT" && !s.blocked.includes(userId)) {
+      s.blocked.push(userId);
+      s.following = s.following.filter(id => id !== userId);
+      s.followers = s.followers.filter(id => id !== userId);
+    }
     if (method === "DELETE")
       s.blocked = s.blocked.filter((id) => id !== userId);
     result = { blocked: s.blocked.includes(userId) };
@@ -1193,34 +1228,35 @@ export const demoTransport: Transport = async (path, options) => {
     );
   else if (path === "/user/userInfo")
     result = {
-      displayName:
-        Number(q.userId) === 10 ? s.user.displayName : "阿圆不想早八",
+      ...demoPerson(s, Number(q.userId)),
       level:
         Number(q.userId) === s.user.id
           ? demoGrowthProgress((s.growth ??= { entries: [] })).level
           : 3,
-      fansCount: 3,
-      followingsCount: 6,
+      fansCount: demoPeople(s, Number(q.userId), "followers").length,
+      followingsCount: demoPeople(s, Number(q.userId), "followings").length,
       earnedLikes: 96,
-      fansVisible: s.privacy.follower,
-      followingsVisible: s.privacy.following,
-      isFollowingHim: s.following.includes(Number(q.userId)),
+      fansVisible: Number(q.userId) !== s.user.id || s.privacy.follower,
+      followingsVisible: Number(q.userId) !== s.user.id || s.privacy.following,
       uploadedFoodsCount: s.foods.filter(
         (f) => f.accountId === (Number(q.userId) || 10),
       ).length,
     };
   else if (path === "/user/follow") {
-    s.following.push(Number(q.userId));
+    const id = Number(q.userId);
+    if (id === s.user.id || s.blocked.includes(id)) throw new ApiError("无法关注这位食友。", 40002);
+    if (!s.following.includes(id)) s.following.push(id);
     save();
   } else if (path === "/user/unfollow") {
     s.following = s.following.filter((id) => id !== Number(q.userId));
     save();
-  } else if (path === "/user/followers" || path === "/user/followings")
-    result = paginate(
-      s.following.map((id) => ({ id, displayName: "阿圆不想早八" })),
-      q,
+  } else if (path === "/user/followers" || path === "/user/followings") {
+    const people = demoPeople(
+      s, Number(q.userId ?? s.user.id),
+      path === "/user/followers" ? "followers" : "followings",
     );
-  else throw new ApiError("这项功能正在准备中，敬请期待。", "DEMO_UNSUPPORTED");
+    result = paginate(people.map(id => demoPerson(s, id)), q);
+  } else throw new ApiError("这项功能正在准备中，敬请期待。", "DEMO_UNSUPPORTED");
   const output = structuredClone(result);
   if (
     method === "GET" &&

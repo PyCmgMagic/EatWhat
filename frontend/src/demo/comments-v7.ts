@@ -1,5 +1,10 @@
 import { ApiError, type RequestOptions } from "../api/client";
-import { commentBody } from "../api/comments";
+import {
+  commentBody,
+  commentReactionOptions,
+  type CommentReactionType,
+} from "../api/comments";
+import { reactionSummary } from "./comment-reactions";
 import { mediaUrl, type Food, type User } from "../api/models";
 
 type Row = {
@@ -17,6 +22,7 @@ type Row = {
   createdAt: string;
   likesCount: number;
   likedBy: number[];
+  reactions?: Record<number, CommentReactionType>;
   moderationStatus:
     "PENDING" | "APPROVED" | "REJECTED" | "SUPERSEDED" | "DELETED";
   hidden?: boolean;
@@ -150,7 +156,7 @@ function visible(s: DemoComments, r: Row) {
     !root.hidden
   );
 }
-function view(s: DemoComments, r: Row) {
+function view(s: DemoComments, r: Row, viewer?: number) {
   return {
     id: r.id,
     gid: r.gid,
@@ -166,6 +172,7 @@ function view(s: DemoComments, r: Row) {
     authorAvatar: r.authorAvatar ?? null,
     text: r.text,
     likesCount: r.likesCount,
+    reactions: reactionSummary(r.reactions, viewer),
     createdAt: r.createdAt,
     images: images(r),
   };
@@ -206,13 +213,19 @@ export function handleComments(
   s: DemoComments,
   path: string,
   options: RequestOptions,
-  actor: { user: User; authenticated: boolean; admin: boolean },
+  actor: {
+    user: User;
+    authenticated: boolean;
+    admin: boolean;
+    blocked?: number[];
+  },
   foods: Food[],
 ) {
   const method = options.method ?? "GET",
     q = options.query,
     b = (options.body ?? {}) as Record<string, unknown>;
   const userId = actor.user.id ?? 10;
+  const viewer = actor.authenticated ? userId : undefined;
   const login = () => {
     if (!actor.authenticated) throw new ApiError("请先登录。", 20001, 401);
     if (actor.user.banned) throw new ApiError("账号暂时无法操作。", 20004, 403);
@@ -321,7 +334,7 @@ export function handleComments(
                 b.createdAt.localeCompare(a.createdAt),
         );
       return page(
-        roots.map((r) => view(s, r)),
+        roots.map((r) => view(s, r, viewer)),
         q,
       );
     }
@@ -379,9 +392,27 @@ export function handleComments(
         .filter(
           (r) => r.rootId === root.id && r.id !== root.id && visible(s, r),
         )
-        .map((r) => view(s, r)),
+        .map((r) => view(s, r, viewer)),
       q,
     );
+  }
+  const reactionPath = path.match(/^\/comments\/(\d+)\/reactions\/([A-Z_]+)$/);
+  if (reactionPath && (method === "PUT" || method === "DELETE")) {
+    login();
+    const row = rowFor(Number(reactionPath[1]), true);
+    const reaction = commentReactionOptions.find(
+      (option) => option.reaction === reactionPath[2],
+    )?.reaction;
+    if (!reaction) throw new ApiError("回应表情无效。", 40001);
+    const choices = (row.reactions ??= {});
+    if (method === "PUT") {
+      if (!actor.user.verified && !actor.admin)
+        throw new ApiError("请先完成学生认证。", 20004, 403);
+      if (actor.blocked?.includes(row.authorId))
+        throw new ApiError("无法回应这条评论。", 40002);
+      choices[userId] = reaction;
+    } else if (choices[userId] === reaction) delete choices[userId];
+    return reactionSummary(choices, userId);
   }
   const like = path.match(/^\/comments\/(\d+)\/like$/);
   if (like) {

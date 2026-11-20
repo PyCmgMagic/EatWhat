@@ -21,7 +21,7 @@ import { useTask } from "../components/useTask";
 import { errorMessage, unavailable } from "../api/client";
 import { categories, mediaUrl, money, parseId, type Food } from "../api/models";
 import { DesignIcon as Icon, useMobile } from "../mobile/ui";
-import { peopleHref } from "./profile-people";
+import { followLabel, peopleHref } from "./profile-people";
 import { CatalogCard, FeaturePage, FeatureState, FoodManage } from "./Catalog";
 import { visualFor } from "../mobile/catalog";
 import SheetHandle from "../mobile/SheetHandle";
@@ -892,13 +892,7 @@ export function MobileUserProfile() {
                   <Icon name={following ? "followed" : "follow"} size={18} />
                   {follow.isPending
                     ? "更新中…"
-                    : following
-                      ? followsMe
-                        ? "已互关"
-                        : "已关注"
-                      : followsMe
-                        ? "回关"
-                        : "关注"}
+                    : followLabel(q.data!)}
                 </button>
               ))}
             {ready && !self && (

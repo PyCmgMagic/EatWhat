@@ -3,6 +3,14 @@ import { profileSection } from "../app/profile-workspace";
 
 export type PeopleTab = "follow" | "fans";
 
+export function followLabel(person: {
+  isFollowingHim?: boolean | null;
+  isFollowingMe?: boolean | null;
+}) {
+  if (person.isFollowingHim) return person.isFollowingMe ? "已互关" : "已关注";
+  return person.isFollowingMe ? "回关" : "关注";
+}
+
 const otherProfilePath = /^\/users\/\d+$/;
 
 /**

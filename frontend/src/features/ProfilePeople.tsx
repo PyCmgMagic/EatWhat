@@ -8,8 +8,10 @@ import { mediaUrl, parseId } from "../api/models";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { SlidingTabs, MotionRegion } from "../desktop/motion";
 import { State } from "../desktop/secondary";
+import { useTask } from "../components/useTask";
 import {
   canReadPeople,
+  followLabel,
   isPeopleHost,
   legacyPeopleHref,
   peoplePage,
@@ -18,6 +20,44 @@ import {
 import { useExitPresence } from "../motion/hooks";
 import SheetHandle from "../mobile/SheetHandle";
 import "./profile-people.css";
+
+function PeopleFollowButton({
+  id,
+  name,
+  following,
+  followsMe,
+}: {
+  id: number;
+  name: string;
+  following: boolean;
+  followsMe?: boolean;
+}) {
+  const { api } = useApp();
+  const task = useTask(undefined, undefined, ["social", "user"]);
+  const label = followLabel({
+    isFollowingHim: following,
+    isFollowingMe: followsMe,
+  });
+  return (
+    <>
+      <button
+        className="profile-people-follow"
+        type="button"
+        aria-label={following ? `${label}，取消关注${name}` : `${label}${name}`}
+        aria-pressed={following}
+        disabled={task.isPending}
+        onClick={() => task.run(() => api.follow(id, following))}
+      >
+        {task.isPending ? "更新中…" : label}
+      </button>
+      {task.error && (
+        <small className="profile-people-error" role="alert">
+          {task.errorText}
+        </small>
+      )}
+    </>
+  );
+}
 
 /** Old bookmarks now open the same profile with its people panel. */
 export function useLegacyPeopleRedirect() {
@@ -79,7 +119,13 @@ export function ProfilePeopleDialog() {
   const page = peoplePage(viewParams.get("peoplePage")),
     search = viewParams.get("peopleQ") ?? "";
   const query = useQuery({
-    queryKey: ["social", tab === "fans" ? "followers" : "followings", id, page],
+    queryKey: [
+      "social",
+      tab === "fans" ? "followers" : "followings",
+      id,
+      page,
+      user?.id,
+    ],
     queryFn: () =>
       api.followers(tab === "fans" ? "followers" : "followings", id, page),
     enabled: open && allowed,
@@ -228,26 +274,38 @@ export function ProfilePeopleDialog() {
               </span>
               <span className="profile-people-person">
                 <strong title={personName}>{personName}</strong>
-                <small>{personId ? "查看食友主页" : "资料暂不可用"}</small>
+                {!personId && <small>资料暂不可用</small>}
+                {personId && personId === user?.id && <small>我自己</small>}
               </span>
-              {personId && <Icon name="chevronRight" size={17} />}
             </>
           );
-          return personId ? (
-            <Link
-              className="profile-people-person-row"
-              key={personId}
-              to={personId === user?.id ? "/me" : `/users/${personId}`}
-              aria-label={`查看${personName}的主页`}
-            >
-              {body}
-            </Link>
-          ) : (
+          return (
             <div
-              className="profile-people-person-row unavailable"
-              key={`unavailable-${index}`}
+              className="profile-people-person-row"
+              key={personId ?? `unavailable-${index}`}
             >
-              {body}
+              {personId ? (
+                <Link
+                  className="profile-people-identity"
+                  to={personId === user?.id ? "/me" : `/users/${personId}`}
+                  aria-label={`查看${personName}的主页`}
+                >
+                  {body}
+                  <Icon name="chevronRight" size={15} />
+                </Link>
+              ) : (
+                <span className="profile-people-identity">{body}</span>
+              )}
+              {personId &&
+                personId !== user?.id &&
+                typeof row.isFollowingHim === "boolean" && (
+                  <PeopleFollowButton
+                    id={personId}
+                    name={personName}
+                    following={row.isFollowingHim}
+                    followsMe={row.isFollowingMe}
+                  />
+                )}
             </div>
           );
         })}
@@ -279,9 +337,9 @@ export function ProfilePeopleDialog() {
             {avatar ? <img src={avatar} alt="" /> : name?.slice(0, 1) || "食"}
           </span>
           <div>
-            <span className="profile-people-eyebrow">
-              {own ? "我的校园食友圈" : name || "校园食友"}
-            </span>
+            {!own && name && (
+              <span className="profile-people-eyebrow">{name}</span>
+            )}
             <h2 id={titleId}>{own ? "关注与粉丝" : "TA 的关注与粉丝"}</h2>
           </div>
           <button
@@ -368,9 +426,7 @@ export function ProfilePeopleDialog() {
                 列表可见性设置
                 <Icon name="chevronRight" size={13} />
               </Link>
-            ) : (
-              "仅展示这位食友公开的列表"
-            )}
+            ) : null}
           </span>
           {allowed && (page > 1 || query.data?.hasNext) && (
             <nav aria-label="食友分页">

@@ -6736,6 +6736,44 @@
           }
         }
       },
+      "Reaction" : {
+        "type" : "object",
+        "properties" : {
+          "reaction" : {
+            "type" : "string",
+            "enum" : [ "THUMBS_UP", "HEART", "LAUGH", "SURPRISED", "SAD", "YUMMY" ]
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "selected" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "ResultListReaction" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Reaction"
+            }
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "VersionRequest" : {
         "type" : "object",
         "properties" : {
@@ -8880,6 +8918,12 @@
           "createdAt" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "isFollowingMe" : {
+            "type" : "boolean"
+          },
+          "isFollowingHim" : {
+            "type" : "boolean"
           }
         }
       },
@@ -10069,44 +10113,6 @@
           }
         }
       },
-      "Reaction" : {
-        "type" : "object",
-        "properties" : {
-          "reaction" : {
-            "type" : "string",
-            "enum" : [ "THUMBS_UP", "HEART", "LAUGH", "SURPRISED", "SAD", "YUMMY" ]
-          },
-          "count" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "selected" : {
-            "type" : "boolean"
-          }
-        }
-      },
-      "ResultListReaction" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "data" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/Reaction"
-            }
-          },
-          "msg" : {
-            "type" : "string"
-          },
-          "timestamp" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }
-      },
       "Comment" : {
         "type" : "object",
         "properties" : {
@@ -10148,15 +10154,15 @@
           "isLiked" : {
             "type" : "boolean"
           },
+          "createdAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "reactions" : {
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/Reaction"
             }
-          },
-          "createdAt" : {
-            "type" : "integer",
-            "format" : "int64"
           }
         }
       },

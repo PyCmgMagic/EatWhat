@@ -22,7 +22,7 @@ async(page)=>{
  try{
   await page.setViewportSize({width:1440,height:900});await page.goto(base+'/?demo=1&view=desktop#/me');await page.getByRole('link',{name:'查看我的粉丝',exact:true}).waitFor();
   const background=await page.locator('.pc-profile-content').elementHandle();await page.getByRole('tab',{name:/收藏/}).click();await settle();
-  await page.getByRole('link',{name:'查看我的粉丝',exact:true}).click();await page.getByRole('dialog',{name:'关注与粉丝',exact:true}).waitFor();await page.getByRole('heading',{name:'还没有粉丝',exact:true}).waitFor();
+  await page.getByRole('link',{name:'查看我的粉丝',exact:true}).click();await page.getByRole('dialog',{name:'关注与粉丝',exact:true}).waitFor();await panel().getByRole('link',{name:'查看阿圆不想早八的主页',exact:true}).waitFor();
   if(!page.url().includes('#/me?people=fans')||await page.locator('.pc-secondary-follows').count())throw new Error('仍然进入独立关注页');
   await close();if(!await background.evaluate(e=>e.isConnected)||await page.getByRole('tab',{name:/收藏/}).getAttribute('aria-selected')!=='true')throw new Error('打开列表丢失主页内容');
   if(!await page.getByRole('link',{name:'查看我的粉丝',exact:true}).evaluate(e=>document.activeElement===e))throw new Error('关闭未恢复入口焦点');

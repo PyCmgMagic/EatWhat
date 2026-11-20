@@ -1,6 +1,7 @@
 import { endpoints } from "../api/backend-v2-endpoints";
 import type { Operation, V2Schema } from "../api/backend-v2";
 import type { Envelope, RequestOptions } from "../api/client";
+import { reactionSummary } from "./comment-reactions";
 
 import {
   commentReactionOptions,
@@ -643,6 +644,10 @@ export function demoTransport(
     return list;
   };
   const idList = (source: Record<number, number[]>) => (source[user] ??= []);
+  const relationTo = (id: number) => ({
+    isFollowingMe: state.follows[id]?.includes(user) ?? false,
+    isFollowingHim: state.follows[user]?.includes(id) ?? false,
+  });
   const withFoodViewer = (food: DemoFood) => ({
     ...food,
     isLiked: uid ? idList(state.foodLikes).includes(food.id) : null,
@@ -659,16 +664,8 @@ export function demoTransport(
   const withCommentViewer = (comment: DemoComment) => ({
     ...comment,
     isLiked: uid ? idList(state.commentLikes).includes(comment.id) : null,
-    reactions: reactionsFor(comment.id),
+    reactions: reactionSummary(state.commentReactions[comment.id], uid),
   });
-  const reactionsFor = (id: number) => {
-    const choices = state.commentReactions[id] ?? {};
-    const values = Object.values(choices);
-    return commentReactionOptions.flatMap(({ reaction }) => {
-      const count = values.filter((value) => value === reaction).length;
-      return count ? [{ reaction, count, selected: choices[user] === reaction }] : [];
-    });
-  };
   const updateShop = (updated: Shop, action: string, restoredFrom?: number) => {
     const revisions = (state.history[updated.id] ??= []);
     const revisionId = (revisions[0]?.revision.id ?? 0) + 1;
@@ -864,27 +861,38 @@ export function demoTransport(
             displayName: target.displayName,
             avatar: target.avatar,
             signature: target.signature,
-            fansCount: target.fansVisible
+            fansCount: user === userId || target.fansVisible
               ? Object.values(state.follows).filter((ids) =>
                   ids.includes(userId),
                 ).length
               : null,
-            followingsCount: target.followingsVisible
+            followingsCount: user === userId || target.followingsVisible
               ? (state.follows[userId]?.length ?? 0)
               : null,
-            isFollowingHim: idList(state.follows).includes(userId),
+            followingsVisible: target.followingsVisible,
+            fansVisible: target.fansVisible,
+            ...relationTo(userId),
             blocked: idList(state.blocks).includes(userId),
           })
         : fail(30001, "用户不存在。");
     case "follow":
     case "unfollow":
+      if (
+        name === "follow" &&
+        (!target || user === userId || state.blocks[user]?.includes(userId) || state.blocks[userId]?.includes(user))
+      )
+        return fail(40002, "无法关注这位食友。");
       state.follows[user] = idList(state.follows).filter((id) => id !== userId);
       if (name === "follow") state.follows[user].push(userId);
       return write();
     case "block":
     case "unblock":
       state.blocks[user] = idList(state.blocks).filter((id) => id !== userId);
-      if (name === "block") state.blocks[user].push(userId);
+      if (name === "block") {
+        state.blocks[user].push(userId);
+        state.follows[user] = idList(state.follows).filter(id => id !== userId);
+        state.follows[userId] = (state.follows[userId] ?? []).filter(id => id !== user);
+      }
       return write();
     case "blockStatus":
       return ok({ blocked: idList(state.blocks).includes(userId) });
@@ -892,6 +900,11 @@ export function demoTransport(
     case "followings":
     case "blocks": {
       const subject = userId || user;
+      if (
+        subject !== user &&
+        ((name === "followers" && !target?.fansVisible) ||
+          (name === "followings" && !target?.followingsVisible))
+      ) return fail(20004, "对方没有公开这个列表");
       const ids =
         name === "blocks"
           ? idList(state.blocks)
@@ -908,6 +921,10 @@ export function demoTransport(
               id: person.id,
               userId: person.id,
               displayName: person.displayName,
+              ...(name !== "blocks" && {
+                avatar: person.avatar,
+                ...relationTo(person.id),
+              }),
             })),
         ),
       );
@@ -1447,7 +1464,7 @@ export function demoTransport(
       } else if (choices[user] === reaction) {
         delete choices[user];
       }
-      return write(reactionsFor(id));
+      return write(reactionSummary(choices, user));
     }
     case "deleteCommentsByCommentId":
       state.comments = state.comments.filter(

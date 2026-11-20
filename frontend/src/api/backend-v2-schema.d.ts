@@ -2818,6 +2818,21 @@ export interface components {
             mealTimes?: string[];
             deliveryEnabled?: boolean;
         };
+        Reaction: {
+            /** @enum {string} */
+            reaction?: "THUMBS_UP" | "HEART" | "LAUGH" | "SURPRISED" | "SAD" | "YUMMY";
+            /** Format: int64 */
+            count?: number;
+            selected?: boolean;
+        };
+        ResultListReaction: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["Reaction"][];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
         VersionRequest: {
             /** Format: int32 */
             minBuild?: number;
@@ -3615,6 +3630,8 @@ export interface components {
             title?: string;
             /** Format: int64 */
             createdAt?: number;
+            isFollowingMe?: boolean;
+            isFollowingHim?: boolean;
         };
         ResultPageResultPerson: {
             /** Format: int32 */
@@ -4082,21 +4099,6 @@ export interface components {
             /** Format: int64 */
             timestamp?: number;
         };
-        Reaction: {
-            /** @enum {string} */
-            reaction?: "THUMBS_UP" | "HEART" | "LAUGH" | "SURPRISED" | "SAD" | "YUMMY";
-            /** Format: int64 */
-            count?: number;
-            selected?: boolean;
-        };
-        ResultListReaction: {
-            /** Format: int32 */
-            code?: number;
-            data?: components["schemas"]["Reaction"][];
-            msg?: string;
-            /** Format: int64 */
-            timestamp?: number;
-        };
         Comment: {
             /** Format: int64 */
             id?: number;
@@ -4112,9 +4114,9 @@ export interface components {
             /** Format: int64 */
             replyCount?: number;
             isLiked?: boolean | null;
-            reactions?: components["schemas"]["Reaction"][];
             /** Format: int64 */
             createdAt?: number;
+            reactions?: components["schemas"]["Reaction"][];
         };
         PageResultComment: {
             /** Format: int64 */

@@ -542,7 +542,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
     follow: (userId: number, following: boolean) =>
       post(`/user/${following ? "unfollow" : "follow"}`, undefined, { userId }),
     followers: (kind: "followers" | "followings", userId?: number, page = 1) =>
-      data<Page<Schema["FansDTOResponse"]>>(`/user/${kind}`, {
+      data<Page<V2["schemas"]["Person"]>>(`/user/${kind}`, {
         query: { userId, page, pageSize: 20 },
       }),
     provinces: () =>

@@ -66,8 +66,8 @@ async (page) => {
     await p.goto(base + "#/");
     for (const width of [1440, 1024, 768, 640, 390, 320]) {
       await p.setViewportSize({ width, height: 844 });
-      const header = p.locator(width >= 640 ? ".pc-header" : ".mobile-home-toolbar");
-      await header.getByRole("switch", { name: "深色模式" }).waitFor();
+      const controls = p.locator(width >= 640 ? ".pc-header" : ".mobile-home-preferences");
+      await controls.getByRole("switch", { name: "深色模式" }).waitFor();
       const geometry = await toggle.boundingBox();
       assert(geometry && geometry.width >= 43 && geometry.height >= 43 &&
         geometry.x >= 0 && geometry.x + geometry.width <= width, "Theme switch clipped at " + width);

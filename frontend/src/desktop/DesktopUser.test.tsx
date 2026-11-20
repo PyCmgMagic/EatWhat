@@ -11,6 +11,7 @@ import { VerificationDialogProvider } from "../app/verification-dialog";
 import { MobileContext, type MobileState } from "../mobile/ui";
 import { writeSession } from "../app/runtime";
 import { DesktopUser } from "./DesktopCommunity";
+import { ProfilePeopleDialog } from "../features/ProfilePeople";
 
 let host: HTMLDivElement;
 let root: Root;
@@ -84,7 +85,7 @@ const mobile = {
   setScene: noop,
 } as unknown as MobileState;
 
-async function render(path: string) {
+async function render(path: string, view = <DesktopUser />) {
   await act(async () =>
     root.render(
       <AppProvider>
@@ -94,7 +95,7 @@ async function render(path: string) {
               <LoginDialogProvider>
                 <VerificationDialogProvider>
                   <CacheProbe />
-                  <DesktopUser />
+                  {view}
                 </VerificationDialogProvider>
               </LoginDialogProvider>
             </MobileContext.Provider>
@@ -182,9 +183,7 @@ it("renders a friend page on the profile-space shell", async () => {
   expect(host.querySelector(".profile-overview-hero")).toBeTruthy();
   expect(host.querySelector(".profile-overview-cover")).toBeTruthy();
   expect(host.querySelectorAll(".profile-overview-dish-card")).toHaveLength(2);
-  expect(host.querySelector(".pc-friend-follow")?.textContent).toBe(
-    "关注这位食友",
-  );
+  expect(host.querySelector(".pc-friend-follow")?.textContent).toBe("关注");
   expect(host.querySelector(".pc-friend-record")?.textContent).toContain(
     "分享了 2 道菜",
   );
@@ -240,6 +239,87 @@ it("follows the friend from the hero actions", async () => {
 
   expect(button.className).toContain("is-following");
   expect(requests).toContain("POST /api/user/follow");
+});
+
+it("uses the viewer's relationships on another profile and refreshes the row after a follow-back", async () => {
+  vi.stubGlobal("matchMedia", () => ({ matches: true }));
+  Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
+    configurable: true,
+    value(this: HTMLDialogElement) {
+      this.open = true;
+    },
+  });
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+  const fetchOther = globalThis.fetch;
+  let followed = false;
+  vi.stubGlobal(
+    "fetch",
+    async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input), "http://localhost");
+      if (url.pathname.endsWith("/user/followers")) {
+        expect(url.searchParams.get("userId")).toBe("21");
+        return ok({
+          items: [
+            {
+              id: 22,
+              displayName: "小林",
+              isFollowingHim: followed,
+              isFollowingMe: true,
+            },
+            {
+              id: 23,
+              displayName: "阿圆",
+              isFollowingHim: false,
+              isFollowingMe: false,
+            },
+            { id: 24, displayName: "旧资料" },
+            {
+              id: 11,
+              displayName: "我自己",
+              isFollowingHim: false,
+              isFollowingMe: false,
+            },
+          ],
+        });
+      }
+      if (
+        url.pathname.endsWith("/user/follow") ||
+        url.pathname.endsWith("/user/unfollow")
+      ) {
+        expect(init?.method).toBe("POST");
+        expect(url.searchParams.get("userId")).toBe("22");
+        followed = url.pathname.endsWith("/follow");
+        return ok(null);
+      }
+      return fetchOther(input, init);
+    },
+  );
+  await render("/users/21?people=fans", <ProfilePeopleDialog />);
+  const panel = () => document.querySelector('[aria-label="粉丝列表"]');
+  const buttons = () => [...(panel()?.querySelectorAll("button") ?? [])];
+  await spin(() => buttons().length === 2);
+  expect(buttons().map((b) => b.textContent)).toEqual(["回关", "关注"]);
+  expect(
+    panel()
+      ?.querySelector('a[aria-label="查看旧资料的主页"]')
+      ?.getAttribute("href"),
+  ).toBe("/users/24");
+  expect(
+    panel()
+      ?.querySelector('a[aria-label="查看我自己的主页"]')
+      ?.getAttribute("href"),
+  ).toBe("/me");
+  await act(async () => buttons()[0].click());
+  await spin(() => buttons()[0]?.textContent === "已互关");
+  expect(buttons()[0].getAttribute("aria-pressed")).toBe("true");
+  await act(async () => buttons()[0].click());
+  await spin(() => buttons()[0]?.textContent === "回关");
 });
 
 it("opens the own public page in edit mode", async () => {

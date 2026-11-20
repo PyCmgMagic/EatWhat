@@ -41,6 +41,7 @@ async function validateAllSheets(page) {
         ).find((e) => e.getAttribute("aria-label")?.endsWith(label));
         return (
           control?.getAttribute("aria-expanded") === String(state) &&
+          (state || !control.classList.contains("mobile-home-handle") || window.scrollY <= 1) &&
           !control.parentElement.hasAttribute("data-sheet-moving")
         );
       },
@@ -69,11 +70,35 @@ async function validateAllSheets(page) {
           await p
             .getByRole("textbox", { name: "菜名", exact: true })
             .fill("拖动保留的草稿");
+        const toolbar = p.locator(".mobile-home-toolbar");
+        if (label === "推荐内容") {
+          await p.locator(".mobile-home-copy h1").waitFor();
+          await p.evaluate(async () => {
+            await document.fonts.ready;
+            window.scrollTo({ top: 0, behavior: "instant" });
+          });
+        }
         const original = await handle.boundingBox();
+        if (label === "推荐内容") {
+          await p.evaluate(() => window.scrollTo(0, 40));
+          await p.waitForFunction(() => {
+            const opacity = Number(getComputedStyle(document.querySelector(".mobile-home-action-label")).opacity);
+            return opacity > 0 && opacity < 1;
+          });
+          const partial = await handle.boundingBox();
+          const hero = await p.locator(".mobile-home-hero").boundingBox();
+          if (Math.abs(original.y - partial.y - 40) > 1 || Math.abs(hero.y) > 1)
+            throw new Error("Scrolling should slide the sheet over the hero");
+          await p.evaluate(() => window.scrollTo(0, 0));
+        }
         await drag(handle, -Math.min(300, original.y - 32));
         await settled(handle, true);
         const expanded = await handle.boundingBox();
-        if (expanded.y > 45 || expanded.y >= original.y - 30)
+        const toolbarBox = label === "推荐内容" ? await toolbar.boundingBox() : null;
+        const misplaced = toolbarBox
+          ? Math.abs(expanded.y - toolbarBox.y - toolbarBox.height) > 1
+          : expanded.y > 45;
+        if (misplaced || expanded.y >= original.y - 30)
           throw new Error(
             `${route} did not expand at ${width}px: ${JSON.stringify({ original, expanded })}`,
           );
@@ -168,7 +193,8 @@ async function validateAllSheets(page) {
     await p.waitForTimeout(50);
     await quick.click();
     await settled(quick, true);
-    if ((await quick.boundingBox()).y > 30)
+    const bar = await p.locator(".mobile-home-toolbar").boundingBox();
+    if (Math.abs((await quick.boundingBox()).y - bar.y - bar.height) > 1)
       throw new Error("Rapid reversal changed the expanded position");
     await quick.click();
     await settled(quick, false);

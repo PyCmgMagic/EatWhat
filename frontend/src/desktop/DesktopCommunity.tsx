@@ -15,7 +15,7 @@ import { useTask } from "../components/useTask";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { SlidingTabs } from "./motion";
 import { useContentMotion } from "../motion/hooks";
-import { peopleHref } from "../features/profile-people";
+import { followLabel, peopleHref } from "../features/profile-people";
 import { useFoodImageRefresh } from "../features/media";
 import { demoDishes, visualFor } from "../mobile/catalog";
 import { stageCode } from "../api/food-display";
@@ -174,6 +174,7 @@ export function DesktopUser() {
               <button
                 type="button"
                 className={`pc-friend-follow${u.isFollowingHim ? " is-following" : ""}`}
+                aria-pressed={u.isFollowingHim === true}
                 disabled={task.isPending || u.isFollowingHim == null}
                 onClick={() =>
                   task.run(() => api.follow(id, u.isFollowingHim === true))
@@ -185,9 +186,7 @@ export function DesktopUser() {
                 />
                 {task.isPending
                   ? "正在更新…"
-                  : u.isFollowingHim
-                    ? "已关注"
-                    : "关注这位食友"}
+                  : followLabel(u)}
               </button>
             )}
             <BlockControl userId={id} />
