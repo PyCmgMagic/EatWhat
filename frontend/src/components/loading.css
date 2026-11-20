@@ -88,11 +88,6 @@
   aspect-ratio: 1;
   background: #e8dcbd;
 }
-.ew-page-skeleton .pc-dish-info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dish-gap);
-}
 .ew-skeleton-profile {
   display: grid;
   gap: 24px;

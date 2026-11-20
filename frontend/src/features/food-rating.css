@@ -178,7 +178,29 @@
   margin: -6px 0 26px;
 }
 .pc-dish-info .food-rating {
-  margin-bottom: var(--dish-gap);
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+  padding: 14px 0 0;
+  border: 0;
+  background: transparent;
+}
+.pc-dish-info .food-rating-top {
+  display: grid;
+  gap: 0;
+}
+.pc-dish-info .food-rating-empty span {
+  display: none;
+}
+.pc-dish-info .food-rating-stars {
+  width: min(100%, 220px);
+  grid-template-columns: repeat(5, 1fr);
+  padding: 0;
+  gap: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 @media (prefers-reduced-motion: reduce) {
   .food-rating-undo,

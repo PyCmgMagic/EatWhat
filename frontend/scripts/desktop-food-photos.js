@@ -31,9 +31,10 @@ async (page) => {
     checks.push('四种桌面宽度：上传图与默认图圆盘尺寸、位置一致，圆形白边，卡片底色跟随舞台色');
     checks.push('与默认菜品重名的上传照片仍按真实照片展示');
     await page.setViewportSize({width:1440,height:1000});await page.goto(base+'/');await page.locator('.pc-current-plate.is-photo img[alt="图片展示验收"]').waitFor();
-    await page.getByRole('link',{name:'就它了',exact:true}).click();await page.waitForURL('**#/foods/'+id);await page.locator('.pc-dish-plate > .pc-plate.is-photo').waitFor();
-    if(await page.locator('.pc-dish-plate > .pc-plate').evaluate(el=>getComputedStyle(el).borderRadius)!=='50%')throw new Error('详情未采用圆盘');
-    await page.screenshot({path:'output/playwright/pc-food-photo-detail.png'});checks.push('推荐与详情继续使用同一照片和圆盘展示');
+    await page.getByRole('link',{name:'就它了',exact:true}).click();await page.waitForURL('**#/foods/'+id);await page.locator('.pc-dish-photo.is-photo').waitFor();
+    const roundPhoto=await page.locator('.pc-dish-photo').evaluate(el=>getComputedStyle(el).borderRadius==='50%' && getComputedStyle(el.querySelector('img')).objectFit==='cover');
+    if(!roundPhoto)throw new Error('详情照片未填满圆盘');
+    await page.screenshot({path:'output/playwright/pc-food-photo-detail.png'});checks.push('推荐与详情都使用圆盘展示实拍');
     await page.setViewportSize({width:390,height:844});await page.goto('http://127.0.0.1:5173/?demo=1#/me');
     const mobileCard=page.locator('.design-food-tile').filter({has:page.getByRole('heading',{name:'图片展示验收',exact:true})});await mobileCard.waitFor();
     const mobile=await mobileCard.locator('img').evaluate(img=>({radius:getComputedStyle(img).borderRadius,fit:getComputedStyle(img).objectFit,width:img.getBoundingClientRect().width,height:img.getBoundingClientRect().height}));

@@ -27,31 +27,14 @@
 .pc-main:has(.pc-home, .pc-nearby) {
   max-width: var(--page-max-width);
 }
-/* The detail image follows available window height, independently of long copy. */
-@media (max-width: 899px) {
-  .pc-dish-layout {
-    --dish-stage-height: clamp(320px, 45svh, 380px);
-    grid-template-columns: minmax(0, 1fr);
-    min-height: 0;
-  }
-  .pc-dish-plate {
-    width: min(74%, calc(var(--dish-stage-height) - 88px), 280px);
-    top: calc(var(--dish-stage-height) / 2 - 20px);
-  }
-  .pc-dish-stage-category {
-    left: 22px;
-    top: 20px;
-  }
-  .pc-photo-thumbnails {
-    top: calc(var(--dish-stage-height) - 60px);
-    left: 18px;
-    right: 18px;
-    gap: 8px;
-  }
-  .pc-photo-thumbnails button {
-    width: 44px;
-    height: 44px;
-  }
+.pc-main:has(.pc-dish-layout) {
+  --dish-note-height: clamp(392px, calc(100svh - 176px), 564px);
+  max-width: min(1260px, calc(var(--dish-note-height) + 530px + var(--page-gutter) * 2));
+}
+@media (max-width: 759px) {
+  .pc-dish-layout { display: block; height: auto; }
+  .pc-dish-stage { height: clamp(260px, 55svh, 470px); }
+  .pc-dish-reading { overflow: visible; }
 }
 /* Budget the desktop stage against viewport height so the next dishes remain
    visible on laptops and zoomed displays, rather than growing with width alone. */

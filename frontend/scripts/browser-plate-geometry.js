@@ -86,18 +86,20 @@ async (page) => {
     await p.screenshot({ path: `output/playwright/plate-geometry-${engine}.png` });
     const href = await p.locator(".pc-food-card").first().getAttribute("href");
     await p.goto(new URL(href, base).href);
-    await p.locator(".pc-dish-plate > .pc-plate.is-photo img").waitFor();
-    const detail = await p.locator(".pc-dish-plate > .pc-plate").evaluate(async (plate) => {
+    await p.locator(".pc-dish-photo.is-photo img").waitFor();
+    const detail = await p.locator(".pc-dish-photo").evaluate(async (plate) => {
       const img = plate.querySelector("img");
       await img.decode();
       return {
         width: plate.offsetWidth,
         height: plate.offsetHeight,
+        radius: getComputedStyle(plate).borderRadius,
+        fit: getComputedStyle(img).objectFit,
         fills: img.offsetWidth === plate.clientWidth && img.offsetHeight === plate.clientHeight,
       };
     });
-    if (Math.abs(detail.width - detail.height) > 1 || !detail.fills)
-      throw Error(`Detail plate is not square: ${JSON.stringify(detail)}`);
+    if (!detail.width || Math.abs(detail.width - detail.height) > 1 || detail.radius !== "50%" || detail.fit !== "cover" || !detail.fills)
+      throw Error(`Detail photo does not fill the round plate: ${JSON.stringify(detail)}`);
     return {
       engine,
       measurements: measurements.map(({ viewport, plates }) => ({

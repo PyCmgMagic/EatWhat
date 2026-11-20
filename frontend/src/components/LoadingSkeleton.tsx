@@ -92,15 +92,18 @@ export function PageSkeleton({ kind }: { kind: PageSkeletonKind }) {
         <>
           <Skeleton width="30%" height={20} />
           <div className="pc-dish-layout">
-            <div className="pc-dish-stage ew-skeleton-stage">
-              <Skeleton width="70%" height="auto" round />
+            <div className="pc-dish-stage">
+              <div className="pc-dish-gallery">
+                <Skeleton width="var(--dish-plate-size)" height="auto" round />
+              </div>
             </div>
             <div className="pc-dish-info">
-              <Skeleton width="80%" height={48} />
-              <Skeleton width="30%" height={32} />
-              <ContentSkeleton kind="rows" count={1} />
-              <Skeleton height={48} />
-              <ContentSkeleton kind="form" count={2} />
+              <div className="pc-dish-byline"><Skeleton width="36%" height={34} /></div>
+              <div className="pc-dish-reading">
+                <Skeleton width="65%" height={32} />
+                <ContentSkeleton kind="rows" count={2} />
+              </div>
+              <div className="pc-dish-actions"><Skeleton height={44} /></div>
             </div>
           </div>
         </>

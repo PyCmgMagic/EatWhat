@@ -1296,6 +1296,59 @@ function DesktopNearby() {
 function DesktopSearch() {
   return <Catalog />;
 }
+function DishGallery({ food, illustrated }: { food: Food; illustrated: boolean }) {
+  const photos = food.pictureUrl ?? [];
+  const [index, setIndex] = useState(0);
+  const selected = index < photos.length ? index : 0;
+  const src = mediaUrl(photos[selected]);
+  const photo = useFoodPhoto(src);
+  const illustration = selected === 0 && illustrated && !photo.unavailable;
+  const frame = useRef<HTMLDivElement>(null);
+  useContentMotion(frame, selected, selected, "opacity");
+
+  return (
+    <section className="pc-dish-gallery" aria-label="菜品图片">
+      <div
+        ref={frame}
+        className={`pc-dish-photo pc-plate ${illustration ? "is-illustration" : "is-photo"}`}
+      >
+        {photo.unavailable ? (
+          <FoodPhotoFallback category={food.category} failed={photo.failed} />
+        ) : (
+          <FoodCover
+            src={src}
+            crop={selected === 0 ? food.coverCrop : undefined}
+            alt={food.name ?? "菜品照片"}
+            onError={photo.onError}
+            decoding="async"
+            fetchPriority="high"
+          />
+        )}
+      </div>
+      {photos.length > 1 && (
+        <div className="pc-gallery-controls" role="group" aria-label="切换照片">
+          <button
+            type="button"
+            aria-label="上一张照片"
+            onClick={() => setIndex((selected + photos.length - 1) % photos.length)}
+          >
+            <Icon name="back" size={20} />
+          </button>
+          <span aria-live="polite" aria-atomic="true">
+            {selected + 1} / {photos.length}
+          </span>
+          <button
+            type="button"
+            aria-label="下一张照片"
+            onClick={() => setIndex((selected + 1) % photos.length)}
+          >
+            <Icon name="chevronRight" size={20} />
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
 function DesktopDish() {
   const returnTo = useReturnTo("/");
   const { api, session, user, toast } = useApp(),
@@ -1310,7 +1363,8 @@ function DesktopDish() {
       staleTime: 0,
     }),
     food = query.data,
-    v = food ? visualFor(food, isDemo) : null;
+    visual = food && visualFor(food, isDemo);
+  const author = food && foodAuthor(food);
   const reactions = useFoodReaction({
     foodId: id,
     food,
@@ -1326,18 +1380,14 @@ function DesktopDish() {
     queryFn: () => api.restaurant(food!.restaurantId!),
     enabled: !!food?.restaurantId,
   });
-  const [image, setImage] = useState(0),
-    [reportOpen, setReportOpen] = useState(false),
-    photo = useRef<HTMLDivElement>(null);
-  useContentMotion(photo, image, image, "opacity");
+  const [reportOpen, setReportOpen] = useState(false);
   useEffect(() => {
-    setImage(0);
     setReportOpen(false);
   }, [id]);
   useEffect(() => m.setFoodId(id), [id]);
   return (
     <QueryStatus query={query} skeleton="dish">
-      {food && v && (
+      {food && visual && (
         <>
           <div className="pc-breadcrumb">
             <Link to={returnTo}>
@@ -1351,50 +1401,31 @@ function DesktopDish() {
             <Icon name="chevronRight" size={14} />
             <span>{food.name}</span>
           </div>
-          <div className="pc-dish-layout">
-            <section
+          <article
+            className="pc-dish-layout"
+            aria-labelledby="pc-dish-title"
+            style={{ "--dish-accent": visual.stage } as CSSProperties}
+          >
+            <div
               className="pc-dish-stage"
-              data-food-stage={v.stageTone}
-              style={
-                { "--stage": v.stageSurface, "--stage-on": v.on } as CSSProperties
-              }
+              data-food-stage={visual.stageTone}
+              style={{ "--dish-stage": visual.stageSurface, "--dish-ink": visual.on } as CSSProperties}
             >
-              <div className="pc-dish-stage-table" />
-              <div className="pc-dish-plate" ref={photo}>
-                <Plate
-                  priority
-                  food={{
-                    ...food,
-                    coverCrop: image === 0 ? food.coverCrop : null,
-                    pictureUrl: food.pictureUrl?.[image]
-                      ? [food.pictureUrl[image]]
-                      : food.pictureUrl,
-                  }}
-                />
-              </div>
-              <span className="pc-dish-stage-category">
-                {categoryNames[food.category ?? "other"]}
-              </span>
-              <div className="pc-photo-thumbnails">
-                {food.pictureUrl?.length! > 1 &&
-                  food.pictureUrl?.map((src, i) => (
-                    <button
-                      key={src}
-                      aria-label={`查看第 ${i + 1} 张照片`}
-                      aria-pressed={i === image}
-                      onClick={() => setImage(i)}
-                    >
-                      <img src={mediaUrl(src)} alt="" />
-                    </button>
-                  ))}
-              </div>
-            </section>
-            <section className="pc-dish-info">
-              <div className="pc-dish-heading">
-                <span className="pc-eyebrow">
-                  {categoryNames[food.category ?? "other"]}
-                  {(food as typeof food & V2Food).signature && " · 招牌菜"}
-                </span>
+              <DishGallery key={id} food={food} illustrated={!!visual.asset} />
+            </div>
+            <div className="pc-dish-info" key={id}>
+              <header className="pc-dish-byline">
+                <div className="pc-contributor">
+                  {author?.id ? (
+                    <Link to={`/users/${author.id}`}>
+                      <UserAvatar className="pc-user-avatar" avatar={food.user?.avatar} name={author.name} />
+                      <b>{author.name ?? "校园食友"}</b>
+                    </Link>
+                  ) : (
+                    <b>{author?.name ?? "校园食友"}</b>
+                  )}
+                  <UserTitle title={food.user?.title} />
+                </div>
                 <div className="pc-dish-tools">
                   <button
                     type="button"
@@ -1425,39 +1456,58 @@ function DesktopDish() {
                     onReport={() => setReportOpen(true)}
                   />
                 </div>
-              </div>
-              <h1>{food.name}</h1>
-              <div
-                className={`pc-detail-price${food.price == null ? " is-unknown" : ""}`}
-              >
-                {money(food.price)}
-                <SupplementPrice food={{ ...food, id }} />
-              </div>
-              {availabilityText(food) && (
-                <p className="dish-availability-note">
-                  {availabilityText(food)}
-                </p>
-              )}
-              <Link
-                className="pc-dish-shop"
-                to={`/restaurants/${food.restaurantId}`}
-                onClick={() => m.setShopId(food.restaurantId!)}
-              >
-                <span className="pc-detail-store-icon">
-                  <Icon name="store" size={24} />
-                </span>
-                <span>
-                  <b>{food.restaurantName}</b>
-                  <small>
-                    {shop.isPending && !shop.data ? (
-                      <Skeleton width="85%" height={14} />
-                    ) : (
-                      (shop.data?.address ?? "地址待补充")
-                    )}
-                  </small>
-                </span>
-                <Icon name="chevronRight" size={21} />
-              </Link>
+              </header>
+              <section className="pc-dish-reading" tabIndex={0} aria-labelledby="pc-dish-title">
+                <div className="pc-dish-copy">
+                  <h1 id="pc-dish-title">{food.name}</h1>
+                  <div className="pc-dish-facts">
+                    <div
+                      className={`pc-detail-price${food.price == null ? " is-unknown" : ""}`}
+                    >
+                      {money(food.price)}
+                      <SupplementPrice food={{ ...food, id }} />
+                    </div>
+                    <p className="pc-dish-meta">
+                      {[
+                        food.category && food.category !== "side_dish" && categoryNames[food.category],
+                        (food as typeof food & V2Food).signature && "招牌菜",
+                        availabilityText(food),
+                      ].filter(Boolean).join(" · ")}
+                    </p>
+                  </div>
+                </div>
+                {food.description?.trim() && (
+                  <p className="pc-dish-description">{food.description}</p>
+                )}
+                {!!food.systemTags?.length && (
+                  <ul className="pc-dish-tags" aria-label="口味">
+                    {food.systemTags.map(tag => (
+                      <li key={tag.id}>{tag.name}</li>
+                    ))}
+                  </ul>
+                )}
+                <Link
+                  className="pc-dish-shop"
+                  to={`/restaurants/${food.restaurantId}`}
+                  onClick={() => m.setShopId(food.restaurantId!)}
+                >
+                  <span className="pc-detail-store-icon">
+                    <Icon name="store" size={24} />
+                  </span>
+                  <span>
+                    <b>{food.restaurantName}</b>
+                    <small>
+                      {shop.isPending && !shop.data ? (
+                        <Skeleton width="85%" height={14} />
+                      ) : (
+                        (shop.data?.address ?? "地址待补充")
+                      )}
+                    </small>
+                  </span>
+                  <Icon name="chevronRight" size={21} />
+                </Link>
+                <FoodRating food={food} />
+              </section>
               <div className="pc-dish-actions">
                 <button
                   type="button"
@@ -1479,6 +1529,23 @@ function DesktopDish() {
                   <b className="pc-dish-like-count">{food.likesCount ?? "—"}</b>
                 </button>
                 <Link
+                  className="pc-discussion-jump"
+                  to={`/foods/${id}?section=comments`}
+                  onClick={(e) => {
+                    // Scroll on every click: after the first one the URL no
+                    // longer changes, so the discussion would not react.
+                    const target = document.getElementById("food-discussion");
+                    if (!target) return; // not loaded yet: let the link do it
+                    e.preventDefault();
+                    target.scrollIntoView({
+                      block: "start",
+                      behavior: instantMotion() ? "instant" : "smooth",
+                    });
+                  }}
+                >
+                  <Icon name="comment" size={15} /> 食友讨论
+                </Link>
+                <Link
                   className="pc-button"
                   to={`/restaurants/${food.restaurantId}`}
                 >
@@ -1486,75 +1553,8 @@ function DesktopDish() {
                   <Icon name="navigate" size={18} />
                 </Link>
               </div>
-              <FoodRating food={food} />
-              <div className="pc-taste-section">
-                <div className="pc-taste-heading">
-                  <h2>口味</h2>
-                  <Link
-                    className="pc-discussion-jump"
-                    to={`/foods/${id}?section=comments`}
-                    onClick={(e) => {
-                      // Scroll on every click: after the first one the URL no
-                      // longer changes, so the discussion would not react.
-                      const target = document.getElementById("food-discussion");
-                      if (!target) return; // not loaded yet: let the link do it
-                      e.preventDefault();
-                      target.scrollIntoView({
-                        block: "start",
-                        behavior: instantMotion() ? "instant" : "smooth",
-                      });
-                    }}
-                  >
-                    <Icon name="comment" size={15} /> 食友讨论
-                    <Icon name="chevronDown" size={13} />
-                  </Link>
-                </div>
-                {/* v2: taste tags are chosen by the author when posting. */}
-                <div className="pc-taste-cloud">
-                  {food.systemTags?.length ? (
-                    food.systemTags.map((tag, i) => (
-                      <span
-                        key={tag.id}
-                        className="pc-taste-tag"
-                        style={{
-                          fontSize: [30, 24, 20, 17][Math.min(i, 3)],
-                          fontWeight: i === 0 ? 900 : 600,
-                        }}
-                      >
-                        {tag.name}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="pc-taste-empty">发布者还没有标注口味</span>
-                  )}
-                </div>
-              </div>
-              <footer className="pc-dish-attribution">
-                <div className="pc-contributor">
-                  {foodAuthor(food).id ? (
-                    <Link to={`/users/${foodAuthor(food).id}`}>
-                      <UserAvatar
-                        className="pc-user-avatar"
-                        avatar={food.user?.avatar}
-                        name={foodAuthor(food).name}
-                      />
-                      <b>{foodAuthor(food).name ?? "同学"}</b>
-                      <UserTitle title={food.user?.title} />
-                    </Link>
-                  ) : (
-                    <>
-                      <b>{foodAuthor(food).name ?? "校园食友"}</b>
-                      <UserTitle title={food.user?.title} />
-                    </>
-                  )}
-                  <span>分享了这道菜</span>
-                </div>
-                {food.description?.trim() && (
-                  <p className="pc-dish-description">{food.description}</p>
-                )}
-              </footer>
-            </section>
-          </div>
+            </div>
+          </article>
           <Suspense fallback={<ContentSkeleton kind="rows" count={3} />}>
             <FoodDiscussion key={id} food={{ ...food, id }} />
             <FoodExtras id={id} />
