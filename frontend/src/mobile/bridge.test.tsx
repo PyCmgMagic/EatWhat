@@ -325,13 +325,13 @@ async function renderPhotoWorkflow() {
     colors: ["#F3C46E"],
   });
   const click = HTMLInputElement.prototype.click;
-  vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(function (
-    this: HTMLInputElement,
-  ) {
-    if (this.type !== "file") return click.call(this);
-    Object.defineProperty(this, "files", { value: [image] });
-    this.dispatchEvent(new Event("change"));
-  });
+  const openPicker = vi
+    .spyOn(HTMLInputElement.prototype, "click")
+    .mockImplementation(function (this: HTMLInputElement) {
+      if (this.type !== "file") return click.call(this);
+      Object.defineProperty(this, "files", { value: [image], configurable: true });
+      this.dispatchEvent(new Event("change", { bubbles: true }));
+    });
   await act(async () =>
     root.render(
       <AppProvider>
@@ -342,7 +342,44 @@ async function renderPhotoWorkflow() {
     ),
   );
   await spin(() => !!host.querySelector('[aria-label="添加菜品照片"]'));
+  return openPicker;
 }
+
+it("can reopen the camera without a picker event and recover from a photo read error", async () => {
+  const openPicker = await renderPhotoWorkflow();
+  openPicker.mockImplementationOnce(() => {});
+  const addPhoto = '[aria-label="添加菜品照片"]';
+
+  await click(addPhoto);
+  expect(openPicker).toHaveBeenCalledTimes(1);
+  expect(host.textContent).not.toContain("正在处理照片");
+  expect(photos.recommendPhotoStage).not.toHaveBeenCalled();
+
+  let failRead!: (error: Error) => void;
+  vi.mocked(photos.recommendPhotoStage).mockReturnValueOnce(
+    new Promise((_, reject) => {
+      failRead = reject;
+    }),
+  );
+  await click(addPhoto);
+  expect(openPicker).toHaveBeenCalledTimes(2);
+  expect(openPicker.mock.contexts[1]).toBe(
+    host.querySelector('input[type="file"]'),
+  );
+  expect(host.querySelector(".mobile-publish-photo-status")?.textContent).toBe(
+    "正在处理照片…",
+  );
+  expect(host.querySelector<HTMLButtonElement>(addPhoto)?.disabled).toBe(true);
+
+  await act(async () => failRead(new Error("照片读取失败")));
+  expect(host.textContent).not.toContain("正在处理照片");
+  expect(host.querySelector<HTMLButtonElement>(addPhoto)?.disabled).toBe(false);
+
+  await click(addPhoto);
+  expect(host.querySelector('[data-testid="photo-route"]')?.textContent).toBe(
+    "/publish/crop",
+  );
+});
 
 it("discards a cancelled new photo instead of adding it to the publishing draft", async () => {
   await renderPhotoWorkflow();

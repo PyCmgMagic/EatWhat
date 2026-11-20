@@ -217,6 +217,7 @@ export function useDesignBridge(
   draftRef.current = m.draft;
   const photoEdit = m.draft.photoEdit;
   const coverEdit = !!photoEdit && photoEdit.targetUrl === m.draft.images[0]?.url;
+  const dishPhotoInput = useRef<HTMLInputElement>(null);
   const photoOpening = useRef(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [cropImage, setCropImage] = useState<HTMLImageElement | null>(null);
@@ -643,62 +644,50 @@ export function useDesignBridge(
       } else throw new Error(result.message);
     });
   }
-  async function preparePhotoEditor(
+  function chooseFiles() {
+    if (photoOpening.current || busy || publishUncertain) return;
+    // A native camera can return without firing change or cancel.
+    dishPhotoInput.current?.click();
+  }
+  async function openPhotoEditor(
     source: File,
     framing: PhotoFraming,
-    page: string,
     targetUrl?: string,
   ) {
-    const candidates = await recommendPhotoStage(source, framing);
-    if (activeLocation.current !== page) return;
-    m.setDraft({
-      photoEdit: {
-        source,
-        url: URL.createObjectURL(source),
-        targetUrl,
-        framing,
-        candidates,
-      },
-    });
-    nav("/publish/crop");
-  }
-  async function chooseFiles() {
     if (photoOpening.current || busy || publishUncertain) return;
-    photoOpening.current = true;
-    const page = location.key;
-    try {
-      const files = await pickFiles(false);
-      if (!files.length || activeLocation.current !== page) return;
-      validateFiles(files, draftRef.current.images.length);
-      setPhotoBusy(true);
-      await preparePhotoEditor(files[0], { x: 0, y: 0, zoom: 1 }, page);
-    } catch (e) {
-      if (activeLocation.current === page) m.notice(errorMessage(e));
-    } finally {
-      photoOpening.current = false;
-      if (activeLocation.current === page) setPhotoBusy(false);
-    }
-  }
-  async function editPhoto(index: number) {
-    if (photoOpening.current || busy || publishUncertain) return;
-    const image = draftRef.current.images[index];
-    if (!image) return;
     photoOpening.current = true;
     setPhotoBusy(true);
     const page = location.key;
     try {
-      await preparePhotoEditor(
-        image.original ?? image.file,
-        image.framing ?? { x: 0, y: 0, zoom: 1 },
-        page,
-        image.url,
-      );
+      if (targetUrl === undefined)
+        validateFiles([source], draftRef.current.images.length);
+      const candidates = await recommendPhotoStage(source, framing);
+      if (activeLocation.current !== page) return;
+      m.setDraft({
+        photoEdit: {
+          source,
+          url: URL.createObjectURL(source),
+          targetUrl,
+          framing,
+          candidates,
+        },
+      });
+      nav("/publish/crop");
     } catch (e) {
       if (activeLocation.current === page) m.notice(errorMessage(e));
     } finally {
       photoOpening.current = false;
-      if (activeLocation.current === page) setPhotoBusy(false);
+      setPhotoBusy(false);
     }
+  }
+  function editPhoto(index: number) {
+    const image = draftRef.current.images[index];
+    if (!image) return;
+    void openPhotoEditor(
+      image.original ?? image.file,
+      image.framing ?? { x: 0, y: 0, zoom: 1 },
+      image.url,
+    );
   }
   async function publish() {
     if (
@@ -2216,11 +2205,25 @@ export function useDesignBridge(
             style={{ ...st, bottom: 96, overflowY: "auto", paddingBottom: 24 }}
           >
             {view.children.slice(0, 2)}
+            <input
+              ref={dishPhotoInput}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              disabled={photoDisabled || m.draft.images.length >= 9}
+              onChange={(event) => {
+                const source = event.currentTarget.files?.[0];
+                event.currentTarget.value = "";
+                if (source)
+                  void openPhotoEditor(source, { x: 0, y: 0, zoom: 1 });
+              }}
+            />
             <DishPhotoPicker
               images={m.draft.images}
               disabled={photoDisabled}
-              onAdd={() => void chooseFiles()}
-              onEdit={(index) => void editPhoto(index)}
+              processing={photoBusy}
+              onAdd={chooseFiles}
+              onEdit={editPhoto}
               onMove={(source, target) => {
                 const images = [...draftRef.current.images];
                 const from = images.findIndex((image) => image.url === source);
@@ -2268,10 +2271,10 @@ export function useDesignBridge(
                 type="button"
                 className="mobile-publish-preview is-empty"
                 disabled={photoDisabled}
-                onClick={() => void chooseFiles()}
+                onClick={chooseFiles}
               >
                 <DesignIcon name="camera" size={32} />
-                加一张照片
+                {photoBusy ? "正在处理照片…" : "加一张照片"}
               </button>
             )}
           </div>
@@ -3035,7 +3038,7 @@ export function useDesignBridge(
       return;
     }
     if (screen === "G-AddDish" && target === "G-Crop.dc.html") {
-      void chooseFiles();
+      chooseFiles();
       return;
     }
     if (screen === "G-Crop" && target === "G-AddDish.dc.html") {

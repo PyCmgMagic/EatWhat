@@ -42,6 +42,13 @@ img.mobile-publish-preview {
     sans-serif;
   font-variant-numeric: tabular-nums;
 }
+.mobile-publish-photo-status {
+  grid-column: 1 / -1;
+  font-size: 14px;
+}
+.mobile-publish-photo-status:empty {
+  position: absolute;
+}
 .mobile-publish-photo-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

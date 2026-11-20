@@ -34,6 +34,7 @@ function clearDrag(drag: PhotoDrag | null) {
 export default function DishPhotoPicker({
   images,
   disabled,
+  processing,
   onAdd,
   onEdit,
   onRemove,
@@ -41,6 +42,7 @@ export default function DishPhotoPicker({
 }: {
   images: readonly { url: string }[];
   disabled: boolean;
+  processing?: boolean;
   onAdd: () => void;
   onEdit: (index: number) => void;
   onRemove: (index: number) => void;
@@ -304,6 +306,11 @@ export default function DishPhotoPicker({
         )}
       </div>
       <output aria-label="已添加照片">{images.length} / 9</output>
+      {processing !== undefined && (
+        <span role="status" className="mobile-publish-photo-status">
+          {processing ? "正在处理照片…" : ""}
+        </span>
+      )}
     </section>
   );
 }
