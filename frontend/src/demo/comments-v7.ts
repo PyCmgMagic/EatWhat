@@ -447,6 +447,10 @@ export function handleComments(
     );
   }
   const deletion = path.match(/^\/comments\/(\d+)$/);
+  if (deletion && method === "GET") {
+    const row = rowFor(Number(deletion[1]), true);
+    return { ...view(s, row, userId), rootId: row.rootId === row.id ? null : row.rootId };
+  }
   if (deletion && method === "DELETE") {
     login();
     const row = rowFor(Number(deletion[1]));

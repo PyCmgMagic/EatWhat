@@ -35,7 +35,7 @@ describe("backend v2 client", () => {
         query: { scene: "delivery" },
       }),
     );
-    expect(Object.keys(endpoints)).toHaveLength(169);
+    expect(Object.keys(endpoints)).toHaveLength(170);
   });
 
   it("retries password login with the challenge only after a 30015", async () => {

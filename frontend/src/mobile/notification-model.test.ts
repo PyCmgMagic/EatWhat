@@ -45,6 +45,23 @@ it("uses the follow actor's profile rather than the recipient's target", () => {
     icon: "follow",
   });
 });
+it("identifies likes on a comment when the card has no detail", () => {
+  expect(
+    notificationView(
+      card({
+        kind: "comment_like",
+        column: "LIKES_AND_FAVORITES",
+        actors: [{ id: 21, name: "小林" }],
+        target: { domain: "comments", id: 7 },
+        data: null,
+      }),
+    ),
+  ).toMatchObject({
+    title: "小林赞了你的评论",
+    icon: "heart",
+    href: "/comments?commentId=7",
+  });
+});
 it("retains aggregate counts and connects comments to their food", () => {
   expect(
     notificationView(

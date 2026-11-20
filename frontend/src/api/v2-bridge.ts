@@ -1097,6 +1097,11 @@ const routes: [string, RegExp, Handler][] = [
   // ---- comments
   [
     "GET",
+    /^\/comments\/(\d+)$/,
+    async ({ match, call }) => comment(await call(match.input!)),
+  ],
+  [
+    "GET",
     /^\/foods\/(\d+)\/comments$/,
     async ({ match, query, call }) =>
       page(

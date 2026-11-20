@@ -5,7 +5,8 @@ import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AppContext, type AppState } from "../../app/state";
-import { MobileComments } from "./Comments";
+import { CommentDestination, FoodDiscussion, MobileComments } from "./Comments";
+import { commentLikeLink } from "../../api/notifications";
 
 vi.mock("../../app/runtime", () => ({
   isDemo: false,
@@ -50,6 +51,58 @@ afterEach(async () => {
   host.remove();
   vi.unstubAllGlobals();
 });
+
+function NotificationTarget({ desktop }: { desktop: boolean }) {
+  const location = useLocation();
+  if (!desktop) return <MobileComments />;
+  return location.pathname === "/comments" ? (
+    <CommentDestination commentId={37} desktop />
+  ) : (
+    <FoodDiscussion food={{ id: 71, name: "招牌云吞" }} />
+  );
+}
+
+it.each([
+  [false, null],
+  [false, 9],
+  [true, null],
+  [true, 9],
+] as const)(
+  "opens the exact liked comment without scanning pages (desktop=%s, root=%s)",
+  async (desktop, rootId) => {
+    const commentDetail = vi.fn().mockResolvedValue({
+      id: 37,
+      foodId: 71,
+      rootId,
+      authorName: "食友",
+      text: "目标内容",
+    });
+    const app = { api: { commentDetail }, user: null } as unknown as AppState;
+    await act(() =>
+      root.render(
+        <MemoryRouter
+          initialEntries={[commentLikeLink("comment_like", "comments", 37)!]}
+        >
+          <QueryClientProvider client={cache}>
+            <AppContext.Provider value={app}>
+              <NotificationTarget desktop={desktop} />
+            </AppContext.Provider>
+          </QueryClientProvider>
+        </MemoryRouter>,
+      ),
+    );
+    await vi.waitFor(async () => {
+      await act(() => Promise.resolve());
+      expect(
+        host.querySelector(".comments-focus .comments-text")?.textContent,
+      ).toBe("目标内容");
+    });
+    expect(host.querySelector(".comments-focus .is-reply") !== null).toBe(
+      !!rootId,
+    );
+    expect(commentDetail).toHaveBeenCalledWith(37, expect.any(AbortSignal));
+  },
+);
 
 async function publish(reply = false, direct = false) {
   const command = vi

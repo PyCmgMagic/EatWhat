@@ -2618,7 +2618,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** 查看指定评论或回复 */
+        get: operations["getCommentsByCommentId"];
         put?: never;
         post?: never;
         /** 【需登录】删除评论（作者或管理员） */
@@ -4127,6 +4128,14 @@ export interface components {
             /** Format: int64 */
             totalItems?: number;
             hasNext?: boolean;
+        };
+        ResultComment: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["Comment"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
         };
         ResultPageResultComment: {
             /** Format: int32 */
@@ -8986,6 +8995,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultVoid"];
+                };
+            };
+        };
+    };
+    getCommentsByCommentId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultComment"];
                 };
             };
         };

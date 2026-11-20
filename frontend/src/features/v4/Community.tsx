@@ -1,3 +1,4 @@
+import { commentLikeLink } from "../../api/notifications";
 import { DesignIcon as Icon } from "../../mobile/ui";
 import { RestaurantCard, TopicCard, TopicHero } from "./Cards";
 import { useContext, useEffect, useState } from "react";
@@ -742,6 +743,7 @@ export function NotificationCardsPanel() {
     if (extra === "new_device_login") return "/settings/devices";
     const t = item.target;
     if (t?.unavailable || !t?.id) return null;
+    if (item.kind === "comment_like") return commentLikeLink(item.kind, t.domain, t.id);
     const foodId = (d as { foodId?: number | null } | null | undefined)?.foodId;
     if (["comment", "reply"].includes(item.kind ?? "") && foodId)
       return `/foods/${foodId}?section=comments`;
@@ -813,18 +815,21 @@ export function NotificationCardsPanel() {
                   item.actors
                     ?.map((actor) => actor.name ?? "校园食友")
                     .join("、") ?? "",
+                isLike = item.kind === "like" || item.kind === "comment_like",
                 actionText =
-                  item.kind === "like"
-                    ? "赞了你的分享"
-                    : item.kind === "favorite"
-                      ? "收藏了你的分享"
-                      : item.kind === "follow"
-                        ? "关注了你"
-                        : item.kind === "reply"
-                          ? "回复了你的评论"
-                          : item.kind === "comment"
-                            ? "评论了你的分享"
-                            : "与你有了新互动",
+                  item.kind === "comment_like"
+                    ? "赞了你的评论"
+                    : item.kind === "like"
+                      ? "赞了你的分享"
+                      : item.kind === "favorite"
+                        ? "收藏了你的分享"
+                        : item.kind === "follow"
+                          ? "关注了你"
+                          : item.kind === "reply"
+                            ? "回复了你的评论"
+                            : item.kind === "comment"
+                              ? "评论了你的分享"
+                              : "与你有了新互动",
                 systemTitle =
                   item.kind === "moderation_result"
                     ? "审核结果"
@@ -840,7 +845,8 @@ export function NotificationCardsPanel() {
                               ? "账号处理通知"
                               : item.kind === "announcement"
                                 ? (extra?.title ?? "公告")
-                                : "系统通知";
+                                : "系统通知",
+                title = actorNames ? `${actorNames}${actionText}` : systemTitle;
               return (
                 <article
                   className="profile-message-row"
@@ -861,7 +867,7 @@ export function NotificationCardsPanel() {
                     >
                       <Icon
                         name={
-                          item.kind === "like"
+                          isLike
                             ? "heart"
                             : item.kind === "favorite"
                               ? "bookmark"
@@ -883,9 +889,7 @@ export function NotificationCardsPanel() {
                   <div className="profile-message-copy">
                     <div className="profile-message-heading">
                       <strong>
-                        {actorNames
-                          ? `${actorNames}${actionText}`
-                          : systemTitle}
+                        {item.kind === "comment_like" && link ? <Link to={link}>{title}</Link> : title}
                       </strong>
                       {!!item.unreadMemberCount && (
                         <span
@@ -898,7 +902,7 @@ export function NotificationCardsPanel() {
                     <p className="profile-message-meta">
                       {(item.memberCount ?? 0) > 1 &&
                         `${item.memberCount} 条${
-                          item.kind === "like"
+                          isLike
                             ? "点赞"
                             : item.kind === "favorite"
                               ? "收藏"
@@ -965,7 +969,7 @@ export function NotificationCardsPanel() {
                     ) : (
                       link && (
                         <Link className="profile-message-target" to={link}>
-                          查看内容 <Icon name="chevronRight" size={15} />
+                          {item.kind === "comment_like" ? "查看评论" : "查看内容"} <Icon name="chevronRight" size={15} />
                         </Link>
                       )
                     )}

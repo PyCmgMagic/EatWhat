@@ -1395,6 +1395,23 @@ export function demoTransport(
             .map(withCommentViewer),
         ),
       );
+    case "getCommentsByCommentId": {
+      const target = state.comments.find((comment) => comment.id === commentId);
+      const root = target?.rootId
+        ? state.comments.find((comment) => comment.id === target.rootId)
+        : target;
+      const blocked = state.blocks[user] ?? [];
+      if (
+        !target ||
+        !root ||
+        [target, root].some(
+          (comment) =>
+            comment.author?.id != null && blocked.includes(comment.author.id),
+        )
+      )
+        return fail(10001, "这条评论已删除或不可见");
+      return ok(withCommentViewer(target));
+    }
     case "getCommentsByCommentIdReplies":
       return ok(
         paged(

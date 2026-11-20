@@ -596,6 +596,12 @@ function DesktopPage({
     <DesktopGate verified={false}>{content}</DesktopGate>
   );
 }
+const CommentDestination = lazy(() =>
+  import("../features/comments/Comments").then((m) => ({
+    default: m.CommentDestination,
+  })),
+);
+
 function DiscussionRedirect() {
   const loc = useLocation(),
     m = useMobile(),
@@ -603,10 +609,19 @@ function DiscussionRedirect() {
   const id =
     parseId(new URLSearchParams(loc.search).get("foodId") ?? undefined) ??
     m.foodId;
+  const params = new URLSearchParams(loc.search);
+  const commentId =
+    !params.has("foodId") && loc.pathname === "/comments"
+      ? parseId(params.get("commentId") ?? undefined)
+      : undefined;
   useEffect(() => {
     // A resize may render the old phone route as a new hash arrives.
     // Do not let that route's deferred redirect replace a newer navigation.
-    if (window.location.hash.slice(1).split("?")[0] !== loc.pathname) return;
+    if (
+      commentId ||
+      window.location.hash.slice(1).split("?")[0] !== loc.pathname
+    )
+      return;
     nav(
       (() => {
         const search = new URLSearchParams(loc.search);
@@ -617,7 +632,8 @@ function DiscussionRedirect() {
       })(),
       { replace: true },
     );
-  }, [id, loc.pathname, loc.search, nav]);
+  }, [id, commentId, loc.pathname, loc.search, nav]);
+  if (commentId) return <CommentDestination commentId={commentId} desktop />;
   return <ContentSkeleton kind="rows" count={3} />;
 }
 function DesktopSource({

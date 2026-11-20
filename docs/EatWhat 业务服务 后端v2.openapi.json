@@ -6199,6 +6199,32 @@
       }
     },
     "/comments/{commentId}" : {
+      "get" : {
+        "tags" : [ "comment · Comment" ],
+        "operationId" : "getCommentsByCommentId",
+        "parameters" : [ {
+          "name" : "commentId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultComment"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "查看指定评论或回复"
+      },
       "delete" : {
         "tags" : [ "comment · Comment" ],
         "summary" : "【需登录】删除评论（作者或管理员）",
@@ -10189,6 +10215,25 @@
           },
           "hasNext" : {
             "type" : "boolean"
+          }
+        }
+      },
+      "ResultComment" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/Comment"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },

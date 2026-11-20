@@ -87,6 +87,18 @@ beforeEach(async () => {
                 actors: [{ id: 22, displayName: "Maycry" }],
               },
               {
+                id: 95,
+                kind: "comment_like",
+                target: { domain: "comments", id: 7 },
+                memberCount: 2,
+                unreadMemberCount: 0,
+                latestAt: Date.now(),
+                actors: [
+                  { id: 23, displayName: "小林" },
+                  { id: 24, displayName: "小吴" },
+                ],
+              },
+              {
                 id: 92,
                 kind: "comment",
                 target: { domain: "foods", id: 7 },
@@ -146,6 +158,8 @@ it("marks every PC notification read and refreshes the unread state", async () =
   await spin(() => !button.disabled);
   expect(host.textContent).toContain("2 条未读");
   expect(host.textContent).toContain("Maycry赞了你的分享");
+  expect(host.textContent).toContain("小林、小吴赞了你的评论");
+  expect(host.querySelector('.profile-message-heading a[href="/comments?commentId=7"]')).not.toBeNull();
   expect(host.textContent).not.toContain("1 条点赞");
   expect(host.querySelector(".profile-message-unread")).not.toBeNull();
   await act(async () => button.click());

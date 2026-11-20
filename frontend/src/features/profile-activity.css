@@ -109,7 +109,7 @@
   background: #f2eee8;
   color: #84705a;
 }
-.profile-activity-symbol[data-kind="like"] {
+.profile-activity-symbol:is([data-kind="like"], [data-kind="comment_like"]) {
   background: #fae9e2;
   color: #9d6652;
 }

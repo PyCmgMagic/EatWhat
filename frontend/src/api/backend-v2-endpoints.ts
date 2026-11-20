@@ -849,6 +849,11 @@ export const endpoints = {
     "path": "/foods/delete/{id}",
     "access": "admin"
   },
+  "getCommentsByCommentId": {
+    "method": "GET",
+    "path": "/comments/{commentId}",
+    "access": "public"
+  },
   "deleteCommentsByCommentId": {
     "method": "DELETE",
     "path": "/comments/{commentId}",

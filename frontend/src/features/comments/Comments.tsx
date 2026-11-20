@@ -10,6 +10,7 @@ import { UserTitle } from "../../components/UserTitle";
 import { userTitle } from "../../api/growth";
 import {
   Link,
+  Navigate,
   useLocation,
   useNavigate,
   useSearchParams,
@@ -71,6 +72,85 @@ const commentsHref = (foodId: number) => `/comments?foodId=${foodId}`;
 const dropPointerFocus = (event: MouseEvent<HTMLButtonElement>) => {
   if (event.detail > 0) event.currentTarget.blur();
 };
+function useCommentDetail(commentId: number) {
+  const { api, user } = useApp();
+  return useQuery({
+    queryKey: ["comments", "detail", user?.id ?? "guest", commentId],
+    queryFn: ({ signal }) => api.commentDetail(commentId, signal),
+    retry: false,
+  });
+}
+
+export function CommentDestination({
+  commentId,
+  desktop = false,
+}: {
+  commentId: number;
+  desktop?: boolean;
+}) {
+  const query = useCommentDetail(commentId);
+  const foodId = query.data?.foodId;
+  return (
+    <>
+      <Link className="comments-back" to="/notifications">
+        返回通知
+      </Link>
+      <QueryState query={query}>
+        {foodId && (
+          <Navigate
+            replace
+            to={
+              desktop
+                ? `/foods/${foodId}?section=comments&commentId=${commentId}`
+                : `${commentsHref(foodId)}&commentId=${commentId}`
+            }
+          />
+        )}
+      </QueryState>
+    </>
+  );
+}
+
+function FocusedComment({
+  commentId,
+  foodId,
+  onReply,
+  showAll,
+}: {
+  commentId: number;
+  foodId: number;
+  onReply: (target: ReplyTarget) => void;
+  showAll: () => void;
+}) {
+  const query = useCommentDetail(commentId);
+  const item = query.data;
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (item?.foodId === foodId)
+      ref.current?.scrollIntoView?.({ block: "center" });
+  }, [item?.id, foodId]);
+  return (
+    <div className="comments-focus" ref={ref}>
+      <div className="comments-sort">
+        <button onClick={showAll}>查看全部评论</button>
+      </div>
+      <QueryState query={query}>
+        {item?.foodId === foodId && item.id === commentId ? (
+          <CommentRow
+            key={item.id}
+            comment={item}
+            rootId={item.rootId ?? undefined}
+            nested={!!item.rootId}
+            onReply={onReply}
+            refresh={query.refetch}
+          />
+        ) : (
+          <p className="comments-state">这条评论已删除或不可见</p>
+        )}
+      </QueryState>
+    </div>
+  );
+}
 function discussionScroll(behavior: ScrollBehavior = "smooth") {
   document.getElementById("food-discussion")?.scrollIntoView({
     block: "start",
@@ -830,6 +910,7 @@ export function FoodDiscussion({
     loc = useLocation();
   const [params, setParams] = useSearchParams();
   const gallery = params.get("view") === "gallery";
+  const focused = parseId(params.get("commentId") ?? undefined);
   const Heading = mobile ? "h1" : "h2";
   const sort: CommentSort =
     params.get("sort") === "NEWEST" ? "NEWEST" : "MOST_USEFUL";
@@ -850,7 +931,7 @@ export function FoodDiscussion({
   const q = useQuery({
     queryKey: ["comments", "list", user?.id ?? "guest", food.id, sort, page],
     queryFn: ({ signal }) => api.foodComments(food.id, sort, page, 20, signal),
-    enabled: !gallery,
+    enabled: !gallery && !focused,
   });
   const g = useQuery({
     queryKey: ["comments", "gallery", user?.id ?? "guest", food.id, page],
@@ -884,7 +965,7 @@ export function FoodDiscussion({
   };
   useEffect(() => {
     if (
-      !mobile &&
+      !mobile && !focused &&
       new URLSearchParams(loc.search).get("section") === "comments"
     ) {
       const frame = requestAnimationFrame(() => {
@@ -911,7 +992,7 @@ export function FoodDiscussion({
             aria-pressed={!gallery}
             onClick={(event) => {
               dropPointerFocus(event);
-              change({ view: null, commentPage: null });
+              change({ view: null, commentPage: null, commentId: null });
             }}
           >
             评论
@@ -920,7 +1001,7 @@ export function FoodDiscussion({
             aria-pressed={gallery}
             onClick={(event) => {
               dropPointerFocus(event);
-              change({ view: "gallery", commentPage: null });
+              change({ view: "gallery", commentPage: null, commentId: null });
             }}
           >
             晒图
@@ -931,6 +1012,13 @@ export function FoodDiscussion({
         <div className="comments-list">
           {gallery ? (
             <Gallery query={g} />
+          ) : focused ? (
+            <FocusedComment
+              foodId={food.id}
+              commentId={focused}
+              onReply={reply}
+              showAll={() => change({ commentId: null })}
+            />
           ) : (
             <>
               <div className="comments-sort" aria-label="评论排序">
@@ -964,12 +1052,14 @@ export function FoodDiscussion({
               </QueryState>
             </>
           )}
-          <Pager
-            page={page}
-            hasNext={gallery ? g.data?.hasNext : q.data?.hasNext}
-            busy={gallery ? g.isFetching : q.isFetching}
-            onChange={(n) => change({ commentPage: String(n) })}
-          />
+          {!focused && (
+            <Pager
+              page={page}
+              hasNext={gallery ? g.data?.hasNext : q.data?.hasNext}
+              busy={gallery ? g.isFetching : q.isFetching}
+              onChange={(n) => change({ commentPage: String(n) })}
+            />
+          )}
         </div>
         {!mobile && (
           <div ref={composer}>
@@ -1185,6 +1275,7 @@ export function MobileComments() {
     nav = useNavigate();
   const params = new URLSearchParams(loc.search),
     foodId = parseId(params.get("foodId") ?? undefined);
+  const commentId = parseId(params.get("commentId") ?? undefined);
   const rootId = parseId(params.get("rootId") ?? undefined),
     replyId = parseId(params.get("replyToId") ?? undefined);
   const writing = loc.pathname.endsWith("/write");
@@ -1209,6 +1300,12 @@ export function MobileComments() {
   useEffect(() => {
     document.title = `${writing ? "发表评论" : "菜品评论"} · 山软今天吃什么`;
   }, [writing]);
+  if (!foodId && commentId && !writing)
+    return (
+      <main className="comments-mobile-page">
+        <CommentDestination commentId={commentId} />
+      </main>
+    );
   if (!foodId)
     return (
       <main className="comments-mobile-page">

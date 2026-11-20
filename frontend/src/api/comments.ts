@@ -28,6 +28,7 @@ export type CommentReaction = {
 
 /** 后端 v2 返回的作者主页信息；历史数据可能没有作者。 */
 export type CommentView = Schema["CommentViewResponse"] & {
+  rootId?: number | null;
   authorId?: number | null;
   authorAvatar?: string | null;
   authorTitle?: string | null;
@@ -91,6 +92,8 @@ export function createCommentsApi(request: ReturnType<typeof createRequester>) {
       headers: { "Idempotency-Key": command(key) },
     });
   return {
+    commentDetail: (commentId: number, signal?: AbortSignal) =>
+      data<CommentView>(`/comments/${id(commentId)}`, { signal }),
     foodComments: (
       foodId: number,
       sort: CommentSort = "MOST_USEFUL",

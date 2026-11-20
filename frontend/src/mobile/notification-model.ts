@@ -1,6 +1,8 @@
 import type { Schema } from "../api/models";
 import { historyTime } from "../desktop/history";
 
+import { commentLikeLink } from "../api/notifications";
+
 export type NotificationCard = Schema["CardResponse"];
 export const notificationColumns = [
   ["ALL", "全部"],
@@ -68,6 +70,13 @@ export function notificationView(item: NotificationCard) {
     case "like":
       title = `${who}赞了你的分享`;
       body = detail.foodName || body;
+      icon = "heart";
+      break;
+    case "comment_like":
+      if (!target?.unavailable)
+        href = commentLikeLink(kind, target?.domain, target?.id);
+      title = `${who}赞了你的评论`;
+      body = detail.commentText || body;
       icon = "heart";
       break;
     case "favorite":
