@@ -4,6 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AreaProvider, useArea, type Area } from "./area";
+import { useDeviceLocation } from "../features/useDeviceLocation";
 
 const { api, address } = vi.hoisted(() => ({
   api: { campuses: vi.fn(), hubs: vi.fn(), locateHub: vi.fn() },
@@ -30,7 +31,21 @@ let root: Root, host: HTMLDivElement, cache: QueryClient;
 let areaState: ReturnType<typeof useArea>;
 function Harness() {
   areaState = useArea();
-  return <output>{areaState.area?.name}</output>;
+  const { locate } = useDeviceLocation({
+    selectionVersion: areaState.selectionVersion,
+    selectArea: areaState.selectArea,
+  });
+  return (
+    <>
+      <output>{areaState.area?.name}</output>
+      <button
+        type="button"
+        className="locate"
+        aria-label="使用我的位置"
+        onClick={locate}
+      />
+    </>
+  );
 }
 async function mount(area: Area | null = device) {
   localStorage.setItem("eatwhat-area", JSON.stringify(area));
@@ -166,10 +181,6 @@ const campuses = [
 ];
 
 it("uses the picker position when the default campus loads during the permission prompt", async () => {
-  Object.defineProperties(HTMLDialogElement.prototype, {
-    showModal: { configurable: true, value: vi.fn() },
-    close: { configurable: true, value: vi.fn() },
-  });
   let finishCampuses!: (value: typeof campuses) => void;
   api.campuses.mockReturnValue(
     new Promise((resolve) => {
@@ -183,9 +194,7 @@ it("uses the picker position when the default campus loads during the permission
   });
   document.body.append(host);
   await mount(null);
-  await act(async () => areaState.openArea());
-  const button = host.querySelector<HTMLButtonElement>("dialog .btn-primary");
-  expect(button?.textContent).toContain("使用我的位置");
+  const button = host.querySelector<HTMLButtonElement>("button.locate");
   act(() => button!.click());
   expect(getPosition).toHaveBeenCalledOnce();
   await act(async () => finishCampuses(campuses));
@@ -193,7 +202,6 @@ it("uses the picker position when the default campus loads during the permission
   expect(areaState.area?.source).toBe("campus");
   await act(async () => getPosition.mock.calls[0][0](position));
   expect(areaState.area?.source).toBe("device");
-  expect(host.querySelector("dialog")).toBeNull();
 });
 
 it("waits for the default campus and uses its coordinates without a hub lookup", async () => {

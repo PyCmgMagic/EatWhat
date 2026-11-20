@@ -5,7 +5,7 @@ import { Select } from "../components/Select";
 import { categories } from "../api/models";
 import type { FoodFilters } from "../api/service";
 import { useArea } from "../app/area";
-import { DesignIcon as Icon } from "../mobile/ui";
+import { DesignIcon as Icon, useMobile } from "../mobile/ui";
 import { DishIllustration } from "../components/DishIllustration";
 import "./favorites.css";
 
@@ -20,7 +20,8 @@ export function FavoritesFilters({
   reset: () => void;
   mode?: "favorites" | "food" | "shop";
 }) {
-  const { area, openArea } = useArea();
+  const { area } = useArea();
+  const { openPanel } = useMobile();
   const favorites = mode === "favorites",
     food = mode !== "shop";
   const budgetActive = filters.minPrice != null || filters.maxPrice != null;
@@ -162,7 +163,7 @@ export function FavoritesFilters({
         <div className="favorites-region">
           <span>所在区域</span>
           <div className="ew-region-filter">
-            <button type="button" onClick={openArea}>
+            <button type="button" onClick={() => openPanel("G-PanelPlace")}>
               <Icon name="nearby" size={16} />
               {area?.name ?? "选择区域"}
             </button>

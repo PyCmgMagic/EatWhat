@@ -750,8 +750,13 @@ export const demoTransport: Transport = async (path, options) => {
       { id: 1, provinceId: 1, name: "济南市" },
       { id: 2, provinceId: 1, name: "青岛市" },
     ];
-  else if (path === "/hub/list") result = paginate(s.hubs, q);
-  else if (path.startsWith("/hub/detail/")) {
+  else if (path === "/hub/list") {
+    const keyword = String(q.keyword ?? "").trim();
+    result = paginate(
+      keyword ? s.hubs.filter((h) => h.name?.includes(keyword)) : s.hubs,
+      q,
+    );
+  } else if (path.startsWith("/hub/detail/")) {
     result =
       s.hubs.find((h) => h.id === Number(path.split("/").at(-1))) ?? null;
   } else if (path === "/hub/locate") {

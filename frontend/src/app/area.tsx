@@ -1,26 +1,15 @@
-import { useFeedbackState } from "../components/feedback";
 import {
   createContext,
   useContext,
   useState,
   useEffect,
-  useRef,
   type ReactNode,
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "./state";
 import { isDemo } from "./runtime";
 import { hasCoordinates } from "../api/models";
-import { errorMessage } from "../api/client";
 import { useDeviceLocation } from "../features/useDeviceLocation";
-import {
-  ErrorState,
-  Gate,
-  Icon,
-  Loading,
-  Modal,
-  Pagination,
-} from "../components/ui";
 export type Area = {
   name: string;
   gcjLng: number;
@@ -56,7 +45,6 @@ function rememberArea(area: Area) {
 const Context = createContext<{
   area: Area | null;
   ready: boolean;
-  openArea: () => void;
   selectArea: (area: Area) => void;
   selectionVersion: number;
   campusId?: number;
@@ -64,7 +52,6 @@ const Context = createContext<{
 }>({
   area: null,
   ready: false,
-  openArea: () => {},
   selectArea: () => {},
   selectionVersion: 0,
   selectCampus: () => {},
@@ -87,7 +74,6 @@ export function AreaProvider({ children }: { children: ReactNode }) {
     }
   });
   const [area, setArea] = useState<Area | null>(initialArea),
-    [open, setOpen] = useState(false),
     [selectionVersion, setSelectionVersion] = useState(0);
   useEffect(() => {
     const available = campuses.data?.filter(
@@ -176,7 +162,6 @@ export function AreaProvider({ children }: { children: ReactNode }) {
     setSelectionVersion((version) => version + 1);
     setArea(a);
     rememberArea(a);
-    setOpen(false);
   }
   const ready =
     area !== null ||
@@ -195,7 +180,6 @@ export function AreaProvider({ children }: { children: ReactNode }) {
         area,
         // Wait for the default point before consuming a personalized batch.
         ready,
-        openArea: () => setOpen(true),
         selectArea: select,
         selectionVersion,
         campusId,
@@ -203,109 +187,6 @@ export function AreaProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-      {open && (
-        <Modal title="从哪里开始找好吃的？" onClose={() => setOpen(false)}>
-          <AreaPicker />
-        </Modal>
-      )}
     </Context.Provider>
-  );
-}
-function AreaPicker() {
-  const { selectionVersion, selectArea } = useArea();
-  const { api } = useApp(),
-    [page, setPage] = useState(1),
-    [selecting, setSelecting] = useState<number>(),
-    [, setError] = useFeedbackState();
-  const { locate, locating } = useDeviceLocation({
-    selectionVersion,
-    selectArea,
-    disabled: selecting !== undefined,
-  });
-  const active = useRef(true);
-  useEffect(() => {
-    active.current = true;
-    return () => {
-      active.current = false;
-    };
-  }, []);
-  const hubs = useQuery({
-    queryKey: ["hubs", page],
-    queryFn: () => api.hubs(page),
-  });
-  return (
-    <>
-      <p className="muted modal-description">
-        手选区域后，将以区域中心查找餐厅。也可以主动开启定位。
-      </p>
-      <button
-        className="btn btn-primary"
-        disabled={locating || selecting !== undefined}
-        onClick={locate}
-      >
-        <Icon name="pin" />
-        {locating ? "正在定位…" : "使用我的位置"}
-      </button>
-
-      <div className="area-list">
-        {hubs.isPending ? (
-          <Loading />
-        ) : hubs.isError ? (
-          <ErrorState error={hubs.error} retry={() => void hubs.refetch()} />
-        ) : hubs.data.items?.length ? (
-          hubs.data.items.map((h) => (
-            <button
-              key={h.id ?? h.name}
-              className="area-option"
-              disabled={!h.id || locating || selecting !== undefined}
-              onClick={async () => {
-                setSelecting(h.id!);
-                setError("");
-                try {
-                  const detail = await api.hubDetail(h.id!);
-                  if (detail.id !== h.id || !hasCoordinates(detail))
-                    throw new Error(
-                      "区域详情缺少有效坐标，请重试或使用设备定位。",
-                    );
-                  if (active.current)
-                    selectArea({
-                      name: detail.name || "所选区域",
-                      gcjLng: detail.gcjLng!,
-                      gcjLat: detail.gcjLat!,
-                      hubId: detail.id!,
-                      source: "hub",
-                    });
-                } catch (cause) {
-                  if (active.current) setError(errorMessage(cause));
-                } finally {
-                  if (active.current) setSelecting(undefined);
-                }
-              }}
-            >
-              <Icon name="pin" />
-              <span>
-                {h.name || "未命名区域"}
-                <small>
-                  {selecting === h.id
-                    ? "正在读取区域详情…"
-                    : "读取区域详情后按中心查找"}
-                </small>
-              </span>
-              <Icon name="arrow" />
-            </button>
-          ))
-        ) : (
-          <p className="muted">
-            暂无区域，请使用设备定位或联系管理员添加区域。
-          </p>
-        )}
-      </div>
-      <Pagination
-        page={page}
-        hasNext={hubs.data?.hasNext}
-        totalPages={hubs.data?.totalPages}
-        onPage={setPage}
-      />
-    </>
   );
 }

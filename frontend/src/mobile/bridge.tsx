@@ -186,13 +186,13 @@ function PlaceLocateButton({ disabled }: { disabled: boolean }) {
   return (
     <button
       type="button"
-      className="mobile-place-chip"
+      className="mobile-place-locate"
       aria-pressed={active}
       data-active={active || undefined}
       disabled={disabled || locating}
       onClick={locate}
     >
-      <DesignIcon name="locate" size={16} />
+      <DesignIcon name="locate" size={14} />
       {locating ? "正在定位…" : "使用我的位置"}
     </button>
   );
@@ -474,10 +474,13 @@ export function useDesignBridge(
     enabled: active && (homeScreens.has(screen) || screen === "G-Inbox"),
     refetchInterval: 60_000,
   });
+  const [hubKeyword, setHubKeyword] = useState("");
+  const debouncedHubKeyword = useDebouncedSearch(hubKeyword.trim());
   const hubs = useQuery({
-    queryKey: ["hubs", page],
-    queryFn: () => api.hubs(page),
+    queryKey: ["hubs", 1, debouncedHubKeyword],
+    queryFn: () => api.hubs(1, debouncedHubKeyword || undefined),
     enabled: browse && screen === "G-PanelPlace",
+    placeholderData: (previous) => previous,
   });
   const queryKeyword =
     screen === "G-Search" ? String(controller.state.q ?? "") : search;
@@ -2659,6 +2662,8 @@ export function useDesignBridge(
       n.attrs["aria-label"] === "校区"
     ) {
       const campusActive = area?.source === "campus" && !!campusId;
+      const isActiveHub = (h: { id?: number | null }) =>
+        area?.source === "hub" && h.id != null && area.hubId === h.id;
       return (
         <div
           className="mobile-place-picker"
@@ -2693,36 +2698,82 @@ export function useDesignBridge(
                 </option>
               ))}
           </Select>
-          {hubs.data?.items?.map((h) => {
-            const activeHub = area?.source === "hub" && area?.hubId === h.id;
-            return (
+          <div className="mobile-place-hub-head">
+            <span>附近区域</span>
+            <PlaceLocateButton disabled={busy} />
+          </div>
+          {(hubKeyword ||
+            (hubs.data?.items?.length ?? 0) > 6 ||
+            hubs.data?.hasNext) && (
+            <input
+              type="search"
+              className="mobile-place-search"
+              placeholder="搜索商圈 / 区域"
+              aria-label="搜索附近区域"
+              value={hubKeyword}
+              onChange={(event) => setHubKeyword(event.currentTarget.value)}
+            />
+          )}
+          <div
+            className="mobile-place-hubs"
+            role="group"
+            aria-label="附近区域"
+            aria-busy={hubs.isFetching}
+          >
+            {hubs.isPending ? (
+              <span className="mobile-place-empty">正在加载区域…</span>
+            ) : hubs.isError ? (
               <button
-                key={h.id}
-                className="mobile-place-chip"
-                aria-pressed={activeHub}
-                data-active={activeHub || undefined}
-                disabled={!h.id || busy}
-                onClick={() =>
-                  void run(async () => {
-                    const detail = await api.hubDetail(h.id!);
-                    if (detail.id !== h.id || !hasCoordinates(detail))
-                      throw new Error("区域详情缺少有效坐标，请重试或使用定位。");
-                    selectArea({
-                      name: detail.name ?? "所选区域",
-                      gcjLng: detail.gcjLng!,
-                      gcjLat: detail.gcjLat!,
-                      hubId: detail.id!,
-                      source: "hub",
-                    });
-                    m.closePanel();
-                  })
-                }
+                type="button"
+                className="mobile-place-empty"
+                onClick={() => void hubs.refetch()}
               >
-                {h.name}
+                区域加载失败，点此重试
               </button>
-            );
-          })}
-          <PlaceLocateButton disabled={busy} />
+            ) : !hubs.data?.items?.length ? (
+              <span className="mobile-place-empty">
+                {debouncedHubKeyword
+                  ? `没有找到“${debouncedHubKeyword}”`
+                  : "暂无可选区域"}
+              </span>
+            ) : null}
+            {[...(hubs.data?.items ?? [])]
+              .sort((a, b) => Number(isActiveHub(b)) - Number(isActiveHub(a)))
+              .map((h) => (
+                <button
+                  type="button"
+                  key={h.id}
+                  className="mobile-place-chip"
+                  aria-pressed={isActiveHub(h)}
+                  data-active={isActiveHub(h) || undefined}
+                  disabled={!h.id || busy}
+                  onClick={() =>
+                    void run(async () => {
+                      const detail = await api.hubDetail(h.id!);
+                      if (detail.id !== h.id || !hasCoordinates(detail))
+                        throw new Error(
+                          "区域详情缺少有效坐标，请重试或使用定位。",
+                        );
+                      selectArea({
+                        name: detail.name ?? "所选区域",
+                        gcjLng: detail.gcjLng!,
+                        gcjLat: detail.gcjLat!,
+                        hubId: detail.id!,
+                        source: "hub",
+                      });
+                      m.closePanel();
+                    })
+                  }
+                >
+                  {h.name}
+                </button>
+              ))}
+          </div>
+          {hubs.data?.hasNext && (
+            <span className="mobile-place-empty">
+              只显示前 {hubs.data.items?.length ?? 0} 个，输入名称查找更多
+            </span>
+          )}
         </div>
       );
     }

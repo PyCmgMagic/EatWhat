@@ -8,8 +8,11 @@ import { FavoritesFilters } from "./FavoritesControls";
 vi.mock("../app/area", () => ({
   useArea: () => ({
     area: { name: "软件园", hubId: 2 },
-    openArea: vi.fn(),
   }),
+}));
+vi.mock("../mobile/ui", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../mobile/ui")>()),
+  useMobile: () => ({ openPanel: vi.fn() }),
 }));
 
 let host: HTMLDivElement;

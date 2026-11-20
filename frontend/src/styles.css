@@ -428,39 +428,6 @@ td {
   width: 100%;
   margin: 25px 0 16px;
 }
-.area-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 24px 0 5px;
-}
-.area-option {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  border: 1px solid var(--line);
-  padding: 15px;
-  border-radius: 12px;
-  text-align: left;
-  transition: background 0.2s;
-}
-.area-option:hover {
-  background: var(--paper);
-}
-.area-option > span {
-  flex: 1;
-  font-size: 13px;
-}
-.area-option small {
-  display: block;
-  font-size: 10px;
-  color: var(--muted);
-  margin-top: 4px;
-}
-.area-option > svg {
-  width: 18px;
-  color: #849776;
-}
 .inline-form {
   display: flex;
   gap: 9px;
@@ -1374,12 +1341,6 @@ td {
   }
   .modal .empty-state h3 {
     font-size: 21px;
-  }
-  .area-option {
-    padding: 12px;
-  }
-  .area-option > span {
-    font-size: 12px;
   }
   .mobile-search-form .search-form {
     padding: 14px 12px;

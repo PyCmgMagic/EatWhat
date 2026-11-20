@@ -478,8 +478,10 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       }),
     deleteMyFood: (id: number) =>
       request<void>(`/foods/my/${id}`, { method: "DELETE" }),
-    hubs: (page = 1) =>
-      data<Page<Hub>>("/hub/list", { query: { page, pageSize: 20 } }),
+    hubs: (page = 1, keyword?: string) =>
+      data<Page<Hub>>("/hub/list", {
+        query: { page, pageSize: 20, keyword: keyword || undefined },
+      }),
     hubDetail: (id: number) => data<Hub>(`/hub/detail/${id}`),
     locateHub: (gcjLng: number, gcjLat: number) =>
       request<Hub | null>("/hub/locate", { query: { gcjLng, gcjLat } }),

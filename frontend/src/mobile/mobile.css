@@ -1874,8 +1874,71 @@ body:has(
   width: 100%;
 }
 .mobile-place-picker > .ew-select {
-  flex: 1 1 180px;
+  flex: 1 1 100%;
   min-width: 0;
+}
+.mobile-place-hub-head {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+  color: #6f625a;
+  font-size: 13px;
+  font-weight: 600;
+}
+.mobile-place-locate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: #231c18;
+  font-size: 13px;
+  font-weight: 600;
+}
+.mobile-place-search {
+  flex: 1 1 100%;
+  min-width: 0;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid #e9dfd1;
+  border-radius: 12px;
+  background: #fffdf8;
+  color: #231c18;
+  font-size: 14px;
+}
+.mobile-place-search:focus {
+  outline: 2px solid #231c18;
+  outline-offset: -1px;
+}
+.mobile-place-hubs {
+  flex: 1 1 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  /* about three rows of chips; the rest scrolls */
+  max-height: 128px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 0;
+}
+.mobile-place-hubs[aria-busy="true"] {
+  opacity: 0.6;
+}
+.mobile-place-locate[data-active] {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.mobile-place-empty {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: #9a8b80;
+  font-size: 13px;
+  text-align: left;
 }
 .mobile-place-picker .ew-select > .ew-select-trigger {
   min-height: 44px;
