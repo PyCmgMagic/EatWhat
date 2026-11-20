@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { Link } from "react-router-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -91,6 +91,7 @@ export function DesktopHistory() {
     );
   const groups = historyGroups(visible);
   function select(next: HistoryKind) {
+    if (next === kind) return;
     setKind(next);
     setPage(1);
     setSearch("");
@@ -107,7 +108,7 @@ export function DesktopHistory() {
         }
       >
         <div className="pp-seg">
-          <SlidingTabs label="足迹类型" active={kind}>
+          <SlidingTabs label="足迹类型" active={kind} indicatorShape="pill">
             {[
               { id: "food", name: "菜品", icon: "bowl" },
               { id: "restaurant", name: "店铺", icon: "store" },
@@ -115,6 +116,8 @@ export function DesktopHistory() {
               <button
                 role="tab"
                 key={tab.id}
+                id={`history-tab-${tab.id}`}
+                aria-controls="history-records"
                 aria-selected={kind === tab.id}
                 tabIndex={kind === tab.id ? 0 : -1}
                 onClick={() => select(tab.id as HistoryKind)}
@@ -128,7 +131,7 @@ export function DesktopHistory() {
       </ProfilePageHead>
       {items.length > 0 && (
         <div className="pc-library-toolbar pc-history-toolbar">
-          <span className="pc-history-count">
+          <span className="pc-history-count" role="status">
             {query.isPlaceholderData
               ? "正在切换…"
               : `共 ${query.data?.totalItems ?? items.length} 条记录`}
@@ -166,20 +169,14 @@ export function DesktopHistory() {
       {query.error && query.data && (
         <Failure error={query.error} retry={() => void query.refetch()} />
       )}
-      {query.isPlaceholderData && (
-        <p className="pc-history-loading" role="status">
-          正在切换记录…
-        </p>
-      )}
       <MotionRegion
-        changeKey={
-          query.isPlaceholderData
-            ? undefined
-            : `${kind}:${page}:${query.dataUpdatedAt}`
-        }
+        changeKey={query.isPlaceholderData ? undefined : `${kind}:${page}`}
         order={kind === "food" ? 0 : 1}
         className="pc-history-content"
-        aria-busy={query.isPlaceholderData}
+        role="tabpanel"
+        id="history-records"
+        aria-labelledby={`history-tab-${kind}`}
+        aria-busy={query.isPending || query.isPlaceholderData}
       >
         {query.isPending ? (
           <ContentSkeleton kind="rows" count={4} />
@@ -198,6 +195,11 @@ export function DesktopHistory() {
               重新加载
             </button>
           </ProfileEmpty>
+        ) : !items.length && query.isPlaceholderData ? (
+          <ProfileEmpty
+            illustration="baozi"
+            title={`正在加载${kind === "food" ? "菜品" : "店铺"}足迹…`}
+          />
         ) : !items.length ? (
           <ProfileEmpty
             illustration="baozi"

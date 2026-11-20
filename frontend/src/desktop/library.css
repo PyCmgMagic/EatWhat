@@ -371,11 +371,6 @@
 .pc-history-content {
   min-height: 310px;
 }
-.pc-history-loading {
-  color: #8a7e76;
-  font-size: 11px;
-  margin: 0 0 15px;
-}
 .pc-history-group + .pc-history-group {
   margin-top: 26px;
 }

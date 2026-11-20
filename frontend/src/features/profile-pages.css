@@ -198,6 +198,9 @@
   overflow: visible;
 }
 .pp-seg .pc-tabs {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
   gap: 2px;
 }
 .pp-seg .pc-tabs > button,
@@ -218,12 +221,40 @@
     background-color 150ms ease,
     color 150ms ease;
 }
-.pp-seg .pc-tabs > button:hover,
+.pp-seg .pc-tabs > button {
+  justify-content: center;
+  font-weight: 700;
+  transition: color 150ms ease;
+}
+.pp-seg .pc-tabs > button[aria-selected="true"] {
+  color: #231c18;
+}
+html[data-motion-input="keyboard"] .pp-seg .pc-tabs > button {
+  transition: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .pp-seg .pc-tabs > button:hover {
+    color: #2e251e;
+  }
+}
+.pp-seg .pc-tab-indicator {
+  border-radius: 999px;
+  background: var(--night-raised, #fff);
+  box-shadow:
+    0 1px 2px rgb(35 28 24 / 8%),
+    0 4px 12px rgb(52 39 28 / 8%);
+  will-change: auto;
+}
+@media (forced-colors: active) {
+  .pp-seg .pc-tab-indicator {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
 .pc-profile-space-content .pp-head-actions > .profile-section-nav > a:hover {
   background: rgb(255 255 255 / 64%);
   color: #2e251e;
 }
-.pp-seg .pc-tabs > button[aria-selected="true"],
 .pc-profile-space-content
   .pp-head-actions
   > .profile-section-nav
@@ -235,7 +266,6 @@
     0 1px 2px rgb(35 28 24 / 8%),
     0 4px 12px rgb(52 39 28 / 8%);
 }
-.pp-seg .pc-tab-indicator,
 .pc-profile-space-content
   .pp-head-actions
   > .profile-section-nav

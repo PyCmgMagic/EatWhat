@@ -12,11 +12,13 @@ export function SlidingTabs({
   active,
   label,
   navigation = false,
+  indicatorShape = navigation ? "pill" : "line",
   children,
 }: {
   active: string;
   label: string;
   navigation?: boolean;
+  indicatorShape?: "line" | "pill";
   children: ReactNode;
 }) {
   const root = useRef<HTMLElement>(null),
@@ -37,14 +39,14 @@ export function SlidingTabs({
         top = selected.offsetTop,
         width = selected.offsetWidth,
         selectedHeight = selected.offsetHeight,
-        height = navigation ? `${selectedHeight}px` : "3px",
-        y = top + (navigation ? 0 : selectedHeight - 3);
+        height = indicatorShape === "pill" ? selectedHeight : 3,
+        y = top + selectedHeight - height;
       // A breakpoint can change both rows and item widths. Snap to the new
       // geometry on resize; animate only deliberate tab selection changes.
       if (!animate) indicator.style.transition = "none";
       indicator.style.top = "0";
       indicator.style.bottom = "auto";
-      if (indicator.style.height !== height) indicator.style.height = height;
+      indicator.style.height = `${height}px`;
       indicator.style.transform = `translate3d(${left}px,${y}px,0) scaleX(${width / 100})`;
       container.dataset.indicatorReady = "true";
       if (!animate) {
@@ -52,7 +54,7 @@ export function SlidingTabs({
         indicator.style.transition = "";
       }
     },
-    [navigation],
+    [indicatorShape],
   );
   useLayoutEffect(() => measure(), [active, measure]);
   useEffect(() => {
@@ -80,6 +82,7 @@ export function SlidingTabs({
     <Tag
       ref={root as React.Ref<HTMLDivElement & HTMLElement>}
       className={`pc-motion-tabs ${navigation ? "pc-nav-tabs" : "pc-tabs"}`}
+      data-indicator-shape={indicatorShape}
       role={navigation ? undefined : "tablist"}
       aria-label={label}
       onKeyDown={
