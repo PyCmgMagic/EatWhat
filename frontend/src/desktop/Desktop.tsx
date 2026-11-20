@@ -870,8 +870,9 @@ function DesktopHome() {
             <button
               type="button"
               className="pc-hero-dismiss"
+              aria-haspopup="dialog"
               disabled={discovery.dismissing}
-              onClick={() => void discovery.dismiss(food)}
+              onClick={() => discovery.requestDismiss(food)}
             >
               不想吃这家
             </button>

@@ -39,6 +39,7 @@ export type MobileState = {
     message: string,
     action: () => Promise<unknown>,
     label?: string,
+    title?: string,
   ) => void;
   go: (screen: string) => void;
   draft: Draft;

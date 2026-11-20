@@ -1638,8 +1638,15 @@ export function useDesignBridge(
           <div {...p} className="mobile-home-actions" style={{ ...p.style, color: values.s.on }}>
             {view.children}
             {session && food?.restaurantId && (
-              <button type="button" className="mobile-home-dismiss" aria-label="不想吃这家"
-                title="不想吃这家" disabled={discovery.dismissing} onClick={() => void discovery.dismiss(food)}>
+              <button
+                type="button"
+                className="mobile-home-dismiss"
+                aria-label="不想吃这家"
+                aria-haspopup="dialog"
+                title="不想吃这家"
+                disabled={discovery.dismissing}
+                onClick={() => discovery.requestDismiss(food)}
+              >
                 <Frown size={22} aria-hidden="true" />
               </button>
             )}

@@ -80,20 +80,11 @@ async function validateProfileComments(page) {
       });
     });
     try {
-      await p.goto(`${base}/?demo=0&view=mobile#/me`);
-      const tab = p.getByRole("tab").filter({ hasText: "评论" });
-      await tab.waitFor();
-      if ((await tab.innerText()).trim() !== "评论")
-        throw new Error("个人页评论入口仍显示敬请期待");
-      if (width === 390)
-        await p.screenshot({
-          path: "output/playwright/profile-comments-entry.png",
-        });
-      await tab.click();
-      if (!p.url().endsWith("#/me?tab=comments"))
-        throw new Error("评论入口未选中个人页评论标签");
+      const path = width === 320 ? "/me?tab=comments" : "/me/shares?tab=comments";
+      await p.goto(`${base}/?demo=0&view=mobile#${path}`);
+      await p.getByRole("heading", { name: "我的评论", exact: true }).waitFor();
       await p
-        .getByText(width === 320 ? "还没写过评论" : "我的用餐评论", {
+        .getByText(width === 320 ? "还没有评论记录。" : "我的用餐评论", {
           exact: true,
         })
         .waitFor();
@@ -127,11 +118,13 @@ async function validateProfileComments(page) {
         )
       )
         throw new Error(`${width}px 页面横向溢出`);
-      await p.getByRole("tab", { name: "上传 0", exact: true }).click();
+      await p.getByRole("link", { name: "返回我的", exact: true }).click();
       await p
         .getByRole("heading", { name: "还没有分享过菜", exact: true })
         .waitFor();
-      await p.getByRole("tab", { name: "评论", exact: true }).waitFor();
+      await p.getByRole("tab", { name: "足迹", exact: true }).waitFor();
+      if (await p.getByRole("tab", { name: "评论", exact: true }).count())
+        throw new Error("个人页仍有评论标签");
       if (errors.length) throw new Error(errors.join("\n"));
       checks.push(
         `${width}px: 评论入口、后端 v2 请求路径、${width === 320 ? "空态" : width === 390 ? "已发布评论" : "带图回复"}、返回个人页`,

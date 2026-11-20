@@ -1,3 +1,33 @@
+.mobile-history-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mobile-history-kinds {
+  display: flex;
+  gap: 4px;
+}
+.mobile-history-toolbar button {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--night-muted, #71665e);
+  font: inherit;
+  font-size: 14px;
+}
+.mobile-history-kinds button[aria-pressed="true"] {
+  background: var(--night-raised, #f4f1ee);
+  color: var(--night-ink, #271e18);
+  font-weight: 650;
+}
+.mobile-history-content .ew-v2-clear { margin-block: 8px; }
+.mobile-history-content .ew-v2-row small {
+  flex: none;
+  color: var(--night-muted, #71665e);
+}
 .ew-v2-card {
   background: #fff;
   padding: 28px;

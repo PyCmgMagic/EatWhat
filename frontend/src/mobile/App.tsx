@@ -47,7 +47,7 @@ import {
 import { isV4Path } from "../features/v4-paths";
 import { codePoints } from "../api/content-rules";
 import { RemoteBanner, FeatureAvailability } from "../features/v4/Remote";
-import { MobileComments } from "../features/comments/Comments";
+import { MobileComments, MobileMyComments } from "../features/comments/Comments";
 const V4Routes = lazy(() => import("../features/v4/Routes"));
 const ApiV2Routes = lazy(() => import("../features/ApiV2Routes"));
 const LoginPage = lazy(() => import("./Login"));
@@ -147,6 +147,7 @@ function MobileWorkspace() {
       message: string;
       action: () => Promise<unknown>;
       label: string;
+      title?: string;
     } | null>(null),
     [draft, setDraftState] = useState<Draft>(emptyDraft),
     [tagId, setTagId] = useState<number>(),
@@ -350,12 +351,13 @@ function MobileWorkspace() {
       ? Math.min(1, viewport.width / 390)
       : Math.min(520, viewport.width) / 390;
   const height = Math.max(640, viewport.height / scale);
+  const myCommentsPage =
+    loc.pathname === "/me/shares" && new URLSearchParams(loc.search).get("tab") === "comments";
   const navigationSection =
     ["/me/edit", "/me/details", "/settings/personalization"].includes(
       loc.pathname,
     ) ||
-    (loc.pathname === "/me/shares" &&
-      new URLSearchParams(loc.search).get("tab") === "comments")
+    myCommentsPage
       ? null
       : loc.pathname === "/" || loc.pathname === "/home-photo"
         ? "home"
@@ -411,8 +413,9 @@ function MobileWorkspace() {
       message: string,
       action: () => Promise<unknown>,
       label = "确认",
+      title?: string,
     ) => {
-      setConfirmation({ message, action, label });
+      setConfirmation({ message, action, label, title });
       setMessage(message);
     },
     go: (name: string) =>
@@ -462,14 +465,15 @@ function MobileWorkspace() {
     },
   };
   if (
-    desktop &&
     loc.pathname === "/me" &&
     !new URLSearchParams(loc.search).has("people")
   ) {
     const legacy = new URLSearchParams(loc.search);
     const tab = legacy.get("tab");
-    if (["uploads", "comments", "favorites", "likes"].includes(tab ?? "")) {
-      if (tab !== "comments") legacy.delete("tab");
+    if (tab === "comments")
+      return <Navigate replace to={"/me/shares" + loc.search} state={loc.state} />;
+    if (desktop && ["uploads", "favorites", "likes"].includes(tab ?? "")) {
+      legacy.delete("tab");
       return (
         <Navigate
           replace
@@ -487,7 +491,7 @@ function MobileWorkspace() {
       <Navigate replace to={desktop ? "/restaurants/directory" : "/nearby?filter=1"} />
     );
   }
-  if (!desktop && !reference && loc.pathname === "/me/shares") {
+  if (!desktop && !reference && loc.pathname === "/me/shares" && !myCommentsPage) {
     const params = new URLSearchParams(loc.search);
     if (!params.has("tab")) params.set("tab", "uploads");
     return <Navigate replace to={"/me?" + params} state={loc.state} />;
@@ -545,6 +549,8 @@ function MobileWorkspace() {
                 !reference &&
                 ["/comments", "/comments/write"].includes(loc.pathname) ? (
                   <MobileComments />
+                ) : !desktop && !reference && myCommentsPage ? (
+                  <MobileMyComments />
                 ) : !desktop &&
                   !reference &&
                   isHelpFeedbackPath(loc.pathname) ? (
@@ -759,7 +765,8 @@ function MobileWorkspace() {
               inert={noticePresence.exiting || undefined}
               role="dialog"
               aria-modal="true"
-              aria-label="操作提示"
+              aria-label={confirmation?.title ?? "操作提示"}
+              aria-describedby="notice-message"
             >
               <SheetHandle
                 mode="dismiss"
@@ -771,8 +778,8 @@ function MobileWorkspace() {
                   setConfirmation(null);
                 }}
               />
-              <h2>{admin ? "确认操作" : "这件事，和你说一下"}</h2>
-              <p>{noticePresence.value}</p>
+              <h2>{confirmation?.title ?? (admin ? "确认操作" : "这件事，和你说一下")}</h2>
+              <p id="notice-message">{noticePresence.value}</p>
               {confirmation ? (
                 <>
                   <PrimaryButton

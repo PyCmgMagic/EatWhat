@@ -6,7 +6,6 @@ import {
 } from "../app/discovery-category";
 import { useArea } from "../app/area";
 import { useApp } from "../app/state";
-import { errorMessage } from "../api/client";
 import { guestDeviceId } from "../api/food-display";
 import type { Food } from "../api/models";
 import { useMobile } from "../mobile/ui";
@@ -16,7 +15,7 @@ export function useHomeDiscovery(enabled = true) {
   const { api, toast } = useApp();
   const cache = useQueryClient();
   const { area, ready = true } = useArea();
-  const { mealKey, mealTime, scene, noteServedMeal } = useMobile();
+  const { mealKey, mealTime, scene, noteServedMeal, confirm } = useMobile();
   const batchSize = recommendationBatchSize(useRemoteConfig().data);
   const [kind, setKind] = useDiscoveryCategory();
   const [dismissed, setDismissed] = useState<number[]>([]);
@@ -53,35 +52,42 @@ export function useHomeDiscovery(enabled = true) {
   });
   const feed = kind === "food" ? hero : selected;
   const visible = (id?: number | null) => !dismissed.includes(Number(id));
-  async function dismiss(food: Food) {
+  function requestDismiss(food: Food) {
     const id = food.restaurantId;
     if (!id || dismissing) return;
-    setDismissing(true);
-    try {
-      await api.dismissRecommendation(id);
-      setDismissed((ids) => [...ids, id]);
-      cache.setQueriesData<NonNullable<typeof hero.data>>(
-        { queryKey: ["foods", "mobile-recommend"] },
-        (prev) =>
-          prev && {
-            ...prev,
-            items: prev.items.filter((dish) => dish.restaurantId !== id),
-            shops: prev.shops?.filter((shop) => shop.id !== id) ?? null,
-          },
-      );
-      toast(`30 天内不再推荐「${food.restaurantName ?? "这家店"}」`);
-    } catch (error) {
-      toast(errorMessage(error));
-    } finally {
-      setDismissing(false);
-    }
+    const name = food.restaurantName?.trim();
+    const shop = name ? `「${name}」` : "这家店";
+    confirm(
+      `接下来 30 天，首页将不再推荐${shop}及其菜品。`,
+      async () => {
+        setDismissing(true);
+        try {
+          await api.dismissRecommendation(id);
+          setDismissed((ids) => [...ids, id]);
+          cache.setQueriesData<NonNullable<typeof hero.data>>(
+            { queryKey: ["foods", "mobile-recommend"] },
+            (prev) =>
+              prev && {
+                ...prev,
+                items: prev.items.filter((dish) => dish.restaurantId !== id),
+                shops: prev.shops?.filter((shop) => shop.id !== id) ?? null,
+              },
+          );
+          toast(`30 天内不再推荐${shop}`);
+        } finally {
+          setDismissing(false);
+        }
+      },
+      "确认不推荐",
+      "不想吃这家？",
+    );
   }
   return {
     hero,
     feed,
     kind,
     setKind,
-    dismiss,
+    requestDismiss,
     dismissing,
     heroFoods:
       hero.data?.items.filter((dish) => visible(dish.restaurantId)) ?? [],

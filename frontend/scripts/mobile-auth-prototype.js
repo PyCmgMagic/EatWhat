@@ -158,7 +158,7 @@ async function validateMobileAuthPrototype(page) {
     await p
       .getByRole("heading", { name: "还没有收藏的菜", exact: true })
       .waitFor();
-    await p.getByRole("tab", { name: "上传 0", exact: true }).click();
+    await p.getByRole("tab", { name: "上传", exact: true }).click();
     await p
       .getByRole("heading", { name: "还没有分享过菜", exact: true })
       .waitFor();

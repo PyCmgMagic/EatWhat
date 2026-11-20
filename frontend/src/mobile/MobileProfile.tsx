@@ -4,7 +4,6 @@ import {
   Bookmark,
   Clock3,
   Heart,
-  MessageCircle,
   Settings,
   SquarePen,
   Upload,
@@ -19,8 +18,8 @@ import { useApp } from "../app/state";
 import { FoodCover } from "../components/FoodCover";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { MarkerTabs } from "../components/MarkerTabs";
+import { MobileHistoryContent } from "../features/ApiV2";
 import { UserAvatar } from "../components/UserAvatar";
-import { MyFoodComments } from "../features/comments/Comments";
 import { useFoodPhoto } from "../features/media";
 import { peopleHref } from "../features/profile-people";
 import ProfileGrowth from "../features/ProfileGrowth";
@@ -33,7 +32,7 @@ const profileTabs = [
   { id: "uploads", name: "上传", icon: Upload },
   { id: "favorites", name: "收藏", icon: Bookmark },
   { id: "likes", name: "赞过", icon: Heart },
-  { id: "comments", name: "评论", icon: MessageCircle },
+  { id: "history", name: "足迹", icon: Clock3 },
 ] as const;
 type ProfileTab = (typeof profileTabs)[number]["id"];
 const emptyTitles = {
@@ -47,7 +46,7 @@ function ProfileFoods({
   page,
   onPage,
 }: {
-  tab: Exclude<ProfileTab, "comments">;
+  tab: Exclude<ProfileTab, "history">;
   page: number;
   onPage: (page: number) => void;
 }) {
@@ -165,6 +164,7 @@ export default function MobileProfile() {
   function select(next: ProfileTab, nextPage = 1) {
     const search = new URLSearchParams(params);
     search.set("tab", next);
+    if (next !== "history") search.delete("historyKind");
     if (nextPage === 1) search.delete("page");
     else search.set("page", String(nextPage));
     setParams(search, {
@@ -253,18 +253,10 @@ export default function MobileProfile() {
         </section>
       </div>
       <ProfileSheet>
-        <Link className="mobile-profile-history" to="/history">
-          <Clock3 size={24} aria-hidden="true" />
-          <span>
-            <strong>足迹</strong>
-            <small>最近看过的菜和店</small>
-          </span>
-        </Link>
         <MarkerTabs
           items={profileTabs.map(({ id, name, icon: Icon }) => ({
             id,
-            name:
-              id === "uploads" && uploads != null ? `上传 ${uploads}` : name,
+            name,
             icon: <Icon aria-hidden="true" size={16} />,
           }))}
           value={tab}
@@ -282,20 +274,8 @@ export default function MobileProfile() {
           tabIndex={0}
           className="mobile-profile-panel"
         >
-          {tab === "comments" ? (
-            <MyFoodComments
-              emptyState={
-                <div className="mobile-profile-comments-empty">
-                  <span>
-                    <MessageCircle aria-hidden="true" size={32} />
-                  </span>
-                  <h2>还没写过评论</h2>
-                  <Link className="design-button light" to="/">
-                    去发现
-                  </Link>
-                </div>
-              }
-            />
+          {tab === "history" ? (
+            <MobileHistoryContent />
           ) : (
             <ProfileFoods
               tab={tab}

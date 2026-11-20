@@ -1247,44 +1247,21 @@ html[data-motion-input="keyboard"] .design-fab-surface {
 .mobile-profile-sheet .ew-content-skeleton {
   grid-column: 1 / -1;
 }
-.mobile-profile-history {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 76px;
-  padding: 14px 17px;
-  border-radius: 18px;
-  color: var(--night-ink, #241e1b);
-  background: var(--night-raised, #f3f2f0);
-}
-.mobile-profile-history > span {
-  display: grid;
-  gap: 3px;
-}
-.mobile-profile-history strong {
-  font-size: 18px;
-  font-weight: 650;
-}
-.mobile-profile-history small {
-  color: var(--night-muted, #6b645f);
-  font-size: 13px;
-}
 .marker-tabs.mobile-profile-tabs {
   --marker-color: #a5c4e1;
-  justify-content: space-between;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: 0;
 }
 :root[data-theme="dark"] .mobile-profile-tabs {
   --marker-color: #49647c;
 }
 .marker-tabs.mobile-profile-tabs button {
+  min-width: 44px;
   min-height: 48px;
   padding: 0 2px;
   font-size: clamp(14px, 4vw, 18px);
-}
-.mobile-profile-tabs button > span {
-  gap: 5px;
-  padding: 0 3px;
 }
 .mobile-profile-panel {
   min-width: 0;
@@ -1322,28 +1299,6 @@ html[data-motion-input="keyboard"] .design-fab-surface {
   margin: -8px 0 8px auto;
   color: var(--night-muted, #625c55);
   font-size: 14px;
-}
-.mobile-profile-comments-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  padding: 16px 0 20px;
-}
-.mobile-profile-comments-empty > span {
-  display: grid;
-  width: 76px;
-  height: 76px;
-  place-items: center;
-  border-radius: 50%;
-  background: #f4f3f1;
-  color: #6e625b;
-}
-.mobile-profile-comments-empty h2 {
-  margin: 0;
-  font-size: 21px;
-  font-weight: 900;
-  line-height: 1.4;
 }
 body:has(
     .mobile-viewport [role="alertdialog"],

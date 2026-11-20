@@ -8,7 +8,7 @@ import { historyEntry, historyTime } from "../desktop/history";
 import { emptyHistoryCache, historyCacheFilters } from "./history-cache";
 import { useSendSignal } from "./useSendSignal";
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   keepPreviousData,
   useQuery,
@@ -1037,79 +1037,91 @@ export function MobileUserProfile() {
   );
 }
 export function MobileHistory() {
-  const { api } = useApp(),
-    [kind, setKind] = useState<"food" | "restaurant">("food"),
-    [page, setPage] = useState(1);
+  const back = useReturnTo("/me");
+  return (
+    <FeaturePage title="浏览足迹" back={back}>
+      <div className="ew-v2-card">
+        <p className="ew-note">浏览记录仅自己可见。</p>
+        <MobileHistoryContent />
+      </div>
+    </FeaturePage>
+  );
+}
+
+export function MobileHistoryContent() {
+  const { api } = useApp();
+  const location = useLocation();
+  const [params, setParams] = useSearchParams();
+  const [managing, setManaging] = useState(false);
+  const kind = params.get("historyKind") === "restaurant" ? "restaurant" : "food";
+  const page = parseId(params.get("page") ?? undefined) ?? 1;
   const q = useQuery({
     queryKey: ["history", "mobile-v2", kind, page],
     queryFn: () => api.history(kind, page),
     refetchOnMount: "always",
   });
+  const hasNext = !!q.data?.hasNext || page < (q.data?.totalPages ?? 0);
+  function select(nextKind: typeof kind, nextPage = 1) {
+    const search = new URLSearchParams(params);
+    if (nextKind === "food") search.delete("historyKind");
+    else search.set("historyKind", nextKind);
+    if (nextPage === 1) search.delete("page");
+    else search.set("page", String(nextPage));
+    setManaging(false);
+    setParams(search, { replace: true, state: { ...location.state, preserveScroll: true } });
+  }
   return (
-    <FeaturePage title="浏览足迹">
-      <div className="ew-v2-card">
-        <p className="ew-note">浏览记录仅自己可见。</p>
-        <div className="ew-v2-row">
-          <div className="ew-inline">
-            {(["food", "restaurant"] as const).map((k) => (
-              <button
-                className="ew-button light"
-                key={k}
-                aria-pressed={kind === k}
-                onClick={() => {
-                  setKind(k);
-                  setPage(1);
-                }}
-              >
-                {k === "food" ? "菜品" : "店铺"}
-              </button>
-            ))}
-          </div>
-          {!!q.data?.items?.length && (
-            <ClearHistory
-              kind={kind}
-              disabled={q.isFetching}
-              onClear={() => setPage(1)}
-            />
-          )}
+    <div className="mobile-history-content">
+      <div className="mobile-history-toolbar">
+        <div className="mobile-history-kinds" role="group" aria-label="足迹分类">
+          {(["food", "restaurant"] as const).map(k => (
+            <button type="button" key={k} aria-pressed={kind === k} onClick={() => select(k)}>
+              {k === "food" ? "菜品" : "店铺"}
+            </button>
+          ))}
         </div>
-        {q.isPending || q.isError ? (
-          <FeatureState
-            loading={q.isPending}
-            error={q.error}
-            kind="rows"
-            retry={() => void q.refetch()}
-          />
-        ) : !q.data.items?.length ? (
-          <FeatureState illustration="baozi" empty="还没有浏览足迹" />
-        ) : (
-          q.data.items.map((item, i) => {
-            const entry = historyEntry(item, kind),
-              date = historyTime(item.viewedAt);
-            const body = (
-              <>
-                <b>{entry.content?.name || "内容暂不可用"}</b>
-                <small>{date?.toLocaleDateString("zh-CN") || ""}</small>
-              </>
-            );
-            return entry.href ? (
-              <Link className="ew-v2-row" key={i} to={entry.href}>
-                {body}
-              </Link>
-            ) : (
-              <div className="ew-v2-row" key={i}>
-                {body}
-              </div>
-            );
-          })
+        {!!q.data?.items?.length && (
+          <button type="button" aria-expanded={managing} onClick={() => setManaging(!managing)}>
+            {managing ? "完成" : "管理足迹"}
+          </button>
         )}
-        <Pages
-          page={page}
-          next={!!q.data?.hasNext || page < (q.data?.totalPages ?? 0)}
-          busy={q.isFetching}
-          change={setPage}
-        />
       </div>
-    </FeaturePage>
+      {managing && !!q.data?.items?.length && (
+        <ClearHistory kind={kind} disabled={q.isFetching} onClear={() => select(kind)} />
+      )}
+      {q.isPending || q.isError ? (
+        <FeatureState
+          loading={q.isPending}
+          error={q.error}
+          kind="rows"
+          retry={() => void q.refetch()}
+        />
+      ) : !q.data.items?.length ? (
+        <FeatureState illustration="baozi" empty="还没有浏览足迹" />
+      ) : (
+        q.data.items.map((item, i) => {
+          const entry = historyEntry(item, kind),
+            date = historyTime(item.viewedAt);
+          const body = (
+            <>
+              <b>{entry.content?.name || "内容暂不可用"}</b>
+              <small>{date?.toLocaleDateString("zh-CN") || ""}</small>
+            </>
+          );
+          return entry.href ? (
+            <Link className="ew-v2-row" key={i} to={entry.href}>
+              {body}
+            </Link>
+          ) : (
+            <div className="ew-v2-row" key={i}>
+              {body}
+            </div>
+          );
+        })
+      )}
+      {(page > 1 || hasNext) && (
+        <Pages page={page} next={hasNext} busy={q.isFetching} change={next => select(kind, next)} />
+      )}
+    </div>
   );
 }
