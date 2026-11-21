@@ -4213,6 +4213,59 @@ export interface components {
             /** Format: int64 */
             timestamp?: number;
         };
+        AdminFoodView: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            restaurantId?: number;
+            restaurantName?: string;
+            accountId?: number | null;
+            name?: string;
+            category?: string;
+            price?: number | null;
+            description?: string | null;
+            pictureUrls?: string[];
+            tags?: string[];
+            signature?: boolean;
+            stageColor?: string | null;
+            stageAlternates?: string[];
+            coverCrop?: components["schemas"]["CoverCrop"] | null;
+            /** Format: int64 */
+            likeCount?: number;
+            /** Format: int64 */
+            favoriteCount?: number;
+            isLiked?: boolean | null;
+            isFavorite?: boolean | null;
+            /** Format: int64 */
+            createdAt?: number;
+            /** Format: int64 */
+            updatedAt?: number;
+            mealTimes?: string[];
+            effectiveMealTimes?: string[];
+            deliveryEnabled?: boolean;
+            rating?: components["schemas"]["Rating"];
+            myRating?: number | null;
+            /** @description 首次分享者的当前昵称；无可用昵称时为 null。 */
+            uploaderName?: string | null;
+        };
+        PageResultAdminFoodView: {
+            /** Format: int64 */
+            currentPage?: number;
+            items?: components["schemas"]["AdminFoodView"][];
+            /** Format: int64 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalItems?: number;
+            hasNext?: boolean;
+        };
+        ResultPageResultAdminFoodView: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["PageResultAdminFoodView"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
         FoodView: {
             /** Format: int64 */
             id?: number;
@@ -8333,7 +8386,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ResultPageResultFoodV2"];
+                    "application/json": components["schemas"]["ResultPageResultAdminFoodView"];
                 };
             };
         };

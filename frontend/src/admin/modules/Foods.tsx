@@ -6,7 +6,6 @@ import { useApp } from "../../app/state";
 import { foodEditBody } from "../../api/content-rules";
 import {
   categories,
-  foodAuthor,
   money,
   type Food,
   type Schema,
@@ -177,7 +176,7 @@ export default function Foods() {
                     <td>{food.categoryLabel || "—"}</td>
                     <td className="is-num">{money(food.price)}</td>
                     <td className="is-num">{num(food.likesCount)}</td>
-                    <td>{foodAuthor(food)?.name || "—"}</td>
+                    <td>{food.uploaderName?.trim() || "—"}</td>
                     <td className="is-muted">{ago(food.createdAt)}</td>
                     <td>
                       <div className="ew-admin-row-actions">

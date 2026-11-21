@@ -155,7 +155,7 @@ export function food(v: Json | null | undefined): Json | null {
   return {
     ...v,
     accountId: v.accountId ?? null,
-    uploaderName: null,
+    uploaderName: v.uploaderName ?? null,
     user: v.accountId ? { id: v.accountId, displayName: null } : null,
     restaurantId: v.restaurantId ?? null,
     restaurantName: v.restaurantName ?? null,

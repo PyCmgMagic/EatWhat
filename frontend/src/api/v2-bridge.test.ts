@@ -404,7 +404,7 @@ describe("v2 bridge", () => {
       ok({
         currentPage: 2,
         totalItems: 13,
-        items: [{ id: 7, name: "早餐豆浆", category: "饮品甜品", pictureUrls: [PIC] }],
+        items: [{ id: 7, name: "早餐豆浆", uploaderName: "豆浆同学", category: "饮品甜品", pictureUrls: [PIC] }],
       }),
     );
     const result = await createApi(transport).adminFoods(undefined, 2, {
@@ -414,7 +414,7 @@ describe("v2 bridge", () => {
     expect(sent).toHaveLength(1);
     expect(sent[0].path).toBe("/admin/foods/list");
     expect(sent[0].query).toEqual({ page: 2, pageSize: 12, keyword: "豆浆", sort: "NEWEST" });
-    expect(result).toMatchObject({ totalItems: 13, items: [{ id: 7, name: "早餐豆浆" }] });
+    expect(result).toMatchObject({ totalItems: 13, items: [{ id: 7, name: "早餐豆浆", uploaderName: "豆浆同学" }] });
   });
 
   it("serves a category tab from the dish list without using up recommendations", async () => {

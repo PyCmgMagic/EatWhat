@@ -5190,7 +5190,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResultPageResultFoodView"
+                  "$ref" : "#/components/schemas/ResultPageResultAdminFoodView"
                 }
               }
             }
@@ -10492,6 +10492,158 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/FoodOptions"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "AdminFoodView" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "restaurantId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "restaurantName" : {
+            "type" : "string"
+          },
+          "accountId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "category" : {
+            "type" : "string"
+          },
+          "price" : {
+            "type" : "number"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "pictureUrls" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "tags" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "signature" : {
+            "type" : "boolean"
+          },
+          "stageColor" : {
+            "type" : "string"
+          },
+          "stageAlternates" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "coverCrop" : {
+            "$ref" : "#/components/schemas/CoverCrop"
+          },
+          "likeCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "favoriteCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "isLiked" : {
+            "type" : "boolean"
+          },
+          "isFavorite" : {
+            "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "updatedAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "mealTimes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "effectiveMealTimes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "deliveryEnabled" : {
+            "type" : "boolean"
+          },
+          "rating" : {
+            "$ref" : "#/components/schemas/Rating"
+          },
+          "myRating" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "uploaderName" : {
+            "type" : [ "string", "null" ],
+            "description" : "首次分享者的当前昵称；无可用昵称时为 null。"
+          }
+        }
+      },
+      "PageResultAdminFoodView" : {
+        "type" : "object",
+        "properties" : {
+          "currentPage" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdminFoodView"
+            }
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalItems" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "hasNext" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "ResultPageResultAdminFoodView" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResultAdminFoodView"
           },
           "msg" : {
             "type" : "string"

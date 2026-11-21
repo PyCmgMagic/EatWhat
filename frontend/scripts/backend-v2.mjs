@@ -192,6 +192,10 @@ export async function readBackendV2() {
     rating: ref("Rating"),
     myRating: nullable(int32),
   });
+  schemas.AdminFoodView.properties = {
+    ...schemas.FoodV2.properties,
+    uploaderName: schemas.AdminFoodView.properties.uploaderName,
+  };
   // Shop and dish ratings both use a record named RatingRequest; springdoc
   // keeps only the shop's {scene, rating}. A dish is rated with a 1-5 score.
   schemas.FoodRatingRequest = {
@@ -234,7 +238,6 @@ export async function readBackendV2() {
   response("/foods/options", "get", "ResultFoodOptions");
   for (const path of [
     "/foods/list",
-    "/admin/foods/list",
     "/foods/my",
     "/foods/by-user/{userId}",
     "/foods/favorites",
