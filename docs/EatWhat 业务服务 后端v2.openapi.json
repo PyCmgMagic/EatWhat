@@ -1140,7 +1140,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResultSettings"
+                  "$ref" : "#/components/schemas/ResultRemoteConfigSettings"
                 }
               }
             }
@@ -6933,6 +6933,67 @@
           }
         }
       },
+      "RemoteConfigSettings" : {
+        "type" : "object",
+        "properties" : {
+          "revision" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "flags" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/Flag"
+            }
+          },
+          "params" : {
+            "type" : "object",
+            "additionalProperties" : { }
+          },
+          "maintenance" : {
+            "$ref" : "#/components/schemas/Maintenance"
+          },
+          "patchRollout" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "integer",
+              "minimum" : 0,
+              "maximum" : 100
+            },
+            "description" : "按正整数构建号配置 beta 补丁比例，未配置的构建走 stable。管理端省略时保留原配置，空对象清空。",
+            "propertyNames" : {
+              "pattern" : "^[1-9][0-9]{0,9}$"
+            }
+          },
+          "updatedAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "updatedBy" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ResultRemoteConfigSettings" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/RemoteConfigSettings"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "SettingsRequest" : {
         "type" : "object",
         "properties" : {
@@ -6952,6 +7013,18 @@
           "expectedRevision" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "patchRollout" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "integer",
+              "minimum" : 0,
+              "maximum" : 100
+            },
+            "description" : "按正整数构建号配置 beta 补丁比例，未配置的构建走 stable。管理端省略时保留原配置，空对象清空。",
+            "propertyNames" : {
+              "pattern" : "^[1-9][0-9]{0,9}$"
+            }
           }
         }
       },
@@ -9485,6 +9558,18 @@
           },
           "update" : {
             "$ref" : "#/components/schemas/Update"
+          },
+          "patchRollout" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "integer",
+              "minimum" : 0,
+              "maximum" : 100
+            },
+            "description" : "按正整数构建号配置 beta 补丁比例，未配置的构建走 stable。管理端省略时保留原配置，空对象清空。",
+            "propertyNames" : {
+              "pattern" : "^[1-9][0-9]{0,9}$"
+            }
           }
         }
       },
@@ -11059,7 +11144,7 @@
             "format" : "int64"
           },
           "settings" : {
-            "$ref" : "#/components/schemas/Settings"
+            "$ref" : "#/components/schemas/RemoteConfigSettings"
           },
           "versions" : {
             "type" : "array",

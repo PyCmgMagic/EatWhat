@@ -14,7 +14,8 @@
     "api:diff": "node scripts/audit-api-v4.mjs \"docs/EatWhat 业务服务 APIv7.openapi.json\" \"docs/EatWhat 业务服务 后端v2.openapi.json\" output/backend-v2-vs-apiv7-20261111.json",
     "api:generate": "node scripts/backend-v2.mjs --write",
     "api:access": "node scripts/backend-v2.mjs --write",
-    "api:access:check": "node scripts/backend-v2.mjs"
+    "api:access:check": "node scripts/backend-v2.mjs",
+    "api:doc": "python3 scripts/backend-v2-doc.py .. \"../docs/后端v2接口文档-20261113.md\" ../../../EatWhat"
   },
   "dependencies": {
     "@baidumap/jsapi-loader": "^1.0.0",

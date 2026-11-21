@@ -2880,6 +2880,33 @@ export interface components {
             /** Format: int64 */
             until?: number;
         };
+        RemoteConfigSettings: {
+            /** Format: int32 */
+            revision?: number;
+            flags?: {
+                [key: string]: components["schemas"]["Flag"];
+            };
+            params?: {
+                [key: string]: unknown;
+            };
+            maintenance?: components["schemas"]["Maintenance"];
+            /** @description 按正整数构建号配置 beta 补丁比例，未配置的构建走 stable。管理端省略时保留原配置，空对象清空。 */
+            patchRollout?: {
+                [key: string]: number;
+            };
+            /** Format: int64 */
+            updatedAt?: number;
+            /** Format: int64 */
+            updatedBy?: number;
+        };
+        ResultRemoteConfigSettings: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["RemoteConfigSettings"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
         SettingsRequest: {
             flags?: {
                 [key: string]: components["schemas"]["Flag"];
@@ -2890,6 +2917,10 @@ export interface components {
             maintenance?: components["schemas"]["Maintenance"];
             /** Format: int32 */
             expectedRevision?: number;
+            /** @description 按正整数构建号配置 beta 补丁比例，未配置的构建走 stable。管理端省略时保留原配置，空对象清空。 */
+            patchRollout?: {
+                [key: string]: number;
+            };
         };
         AnnouncementRequest: {
             level?: string;
@@ -3836,6 +3867,10 @@ export interface components {
                 [key: string]: components["schemas"]["Version"];
             };
             update?: components["schemas"]["Update"] | null;
+            /** @description 按正整数构建号配置 beta 补丁比例，未配置的构建走 stable。管理端省略时保留原配置，空对象清空。 */
+            patchRollout?: {
+                [key: string]: number;
+            };
         };
         ResultClientConfig: {
             /** Format: int32 */
@@ -4444,7 +4479,7 @@ export interface components {
         AdminView: {
             /** Format: int64 */
             configVersion?: number;
-            settings?: components["schemas"]["RemoteSettings"];
+            settings?: components["schemas"]["RemoteConfigSettings"];
             versions?: components["schemas"]["VersionLine"][];
         };
         ResultAdminView: {
@@ -4808,29 +4843,6 @@ export interface components {
             /** Format: int32 */
             code?: number;
             data?: components["schemas"]["AiSettings"];
-            msg?: string;
-            /** Format: int64 */
-            timestamp?: number;
-        };
-        RemoteSettings: {
-            /** Format: int32 */
-            revision?: number;
-            flags?: {
-                [key: string]: components["schemas"]["Flag"];
-            };
-            params?: {
-                [key: string]: unknown;
-            };
-            maintenance?: components["schemas"]["Maintenance"];
-            /** Format: int64 */
-            updatedAt?: number;
-            /** Format: int64 */
-            updatedBy?: number;
-        };
-        ResultRemoteSettings: {
-            /** Format: int32 */
-            code?: number;
-            data?: components["schemas"]["RemoteSettings"];
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
@@ -5756,7 +5768,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ResultRemoteSettings"];
+                    "application/json": components["schemas"]["ResultRemoteConfigSettings"];
                 };
             };
         };

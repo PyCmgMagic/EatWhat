@@ -65,6 +65,13 @@ type Data = {
   commentReactions: Record<number, Record<number, CommentReactionType>>;
   feedback: DemoFeedback[];
   notifications: V2Schema["NotificationCard"][];
+  remoteSettings?: {
+    revision: number;
+    flags: object;
+    params: object;
+    maintenance: object;
+    patchRollout: Record<string, number>;
+  };
   pushCategories: Record<string, boolean>;
 };
 
@@ -548,6 +555,13 @@ export function demoTransport(
   const write = (data?: unknown) => {
     save(state);
     return ok(data);
+  };
+  const remoteSettings = state.remoteSettings ?? {
+    revision: 1,
+    flags: {},
+    params: {},
+    maintenance: { mode: "NONE" },
+    patchRollout: {},
   };
   const user = person?.id ?? 0;
   const status = () => ({
@@ -1758,11 +1772,12 @@ export function demoTransport(
       });
     case "getRemoteConfig":
       return ok({
-        configVersion: 1,
-        flags: {},
-        params: {},
+        configVersion: remoteSettings.revision,
+        flags: remoteSettings.flags,
+        params: remoteSettings.params,
+        patchRollout: remoteSettings.patchRollout,
         announcements: [],
-        maintenance: { mode: "NONE" },
+        maintenance: remoteSettings.maintenance,
         versions: {},
         update: null,
       });
@@ -1927,22 +1942,25 @@ export function demoTransport(
     }
     case "getAdminRemoteConfig":
       return ok({
-        configVersion: 1,
-        settings: {
-          revision: 1,
-          flags: {},
-          params: {},
-          maintenance: { mode: "NONE" },
-        },
+        configVersion: remoteSettings.revision,
+        settings: remoteSettings,
         versions: [],
       });
-    case "putAdminRemoteConfigSettings":
-      return ok({
-        revision: 2,
-        flags: {},
-        params: {},
-        maintenance: { mode: "NONE" },
-      });
+    case "putAdminRemoteConfigSettings": {
+      const change = options.body as Omit<typeof remoteSettings, "revision"> & {
+        expectedRevision: number;
+      };
+      if (change.expectedRevision !== remoteSettings.revision)
+        return fail(20006, "配置已变更。");
+      state.remoteSettings = {
+        revision: remoteSettings.revision + 1,
+        flags: change.flags,
+        params: change.params,
+        maintenance: change.maintenance,
+        patchRollout: change.patchRollout ?? remoteSettings.patchRollout,
+      };
+      return write(state.remoteSettings);
+    }
     case "putAdminRemoteConfigVersionsByPlatform":
       return ok({
         platform: params?.platform,

@@ -51,7 +51,10 @@ export function Announcements() {
         <span className="ew-admin-toolbar-note">
           公告按平台、校区、版本和时间筛选后展示给用户。
         </span>
-        <button className="ew-admin-btn is-primary" onClick={() => setEdit(true)}>
+        <button
+          className="ew-admin-btn is-primary"
+          onClick={() => setEdit(true)}
+        >
           <Icon name="add" size={16} />
           新建公告
         </button>
@@ -416,7 +419,7 @@ function SettingsEditor({
   value,
   refresh,
 }: {
-  value: Schema["SettingsResponse"];
+  value: Schema["SettingsResponse"] & { patchRollout?: Record<string, number> };
   refresh: () => Promise<unknown>;
 }) {
   const { api } = useApp(),
@@ -435,6 +438,12 @@ function SettingsEditor({
           },
         ]),
       ),
+    ),
+    [rules, setRules] = useState(() =>
+      Object.entries(value.patchRollout ?? {}).map(([build, percent]) => ({
+        build,
+        percent: String(percent),
+      })),
     ),
     [params, setParams] = useState(JSON.stringify(value.params ?? {}, null, 2)),
     [mode, setMode] = useState<"NONE" | "READ_ONLY" | "DOWN">(
@@ -460,7 +469,28 @@ function SettingsEditor({
               throw new Error("运营参数需为对象。");
             if (value.revision == null)
               throw new Error("配置修订号缺失，请重新读取。");
+            const patchRollout: Record<string, number> = {};
+            for (const rule of rules) {
+              const build = Number(rule.build);
+              const percent = Number(rule.percent);
+              if (
+                !Number.isInteger(build) ||
+                build < 1 ||
+                build > 2147483647 ||
+                !rule.percent ||
+                !Number.isInteger(percent) ||
+                percent < 0 ||
+                percent > 100
+              )
+                throw new Error(
+                  "构建号须为正整数，放量比例须为 0 到 100 的整数。",
+                );
+              if (Object.hasOwn(patchRollout, build))
+                throw new Error("每个构建号只能设置一个放量比例。");
+              patchRollout[build] = percent;
+            }
             return api.saveRemoteSettings({
+              ...(value.patchRollout !== undefined && { patchRollout }),
               flags,
               params: parsed,
               maintenance: {
@@ -545,6 +575,65 @@ function SettingsEditor({
           </>
         )}
       </Panel>
+      {value.patchRollout !== undefined && (
+        <Panel
+          title="热更新灰度"
+          hint="按 App 构建号设置 beta 补丁比例，其余设备使用 stable。删除该构建的规则即可停止放量。"
+        >
+          {rules.map((rule, i) => (
+            <div className="ew-admin-form" key={i}>
+              <Field label="构建号">
+                <input
+                  type="number"
+                  min="1"
+                  max="2147483647"
+                  step="1"
+                  required
+                  value={rule.build}
+                  onChange={(e) =>
+                    setRules(
+                      rules.map((row, j) =>
+                        j === i ? { ...row, build: e.target.value } : row,
+                      ),
+                    )
+                  }
+                />
+              </Field>
+              <Field label="放量比例（%）">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  required
+                  value={rule.percent}
+                  onChange={(e) =>
+                    setRules(
+                      rules.map((row, j) =>
+                        j === i ? { ...row, percent: e.target.value } : row,
+                      ),
+                    )
+                  }
+                />
+              </Field>
+              <button
+                type="button"
+                className="ew-admin-btn"
+                onClick={() => setRules(rules.filter((_, j) => j !== i))}
+              >
+                移除规则
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            className="ew-admin-btn"
+            onClick={() => setRules([...rules, { build: "", percent: "0" }])}
+          >
+            添加构建号
+          </button>
+        </Panel>
+      )}
       <Panel
         title="高级运营参数"
         hint="JSON 对象：饭点窗口、推荐批量、评分门槛、轮询、距离与分类顺序等。保留未修改的已有键。"
@@ -686,7 +775,10 @@ function VersionEditor({
           />
         </Field>
         <div className="ew-admin-form-actions">
-          <button className="ew-admin-btn" disabled={task.busy || task.uncertain}>
+          <button
+            className="ew-admin-btn"
+            disabled={task.busy || task.uncertain}
+          >
             {task.busy ? "保存中…" : "保存版本线"}
           </button>
         </div>
@@ -992,7 +1084,9 @@ export function Audit() {
               : "（无，首次创建）"}
           </pre>
           <h3 className="ew-admin-subhead">修改后</h3>
-          <pre className="ew-admin-code">{JSON.stringify(open.after, null, 2)}</pre>
+          <pre className="ew-admin-code">
+            {JSON.stringify(open.after, null, 2)}
+          </pre>
         </Drawer>
       )}
     </>

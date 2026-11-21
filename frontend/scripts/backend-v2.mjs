@@ -289,23 +289,6 @@ export async function readBackendV2() {
 
   // Records named Settings / Consent / Accepted in different modules are merged
   // by springdoc; give each operation its own source-accurate schema.
-  schemas.RemoteSettings = {
-    type: "object",
-    properties: {
-      revision: { type: "integer", format: "int32" },
-      flags: {
-        type: "object",
-        additionalProperties: { $ref: "#/components/schemas/Flag" },
-      },
-      params: { type: "object", additionalProperties: {} },
-      maintenance: { $ref: "#/components/schemas/Maintenance" },
-      updatedAt: { type: "integer", format: "int64" },
-      updatedBy: { type: "integer", format: "int64" },
-    },
-  };
-  schemas.ResultRemoteSettings = result(ref("RemoteSettings"));
-  schemas.AdminView.properties.settings = ref("RemoteSettings");
-  response("/admin/remote-config/settings", "put", "ResultRemoteSettings");
   schemas.RecommendationSettings = object({ personalized: bool });
   schemas.ResultRecommendationSettings = result(ref("RecommendationSettings"));
   request("/user/recommendation-settings", "put", "RecommendationSettings");
