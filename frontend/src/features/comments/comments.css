@@ -354,6 +354,59 @@ a.comments-author:focus-visible {
 .comments-reactions button:disabled {
   cursor: progress;
 }
+/* Inside the like/reply row: sit inline and match the plain action buttons. */
+/* Anchor the picker to the row start so it never runs off narrow screens. */
+.comments-actions:has(> .comments-reactions) {
+  position: relative;
+}
+.comments-actions > .comments-reactions {
+  position: static;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0;
+}
+.comments-actions .comments-reaction-buttons > button {
+  min-height: 0;
+}
+.comments-actions .comments-reaction-picker {
+  transform-origin: 50% 100%;
+}
+/* Reply rows are indented; open from the right edge so the picker stays on screen. */
+.comments-row.is-reply .comments-actions .comments-reaction-popover {
+  left: auto;
+  right: 0;
+}
+.comments-actions .comments-reaction-buttons > button:disabled,
+.comments-actions .comments-reaction-picker button:disabled {
+  opacity: 1;
+}
+.comments-actions .comments-reaction-buttons > .comments-reaction-opener {
+  order: -1;
+  height: auto;
+  min-height: 44px;
+  gap: 6px;
+  padding: 6px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--comment-muted);
+}
+.comments-actions .comments-reaction-buttons > .comments-reaction-opener::before {
+  content: none;
+}
+.comments-actions .comments-reaction-buttons > .comments-reaction-opener[aria-expanded="true"] {
+  background: none;
+  color: var(--comment-ink);
+}
+.comments-actions .comments-reaction-opener svg {
+  width: 17px;
+  height: 17px;
+}
+.comments-actions > .comments-reactions > .comments-error {
+  flex-basis: 100%;
+}
 /* Floating picker above the row. */
 .comments-reaction-popover {
   position: absolute;

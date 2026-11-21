@@ -561,6 +561,12 @@ function CommentRow({
             <Icon name="comment" size={17} />
             回复
           </button>
+          {comment.id != null && comment.reactions && (
+            <CommentReactions
+              commentId={comment.id}
+              reactions={comment.reactions}
+            />
+          )}
           {showToggle && (
             <button
               type="button"
@@ -583,9 +589,6 @@ function CommentRow({
             </button>
           )}
         </div>
-        {comment.id != null && comment.reactions && (
-          <CommentReactions commentId={comment.id} reactions={comment.reactions} />
-        )}
         {!nested && (expanded || defaultLimit > 0) && (
           <div className="comments-replies">
             <QueryState query={replies}>
