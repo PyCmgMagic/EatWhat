@@ -19,7 +19,6 @@ const v2Retired: [RegExp, string][] = [
   [/^\/me\/tags(\/.*)?$/, "/me"],
   [/^\/topics(\/.*)?$/, "/"],
   [/^\/submissions(\/.*)?$/, "/me"],
-  [/^\/settings\/notifications$/, "/settings"],
   [/^\/auth\/(account|mobile|device)-recovery$/, "/settings/account"],
 ];
 export function isRetiredV2(to: string | null | undefined) {

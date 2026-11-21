@@ -57,12 +57,12 @@ describe("retired cross-site bookmarks", () => {
     "/settings/privacy",
     "/settings/telemetry",
     "/settings/delete",
+    "/settings/notifications",
     "/me/growth",
   ])("leaves independent flows intact: %s", (path) =>
     expect(retiredRouteDestination(path, "", true)).toBeNull(),
   );
   it.each([
-    ["/settings/notifications", "/settings"],
     ["/topics/current", "/"],
     ["/submissions/abc", "/me"],
   ])("sends features backend v2 lacks elsewhere: %s", (path, target) =>
