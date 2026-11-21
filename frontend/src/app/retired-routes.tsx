@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useApp } from "./state";
 import { safeLoginNext } from "./auth-dialog";
 import { normalizeAuthRoute } from "./auth-routes";
+import { aboutHome } from "../features/about-navigation";
 
 const retired = new Set([
   "/auth/consent",
@@ -34,11 +35,11 @@ export function retiredRouteDestination(
 ) {
   const current = normalizeAuthRoute(path);
   if (current !== path) return current + search;
-  const gone = v2Retired.find(([pattern]) =>
-    pattern.test(path.replace(/\/+$/, "")),
-  );
+  const pathname = path.replace(/\/+$/, "");
+  if (pathname === "/settings/about/us") return aboutHome.path;
+  const gone = v2Retired.find(([pattern]) => pattern.test(pathname));
   if (gone) return gone[1];
-  if (!retired.has(path.replace(/\/+$/, ""))) return null;
+  if (!retired.has(pathname)) return null;
   const next = safeLoginNext(new URLSearchParams(search).get("next"));
   return signedIn
     ? (next ?? "/settings/account")

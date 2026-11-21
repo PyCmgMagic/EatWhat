@@ -1,4 +1,7 @@
 async function validateSettingsPages(page) {
+  const origin = new URL(page.url()).origin;
+  if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(origin))
+    throw new Error("请在本地开发页面运行");
   const context = await page
     .context()
     .browser()
@@ -39,7 +42,7 @@ async function validateSettingsPages(page) {
       );
   });
   await context.route(
-    (u) => u.origin !== "http://127.0.0.1:5173",
+    (u) => u.origin !== origin,
     (r) => r.abort(),
   );
   await context.route(
@@ -111,7 +114,7 @@ async function validateSettingsPages(page) {
       return r.fulfill({ status: 200, json: { code: 0, data } });
     },
   );
-  const base = "http://127.0.0.1:5173/?demo=0#";
+  const base = origin + "/?demo=0#";
   const paths = [
     "/settings/privacy",
     "/settings/password",
@@ -142,9 +145,18 @@ async function validateSettingsPages(page) {
       const about = p.getByRole("navigation", { name: "关于栏目" });
       await about.waitFor();
       assert(
-        (await about.locator(".about-list a").allTextContents()).join("|") ===
+        (await about.getByRole("link").allTextContents()).join("|") ===
           "反馈问题反馈与建议|我的反馈提交记录与处理结果|隐私政策|用户协议|开发团队|开源声明",
         "About links must follow the two reference groups",
+      );
+      await p.evaluate(() => document.fonts.ready);
+      assert(
+        await about.locator(".about-row-detail").evaluateAll((labels) =>
+          labels.every((label) =>
+            label.getBoundingClientRect().height <= parseFloat(getComputedStyle(label).lineHeight) + 1
+          ),
+        ),
+        `About feedback descriptions wrap at ${width}px`,
       );
       if (width === 390) {
         await about.getByRole("link", { name: "开源声明" }).click();
@@ -152,7 +164,7 @@ async function validateSettingsPages(page) {
         await react.locator("summary").click();
         assert((await react.locator("pre").innerText()).includes("MIT"), "React license text is missing");
         await p.getByRole("link", { name: "返回关于" }).click();
-        await about.getByRole("link", { name: "关于我们", exact: true }).waitFor();
+        await about.getByRole("link", { name: "开发团队", exact: true }).waitFor();
       }
       for (const path of paths) {
         await open(path);

@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { retiredRouteDestination } from "./retired-routes";
 
+it.each(["/settings/about/us", "/settings/about/us/"])(
+  "opens the About directory for a saved link to %s",
+  (path) => {
+    expect(retiredRouteDestination(path, "", false)).toBe("/settings/about");
+    expect(retiredRouteDestination(path, "", true)).toBe("/settings/about");
+  },
+);
+
 it.each([false, true])(
   "redirects legacy username registration to SMS registration, signed in: %s",
   (signedIn) => {

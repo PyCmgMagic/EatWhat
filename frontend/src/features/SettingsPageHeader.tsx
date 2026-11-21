@@ -26,7 +26,7 @@ export function settingsBackLabel(back = "/settings") {
   if (back === "/settings/privacy") return "返回隐私设置";
   if (back === "/settings/personalization") return "返回个性化";
   if (back === "/settings/about") return "返回关于";
-  if (back === "/settings/about/us") return "返回关于我们";
+  if (back === "/help") return "返回帮助与反馈";
   if (back === "/settings") return "返回设置";
   if (back === "/me") return "返回个人中心";
   if (back === "/") return "返回发现";

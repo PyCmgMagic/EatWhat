@@ -1,7 +1,7 @@
 import { useSendSignal } from "../features/useSendSignal";
 import PrivacySettings from "../features/PrivacySettings";
 import AboutPage from "../features/AboutPage";
-import { aboutUs, findAboutPage } from "../features/about-navigation";
+import { findAboutPage } from "../features/about-navigation";
 import Personalization from "../theme/Personalization";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -438,8 +438,8 @@ function DataNotice() {
       <PageHead
         title="数据存放说明"
         detail="了解账号信息与分享内容的保存方式。"
-        back={aboutUs.path}
-        crumb={aboutUs.title}
+        back="/help"
+        crumb="帮助与反馈"
       />
       <div className="pc-secondary-columns">
         <Section title="你的资料与内容">

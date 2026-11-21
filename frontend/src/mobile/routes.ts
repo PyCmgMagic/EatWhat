@@ -1,5 +1,5 @@
 import { restaurantHistoryId } from "../features/v4-paths";
-import { aboutPages, aboutUs } from "../features/about-navigation";
+import { aboutPages } from "../features/about-navigation";
 
 export const screenRoutes: Record<string, string> = {
   "G2-Home": "/",
@@ -117,7 +117,7 @@ export const mobileSettingsPages: Record<
   ),
   "/data-notice": {
     title: "数据存放说明",
-    back: aboutUs.path,
+    back: "/help",
     public: true,
   },
 };

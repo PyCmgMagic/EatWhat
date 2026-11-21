@@ -1,20 +1,14 @@
 import {
   ChevronLeft,
   ChevronRight,
+  Clock,
   Copy,
-  History,
   MessageSquareText,
 } from "lucide-react";
 import { lazy, Suspense, useContext, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { buildNumber, webVersion } from "../app/version";
-import { DesignIcon as Icon } from "../mobile/ui";
-import {
-  aboutHome,
-  aboutUs,
-  openSource,
-  productionTeam,
-} from "./about-navigation";
+import { aboutHome, openSource, productionTeam } from "./about-navigation";
 import DevelopmentTeam from "./DevelopmentTeam";
 import SettingsPageHeader from "./SettingsPageHeader";
 import { DesktopSettingsContext } from "./settings-nav";
@@ -59,7 +53,7 @@ function VersionInfo() {
           ? "已复制版本号和构建信息。"
           : copyState === "manual"
             ? "请手动复制下方的版本信息。"
-            : "如需向他人提供版本号，请一并提供构建信息。"}
+            : "如需要向他人提供版本号，请将所有内容进行转述。"}
       </p>
       {copyState === "manual" && (
         <input
@@ -92,7 +86,7 @@ function AboutRow({
       {detail && <span className="about-row-detail">{detail}</span>}
       <ChevronRight
         className="about-row-chevron"
-        size={19}
+        size={20}
         aria-hidden="true"
       />
     </>
@@ -120,7 +114,7 @@ function AboutDirectory() {
             to="/feedback/mine"
             title="我的反馈"
             detail="提交记录与处理结果"
-            icon={<History size={22} aria-hidden="true" />}
+            icon={<Clock size={22} aria-hidden="true" />}
           />
         </div>
         <div className="about-list">
@@ -135,39 +129,6 @@ function AboutDirectory() {
           <AboutRow to={productionTeam.path} title={productionTeam.title} />
           <AboutRow to={openSource.path} title={openSource.title} />
         </div>
-        <Link className="about-us-link" to={aboutUs.path}>
-          {aboutUs.title}
-        </Link>
-      </nav>
-    </>
-  );
-}
-
-function AboutUs() {
-  return (
-    <>
-      <article className="about-story">
-        <span className="about-tile-icon">
-          <Icon name="bowl" size={24} />
-        </span>
-        <h2>山软今天吃什么</h2>
-        <p>
-          这是山软同学一起做的校园美食指南。选好校区、饭点和堂食或外卖，就能从大家分享的菜品里挑一顿想吃的。
-        </p>
-        <p>
-          这里的店铺、菜品和评价都来自校园里的食友。你可以收藏想吃的菜，也可以写下自己的口味和体验，给下一位同学做参考。
-        </p>
-        <Link to="/">
-          去发现菜品 <Icon name="chevronRight" size={16} />
-        </Link>
-      </article>
-      <nav className="about-resources" aria-label="相关服务">
-        <Link to="/data-notice">
-          数据存放说明 <Icon name="chevronRight" size={18} />
-        </Link>
-        <Link to="/feedback">
-          意见反馈 <Icon name="chevronRight" size={18} />
-        </Link>
       </nav>
     </>
   );
@@ -197,8 +158,6 @@ export default function AboutPage({ page }: { page: typeof aboutHome }) {
       )}
       {isHome ? (
         <AboutDirectory />
-      ) : page.path === aboutUs.path ? (
-        <AboutUs />
       ) : page.path === openSource.path ? (
         <Suspense fallback={<p role="status">正在读取开源声明…</p>}>
           <OpenSourceNotices />

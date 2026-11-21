@@ -84,9 +84,11 @@ async function validateDesktopSettingsCompact(page) {
     await p.getByRole("heading",{name:"开发团队",level:1}).waitFor();
     assert(await menu.getByRole("link",{name:"关于",exact:true}).getAttribute("aria-current")==="location","Team lost its parent selection");
     await p.getByRole("link",{name:"返回关于",exact:true}).click();
-    await about.getByRole("link",{name:"关于我们",exact:true}).click();
-    await p.getByRole("link",{name:"数据存放说明",exact:true}).waitFor();
-    checks.push("Privacy retains blocks and statistics authorization; About retains data notice");
+    await menu.getByRole("link",{name:"帮助与反馈"}).click();
+    await p.getByRole("link",{name:"数据存放说明",exact:true}).click();
+    await p.getByRole("link",{name:"返回帮助与反馈",exact:true}).click();
+    await p.getByRole("searchbox",{name:"搜索使用帮助"}).waitFor();
+    checks.push("Data notice is reachable from Help and returns to Help");
     assert(!errors.length&&!writes.length,JSON.stringify({errors,writes}));
     return {checks,errors,realBackendWrites:0};
   } catch(error) {

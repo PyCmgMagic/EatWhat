@@ -7,7 +7,7 @@ import { mediaUrl } from "../api/models";
 import "./secondary.css";
 import { ToastError } from "../components/feedback";
 import SettingsPageHeader from "../features/SettingsPageHeader";
-import { aboutPages, aboutUs } from "../features/about-navigation";
+import { aboutHome, aboutPages } from "../features/about-navigation";
 
 export const secondaryTitles: Record<string, string> = {
   "/me": "个人总览",
@@ -291,8 +291,8 @@ export const pendingPages: Record<
       "附上错误提示，便于定位问题",
       "请勿提供密码或验证码",
     ],
-    link: aboutUs.path,
-    label: "了解平台",
+    link: aboutHome.path,
+    label: aboutHome.title,
     icon: "comment",
   },
   "/restaurants/correction": {
