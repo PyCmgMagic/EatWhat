@@ -246,14 +246,19 @@ async function validateAccountSettings(page) {
       "Statistics authorization is missing from privacy settings",
     );
     await p.goto(origin + "/?demo=0#/settings/about");
-    await p.getByRole("link", { name: "数据说明", exact: true }).click();
+    const about = p.getByRole("navigation", { name: "关于栏目" });
+    await about.getByRole("link", { name: "制作团队", exact: true }).click();
+    await p.getByRole("heading", { name: "制作团队", level: 1 }).waitFor();
+    await p.getByRole("link", { name: "返回关于", exact: true }).click();
+    await about.getByRole("link", { name: "关于我们", exact: true }).click();
+    await p.getByRole("link", { name: "数据存放说明", exact: true }).click();
     await p
       .getByRole("heading", { name: "数据存放说明", exact: true })
       .waitFor();
     assert(
       (await p
-        .getByRole("link", { name: "返回关于", exact: true })
-        .getAttribute("href")) === "#/settings/about",
+        .getByRole("link", { name: "返回关于我们", exact: true })
+        .getAttribute("href")) === "#/settings/about/us",
       "Data notice lost its About return destination",
     );
     checks.push(

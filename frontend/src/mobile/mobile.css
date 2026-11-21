@@ -1374,27 +1374,6 @@ body:has(
   font-size: 13px;
   color: #6e625b;
 }
-.mobile-settings-actions {
-  position: absolute;
-  left: 20px;
-  right: 20px;
-  bottom: 110px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.mobile-settings-actions > a {
-  min-height: 52px;
-  padding: 12px 16px;
-  border-radius: 16px;
-  background: #fff2ca;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-}
 .mobile-panel-layer {
   position: fixed;
   inset: 0;

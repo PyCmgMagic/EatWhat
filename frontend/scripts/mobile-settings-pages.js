@@ -124,7 +124,6 @@ async function validateSettingsPages(page) {
     "/settings/telemetry",
     "/settings/preferences",
     "/verify",
-    "/settings/about",
     "/data-notice",
   ];
   const assert = (ok, message) => {
@@ -139,6 +138,13 @@ async function validateSettingsPages(page) {
   try {
     for (const width of [390, 320, 440, 520]) {
       await p.setViewportSize({ width, height: 844 });
+      await p.goto(base + "/settings/about");
+      const about = p.getByRole("navigation", { name: "关于栏目" });
+      await about.waitFor();
+      assert(
+        (await about.getByRole("link").allTextContents()).join("|") === "关于我们|制作团队",
+        "About must expose both destinations at the same level",
+      );
       for (const path of paths) {
         await open(path);
         const layout = await p.evaluate(() => {
@@ -239,7 +245,8 @@ async function validateSettingsPages(page) {
       !writes.some((x) => x.path.startsWith("/api/push/")),
       "Unreleased notifications sent a write",
     );
-    await open("/settings/preferences");
+    await p.getByRole("link", { name: "个性化", exact: true }).click();
+    await p.getByRole("link", { name: "口味偏好", exact: true }).click();
     await p
       .getByRole("group", { name: "喜欢的口味", exact: true })
       .getByText("甜", { exact: true })
@@ -249,6 +256,8 @@ async function validateSettingsPages(page) {
       document.body.innerText.includes("口味偏好已更新"),
     );
     assert(preferences.likedTags.includes("甜") && preferences.likedTags.includes("清淡"), "Preferences did not save");
+    await p.getByRole("link", { name: "返回个性化", exact: true }).click();
+    await p.getByRole("heading", { name: "个性化", exact: true }).waitFor();
     await open("/settings/delete");
     assert(
       await p

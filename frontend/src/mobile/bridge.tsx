@@ -2332,7 +2332,11 @@ export function useDesignBridge(
               <span>个性化</span>
               <DesignIcon name="chevronRight" size={20} />
             </Link>
-            <a {...p}>{view.children}</a>
+            <a {...p}>
+              <DesignIcon name="info" size={22} />
+              <span style={{ flex: 1 }}>关于</span>
+              <DesignIcon name="chevronRight" size={20} />
+            </a>
           </>
         );
       if (tag === "a" && n.attrs.href === "G-EditProfile.dc.html") {
@@ -2359,22 +2363,12 @@ export function useDesignBridge(
       }
       if (tag === "button" && clean(text) === "退出登录")
         return (
-          <div className="mobile-settings-actions">
-            <Link to="/settings/preferences">
-              口味偏好 · 让推荐更懂你
-              <DesignIcon name="chevronRight" size={18} />
-            </Link>
-            <button
-              {...p}
-              style={{
-                ...p.style,
-                position: "static",
-                width: "100%",
-              }}
-            >
-              {view.children}
-            </button>
-          </div>
+          <button
+            {...p}
+            style={{ ...p.style, bottom: 110, width: "calc(100% - 40px)" }}
+          >
+            {view.children}
+          </button>
         );
     }
     if (screen === "G-Verify" && tag === "button") {

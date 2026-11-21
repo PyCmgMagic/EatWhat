@@ -1,0 +1,178 @@
+.pc-settings-workspace {
+  container: desktop-settings / inline-size;
+  color: var(--pc-ink);
+  background: var(--pc-paper);
+  border: 1px solid var(--pc-line);
+  border-radius: 24px;
+}
+.pc-profile-space-content .pc-settings-workspace {
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+}
+.pc-settings-layout {
+  display: grid;
+  grid-template-columns: 194px minmax(0, 1fr);
+  gap: clamp(28px, 3vw, 48px);
+  align-items: start;
+  padding: clamp(20px, 2.5vw, 36px);
+}
+.pc-settings-navigation {
+  position: sticky;
+  top: calc(var(--header-height, 80px) + 12px);
+  display: grid;
+  gap: 14px;
+  max-height: calc(100dvh - var(--header-height, 80px) - 32px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding: 4px 16px 4px 4px;
+  border-right: 1px solid var(--pc-line);
+}
+.pc-profile-space-content .pc-settings-navigation {
+  top: calc(var(--header-height, 80px) + 76px);
+  max-height: calc(100dvh - var(--header-height, 80px) - 96px);
+}
+.pc-settings-navigation a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 11px;
+  color: var(--pc-ink);
+  font-size: 14px;
+  font-weight: 550;
+  text-decoration: none;
+}
+.pc-settings-navigation a:hover {
+  background: var(--night-layer, #f6f3ee);
+}
+.pc-settings-navigation a[aria-current] {
+  background: var(--night-gold-soft, #fff0bf);
+  color: var(--night-gold-text, #513b15);
+  font-weight: 700;
+}
+.pc-settings-navigation a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+.pc-settings-nav-group p {
+  margin: 0 12px 4px;
+  font-size: 12px;
+  color: var(--pc-muted);
+}
+.pc-settings-panel {
+  min-width: 0;
+  width: 100%;
+  max-width: 920px;
+  container: settings-panel / inline-size;
+}
+.pc-settings-workspace
+  .pc-settings-panel
+  :is(
+    .pc-secondary-body,
+    .ew-feature,
+    .v4-page,
+    .about-screen,
+    .settings-home
+  ) {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+.pc-settings-workspace .pc-settings-panel .settings-page-head {
+  margin: 0 0 24px;
+  padding: 0 0 18px;
+  border-bottom: 1px solid var(--pc-line);
+}
+.pc-settings-panel .settings-page-head-copy {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
+}
+.pc-settings-panel .settings-page-head h1 {
+  grid-area: 1 / 1;
+  margin: 0;
+  font-size: clamp(24px, 3cqi, 30px);
+  line-height: 1.4;
+}
+.pc-settings-panel .settings-page-back {
+  grid-area: 1 / 2;
+  min-height: 44px;
+  margin: 0;
+}
+.pc-settings-panel .settings-page-head p {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.pc-settings-panel .profile-section-nav[data-section="help"] {
+  width: fit-content;
+  margin: 0 0 20px;
+  max-width: 100%;
+  gap: 2px;
+  padding: 3px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--night-canvas, #f3eee8);
+}
+.pc-settings-panel .profile-section-nav[data-section="help"] > a {
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: inherit;
+  color: var(--pc-muted);
+}
+.pc-settings-panel .profile-section-nav[data-section="help"] > a[aria-current] {
+  color: var(--pc-ink);
+  background: var(--pc-paper);
+  box-shadow: 0 1px 4px rgb(35 28 24 / 10%);
+}
+.pc-settings-panel .profile-section-nav[data-section="help"] > .profile-section-tab-indicator {
+  display: none;
+}
+.pc-settings-workspace .pc-settings-panel .help-feedback-page > :is(.profile-help, .v4-page) {
+  margin: 0;
+}
+.pc-settings-panel .profile-help-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+.pc-settings-panel .pc-secondary-section {
+  border: 1px solid var(--pc-line);
+}
+@container settings-panel (max-width: 760px) {
+  .pc-settings-panel .pc-secondary-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@container desktop-settings (max-width: 830px) {
+  .pc-settings-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+    padding: 20px;
+  }
+  .pc-settings-workspace .pc-settings-navigation {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-height: none;
+    overflow: visible;
+    padding: 0 0 14px;
+    border: 0;
+    border-bottom: 1px solid var(--pc-line);
+  }
+  .pc-settings-nav-group {
+    display: contents;
+  }
+  .pc-settings-nav-group p {
+    display: none;
+  }
+  .pc-settings-navigation a {
+    gap: 6px;
+    padding-inline: 10px;
+  }
+}

@@ -1,5 +1,10 @@
 import { Check } from "lucide-react";
-import { DesignNavigation, PublishButtonSurface } from "../mobile/ui";
+import { Link } from "react-router-dom";
+import {
+  DesignIcon,
+  DesignNavigation,
+  PublishButtonSurface,
+} from "../mobile/ui";
 import {
   setAppearance,
   setNavTransparency,
@@ -19,6 +24,11 @@ export default function Personalization() {
   const transparency = useNavTransparency();
   return (
     <div className="personalization">
+      <Link className="personalization-entry" to="/settings/preferences">
+        <DesignIcon name="utensils" size={20} />
+        口味偏好
+        <DesignIcon name="chevronRight" size={18} />
+      </Link>
       <fieldset>
         <legend>外观</legend>
         <div className="personalization-options">

@@ -48,7 +48,7 @@
   background: #f8f5f1;
   color: var(--pc-ink);
 }
-.pc-secondary-rail nav a[aria-current="page"] {
+.pc-secondary-rail nav a[aria-current] {
   background: #fff0c3;
   color: var(--pc-ink);
 }
@@ -520,43 +520,6 @@
   font-size: 13px;
   line-height: 2;
   color: var(--pc-muted);
-  margin: 0;
-}
-.pc-secondary-about {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 42%;
-  background: #ffcb45;
-  overflow: hidden;
-  border-radius: 26px;
-  padding: 34px 40px;
-  margin-bottom: 24px;
-  align-items: center;
-  min-height: 310px;
-}
-.pc-secondary-about h2 {
-  font-size: 34px;
-  line-height: 1.25;
-  letter-spacing: -1px;
-  font-weight: 900;
-  margin: 19px 0 14px;
-}
-.pc-secondary-about p {
-  font-size: 13px;
-  line-height: 1.9;
-  margin-bottom: 24px;
-}
-.pc-secondary-about .pc-brand-symbol {
-  background: #fff4d6;
-}
-.pc-secondary-about img {
-  width: 320px;
-  filter: drop-shadow(0 15px 0 #231c1814);
-  transform: translateX(20px) rotate(-8deg);
-}
-.pc-secondary-columns.about-columns {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.pc-secondary-columns.about-columns > .pc-secondary-note {
   margin: 0;
 }
 .pc-secondary-availability {

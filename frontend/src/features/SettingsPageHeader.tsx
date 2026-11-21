@@ -14,7 +14,6 @@ const details: Record<string, string> = {
   "/settings/username": "设置用于登录的账号标识，与展示昵称互不影响。",
   "/settings/notifications": "按自己的节奏，接收关心的消息。",
   "/settings/telemetry": "自主决定是否分享最小范围的使用统计。",
-  "/settings/about": "了解山软今天吃什么与站点服务。",
   "/data-notice": "了解账号信息与分享内容的保存方式。",
   "/verify": "完成学校统一认证或学校邮箱认证。",
   "/auth/account-recovery": "继续未完成的设备、手机号或注销操作。",
@@ -25,6 +24,9 @@ const details: Record<string, string> = {
 export function settingsBackLabel(back = "/settings") {
   if (back === "/settings/account") return "返回账号与安全";
   if (back === "/settings/privacy") return "返回隐私设置";
+  if (back === "/settings/personalization") return "返回个性化";
+  if (back === "/settings/about") return "返回关于";
+  if (back === "/settings/about/us") return "返回关于我们";
   if (back === "/settings") return "返回设置";
   if (back === "/me") return "返回个人中心";
   if (back === "/") return "返回发现";

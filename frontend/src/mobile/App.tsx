@@ -18,6 +18,7 @@ import {
   mobileSettingsPages,
   browserTitle,
 } from "./routes";
+import { findAboutPage } from "../features/about-navigation";
 import {
   MobileContext,
   DesignRegistryContext,
@@ -354,9 +355,8 @@ function MobileWorkspace() {
   const myCommentsPage =
     loc.pathname === "/me/shares" && new URLSearchParams(loc.search).get("tab") === "comments";
   const navigationSection =
-    ["/me/edit", "/me/details", "/settings/personalization"].includes(
-      loc.pathname,
-    ) ||
+    ["/me/edit", "/me/details", "/settings/personalization"].includes(loc.pathname) ||
+    findAboutPage(loc.pathname) ||
     myCommentsPage
       ? null
       : loc.pathname === "/" || loc.pathname === "/home-photo"

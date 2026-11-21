@@ -23,6 +23,7 @@ import { errorMessage, resultUncertain, unavailable } from "../../api/client";
 import { ProfileWorkspaceContext } from "../../app/profile-workspace";
 import { isMessagesPath } from "../v4-paths";
 import SettingsPageHeader from "../SettingsPageHeader";
+import { DesktopSettingsContext } from "../settings-nav";
 import "./v4.css";
 import "./design.css";
 export const labels: Record<string, string> = {
@@ -96,6 +97,7 @@ export function Shell({
 }) {
   const location = useLocation();
   const embedded = useContext(ProfileWorkspaceContext);
+  const desktopSettings = useContext(DesktopSettingsContext);
   const path = location.pathname;
   const featuresReturnTo =
     typeof location.state?.featuresReturnTo === "string" &&
@@ -104,7 +106,8 @@ export function Shell({
       : undefined;
   // In-app arrivals remember their source, so 返回 lands where the user came
   // from; cold opens fall back to the fixed target.
-  const backTo = featuresReturnTo ?? useReturnTo(back);
+  const origin = useReturnTo(back);
+  const backTo = featuresReturnTo ?? origin;
   const workspaceSectionPage = [
     "/features",
     "/me/growth",
@@ -182,7 +185,7 @@ export function Shell({
   };
   const aside =
     advice &&
-    !embedded &&
+    !embedded && !desktopSettings &&
     ((section === "feedback" && !path.startsWith("/feedback/mine")) ||
       section === "account");
   useEffect(() => {
@@ -191,11 +194,11 @@ export function Shell({
   return (
     <div className="v4-page" data-section={section} data-route={path}>
       {heading ??
-        (section === "account" ? (
+        (section === "account" || desktopSettings ? (
           <SettingsPageHeader
             title={title}
             detail={detail}
-            back={back}
+            back={section === "account" ? back : backTo}
             action={
               !embedded && path !== "/features" && featuresReturnTo ? (
                 <Link to={featuresReturnTo} className="v4-heading-home">

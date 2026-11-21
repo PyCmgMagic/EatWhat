@@ -1,6 +1,4 @@
-import { useContext, type ReactNode } from "react";
-import { BRAND_SLOGAN } from "../app/brand";
-import { ProfileWorkspaceContext } from "../app/profile-workspace";
+import type { ReactNode } from "react";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { Link, useLocation } from "react-router-dom";
 import { DesignIcon as Icon } from "../mobile/ui";
@@ -8,9 +6,8 @@ import { errorMessage } from "../api/client";
 import { mediaUrl } from "../api/models";
 import "./secondary.css";
 import { ToastError } from "../components/feedback";
-import { isRetiredV2 } from "../app/retired-routes";
-import { settingsNavGroups } from "../features/settings-nav";
 import SettingsPageHeader from "../features/SettingsPageHeader";
+import { aboutPages, aboutUs } from "../features/about-navigation";
 
 export const secondaryTitles: Record<string, string> = {
   "/me": "个人总览",
@@ -24,7 +21,7 @@ export const secondaryTitles: Record<string, string> = {
   "/settings/privacy": "隐私设置",
   "/settings/preferences": "口味偏好",
   "/settings/bind-phone": "绑定手机号",
-  "/settings/about": "关于我们",
+  ...Object.fromEntries(aboutPages.map((page) => [page.path, page.title])),
   "/data-notice": "数据存放说明",
   "/follows": "关注与粉丝",
   "/restaurants/new": "添加一家店",
@@ -107,61 +104,6 @@ export function PageHead({
       </div>
       {action && <div className="pc-secondary-head-action">{action}</div>}
     </header>
-  );
-}
-export function SettingsShell({ children }: { children: ReactNode }) {
-  const path = useLocation().pathname;
-  const embedded = useContext(ProfileWorkspaceContext);
-  if (embedded)
-    return <section className="pc-secondary-body">{children}</section>;
-  const groups = settingsNavGroups.map((group) => ({
-    title: group.title,
-    items: group.items.filter((item) => !isRetiredV2(item.to)),
-  }));
-  return (
-    <div className="pc-secondary-layout">
-      <aside className="pc-secondary-rail">
-        <Link className="pc-secondary-rail-back" to="/settings">
-          <Icon name="back" size={18} />
-          全部设置
-        </Link>
-        {groups.map((g) => (
-          <nav key={g.title} aria-label={g.title + "设置"}>
-            <p>{g.title}</p>
-            {g.items.map(({ to, name, icon }) => (
-              <Link
-                key={to}
-                to={to}
-                aria-current={
-                  path === to ||
-                  (to === "/settings/account" &&
-                    [
-                      "/settings/phone",
-                      "/settings/devices",
-                      "/settings/delete",
-                      "/settings/password",
-                      "/settings/bind-phone",
-                      "/settings/username",
-                      "/verify",
-                    ].includes(path))
-                    ? "page"
-                    : undefined
-                }
-              >
-                <Icon name={icon} size={19} />
-                {name}
-                <Icon name="chevronRight" size={15} />
-              </Link>
-            ))}
-          </nav>
-        ))}
-        <div className="pc-secondary-rail-note">
-          <Icon name="bowl" size={26} />
-          <b>{BRAND_SLOGAN}</b>
-        </div>
-      </aside>
-      <section className="pc-secondary-body">{children}</section>
-    </div>
   );
 }
 export function Section({
@@ -349,7 +291,7 @@ export const pendingPages: Record<
       "附上错误提示，便于定位问题",
       "请勿提供密码或验证码",
     ],
-    link: "/settings/about",
+    link: aboutUs.path,
     label: "了解平台",
     icon: "comment",
   },

@@ -1,6 +1,7 @@
 import { useSendSignal } from "../features/useSendSignal";
-import { BRAND_SLOGAN } from "../app/brand";
 import PrivacySettings from "../features/PrivacySettings";
+import AboutPage from "../features/AboutPage";
+import { aboutUs, findAboutPage } from "../features/about-navigation";
 import Personalization from "../theme/Personalization";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -25,7 +26,6 @@ import {
   PageHead,
   PendingPage,
   Section,
-  SettingsShell,
   TaskError,
   pendingPages,
 } from "./secondary";
@@ -85,8 +85,9 @@ function Row({
 }
 export function DesktopSettingsPage() {
   const path = useLocation().pathname;
+  const about = findAboutPage(path);
   return (
-    <SettingsShell>
+    <section className="pc-secondary-body">
       {pendingPages[path] ? (
         <PendingPage path={path} />
       ) : path === "/settings/account" ? (
@@ -104,10 +105,12 @@ export function DesktopSettingsPage() {
         <Binding />
       ) : path === "/verify" ? (
         <Verification />
-      ) : (
-        <About data={path === "/data-notice"} />
-      )}
-    </SettingsShell>
+      ) : about ? (
+        <AboutPage page={about} />
+      ) : path === "/data-notice" ? (
+        <DataNotice />
+      ) : null}
+    </section>
   );
 }
 function Account() {
@@ -429,122 +432,41 @@ function VerificationForm() {
     </>
   );
 }
-function About({ data }: { data: boolean }) {
+function DataNotice() {
   return (
     <>
       <PageHead
-        title={data ? "数据存放说明" : "关于我们"}
-        detail={data ? "了解账号信息与分享内容的保存方式。" : BRAND_SLOGAN}
-        back={data ? "/settings/about" : "/settings"}
-        crumb={data ? "关于我们" : "设置"}
+        title="数据存放说明"
+        detail="了解账号信息与分享内容的保存方式。"
+        back={aboutUs.path}
+        crumb={aboutUs.title}
       />
-      {data ? (
-        <div className="pc-secondary-columns">
-          <Section title="你的资料与内容">
-            <div className="pc-secondary-prose">
-              <h3>账号信息与分享</h3>
-              <p>
-                正式使用时，账号资料、菜品、店铺、收藏和关注关系由平台服务保存。你可以通过个人中心管理已经开放的资料与内容。
-              </p>
-              <h3>本机演示数据</h3>
-              <p>
-                演示模式使用浏览器中的隔离数据，评论等本地演示内容保存在当前浏览器。清理浏览器数据后，这些内容可能丢失；它们不会同步成正式分享。
-              </p>
-              <h3>登录状态</h3>
-              <p>
-                正式登录凭证保存在当前标签页会话中。使用公用电脑后，请主动退出登录。
-              </p>
-              <h3>隐私与数据处理</h3>
-              <p>
-                关注与粉丝列表可以设置公开范围。需要进一步处理账号或数据时，请联系平台管理员。
-              </p>
-            </div>
-          </Section>
-          <Note title="管理你的公开范围" icon="lock">
-            <p>分享美味的同时，也可以决定哪些关注信息向其他同学展示。</p>
-            <Link to="/settings/privacy">前往隐私设置 →</Link>
-          </Note>
-        </div>
-      ) : (
-        <div className="about-page">
-          <div className="pc-secondary-about">
-            <div>
-              <span className="pc-brand-symbol">
-                <Icon name="bowl" size={34} />
-              </span>
-              <h2>
-                山软
-                <br />
-                今天吃什么
-              </h2>
-              <p>
-                把吃过的好味道分享给同学，
-                <br />
-                也把想吃的下一餐整理好。
-              </p>
-              <Link className="pc-button" to="/">
-                发现今天的好味道
-                <Icon name="chevronRight" size={17} />
-              </Link>
-            </div>
-            <img src="/prototype/assets/dishes/yuntun.svg" alt="一碗鲜虾云吞" />
+      <div className="pc-secondary-columns">
+        <Section title="你的资料与内容">
+          <div className="pc-secondary-prose">
+            <h3>账号信息与分享</h3>
+            <p>
+              正式使用时，账号资料、菜品、店铺、收藏和关注关系由平台服务保存。你可以通过个人中心管理已经开放的资料与内容。
+            </p>
+            <h3>本机演示数据</h3>
+            <p>
+              演示模式使用浏览器中的隔离数据，评论等本地演示内容保存在当前浏览器。清理浏览器数据后，这些内容可能丢失；它们不会同步成正式分享。
+            </p>
+            <h3>登录状态</h3>
+            <p>
+              正式登录凭证保存在当前标签页会话中。使用公用电脑后，请主动退出登录。
+            </p>
+            <h3>隐私与数据处理</h3>
+            <p>
+              关注与粉丝列表可以设置公开范围。需要进一步处理账号或数据时，请联系平台管理员。
+            </p>
           </div>
-          <Section
-            title="我们在做什么"
-            detail="一个帮山软同学决定「今天吃什么」的小工具。"
-          >
-            <div className="pc-secondary-prose">
-              <h3>先定位置和饭点，再给一道菜</h3>
-              <p>
-                选好校区、饭点和堂食或外卖之后，首页会从同学们分享过的菜品里挑出今天值得吃的那一道，菜品背后的店、距离和推荐率也一起给出。
-              </p>
-              <h3>内容都来自校园里的食友</h3>
-              <p>
-                菜品、店铺、推荐率与评价都由同学自己分享和投票产生，不做广告位；发现信息不准，随时可以用纠错告诉我们。
-              </p>
-              <h3>把想吃的好味道存下来</h3>
-              <p>
-                收藏、口味偏好、浏览足迹和成长等级，让下一次决定快一点，也把吃过的好味道留成自己的小档案。
-              </p>
-            </div>
-          </Section>
-          <Section title="制作团队" detail="一群爱吃、也爱折腾的同学。">
-            <div className="pc-secondary-prose">
-              <p>
-                「山软今天吃什么」由山软的同学在课余时间一起做出来：一起选题、一起设计、一起写代码，也一起去食堂试吃。
-              </p>
-            </div>
-            <div className="pc-secondary-row">
-              <div>
-                <b>产品与设计</b>
-                <p>想清楚「每天该吃什么」这件事，也把它做得好看。</p>
-              </div>
-            </div>
-            <div className="pc-secondary-row">
-              <div>
-                <b>开发与体验</b>
-                <p>把推荐、地图和分享的细节磨到顺手。</p>
-              </div>
-            </div>
-            <div className="pc-secondary-row">
-              <div>
-                <b>内容与运营</b>
-                <p>整理校园店铺与菜品信息，处理纠错与反馈。</p>
-              </div>
-            </div>
-          </Section>
-          <div className="pc-secondary-columns about-columns">
-            <Note title="关于这份数据" icon="lock">
-              <p>账号资料、分享内容与关注关系的保存方式。</p>
-              <Link to="/data-notice">查看数据存放说明 →</Link>
-            </Note>
-            <Note title="想一起做点什么" icon="feedback">
-              <p>发现问题，或者有想法想告诉团队，都可以直接留言。</p>
-              <Link to="/feedback">前往意见反馈 →</Link>
-            </Note>
-          </div>
-        </div>
-      )}
+        </Section>
+        <Note title="管理你的公开范围" icon="lock">
+          <p>分享美味的同时，也可以决定哪些关注信息向其他同学展示。</p>
+          <Link to="/settings/privacy">前往隐私设置 →</Link>
+        </Note>
+      </div>
     </>
   );
 }

@@ -6,26 +6,7 @@ import { Modal } from "../components/ui";
 import { useTask } from "../components/useTask";
 import { DesignIcon as Icon } from "../mobile/ui";
 import "./settings-home.css";
-import { isRetiredV2 } from "../app/retired-routes";
-import "./profile-section-nav.css";
 import SettingsPageHeader from "./SettingsPageHeader";
-import { settingsNavGroups, type SettingsNavItem } from "./settings-nav";
-
-function SettingLink({ item }: { item: SettingsNavItem }) {
-  return (
-    <Link className="settings-home-row" to={item.to}>
-      <span className="settings-home-icon">
-        <Icon name={item.icon} size={19} />
-      </span>
-      <span className="settings-home-copy">
-        <strong>{item.name}</strong>
-        {item.hint && <small>{item.hint}</small>}
-      </span>
-      <Icon name="chevronRight" size={16} />
-    </Link>
-  );
-}
-
 type AccountFact = {
   icon: string;
   label: string;
@@ -37,11 +18,7 @@ function maskPhone(phone: string) {
   return phone.replace(/(\d{3})\d{4}(\d{4})/, "$1****$2");
 }
 
-export default function SettingsHome({
-  embedded = false,
-}: {
-  embedded?: boolean;
-}) {
+export default function SettingsHome() {
   const { user, signOut } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
@@ -59,18 +36,8 @@ export default function SettingsHome({
   const verificationKnown = typeof user?.verified === "boolean";
   const passwordKnown = typeof user?.hasPassword === "boolean";
   useEffect(() => {
-    document.title = "账号设置 · 山软今天吃什么";
+    document.title = "设置总览 · 山软今天吃什么";
   }, []);
-  const groups = settingsNavGroups
-    .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => !isRetiredV2(item.to)),
-    }))
-    .filter((group) => group.items.length > 0);
-  const accountEntry: SettingsNavItem = groups.find(
-    (group) => group.id === "account",
-  )?.items[0] ?? { to: "/settings/account", name: "账号与安全", icon: "idcard" };
-  const menuGroups = groups.filter((group) => group.id !== "account");
   const facts: AccountFact[] = [
     {
       icon: "phone",
@@ -109,10 +76,9 @@ export default function SettingsHome({
   return (
     <div className="settings-home" aria-labelledby="settings-home-title">
       <SettingsPageHeader
-        title="账号设置"
-        detail={embedded ? undefined : ""}
+        title="设置总览"
+        detail=""
         headingId="settings-home-title"
-        back={embedded ? undefined : "/me"}
         action={
           featuresReturnTo && (
             <Link className="settings-home-all" to={featuresReturnTo}>
@@ -123,14 +89,13 @@ export default function SettingsHome({
         }
       />
 
-      <Link className="settings-home-account" to={accountEntry.to}>
+      <Link className="settings-home-account" to="/settings/account">
         <div className="settings-home-account-row">
           <span className="settings-home-account-icon">
-            <Icon name={accountEntry.icon} size={23} />
+            <Icon name="idcard" size={23} />
           </span>
           <span className="settings-home-account-copy">
-            <strong>{accountEntry.name}</strong>
-            <small>登录名、手机号、密码、登录设备与学生认证</small>
+            <strong>账号与安全</strong>
           </span>
           <span className="settings-home-account-go">
             管理
@@ -151,26 +116,6 @@ export default function SettingsHome({
           ))}
         </div>
       </Link>
-
-      <div className="settings-home-groups">
-        {menuGroups.map((group) => (
-          <section
-            key={group.id}
-            className="settings-home-group"
-            aria-label={group.title + "设置"}
-          >
-            <header>
-              <h2>{group.title}</h2>
-              <p>{group.detail}</p>
-            </header>
-            <div className="settings-home-group-items">
-              {group.items.map((item) => (
-                <SettingLink key={item.to} item={item} />
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
 
       <footer className="settings-home-session">
         <button

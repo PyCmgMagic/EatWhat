@@ -1,4 +1,5 @@
 import { restaurantHistoryId } from "../features/v4-paths";
+import { aboutPages, aboutUs } from "../features/about-navigation";
 
 export const screenRoutes: Record<string, string> = {
   "G2-Home": "/",
@@ -107,14 +108,16 @@ export const mobileSettingsPages: Record<
   },
   "/settings/preferences": {
     title: "口味偏好",
-    back: "/settings",
+    back: "/settings/personalization",
     source: "preferences",
   },
   "/verify": { title: "学生认证", back: "/settings/account" },
-  "/settings/about": { title: "关于我们", back: "/settings", public: true },
+  ...Object.fromEntries(
+    aboutPages.map((page) => [page.path, { ...page, public: true }]),
+  ),
   "/data-notice": {
     title: "数据存放说明",
-    back: "/settings/about",
+    back: aboutUs.path,
     public: true,
   },
 };
