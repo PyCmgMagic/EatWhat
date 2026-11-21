@@ -6,141 +6,142 @@ import {
   type PointerEvent,
   type ReactNode,
 } from "react";
-import { instantMotion, motion } from "../motion/runtime";
+import { instantMotion } from "../motion/runtime";
 
 type Drag = {
   id: number;
   startY: number;
   origin: number;
+  wasOpen: boolean;
   moved: boolean;
   samples: { y: number; time: number }[];
 };
 
-/** The profile artboard's handle owns the drag; its content keeps native scrolling. */
-export default function ProfileSheet({ children }: { children: ReactNode }) {
+export default function ProfileSheet({
+  contentKey,
+  tabs,
+  children,
+}: {
+  contentKey: string;
+  tabs: ReactNode;
+  children: ReactNode;
+}) {
   const sheet = useRef<HTMLDivElement>(null);
-  const content = useRef<HTMLDivElement>(null);
-  const handle = useRef<HTMLButtonElement>(null);
-  const metrics = useRef({ height: 844, top: 24, distance: 348 });
+  const nav = useRef<HTMLDivElement>(null);
+  const travel = useRef(0);
   const drag = useRef<Drag | null>(null);
-  const expandedRef = useRef(false);
+  const destination = useRef<boolean | null>(null);
   const suppressClick = useRef(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [expanded, setExpanded] = useState(false);
   const contentId = useId();
 
-  function resizeContent(offset: number) {
-    if (!content.current || !handle.current) return;
-    content.current.style.height = `${Math.max(0, metrics.current.height - metrics.current.top - offset - handle.current.offsetHeight)}px`;
-  }
-
-  function currentOffset() {
-    const transform = getComputedStyle(sheet.current!).transform;
-    return transform === "none" ? 0 : new DOMMatrixReadOnly(transform).m42;
-  }
-
-  function freeze() {
-    const element = sheet.current!;
-    const offset = currentOffset();
-    clearTimeout(timer.current);
-    element.style.transition = "none";
-    element.style.transform = `translateY(${offset}px)`;
-    return offset;
-  }
-
-  function settle(open: boolean, immediate = false) {
-    const element = sheet.current;
-    if (!element) return;
-    const start = freeze();
-    const target = open ? 0 : metrics.current.distance;
-    expandedRef.current = open;
-    setExpanded(open);
-    delete element.dataset.dragging;
-    const finish = () => {
-      delete element.dataset.moving;
-      resizeContent(target);
-    };
-    if (immediate || instantMotion() || Math.abs(start - target) < 1) {
-      element.style.transform = `translateY(${target}px)`;
-      finish();
-      return;
-    }
-    // Keep the full surface available while it travels; resize the scrollport
-    // only once it reaches its resting position, never on each pointer move.
-    resizeContent(0);
-    element.dataset.moving = "true";
-    void element.offsetHeight;
-    element.style.transition = `transform ${motion.surface}ms ${motion.move}`;
-    element.style.transform = `translateY(${target}px)`;
-    timer.current = setTimeout(finish, motion.surface + 20);
-  }
-
   useLayoutEffect(() => {
-    const element = sheet.current!;
-    const stage = element.parentElement!.querySelector<HTMLElement>(".mobile-profile-stage");
-    const measure = () => {
-      const height = element.parentElement!.clientHeight;
-      const top = parseFloat(getComputedStyle(element).top) || 24;
-      const collapsed = Math.min(
-        stage?.offsetHeight ?? 372,
-        Math.max(top + 120, height - 144),
+    const panel = sheet.current!;
+    const screen = panel.parentElement!;
+    const toolbar = screen.querySelector<HTMLElement>(
+      ".mobile-profile-actions",
+    )!;
+    const summary = toolbar.querySelector<HTMLElement>(
+      ".mobile-profile-summary",
+    )!;
+    const stage = screen.querySelector<HTMLElement>(".mobile-profile-stage")!;
+    let lastProgress = -1;
+
+    function sync() {
+      const offset = screen.scrollTop;
+      const open = offset >= travel.current - 1;
+      if (
+        (destination.current === true && open) ||
+        (destination.current === false && offset <= 1)
+      )
+        destination.current = null;
+      if (open !== stage.inert) {
+        stage.inert = open;
+        summary.setAttribute("aria-hidden", String(!open));
+        setExpanded(open);
+      }
+      // Stop updating styles once the list is scrolling under the pinned tabs.
+      const progress = open ? 1 : Math.max(0, offset / travel.current);
+      if (progress === lastProgress) return;
+      lastProgress = progress;
+      toolbar.style.setProperty("--profile-collapse", String(progress));
+      toolbar.toggleAttribute("data-compact", progress >= 0.5);
+      nav.current!.style.setProperty(
+        "--profile-corner",
+        `${32 * (1 - progress)}px`,
       );
-      metrics.current = { height, top, distance: collapsed - top };
-      const active = drag.current;
-      drag.current = null;
-      if (active && handle.current?.hasPointerCapture(active.id))
-        handle.current.releasePointerCapture(active.id);
-      settle(expandedRef.current, true);
-    };
+    }
+    function measure() {
+      const previous = travel.current;
+      travel.current = Math.max(1, panel.offsetTop - toolbar.offsetHeight);
+      if (previous && stage.inert && previous !== travel.current)
+        screen.scrollTop =
+          travel.current + Math.max(0, screen.scrollTop - previous);
+      sync();
+    }
+    function interrupt() {
+      destination.current = null;
+    }
     measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(element.parentElement!);
-    if (stage) observer.observe(stage);
+    const resize = new ResizeObserver(measure);
+    resize.observe(stage);
+    resize.observe(toolbar);
+    screen.addEventListener("scroll", sync, { passive: true });
+    screen.addEventListener("wheel", interrupt, { passive: true });
+    screen.addEventListener("touchmove", interrupt, { passive: true });
     return () => {
-      observer.disconnect();
-      clearTimeout(timer.current);
+      resize.disconnect();
+      screen.removeEventListener("scroll", sync);
+      screen.removeEventListener("wheel", interrupt);
+      screen.removeEventListener("touchmove", interrupt);
     };
   }, []);
 
+  useLayoutEffect(() => {
+    // Start the new list at its first item while preserving the header position.
+    const screen = sheet.current!.parentElement!;
+    if (screen.scrollTop > travel.current) screen.scrollTop = travel.current;
+  }, [contentKey]);
+
+  function settle(open: boolean, immediate = false) {
+    destination.current = open;
+    sheet.current!.parentElement!.scrollTo({
+      top: open ? travel.current : 0,
+      behavior: immediate || instantMotion() ? "instant" : "smooth",
+    });
+  }
   function pointerDown(event: PointerEvent<HTMLButtonElement>) {
     if (!event.isPrimary || event.button !== 0 || drag.current) return;
+    const screen = sheet.current!.parentElement!;
+    const origin = screen.scrollTop;
+    screen.scrollTo({ top: origin, behavior: "instant" });
     suppressClick.current = false;
-    const origin = freeze();
     drag.current = {
       id: event.pointerId,
       startY: event.clientY,
       origin,
+      wasOpen: destination.current ?? expanded,
       moved: false,
       samples: [{ y: event.clientY, time: event.timeStamp }],
     };
-    sheet.current!.dataset.dragging = "true";
-    sheet.current!.dataset.moving = "true";
-    resizeContent(0);
     event.currentTarget.setPointerCapture(event.pointerId);
   }
-
   function pointerMove(event: PointerEvent<HTMLButtonElement>) {
     const active = drag.current;
     if (!active || active.id !== event.pointerId) return;
-    const delta = event.clientY - active.startY;
+    const delta = active.startY - event.clientY;
     active.moved ||= Math.abs(delta) > 6;
+    if (!active.moved) return;
+    sheet.current!.dataset.dragging = "true";
     active.samples = active.samples.filter(
       (sample) => event.timeStamp - sample.time < 100,
     );
     active.samples.push({ y: event.clientY, time: event.timeStamp });
-    const raw = active.origin + delta;
-    const end = metrics.current.distance;
-    const resistance = (overshoot: number) =>
-      24 * (1 - Math.exp(-overshoot / 80));
-    const offset =
-      raw < 0
-        ? -resistance(-raw)
-        : raw > end
-          ? end + resistance(raw - end)
-          : raw;
-    sheet.current!.style.transform = `translateY(${offset}px)`;
+    sheet.current!.parentElement!.scrollTop = Math.min(
+      Math.max(travel.current, active.origin),
+      active.origin + delta,
+    );
   }
-
   function pointerEnd(
     event: PointerEvent<HTMLButtonElement>,
     cancelled = false,
@@ -148,63 +149,67 @@ export default function ProfileSheet({ children }: { children: ReactNode }) {
     const active = drag.current;
     if (!active || active.id !== event.pointerId) return;
     drag.current = null;
+    delete sheet.current!.dataset.dragging;
     suppressClick.current = active.moved || cancelled;
-    if (event.currentTarget.hasPointerCapture(event.pointerId))
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    if (cancelled || !active.moved) {
-      settle(expandedRef.current);
+    if (event.currentTarget.hasPointerCapture(active.id))
+      event.currentTarget.releasePointerCapture(active.id);
+    if (cancelled) {
+      if (active.origin > travel.current) {
+        sheet.current!.parentElement!.scrollTop = active.origin;
+      } else if (active.moved) settle(active.wasOpen);
       return;
     }
-    const recent = active.samples.filter(
+    if (
+      !active.moved ||
+      sheet.current!.parentElement!.scrollTop > travel.current
+    )
+      return;
+    const first = active.samples.find(
       (sample) => event.timeStamp - sample.time < 100,
     );
-    const first = recent[0];
-    const delta = event.clientY - active.startY;
+    const delta = active.startY - event.clientY;
     const velocity =
-      first && recent.length > 1 && Math.abs(delta) >= 20
-        ? (event.clientY - first.y) / Math.max(1, event.timeStamp - first.time)
+      first && Math.abs(delta) >= 20
+        ? (first.y - event.clientY) / Math.max(1, event.timeStamp - first.time)
         : 0;
-    const projected = active.origin + delta + velocity * 180;
-    settle(projected < metrics.current.distance / 2);
+    settle(active.origin + delta + velocity * 180 > travel.current / 2);
   }
 
   return (
     <div ref={sheet} className="mobile-profile-sheet" data-expanded={expanded}>
-      <button
-        ref={handle}
-        type="button"
-        className="mobile-profile-sheet-handle"
-        aria-label={expanded ? "收起我的内容" : "展开我的内容"}
-        aria-expanded={expanded}
-        aria-controls={contentId}
-        onPointerDown={pointerDown}
-        onPointerMove={pointerMove}
-        onPointerUp={(event) => pointerEnd(event)}
-        onPointerCancel={(event) => pointerEnd(event, true)}
-        onLostPointerCapture={(event) => pointerEnd(event, true)}
-        onClick={(event) => {
-          if (suppressClick.current) {
+      <div ref={nav} className="mobile-profile-sheet-nav">
+        <button
+          type="button"
+          className="mobile-profile-sheet-handle"
+          aria-label={expanded ? "收起我的内容" : "展开我的内容"}
+          aria-expanded={expanded}
+          aria-controls={contentId}
+          onPointerDown={pointerDown}
+          onPointerMove={pointerMove}
+          onPointerUp={(event) => pointerEnd(event)}
+          onPointerCancel={(event) => pointerEnd(event, true)}
+          onLostPointerCapture={(event) => pointerEnd(event, true)}
+          onClick={(event) => {
+            if (!suppressClick.current || event.detail === 0)
+              settle(!(destination.current ?? expanded), event.detail === 0);
             suppressClick.current = false;
-            return;
-          }
-          settle(!expandedRef.current, event.detail === 0);
-        }}
-        onKeyDown={(event) => {
-          suppressClick.current = false;
-          if (
-            ["ArrowUp", "ArrowDown", "Home", "End", "Escape"].includes(
-              event.key,
-            )
-          ) {
-            event.preventDefault();
-            settle(["ArrowUp", "Home"].includes(event.key), true);
-          }
-        }}
-      >
-        <span aria-hidden="true" />
-      </button>
+          }}
+          onKeyDown={(event) => {
+            if (
+              ["ArrowUp", "ArrowDown", "Home", "End", "Escape"].includes(
+                event.key,
+              )
+            ) {
+              event.preventDefault();
+              settle(["ArrowUp", "Home"].includes(event.key), true);
+            }
+          }}
+        >
+          <span aria-hidden="true" />
+        </button>
+        {tabs}
+      </div>
       <div
-        ref={content}
         id={contentId}
         className="mobile-profile-sheet-content"
         role="region"

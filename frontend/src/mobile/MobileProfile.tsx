@@ -174,21 +174,28 @@ export default function MobileProfile() {
   }
   return (
     <div className="design-screen mobile-profile-screen" data-screen="G-Me">
-      <div className="mobile-profile-stage">
-        <header className="mobile-profile-actions">
-          <WorkspaceSwitch
-            className="mobile-profile-admin-link"
-            iconSize={18}
+      <header className="mobile-profile-actions">
+        <div className="mobile-profile-summary" aria-hidden="true">
+          <UserAvatar
+            className="mobile-profile-mini-avatar"
+            avatar={user?.avatar}
+            name={name}
           />
-          <ProfileEditLink aria-label="编辑资料">
-            <SquarePen size={17} aria-hidden="true" />
-            编辑
-          </ProfileEditLink>
-          <Link to="/settings">
-            <Settings size={17} aria-hidden="true" />
-            设置
-          </Link>
-        </header>
+          <strong title={name} role="heading" aria-level={1}>
+            {name}
+          </strong>
+        </div>
+        <WorkspaceSwitch className="mobile-profile-admin-link" iconSize={19} />
+        <ProfileEditLink aria-label="编辑资料">
+          <SquarePen size={19} aria-hidden="true" />
+          <span>编辑</span>
+        </ProfileEditLink>
+        <Link to="/settings" aria-label="设置">
+          <Settings size={19} aria-hidden="true" />
+          <span>设置</span>
+        </Link>
+      </header>
+      <div className="mobile-profile-stage">
         <div
           className="mobile-profile-cover"
           data-cover-kind={illustration ? "illustration" : "photo"}
@@ -252,21 +259,25 @@ export default function MobileProfile() {
           </div>
         </section>
       </div>
-      <ProfileSheet>
-        <MarkerTabs
-          items={profileTabs.map(({ id, name, icon: Icon }) => ({
-            id,
-            name,
-            icon: <Icon aria-hidden="true" size={16} />,
-          }))}
-          value={tab}
-          onChange={(next) => {
-            if (next !== tab) select(next);
-          }}
-          panelId={panelId}
-          label="我的内容分类"
-          className="mobile-profile-tabs"
-        />
+      <ProfileSheet
+        contentKey={`${tab}/${page}`}
+        tabs={
+          <MarkerTabs
+            items={profileTabs.map(({ id, name, icon: Icon }) => ({
+              id,
+              name,
+              icon: <Icon aria-hidden="true" size={16} />,
+            }))}
+            value={tab}
+            onChange={(next) => {
+              if (next !== tab) select(next);
+            }}
+            panelId={panelId}
+            label="我的内容分类"
+            className="mobile-profile-tabs"
+          />
+        }
+      >
         <div
           id={panelId}
           role="tabpanel"
