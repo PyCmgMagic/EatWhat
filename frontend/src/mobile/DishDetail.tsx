@@ -1,5 +1,6 @@
 import { foodAuthor } from "../api/models";
 import { FoodCover } from "../components/FoodCover";
+import { PhotoPreviewButton } from "../components/PhotoPreviewButton";
 import { UserAvatar } from "../components/UserAvatar";
 import { UserTitle } from "../components/UserTitle";
 import {
@@ -18,9 +19,9 @@ import {
   type Food,
   type Restaurant,
 } from "../api/models";
-import { useFoodImageRefresh } from "../features/media";
+import { useFoodPhoto } from "../features/media";
 import { useCelebration } from "../features/food-reactions";
-import { DesignIcon } from "./ui";
+import { DesignIcon, ReactionIcon } from "./ui";
 import { DishMoreActions } from "./DishMoreActions";
 import { visualFor } from "./catalog";
 import "./dish-detail.css";
@@ -52,7 +53,7 @@ function useOptimisticReaction(
 ) {
   const [pending, setPending] = useState<boolean | null>(null);
   const active = pending ?? serverValue;
-  const celebration = useCelebration(480);
+  const celebration = useCelebration(260);
   const prevServer = useRef(serverValue);
 
   useEffect(() => {
@@ -90,31 +91,6 @@ function useOptimisticReaction(
   return { active, celebrating: celebration.celebrating, toggle };
 }
 
-function MorphReactionIcon({
-  outline,
-  filled,
-  size,
-  className,
-}: {
-  outline: string;
-  filled: string;
-  size: number;
-  className: string;
-}) {
-  // Mount both SVG masks together so activation pops smoothly without waiting
-  // for a lazy mask image fetch or swapping DOM nodes mid-transition.
-  return (
-    <span className={className} aria-hidden="true">
-      <span className="dish-morph-layer is-outline">
-        <DesignIcon name={outline} size={size} />
-      </span>
-      <span className="dish-morph-layer is-filled">
-        <DesignIcon name={filled} size={size} />
-      </span>
-    </span>
-  );
-}
-
 export default function DishDetail({
   food,
   restaurant,
@@ -133,7 +109,7 @@ export default function DishDetail({
 }: Props) {
   const visual = visualFor(food, demo),
     src = mediaUrl(food.pictureUrl?.[0]);
-  const renewImage = useFoodImageRefresh();
+  const photo = useFoodPhoto(src);
   const serverLiked = food.isLiked === true;
   const like = useOptimisticReaction(serverLiked, onLike);
   const favorite = useOptimisticReaction(food.isFavorite === true, onFavorite);
@@ -203,12 +179,7 @@ export default function DishDetail({
               disabled={favoriteDisabled}
               onClick={favorite.toggle}
             >
-              <MorphReactionIcon
-                className="dish-favorite-icon"
-                outline="bookmark"
-                filled="bookmarkOn"
-                size={22}
-              />
+              <ReactionIcon kind="favorite" size={22} />
             </button>
             <button
               type="button"
@@ -249,13 +220,20 @@ export default function DishDetail({
           <div
             className={`dish-plate${visual.asset ? " is-illustration" : ""}`}
           >
-            {src ? (
-              <FoodCover
-                crop={food.coverCrop}
-                src={src}
-                alt={food.name || "菜品照片"}
-                onError={() => renewImage(src)}
-              />
+            {!photo.unavailable ? (
+              <>
+                <FoodCover
+                  crop={food.coverCrop}
+                  src={src}
+                  alt={food.name || "菜品照片"}
+                  onError={photo.onError}
+                />
+                <PhotoPreviewButton
+                  pictures={food.pictureUrl}
+                  name={food.name || "菜品"}
+                  onImageError={photo.renew}
+                />
+              </>
             ) : (
               <DesignIcon name="bowl" size={64} />
             )}
@@ -283,12 +261,7 @@ export default function DishDetail({
             disabled={likeDisabled}
             onClick={like.toggle}
           >
-            <MorphReactionIcon
-              className="dish-like-icon"
-              outline="heart"
-              filled="heartOn"
-              size={20}
-            />
+            <ReactionIcon kind="like" size={20} />
             <span>{like.active ? "已喜欢" : "喜欢"}</span>
             <b>{food.likesCount == null ? "—" : likesCount}</b>
           </button>

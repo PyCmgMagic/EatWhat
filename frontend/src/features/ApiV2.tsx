@@ -20,12 +20,13 @@ import { LoginLink } from "../app/auth-dialog";
 import { useTask } from "../components/useTask";
 import { errorMessage, unavailable } from "../api/client";
 import { categories, mediaUrl, money, parseId, type Food } from "../api/models";
-import { DesignIcon as Icon, useMobile } from "../mobile/ui";
+import { DesignIcon as Icon, ReactionIcon, useMobile } from "../mobile/ui";
 import { followLabel, peopleHref } from "./profile-people";
 import { CatalogCard, FeaturePage, FeatureState, FoodManage } from "./Catalog";
 import { visualFor } from "../mobile/catalog";
 import SheetHandle from "../mobile/SheetHandle";
 import { useFoodImageRefresh } from "./media";
+import { ProfileFoodLike } from "./ProfileFoodLike";
 import "./api-v2.css";
 import "./user-profile.css";
 import { ToastError } from "../components/feedback";
@@ -80,7 +81,7 @@ function ProfileFoodCard({
   const renewImage = useFoodImageRefresh();
   return (
     <article className="mobile-user-food-card">
-      <Link to={`/foods/${food.id}`}>
+      <div className="profile-food-link-area">
         <div className="mobile-user-food-photo">
           {src && failed !== src ? (
             <img
@@ -101,23 +102,18 @@ function ProfileFoodCard({
           )}
         </div>
         <div className="mobile-user-food-title">
-          <h3>{food.name || "未命名菜品"}</h3>
-          <span
-            aria-label={
-              food.likesCount == null
-                ? "获赞数量未知"
-                : `${food.likesCount} 次获赞`
-            }
-          >
-            <Icon name="heart" size={14} />
-            {food.likesCount ?? "—"}
-          </span>
+          <h3>
+            <Link className="profile-food-link" to={`/foods/${food.id}`}>
+              {food.name || "未命名菜品"}
+            </Link>
+          </h3>
+          <ProfileFoodLike food={food} />
         </div>
         <div className="mobile-user-food-meta">
           <span>{food.restaurantName || "餐厅信息待补充"}</span>
           {food.price != null && <b>{money(food.price)}</b>}
         </div>
-      </Link>
+      </div>
       {(own || manage) && <FoodManage food={food} anyone />}
     </article>
   );
@@ -329,7 +325,12 @@ export function UserFoods({
                 compact ? (
                   <ProfileFoodCard key={f.id} food={f} manage={manage} />
                 ) : (
-                  <CatalogCard key={f.id} food={f} actions={manage} />
+                  <CatalogCard
+                    key={f.id}
+                    food={f}
+                    actions={manage}
+                    likeControl={<ProfileFoodLike food={f} />}
+                  />
                 ),
               )}
             </div>
@@ -886,13 +887,14 @@ export function MobileUserProfile() {
                 <button
                   className="mobile-user-follow"
                   aria-pressed={following}
+                  aria-busy={follow.isPending}
                   disabled={follow.isPending || q.data?.isFollowingHim == null}
                   onClick={() => follow.run(() => api.follow(id!, following))}
                 >
-                  <Icon name={following ? "followed" : "follow"} size={18} />
-                  {follow.isPending
-                    ? "更新中…"
-                    : followLabel(q.data!)}
+                  <ReactionIcon kind="follow" size={18} />
+                  <span className="follow-label">
+                    {follow.isPending ? "更新中…" : followLabel(q.data!)}
+                  </span>
                 </button>
               ))}
             {ready && !self && (

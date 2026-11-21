@@ -4,8 +4,10 @@ import { priceBands } from "../api/v2-vocab";
 import { discoveryKinds } from "../app/discovery-category";
 import { useApp } from "../app/state";
 import { Modal } from "../components/ui";
-import { useShopOptions } from "../features/shop-options";
-import SheetHandle from "./SheetHandle";
+import { useShopOptions } from "./shop-options";
+import SheetHandle from "../mobile/SheetHandle";
+import { SlidersHorizontal } from "lucide-react";
+import { useArea } from "../app/area";
 import {
   allShops,
   hasNearbyFilters,
@@ -19,17 +21,19 @@ function ChoiceGroup({
   choices,
   value,
   choose,
+  defaultLabel = "不限",
 }: {
   title: string;
   choices: readonly { id: string; name: string }[];
   value: string;
   choose: (value: string) => void;
+  defaultLabel?: string;
 }) {
   return (
     <fieldset>
       <legend>{title}</legend>
       <div className="nearby-filter-chips">
-        {[{ id: "", name: "不限" }, ...choices].map(({ id, name }) => (
+        {[{ id: "", name: defaultLabel }, ...choices].map(({ id, name }) => (
           <label key={id}>
             <input
               type="radio"
@@ -45,21 +49,51 @@ function ChoiceGroup({
   );
 }
 
+export function NearbyFilterTrigger({
+  active,
+  open,
+  onClick,
+  showLabel,
+}: {
+  active: boolean;
+  open: boolean;
+  onClick: () => void;
+  showLabel?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      className="nearby-filter-trigger"
+      aria-label={active ? "筛选店铺，已应用筛选" : "筛选店铺"}
+      aria-haspopup="dialog"
+      aria-expanded={open}
+      data-active={active || undefined}
+      onClick={onClick}
+    >
+      <SlidersHorizontal size={showLabel ? 16 : 20} aria-hidden="true" />
+      {showLabel && "筛选"}
+    </button>
+  );
+}
+
 export default function NearbyFilterSheet({
   filters,
   keyword,
+  pageSize,
   onApply,
   onClose,
 }: {
   filters: NearbyFilters;
   keyword: string;
+  pageSize?: number;
   onApply: (filters: NearbyFilters) => void;
   onClose: () => void;
 }) {
   const [draft, setDraft] = useState(filters);
   const { session } = useApp();
   const { categories } = useShopOptions();
-  const preview = useNearbyShops(keyword, draft, 1);
+  const { area } = useArea();
+  const preview = useNearbyShops(keyword, draft, 1, pageSize);
   const count = preview.data?.totalItems;
   function change(patch: Partial<NearbyFilters>) {
     setDraft((previous) => ({ ...previous, ...patch }));
@@ -107,6 +141,15 @@ export default function NearbyFilterSheet({
           value={draft.priceBand}
           choose={(priceBand) => change({ priceBand })}
         />
+        {area && (
+          <ChoiceGroup
+            title="排序"
+            defaultLabel="距离优先"
+            choices={[{ id: "NEWEST", name: "最新店铺" }]}
+            value={draft.newestFirst ? "NEWEST" : ""}
+            choose={(sort) => change({ newestFirst: sort === "NEWEST" })}
+          />
+        )}
         <label className="nearby-filter-switch">
           <span>
             只看口碑好的

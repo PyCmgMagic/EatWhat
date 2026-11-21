@@ -79,6 +79,18 @@ beforeEach(async () => {
           ok({
             items: [
               {
+                id: 96,
+                kind: "new_device_login",
+                data: {
+                  type: "new_device_login",
+                  deviceName: "Chrome · Android",
+                },
+                memberCount: 1,
+                unreadMemberCount: unreadCard,
+                latestAt: Date.now(),
+                actors: [],
+              },
+              {
                 id: 91,
                 kind: "like",
                 memberCount: 1,
@@ -162,6 +174,15 @@ it("marks every PC notification read and refreshes the unread state", async () =
   expect(host.querySelector('.profile-message-heading a[href="/comments?commentId=7"]')).not.toBeNull();
   expect(host.textContent).not.toContain("1 条点赞");
   expect(host.querySelector(".profile-message-unread")).not.toBeNull();
+  const loginNotice = () =>
+    Array.from(host.querySelectorAll("article")).find((row) =>
+      row.textContent?.includes("新设备登录"),
+    );
+  expect(loginNotice()?.textContent).toContain("Chrome · Android");
+  expect(loginNotice()?.querySelector("a")).toBeNull();
+  expect(loginNotice()?.querySelector("button")?.textContent).toContain(
+    "标为已读",
+  );
   await act(async () => button.click());
   await spin(
     () =>
@@ -173,6 +194,8 @@ it("marks every PC notification read and refreshes the unread state", async () =
   );
   expect(button.disabled).toBe(true);
   expect(host.querySelector(".profile-message-unread")).toBeNull();
+  expect(loginNotice()?.textContent).toContain("Chrome · Android");
+  expect(loginNotice()?.querySelector("a, button")).toBeNull();
   expect(document.body.textContent).toContain("全部通知已标为已读");
   expect(
     vi

@@ -19,10 +19,10 @@ import type { useHomeDiscovery } from "./useHomeDiscovery";
 import "./discovery-list.css";
 
 const icons = { food: Soup, drink: CupSoda, buffet: ConciergeBell };
-const sortIcons = {
-  recommended: ListFilter,
-  distance: MapPin,
-  rating: ThumbsUp,
+const sortButtons = {
+  recommended: { icon: ListFilter, shortLabel: "排序" },
+  distance: { icon: MapPin, shortLabel: "距离" },
+  rating: { icon: ThumbsUp, shortLabel: "推荐率" },
 };
 
 export function DiscoveryList({
@@ -36,7 +36,7 @@ export function DiscoveryList({
   const mobile = useMobile();
   const id = useId();
   const hasResults = (shops ?? dishes).length > 0;
-  const SortIcon = sortIcons[discovery.sort];
+  const { icon: SortIcon, shortLabel } = sortButtons[discovery.sort];
   return (
     <>
       <div className="discovery-toolbar">
@@ -51,37 +51,37 @@ export function DiscoveryList({
           label="店铺分类"
           className="discovery-tabs"
         />
-        {!!shops?.length && (
-          <Select
-            className="discovery-sort"
-            popupClassName="discovery-sort-menu"
-            icon={<SortIcon size={14} strokeWidth={1.75} />}
-            aria-label="推荐店铺排序"
-            menuLabel="本组店铺排序"
-            value={discovery.sort}
-            onChange={(event) => {
-              const value = event.target.value;
-              if (
-                value === "recommended" ||
-                value === "distance" ||
-                value === "rating"
-              )
-                discovery.setSort(value);
-            }}
+        <Select
+          className="discovery-sort"
+          popupClassName="discovery-sort-menu"
+          compactLabel={shortLabel}
+          icon={<SortIcon size={14} strokeWidth={1.75} />}
+          aria-label="推荐店铺排序"
+          menuLabel="本组店铺排序"
+          disabled={!shops?.length}
+          value={discovery.sort}
+          onChange={(event) => {
+            const value = event.target.value;
+            if (
+              value === "recommended" ||
+              value === "distance" ||
+              value === "rating"
+            )
+              discovery.setSort(value);
+          }}
+        >
+          <option value="recommended">默认排序</option>
+          <option
+            value="distance"
+            disabled={!discovery.canSortByDistance}
+            data-description={
+              discovery.canSortByDistance ? undefined : "暂无店铺距离"
+            }
           >
-            <option value="recommended">默认排序</option>
-            <option
-              value="distance"
-              disabled={!discovery.canSortByDistance}
-              data-description={
-                discovery.canSortByDistance ? undefined : "暂无店铺距离"
-              }
-            >
-              距离最近
-            </option>
-            <option value="rating">推荐率最高</option>
-          </Select>
-        )}
+            距离最近
+          </option>
+          <option value="rating">推荐率最高</option>
+        </Select>
       </div>
       <div
         id={id}

@@ -2,13 +2,13 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { createApi } from "../api/service";
 import { bridgeToV2 } from "../api/v2-bridge";
 import type { Food } from "../api/models";
 import DishDetail from "./DishDetail";
 
-vi.mock("../features/media", () => ({ useFoodImageRefresh: () => vi.fn() }));
 vi.mock("../features/SupplementPrice", () => ({ SupplementPrice: () => null }));
 vi.mock("../features/FoodRating", () => ({ FoodRating: () => null }));
 vi.mock("../features/comments/Comments", () => ({
@@ -18,16 +18,19 @@ vi.mock("./DishMoreActions", () => ({ DishMoreActions: () => null }));
 
 const avatar = "https://cdn.example.com/avatar/maycry.webp";
 let host: HTMLDivElement, root: Root;
+let client: QueryClient;
 
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
+  client = new QueryClient();
 });
 
 afterEach(async () => {
   await act(async () => root.unmount());
+  client.clear();
   host.remove();
   vi.unstubAllGlobals();
 });
@@ -43,26 +46,44 @@ async function render(
 ) {
   await act(async () =>
     root.render(
-      <MemoryRouter>
-        <DishDetail
-          food={food}
-          back="/"
-          demo={false}
-          sharedAt="8 小时前"
-          likeDisabled={handlers.likeDisabled ?? true}
-          favoriteDisabled={handlers.favoriteDisabled ?? true}
-          onLike={handlers.onLike ?? vi.fn()}
-          onFavorite={handlers.onFavorite ?? vi.fn()}
-          onShare={vi.fn()}
-          onTags={vi.fn()}
-          onRestaurant={vi.fn()}
-          management={null}
-          footer={null}
-        />
-      </MemoryRouter>,
+      <QueryClientProvider client={client}>
+        <MemoryRouter>
+          <DishDetail
+            food={food}
+            back="/"
+            demo={false}
+            sharedAt="8 小时前"
+            likeDisabled={handlers.likeDisabled ?? true}
+            favoriteDisabled={handlers.favoriteDisabled ?? true}
+            onLike={handlers.onLike ?? vi.fn()}
+            onFavorite={handlers.onFavorite ?? vi.fn()}
+            onShare={vi.fn()}
+            onTags={vi.fn()}
+            onRestaurant={vi.fn()}
+            management={null}
+            footer={null}
+          />
+        </MemoryRouter>
+      </QueryClientProvider>,
     ),
   );
 }
+
+it("only opens a preview from an available cover, including after URL renewal", async () => {
+  const trigger = () =>
+    host.querySelector('.dish-plate button[aria-haspopup="dialog"]');
+  const food = { id: 71, pictureUrl: ["/assets/rice.jpg"] };
+  await render({ ...food, pictureUrl: [] });
+  expect(trigger()).toBeNull();
+  await render(food);
+  expect(trigger()).not.toBeNull();
+  await act(async () =>
+    host.querySelector(".dish-plate img")!.dispatchEvent(new Event("error")),
+  );
+  expect(trigger()).toBeNull();
+  await render({ ...food, pictureUrl: ["/assets/rice.jpg?renewed"] });
+  expect(trigger()).not.toBeNull();
+});
 
 it("shows the share author's avatar returned by the v2 profile API", async () => {
   const api = createApi(

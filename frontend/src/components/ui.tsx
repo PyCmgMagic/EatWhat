@@ -1,4 +1,10 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  type KeyboardEventHandler,
+  type ReactNode,
+} from "react";
 import { BRAND_SLOGAN } from "../app/brand";
 import { Link } from "react-router-dom";
 import { ContentSkeleton } from "./LoadingSkeleton";
@@ -195,6 +201,7 @@ export function Modal({
   className = "",
   dismissible = true,
   returnFocus,
+  onKeyDown,
 }: {
   title: string;
   children: ReactNode;
@@ -202,6 +209,7 @@ export function Modal({
   className?: string;
   dismissible?: boolean;
   returnFocus?: HTMLElement | null;
+  onKeyDown?: KeyboardEventHandler<HTMLDialogElement>;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -236,6 +244,7 @@ export function Modal({
       ref={ref}
       className={`modal ${className}`}
       aria-labelledby={titleId}
+      onKeyDown={onKeyDown}
       onCancel={(e) => {
         e.preventDefault();
         if (dismissible) dismiss();

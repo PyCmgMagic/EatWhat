@@ -81,6 +81,7 @@ export function useHomeDiscovery(enabled = true) {
       },
       "确认不推荐",
       "不想吃这家？",
+      "点错了",
     );
   }
   const shops = feed.data?.shops?.filter((shop) => visible(shop.id));
@@ -88,7 +89,9 @@ export function useHomeDiscovery(enabled = true) {
     (shop) => shop.distanceMeters != null,
   );
   const activeSort =
-    sort === "distance" && !canSortByDistance ? "recommended" : sort;
+    sort === "distance" && shops?.length && !canSortByDistance
+      ? "recommended"
+      : sort;
   return {
     hero,
     feed,

@@ -29,6 +29,7 @@ import {
 import { recoveryCommands } from "../api/recovery";
 import { ToastViewport, useToasts } from "./toast";
 import { clearCommentDrafts } from "./drafts";
+import { withReactionHaptics } from "./reaction-haptics";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -146,7 +147,7 @@ function clientForSession(session: Session | null) {
       )(...args);
     },
   );
-  return { api: client, signal, checkOwner };
+  return { api: withReactionHaptics(client), signal, checkOwner };
 }
 function StateProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState(readSession);

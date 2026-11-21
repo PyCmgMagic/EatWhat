@@ -104,6 +104,85 @@ it.each([
   },
 );
 
+it.each([false, true])(
+  "opens the editor inside the selected reply (mobile=%s)",
+  async (mobile) => {
+    const parent = {
+      id: 8,
+      authorName: "小林",
+      text: "汤底不错",
+      replyCount: 1,
+    };
+    const child = { id: 9, rootId: 8, authorName: "阿哲", text: "同意" };
+    cache.setQueryData(["comments", "list", 10, 71, "MOST_USEFUL", 1], {
+      items: [parent],
+    });
+    cache.setQueryData(["comments", "replies", 10, 8, 1], { items: [child] });
+    const replyToComment = vi
+      .fn()
+      .mockResolvedValue({ moderationStatus: "APPROVED" });
+    const app = {
+      user: { id: 10 },
+      api: {
+        foodComments: async () => ({ items: [parent] }),
+        commentReplies: async () => ({ items: [child] }),
+        replyToComment,
+      },
+      toast: vi.fn(),
+    } as unknown as AppState;
+    await act(() =>
+      root.render(
+        <MemoryRouter
+          initialEntries={[mobile ? "/comments?foodId=71" : "/foods/71"]}
+        >
+          <QueryClientProvider client={cache}>
+            <AppContext.Provider value={app}>
+              <FoodDiscussion food={{ id: 71 }} mobile={mobile} />
+            </AppContext.Provider>
+          </QueryClientProvider>
+        </MemoryRouter>,
+      ),
+    );
+    const firstReplyButton = [...host.querySelectorAll("button")].find(
+      (button) => button.textContent === "回复",
+    )!;
+    await act(() => firstReplyButton.click());
+    expect(host.querySelector("textarea")?.labels?.[0]?.textContent).toBe("回复 小林");
+    const row = host.querySelector('article[aria-label="阿哲的回复"]')!;
+    const trigger = [...row.querySelectorAll("button")].find(
+      (button) => button.textContent === "回复",
+    )!;
+    await act(() => trigger.click());
+    const editor = row.querySelector("textarea")!;
+    expect(document.activeElement).toBe(editor);
+    expect(host.querySelectorAll("textarea")).toHaveLength(1);
+    expect(editor.labels?.[0]?.textContent).toBe("回复 阿哲");
+    await act(() => {
+      Object.getOwnPropertyDescriptor(
+        HTMLTextAreaElement.prototype,
+        "value",
+      )!.set!.call(editor, "明天去试试");
+      editor.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(() =>
+      row.querySelector<HTMLButtonElement>('[aria-label="取消回复"]')!.click(),
+    );
+    expect(document.activeElement).toBe(trigger);
+    await act(() => trigger.click());
+    expect(row.querySelector("textarea")?.value).toBe("明天去试试");
+    await act(async () =>
+      row.querySelector<HTMLButtonElement>('[type="submit"]')!.click(),
+    );
+    expect(replyToComment).toHaveBeenCalledWith(
+      71,
+      8,
+      expect.objectContaining({ replyToId: 9, text: "明天去试试" }),
+      expect.any(String),
+    );
+    expect(row.querySelector("textarea")).toBeNull();
+  },
+);
+
 async function publish(reply = false, direct = false) {
   const command = vi
     .fn()

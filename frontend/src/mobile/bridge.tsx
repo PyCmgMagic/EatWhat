@@ -87,6 +87,7 @@ import {
 } from "../api/food-display";
 import { FoodManage } from "../features/Catalog";
 import DishDetail from "./DishDetail";
+import { PhotoPreviewButton } from "../components/PhotoPreviewButton";
 import { DishAvailabilityFields } from "../features/DishAvailability";
 import SheetHandle from "./SheetHandle";
 import HomeSheetHandle from "./HomeSheetHandle";
@@ -116,7 +117,6 @@ import { FoodReportDialog } from "../features/FoodReportDialog";
 import { RestaurantCorrectionDialog } from "../features/RestaurantCorrectionDialog";
 import { useShareLink } from "../features/useShareLink";
 import { HomeSearchButton, HomeSearchOverlay } from "./HomeSearch";
-import { ThemeToggle } from "../theme/AppearanceControl";
 import { PublishButton } from "../components/PublishButton";
 
 const FoodExtras = React.lazy(() =>
@@ -1575,7 +1575,6 @@ export function useDesignBridge(
               {view.children.slice(0, toolbarIndex)}
               <div className="mobile-home-preferences" style={{ color: values.s.on }}>
                 <SceneToggle tone="stage" stage={values.s.stage} value={m.scene} onChange={m.setScene} />
-                <ThemeToggle />
               </div>
               {view.children.slice(toolbarIndex + 1, sheetIndex)}
             </div>
@@ -1871,9 +1870,16 @@ export function useDesignBridge(
           </div>
         );
       if (id === 3) {
-        p.src = mediaUrl(r.pictureUrl?.[0]) ?? "/assets/restaurants/shop.svg";
+        const src = mediaUrl(r.pictureUrl?.[0]);
+        p.src = src ?? "/assets/restaurants/shop.svg";
         p.className = "mobile-restaurant-art";
         p.style = undefined;
+        if (src) return (
+          <div className="mobile-restaurant-photo">
+            <img {...p} alt={r.name || "店铺照片"} />
+            <PhotoPreviewButton pictures={r.pictureUrl} name={r.name || "店铺"} />
+          </div>
+        );
       }
       if (id === 4)
         return (

@@ -55,12 +55,20 @@
   color: #8a7e76;
   font: 700 14px "Bricolage Grotesque Variable";
 }
-.pc-nearby-list-title a {
-  padding: 4px 0;
-  flex: none;
-  font-size: 12px;
-  line-height: 18px;
-  color: #6e625b;
+.pc-nearby-list-title .nearby-filter-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  height: 34px;
+  padding-inline: 12px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.pc-nearby-list-title .nearby-filter-trigger:hover {
+  box-shadow: inset 0 0 0 1px currentColor;
 }
 .pc-nearby-list-header .pc-search-field {
   height: 40px;

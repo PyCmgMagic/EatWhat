@@ -1,213 +1,198 @@
-.food-rating {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 15px 16px 14px;
-  border-radius: 20px;
-  background: linear-gradient(180deg, #fcf9f6 0%, #f7f2ec 100%);
-  border: 1px solid #ece3da;
-  color: #231c18;
+.dish-sheet .food-rating {
+  margin: -16px 0 10px;
 }
-.food-rating-top {
+.pc-dish-info .food-rating {
+  margin-top: 8px;
+}
+.food-rating-entry {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #685b50;
+  font: inherit;
+  font-size: 13px;
+  text-align: start;
+  cursor: pointer;
 }
-.food-rating-summary {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-.food-rating-score {
+.food-rating-summary,
+.food-rating-action {
   display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
-}
-.food-rating-score strong {
-  font-family: "Bricolage Grotesque Variable", sans-serif;
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-  color: #231c18;
-}
-.food-rating-score span {
-  font-family: "Bricolage Grotesque Variable", sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  color: #9b8e84;
-}
-.food-rating-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding-left: 10px;
-  border-left: 1px solid #e7ddd3;
-  line-height: 1.3;
-}
-.food-rating-meta span {
-  font-size: 12px;
-  font-weight: 600;
-  color: #4f433b;
-}
-.food-rating-meta small {
-  font-size: 11px;
-  color: #8b7e75;
-}
-.food-rating-empty {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.food-rating-empty strong {
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.35;
-  color: #231c18;
-}
-.food-rating-empty span {
-  font-size: 12px;
-  line-height: 1.4;
-  color: #82756c;
-}
-.food-rating-status {
-  display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 28px;
 }
-.food-rating-hint {
-  font-size: 12px;
-  font-weight: 500;
-  color: #7d7067;
+.food-rating-summary > svg {
+  flex: none;
+  color: var(--night-gold-text, #976413);
+  fill: var(--night-gold-text, #f4bf59);
 }
-.food-rating-mine-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 26px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: #fff5df;
-  border: 1px solid #f0d8a8;
-  color: #8f5c09;
+.food-rating-summary strong {
+  color: #30251e;
+  font:
+    700 19px/1 "Bricolage Grotesque Variable",
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.food-rating-summary small {
+  color: var(--night-muted, #756a61);
   font-size: 12px;
+}
+.food-rating-action {
+  flex: none;
+  gap: 3px;
+  color: var(--night-ink, #4e4238);
   font-weight: 600;
-  line-height: 1;
 }
-.food-rating-undo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 26px;
-  padding: 0 10px;
-  border: 1px solid #e3d9cf;
-  border-radius: 999px;
-  background: #fff;
-  color: #5a4e46;
+@media (hover: hover) {
+  .food-rating-entry:hover .food-rating-action {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+.modal.food-rating-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(360px, calc(100% - 32px));
+  height: fit-content;
+  max-height: calc(100dvh - 24px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  color: #30251e;
+  background: var(--night-surface, #fffdfa);
+}
+.food-rating-dialog::backdrop {
+  background: rgb(35 28 24 / 36%);
+  backdrop-filter: none;
+}
+.food-rating-dialog > .modal-pad {
+  position: relative;
+  padding: 22px 20px 18px;
+}
+.food-rating-dialog .modal-pad > h2 {
+  margin: 0 42px 18px 2px;
   font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1;
-  cursor: pointer;
-  transition:
-    background-color 140ms ease,
-    border-color 140ms ease,
-    color 140ms ease;
+  font-size: 20px;
+  font-weight: 750;
+  line-height: 1.4;
 }
-.food-rating-undo:hover:not(:disabled) {
-  background: #f4efeb;
-  border-color: #d4c7ba;
-  color: #231c18;
-}
-.food-rating-undo:disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-.food-rating-stars {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 4px;
-  padding: 4px;
-  border-radius: 14px;
-  background: #fff;
-  border: 1px solid #ede4dc;
-  box-shadow: inset 0 1px 0 #faf7f4;
-}
-.food-rating-stars button {
-  display: grid;
-  place-items: center;
-  width: 100%;
+.food-rating-dialog .modal-close {
+  position: absolute;
+  inset: 12px 10px auto auto;
+  width: 44px;
   height: 44px;
   padding: 0;
   border: 0;
-  border-radius: 10px;
   background: transparent;
-  color: #d0c4ba;
-  cursor: pointer;
-  transition:
-    transform 120ms cubic-bezier(0.23, 1, 0.32, 1),
-    background-color 150ms ease,
-    color 150ms ease;
+  color: inherit;
 }
-.food-rating-stars button:hover:not(:disabled) {
-  background: #faf5ef;
-}
-.food-rating-stars button:active:not(:disabled) {
-  transform: scale(0.92);
-}
-.food-rating-stars button.is-on {
-  color: #e6a219;
-}
-.food-rating-stars button.is-on svg {
-  fill: #f3b72f;
-}
-.food-rating-stars button:disabled {
-  cursor: default;
-  opacity: 0.6;
-}
-.food-rating-stars button:focus-visible,
-.food-rating-undo:focus-visible {
-  outline: 2px solid #231c18;
-  outline-offset: 2px;
-}
-.dish-sheet .food-rating {
-  margin: -6px 0 26px;
-}
-.pc-dish-info .food-rating {
-  flex-flow: row wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px 8px;
-  padding: 14px 0 0;
-  border: 0;
-  background: transparent;
-}
-.pc-dish-info .food-rating-top {
+.food-rating-stars {
+  --rating-fill: var(--night-gold-text, #f3b83e);
   display: grid;
-  gap: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 2px;
 }
-.pc-dish-info .food-rating-empty span {
-  display: none;
-}
-.pc-dish-info .food-rating-stars {
-  width: min(100%, 220px);
-  grid-template-columns: repeat(5, 1fr);
-  padding: 0;
-  gap: 0;
+.food-rating-stars button {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 76px;
+  padding: 6px 0;
   border: 0;
+  border-radius: 14px;
   background: transparent;
-  box-shadow: none;
+  color: var(--night-muted, #756a61);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
-@media (prefers-reduced-motion: reduce) {
-  .food-rating-undo,
-  .food-rating-stars button {
-    transition: none;
+.food-rating-mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  pointer-events: none;
+}
+.food-rating-glyph {
+  stroke: var(--night-muted, #968775);
+  fill: transparent;
+  transform-origin: 50% 60%;
+}
+.food-rating-stars .is-on .food-rating-glyph {
+  stroke: var(--night-gold-text, #ab6b10);
+  fill: var(--rating-fill);
+}
+.food-rating-sparks {
+  position: absolute;
+  inset: -11px;
+  width: 52px;
+  height: 52px;
+  fill: var(--night-gold-text, #d49221);
+  opacity: 0;
+}
+.food-rating-stars button[aria-pressed="true"] {
+  background: var(--night-gold-soft, #fcf0d6);
+  color: var(--night-gold-text, #835511);
+  font-weight: 700;
+}
+.food-rating :focus-visible {
+  outline: 2px solid var(--night-ink, #49382b);
+  outline-offset: -2px;
+}
+.food-rating-stars button[aria-disabled="true"] {
+  cursor: progress;
+}
+.food-rating-status {
+  margin: 12px 0 0;
+  color: var(--night-muted, #74675b);
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: center;
+}
+.food-rating-status[role="alert"] {
+  color: var(--night-red-text, #9c3d30);
+  overflow-wrap: anywhere;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion-input="keyboard"]) .food-rating-glyph {
+    transition:
+      fill 110ms ease-out,
+      stroke 110ms ease-out;
   }
-  .food-rating-stars button:active:not(:disabled) {
-    transform: none;
+  html:not([data-motion-input="keyboard"]) .food-rating-mark {
+    transition: transform 150ms var(--ease-enter);
+  }
+  .food-rating-stars button[data-preview] .food-rating-mark {
+    transform: translateY(-2px);
+  }
+  .food-rating-stars
+    button:active:not([aria-disabled="true"])
+    .food-rating-mark {
+    transform: scale(0.95);
+    transition-duration: 0s;
+  }
+}
+@media (max-width: 639px) {
+  .modal.food-rating-dialog {
+    inset: auto 0 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    border-radius: 24px 24px 0 0;
+  }
+  .food-rating-dialog > .modal-pad {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
   }
 }

@@ -93,38 +93,42 @@ function ToastItem({
         ? Check
         : Info;
   return (
-    <div
-      className="toast visible app-toast"
-      data-tone={item.tone}
-      data-exiting={closing ? "true" : undefined}
-      inert={closing}
-      role={item.tone === "error" ? "alert" : "status"}
-      aria-atomic="true"
-      onPointerEnter={() => setPaused(true)}
-      onPointerLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget))
-          setPaused(false);
-      }}
-    >
-      <Icon
-        className="app-toast-icon"
-        size={20}
-        strokeWidth={1.8}
-        aria-hidden="true"
-      />
-      <span>{item.message}</span>
-      <button
-        type="button"
-        onClick={(event) => {
-          if (event.detail === 0) dismiss(item.id);
-          else setClosing(true);
-        }}
-        aria-label="关闭提示"
-      >
-        <X size={16} aria-hidden="true" />
-      </button>
+    <div className="app-toast-slot" data-closing={closing || undefined}>
+      <div className="app-toast-slot-content">
+        <div
+          className="toast visible app-toast"
+          data-tone={item.tone}
+          data-exiting={closing ? "true" : undefined}
+          inert={closing}
+          role={item.tone === "error" ? "alert" : "status"}
+          aria-atomic="true"
+          onPointerEnter={() => setPaused(true)}
+          onPointerLeave={() => setPaused(false)}
+          onFocusCapture={() => setPaused(true)}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget))
+              setPaused(false);
+          }}
+        >
+          <Icon
+            className="app-toast-icon"
+            size={20}
+            strokeWidth={1.8}
+            aria-hidden="true"
+          />
+          <span>{item.message}</span>
+          <button
+            type="button"
+            onClick={(event) => {
+              if (event.detail === 0) dismiss(item.id);
+              else setClosing(true);
+            }}
+            aria-label="关闭提示"
+          >
+            <X size={16} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -167,8 +171,9 @@ export function ToastViewport({
     // A manual popover shares the browser top layer with native dialogs, so
     // feedback stays visible inside login, cropping and confirmation dialogs.
     try {
-      if (node.matches(":popover-open")) node.hidePopover();
-      if (latest !== undefined) node.showPopover();
+      if (latest === undefined) {
+        if (node.matches(":popover-open")) node.hidePopover();
+      } else if (!node.matches(":popover-open")) node.showPopover();
     } catch {
       // Feedback must never take the page down; the toast still renders inline.
     }

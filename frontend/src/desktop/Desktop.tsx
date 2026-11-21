@@ -1,6 +1,7 @@
 import WorkspaceSwitch from "../admin/WorkspaceSwitch";
 import { ThemeToggle } from "../theme/AppearanceControl";
 import { DiscoveryList } from "../features/DiscoveryList";
+import { PhotoPreviewButton } from "../components/PhotoPreviewButton";
 import { useHomeDiscovery } from "../features/useHomeDiscovery";
 import { SupplementPrice } from "../features/SupplementPrice";
 import { BRAND_SLOGAN } from "../app/brand";
@@ -36,7 +37,8 @@ import {
 } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { LoginLink } from "../app/auth-dialog";
-import { useDebouncedSearch } from "../app/search";
+import NearbyFilterSheet, { NearbyFilterTrigger } from "../features/NearbyFilterSheet";
+import { hasNearbyFilters, useNearbyBrowse } from "../features/nearby-filters";
 import { NearbySearchInput } from "../features/NearbySearchInput";
 import { useCelebration, useFoodReaction } from "../features/food-reactions";
 import { useArea } from "../app/area";
@@ -50,7 +52,7 @@ import {
   type Food,
   type Restaurant,
 } from "../api/models";
-import { DesignIcon as Icon, Pending, useMobile } from "../mobile/ui";
+import { DesignIcon as Icon, Pending, ReactionIcon, useMobile } from "../mobile/ui";
 import { mobileSettingsPages } from "../mobile/routes";
 import { visualFor } from "../mobile/catalog";
 import "./desktop.css";
@@ -1113,61 +1115,33 @@ function NextPage({
 function DesktopNearby() {
   const [params, setParams] = useSearchParams();
   const searchInput = useRef<HTMLInputElement>(null);
-  const update = (patch: Record<string, string | undefined>) =>
+  const { area } = useArea();
+  const m = useMobile();
+  const {
+    shops: query,
+    keyword: q,
+    committedKeyword: keyword,
+    filters,
+    page,
+    setPage,
+    changeKeyword: setQ,
+    open,
+    openFilters,
+    closeFilters,
+    apply,
+  } = useNearbyBrowse(10);
+  const selected = parseId(params.get("selected") ?? undefined);
+  const setSelected = (id: number) =>
     setParams(
       (previous) => {
         const next = new URLSearchParams(previous);
-        for (const [key, value] of Object.entries(patch))
-          value ? next.set(key, value) : next.delete(key);
+        next.set("selected", String(id));
         return next;
       },
-      { replace: true },
+      { replace: true, state: { preserveScroll: true } },
     );
-  const page = Math.max(1, Number(params.get("page")) || 1);
-  const setPage = (change: number | ((value: number) => number)) =>
-    update({
-      page: String(typeof change === "function" ? change(page) : change),
-    });
-  const selected = parseId(params.get("selected") ?? undefined);
-  const setSelected = (id: number) => update({ selected: String(id) });
-  const q = params.get("q") ?? "";
-  const setQ = (value: string) =>
-    update({ q: value || undefined, page: undefined });
-  const { api } = useApp(),
-    { area } = useArea(),
-    m = useMobile();
-  const areaKey = JSON.stringify(area);
-  const previousArea = useRef(areaKey);
-  const areaChanged = previousArea.current !== areaKey;
-  useEffect(() => {
-    if (previousArea.current !== areaKey) {
-      previousArea.current = areaKey;
-      update({ page: undefined, selected: undefined });
-    }
-  }, [areaKey]);
-  const keyword = useDebouncedSearch(q);
-  const query = useQuery({
-      queryKey: ["restaurants", "desktop-nearby", area, keyword, page],
-      queryFn: () =>
-        area
-          ? api.restaurantSearch({
-              gcjLng: area!.gcjLng,
-              gcjLat: area!.gcjLat,
-              hubId: area?.hubId,
-              keyword: keyword || undefined,
-              page,
-              pageSize: 10,
-            })
-          : api.browseRestaurants({
-              keyword: keyword || undefined,
-              page,
-              pageSize: 10,
-            }),
-      placeholderData: keepPreviousData,
-      enabled: !areaChanged,
-    }),
-    shops = query.data?.items ?? [],
-    current = shops.find((s) => s.id === selected) ?? shops[0];
+  const shops = query.data?.items ?? [];
+  const current = shops.find((shop) => shop.id === selected) ?? shops[0];
   return (
     <div className="pc-nearby">
       <PageHeading title="好吃的，就在附近">
@@ -1187,7 +1161,12 @@ function DesktopNearby() {
               <h2>
                 附近的店 <span>{query.data?.totalItems ?? "—"}</span>
               </h2>
-              <Link to="/restaurants/directory">更多筛选 →</Link>
+              <NearbyFilterTrigger
+                active={hasNearbyFilters(filters)}
+                open={open}
+                onClick={openFilters}
+                showLabel
+              />
             </div>
             <div className="pc-search-field">
               <Icon name="search" size={20} />
@@ -1210,18 +1189,25 @@ function DesktopNearby() {
                 </button>
               )}
             </div>
-            <span className="pc-small-note" role="status">
-              {(query.isFetching && !query.isPending) || q !== keyword
-                ? "正在更新附近的店…"
-                : "按所选区域查询"}
-            </span>
+            {((query.isFetching && !query.isPending) || q !== keyword) && (
+              <span className="pc-small-note" role="status">
+                正在更新附近的店…
+              </span>
+            )}
           </div>
           <div
             className="pc-nearby-list-scroll"
             aria-busy={query.isFetching || q !== keyword}
           >
             {
-              <QueryStatus query={query} rows empty={!shops.length}>
+              <QueryStatus query={query} rows>
+                {!shops.length && (
+                  <Status title="没有符合条件的店铺">
+                    <button className="pc-button light" onClick={openFilters}>
+                      调整筛选
+                    </button>
+                  </Status>
+                )}
                 {shops.map((shop) => (
                   <button
                     key={shop.id}
@@ -1255,8 +1241,8 @@ function DesktopNearby() {
                 <NextPage
                   page={page}
                   hasNext={query.data?.hasNext}
-                  onNext={() => setPage((p) => p + 1)}
-                  onPrevious={() => setPage((p) => Math.max(1, p - 1))}
+                  onNext={() => setPage(page + 1)}
+                  onPrevious={() => setPage(page - 1)}
                 />
               </QueryStatus>
             }
@@ -1295,6 +1281,15 @@ function DesktopNearby() {
           )}
         </section>
       </div>
+      {open && (
+        <NearbyFilterSheet
+          filters={filters}
+          keyword={q}
+          pageSize={10}
+          onApply={apply}
+          onClose={closeFilters}
+        />
+      )}
     </div>
   );
 }
@@ -1327,6 +1322,14 @@ function DishGallery({ food, illustrated }: { food: Food; illustrated: boolean }
             onError={photo.onError}
             decoding="async"
             fetchPriority="high"
+          />
+        )}
+        {!photo.unavailable && (
+          <PhotoPreviewButton
+            pictures={photos}
+            name={food.name || "菜品"}
+            startIndex={selected}
+            onImageError={photo.renew}
           />
         )}
       </div>
@@ -1378,8 +1381,8 @@ function DesktopDish() {
       if (message) toast(message, { tone: "error" });
     },
   });
-  const likeCelebration = useCelebration(480);
-  const favCelebration = useCelebration(480);
+  const likeCelebration = useCelebration(260);
+  const favCelebration = useCelebration(260);
   const shop = useQuery({
     queryKey: ["restaurants", "detail", food?.restaurantId],
     queryFn: () => api.restaurant(food!.restaurantId!),
@@ -1448,12 +1451,7 @@ function DesktopDish() {
                       void reactions.toggle("favorite");
                     }}
                   >
-                    <span className="pc-reaction-icon" aria-hidden="true">
-                      <Icon
-                        name={food.isFavorite ? "bookmarkOn" : "bookmark"}
-                        size={20}
-                      />
-                    </span>
+                    <ReactionIcon kind="favorite" size={20} />
                   </button>
                   <DishMoreActions
                     key={id}
@@ -1528,9 +1526,7 @@ function DesktopDish() {
                     void reactions.toggle("like");
                   }}
                 >
-                  <span className="pc-reaction-icon" aria-hidden="true">
-                    <Icon name={food.isLiked ? "heartOn" : "heart"} size={21} />
-                  </span>
+                  <ReactionIcon kind="like" size={21} />
                   <b className="pc-dish-like-count">{food.likesCount ?? "—"}</b>
                 </button>
                 <Link
@@ -1595,6 +1591,7 @@ function DesktopRestaurant() {
       placeholderData: keepPreviousData,
     }),
     shop = query.data;
+  const featuredFood = foods.data?.items?.[0];
   return (
     <QueryStatus query={query} skeleton="restaurant">
       {shop && (
@@ -1679,12 +1676,18 @@ function DesktopRestaurant() {
                     }}
                   />
                 </div>
-              ) : foods.data?.items?.[0] ? (
-                <Plate food={foods.data.items[0]} />
+              ) : featuredFood ? (
+                <Plate food={featuredFood} />
               ) : mediaUrl(shop.pictureUrl?.[0]) ? (
                 <img src={mediaUrl(shop.pictureUrl?.[0])} alt="" />
               ) : (
                 <img src="/assets/restaurants/shop.svg" alt="" />
+              )}
+              {!foods.isPending && (
+                <PhotoPreviewButton
+                  pictures={featuredFood ? featuredFood.pictureUrl : shop.pictureUrl}
+                  name={featuredFood ? featuredFood.name || "菜品" : shop.name || "店铺"}
+                />
               )}
             </div>
           </section>

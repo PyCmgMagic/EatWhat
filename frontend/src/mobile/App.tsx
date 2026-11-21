@@ -149,6 +149,7 @@ function MobileWorkspace() {
       action: () => Promise<unknown>;
       label: string;
       title?: string;
+      cancelLabel: string;
     } | null>(null),
     [draft, setDraftState] = useState<Draft>(emptyDraft),
     [tagId, setTagId] = useState<number>(),
@@ -329,7 +330,8 @@ function MobileWorkspace() {
     reference,
     showIndex,
   );
-  const flow = !reference && !showIndex ? editingFlow(loc.pathname) : null;
+  const flow =
+    !reference && !showIndex ? editingFlow(loc.pathname, loc.search) : null;
   const [flowLayout, setFlowLayout] = useState({
     flow,
     desktop: preferredDesktop,
@@ -414,8 +416,9 @@ function MobileWorkspace() {
       action: () => Promise<unknown>,
       label = "确认",
       title?: string,
+      cancelLabel = "取消",
     ) => {
-      setConfirmation({ message, action, label, title });
+      setConfirmation({ message, action, label, title, cancelLabel });
       setMessage(message);
     },
     go: (name: string) =>
@@ -487,9 +490,9 @@ function MobileWorkspace() {
     }
   }
   if (loc.pathname === "/panels/filter") {
-    return (
-      <Navigate replace to={desktop ? "/restaurants/directory" : "/nearby?filter=1"} />
-    );
+    const params = new URLSearchParams(loc.search);
+    params.set("filter", "1");
+    return <Navigate replace to={{ pathname: "/nearby", search: params.toString() }} />;
   }
   if (!desktop && !reference && loc.pathname === "/me/shares" && !myCommentsPage) {
     const params = new URLSearchParams(loc.search);
@@ -811,16 +814,16 @@ function MobileWorkspace() {
                   >
                     {confirmBusy ? "正在处理…" : confirmation.label}
                   </PrimaryButton>
-                  <button
-                    className="mobile-inline-link"
+                  <PrimaryButton
+                    light
                     disabled={confirmBusy}
                     onClick={() => {
                       setConfirmation(null);
                       setMessage("");
                     }}
                   >
-                    取消
-                  </button>
+                    {confirmation.cancelLabel}
+                  </PrimaryButton>
                 </>
               ) : (
                 <PrimaryButton onClick={() => setMessage("")}>

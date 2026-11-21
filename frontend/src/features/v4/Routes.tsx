@@ -24,8 +24,8 @@ import { FeatureAvailability } from "./Remote";
 import { Messages } from "./Messages";
 import Features from "./Hub";
 import NotificationSettings from "./NotificationSettings";
+import Directory from "./Directory";
 const Growth = lazy(() => import("./Growth"));
-const Directory = lazy(() => import("./Directory"));
 export default function V4Routes() {
   const path = useLocation().pathname;
   const historyId = restaurantHistoryId(path);
@@ -36,12 +36,7 @@ export default function V4Routes() {
   if (path === "/auth/account-recovery") return <AccountRecovery />;
   if (path === "/notifications" || path === "/announcements")
     return <Messages />;
-  if (path === "/restaurants/directory")
-    return (
-      <Suspense fallback={<ContentSkeleton kind="rows" count={3} />}>
-        <Directory />
-      </Suspense>
-    );
+  if (path === "/restaurants/directory") return <Directory />;
   if (path === "/features") return <Features />;
   if (
     path === "/topics" ||

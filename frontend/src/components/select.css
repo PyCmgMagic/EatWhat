@@ -78,6 +78,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.ew-select-compact-label {
+  display: none;
+}
 .ew-select-chevron {
   width: 16px;
   height: 16px;

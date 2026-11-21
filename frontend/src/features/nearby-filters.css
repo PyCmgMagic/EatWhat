@@ -211,3 +211,20 @@
   opacity: 0.55;
   cursor: default;
 }
+
+.desktop-mode .modal.nearby-filter-sheet {
+  inset: 0;
+  width: min(480px, calc(100% - 32px));
+  max-height: calc(100dvh - 48px);
+  margin: auto;
+  border-radius: 24px;
+}
+.desktop-mode .nearby-filter-sheet .mobile-sheet-handle {
+  display: none;
+}
+.desktop-mode .nearby-filter-sheet .modal-pad > h2 {
+  padding-top: 20px;
+}
+.desktop-mode .nearby-filter-sheet .modal-close {
+  top: 12px;
+}

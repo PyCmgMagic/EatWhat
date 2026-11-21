@@ -45,10 +45,11 @@ function PeopleFollowButton({
         type="button"
         aria-label={following ? `${label}，取消关注${name}` : `${label}${name}`}
         aria-pressed={following}
+        aria-busy={task.isPending}
         disabled={task.isPending}
         onClick={() => task.run(() => api.follow(id, following))}
       >
-        {task.isPending ? "更新中…" : label}
+        <span className="follow-label">{task.isPending ? "更新中…" : label}</span>
       </button>
       {task.error && (
         <small className="profile-people-error" role="alert">

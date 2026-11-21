@@ -106,17 +106,15 @@ async function validateMobileProfile(page) {
         user.avatar
       )
         throw new Error("settings did not use the API avatar");
-      const preference = p.getByRole("link", {
-        name: "口味偏好 · 让推荐更懂你",
-        exact: true,
-      });
+      if (await p.locator('a[href="#/settings/preferences"]').count())
+        throw new Error("taste preferences should only appear inside personalization");
       const logout = p.getByRole("button", { name: "退出登录", exact: true });
-      const prefBox = await preference.boundingBox(),
+      const menuBox = await p.locator(".mobile-settings-menu").last().boundingBox(),
         logoutBox = await logout.boundingBox();
       if (
-        !prefBox ||
+        !menuBox ||
         !logoutBox ||
-        logoutBox.y - prefBox.y - prefBox.height < 8
+        logoutBox.y - menuBox.y - menuBox.height < 8
       )
         throw new Error(`settings footer overlaps at ${width}px`);
       if (width === 390)

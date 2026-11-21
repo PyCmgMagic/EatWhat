@@ -313,9 +313,18 @@
   flex-direction: column;
   min-width: 0;
 }
-.mobile-user-food-card > a {
-  display: block;
+.mobile-user-food-card > .profile-food-link-area {
   flex: 1;
+}
+.profile-food-link-area {
+  position: relative;
+  isolation: isolate;
+}
+.profile-food-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 .mobile-user-food-card .ew-food-manage {
   gap: 6px;
@@ -355,7 +364,7 @@
 }
 .mobile-user-food-title {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 6px;
   margin-top: 8px;
@@ -368,15 +377,36 @@
   font-weight: 600;
   overflow-wrap: anywhere;
 }
-.mobile-user-food-title > span {
+.profile-food-like {
+  position: relative;
+  z-index: 2;
   display: inline-flex;
   flex: none;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
+  gap: 4px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
   color: var(--ink-muted);
   font:
     600 13px/1.5 "Bricolage Grotesque Variable",
     sans-serif;
+}
+.profile-food-like[aria-pressed="true"] {
+  color: var(--danger, #b33a3a);
+}
+.profile-food-like:focus-visible,
+.profile-food-link:focus-visible::after {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.profile-food-meta {
+  align-items: center;
+  gap: 8px;
 }
 .mobile-user-food-meta {
   display: flex;

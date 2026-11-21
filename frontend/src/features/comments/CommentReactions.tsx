@@ -98,7 +98,7 @@ export function CommentReactions({
     const reduced = window.matchMedia?.(
       "(prefers-reduced-motion: reduce)",
     ).matches;
-    if (reduced) return;
+    if (reduced || document.documentElement.dataset.motionInput === "keyboard") return;
     setClosing(true);
     const timer = window.setTimeout(() => setClosing(false), 170);
     return () => window.clearTimeout(timer);
@@ -212,6 +212,7 @@ export function CommentReactions({
         className="comments-reaction-popover"
         data-state={open ? "open" : "closed"}
         hidden={!open && !closing}
+        inert={!open}
       >
         <div
           className="comments-reaction-picker"

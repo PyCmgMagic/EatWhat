@@ -17,6 +17,7 @@ let host: HTMLDivElement;
 let root: Root;
 let requests: string[];
 let following = false;
+let liked = false;
 let cache: ReturnType<typeof useQueryClient> | null = null;
 function CacheProbe() {
   cache = useQueryClient();
@@ -29,7 +30,9 @@ const dish = (id: number, name: string, price: number) => ({
   id,
   name,
   price,
-  likes: 12,
+  accountId: 21,
+  isLiked: id === 1 && liked,
+  likeCount: 12 + Number(id === 1 && liked),
   restaurantName: "哀记云饺",
   pictureUrl: ["/prototype/assets/dishes/yangzhi.svg"],
   stageColor: "stage-1",
@@ -113,6 +116,7 @@ beforeEach(async () => {
   writeSession({ tokenName: "satoken", tokenValue: "friend-page" });
   requests = [];
   following = false;
+  liked = false;
   vi.stubGlobal(
     "fetch",
     vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
@@ -131,8 +135,14 @@ beforeEach(async () => {
         following = false;
         return Promise.resolve(ok(null));
       }
+      if (path.endsWith("/foods/1/like") || path.endsWith("/foods/1/unlike")) {
+        liked = path.endsWith("/like");
+        return Promise.resolve(ok(null));
+      }
       if (path.endsWith("/user/userInfo"))
-        return Promise.resolve(ok(friend({ isFollowingHim: following })));
+        return Promise.resolve(
+          ok(friend({ isFollowingHim: following, earnedLikes: 96 + Number(liked) })),
+        );
       if (path.endsWith("/foods/by-user/11"))
         return Promise.resolve(
           ok({
@@ -195,6 +205,26 @@ it("renders a friend page on the profile-space shell", async () => {
     "/users/21?people=follow",
   ]);
   expect(host.querySelector(".pc-friend-shares .ew-food-manage")).toBeNull();
+});
+
+it("keeps both share lists and the profile total in sync when liking a dish", async () => {
+  await render("/users/21");
+  const selector = 'button[aria-label$="鲜虾蟹籽云吞"]';
+  await spin(() => host.querySelectorAll(selector).length === 2);
+  const buttons = [...host.querySelectorAll<HTMLButtonElement>(selector)];
+  const total = host.querySelector(".profile-overview-social strong");
+  const showsLike = (pressed: boolean, count: number) => buttons.every(
+    (button) => !button.disabled &&
+      button.getAttribute("aria-pressed") === String(pressed) &&
+      button.textContent === String(count),
+  );
+  expect(buttons.every((button) => !button.closest("a"))).toBe(true);
+  await act(async () => buttons[0].click());
+  await spin(() => showsLike(true, 13) && total?.textContent === "97");
+  await act(async () => buttons[1].click());
+  await spin(() => showsLike(false, 12) && total?.textContent === "96");
+  const writes = requests.filter((request) => request.startsWith("POST /api/foods/"));
+  expect(writes).toEqual(["POST /api/foods/1/like", "POST /api/foods/1/unlike"]);
 });
 
 it("shows the empty share state for a friend without dishes", async () => {

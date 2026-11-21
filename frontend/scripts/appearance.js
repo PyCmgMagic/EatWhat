@@ -20,7 +20,7 @@ async (page) => {
     await p.getByRole("link", { name: /^个性化/ }).click();
     await p.getByRole("heading", { name: "个性化", exact: true }).waitFor();
   };
-  const recommendationPaint = (selector) => p.locator(selector).evaluate((hero) => [
+  const recommendationPaint = (heroLocator) => heroLocator.evaluate((hero) => [
     getComputedStyle(hero).backgroundColor,
     getComputedStyle(hero.querySelector("h1")).color,
   ].join("/"));
@@ -28,12 +28,13 @@ async (page) => {
     await p.goto(base + "#/");
     await p.locator(".pc-hero h1").waitFor();
     await themeIs(p, "light");
-    const lightStage = await recommendationPaint(".pc-hero");
+    const desktopHero = p.locator(".pc-hero");
+    const lightStage = await recommendationPaint(desktopHero);
     await toggle.click();
     await themeIs(p, "dark");
     await p.waitForFunction(() => getComputedStyle(document.querySelector(".pc-app")).backgroundColor === "rgb(15, 15, 14)");
     await p.evaluate(async () => { await document.activeViewTransition?.finished; });
-    assert(await recommendationPaint(".pc-hero") === lightStage, "Theme changed the recommended dish's palette");
+    assert(await recommendationPaint(desktopHero) === lightStage, "Theme changed the recommended dish's palette");
     await p.screenshot({ path: "output/playwright/appearance-desktop.png" });
     await p.reload();
     await themeIs(p, "dark");
@@ -66,20 +67,18 @@ async (page) => {
     await p.goto(base + "#/");
     for (const width of [1440, 1024, 768, 640, 390, 320]) {
       await p.setViewportSize({ width, height: 844 });
-      const controls = p.locator(width >= 640 ? ".pc-header" : ".mobile-home-preferences");
-      await controls.getByRole("switch", { name: "深色模式" }).waitFor();
-      const geometry = await toggle.boundingBox();
-      assert(geometry && geometry.width >= 43 && geometry.height >= 43 &&
-        geometry.x >= 0 && geometry.x + geometry.width <= width, "Theme switch clipped at " + width);
+      if (width >= 640) {
+        await p.locator(".pc-header").getByRole("switch", { name: "深色模式" }).waitFor();
+        const geometry = await toggle.boundingBox();
+        assert(geometry && geometry.width >= 43 && geometry.height >= 43 &&
+          geometry.x >= 0 && geometry.x + geometry.width <= width, "Theme switch clipped at " + width);
+      } else {
+        await p.locator(".mobile-home-hero").getByRole("radiogroup", { name: "堂食还是外卖" }).waitFor();
+        assert(await toggle.count() === 0, "Unexpected theme switch on mobile home at " + width);
+      }
       assert(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Page overflows at " + width);
       if (width === 390) await p.screenshot({ path: "output/playwright/appearance-mobile.png" });
     }
-    const mobileStage = await recommendationPaint(".mobile-home-hero");
-    await toggle.click();
-    await themeIs(p, "light");
-    assert(await recommendationPaint(".mobile-home-hero") === mobileStage, "Mobile dish colours changed with the interface");
-    await toggle.click();
-    await themeIs(p, "dark");
     await p.goto(base + "#/foods/1");
     await p.locator(".dish-hero-copy h1").waitFor();
     await themeIs(p, "dark");
@@ -93,6 +92,14 @@ async (page) => {
     await home.setViewportSize({ width: 390, height: 844 });
     await home.goto(base + "#/");
     await home.getByRole("navigation", { name: "主导航" }).waitFor();
+    const mobileHero = home.locator(".mobile-home-hero");
+    await mobileHero.locator("h1").waitFor();
+    const mobileStage = await recommendationPaint(mobileHero);
+    await light.check();
+    await themeIs(home, "light");
+    assert(await recommendationPaint(mobileHero) === mobileStage, "Mobile dish colours changed with the interface");
+    await p.getByRole("radio", { name: "深色", exact: true }).check();
+    await themeIs(home, "dark");
     await slider.press("Home");
     const opaque = await glassPaint(p, ".personalization-preview");
     for (const value of ["0", "100"]) {

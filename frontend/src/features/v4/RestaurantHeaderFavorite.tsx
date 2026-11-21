@@ -1,7 +1,7 @@
 import { useEffect, type ButtonHTMLAttributes } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
-import { useMobile, DesignIcon } from "../../mobile/ui";
+import { useMobile, ReactionIcon } from "../../mobile/ui";
 import { useCommand } from "./shared";
 
 /** The first-screen action shares the detail query with the rating panel. */
@@ -49,10 +49,7 @@ export function RestaurantHeaderFavorite({
         );
       }}
     >
-      <DesignIcon
-        name={shop?.isFavorite ? "bookmarkOn" : "bookmark"}
-        size={22}
-      />
+      <ReactionIcon kind="favorite" size={22} />
     </button>
   );
 }

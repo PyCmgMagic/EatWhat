@@ -4,6 +4,7 @@ import { userTitle } from "../api/growth";
 import { FieldMark } from "../features/FieldMark";
 import { codePoints } from "../api/content-rules";
 import { BlockControl, UserFoods } from "../features/ApiV2";
+import { ProfileFoodLike } from "../features/ProfileFoodLike";
 import { useEffect, useState, type CSSProperties } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -12,7 +13,7 @@ import { ProfileEditLink } from "../app/profile-navigation";
 import { isDemo } from "../app/runtime";
 import { mediaUrl, money, parseId, type Food } from "../api/models";
 import { useTask } from "../components/useTask";
-import { DesignIcon as Icon } from "../mobile/ui";
+import { DesignIcon as Icon, ReactionIcon } from "../mobile/ui";
 import { SlidingTabs } from "./motion";
 import { useContentMotion } from "../motion/hooks";
 import { followLabel, peopleHref } from "../features/profile-people";
@@ -62,22 +63,21 @@ function FriendFoodPhoto({ food }: { food: Food }) {
 
 function FriendDishCard({ food }: { food: Food }) {
   return (
-    <Link to={`/foods/${food.id}`} className="profile-overview-dish-card">
+    <article className="profile-overview-dish-card profile-food-link-area">
       <FriendFoodPhoto food={food} />
       <div className="profile-overview-food-heading">
-        <h3>{food.name || "未命名菜品"}</h3>
+        <h3>
+          <Link className="profile-food-link" to={`/foods/${food.id}`}>
+            {food.name || "未命名菜品"}
+          </Link>
+        </h3>
         <strong>{money(food.price)}</strong>
       </div>
       <div className="profile-overview-dish-meta">
         <span>{food.restaurantName || "餐厅信息待补充"}</span>
-        {food.likesCount != null && (
-          <span className="profile-overview-dish-likes">
-            <Icon name="heart" size={13} />
-            {food.likesCount}
-          </span>
-        )}
+        <ProfileFoodLike food={food} />
       </div>
-    </Link>
+    </article>
   );
 }
 
@@ -175,18 +175,16 @@ export function DesktopUser() {
                 type="button"
                 className={`pc-friend-follow${u.isFollowingHim ? " is-following" : ""}`}
                 aria-pressed={u.isFollowingHim === true}
+                aria-busy={task.isPending}
                 disabled={task.isPending || u.isFollowingHim == null}
                 onClick={() =>
                   task.run(() => api.follow(id, u.isFollowingHim === true))
                 }
               >
-                <Icon
-                  name={u.isFollowingHim ? "followed" : "follow"}
-                  size={18}
-                />
-                {task.isPending
-                  ? "正在更新…"
-                  : followLabel(u)}
+                <ReactionIcon kind="follow" size={18} />
+                <span className="follow-label">
+                  {task.isPending ? "更新中…" : followLabel(u)}
+                </span>
               </button>
             )}
             <BlockControl userId={id} />

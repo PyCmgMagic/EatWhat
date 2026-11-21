@@ -21,6 +21,7 @@ type Props = Omit<
 > & {
   menuLabel?: string;
   popupClassName?: string;
+  compactLabel?: string;
   icon?: ReactNode;
 };
 type Option = {
@@ -100,6 +101,7 @@ export function Select({
   autoFocus,
   menuLabel,
   popupClassName,
+  compactLabel,
   icon,
   ...props
 }: Props) {
@@ -373,6 +375,9 @@ export function Select({
             />
           )}
           <span className="ew-select-label">{selected?.label ?? "请选择"}</span>
+          {compactLabel && (
+            <span className="ew-select-compact-label">{compactLabel}</span>
+          )}
         </span>
         <ChevronDown
           className="ew-select-chevron"

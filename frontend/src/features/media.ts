@@ -19,6 +19,7 @@ export function useFoodPhoto(src?: string) {
   return {
     unavailable: !src || failed,
     failed,
+    renew,
     onError: () => {
       if (!src) return;
       setFailedSrc(src);

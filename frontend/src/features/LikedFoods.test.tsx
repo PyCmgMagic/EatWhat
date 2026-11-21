@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { LikedFoods } from "./Catalog";
 import Directory from "./v4/Directory";
+import { useNearbyBrowse } from "./nearby-filters";
 
 const { api, toast, session, user } = vi.hoisted(() => ({
   api: {
@@ -144,39 +145,36 @@ it("lists liked dishes and lets the user unlike one", async () => {
   expect(api.like).toHaveBeenCalledWith(11, true);
 });
 
-it("filters the restaurant directory by buffet shop kind", async () => {
+it("opens saved directory filters in nearby and uses them for the shop query", async () => {
+  function NearbyResult() {
+    const { shops } = useNearbyBrowse();
+    return shops.isSuccess ? "附近店铺已加载" : null;
+  }
   await act(async () =>
     root.render(
       <QueryClientProvider client={new QueryClient()}>
-        <MemoryRouter initialEntries={["/restaurants/directory"]}>
+        <MemoryRouter
+          initialEntries={[
+            "/restaurants/directory?q=校区&kind=buffet&category=自助&price=OVER_30&sort=NEWEST&page=2",
+          ]}
+        >
           <Routes>
             <Route path="/restaurants/directory" element={<Directory />} />
+            <Route path="/nearby" element={<NearbyResult />} />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
     ),
   );
-  await waitForText("全部类型");
-  const select = [...host.querySelectorAll("select")].find((node) =>
-    [...node.options].some((opt) => opt.value === "buffet"),
-  )!;
-  expect([...select.options].map((opt) => opt.textContent)).toContain("自助");
-  await act(async () => {
-    select.value = "buffet";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
-  });
-  for (let i = 0; i < 20; i++) {
-    if (
-      api.browseRestaurants.mock.calls.some(
-        ([q]) => (q as { kind?: string })?.kind === "buffet",
-      )
-    )
-      break;
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 10));
-    });
-  }
+  await waitForText("附近店铺已加载");
   expect(api.browseRestaurants).toHaveBeenLastCalledWith(
-    expect.objectContaining({ kind: "buffet" }),
+    expect.objectContaining({
+      keyword: "校区",
+      kind: "buffet",
+      categories: ["自助"],
+      priceBand: "OVER_30",
+      sort: "NEWEST",
+      page: 2,
+    }),
   );
 });

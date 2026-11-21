@@ -43,6 +43,23 @@ function setup() {
   };
 }
 describe("shared request permissions", () => {
+  it("allows signed-in users to dismiss a shop and prompts guests before sending", async () => {
+    const s = setup();
+    await s.api.dismissRecommendation(42);
+    expect(s.send).toHaveBeenCalledWith(
+      "/recommend/dismiss/42",
+      expect.objectContaining({ method: "POST" }),
+    );
+    s.state.session = null;
+    await expect(s.api.dismissRecommendation(42)).rejects.toBeInstanceOf(
+      AccessRequiredError,
+    );
+    expect(s.prompt).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: "login" }),
+    );
+    expect(s.send).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps APIv7 public and optional-login operations accessible despite security export conflicts", () => {
     const spec = JSON.parse(
       readFileSync(

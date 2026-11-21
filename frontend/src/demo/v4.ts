@@ -1,4 +1,5 @@
 import { ApiError, type RequestOptions, type Query } from "../api/client";
+import { readSession } from "../app/runtime";
 import { demoFeedbackFields } from "./feedback";
 import {
   dislikableTags,
@@ -30,6 +31,7 @@ export type DemoV4 = {
   cards: Row[];
   topics: Row[];
   favorites: number[];
+  dismissedShops?: Record<number, Record<number, number>>;
   ratings: Record<string, string>;
   /** 店铺场景评价：`${restaurantId}:${scene}` -> RECOMMEND / NOT_RECOMMEND */
   sceneRatings: Record<string, string>;
@@ -51,6 +53,15 @@ type Context = {
   restaurants: Restaurant[];
   tags: CustomTag[];
 };
+export function dismissedShopIds(s: Context) {
+  const expiries = readSession() && s.v4?.dismissedShops?.[s.user.id ?? 10];
+  const now = Date.now();
+  return new Set(
+    Object.entries(expiries ?? {})
+      .filter(([, until]) => until > now)
+      .map(([id]) => Number(id)),
+  );
+}
 const now = () => new Date().toISOString(),
   later = (ms = 600_000) => new Date(Date.now() + ms).toISOString();
 const secretCommands = new Map<string, Row>(),
@@ -803,6 +814,17 @@ export function handleV4(
   };
   if (path === "/recommend/tags")
     return ok({ categories: shopCategories, tags: tasteTags, dislikableTags });
+  const dismiss = m === "POST" && path.match(/^\/recommend\/dismiss\/(\d+)$/);
+  if (dismiss) {
+    if (!readSession()) throw new ApiError("请先登录。", 20001, 401);
+    const id = Number(dismiss[1]);
+    if (!s.restaurants.some((shop) => shop.id === id))
+      throw new ApiError("店铺不存在。", 40009);
+    const byUser = (v.dismissedShops ??= {});
+    const expiries = (byUser[user] ??= {});
+    expiries[id] = Date.now() + 30 * 86_400_000;
+    return ok(null);
+  }
   const restaurant = (r: Restaurant & V2Shop) => {
     const foods = s.foods.filter((f) => f.restaurantId === r.id),
       prices = foods
@@ -866,12 +888,15 @@ export function handleV4(
     };
   };
   if (path === "/foods/recommend" && q.kind) {
+    const dismissed = dismissedShopIds(s);
     const eligible = s.foods.filter((food: Food & V2Food) =>
       !s.blocked?.includes(food.accountId ?? 0) &&
       (!q.mealTime || !food.mealTimes?.length || food.mealTimes.some((meal) => meal === q.mealTime)) &&
       (q.scene !== "delivery" || food.deliveryEnabled !== false)
     );
-    const shops = s.restaurants.map(restaurant)
+    const shops = s.restaurants
+      .filter((shop) => !dismissed.has(shop.id ?? 0))
+      .map(restaurant)
       .filter((shop) => (shop.kind ?? "food") === q.kind && !shop.permanentlyClosed &&
         (q.scene !== "delivery" || shop.deliveryEnabled !== false))
       .map((shop) => ({

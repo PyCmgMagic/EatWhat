@@ -106,7 +106,7 @@ async (page) => {
           await hit(meal.locator('input').last());
           await hit(p.getByText('发布',{exact:true}));
         }
-        if(path==='/nearby') await hit(p.getByRole('link',{name:'店铺目录',exact:true}));
+        if(path==='/nearby') await hit(p.getByRole('button',{name:/^筛选店铺/}));
         checks.push(`${width}x${height} ${path}: no horizontal overflow or duplicate navigation`);
       }
     }

@@ -25,7 +25,12 @@ import { stageCode } from "../api/food-display";
 import { wgsToGcj } from "../api/models";
 import { parseHubImport } from "../api/sync-management";
 import { demoSync, seedSync, type DemoSync } from "./sync";
-import { handleV4, snapshotV4Recovery, type DemoV4 } from "./v4";
+import {
+  dismissedShopIds,
+  handleV4,
+  snapshotV4Recovery,
+  type DemoV4,
+} from "./v4";
 const tagWords = [
   "鲜虾大只",
   "平价",
@@ -1005,7 +1010,9 @@ export const demoTransport: Transport = async (path, options) => {
     result = { id };
     save();
   } else if (path === "/foods/recommend") {
+    const dismissed = dismissedShopIds(s);
     const items = filterFoods(s.foods, q)
+      .filter((f) => !dismissed.has(f.restaurantId ?? 0))
       .filter((f) => !s.blocked!.includes(f.accountId ?? 0))
       .filter((f) => !q.mealTime || f.mealTimes?.includes(q.mealTime as any))
       .slice(0, Number(q.size ?? q.limit ?? 8));
@@ -1125,13 +1132,12 @@ export const demoTransport: Transport = async (path, options) => {
       ];
       save();
       result = food;
-    } else if (path.endsWith("/unlike")) {
-      food.isLiked = false;
-      food.likesCount = Math.max(0, (food.likesCount ?? 1) - 1);
-      save();
-    } else if (path.endsWith("/like")) {
-      food.isLiked = true;
-      food.likesCount = (food.likesCount ?? 0) + 1;
+    } else if (path.endsWith("/like") || path.endsWith("/unlike")) {
+      const liked = path.endsWith("/like");
+      if ((food.isLiked === true) !== liked) {
+        food.likesCount = Math.max(0, (food.likesCount ?? 0) + (liked ? 1 : -1));
+      }
+      food.isLiked = liked;
       save();
     } else if (path.endsWith("/rating")) {
       // One viewer in this mock: their score is the whole rating.
@@ -1231,7 +1237,12 @@ export const demoTransport: Transport = async (path, options) => {
         })),
       q,
     );
-  else if (path === "/user/userInfo")
+  else if (path === "/user/userInfo") {
+    const profileId = Number(q.userId);
+    const uploads = s.foods.filter((f) => f.accountId === profileId);
+    const comments = (s.commentsV7 ??= seedComments(s.foods, s.user)).rows.filter(
+      (c) => c.authorId === profileId && c.moderationStatus === "APPROVED" && !c.hidden,
+    );
     result = {
       ...demoPerson(s, Number(q.userId)),
       level:
@@ -1240,14 +1251,14 @@ export const demoTransport: Transport = async (path, options) => {
           : 3,
       fansCount: demoPeople(s, Number(q.userId), "followers").length,
       followingsCount: demoPeople(s, Number(q.userId), "followings").length,
-      earnedLikes: 96,
+      earnedLikes:
+        uploads.reduce((sum, f) => sum + (f.likesCount ?? 0), 0) +
+        comments.reduce((sum, c) => sum + c.likesCount, 0),
       fansVisible: Number(q.userId) !== s.user.id || s.privacy.follower,
       followingsVisible: Number(q.userId) !== s.user.id || s.privacy.following,
-      uploadedFoodsCount: s.foods.filter(
-        (f) => f.accountId === (Number(q.userId) || 10),
-      ).length,
+      uploadedFoodsCount: uploads.length,
     };
-  else if (path === "/user/follow") {
+  } else if (path === "/user/follow") {
     const id = Number(q.userId);
     if (id === s.user.id || s.blocked.includes(id)) throw new ApiError("无法关注这位食友。", 40002);
     if (!s.following.includes(id)) s.following.push(id);

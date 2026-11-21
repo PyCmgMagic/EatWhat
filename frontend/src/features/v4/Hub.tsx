@@ -21,7 +21,7 @@ const groups = [
     tone: "green",
     items: [
       {
-        to: "/restaurants/directory",
+        to: "/nearby?filter=1",
         title: "找一家店",
         detail: "按分类、预算筛选餐厅",
         icon: "store",

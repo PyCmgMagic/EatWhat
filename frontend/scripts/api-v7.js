@@ -138,8 +138,8 @@ async function validateApiV7(page) {
       screenshots.push("output/playwright/api-v7-write-390.png");
     }
     await p.getByRole("button", { name: "发表回复", exact: true }).click();
-    if (!mobile)
-      await p.getByRole("link", { name: "我的评论", exact: true }).click();
+    await editor.waitFor({ state: "hidden" });
+    await open(p, width, "/me/shares?tab=comments");
     const text = `V7 隔离回复验收 ${width} 🍜`;
     const mine = p.locator(".comments-submission").filter({ hasText: text });
     await mine.waitFor();

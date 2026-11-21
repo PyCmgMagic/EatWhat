@@ -235,12 +235,14 @@ export function CatalogCard({
   collection = false,
   actionKind,
   actions,
+  likeControl,
 }: {
   food: Food;
   collection?: boolean;
   actionKind?: keyof typeof CARD_ACTIONS;
   /** 三态：undefined 保持原行为；true 展示管理操作（管理员「管理」模式）；false 只读。 */
   actions?: boolean;
+  likeControl?: ReactNode;
 }) {
   const v = visualFor(food, isDemo),
     src = mediaUrl(food.pictureUrl?.[0]);
@@ -271,11 +273,19 @@ export function CatalogCard({
           <h3>{food.name ?? "未命名菜品"}</h3>
           <b>{money(food.price)}</b>
         </div>
-        <p>
-          {food.restaurantName ?? "餐厅信息待补充"}
-          <span>♡ {food.likesCount ?? "—"}</span>
-        </p>
+        {!likeControl && (
+          <p>
+            {food.restaurantName ?? "餐厅信息待补充"}
+            <span>♡ {food.likesCount ?? "—"}</span>
+          </p>
+        )}
       </Link>
+      {likeControl && (
+        <p className="profile-food-meta">
+          <Link to={`/foods/${food.id}`}>{food.restaurantName ?? "餐厅信息待补充"}</Link>
+          {likeControl}
+        </p>
+      )}
       {cardAction ? (
         <FoodCardAction food={food} kind={cardAction} />
       ) : actions === false ? null : (

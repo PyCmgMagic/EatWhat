@@ -893,14 +893,23 @@ export function demoTransport(
             displayName: target.displayName,
             avatar: target.avatar,
             signature: target.signature,
-            fansCount: user === userId || target.fansVisible
-              ? Object.values(state.follows).filter((ids) =>
-                  ids.includes(userId),
-                ).length
-              : null,
-            followingsCount: user === userId || target.followingsVisible
-              ? (state.follows[userId]?.length ?? 0)
-              : null,
+            earnedLikes:
+              state.foods
+                .filter((food) => food.accountId === target.id)
+                .reduce((sum, food) => sum + (food.likeCount ?? 0), 0) +
+              state.comments
+                .filter((comment) => comment.author?.id === target.id)
+                .reduce((sum, comment) => sum + (comment.likeCount ?? 0), 0),
+            fansCount:
+              user === userId || target.fansVisible
+                ? Object.values(state.follows).filter((ids) =>
+                    ids.includes(userId),
+                  ).length
+                : null,
+            followingsCount:
+              user === userId || target.followingsVisible
+                ? (state.follows[userId]?.length ?? 0)
+                : null,
             followingsVisible: target.followingsVisible,
             fansVisible: target.fansVisible,
             ...relationTo(userId),
@@ -911,7 +920,10 @@ export function demoTransport(
     case "unfollow":
       if (
         name === "follow" &&
-        (!target || user === userId || state.blocks[user]?.includes(userId) || state.blocks[userId]?.includes(user))
+        (!target ||
+          user === userId ||
+          state.blocks[user]?.includes(userId) ||
+          state.blocks[userId]?.includes(user))
       )
         return fail(40002, "无法关注这位食友。");
       state.follows[user] = idList(state.follows).filter((id) => id !== userId);
@@ -922,8 +934,12 @@ export function demoTransport(
       state.blocks[user] = idList(state.blocks).filter((id) => id !== userId);
       if (name === "block") {
         state.blocks[user].push(userId);
-        state.follows[user] = idList(state.follows).filter(id => id !== userId);
-        state.follows[userId] = (state.follows[userId] ?? []).filter(id => id !== user);
+        state.follows[user] = idList(state.follows).filter(
+          (id) => id !== userId,
+        );
+        state.follows[userId] = (state.follows[userId] ?? []).filter(
+          (id) => id !== user,
+        );
       }
       return write();
     case "blockStatus":
@@ -936,7 +952,8 @@ export function demoTransport(
         subject !== user &&
         ((name === "followers" && !target?.fansVisible) ||
           (name === "followings" && !target?.followingsVisible))
-      ) return fail(20004, "对方没有公开这个列表");
+      )
+        return fail(20004, "对方没有公开这个列表");
       const ids =
         name === "blocks"
           ? idList(state.blocks)
@@ -1374,12 +1391,18 @@ export function demoTransport(
     case "postFoodsByIdUnlike":
     case "postFoodsByIdFavorite":
     case "postFoodsByIdUnfavorite": {
-      const source = name.includes("Favorite")
-        ? state.foodFavorites
-        : state.foodLikes;
+      const isLike =
+        name === "postFoodsByIdLike" || name === "postFoodsByIdUnlike";
+      const source = isLike ? state.foodLikes : state.foodFavorites;
+      const active =
+        name === "postFoodsByIdLike" || name === "postFoodsByIdFavorite";
+      if (isLike && idList(source).includes(id) !== active) {
+        const food = state.foods.find((item) => item.id === id);
+        if (!food) return fail(40015, "菜品不存在。");
+        food.likeCount = Math.max(0, (food.likeCount ?? 0) + (active ? 1 : -1));
+      }
       source[user] = idList(source).filter((item) => item !== id);
-      if (name === "postFoodsByIdLike" || name === "postFoodsByIdFavorite")
-        source[user].push(id);
+      if (active) source[user].push(id);
       return write();
     }
     case "rateFood":
@@ -1512,7 +1535,11 @@ export function demoTransport(
       const choices = (state.commentReactions[id] ??= {});
       if (name === "putCommentsByIdReactionsByReaction") {
         const author = comment.author?.id;
-        if (author != null && (state.blocks[user]?.includes(author) || state.blocks[author]?.includes(user)))
+        if (
+          author != null &&
+          (state.blocks[user]?.includes(author) ||
+            state.blocks[author]?.includes(user))
+        )
           return fail(40002, "无法回应这条评论");
         choices[user] = reaction;
       } else if (choices[user] === reaction) {
@@ -1521,13 +1548,11 @@ export function demoTransport(
       return write(reactionSummary(choices, user));
     }
     case "deleteCommentsByCommentId":
-      state.comments = state.comments.filter(
-        (comment) => {
-          const keep = comment.id !== commentId && comment.rootId !== commentId;
-          if (!keep) delete state.commentReactions[comment.id];
-          return keep;
-        },
-      );
+      state.comments = state.comments.filter((comment) => {
+        const keep = comment.id !== commentId && comment.rootId !== commentId;
+        if (!keep) delete state.commentReactions[comment.id];
+        return keep;
+      });
       return write();
     case "getFoodsByFoodIdGallery":
       return ok(

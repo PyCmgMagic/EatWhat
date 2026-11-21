@@ -5,6 +5,46 @@ beforeEach(() => {
   vi.resetModules();
   localStorage.clear();
 });
+it("dismisses a restaurant from recommendation feeds for 30 days across reloads", async () => {
+  const { createApi } = await import("../api/service");
+  const { writeSession } = await import("../app/runtime");
+  const session = { tokenName: "satoken", tokenValue: "demo-test" };
+  const api = createApi((await import("./transport")).demoTransport);
+  writeSession(session);
+  const start = Date.now();
+  const clock = vi.spyOn(Date, "now").mockReturnValue(start);
+  try {
+    const before = await api.recommendFeed(8, { kind: "food" });
+    const shopId = before.items[0].restaurantId!;
+    await api.dismissRecommendation(shopId);
+    vi.resetModules();
+    const reloaded = createApi((await import("./transport")).demoTransport);
+    clock.mockReturnValue(start + 30 * 86_400_000 - 1);
+    const feed = await reloaded.recommendFeed(8, {
+      kind: "food",
+      scene: "delivery",
+    });
+    expect(feed.shops?.map((s) => s.id)).not.toContain(shopId);
+    expect(feed.items.length).toBeGreaterThan(0);
+    expect(feed.items.map((dish) => dish.restaurantId)).not.toContain(shopId);
+    const shopIds = async () =>
+      (await reloaded.recommend()).map((dish) => dish.restaurantId);
+    expect(await shopIds()).not.toContain(shopId);
+
+    writeSession(null);
+    expect(await shopIds()).toContain(shopId);
+    await expect(reloaded.dismissRecommendation(shopId)).rejects.toMatchObject({
+      code: 20001,
+    });
+    writeSession(session);
+    clock.mockReturnValue(start + 30 * 86_400_000);
+    const restored = await reloaded.recommendFeed(8, { kind: "food" });
+    expect(restored.shops?.map((s) => s.id)).toContain(shopId);
+  } finally {
+    clock.mockRestore();
+  }
+});
+
 it.each(["原来的昵称", "alice"])(
   "migrates the old display name %s without inferring a login name or losing uploads",
   async (oldName) => {

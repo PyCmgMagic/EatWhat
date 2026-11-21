@@ -1,11 +1,12 @@
 import {
   useEffect,
+  useId,
   useRef,
   useState,
   type MouseEvent,
   type ReactNode,
 } from "react";
-import { Quote } from "lucide-react";
+import { PencilLine, Quote } from "lucide-react";
 import { UserTitle } from "../../components/UserTitle";
 import { userTitle } from "../../api/growth";
 import {
@@ -40,7 +41,7 @@ import {
 } from "../../api/comments";
 import { mediaUrl, parseId, type Food, type Page } from "../../api/models";
 import { useActionAccess } from "../access";
-import { DesignIcon as Icon } from "../../mobile/ui";
+import { DesignIcon as Icon, ReactionIcon } from "../../mobile/ui";
 import { FoodCover } from "../../components/FoodCover";
 import { ContentSkeleton } from "../../components/LoadingSkeleton";
 import { Gate } from "../../components/ui";
@@ -57,6 +58,12 @@ import {
 import "./comments.css";
 
 type ReplyTarget = { rootId: number; id: number; name: string };
+type ReplyEditor = {
+  food: Food & { id: number };
+  activeId?: number;
+  open: (id: number) => void;
+  close: () => void;
+};
 type ImageValue = { slot?: number | null; url?: string | null };
 const validPage = (raw: string | null) => {
   const n = Number(raw);
@@ -114,12 +121,12 @@ export function CommentDestination({
 function FocusedComment({
   commentId,
   foodId,
-  onReply,
+  editor,
   showAll,
 }: {
   commentId: number;
   foodId: number;
-  onReply: (target: ReplyTarget) => void;
+  editor: ReplyEditor;
   showAll: () => void;
 }) {
   const query = useCommentDetail(commentId);
@@ -141,7 +148,7 @@ function FocusedComment({
             comment={item}
             rootId={item.rootId ?? undefined}
             nested={!!item.rootId}
-            onReply={onReply}
+            editor={editor}
             refresh={query.refetch}
           />
         ) : (
@@ -418,7 +425,7 @@ function Like({ comment }: { comment: CommentView }) {
         }
         onClick={() => void toggleLike()}
       >
-        <Icon name={liked ? "heartOn" : "heart"} size={17} />
+        <ReactionIcon kind="like" size={17} />
         {likes > 0 && <b className="comments-like-count">{likes}</b>}
       </button>
       {q.isError && initialLiked == null && (
@@ -487,13 +494,13 @@ function CommentAuthor({
 function CommentRow({
   comment,
   rootId,
-  onReply,
+  editor,
   refresh,
   nested = false,
 }: {
   comment: CommentView;
   rootId?: number;
-  onReply: (target: ReplyTarget) => void;
+  editor: ReplyEditor;
   refresh: () => unknown;
   nested?: boolean;
 }) {
@@ -526,6 +533,13 @@ function CommentRow({
       ? true
       : knownReplyCount > defaultLimit || expanded);
   const name = comment.authorName || "匿名用户";
+  const replyButton = useRef<HTMLButtonElement>(null);
+  const panelId = useId();
+  const writing = comment.id != null && editor.activeId === comment.id;
+  function closeReply() {
+    editor.close();
+    replyButton.current?.focus({ preventScroll: true });
+  }
   return (
     <article
       className={`comments-row${nested ? " is-reply" : ""}`}
@@ -554,9 +568,11 @@ function CommentRow({
           <Like comment={comment} />
           <button
             type="button"
-            onClick={() =>
-              onReply({ rootId: rootId ?? comment.id!, id: comment.id!, name })
-            }
+            ref={replyButton}
+            aria-expanded={writing}
+            aria-controls={writing ? panelId : undefined}
+            disabled={comment.id == null}
+            onClick={() => (writing ? closeReply() : editor.open(comment.id!))}
           >
             <Icon name="comment" size={17} />
             回复
@@ -589,6 +605,17 @@ function CommentRow({
             </button>
           )}
         </div>
+        {writing && (
+          <div id={panelId} className="comments-inline-editor">
+            <CommentComposer
+              embedded
+              food={editor.food}
+              target={{ rootId: rootId ?? comment.id!, id: comment.id!, name }}
+              cancel={closeReply}
+              after={closeReply}
+            />
+          </div>
+        )}
         {!nested && (expanded || defaultLimit > 0) && (
           <div className="comments-replies">
             <QueryState query={replies}>
@@ -599,7 +626,7 @@ function CommentRow({
                       comment={reply}
                       rootId={comment.id!}
                       nested
-                      onReply={onReply}
+                      editor={editor}
                       refresh={() => replies.refetch()}
                     />
                   ))
@@ -626,12 +653,14 @@ type DraftPhoto = { url: string; file?: File; key?: string };
 export function CommentComposer({
   food,
   target,
-  cancelReply,
+  embedded = false,
+  cancel,
   after,
 }: {
   food: Food & { id: number };
   target: ReplyTarget | null;
-  cancelReply?: () => void;
+  embedded?: boolean;
+  cancel?: () => void;
   after?: () => void;
 }) {
   const app = useApp(),
@@ -639,6 +668,7 @@ export function CommentComposer({
     refresh = useRefreshComments(),
     access = useActionAccess();
   const active = usePageLifetime();
+  const fieldId = useId();
   const scope = `comments:draft:${app.user?.id ?? "guest"}:${food.id}:${target?.id ?? "root"}`;
   const [text, setText, clearText] = useSessionDraft(scope, "");
   const previousOwner = useRef({ id: app.user?.id, text });
@@ -705,8 +735,8 @@ export function CommentComposer({
   );
   const busy = uploading || task.busy;
   useEffect(() => {
-    if (target) textarea.current?.focus();
-  }, [target?.id]);
+    if (target || embedded) textarea.current?.focus();
+  }, [target?.id, embedded]);
   async function pick(files: File[]) {
     if (busy || task.pending || !files.length || !access(true)) return;
     try {
@@ -733,9 +763,9 @@ export function CommentComposer({
         return;
       }
       const content = boundedText(text, 200, "评论");
-      if (photos.some((p) => !p.key) && !access(true)) return;
+      const next = target ? [] : [...photos];
+      if (next.some((p) => !p.key) && !access(true)) return;
       setUploading(true);
-      const next = [...photos];
       for (let i = 0; i < next.length; i++)
         if (!next[i].key) {
           if (!next[i].file) throw new Error("请重新选择尚未上传的图片。");
@@ -764,51 +794,64 @@ export function CommentComposer({
     }
   }
   return (
-    <aside
-      className="comments-composer"
-      aria-label={target ? "发表回复" : "发表评论"}
-    >
-      <div className="comments-compose-dish">
-        {mediaUrl(food.pictureUrl?.[0]) && (
-          <FoodCover
-            src={mediaUrl(food.pictureUrl?.[0])}
-            crop={food.coverCrop}
-            alt=""
-          />
-        )}
-        <div>
-          <strong>{food.name || "这道菜"}</strong>
-          {food.restaurantName && <span>{food.restaurantName}</span>}
+    <div className={`comments-composer${embedded ? " is-embedded" : ""}`}>
+      {!embedded && (
+        <div className="comments-compose-dish">
+          {mediaUrl(food.pictureUrl?.[0]) && (
+            <FoodCover
+              src={mediaUrl(food.pictureUrl?.[0])}
+              crop={food.coverCrop}
+              alt=""
+            />
+          )}
+          <div>
+            <strong>{food.name || "这道菜"}</strong>
+            {food.restaurantName && <span>{food.restaurantName}</span>}
+          </div>
         </div>
-      </div>
+      )}
       <form
+        aria-label={target ? `回复 ${target.name}` : "发表评论"}
+        onKeyDown={(e) => {
+          if (
+            e.key === "Escape" &&
+            !e.nativeEvent.isComposing &&
+            cancel &&
+            !busy &&
+            !task.pending
+          ) {
+            e.preventDefault();
+            e.stopPropagation();
+            cancel();
+          }
+        }}
         onSubmit={(e) => {
           e.preventDefault();
           void submit();
         }}
       >
         <div className="comments-compose-heading">
-          <label htmlFor={`comment-text-${food.id}`}>
+          <label htmlFor={fieldId}>
             {target ? `回复 ${target.name}` : "说说你的用餐感受"}
           </label>
-          {target && cancelReply && (
+          {cancel && (
             <button
               type="button"
               className="comments-icon"
-              aria-label="取消回复"
+              aria-label={target ? "取消回复" : "收起评论框"}
               disabled={busy || task.pending}
-              onClick={cancelReply}
+              onClick={cancel}
             >
               <Icon name="close" size={18} />
             </button>
           )}
         </div>
         <textarea
-          id={`comment-text-${food.id}`}
-          aria-describedby={`comment-limit-${food.id}`}
+          id={fieldId}
+          aria-describedby={`${fieldId}-limit`}
           aria-invalid={codePoints(text.trim()) > 200}
           ref={textarea}
-          placeholder="口味、分量，或一点用餐建议"
+          placeholder={target ? "写下你的回复…" : "口味、分量，或一点用餐建议"}
           value={text}
           disabled={busy || task.pending}
           onChange={(e) => setText(e.target.value)}
@@ -819,84 +862,89 @@ export function CommentComposer({
             }
           }}
         />
-        <div className="comments-draft-pictures">
-          {photos.map((photo, i) => (
-            <span key={photo.url}>
-              <img src={photo.url} alt={`待发布图片 ${i + 1}`} />
+        {!target && (
+          <div className="comments-draft-pictures">
+            {photos.map((photo, i) => (
+              <span key={photo.url}>
+                <img src={photo.url} alt={`待发布图片 ${i + 1}`} />
+                <button
+                  type="button"
+                  aria-label={`移除评论图片 ${i + 1}`}
+                  disabled={busy || task.pending}
+                  onClick={() => {
+                    if (photo.url.startsWith("blob:"))
+                      URL.revokeObjectURL(photo.url);
+                    setPhotos(photos.filter((_, n) => n !== i));
+                  }}
+                >
+                  <Icon name="close" size={18} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="comments-compose-footer">
+          <div className="comments-compose-tools">
+            {!target && (
               <button
                 type="button"
-                aria-label={`移除评论图片 ${i + 1}`}
-                disabled={busy || task.pending}
+                disabled={busy || task.pending || photos.length >= 3}
                 onClick={() => {
-                  if (photo.url.startsWith("blob:"))
-                    URL.revokeObjectURL(photo.url);
-                  setPhotos(photos.filter((_, n) => n !== i));
+                  if (access(true)) input.current?.click();
                 }}
               >
-                <Icon name="close" size={14} />
+                <Icon name="image" size={18} />
+                添加图片 <span>{photos.length}/3</span>
               </button>
+            )}
+            <span
+              id={`${fieldId}-limit`}
+              className={codePoints(text.trim()) > 200 ? "comments-error" : ""}
+            >
+              {codePoints(text.trim())}/200
             </span>
-          ))}
-        </div>
-        <div className="comments-compose-tools">
+          </div>
+          {!target && (
+            <input
+              ref={input}
+              type="file"
+              hidden
+              multiple
+              accept="image/jpeg,image/png,image/webp"
+              aria-label="添加评论图片"
+              onChange={(e) => {
+                void pick(Array.from(e.target.files ?? []));
+                e.target.value = "";
+              }}
+            />
+          )}
           <button
-            type="button"
-            disabled={busy || task.pending || photos.length >= 3}
-            onClick={() => {
-              if (access(true)) input.current?.click();
-            }}
+            className="comments-primary"
+            type="submit"
+            disabled={
+              busy ||
+              (!task.pending && (!text.trim() || codePoints(text.trim()) > 200))
+            }
           >
-            <Icon name="image" size={18} />
-            添加图片 <span>{photos.length}/3</span>
+            {uploading
+              ? "正在上传图片…"
+              : task.busy
+                ? "正在提交…"
+                : task.pending
+                  ? "重试确认"
+                  : target
+                    ? "发表回复"
+                    : "发表评论"}
+            <Icon name="chevronRight" size={17} />
           </button>
-          <span
-            id={`comment-limit-${food.id}`}
-            className={codePoints(text.trim()) > 200 ? "comments-error" : ""}
-          >
-            {codePoints(text.trim())}/200
-          </span>
         </div>
-        <input
-          ref={input}
-          type="file"
-          hidden
-          multiple
-          accept="image/jpeg,image/png,image/webp"
-          aria-label="添加评论图片"
-          onChange={(e) => {
-            void pick(Array.from(e.target.files ?? []));
-            e.target.value = "";
-          }}
-        />
         {(error || task.error) && (
           <p className="comments-error" role="alert">
             {error || task.error}
           </p>
         )}
-        <button
-          className="comments-primary"
-          type="submit"
-          disabled={
-            busy ||
-            (!task.pending && (!text.trim() || codePoints(text.trim()) > 200))
-          }
-        >
-          {uploading
-            ? "正在上传图片…"
-            : task.busy
-              ? "正在提交…"
-              : task.pending
-                ? "重试确认"
-                : target
-                  ? "发表回复"
-                  : "发表评论"}
-          <Icon name="chevronRight" size={17} />
-        </button>
-        <Link className="comments-mine-link" to="/me/shares?tab=comments">
-          我的评论 <Icon name="chevronRight" size={14} />
-        </Link>
       </form>
-    </aside>
+    </div>
   );
 }
 
@@ -913,24 +961,20 @@ export function FoodDiscussion({
     loc = useLocation();
   const [params, setParams] = useSearchParams();
   const gallery = params.get("view") === "gallery";
-  const focused = parseId(params.get("commentId") ?? undefined);
+  const linkedRoot = parseId(params.get("rootId") ?? undefined);
+  const replyId = parseId(params.get("replyToId") ?? undefined) ?? linkedRoot;
+  const [entryKey] = useState(loc.key);
+  // On a direct link or reload the recipient may be on another page or in a collapsed thread.
+  const focused =
+    parseId(params.get("commentId") ?? undefined) ??
+    (linkedRoot || loc.key === entryKey ? replyId : undefined);
+  const writingRoot = !mobile && !replyId && params.get("compose") === "1";
+  const section = params.get("section");
+  const writeButton = useRef<HTMLButtonElement>(null);
   const Heading = mobile ? "h1" : "h2";
   const sort: CommentSort =
     params.get("sort") === "NEWEST" ? "NEWEST" : "MOST_USEFUL";
   const page = validPage(params.get("commentPage"));
-  const [target, setTarget] = useState<ReplyTarget | null>(null);
-  const composer = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (mobile) return;
-    const rootId = parseId(params.get("rootId") ?? undefined);
-    const replyId = parseId(params.get("replyToId") ?? undefined);
-    if (rootId)
-      setTarget({
-        rootId,
-        id: replyId ?? rootId,
-        name: params.get("name") || "食友",
-      });
-  }, [mobile, params.get("rootId"), params.get("replyToId")]);
   const q = useQuery({
     queryKey: ["comments", "list", user?.id ?? "guest", food.id, sort, page],
     queryFn: ({ signal }) => api.foodComments(food.id, sort, page, 20, signal),
@@ -945,40 +989,44 @@ export function FoodDiscussion({
     setParams(
       (previous) => {
         const next = new URLSearchParams(previous);
+        if (focused) next.set("commentId", String(focused));
+        for (const key of ["rootId", "replyToId", "name", "compose"])
+          next.delete(key);
         for (const [k, v] of Object.entries(patch))
           v == null ? next.delete(k) : next.set(k, v);
         return next;
       },
-      { replace: true },
+      {
+        replace: true,
+        preventScrollReset: true,
+        state: { ...loc.state, preserveScroll: true },
+      },
     );
-  const reply = (value: ReplyTarget) => {
-    if (!access(false)) return;
-    if (mobile)
-      nav(
-        `/comments/write?foodId=${food.id}&rootId=${value.rootId}&replyToId=${value.id}&name=${encodeURIComponent(value.name)}`,
-        { state: { commentList: loc.pathname + loc.search } },
-      );
-    else {
-      setTarget(value);
-      composer.current?.scrollIntoView({
-        block: "nearest",
-        behavior: "smooth",
-      });
-    }
+  const editor: ReplyEditor = {
+    food,
+    activeId: replyId,
+    open: (id) => {
+      if (!access(false)) return;
+      change({ replyToId: String(id) });
+    },
+    close: () => change({}),
+  };
+  const closeRoot = () => {
+    change({});
+    writeButton.current?.focus({ preventScroll: true });
   };
   useEffect(() => {
     if (
-      !mobile && !focused &&
-      new URLSearchParams(loc.search).get("section") === "comments"
+      !mobile &&
+      !focused &&
+      section === "comments" &&
+      !writingRoot &&
+      !replyId
     ) {
-      const frame = requestAnimationFrame(() => {
-        discussionScroll("instant");
-        if (new URLSearchParams(loc.search).get("compose") === "1")
-          composer.current?.querySelector("textarea")?.focus();
-      });
+      const frame = requestAnimationFrame(() => discussionScroll("instant"));
       return () => cancelAnimationFrame(frame);
     }
-  }, [food.id, mobile, loc.search]);
+  }, [food.id, mobile, section, focused]);
   return (
     <section
       className={`comments-surface${mobile ? " is-mobile" : ""}`}
@@ -990,28 +1038,77 @@ export function FoodDiscussion({
           吃过的人说
           {q.data?.totalItems != null && <span>{q.data.totalItems}</span>}
         </Heading>
-        <div className="comments-tabs" aria-label="讨论内容">
+        {!mobile && (
           <button
-            aria-pressed={!gallery}
-            onClick={(event) => {
-              dropPointerFocus(event);
-              change({ view: null, commentPage: null, commentId: null });
-            }}
+            className="comments-write"
+            type="button"
+            ref={writeButton}
+            aria-expanded={writingRoot}
+            aria-controls={writingRoot ? "discussion-composer" : undefined}
+            onClick={() =>
+              writingRoot ? closeRoot() : change({ compose: "1" })
+            }
           >
-            评论
+            <PencilLine size={16} aria-hidden="true" />
+            写评论
           </button>
-          <button
-            aria-pressed={gallery}
-            onClick={(event) => {
-              dropPointerFocus(event);
-              change({ view: "gallery", commentPage: null, commentId: null });
-            }}
-          >
-            晒图
-          </button>
-        </div>
+        )}
       </header>
+      {writingRoot && (
+        <div id="discussion-composer">
+          <CommentComposer
+            embedded
+            food={food}
+            target={null}
+            cancel={closeRoot}
+            after={closeRoot}
+          />
+        </div>
+      )}
       <div className="comments-layout">
+        <div className="comments-toolbar">
+          <div className="comments-tabs" role="group" aria-label="讨论内容">
+            <button
+              aria-pressed={!gallery}
+              onClick={(event) => {
+                dropPointerFocus(event);
+                change({ view: null, commentPage: null, commentId: null });
+              }}
+            >
+              评论
+            </button>
+            <button
+              aria-pressed={gallery}
+              onClick={(event) => {
+                dropPointerFocus(event);
+                change({ view: "gallery", commentPage: null, commentId: null });
+              }}
+            >
+              晒图
+            </button>
+          </div>
+          {!gallery && !focused && (
+            <div className="comments-sort" role="group" aria-label="评论排序">
+              {(
+                [
+                  ["MOST_USEFUL", "最热"],
+                  ["NEWEST", "最新"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  aria-pressed={sort === value}
+                  onClick={(event) => {
+                    dropPointerFocus(event);
+                    change({ sort: value, commentPage: null });
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="comments-list">
           {gallery ? (
             <Gallery query={g} />
@@ -1019,41 +1116,20 @@ export function FoodDiscussion({
             <FocusedComment
               foodId={food.id}
               commentId={focused}
-              onReply={reply}
+              editor={editor}
               showAll={() => change({ commentId: null })}
             />
           ) : (
-            <>
-              <div className="comments-sort" aria-label="评论排序">
-                {(
-                  [
-                    ["MOST_USEFUL", "最热"],
-                    ["NEWEST", "最新"],
-                  ] as const
-                ).map(([value, label]) => (
-                  <button
-                    key={value}
-                    aria-pressed={sort === value}
-                    onClick={(event) => {
-                      dropPointerFocus(event);
-                      change({ sort: value, commentPage: null });
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <QueryState query={q} empty={!q.data?.items?.length}>
-                {q.data?.items?.map((comment) => (
-                  <CommentRow
-                    key={comment.id}
-                    comment={comment}
-                    onReply={reply}
-                    refresh={() => q.refetch()}
-                  />
-                ))}
-              </QueryState>
-            </>
+            <QueryState query={q} empty={!q.data?.items?.length}>
+              {q.data?.items?.map((comment) => (
+                <CommentRow
+                  key={comment.id}
+                  comment={comment}
+                  editor={editor}
+                  refresh={() => q.refetch()}
+                />
+              ))}
+            </QueryState>
           )}
           {!focused && (
             <Pager
@@ -1064,17 +1140,6 @@ export function FoodDiscussion({
             />
           )}
         </div>
-        {!mobile && (
-          <div ref={composer}>
-            <CommentComposer
-              key={target?.id ?? "root"}
-              food={food}
-              target={target}
-              cancelReply={() => setTarget(null)}
-              after={() => setTarget(null)}
-            />
-          </div>
-        )}
       </div>
       {mobile && (
         <div className="comments-mobile-bar">

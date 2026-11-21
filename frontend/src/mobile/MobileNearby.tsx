@@ -1,14 +1,6 @@
 import { useState } from "react";
-import {
-  Link,
-  useLocation,
-  useNavigate,
-  useSearchParams,
-} from "react-router-dom";
-import { SlidersHorizontal } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useArea } from "../app/area";
-import { useDebouncedSearch } from "../app/search";
-import { useApp } from "../app/state";
 import { errorMessage } from "../api/client";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { NearbySearchInput } from "../features/NearbySearchInput";
@@ -21,63 +13,32 @@ import {
   useMobile,
 } from "./ui";
 import SheetHandle from "./SheetHandle";
-import NearbyFilterSheet from "./NearbyFilterSheet";
-import {
-  hasNearbyFilters,
-  readNearbyFilters,
-  useNearbyShops,
-  writeNearbyFilters,
-  type NearbyFilters,
-} from "./nearby-filters";
+import NearbyFilterSheet, {
+  NearbyFilterTrigger,
+} from "../features/NearbyFilterSheet";
+import { hasNearbyFilters, useNearbyBrowse } from "../features/nearby-filters";
 
 export default function MobileNearby() {
-  const { session } = useApp();
   const { area } = useArea();
   const mobile = useMobile();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [params, setParams] = useSearchParams();
-  const keyword = params.get("q") ?? "";
-  const filters = readNearbyFilters(params, !!session);
+  const {
+    shops,
+    filters,
+    page,
+    setPage,
+    keyword,
+    changeKeyword,
+    open,
+    openFilters,
+    closeFilters,
+    apply,
+  } = useNearbyBrowse();
   const filtered = hasNearbyFilters(filters);
-  const open = params.get("filter") === "1";
-  const [pagination, setPagination] = useState({ area, page: 1 });
-  const page = pagination.area === area ? pagination.page : 1;
-  const setPage = (page: number) => setPagination({ area, page });
-  const committedKeyword = useDebouncedSearch(keyword);
-  const shops = useNearbyShops(committedKeyword, filters, page);
   const restaurants = shops.data?.items ?? [];
   const [selectedId, setSelectedId] = useState<number | null>();
   const selected =
     restaurants.find((shop) => shop.id === selectedId) ?? restaurants[0];
 
-  function changeKeyword(value: string) {
-    setPage(1);
-    const next = new URLSearchParams(params);
-    if (value) next.set("q", value);
-    else next.delete("q");
-    setParams(next, { replace: true });
-  }
-  function openFilters() {
-    const next = new URLSearchParams(params);
-    next.set("filter", "1");
-    setParams(next, {
-      state: { nearbyFilterEntry: true, preserveScroll: true },
-    });
-  }
-  function closeFilters() {
-    if (location.state?.nearbyFilterEntry) {
-      navigate(-1);
-      return;
-    }
-    const next = new URLSearchParams(params);
-    next.delete("filter");
-    setParams(next, { replace: true });
-  }
-  function apply(next: NearbyFilters) {
-    setPage(1);
-    setParams(writeNearbyFilters(params, next), { replace: true });
-  }
   return (
     <>
       <header className="mobile-nearby-toolbar">
@@ -90,17 +51,11 @@ export default function MobileNearby() {
             value={keyword}
             onCommit={changeKeyword}
           />
-          <button
-            type="button"
-            className="nearby-filter-trigger"
-            aria-label={filtered ? "筛选店铺，已应用筛选" : "筛选店铺"}
-            aria-haspopup="dialog"
-            aria-expanded={open}
-            data-active={filtered || undefined}
+          <NearbyFilterTrigger
+            active={filtered}
+            open={open}
             onClick={openFilters}
-          >
-            <SlidersHorizontal size={20} aria-hidden="true" />
-          </button>
+          />
         </div>
         <button
           type="button"
@@ -134,9 +89,6 @@ export default function MobileNearby() {
           <h1>
             附近 <span>{shops.data?.totalItems ?? "—"}</span>
           </h1>
-          <Link to="/restaurants/directory" className="mobile-nearby-directory">
-            店铺目录 <DesignIcon name="chevronRight" size={14} />
-          </Link>
         </div>
         <div className="mobile-nearby-results">
           {shops.isPending ? (

@@ -135,6 +135,7 @@ button:disabled {
   background: #fff9ef;
 }
 .mobile-home-toolbar {
+  --home-label-opacity: clamp(0, calc(var(--home-labels, 1) * 2 - 1), 1);
   position: sticky;
   top: 0;
   z-index: 3;
@@ -168,7 +169,7 @@ button:disabled {
   height: 44px !important;
   padding: 0;
   border-radius: 999px;
-  background: rgb(255 255 255 / 18%);
+  background: rgb(255 255 255 / calc(18% * var(--home-label-opacity)));
   font-size: 14px;
   font-weight: 600;
 }
@@ -177,7 +178,7 @@ button:disabled {
   max-width: calc(2em * clamp(0, var(--home-labels, 1) * 2, 1));
   overflow: hidden;
   white-space: nowrap;
-  opacity: clamp(0, calc(var(--home-labels, 1) * 2 - 1), 1);
+  opacity: var(--home-label-opacity);
 }
 .mobile-home-bell {
   position: relative;
@@ -191,7 +192,6 @@ button:disabled {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 .mobile-home-screen .mobile-home-handle {
   touch-action: none;
@@ -1443,6 +1443,9 @@ body:has(
   color: #6e625b;
   margin: 0 0 24px;
 }
+.design-notice > .design-button + .design-button {
+  margin-top: 10px;
+}
 .design-food-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1658,14 +1661,6 @@ body:has(
 }
 .mobile-nearby-heading > span {
   font-size: 12px;
-  color: #6e625b;
-}
-.mobile-nearby-directory {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 44px;
-  font-size: 13px;
   color: #6e625b;
 }
 .mobile-error-banner {

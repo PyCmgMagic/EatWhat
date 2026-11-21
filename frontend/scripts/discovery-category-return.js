@@ -35,7 +35,7 @@ async function validateDiscoveryCategoryReturn(page) {
     totalPages: items.length ? 1 : 0,
     hasNext: false,
   });
-  for (const width of [360, 520, 820, 1440]) {
+  for (const width of [320, 360, 520, 820, 1440]) {
     const context = await page
       .context()
       .browser()
@@ -47,6 +47,7 @@ async function validateDiscoveryCategoryReturn(page) {
     p.setDefaultTimeout(10000);
     p.on("pageerror", (error) => errors.push(error.message));
     const requests = [];
+    let buffetHasResults = false;
     await context.route("**/*", (route) => {
       const url = new URL(route.request().url());
       if (url.origin !== base) return route.abort();
@@ -55,7 +56,11 @@ async function validateDiscoveryCategoryReturn(page) {
       if (url.pathname === "/api/recommend") {
         const kind = url.searchParams.get("kind");
         requests.push(kind);
-        data = result(shops.filter((shop) => shop.kind === kind));
+        data = result(
+          kind === "buffet" && !buffetHasResults
+            ? []
+            : shops.filter((shop) => shop.kind === kind),
+        );
       }
       if (url.pathname === "/api/foods/list")
         data = result(
@@ -100,21 +105,38 @@ async function validateDiscoveryCategoryReturn(page) {
     try {
       await p.goto(`${base}/?demo=0#/`);
       await p.getByRole("tab", { name: "美食", exact: true }).waitFor();
-      if (
-        (
-          await p
-            .getByRole("tablist", { name: "店铺分类" })
-            .getByRole("tab")
-            .allTextContents()
-        ).join("/") !== "美食/甜点饮品/自助"
-      )
+      const tabs = p
+        .getByRole("tablist", { name: "店铺分类" })
+        .getByRole("tab");
+      if ((await tabs.allTextContents()).join("/") !== "美食/甜点饮品/自助")
         throw new Error("首页分类数量或顺序有误");
       await foodLink(foods[0].name).waitFor();
+      if ((await tabs.locator("svg:visible").count()) !== categories.length)
+        throw new Error(`${width}px: 首页分类图标没有全部显示`);
       if (requests.join() !== "food")
         throw new Error("默认列表重复请求了美食推荐");
+      const sort = p.getByRole("combobox", { name: "推荐店铺排序" });
       for (const [name, key, food] of categories) {
+        if (key === "buffet") {
+          await sort.click();
+          await p.getByRole("option", { name: "距离最近" }).click();
+        }
         await p.getByRole("tab", { name, exact: true }).click();
         await assertCategory(name, key);
+        if (key === "buffet") {
+          await p.getByText("这个分类暂时没有推荐店铺", { exact: true }).waitFor();
+          if (!(await sort.isVisible()) || !(await sort.isDisabled()))
+            throw new Error(`${width}px: 空列表应保留并禁用排序`);
+          const value = p.locator(".discovery-toolbar select");
+          if (await value.inputValue() !== "distance")
+            throw new Error(`${width}px: 空列表丢失了距离排序`);
+          buffetHasResults = true;
+          await p.getByRole("button", { name: "刷新推荐", exact: true }).click();
+          await foodLink(food).waitFor();
+          if (!(await sort.isEnabled()) || await value.inputValue() !== "distance")
+            throw new Error(`${width}px: 刷新得到店铺后应恢复距离排序`);
+          checks.push(`${width}px 自助: 空列表保留排序，刷新后恢复使用`);
+        }
         await foodLink(food).waitFor();
         if (
           (await p.locator(".mobile-home-copy h1, .pc-hero h1").innerText()) !==

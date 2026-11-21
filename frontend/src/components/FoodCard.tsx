@@ -28,7 +28,12 @@ export function useFoodActions(food: Food) {
       }
     },
     onSuccess: async (_, action) => {
-      await cache.invalidateQueries({ queryKey: ["foods"] });
+      await Promise.all([
+        cache.invalidateQueries({ queryKey: ["foods"] }),
+        action === "like" && food.accountId
+          ? cache.invalidateQueries({ queryKey: ["user", food.accountId] })
+          : undefined,
+      ]);
       toast(
         action === "favorite"
           ? food.isFavorite

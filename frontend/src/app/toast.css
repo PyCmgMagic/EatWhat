@@ -19,6 +19,21 @@
   background: transparent;
   pointer-events: none;
 }
+.app-toast-slot {
+  display: grid;
+  grid-template-rows: 1fr;
+}
+.app-toast-slot-content {
+  min-height: 0;
+}
+.app-toast-slot[data-closing] {
+  grid-template-rows: 0fr;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion-input="keyboard"]) .app-toast-slot {
+    transition: grid-template-rows var(--motion-exit) var(--ease-move);
+  }
+}
 .app-toast-viewport .toast.app-toast {
   position: relative;
   inset: auto;

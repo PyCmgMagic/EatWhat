@@ -72,6 +72,11 @@
   text-wrap: balance;
   overflow-wrap: anywhere;
 }
+.mobile-restaurant-photo {
+  grid-area: art;
+  position: relative;
+  border-radius: 50%;
+}
 .mobile-restaurant-art {
   grid-area: art;
   display: block;

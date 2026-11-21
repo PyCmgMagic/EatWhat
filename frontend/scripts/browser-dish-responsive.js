@@ -9,10 +9,33 @@ async (page) => {
     user: { id: 21, displayName: "PyCmg" },
     stageColor: "matcha", likesCount: 0, isLiked: false, isFavorite: false,
     coverCrop: {centerX:0.25, centerY:0.5, diameter:0.5},
-    tags: [], pictureUrls: ["/prototype/assets/photos/sq_luosi.png", "/prototype/assets/photos/sq_tieguo.png"],
+    tags: [], pictureUrls: ["/prototype/assets/photos/sq_luosi.png", "/assets/dessert.jpg"],
   };
   let current = food, holdDetail;
   const assert = (condition, message) => { if (!condition) throw Error(message); };
+  async function checkPhotoPreview(start, mobile = false) {
+    const trigger = p.getByRole("button", { name: `查看${food.name}大图` });
+    if (mobile) await trigger.click();
+    else await trigger.press("Enter");
+    const dialog = p.getByRole("dialog", { name: `${food.name} · 照片预览` });
+    const image = dialog.getByRole("img");
+    await image.waitFor();
+    await image.evaluate(img => img.decode());
+    assert(await image.getAttribute("src") === food.pictureUrls[start], "Preview opened the wrong photo");
+    assert(await image.evaluate(img => {
+      const {width, height} = img.getBoundingClientRect();
+      return width <= innerWidth && height <= innerHeight &&
+        Math.abs(width / height - img.naturalWidth / img.naturalHeight) < 0.01;
+    }), "Preview cropped or distorted the original");
+    const next = (start + 1) % food.pictureUrls.length;
+    if (mobile) await dialog.getByRole("button", { name: "下一张照片" }).click();
+    else await p.keyboard.press("ArrowRight");
+    assert(await image.getAttribute("src") === food.pictureUrls[next], "Preview did not advance");
+    if (mobile) await dialog.getByRole("button", { name: "关闭弹窗" }).click();
+    else await p.keyboard.press("Escape");
+    await dialog.waitFor({ state: "hidden" });
+    assert(await trigger.evaluate(el => document.activeElement === el), "Preview lost the opening control");
+  }
   p.on("pageerror", error => { if (!error.message.includes("ResizeObserver loop")) errors.push(error.message); });
   await context.route(url => url.origin !== base, route => route.abort());
   await context.route(url => url.origin === base && url.pathname.startsWith("/api/"), async route => {
@@ -94,9 +117,10 @@ async (page) => {
     const nextPhoto = p.getByRole("button", { name: "下一张照片", exact: true });
     await nextPhoto.press("Enter");
     assert(await cover.count() === 0, "Secondary photo inherited the cover crop");
-    assert((await p.locator(".pc-dish-photo img").getAttribute("src")).endsWith("sq_tieguo.png"), "Gallery selection stopped working");
+    assert(await p.locator(".pc-dish-photo img").getAttribute("src") === food.pictureUrls[1], "Gallery selection stopped working");
     assert(await p.locator(".pc-dish-photo img").evaluate(img => getComputedStyle(img).objectFit) === "cover", "Secondary photo must fill the plate");
     assert(await p.locator(".pc-gallery-controls [aria-live]").innerText() === "2 / 2", "Gallery counter did not update");
+    await checkPhotoPreview(1);
     await p.getByRole("button", { name: "上一张照片", exact: true }).click();
     await cover.waitFor();
     const shop = p.locator(".pc-dish-actions").getByRole("link", { name: "去这家店", exact: true });
@@ -169,6 +193,7 @@ async (page) => {
     assert(desktopColors.background === mobileColors.background && desktopColors.title === mobileColors.title &&
       desktopColors.background !== "rgba(0, 0, 0, 0)", "Desktop and mobile must share the dish cover colors");
     await p.locator(".dish-actions").getByRole("link", { name: "去这家店" }).waitFor();
+    await checkPhotoPreview(0, true);
     await p.getByLabel("更多菜品操作", { exact: true }).click();
     await p.getByRole("button", { name: "举报这道菜", exact: true }).waitFor();
     assert(errors.length === 0 && writes.length === 0, JSON.stringify({errors,writes}));

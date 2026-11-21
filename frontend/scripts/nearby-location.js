@@ -1,5 +1,5 @@
 async function validateNearbyLocation(page) {
-  const base = "http://127.0.0.1:5173",
+  const base = new URL(page.url()).origin,
     checks = [],
     errors = [];
   const assert = (ok, message) => {
@@ -67,6 +67,8 @@ async function validateNearbyLocation(page) {
           return route.continue();
         if (url.origin !== base) return route.abort();
         if (!url.pathname.startsWith("/api/")) return route.continue();
+        if (request.method() === "POST" && url.pathname === "/api/device/register")
+          return route.fulfill({ json: { code: 0, data: null } });
         if (!["GET", "HEAD"].includes(request.method()))
           writes.push(url.pathname);
         let data = { items: [], totalItems: 0, hasNext: false };
@@ -145,10 +147,10 @@ async function validateNearbyLocation(page) {
       await loaded();
       await rows.first().waitFor();
       await p.locator(".restaurant-map-device-dot").waitFor();
-      await p.getByRole("button", { name: "当前位置", exact: true }).waitFor();
       const area = await p.evaluate(() =>
         JSON.parse(localStorage.getItem("eatwhat-area")),
       );
+      await p.getByRole("button", { name: area.name, exact: true }).waitFor();
       const latest = searches.at(-1);
       assert(
         area.source === "device" &&
@@ -249,7 +251,8 @@ async function validateNearbyLocation(page) {
           before,
         "Late permission result changed area after leaving",
       );
-      await p.goto(base + "/?demo=0#/restaurants/new/details");
+      // This check counts startup requests from a fresh document.
+      await p.goto(base + "/?demo=0&entry=editor#/restaurants/new/details");
       await loaded();
       assert(
         (await p.evaluate(() => window.__geoCalls)) === 1,

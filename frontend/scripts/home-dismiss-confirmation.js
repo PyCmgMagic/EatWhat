@@ -36,10 +36,15 @@ async function verifyHomeDismissConfirmation(page) {
       const hero = p.locator(".mobile-home-copy h1, .pc-hero-copy h1");
       const dialog = p.getByRole("dialog", { name: "不想吃这家？" });
       const confirm = dialog.getByRole("button", { name: "确认不推荐" });
+      const cancel = dialog.getByRole("button", { name: "点错了", exact: true });
       await trigger.click();
       await dialog.getByText("接下来 30 天，首页将不再推荐「东北饭庄」及其菜品。").waitFor();
       assert(posts.length === 0, "打开弹窗时已提交");
-      await dialog.getByRole("button", { name: "取消", exact: true }).click();
+      const [primary, secondary] = await Promise.all([confirm.boundingBox(), cancel.boundingBox()]);
+      assert(primary && secondary && secondary.x === primary.x && secondary.width === primary.width
+        && secondary.height >= 44 && secondary.y >= primary.y + primary.height + 8,
+        "取消按钮应与确认等宽、上下留有间距，并提供完整的触控区域");
+      await cancel.click();
       await dialog.waitFor({ state: "hidden" });
       await trigger.click();
       await p.keyboard.press("Escape");

@@ -40,6 +40,7 @@ export type MobileState = {
     action: () => Promise<unknown>,
     label?: string,
     title?: string,
+    cancelLabel?: string,
   ) => void;
   go: (screen: string) => void;
   draft: Draft;
@@ -116,6 +117,29 @@ export function DesignIcon({
     />
   );
 }
+const reactionIcons = {
+  like: ["heart", "heartOn"],
+  favorite: ["bookmark", "bookmarkOn"],
+  follow: ["follow", "followed"],
+} as const;
+
+/** Keep both masks mounted so a quick reversal can continue from the current frame. */
+export function ReactionIcon({
+  kind,
+  size,
+}: {
+  kind: keyof typeof reactionIcons;
+  size: number;
+}) {
+  const [outline, selected] = reactionIcons[kind];
+  return (
+    <span className="reaction-icon" aria-hidden="true">
+      <DesignIcon name={outline} size={size} />
+      <DesignIcon name={selected} size={size} />
+    </span>
+  );
+}
+
 export function DesignNav({ active }: { active: string }) {
   const nav = useNavigate();
   const { session } = useApp();

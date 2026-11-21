@@ -1,6 +1,6 @@
 import { commentLikeLink } from "../../api/notifications";
 import { feedbackCategories, feedbackCategoryLabel, type FeedbackCategory, type FeedbackCase } from "../../api/feedback";
-import { DesignIcon as Icon } from "../../mobile/ui";
+import { DesignIcon as Icon, ReactionIcon } from "../../mobile/ui";
 import { RestaurantCard, TopicCard, TopicHero } from "./Cards";
 import { useContext, useEffect, useState } from "react";
 import { ProfileWorkspaceContext } from "../../app/profile-workspace";
@@ -769,10 +769,13 @@ export function NotificationCardsPanel() {
       return `/feedback/mine/${d.caseId}`;
     if (d?.type === "moderation_result" && d.revisionId)
       return `/submissions/${d.revisionId}`;
-    // The removed dish or comment is gone; a new sign-in links to devices.
-    const extra = (d as SystemDetail | null | undefined)?.type;
-    if (extra === "content_removed" || extra === "account_banned") return null;
-    if (extra === "new_device_login") return "/settings/devices";
+    const type = (d as SystemDetail | null | undefined)?.type ?? item.kind;
+    if (
+      type === "new_device_login" ||
+      type === "content_removed" ||
+      type === "account_banned"
+    )
+      return null;
     const t = item.target;
     if (t?.unavailable || !t?.id) return null;
     if (item.kind === "comment_like") return commentLikeLink(item.kind, t.domain, t.id);
@@ -1204,7 +1207,7 @@ export function FavoriteRestaurants() {
       heading={
         <ProfileCollectionsHeader
           action={
-            <Link className="pp-button is-quiet" to="/restaurants/directory">
+            <Link className="pp-button is-quiet" to="/nearby">
               <Icon name="store" size={16} />
               再找一家店
             </Link>
@@ -1214,7 +1217,7 @@ export function FavoriteRestaurants() {
     >
       {!embedded && (
         <div className="v4-list-toolbar profile-collections-toolbar">
-          <Link className="v4-button" to="/restaurants/directory">
+          <Link className="v4-button" to="/nearby">
             <Icon name="store" size={17} />
             再找一家店
           </Link>
@@ -1335,10 +1338,7 @@ export function RestaurantActions({
                       )
                     }
                   >
-                    <Icon
-                      name={shop?.isFavorite ? "bookmarkOn" : "bookmark"}
-                      size={18}
-                    />
+                    <ReactionIcon kind="favorite" size={18} />
                     {shop?.isFavorite ? "已收藏" : "收藏店铺"}
                   </button>
                 )}
