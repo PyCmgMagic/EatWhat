@@ -6,6 +6,10 @@
 
 ## 发布流程
 
+Web 版本号在构建时从 Git 历史生成。以构建 122 的 `0.1.0` 为基准，`main` 每增加一个主线提交，补丁号加一。合并提交计一次，重新构建同一提交得到相同版本号。构建号继续使用 GitHub Actions 的运行编号。
+
+切换主版本或次版本时，在 `frontend/package.json` 中同步设置基准版本 `version` 和对应的主线提交 `versionBaseCommit`。缺少基准历史的本地源码包显示 `-local` 后缀，正式工作流会检出完整历史。
+
 工作流为 `.github/workflows/deploy-frontend.yml`：
 
 - PR：部署工具测试 → `frontend/npm ci` → `npm test` → `npm run build` → 打包。

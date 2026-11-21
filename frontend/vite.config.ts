@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { createApiProxy } from "./config/api-proxy.ts";
@@ -6,6 +7,8 @@ import { UPLOAD_PROXY_PREFIX } from "./src/api/upload-target.ts";
 import { prototypeData } from "./config/prototype-data.ts";
 import { themeStyles } from "./config/theme-styles.ts";
 import { openSourceNotices } from "./config/open-source-notices.ts";
+import { resolveWebVersion } from "./config/web-version.ts";
+import pkg from "./package.json" with { type: "json" };
 
 export default defineConfig(({ mode, command, isPreview }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -16,10 +19,16 @@ export default defineConfig(({ mode, command, isPreview }) => {
       ? env.UPLOAD_PROXY_TARGET?.trim() || ""
       : "";
   const uploadProxy = createUploadProxy(uploadTarget);
+  const webVersion = resolveWebVersion(
+    fileURLToPath(new URL(".", import.meta.url)),
+    pkg,
+    process.env.GITHUB_ACTIONS === "true",
+  );
   return {
     plugins: [react(), prototypeData(), openSourceNotices()],
     css: { postcss: { plugins: [themeStyles] } },
     define: {
+      "import.meta.env.WEB_VERSION": JSON.stringify(webVersion),
       "import.meta.env.DEV_UPLOAD_TARGET": JSON.stringify(uploadTarget),
     },
     server: {

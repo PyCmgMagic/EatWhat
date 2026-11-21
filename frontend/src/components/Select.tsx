@@ -20,6 +20,7 @@ type Props = Omit<
   "multiple" | "size"
 > & {
   menuLabel?: string;
+  popupClassName?: string;
   icon?: ReactNode;
 };
 type Option = {
@@ -98,6 +99,7 @@ export function Select({
   disabled,
   autoFocus,
   menuLabel,
+  popupClassName,
   icon,
   ...props
 }: Props) {
@@ -407,7 +409,11 @@ export function Select({
           <div
             ref={popup}
             popover="manual"
-            className="ew-select-popup"
+            className={
+              popupClassName
+                ? `ew-select-popup ${popupClassName}`
+                : "ew-select-popup"
+            }
             style={position}
             onMouseDown={(event) => event.preventDefault()}
           >

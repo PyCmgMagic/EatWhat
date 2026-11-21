@@ -1,7 +1,111 @@
 .discovery-results {
   min-width: 0;
 }
-.pc-discovery-sheet .discovery-tabs {
+.discovery-toolbar {
+  container-type: inline-size;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 6px;
+  border-bottom: 1px solid var(--night-line, #e9e4df);
+}
+.discovery-toolbar .discovery-tabs {
+  border-bottom: 0;
+}
+.discovery-toolbar > .ew-select {
+  width: auto;
+  margin-inline-start: auto;
+}
+.discovery-toolbar .ew-select > .discovery-sort {
+  position: relative;
+  isolation: isolate;
+  min-height: 44px;
+  gap: 4px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--night-muted, #71665e);
+  font-size: 13px;
+  font-weight: 500;
+}
+.discovery-sort::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 8px 0;
+  border-radius: inherit;
+  background: var(--night-layer, #f6f4f1);
+}
+.discovery-sort .ew-select-icon {
+  color: inherit;
+}
+.discovery-sort .ew-select-icon svg {
+  width: 14px;
+  height: 14px;
+}
+.discovery-sort .ew-select-chevron {
+  width: 12px;
+  color: inherit;
+}
+.discovery-toolbar
+  .ew-select
+  > .discovery-sort:is(:hover, :focus-visible, [aria-expanded="true"]) {
+  background: transparent;
+  box-shadow: none;
+}
+.discovery-sort:is(:hover, [aria-expanded="true"])::before {
+  background: var(--night-raised, #eeeae5);
+}
+.discovery-sort:focus-visible::before {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.discovery-sort-menu .ew-select-option[aria-selected="true"] {
+  background: transparent;
+  color: var(--night-ink, #413b36);
+  font-weight: 600;
+}
+.discovery-sort-menu .ew-select-option[data-active] {
+  background: var(--night-layer, #f3f1ee);
+}
+.discovery-sort-menu .ew-select-check,
+.discovery-sort-menu .ew-select-caption {
+  color: var(--night-muted, #71665e);
+}
+@container (max-width: 430px) {
+  .discovery-tabs {
+    gap: 4px;
+  }
+  .discovery-tabs button {
+    min-width: 44px;
+    padding: 0 2px;
+    font-size: 15px;
+  }
+  .discovery-tabs button > span {
+    gap: 3px;
+    padding-inline: 2px;
+  }
+  .discovery-tabs svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+@container (max-width: 342px) {
+  .discovery-tabs {
+    gap: 0;
+  }
+  .discovery-tabs button,
+  .discovery-tabs button > span {
+    padding-inline: 0;
+  }
+  .discovery-tabs svg {
+    display: none;
+  }
+}
+.pc-discovery-sheet .discovery-toolbar {
   margin-bottom: 22px;
 }
 .mobile-home-sheet .rec-shop-list {
@@ -127,4 +231,3 @@
   color: inherit;
   background: transparent;
 }
-

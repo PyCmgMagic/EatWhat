@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { BRAND_SLOGAN } from "../app/brand";
 import { localDestination } from "../app/navigation";
 import { DesignIcon as Icon } from "../mobile/ui";
@@ -35,10 +35,7 @@ export default function AuthLanding({ desktop }: { desktop: boolean }) {
         className="auth-landing-stage"
         aria-labelledby="auth-landing-title"
       >
-        <Link className="auth-landing-browse" to={returnTo} replace>
-          <AuthPageCurl />
-          <span>先逛逛？</span>
-        </Link>
+        <AuthPageCurl to={returnTo} />
         <div className="auth-landing-intro">
           <span>山软</span>
           <h1 id="auth-landing-title">

@@ -2,6 +2,7 @@
   "name": "shanruan-eatwhat",
   "private": true,
   "version": "0.1.0",
+  "versionBaseCommit": "be3381ad109ce3d8ad3c9da0071d4413b42f2d98",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",

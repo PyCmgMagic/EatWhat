@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  useDiscoveryCategory,
+  useDiscoveryFilters,
+  sortRecommendedShops,
   type DiscoveryKind,
 } from "../app/discovery-category";
 import { useArea } from "../app/area";
@@ -17,7 +18,7 @@ export function useHomeDiscovery(enabled = true) {
   const { area, ready = true } = useArea();
   const { mealKey, mealTime, scene, noteServedMeal, confirm } = useMobile();
   const batchSize = recommendationBatchSize(useRemoteConfig().data);
-  const [kind, setKind] = useDiscoveryCategory();
+  const { kind, setKind, sort, setSort } = useDiscoveryFilters();
   const [dismissed, setDismissed] = useState<number[]>([]);
   const [dismissing, setDismissing] = useState(false);
   const options = (key: DiscoveryKind) => ({
@@ -82,17 +83,26 @@ export function useHomeDiscovery(enabled = true) {
       "不想吃这家？",
     );
   }
+  const shops = feed.data?.shops?.filter((shop) => visible(shop.id));
+  const canSortByDistance = !!shops?.some(
+    (shop) => shop.distanceMeters != null,
+  );
+  const activeSort =
+    sort === "distance" && !canSortByDistance ? "recommended" : sort;
   return {
     hero,
     feed,
     kind,
     setKind,
+    sort: activeSort,
+    setSort,
+    canSortByDistance,
     requestDismiss,
     dismissing,
     heroFoods:
       hero.data?.items.filter((dish) => visible(dish.restaurantId)) ?? [],
     heroHasShops: hero.data?.shops?.some((shop) => visible(shop.id)),
-    shops: feed.data?.shops?.filter((shop) => visible(shop.id)),
+    shops: shops && sortRecommendedShops(shops, activeSort, scene),
     dishes: feed.data?.items.filter((dish) => visible(dish.restaurantId)) ?? [],
   };
 }

@@ -11,15 +11,26 @@ import {
   type NavigateFunction,
 } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { useDiscoveryCategory } from "./discovery-category";
+import {
+  sortRecommendedShops,
+  useDiscoveryFilters,
+} from "./discovery-category";
 import { RouteContinuityProvider, useReturnTo } from "./navigation";
 
 let host: HTMLDivElement, root: Root, navigate: NavigateFunction;
 function Home() {
-  const [category, setCategory] = useDiscoveryCategory();
+  const {
+    kind: category,
+    setKind: setCategory,
+    sort,
+    setSort,
+  } = useDiscoveryFilters();
   return (
     <>
       <output data-testid="category">{category}</output>
+      <output data-testid="sort">{sort}</output>
+      <button onClick={() => setSort("distance")}>距离最近</button>
+      <button onClick={() => setSort("recommended")}>默认排序</button>
       <button onClick={() => setCategory("drink")}>甜点饮品</button>
       <button onClick={() => setCategory("buffet")}>自助</button>
       <button onClick={() => setCategory("food")}>美食</button>
@@ -68,6 +79,42 @@ const selected = () =>
   host.querySelector('[data-testid="category"]')?.textContent;
 const address = () =>
   host.querySelector('[data-testid="address"]')?.textContent;
+
+it("sorts the same shops by distance or scene rate, keeping unknown values last", () => {
+  const shops = [
+    {
+      id: 1,
+      distanceMeters: 100,
+      dineIn: { rate: null, count: 0 },
+      delivery: { rate: 1, count: 1 },
+    },
+    { id: 2, distanceMeters: null, dineIn: { rate: 0, count: 1 } },
+    {
+      id: 3,
+      distanceMeters: 100,
+      dineIn: { rate: 1, count: 1 },
+      delivery: { rate: 0, count: 3 },
+    },
+    {
+      id: 4,
+      distanceMeters: 0,
+      dineIn: { rate: 1, count: 2 },
+      delivery: { rate: 0.5, count: 4 },
+    },
+  ];
+  expect(
+    sortRecommendedShops(shops, "distance", "dine_in").map((s) => s.id),
+  ).toEqual([4, 1, 3, 2]);
+  expect(
+    sortRecommendedShops(shops, "rating", "dine_in").map((s) => s.id),
+  ).toEqual([4, 3, 2, 1]);
+  expect(
+    sortRecommendedShops(shops, "rating", "delivery").map((s) => s.id),
+  ).toEqual([1, 4, 3, 2]);
+  expect(
+    sortRecommendedShops(shops, "recommended", "dine_in").map((s) => s.id),
+  ).toEqual([1, 2, 3, 4]);
+});
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -110,6 +157,19 @@ it("does not add a browser history entry for each category switch", async () => 
   await click("自助");
   await act(() => navigate(-1));
   expect(address()).toBe("/nearby");
+});
+it("keeps the list sort across category changes and a trip to a dish", async () => {
+  await mount("/?sort=rating&meal=lunch");
+  expect(host.querySelector('[data-testid="sort"]')?.textContent).toBe(
+    "rating",
+  );
+  await click("距离最近");
+  await click("甜点饮品");
+  await click("查看菜品");
+  await click("返回");
+  expect(address()).toBe("/?sort=distance&meal=lunch&category=drink");
+  await click("默认排序");
+  expect(address()).toBe("/?meal=lunch&category=drink");
 });
 it.each(["snack", "unknown"])(
   "opens the food tab for the old or unknown category %s",
