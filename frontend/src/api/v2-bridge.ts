@@ -170,7 +170,7 @@ export function food(v: Json | null | undefined): Json | null {
     category: newToOldCategory[v.category] ?? "other",
     categoryLabel: v.category ?? null,
     pictureUrl: pictures,
-    pictureKeys: keys(pictures) ?? [],
+    pictureKeys: v.pictureKeys ?? keys(pictures) ?? [],
     systemTags: tags.map((name) => ({
       id: tagId(name),
       name,
@@ -520,6 +520,7 @@ const created = (v: Json | null) => ({
   id: v?.id,
   moderationStatus: null,
   revisionId: v?.revisionId ?? null,
+  ...(v?.pictureKeys ? { pictureKeys: v.pictureKeys } : {}),
 });
 function foodQuery(query: Query) {
   const q: Query = omit(query, ["restaurantId", "keyword", "page", "pageSize"]);

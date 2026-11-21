@@ -2837,6 +2837,21 @@ export interface components {
             mealTimes?: string[];
             deliveryEnabled?: boolean;
         };
+        FoodEditResult: {
+            /** Format: int64 */
+            id?: number;
+            /** Format: int64 */
+            revisionId?: number;
+            pictureKeys?: string[];
+        };
+        ResultFoodEditResult: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["FoodEditResult"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
         Reaction: {
             /** @enum {string} */
             reaction?: "THUMBS_UP" | "HEART" | "LAUGH" | "SURPRISED" | "SAD" | "YUMMY";
@@ -4225,6 +4240,7 @@ export interface components {
             price?: number | null;
             description?: string | null;
             pictureUrls?: string[];
+            pictureKeys?: string[];
             tags?: string[];
             signature?: boolean;
             stageColor?: string | null;
@@ -4279,6 +4295,7 @@ export interface components {
             price?: number;
             description?: string;
             pictureUrls?: string[];
+            pictureKeys?: string[];
             tags?: string[];
             signature?: boolean;
             stageColor?: string;
@@ -4796,6 +4813,7 @@ export interface components {
             price?: number | null;
             description?: string | null;
             pictureUrls?: string[];
+            pictureKeys?: string[];
             tags?: string[];
             signature?: boolean;
             stageColor?: string | null;
@@ -5698,7 +5716,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ResultEdited"];
+                    "application/json": components["schemas"]["ResultFoodEditResult"];
                 };
             };
         };

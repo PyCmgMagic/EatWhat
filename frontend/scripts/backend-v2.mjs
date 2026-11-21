@@ -175,6 +175,7 @@ export async function readBackendV2() {
     price: nullable(decimal),
     description: nullable(string),
     pictureUrls: array(string),
+    pictureKeys: array(string),
     tags: array(string),
     signature: bool,
     stageColor: nullable(string),

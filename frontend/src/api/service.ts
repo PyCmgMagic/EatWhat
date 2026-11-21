@@ -11,6 +11,8 @@ import type { FoodRated } from "./v2-vocab";
 import type { components as V2 } from "./backend-v2-schema";
 /** One hit of the pre-publish duplicate check (backend v2 /foods/duplicates). */
 export type FoodDuplicate = V2["schemas"]["DishDuplicate"];
+type FoodEditResult = Schema["CreatedResourceVOResponse"] &
+  Pick<V2["schemas"]["FoodEditResult"], "pictureKeys">;
 import type { ShopTraits } from "../features/ShopTraits";
 import { createV4Api } from "./v4";
 import { createCommentsApi } from "./comments";
@@ -480,7 +482,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       id: number,
       body: Omit<Schema["EditFoodDTORequest"], "mealTimes"> & DishServing,
     ) =>
-      request<Schema["CreatedResourceVOResponse"] | null>(`/foods/my/${id}`, {
+      request<FoodEditResult | null>(`/foods/my/${id}`, {
         method: "PUT",
         body,
       }),
@@ -656,7 +658,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
     deleteRestaurant: (id: number) =>
       request<void>(`/restaurant/delete/${id}`, { method: "DELETE" }),
     editFood: (id: number, body: Schema["EditFoodDTORequest"]) =>
-      request<Schema["CreatedResourceVOResponse"] | null>(`/foods/edit/${id}`, {
+      request<FoodEditResult | null>(`/foods/edit/${id}`, {
         method: "PUT",
         body,
       }),

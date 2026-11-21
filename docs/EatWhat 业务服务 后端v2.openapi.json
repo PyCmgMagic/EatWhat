@@ -932,7 +932,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ResultEdited"
+                  "$ref" : "#/components/schemas/ResultFoodEditResult"
                 }
               }
             }
@@ -6876,6 +6876,44 @@
           }
         }
       },
+      "FoodEditResult" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "revisionId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "pictureKeys" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
+      },
+      "ResultFoodEditResult" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/FoodEditResult"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "Reaction" : {
         "type" : "object",
         "properties" : {
@@ -10538,6 +10576,12 @@
               "type" : "string"
             }
           },
+          "pictureKeys" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "tags" : {
             "type" : "array",
             "items" : {
@@ -10685,6 +10729,12 @@
             "type" : "string"
           },
           "pictureUrls" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "pictureKeys" : {
             "type" : "array",
             "items" : {
               "type" : "string"

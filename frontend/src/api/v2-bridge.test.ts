@@ -123,6 +123,7 @@ describe("v2 bridge", () => {
         category: "主食",
         price: 22,
         pictureUrls: [PIC],
+        pictureKeys: ["foods/original.webp"],
         tags: ["辣"],
         signature: true,
         likeCount: 12,
@@ -137,7 +138,7 @@ describe("v2 bridge", () => {
       category: "staple",
       categoryLabel: "主食",
       pictureUrl: [PIC],
-      pictureKeys: ["foods/2026/11/a b.webp"],
+      pictureKeys: ["foods/original.webp"],
       likesCount: 12,
       user: { id: 9 },
       systemTags: [{ id: 1, name: "辣" }],
@@ -252,11 +253,13 @@ describe("v2 bridge", () => {
   });
 
   it("edits an owner's dish through the v2 edit endpoint without blanks", async () => {
-    const { request, sent } = backend(() => ok({ id: 7, revisionId: 3 }));
-    await request("/foods/my/7", {
+    const pictureKeys = ["foods/2026/11/a b.webp"];
+    const { request, sent } = backend(() => ok({ id: 7, revisionId: 3, pictureKeys }));
+    const result = await request("/foods/my/7", {
       method: "PUT",
       body: { name: "牛肉面", category: "staple", pictureUrl: [PIC] },
     });
+    expect(result).toMatchObject({ id: 7, revisionId: 3, pictureKeys });
     expect(sent[0].path).toBe("/foods/edit/7");
     expect(sent[0].method).toBe("PUT");
     expect(sent[0].body).toEqual({
