@@ -280,7 +280,8 @@ a.comments-author:focus-visible {
   text-decoration: underline;
 }
 .comments-reactions {
-  margin-top: 2px;
+  position: relative;
+  margin-top: 6px;
 }
 .comments-preview-row:has(> .comments-reactions) {
   flex-wrap: wrap;
@@ -289,41 +290,179 @@ a.comments-author:focus-visible {
   flex: 1 0 calc(100% - 42px);
   margin-inline-start: 42px;
 }
-.comments-reaction-buttons,
-.comments-reaction-picker {
+.comments-reaction-buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  align-items: center;
+  gap: 6px;
 }
-.comments-reaction-picker {
-  margin-top: 4px;
-}
-.comments-reactions button {
+/* Existing reaction chips: compact pills, 44px tap area kept via ::before. */
+.comments-reaction-buttons > button {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 4px 8px;
-  border: 1px solid #eee1db;
-  border-radius: 12px;
-  background: #fbf8f6;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid #efe4de;
+  border-radius: 999px;
+  background: #faf6f3;
   color: var(--comment-muted);
   font: inherit;
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
   cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.12s ease;
 }
-.comments-reactions button[aria-pressed="true"] {
-  border-color: #c86652;
-  background: #fff0e9;
-  color: #a8321c;
+.comments-reaction-buttons > button::before {
+  content: "";
+  position: absolute;
+  inset: -8px -2px;
+}
+.comments-reaction-buttons > button > span:first-child {
+  font-size: 14px;
+}
+.comments-reaction-buttons > button:active {
+  transform: scale(0.94);
+}
+.comments-reaction-buttons > button[aria-pressed="true"] {
+  border-color: #f0b8a8;
+  background: #fff1eb;
+  color: #b23a22;
+  font-weight: 600;
+}
+.comments-reaction-buttons > .comments-reaction-opener {
+  padding: 0 9px;
+  border-style: dashed;
+  border-color: #e6d9d1;
+  background: transparent;
+}
+.comments-reaction-buttons > .comments-reaction-opener > span {
+  font-size: 12px;
+}
+.comments-reaction-buttons > .comments-reaction-opener[aria-expanded="true"] {
+  border-style: solid;
+  border-color: #e3cfc5;
+  background: #f6eee9;
+  color: var(--comment-ink);
 }
 .comments-reactions button:disabled {
-  cursor: wait;
+  cursor: progress;
+}
+/* Floating picker above the row. */
+.comments-reaction-popover {
+  position: absolute;
+  z-index: 20;
+  bottom: calc(100% + 8px);
+  left: 0;
+}
+.comments-reaction-popover[hidden] {
+  display: none;
+}
+.comments-reaction-picker {
+  display: flex;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid rgba(35, 28, 24, 0.06);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    0 10px 28px rgba(35, 28, 24, 0.16),
+    0 2px 6px rgba(35, 28, 24, 0.08);
+  transform-origin: 28px 100%;
+  animation: comments-reaction-in 0.32s cubic-bezier(0.18, 1.25, 0.4, 1) both;
+}
+.comments-reaction-popover[data-state="closed"] .comments-reaction-picker {
+  animation: comments-reaction-out 0.16s cubic-bezier(0.4, 0, 1, 1) both;
+  pointer-events: none;
+}
+/* Emojis pop in one after another. */
+.comments-reaction-popover[data-state="open"] .comments-reaction-picker button > span {
+  display: inline-block;
+  animation: comments-reaction-emoji 0.38s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+  animation-delay: calc(0.04s + var(--i, 0) * 0.035s);
 }
 .comments-reaction-picker button {
-  font-size: 19px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 0.15s cubic-bezier(0.2, 0.9, 0.3, 1.4),
+    background-color 0.15s ease;
+}
+.comments-reaction-picker button:hover,
+.comments-reaction-picker button:focus-visible {
+  background: #f7f1ed;
+  transform: translateY(-3px) scale(1.18);
+  outline: none;
+}
+.comments-reaction-picker button:active {
+  transform: scale(0.92);
+}
+.comments-reaction-picker button[aria-pressed="true"] {
+  background: #ffe9e0;
+  box-shadow: inset 0 0 0 1.5px #f0b8a8;
+}
+@keyframes comments-reaction-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes comments-reaction-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(6px) scale(0.85);
+  }
+}
+@keyframes comments-reaction-emoji {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .comments-reaction-picker,
+  .comments-reaction-picker button,
+  .comments-reaction-picker button > span,
+  .comments-reaction-popover[data-state] .comments-reaction-picker,
+  .comments-reaction-popover[data-state] .comments-reaction-picker button > span,
+  .comments-reaction-buttons > button {
+    animation: none;
+    transition: none;
+  }
+}
+@media (max-width: 380px) {
+  .comments-reaction-picker button {
+    width: 40px;
+    height: 40px;
+    font-size: 22px;
+  }
 }
 .comments-replies {
   background: #fbf8f6;
@@ -1193,4 +1332,24 @@ a.comments-author:focus-visible {
 
 html:has(.comments-mobile-bar) {
   scroll-padding-bottom: calc(90px + env(safe-area-inset-bottom));
+}
+:root[data-theme="dark"] .comments-reaction-picker {
+  border-color: var(--night-outline);
+  background: var(--night-raised);
+  box-shadow:
+    0 14px 36px rgb(0 0 0 / 55%),
+    0 2px 8px rgb(0 0 0 / 40%);
+}
+:root[data-theme="dark"] .comments-reaction-picker button:hover,
+:root[data-theme="dark"] .comments-reaction-picker button:focus-visible {
+  background: rgb(255 250 245 / 9%);
+}
+:root[data-theme="dark"] .comments-reaction-picker button[aria-pressed="true"] {
+  background: var(--night-red-soft);
+  box-shadow: inset 0 0 0 1.5px var(--night-red-solid);
+}
+:root[data-theme="dark"] .comments-reaction-buttons > button[aria-pressed="true"] {
+  border-color: var(--night-red-solid);
+  background: var(--night-red-soft);
+  color: var(--night-red-text);
 }
