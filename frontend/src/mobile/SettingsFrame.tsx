@@ -7,7 +7,7 @@ export default function SettingsFrame({
   title,
   detail,
   back = "/settings",
-  backLabel = "返回设置",
+  backLabel,
   children,
   list = false,
 }: {

@@ -5,6 +5,24 @@
   align-items: start;
   color: var(--night-ink, #231c18);
 }
+.personalization-entry {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding-inline: 18px;
+  border-radius: 18px;
+  background: var(--night-layer, #f8f7f5);
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+.personalization-entry:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
 .personalization fieldset {
   min-inline-size: 0;
   padding: 0;

@@ -10,6 +10,8 @@ import ProfileSpaceHeader from "../features/ProfileSpaceHeader";
 import { ProfileEmpty, ProfilePageHead } from "../features/ProfilePage";
 import HelpFeedback, { isHelpFeedbackPath } from "../features/HelpFeedback";
 import DesktopRouteSkeleton from "./DesktopRouteSkeleton";
+import DesktopSettingsWorkspace from "./DesktopSettingsWorkspace";
+import { desktopSettingsCategory } from "../features/settings-nav";
 import { unreadCount } from "../api/notifications";
 import {
   useEffect,
@@ -49,6 +51,7 @@ import {
   type Restaurant,
 } from "../api/models";
 import { DesignIcon as Icon, Pending, useMobile } from "../mobile/ui";
+import { mobileSettingsPages } from "../mobile/routes";
 import { visualFor } from "../mobile/catalog";
 import "./desktop.css";
 import "./nearby.css";
@@ -177,9 +180,11 @@ export default function DesktopExperience({
           changeKey={
             workspace
               ? "profile-workspace"
-              : location.pathname.startsWith("/publish")
-                ? "/publish"
-                : routeMotionKey(location.pathname)
+              : desktopSettingsCategory(location.pathname)
+                ? "/settings"
+                : location.pathname.startsWith("/publish")
+                  ? "/publish"
+                  : routeMotionKey(location.pathname)
           }
           order={location.pathname === "/nearby" ? 1 : workspace ? 2 : 0}
         >
@@ -405,7 +410,11 @@ function DesktopRoute({
   const { session } = useApp();
   const location = useLocation();
   const section = profileSection(location.pathname);
-  const page = <DesktopPage screen={screen}>{children}</DesktopPage>;
+  const category = desktopSettingsCategory(location.pathname);
+  const content = <DesktopPage screen={screen}>{children}</DesktopPage>;
+  const page = category ? (
+    <DesktopSettingsWorkspace category={category}>{content}</DesktopSettingsWorkspace>
+  ) : content;
   return session && section ? (
     <ProfileWorkspace section={section}>{page}</ProfileWorkspace>
   ) : (
@@ -440,8 +449,8 @@ function ProfileWorkspace({
             >
               <MotionRegion
                 changeKey={
-                  isHelpFeedbackPath(location.pathname)
-                    ? "/help"
+                  desktopSettingsCategory(location.pathname)
+                    ? "/settings"
                     : location.pathname
                 }
                 order={profileSections.findIndex((item) => item.to === section)}
@@ -523,12 +532,7 @@ function DesktopPage({
         <DesktopSettingsPage key={loc.pathname} />
       </div>
     );
-    return [
-      "/settings/about",
-      "/settings/personalization",
-      "/data-notice",
-      "/feedback",
-    ].includes(loc.pathname) ? (
+    return mobileSettingsPages[loc.pathname]?.public || loc.pathname === "/feedback" ? (
       page
     ) : (
       <DesktopGate verified={false}>{page}</DesktopGate>
@@ -568,7 +572,7 @@ function DesktopPage({
   else if (screen === "G-TagDishes") content = <Catalog favorites />;
   else if (screen === "G-History") content = <DesktopHistory />;
   else if (screen === "G-Settings" && loc.pathname === "/settings")
-    content = <SettingsHome embedded />;
+    content = <SettingsHome />;
   else {
     const auth = [
       "G-Login",

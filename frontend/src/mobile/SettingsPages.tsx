@@ -6,6 +6,8 @@ import { DesktopSettingsPage } from "../desktop/DesktopAccount";
 import ApiV2Routes from "../features/ApiV2Routes";
 import V4Routes from "../features/v4/Routes";
 import { Preferences } from "../features/Account";
+import AboutPage from "../features/AboutPage";
+import { findAboutPage } from "../features/about-navigation";
 import { mobileSettingsPages } from "./routes";
 import SettingsFrame from "./SettingsFrame";
 import {
@@ -17,6 +19,8 @@ export default function MobileSettingsPages() {
   const location = useLocation(),
     path = location.pathname;
   const { user } = useApp();
+  const about = findAboutPage(path);
+  if (about) return <AboutPage page={about} />;
   const page = mobileSettingsPages[path];
   const returnTo =
     path === "/verify"
@@ -51,17 +55,7 @@ export default function MobileSettingsPages() {
           : undefined
       }
       back={returnTo ?? page.back}
-      backLabel={
-        returnTo
-          ? "返回原页面"
-          : page.back === "/settings/account"
-            ? "返回账号与安全"
-            : page.back === "/settings/privacy"
-              ? "返回隐私设置"
-              : page.back === "/settings/about"
-                ? "返回关于"
-                : "返回设置"
-      }
+      backLabel={returnTo ? "返回原页面" : undefined}
     >
       {content}
     </SettingsFrame>

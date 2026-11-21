@@ -87,6 +87,7 @@ async function validateAccountSettings(page) {
     "/settings/phone",
     "/settings/password",
     "/settings/devices",
+    "/settings/delete",
   ];
   const checkLayout = async (width) => {
     const layout = await p
@@ -134,7 +135,7 @@ async function validateAccountSettings(page) {
       await p.evaluate(() => document.fonts.ready);
       await checkLayout(width);
       assert(
-        (await p.locator(".mobile-account-row").count()) === 5,
+        (await p.locator(".mobile-account-row").count()) === targets.length,
         "Account settings contains unrelated or duplicate rows",
       );
       for (const target of targets)
@@ -169,7 +170,7 @@ async function validateAccountSettings(page) {
           path: `output/playwright/account-settings-${width}.png`,
         });
       const last = p.getByRole("link", {
-        name: "学生认证 去认证",
+        name: "注销账号",
         exact: true,
       });
       await p.evaluate(() =>
@@ -197,7 +198,7 @@ async function validateAccountSettings(page) {
         .getByRole("heading", { name: "账号与安全", exact: true })
         .waitFor();
       checks.push(
-        `${width}px: five account actions, masked phone, back navigation, no unrelated entries or horizontal overflow`,
+        `${width}px: six account actions, masked phone, back navigation, no unrelated entries or horizontal overflow`,
       );
     }
     user = {
@@ -246,14 +247,19 @@ async function validateAccountSettings(page) {
       "Statistics authorization is missing from privacy settings",
     );
     await p.goto(origin + "/?demo=0#/settings/about");
-    await p.getByRole("link", { name: "数据说明", exact: true }).click();
+    const about = p.getByRole("navigation", { name: "关于栏目" });
+    await about.getByRole("link", { name: "制作团队", exact: true }).click();
+    await p.getByRole("heading", { name: "制作团队", level: 1 }).waitFor();
+    await p.getByRole("link", { name: "返回关于", exact: true }).click();
+    await about.getByRole("link", { name: "关于我们", exact: true }).click();
+    await p.getByRole("link", { name: "数据存放说明", exact: true }).click();
     await p
       .getByRole("heading", { name: "数据存放说明", exact: true })
       .waitFor();
     assert(
       (await p
-        .getByRole("link", { name: "返回关于", exact: true })
-        .getAttribute("href")) === "#/settings/about",
+        .getByRole("link", { name: "返回关于我们", exact: true })
+        .getAttribute("href")) === "#/settings/about/us",
       "Data notice lost its About return destination",
     );
     checks.push(
@@ -267,8 +273,8 @@ async function validateAccountSettings(page) {
       "Mobile view replaced desktop",
     );
     assert(
-      (await p.locator(".pc-secondary-section .pc-secondary-row").count()) ===
-        5,
+      (await p.locator(".pc-settings-account .pc-secondary-row").count()) ===
+        targets.length,
       "Desktop account settings still contains unrelated rows",
     );
     checks.push("Desktop account layout preserved");

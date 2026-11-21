@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { useLocation } from "react-router-dom";
 import { ProfileWorkspaceContext } from "../app/profile-workspace";
+import { DesktopSettingsContext } from "../features/settings-nav";
 import { useProfileReturnTo } from "../app/profile-navigation";
 import {
   ContentSkeleton,
@@ -14,20 +15,6 @@ import "../features/settings-page-header.css";
 import "./profile.css";
 import "./route-skeleton.css";
 
-function SettingRows({ count }: { count: number }) {
-  return Array.from({ length: count }, (_, i) => (
-    <div className="settings-home-row" key={i}>
-      <span className="settings-home-icon">
-        <Skeleton width={19} height={19} />
-      </span>
-      <span className="settings-home-copy">
-        <Skeleton width="52%" height={19} />
-      </span>
-      <Skeleton width={16} height={16} />
-    </div>
-  ));
-}
-
 /** Reuse the page's layout classes so its breakpoints and spacing stay in sync. */
 function SettingsSkeleton() {
   return (
@@ -39,7 +26,7 @@ function SettingsSkeleton() {
     >
       <header className="settings-page-head" aria-hidden="true">
         <div className="settings-page-head-copy">
-          <h1>账号设置</h1>
+          <h1>设置总览</h1>
         </div>
       </header>
       <div className="settings-home-account" aria-hidden="true">
@@ -49,7 +36,6 @@ function SettingsSkeleton() {
           </span>
           <span className="settings-home-account-copy">
             <Skeleton width={150} height={22} />
-            <Skeleton width="72%" height={13} />
           </span>
           <Skeleton width={78} height={38} />
         </div>
@@ -62,18 +48,6 @@ function SettingsSkeleton() {
             </div>
           ))}
         </div>
-      </div>
-      <div className="settings-home-groups" aria-hidden="true">
-        {[0, 1].map((group) => (
-          <section className="settings-home-group" key={group}>
-            <header>
-              <Skeleton width={54} height={18} />
-            </header>
-            <div className="settings-home-group-items">
-              <SettingRows count={3} />
-            </div>
-          </section>
-        ))}
       </div>
       <footer className="settings-home-session" aria-hidden="true">
         <span className="settings-home-logout">
@@ -163,11 +137,12 @@ function ProfileEditorSkeleton() {
 export default function DesktopRouteSkeleton() {
   const { pathname } = useLocation();
   const inWorkspace = useContext(ProfileWorkspaceContext);
+  const inSettings = useContext(DesktopSettingsContext);
   if (pathname === "/settings") return <SettingsSkeleton />;
   if (pathname === "/me/edit" || pathname === "/me/details")
     return <ProfileEditorSkeleton />;
   // The workspace already owns its rail; never nest the former full profile shell.
-  return inWorkspace ? (
+  return inWorkspace || inSettings ? (
     <ContentSkeleton kind="rows" count={4} />
   ) : (
     <PageSkeleton kind="profile" />

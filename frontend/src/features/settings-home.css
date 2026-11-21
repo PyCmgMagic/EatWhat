@@ -166,83 +166,6 @@
   font-weight: 550;
 }
 
-/* 偏好 / 更多：两张并排的入口卡。 */
-.settings-home-groups {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: stretch;
-  gap: 18px;
-}
-.settings-home-group {
-  display: grid;
-  align-content: start;
-  min-width: 0;
-  border: 1px solid #ebe3da;
-  border-radius: 20px;
-  background: #fff;
-  overflow: hidden;
-}
-.settings-home-group > header {
-  padding: 18px 20px 8px;
-}
-.settings-home-group h2 {
-  font-size: 15px;
-  font-weight: 750;
-  line-height: 1.5;
-}
-.settings-home-group > header p {
-  margin-top: 3px;
-  color: #8b7b62;
-  font-size: 12px;
-  line-height: 1.5;
-}
-.settings-home-group-items {
-  display: grid;
-  padding: 4px 10px 10px;
-}
-.settings-home-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  min-height: 60px;
-  padding: 10px;
-  border-radius: 12px;
-  transition: background 0.16s ease;
-}
-.settings-home-icon {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  border-radius: 11px;
-  background: #f7f1e6;
-  color: #8a6b2f;
-}
-.settings-home-copy {
-  display: grid;
-  gap: 3px;
-  flex: 1;
-  min-width: 0;
-}
-.settings-home-copy strong {
-  font-size: 14px;
-  font-weight: 650;
-  line-height: 1.5;
-}
-.settings-home-copy small {
-  color: var(--settings-muted);
-  font-size: 11.5px;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-}
-.settings-home-row > .design-icon {
-  color: #b8a795;
-  transition:
-    transform 0.16s ease,
-    color 0.16s ease;
-}
 .settings-home-session {
   display: flex;
   align-items: center;
@@ -258,7 +181,7 @@
   justify-content: center;
   gap: 8px;
   flex-shrink: 0;
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 18px;
   border: 1px solid #e4d7c8;
   border-radius: 999px;
@@ -327,11 +250,6 @@
   outline: 2px solid #947220;
   outline-offset: 3px;
 }
-@container settings (max-width: 720px) {
-  .settings-home-groups {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
 @container settings (max-width: 560px) {
   .settings-home-account-row {
     gap: 13px;
@@ -383,19 +301,6 @@
     width: 100%;
   }
 }
-@container settings (max-width: 380px) {
-  .settings-home-account-copy small {
-    display: none;
-  }
-  .settings-home-copy small {
-    display: none;
-  }
-  .settings-home-row {
-    min-height: 52px;
-    padding: 9px 8px;
-    gap: 10px;
-  }
-}
 @media (max-width: 599px) {
   .settings-home {
     padding: 0 0 20px;
@@ -405,13 +310,6 @@
   }
 }
 @media (hover: hover) {
-  .settings-home-row:hover {
-    background: #faf6ef;
-  }
-  .settings-home-row:hover > .design-icon {
-    color: #8a6b2f;
-    transform: translateX(2px);
-  }
   .settings-home-logout:hover {
     background: #fdf2ec;
     border-color: #ddc4b0;
@@ -419,14 +317,11 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .settings-home-row,
-  .settings-home-row > .design-icon,
   .settings-home-account,
   .settings-home-account-go,
   .settings-home-logout {
     transition: none;
   }
-  .settings-home-row:hover > .design-icon,
   .settings-home-account:hover .settings-home-account-go {
     transform: none;
   }

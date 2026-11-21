@@ -4,6 +4,8 @@ import "./profile-section-nav.css";
 import { isRetiredV2 } from "../app/retired-routes";
 import { ProfileWorkspaceContext } from "../app/profile-workspace";
 import { ProfilePageHead } from "./ProfilePage";
+import SettingsPageHeader from "./SettingsPageHeader";
+import { DesktopSettingsContext } from "./settings-nav";
 
 const sections = {
   collections: {
@@ -65,6 +67,13 @@ function ProfileSectionHeader({
 }
 
 export function ProfileHelpHeader() {
+  if (useContext(DesktopSettingsContext))
+    return (
+      <>
+        <SettingsPageHeader title="帮助与反馈" back="/settings" />
+        <ProfileSectionNav section="help" />
+      </>
+    );
   return (
     <ProfileSectionHeader
       section="help"

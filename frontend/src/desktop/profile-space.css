@@ -459,68 +459,6 @@
   display: none;
 }
 
-/* 帮助与反馈：标题、子导航、正文统一在同一条 32px 内缩基线上，
-   子导航改成与收藏页一致的 fit-content 药丸组（去掉整条底色和黄线）。 */
-.pc-profile-space-content .help-feedback-page .profile-section-heading {
-  margin: 0 32px 18px;
-  padding: 32px 0 0;
-}
-.pc-profile-space-content .help-feedback-page .profile-section-nav {
-  width: fit-content;
-  max-width: calc(100% - 64px);
-  gap: 2px;
-  margin: 0 32px 26px;
-  padding: 4px;
-  border-radius: 999px;
-  background: #f3eee8;
-  overflow: visible;
-}
-.pc-profile-space-content .help-feedback-page .profile-section-nav > a {
-  min-height: 34px;
-  padding: 7px 17px;
-  border-radius: 999px;
-  color: #6e625b;
-  font-size: 12.5px;
-  font-weight: 650;
-}
-.pc-profile-space-content
-  .help-feedback-page
-  .profile-section-nav
-  > a:hover {
-  background: rgb(255 255 255 / 64%);
-  color: #2e251e;
-}
-.pc-profile-space-content
-  .help-feedback-page
-  .profile-section-nav
-  > a[aria-current="page"] {
-  background: #fff;
-  color: #231c18;
-  font-weight: 750;
-  box-shadow:
-    0 1px 2px rgb(35 28 24 / 8%),
-    0 4px 12px rgb(52 39 28 / 8%);
-}
-.pc-profile-space-content
-  .help-feedback-page
-  .profile-section-nav
-  > a::after,
-.pc-profile-space-content
-  .help-feedback-page
-  .profile-section-nav
-  > .profile-section-tab-indicator {
-  display: none;
-}
-.pc-profile-space-content .help-feedback-page > .profile-help {
-  margin: 0 32px 40px;
-}
-/* 提交反馈 / 反馈记录也走同一条 32px 基线，切换子标签时内容不会左右跳。 */
-.pc-profile-space-content .help-feedback-page > .v4-page {
-  width: auto;
-  max-width: 1120px;
-  margin: 0 auto 40px 32px;
-  padding: 0;
-}
 .pc-profile-space-content .ew-favorites .favorites-filters {
   padding: 12px;
   border-color: #ede4da;

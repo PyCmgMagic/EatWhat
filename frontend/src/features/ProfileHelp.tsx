@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { DesktopSettingsContext } from "./settings-nav";
 import { Link } from "react-router-dom";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { ProfileHelpHeader } from "./ProfileSectionNav";
@@ -70,6 +71,7 @@ export default function ProfileHelp({
   showHeader?: boolean;
 }) {
   const [query, setQuery] = useState("");
+  const desktopSettings = useContext(DesktopSettingsContext);
   const [category, setCategory] = useState("全部");
   const terms = query.trim().toLocaleLowerCase().split(/\s+/).filter(Boolean);
   const filtered = questions.filter(
@@ -169,37 +171,39 @@ export default function ProfileHelp({
             </div>
           </section>
         </div>
-        <aside className="profile-help-actions" aria-label="反馈入口">
-          <section className="profile-help-contact">
-            <DishIllustration
-              name="baozi"
-              className="profile-help-contact-dish"
-            />
-            <h2>还有其他问题？</h2>
-            <p>告诉我们发生了什么，也欢迎分享你对这里的建议。</p>
-            <Link to="/feedback">
-              提交反馈
+        {!desktopSettings && (
+          <aside className="profile-help-actions" aria-label="反馈入口">
+            <section className="profile-help-contact">
+              <DishIllustration
+                name="baozi"
+                className="profile-help-contact-dish"
+              />
+              <h2>还有其他问题？</h2>
+              <p>告诉我们发生了什么，也欢迎分享你对这里的建议。</p>
+              <Link to="/feedback">
+                提交反馈
+                <Icon name="chevronRight" size={17} />
+              </Link>
+            </section>
+            <Link className="profile-help-records" to="/feedback/mine">
+              <span className="profile-help-records-icon">
+                <Icon name="mail" size={19} />
+              </span>
+              <span className="profile-help-records-copy">
+                <strong>反馈记录</strong>
+                <small>查看处理状态和回复</small>
+              </span>
               <Icon name="chevronRight" size={17} />
             </Link>
-          </section>
-          <Link className="profile-help-records" to="/feedback/mine">
-            <span className="profile-help-records-icon">
-              <Icon name="mail" size={19} />
-            </span>
-            <span className="profile-help-records-copy">
-              <strong>反馈记录</strong>
-              <small>查看处理状态和回复</small>
-            </span>
-            <Icon name="chevronRight" size={17} />
-          </Link>
-          <p className="profile-help-tip">
-            <Icon name="info" size={15} />
-            描述清楚页面和操作步骤，能帮助我们更快定位问题。
-          </p>
-        </aside>
+            <p className="profile-help-tip">
+              <Icon name="info" size={15} />
+              描述清楚页面和操作步骤，能帮助我们更快定位问题。
+            </p>
+          </aside>
+        )}
       </div>
       <div className="profile-help-links">
-        <Link to="/settings/about">关于我们</Link>
+        <Link to="/settings/about">关于</Link>
         <Link to="/data-notice">数据存放说明</Link>
         <Link to="/features">查找其他功能</Link>
       </div>
