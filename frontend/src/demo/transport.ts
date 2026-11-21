@@ -1036,7 +1036,7 @@ export const demoTransport: Transport = async (path, options) => {
       s.foods.filter((f) => f.accountId === 10),
       q,
     );
-  else if (path === "/foods/list")
+  else if (path === "/foods/list" || path === "/admin/foods/list")
     result = paginate(filterFoods(s.foods, q), q);
   else if (path === "/foods/tags/my") {
     s.tags.forEach(

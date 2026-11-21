@@ -47,7 +47,7 @@ export default function Foods() {
     q = useQuery({
       queryKey: ["foods", "admin", filters, page],
       queryFn: () =>
-        api.foods(filters.restaurantId, page, {
+        api.adminFoods(filters.restaurantId, page, {
           keyword: filters.keyword,
           category: filters.category,
           sort: filters.sort,

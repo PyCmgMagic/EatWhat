@@ -975,19 +975,20 @@ const routes: [string, RegExp, Handler][] = [
   ],
   [
     "GET",
-    /^\/foods\/(list|favorites|likes|my)$/,
+    /^\/(?:admin\/)?foods\/list$/,
     async ({ match, query, call }) =>
       page(
-        await call(match.input!, {
-          query:
-            match[1] === "list"
-              ? foodQuery(query)
-              : omit(query, ["page", "pageSize"]),
-        }),
-        (dish: Json) =>
-          match[1] === "list"
-            ? asCategory(food(dish)!, query.category)
-            : food(dish),
+        await call(match.input!, { query: foodQuery(query) }),
+        (dish: Json) => asCategory(food(dish)!, query.category),
+      ),
+  ],
+  [
+    "GET",
+    /^\/foods\/(favorites|likes|my)$/,
+    async ({ match, query, call }) =>
+      page(
+        await call(match.input!, { query: omit(query, ["page", "pageSize"]) }),
+        food,
       ),
   ],
   [

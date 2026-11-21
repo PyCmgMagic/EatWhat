@@ -35,7 +35,8 @@ describe("backend v2 client", () => {
         query: { scene: "delivery" },
       }),
     );
-    expect(Object.keys(endpoints)).toHaveLength(170);
+    expect(endpoints.getAdminFoodsList.access).toBe("admin");
+    expect(Object.keys(endpoints)).toHaveLength(171);
   });
 
   it("retries password login with the challenge only after a 30015", async () => {

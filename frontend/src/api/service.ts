@@ -401,6 +401,14 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       data<Page<Food>>("/foods/list", {
         query: { restaurantId, page, pageSize: 12, ...filters },
       }),
+    adminFoods: (
+      restaurantId: number | undefined,
+      page = 1,
+      filters?: Pick<FoodFilters, "keyword" | "category" | "sort">,
+    ) =>
+      data<Page<Food>>("/admin/foods/list", {
+        query: { restaurantId, page, pageSize: 12, ...filters },
+      }),
     /**
      * Dishes of this shop whose name contains the keyword (spaces and case
      * ignored), same name first. Only a hint before publishing: a dish shared

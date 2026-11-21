@@ -108,7 +108,7 @@ export default function Overview() {
     }),
     foods = useQuery({
       queryKey: ["foods", "admin", "latest"],
-      queryFn: () => api.foods(undefined, 1, { sort: "NEWEST" }),
+      queryFn: () => api.adminFoods(undefined, 1, { sort: "NEWEST" }),
     }),
     config = useQuery({
       queryKey: ["admin", "remote-config"],

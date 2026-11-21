@@ -682,6 +682,11 @@ export const endpoints = {
     "path": "/foods/my",
     "access": "login"
   },
+  "getAdminFoodsList": {
+    "method": "GET",
+    "path": "/admin/foods/list",
+    "access": "admin"
+  },
   "getFoodsList": {
     "method": "GET",
     "path": "/foods/list",
