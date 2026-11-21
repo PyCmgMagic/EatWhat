@@ -68,7 +68,8 @@ it("preserves feedback idempotency and pending moderation acceptance metadata", 
       },
     };
   });
-  await api.createFeedback({ text: "建议" }, "stable-key");
+  await api.createFeedback({ text: "建议", category: "SUGGESTION" }, "stable-key");
+  expect(calls[0].body).toMatchObject({ category: "SUGGESTION" });
   expect(calls[0].headers?.["Idempotency-Key"]).toBe("stable-key");
   await api.ban(1, "期限测试", "2026-12-01T00:00:00+08:00");
   expect(calls[1].body).toEqual({

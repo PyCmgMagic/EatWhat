@@ -1307,6 +1307,18 @@ a.ew-admin-stat:hover {
   width: auto;
   min-height: 36px;
 }
+.ew-admin-feedback-filters {
+  width: 100%;
+}
+.ew-admin-feedback-filters summary {
+  cursor: pointer;
+  padding: 6px 0;
+}
+.ew-admin-feedback-filters form {
+  display: grid;
+  gap: 8px;
+  padding-top: 8px;
+}
 .ew-admin-split-detail {
   position: sticky;
   top: 74px;

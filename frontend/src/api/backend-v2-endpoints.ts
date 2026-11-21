@@ -722,6 +722,16 @@ export const endpoints = {
     "path": "/feedback/mine/{id}",
     "access": "login"
   },
+  "getCommentsByCommentId": {
+    "method": "GET",
+    "path": "/comments/{commentId}",
+    "access": "public"
+  },
+  "deleteCommentsByCommentId": {
+    "method": "DELETE",
+    "path": "/comments/{commentId}",
+    "access": "login"
+  },
   "getCommentsByCommentIdReplies": {
     "method": "GET",
     "path": "/comments/{commentId}/replies",
@@ -848,16 +858,6 @@ export const endpoints = {
     "method": "DELETE",
     "path": "/foods/delete/{id}",
     "access": "admin"
-  },
-  "getCommentsByCommentId": {
-    "method": "GET",
-    "path": "/comments/{commentId}",
-    "access": "public"
-  },
-  "deleteCommentsByCommentId": {
-    "method": "DELETE",
-    "path": "/comments/{commentId}",
-    "access": "login"
   },
   "revoke": {
     "method": "DELETE",

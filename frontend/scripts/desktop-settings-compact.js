@@ -80,8 +80,8 @@ async function validateDesktopSettingsCompact(page) {
     checks.push("Appearance and unsent feedback survive category changes");
     await menu.getByRole("link",{name:"关于",exact:true}).click();
     const about=p.getByRole("navigation",{name:"关于栏目"});
-    await about.getByRole("link",{name:"制作团队",exact:true}).click();
-    await p.getByRole("heading",{name:"制作团队",level:1}).waitFor();
+    await about.getByRole("link",{name:"开发团队",exact:true}).click();
+    await p.getByRole("heading",{name:"开发团队",level:1}).waitFor();
     assert(await menu.getByRole("link",{name:"关于",exact:true}).getAttribute("aria-current")==="location","Team lost its parent selection");
     await p.getByRole("link",{name:"返回关于",exact:true}).click();
     await about.getByRole("link",{name:"关于我们",exact:true}).click();

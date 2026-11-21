@@ -1,5 +1,5 @@
 import type { operations } from "./backend-v2-schema";
-import { boundedText, normalizedTag } from "./content-rules";
+import { boundedText, normalizedTag, restaurantAddressLimit } from "./content-rules";
 import { putImage } from "./storage-upload";
 import { compressImage } from "./image-compression";
 import type { Revision } from "../features/v4/EditHistory";
@@ -506,7 +506,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       created("/restaurant/add", {
         ...body,
         name: boundedText(body.name, 20, "店名"),
-        address: boundedText(body.address, 30, "地址"),
+        address: boundedText(body.address, restaurantAddressLimit, "地址"),
       }),
     presign: (body: Schema["PresignUploadReqDTORequest"]) =>
       data<Schema["PresignUploadRespDTOResponse"]>("/upload/presign", {

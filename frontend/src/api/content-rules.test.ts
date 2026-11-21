@@ -61,6 +61,16 @@ it("keeps unchanged historical over-limit values and image references out of edi
   ).toThrow();
 });
 
+it("accepts 50 address code points, rejects 51 and preserves unchanged historical values", () => {
+  const address = "𠮷".repeat(50);
+  expect(restaurantEditBody({}, { address })).toEqual({ address });
+  const longer = address + "号";
+  expect(() => restaurantEditBody({}, { address: longer })).toThrow("50");
+  expect(restaurantEditBody({ address: longer }, { address: longer })).toEqual(
+    {},
+  );
+});
+
 it("lets a dish be shared without a price but still checks one that is given", () => {
   const draft = { name: "牛肉面", description: "", tags: [] };
   expect(() => validateFoodDraft({ ...draft, price: "" })).not.toThrow();

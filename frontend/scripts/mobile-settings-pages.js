@@ -142,9 +142,18 @@ async function validateSettingsPages(page) {
       const about = p.getByRole("navigation", { name: "关于栏目" });
       await about.waitFor();
       assert(
-        (await about.getByRole("link").allTextContents()).join("|") === "关于我们|制作团队",
-        "About must expose both destinations at the same level",
+        (await about.locator(".about-list a").allTextContents()).join("|") ===
+          "反馈问题反馈与建议|我的反馈提交记录与处理结果|隐私政策|用户协议|开发团队|开源声明",
+        "About links must follow the two reference groups",
       );
+      if (width === 390) {
+        await about.getByRole("link", { name: "开源声明" }).click();
+        const react = p.locator("details").filter({ has: p.locator("summary", { hasText: /^react\s/ }) });
+        await react.locator("summary").click();
+        assert((await react.locator("pre").innerText()).includes("MIT"), "React license text is missing");
+        await p.getByRole("link", { name: "返回关于" }).click();
+        await about.getByRole("link", { name: "关于我们", exact: true }).waitFor();
+      }
       for (const path of paths) {
         await open(path);
         const layout = await p.evaluate(() => {

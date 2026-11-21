@@ -12,11 +12,17 @@ export const aboutUs = {
 
 export const productionTeam = {
   path: "/settings/about/team",
-  title: "制作团队",
+  title: "开发团队",
   back: aboutHome.path,
 };
 
-export const aboutPages = [aboutHome, aboutUs, productionTeam];
+export const openSource = {
+  path: "/settings/about/licenses",
+  title: "开源声明",
+  back: aboutHome.path,
+};
+
+export const aboutPages = [aboutHome, aboutUs, productionTeam, openSource];
 export function findAboutPage(path: string) {
   return aboutPages.find((page) => page.path === path);
 }

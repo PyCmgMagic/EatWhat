@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import { useArea } from "../../app/area";
+import { buildNumber } from "../../app/version";
 import { Card, Shell, QueryView, safeLink } from "./shared";
 import type { Schema } from "../../api/models";
 import { DesignIcon as Icon } from "../../mobile/ui";
@@ -22,12 +23,10 @@ export function recommendationBatchSize(
 export function useRemoteConfig() {
   const { api } = useApp(),
     { campusId } = useArea();
-  const rawBuild = import.meta.env.VITE_BUILD_NUMBER;
-  const build =
-    rawBuild && /^\d+$/.test(rawBuild) ? Number(rawBuild) : undefined;
   return useQuery({
-    queryKey: ["remote-config", campusId, build],
-    queryFn: () => api.remoteConfig({ platform: "web", build, campusId }),
+    queryKey: ["remote-config", campusId, buildNumber],
+    queryFn: () =>
+      api.remoteConfig({ platform: "web", build: buildNumber, campusId }),
     staleTime: 300_000,
     refetchInterval: 300_000,
     retry: false,

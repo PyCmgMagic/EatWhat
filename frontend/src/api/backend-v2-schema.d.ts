@@ -388,7 +388,7 @@ export interface paths {
         };
         /** 【需角色：admin】获取 AI 提供商配置（API Key 只显示后 4 位） */
         get: operations["getAdminAiSettings"];
-        /** 【需角色：admin】修改 AI 提供商配置（OpenAI 兼容端点） */
+        /** 【需角色：admin】修改 AI 提供商配置（首次配置或更换协议、主机、有效端口时必填 apiKey） */
         put: operations["putAdminAiSettings"];
         post?: never;
         delete?: never;
@@ -627,7 +627,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 【需登录】确认文件上传完成 */
+        /** 【需登录】检查并发布已上传的文件（正在检查返回 40004，可稍后重试） */
         post: operations["complete"];
         delete?: never;
         options?: never;
@@ -644,7 +644,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 上报使用统计事件（游客带安装 ID） */
+        /** 上报使用统计事件（请求体最多 32 KiB，游客带安装 ID） */
         post: operations["postTelemetryEvents"];
         delete?: never;
         options?: never;
@@ -2186,6 +2186,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 查看指定评论或回复 */
+        get: operations["getCommentsByCommentId"];
+        put?: never;
+        post?: never;
+        /** 【需登录】删除评论（作者或管理员） */
+        delete: operations["deleteCommentsByCommentId"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/comments/{commentId}/replies": {
         parameters: {
             query?: never;
@@ -2611,24 +2629,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/comments/{commentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** 查看指定评论或回复 */
-        get: operations["getCommentsByCommentId"];
-        put?: never;
-        post?: never;
-        /** 【需登录】删除评论（作者或管理员） */
-        delete: operations["deleteCommentsByCommentId"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/auth/sessions/{sessionId}": {
         parameters: {
             query?: never;
@@ -2746,6 +2746,7 @@ export interface components {
         };
         RestaurantEditRequest: {
             name?: string;
+            /** @description 去除首尾空白后按 Unicode 码点计数，地址不能为空。 */
             address?: string;
             /** Format: double */
             gcjLng?: number;
@@ -3060,6 +3061,7 @@ export interface components {
         };
         RestaurantAddRequest: {
             name?: string;
+            /** @description 去除首尾空白后按 Unicode 码点计数，地址不能为空。 */
             address?: string;
             /** Format: double */
             gcjLng?: number;
@@ -3169,6 +3171,8 @@ export interface components {
             text?: string;
             screenshotKeys?: string[];
             context?: components["schemas"]["Context"];
+            /** @enum {string} */
+            category?: "PROBLEM" | "SUGGESTION" | "OTHER";
         };
         CatalogErrorRequest: {
             /** Format: int64 */
@@ -4129,14 +4133,6 @@ export interface components {
             totalItems?: number;
             hasNext?: boolean;
         };
-        ResultComment: {
-            /** Format: int32 */
-            code?: number;
-            data?: components["schemas"]["Comment"];
-            msg?: string;
-            /** Format: int64 */
-            timestamp?: number;
-        };
         ResultPageResultComment: {
             /** Format: int32 */
             code?: number;
@@ -4247,6 +4243,7 @@ export interface components {
             /** Format: int64 */
             id?: number;
             kind?: string;
+            category?: ("PROBLEM" | "SUGGESTION" | "OTHER") | null;
             status?: string;
             target?: components["schemas"]["FeedbackTarget"] | null;
             reason?: string | null;
@@ -4285,6 +4282,14 @@ export interface components {
             /** Format: int32 */
             code?: number;
             data?: components["schemas"]["CaseView"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        ResultComment: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["Comment"];
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
@@ -4516,6 +4521,7 @@ export interface components {
             /** Format: int64 */
             resolvedBy?: number;
             catalogChangeRequired?: boolean;
+            submissionDevice?: components["schemas"]["SubmissionDevice"] | null;
         };
         PageResultAdminCase: {
             /** Format: int64 */
@@ -4534,6 +4540,14 @@ export interface components {
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
+        };
+        SubmissionDevice: {
+            installId?: string;
+            platform?: string | null;
+            model?: string | null;
+            osVersion?: string | null;
+            appVersion?: string | null;
+            appBuild?: string | null;
         };
         ResultAdminCase: {
             /** Format: int32 */
@@ -8457,6 +8471,54 @@ export interface operations {
             };
         };
     };
+    getCommentsByCommentId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultComment"];
+                };
+            };
+        };
+    };
+    deleteCommentsByCommentId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["DeleteRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultVoid"];
+                };
+            };
+        };
+    };
     getCommentsByCommentIdReplies: {
         parameters: {
             query?: {
@@ -8777,7 +8839,10 @@ export interface operations {
         parameters: {
             query?: {
                 status?: string;
+                category?: "PROBLEM" | "SUGGESTION" | "OTHER";
                 kind?: string;
+                submitterId?: number;
+                appVersion?: string;
                 page?: number;
                 pageSize?: number;
             };
@@ -8979,54 +9044,6 @@ export interface operations {
             header?: never;
             path: {
                 id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["DeleteRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResultVoid"];
-                };
-            };
-        };
-    };
-    getCommentsByCommentId: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                commentId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResultComment"];
-                };
-            };
-        };
-    };
-    deleteCommentsByCommentId: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                commentId: number;
             };
             cookie?: never;
         };

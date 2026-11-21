@@ -1,4 +1,5 @@
 import { commentLikeLink } from "../../api/notifications";
+import { feedbackCategories, feedbackCategoryLabel, type FeedbackCategory, type FeedbackCase } from "../../api/feedback";
 import { DesignIcon as Icon } from "../../mobile/ui";
 import { RestaurantCard, TopicCard, TopicHero } from "./Cards";
 import { useContext, useEffect, useState } from "react";
@@ -95,6 +96,7 @@ export function FeedbackForm({
   const draftKey = `feedback:${app.user?.id}:${kind}:${targetType}:${validTarget ? targetId : "general"}`;
   const [draft, setDraft, clearDraft] = useSessionDraft(draftKey, {
     text: "",
+    category: "" as FeedbackCategory | "",
     reason: kind === "catalog" ? "WRONG_NAME" : "OTHER",
   });
   const [attachments, setAttachments, clearAttachments] = useMemoryDraft<{
@@ -103,6 +105,7 @@ export function FeedbackForm({
     checking?: ReturnType<typeof checkScreenshots>;
   }>(draftKey, { files: [], uploaded: new WeakMap() });
   const { text, reason } = draft;
+  const category = draft.category ?? "";
   const textLimit = kind === "feedback" ? 500 : 2000;
   const { files, uploaded, checking } = attachments;
   useEffect(() => {
@@ -176,12 +179,9 @@ export function FeedbackForm({
       advice={showHeader}
     >
       <Card>
-        <div className="v4-form-intro">
-          <div>
-            <span className="v4-kicker">你的声音，我们认真听</span>
-            <h2>{kind === "feedback" ? "说说你的想法" : "补充问题信息"}</h2>
-          </div>
-          {kind !== "feedback" && (
+        {kind !== "feedback" && (
+          <div className="v4-form-intro">
+            <h2>补充问题信息</h2>
             <Link
               to="/feedback/mine"
               state={{
@@ -192,8 +192,8 @@ export function FeedbackForm({
               <Icon name="document" size={16} />
               反馈记录
             </Link>
-          )}
-        </div>
+          </div>
+        )}
         {kind !== "feedback" && !validTarget ? (
           <p>
             请从菜品、店铺或食友详情发起此操作。<Link to="/">返回发现</Link>
@@ -218,12 +218,17 @@ export function FeedbackForm({
                         "feedback",
                         (index, key) => uploaded.set(pending[index], key),
                       );
-                      keys.forEach((key, index) => uploaded.set(pending[index], key));
+                      keys.forEach((key, index) =>
+                        uploaded.set(pending[index], key),
+                      );
                     }
                     return app.api.createFeedback(
                       {
                         text: text.trim(),
-                        screenshotKeys: files.map((file) => uploaded.get(file)!),
+                        category: category || undefined,
+                        screenshotKeys: files.map((file) =>
+                          uploaded.get(file)!,
+                        ),
                         context: validTarget
                           ? { type: targetType, id: targetId }
                           : undefined,
@@ -267,6 +272,29 @@ export function FeedbackForm({
             }}
           >
             <fieldset disabled={task.busy || task.uncertain}>
+              {kind === "feedback" && (
+                <Field label="反馈分类">
+                  <select
+                    value={category}
+                    onChange={(event) => {
+                      const value = event.target.value as FeedbackCategory | "";
+                      setDraft((previous) => ({
+                        ...previous,
+                        category: value,
+                      }));
+                    }}
+                  >
+                    <option value="">请选择（选填）</option>
+                    {Object.entries(feedbackCategories).map(
+                      ([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </Field>
+              )}
               {kind !== "feedback" && (
                 <Field label="问题类型">
                   <select
@@ -288,7 +316,11 @@ export function FeedbackForm({
                   maxLength={textLimit}
                   placeholder={
                     kind === "feedback"
-                      ? "有什么建议，或遇到了什么问题？可以具体说说…"
+                      ? category === "PROBLEM"
+                        ? "你做了哪些操作？预期看到什么，实际发生了什么？"
+                        : category === "SUGGESTION"
+                          ? "你想完成什么？现在有哪些地方不方便？"
+                          : "写下你想反馈的内容…"
                       : "补充一些细节，帮助我们更准确地了解问题…"
                   }
                   required={kind === "feedback"}
@@ -378,7 +410,7 @@ export function FeedbackRecords({
               key={item.id}
             >
               <div>
-                <strong>{statusText(item.kind)}</strong>
+                <strong>{feedbackCategoryLabel(item) ?? statusText(item.kind)}</strong>
                 <p>
                   {item.text ||
                     (item.reason &&
@@ -396,9 +428,9 @@ export function FeedbackRecords({
     </Shell>
   );
 }
-export function CaseContent({ value }: { value: Schema["CaseViewResponse"] }) {
+export function CaseContent({ value }: { value: FeedbackCase }) {
   return (
-    <Card title={statusText(value.kind)}>
+    <Card title={feedbackCategoryLabel(value) ?? statusText(value.kind)}>
       <Badge value={value.status} />
       <p>{value.text || "未填写补充说明"}</p>
       {value.reason && (

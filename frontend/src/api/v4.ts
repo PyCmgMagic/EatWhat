@@ -5,7 +5,8 @@ import {
   type Envelope,
   type createRequester,
 } from "./client";
-import type { Schema } from "./models";
+import type { Page, Schema } from "./models";
+import type { AdminFeedbackCase, FeedbackCase, FeedbackCategory } from "./feedback";
 import type { CaptchaRunner } from "./captcha";
 import type {
   PushCommand,
@@ -53,16 +54,18 @@ export function createV4Api(
       query: {
         status?: "OPEN" | "CLOSED";
         kind?: "FEEDBACK" | "CATALOG_ERROR" | "REPORT";
+        category?: FeedbackCategory;
+        submitterId?: number;
+        appVersion?: string;
         page?: number;
         pageSize?: number;
       } = {},
     ) =>
-      data<Reply<"Result_PageResult_AdminCaseViewResponse">>(
-        `/admin/feedback/cases`,
-        { query: query as Query },
-      ),
+      data<Page<AdminFeedbackCase>>(`/admin/feedback/cases`, {
+        query: query as Query,
+      }),
     adminFeedbackCase: (id: number) =>
-      data<Reply<"Result_AdminCaseViewResponse">>(
+      data<AdminFeedbackCase>(
         `/admin/feedback/cases/${encodeURIComponent(id)}`,
         {},
       ),
@@ -207,7 +210,7 @@ export function createV4Api(
         },
       ),
     createFeedback: (
-      body: Schema["FeedbackInputRequest"],
+      body: Schema["FeedbackInputRequest"] & { category?: FeedbackCategory },
       idempotencyKey: string,
     ) =>
       data<Reply<"Result_FeedbackAcceptedResponse">>(`/feedback/messages`, {
@@ -222,14 +225,11 @@ export function createV4Api(
         pageSize?: number;
       } = {},
     ) =>
-      data<Reply<"Result_PageResult_CaseViewResponse">>(`/feedback/mine`, {
+      data<Page<FeedbackCase>>(`/feedback/mine`, {
         query: query as Query,
       }),
     feedbackCase: (id: number) =>
-      data<Reply<"Result_CaseViewResponse">>(
-        `/feedback/mine/${encodeURIComponent(id)}`,
-        {},
-      ),
+      data<FeedbackCase>(`/feedback/mine/${encodeURIComponent(id)}`, {}),
     createReport: (
       body: Schema["FeedbackReportInputRequest"],
       idempotencyKey: string,

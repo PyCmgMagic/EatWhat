@@ -57,6 +57,44 @@ beforeEach(() => {
     v4: seedV4(),
   };
 });
+it("keeps feedback categories on user records and filters the admin queue using private device metadata", () => {
+  const issue = post(
+    "/feedback/messages",
+    { text: "图片加载失败", category: "PROBLEM" },
+    { "Idempotency-Key": id() },
+  );
+  const other = post(
+    "/feedback/messages",
+    { text: "未分类的反馈" },
+    { "Idempotency-Key": id() },
+  );
+  expect(call(`/feedback/mine/${issue.id}`)).toMatchObject({
+    category: "PROBLEM",
+  });
+  expect(call(`/feedback/mine/${other.id}`).category).toBe("OTHER");
+  expect(call(`/feedback/mine/${issue.id}`)).not.toHaveProperty(
+    "submissionDevice",
+  );
+  persona(true);
+  const detail = call(`/admin/feedback/cases/${issue.id}`);
+  expect(detail.submissionDevice.platform).toBe("web");
+  const query = {
+    category: "PROBLEM",
+    submitterId: detail.submitterId,
+    appVersion: detail.submissionDevice.appVersion,
+  };
+  expect(
+    call("/admin/feedback/cases", { query }).items.map(
+      (item: typeof detail) => item.view.id,
+    ),
+  ).toEqual([issue.id]);
+  expect(
+    call("/admin/feedback/cases", {
+      query: { ...query, appVersion: "unmatched" },
+    }).items,
+  ).toEqual([]);
+});
+
 it("keeps pending food private until an administrator approves its exact revision", () => {
   const r = post("/foods/upload", {
     name: "热云吞",

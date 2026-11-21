@@ -2,7 +2,7 @@
   "openapi" : "3.1.0",
   "info" : {
     "title" : "EatWhat 业务后端 API",
-    "description" : "单站业务后端（feat/eatwhat-v2）由代码生成的接口文档。\n所有接口返回 HTTP 200 + Result{code,data,msg,timestamp}，code=0 为成功，业务码见 docs/legacy-api/biz-codes.md。\n公网经 nginx 访问，路径前加 /api。登录后在请求头 satoken 里带 \"Bearer <tokenValue>\"。\n已登录但没同意当前隐私政策版本时，除标注\"同意前可用\"的接口外都返回 20009。",
+    "description" : "单站业务后端（feat/eatwhat-v2）由代码生成的接口文档。\n所有接口返回 HTTP 200 + Result{code,data,msg,timestamp}，code=0 为成功，业务码见 docs/legacy-api/biz-codes.md。\ncode=10001 时，msg 直接给出具体原因，可向用户展示。没有具体原因时返回“参数非法”。\n公网经 nginx 访问，路径前加 /api。登录后在请求头 satoken 里带 \"Bearer <tokenValue>\"。\n已登录但没同意当前隐私政策版本时，除标注\"同意前可用\"的接口外都返回 20009。",
     "version" : "v2"
   },
   "servers" : [ {
@@ -1252,7 +1252,7 @@
       },
       "put" : {
         "tags" : [ "ai · AdminAi" ],
-        "summary" : "【需角色：admin】修改 AI 提供商配置（OpenAI 兼容端点）",
+        "summary" : "【需角色：admin】修改 AI 提供商配置（首次配置或更换协议、主机、有效端口时必填 apiKey）",
         "operationId" : "put_2",
         "requestBody" : {
           "content" : {
@@ -1741,7 +1741,7 @@
     "/upload/complete" : {
       "post" : {
         "tags" : [ "上传 · Upload" ],
-        "summary" : "【需登录】确认文件上传完成",
+        "summary" : "【需登录】检查并发布已上传的文件（正在检查返回 40004，可稍后重试）",
         "operationId" : "complete",
         "requestBody" : {
           "content" : {
@@ -1796,7 +1796,7 @@
             }
           }
         },
-        "summary" : "上报使用统计事件（游客带安装 ID）"
+        "summary" : "上报使用统计事件（请求体最多 32 KiB，游客带安装 ID）"
       }
     },
     "/restaurant/{id}/history/{revisionId}/restore" : {
@@ -5463,6 +5463,72 @@
         } ]
       }
     },
+    "/comments/{commentId}" : {
+      "get" : {
+        "tags" : [ "comment · Comment" ],
+        "operationId" : "detail_3",
+        "parameters" : [ {
+          "name" : "commentId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultComment"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "查看指定评论或回复"
+      },
+      "delete" : {
+        "tags" : [ "comment · Comment" ],
+        "summary" : "【需登录】删除评论（作者或管理员）",
+        "operationId" : "delete_1",
+        "parameters" : [ {
+          "name" : "commentId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DeleteRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
     "/comments/{commentId}/replies" : {
       "get" : {
         "tags" : [ "comment · Comment" ],
@@ -5874,7 +5940,30 @@
             "type" : "string"
           }
         }, {
+          "name" : "category",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "PROBLEM", "SUGGESTION", "OTHER" ]
+          }
+        }, {
           "name" : "kind",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "submitterId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "appVersion",
           "in" : "query",
           "required" : false,
           "schema" : {
@@ -5918,7 +6007,7 @@
       "get" : {
         "tags" : [ "feedback · Feedback" ],
         "summary" : "【需角色：admin】获取反馈举报详情（管理端）",
-        "operationId" : "detail_3",
+        "operationId" : "detail_4",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -6069,7 +6158,7 @@
       "get" : {
         "tags" : [ "账号 · AdminConsent" ],
         "summary" : "【需角色：admin】获取某个政策版本原文",
-        "operationId" : "detail_4",
+        "operationId" : "detail_5",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -6100,7 +6189,7 @@
       "delete" : {
         "tags" : [ "店铺 · Restaurant" ],
         "summary" : "【需角色：admin】删除店铺",
-        "operationId" : "delete_1",
+        "operationId" : "delete_2",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -6131,7 +6220,7 @@
       "delete" : {
         "tags" : [ "校区与商圈 · Hub" ],
         "summary" : "【需角色：admin】删除商圈（重算全部店铺所属商圈）",
-        "operationId" : "delete_2",
+        "operationId" : "delete_3",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -6162,75 +6251,9 @@
       "delete" : {
         "tags" : [ "food · Food" ],
         "summary" : "【需角色：admin】删除菜品",
-        "operationId" : "delete_3",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/DeleteRequest"
-              }
-            }
-          }
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ResultVoid"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "satoken" : [ ]
-        } ]
-      }
-    },
-    "/comments/{commentId}" : {
-      "get" : {
-        "tags" : [ "comment · Comment" ],
-        "operationId" : "getCommentsByCommentId",
-        "parameters" : [ {
-          "name" : "commentId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ResultComment"
-                }
-              }
-            }
-          }
-        },
-        "summary" : "查看指定评论或回复"
-      },
-      "delete" : {
-        "tags" : [ "comment · Comment" ],
-        "summary" : "【需登录】删除评论（作者或管理员）",
         "operationId" : "delete_4",
         "parameters" : [ {
-          "name" : "commentId",
+          "name" : "id",
           "in" : "path",
           "required" : true,
           "schema" : {
@@ -6555,7 +6578,9 @@
             "type" : "string"
           },
           "address" : {
-            "type" : "string"
+            "type" : "string",
+            "maxLength" : 50,
+            "description" : "去除首尾空白后按 Unicode 码点计数，地址不能为空。"
           },
           "gcjLng" : {
             "type" : "number",
@@ -7398,7 +7423,9 @@
             "type" : "string"
           },
           "address" : {
-            "type" : "string"
+            "type" : "string",
+            "maxLength" : 50,
+            "description" : "去除首尾空白后按 Unicode 码点计数，地址不能为空。"
           },
           "gcjLng" : {
             "type" : "number",
@@ -7710,6 +7737,10 @@
           },
           "context" : {
             "$ref" : "#/components/schemas/Context"
+          },
+          "category" : {
+            "type" : "string",
+            "enum" : [ "PROBLEM", "SUGGESTION", "OTHER" ]
           }
         }
       },
@@ -10218,25 +10249,6 @@
           }
         }
       },
-      "ResultComment" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "data" : {
-            "$ref" : "#/components/schemas/Comment"
-          },
-          "msg" : {
-            "type" : "string"
-          },
-          "timestamp" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }
-      },
       "ResultPageResultComment" : {
         "type" : "object",
         "properties" : {
@@ -10539,6 +10551,10 @@
           "kind" : {
             "type" : "string"
           },
+          "category" : {
+            "type" : "string",
+            "enum" : [ "PROBLEM", "SUGGESTION", "OTHER" ]
+          },
           "status" : {
             "type" : "string"
           },
@@ -10639,6 +10655,25 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/CaseView"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ResultComment" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/Comment"
           },
           "msg" : {
             "type" : "string"
@@ -11211,6 +11246,9 @@
           },
           "catalogChangeRequired" : {
             "type" : "boolean"
+          },
+          "submissionDevice" : {
+            "$ref" : "#/components/schemas/SubmissionDevice"
           }
         }
       },
@@ -11256,6 +11294,29 @@
           "timestamp" : {
             "type" : "integer",
             "format" : "int64"
+          }
+        }
+      },
+      "SubmissionDevice" : {
+        "type" : "object",
+        "properties" : {
+          "installId" : {
+            "type" : "string"
+          },
+          "platform" : {
+            "type" : "string"
+          },
+          "model" : {
+            "type" : "string"
+          },
+          "osVersion" : {
+            "type" : "string"
+          },
+          "appVersion" : {
+            "type" : "string"
+          },
+          "appBuild" : {
+            "type" : "string"
           }
         }
       },

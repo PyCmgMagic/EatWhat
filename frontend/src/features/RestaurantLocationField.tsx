@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { MapPlace } from "../api/baidu-places";
-import { codePoints } from "../api/content-rules";
+import { codePoints, restaurantAddressLimit } from "../api/content-rules";
 import { DesignIcon } from "../mobile/ui";
 import { FieldMark } from "./FieldMark";
 import RestaurantMap from "./RestaurantMap";
@@ -67,14 +67,14 @@ export default function RestaurantLocationField(props: {
     };
   }, [lng, lat, place]);
 
-  const addressHint =
-    codePoints(address.trim()) > 30
-      ? "请将地址简化至 30 字以内，保留门牌或楼层。"
-      : lookup === "loading" && !address.trim()
-        ? "正在识别地址…"
-        : lookup === "missing" && !address.trim()
-          ? "未能识别地址，请手动填写。"
-          : "";
+  const tooLong = codePoints(address.trim()) > restaurantAddressLimit;
+  const addressHint = tooLong
+    ? `请将地址简化至 ${restaurantAddressLimit} 字以内，保留门牌或楼层。`
+    : lookup === "loading" && !address.trim()
+      ? "正在识别地址…"
+      : lookup === "missing" && !address.trim()
+        ? "未能识别地址，请手动填写。"
+        : "";
   const showMap = !place || editingMap;
 
   return (
@@ -91,7 +91,7 @@ export default function RestaurantLocationField(props: {
           onChange={(event) => props.onAddressChange(event.target.value)}
           disabled={disabled}
           required
-          maxLength={30}
+          aria-invalid={tooLong || undefined}
           placeholder="门牌、楼层或食堂窗口"
           aria-describedby={addressHint ? `${id}-address-hint` : undefined}
         />

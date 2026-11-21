@@ -1,6 +1,7 @@
 import type { Food, Restaurant, Schema } from "./models";
 
 export const codePoints = (value: string) => [...value].length;
+export const restaurantAddressLimit = 50;
 export const normalizedTag = (value: string) =>
   value.trim().replace(/\s+/gu, " ");
 export function boundedText(
@@ -79,7 +80,7 @@ export function restaurantEditBody(
   const body = { ...patch };
   for (const [field, max, label] of [
     ["name", 20, "店名"],
-    ["address", 30, "地址"],
+    ["address", restaurantAddressLimit, "地址"],
   ] as const) {
     if (body[field] != null) {
       if (body[field]!.trim() === original[field]?.trim()) delete body[field];

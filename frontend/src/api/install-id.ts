@@ -4,6 +4,8 @@
  * 只在用户同意隐私政策后才发出去：登录、注册时随请求体发，登录后登记一次设备，档案变了再登记。
  * 网页版不上报硬件标识；设备名称组合浏览器与型号，取不到型号时使用系统名称。
  */
+import { buildNumber, webVersion } from "../app/version";
+
 const INSTALL_KEY = "eatwhat.installId";
 const REGISTERED_KEY = "eatwhat.deviceRegistered";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -43,6 +45,8 @@ export function installId(): string {
 export interface DeviceProfile {
   installId: string;
   platform: "web";
+  appVersion: string;
+  appBuild?: string;
   model?: string;
   screenWidth?: number;
   screenHeight?: number;
@@ -132,6 +136,8 @@ export async function deviceProfile(): Promise<DeviceProfile> {
   return {
     installId: installId(),
     platform: "web",
+    appVersion: webVersion,
+    appBuild: buildNumber === undefined ? undefined : String(buildNumber),
     model: await webDeviceModel(),
     screenWidth: size(globalThis.screen?.width),
     screenHeight: size(globalThis.screen?.height),

@@ -1,4 +1,5 @@
 import BMapLoader from "@baidumap/jsapi-loader";
+import { codePoints, restaurantAddressLimit } from "./content-rules";
 import { gcjToBaidu, mapPoint, type MapPoint } from "../features/map-geometry";
 
 /** Best-effort address suggestion; a lookup failure never discards the picked point. */
@@ -16,7 +17,7 @@ export async function addressForMapPoint(
         (result) => {
           clearTimeout(timer);
           const address = result?.address?.trim();
-          if (address && address.length <= 30) {
+          if (address && codePoints(address) <= restaurantAddressLimit) {
             resolve(address);
             return;
           }
@@ -28,7 +29,11 @@ export async function addressForMapPoint(
                 .join("")
                 .trim()
             : "";
-          resolve(compact && compact.length <= 30 ? compact : undefined);
+          resolve(
+            compact && codePoints(compact) <= restaurantAddressLimit
+              ? compact
+              : undefined,
+          );
         },
       );
     } catch {

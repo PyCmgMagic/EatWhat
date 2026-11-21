@@ -147,7 +147,6 @@ function EditForm({
             <textarea
               value={address}
               rows={2}
-              maxLength={30}
               autoComplete="street-address"
               onChange={(e) => setAddress(e.target.value)}
               required

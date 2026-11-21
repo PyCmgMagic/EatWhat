@@ -1,4 +1,5 @@
 import { ApiError, type RequestOptions, type Query } from "../api/client";
+import { demoFeedbackFields } from "./feedback";
 import {
   dislikableTags,
   shopCategories,
@@ -17,6 +18,7 @@ import {
   validateFoodDraft,
   foodEditBody,
   boundedText,
+  restaurantAddressLimit,
 } from "../api/content-rules";
 // Domain data is persisted only by the isolated demo transport. Recovery secrets,
 // command proofs and device tokens stay in this module's memory.
@@ -218,8 +220,9 @@ export function handleV4(
   )
     fail("此操作需要管理员身份。", 403);
   const adminCase = (c: Row) => ({
-    view: c,
-    submitterId: user,
+    view: viewCase(c),
+    submitterId: c.submitterId ?? user,
+    submissionDevice: c.submissionDevice ?? null,
     targetName:
       c.target?.type === "FOOD"
         ? (s.foods.find((f) => f.id === c.target.id)?.name ?? null)
@@ -244,8 +247,8 @@ export function handleV4(
         : [],
   });
   const viewCase = (c: Row) => {
-    const { decisionId, internalNote, ...view } = c;
-    return view;
+    const { decisionId, internalNote, submissionDevice, submitterId, ...view } = c;
+    return { ...view, category: view.kind === "FEEDBACK" ? view.category ?? "OTHER" : null };
   };
   const addCard = (
     kind: string,
@@ -304,6 +307,8 @@ export function handleV4(
           id: Math.max(0, ...v.feedback.map((x) => x.id)) + 1,
           gid: crypto.randomUUID(),
           kind,
+          submitterId: user,
+          ...demoFeedbackFields(kind, b.category),
           status: "OPEN",
           target,
           reason: b.errorType ?? b.reason ?? null,
@@ -330,6 +335,7 @@ export function handleV4(
         v.feedback
           .filter((x) => !q.status || x.status === q.status)
           .filter((x) => !q.kind || x.kind === q.kind)
+          .filter((x) => (x.submitterId ?? user) === user)
           .map(viewCase),
         q,
       ),
@@ -338,7 +344,7 @@ export function handleV4(
     return ok(
       viewCase(
         requireRow(
-          v.feedback.find((x) => x.id === Number(path.split("/").pop())),
+          v.feedback.find((x) => x.id === Number(path.split("/").pop()) && (x.submitterId ?? user) === user),
         ),
       ),
     );
@@ -358,6 +364,9 @@ export function handleV4(
         v.feedback
           .filter((x) => !q.status || x.status === q.status)
           .filter((x) => !q.kind || x.kind === q.kind)
+          .filter((x) => !q.category || (x.kind === "FEEDBACK" && (x.category ?? "OTHER") === q.category))
+          .filter((x) => !q.submitterId || (x.submitterId ?? user) === Number(q.submitterId))
+          .filter((x) => !q.appVersion || x.submissionDevice?.appVersion === q.appVersion)
           .map(adminCase),
         q,
       ),
@@ -567,7 +576,7 @@ export function handleV4(
       else foodEditBody(original as Food, b);
     } else {
       if (isNew || b.name != null) boundedText(b.name ?? "", 20, "店名");
-      if (isNew || b.address != null) boundedText(b.address ?? "", 30, "地址");
+      if (isNew || b.address != null) boundedText(b.address ?? "", restaurantAddressLimit, "地址");
     }
     const images = b.pictureUrl ?? b.pictureKeys ?? original?.pictureUrl ?? [];
     if (

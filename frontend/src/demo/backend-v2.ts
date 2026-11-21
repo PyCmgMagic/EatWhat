@@ -2,6 +2,8 @@ import { endpoints } from "../api/backend-v2-endpoints";
 import type { Operation, V2Schema } from "../api/backend-v2";
 import type { Envelope, RequestOptions } from "../api/client";
 import { reactionSummary } from "./comment-reactions";
+import { demoFeedbackFields } from "./feedback";
+import { codePoints, restaurantAddressLimit } from "../api/content-rules";
 
 import {
   commentReactionOptions,
@@ -15,6 +17,22 @@ type DemoFood = V2Schema["FoodV2"] & {
   restaurantId: number;
 };
 type DemoComment = V2Schema["Comment"] & { id: number; foodId: number };
+type DemoFeedback = V2Schema["CaseView"] & {
+  submitterId?: number;
+  submissionDevice?: V2Schema["SubmissionDevice"] | null;
+  internalNote?: string;
+};
+function publicFeedback({
+  submitterId,
+  submissionDevice,
+  internalNote,
+  ...view
+}: DemoFeedback) {
+  return {
+    ...view,
+    category: view.kind === "FEEDBACK" ? (view.category ?? "OTHER") : null,
+  };
+}
 type Person = V2Schema["MyInfo"] & {
   id: number;
   phone: string;
@@ -45,7 +63,7 @@ type Data = {
   comments: DemoComment[];
   commentLikes: Record<number, number[]>;
   commentReactions: Record<number, Record<number, CommentReactionType>>;
-  feedback: V2Schema["CaseView"][];
+  feedback: DemoFeedback[];
   notifications: V2Schema["NotificationCard"][];
   pushCategories: Record<string, boolean>;
 };
@@ -1068,6 +1086,11 @@ export function demoTransport(
       return ok(duplicatesOf(q.name, q.gcjLng, q.gcjLat));
     case "editRestaurant":
     case "addRestaurant": {
+      if (
+        body.address != null &&
+        codePoints(String(body.address).trim()) > restaurantAddressLimit
+      )
+        return fail(10001, `地址最多 ${restaurantAddressLimit} 个字`);
       if (name === "addRestaurant" && !body.force) {
         const duplicates = duplicatesOf(body.name, body.gcjLng, body.gcjLat);
         if (duplicates.length)
@@ -1522,6 +1545,10 @@ export function demoTransport(
       const record = {
         id: nextId,
         kind,
+        ...demoFeedbackFields(
+          kind,
+          payload.category as V2Schema["MessageRequest"]["category"],
+        ),
         status: "OPEN",
         target: payload.restaurantId
           ? { type: "RESTAURANT", id: Number(payload.restaurantId) }
@@ -1539,7 +1566,7 @@ export function demoTransport(
         createdAt: Date.now(),
         closedAt: null,
         submitterId: user,
-      } as V2Schema["CaseView"];
+      } satisfies DemoFeedback;
       state.feedback.unshift(record);
       return write({
         id: nextId,
@@ -1550,9 +1577,19 @@ export function demoTransport(
       });
     }
     case "getFeedbackMine":
-      return ok(paged(state.feedback));
-    case "getFeedbackMineById":
-      return ok(state.feedback.find((item) => item.id === id) ?? null);
+      return ok(
+        paged(
+          state.feedback
+            .filter((item) => (item.submitterId ?? user) === user)
+            .map(publicFeedback),
+        ),
+      );
+    case "getFeedbackMineById": {
+      const item = state.feedback.find(
+        (row) => row.id === id && (row.submitterId ?? user) === user,
+      );
+      return item ? ok(publicFeedback(item)) : fail(10001, "记录不存在");
+    }
     case "getNotificationCards":
       return ok(paged(state.notifications));
     case "getNotificationCardsUnreadCount":
@@ -1817,9 +1854,8 @@ export function demoTransport(
       return ok({ ok: true, category: "特色", tags: ["清淡"], failure: null });
     case "getAdminFeedbackCases":
     case "getAdminFeedbackCasesById": {
-      const adminCase = (view: V2Schema["CaseView"]) => {
-        const submitterId =
-          (view as { submitterId?: number }).submitterId ?? user;
+      const adminCase = (view: DemoFeedback) => {
+        const submitterId = view.submitterId ?? user;
         const submitter = state.people.find((p) => p.id === submitterId);
         const targetId = view.target?.id;
         const targetName =
@@ -1833,7 +1869,8 @@ export function demoTransport(
                   ? state.comments.find((c) => c.id === targetId)?.text
                   : undefined;
         return {
-          view,
+          view: publicFeedback(view),
+          submissionDevice: view.submissionDevice ?? null,
           submitterId,
           submitterName: submitter?.displayName ?? "演示用户",
           targetName: targetName ?? "",
@@ -1851,7 +1888,15 @@ export function demoTransport(
       const wanted = String(q.status ?? "OPEN");
       const kind = q.kind ? String(q.kind) : "";
       const items = state.feedback.filter(
-        (item) => item.status === wanted && (!kind || item.kind === kind),
+        (item) =>
+          item.status === wanted &&
+          (!kind || item.kind === kind) &&
+          (!q.category ||
+            (item.kind === "FEEDBACK" &&
+              (item.category ?? "OTHER") === q.category)) &&
+          (!q.submitterId ||
+            (item.submitterId ?? user) === Number(q.submitterId)) &&
+          (!q.appVersion || item.submissionDevice?.appVersion === q.appVersion),
       );
       if (wanted === "OPEN")
         items.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));

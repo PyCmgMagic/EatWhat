@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { MapPlace } from "../api/baidu-places";
 import { resultUncertain } from "../api/client";
-import { boundedText, codePoints } from "../api/content-rules";
+import { boundedText, codePoints, restaurantAddressLimit } from "../api/content-rules";
 import { useArea } from "../app/area";
 import { usePageLifetime } from "../app/drafts";
 import { useApp } from "../app/state";
@@ -100,7 +100,7 @@ export function useNewShop(rememberDraft = false) {
     !!draft.name.trim() &&
     !!draft.address.trim() &&
     codePoints(draft.name.trim()) <= 20 &&
-    codePoints(draft.address.trim()) <= 30 &&
+    codePoints(draft.address.trim()) <= restaurantAddressLimit &&
     draft.traits.mealTimes.length > 0;
 
   function select(place?: MapPlace) {
@@ -125,7 +125,7 @@ export function useNewShop(rememberDraft = false) {
         const name = boundedText(draft.name, 20, "店名");
         const created = await api.createRestaurant({
           name,
-          address: boundedText(draft.address, 30, "地址"),
+          address: boundedText(draft.address, restaurantAddressLimit, "地址"),
           ...requireShopLocation(draft.point),
           hubId: area?.hubId,
           ...draft.traits,

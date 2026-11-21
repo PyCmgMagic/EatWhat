@@ -65,7 +65,7 @@ describe("Baidu Maps integration", () => {
       Geocoder: class {
         getLocation(_p: unknown, callback: (r: unknown) => void) {
           callback({
-            address: "很长的地址".repeat(10),
+            address: "很长的地址".repeat(11),
             addressComponents: {
               city: "济南市",
               district: "历城区",

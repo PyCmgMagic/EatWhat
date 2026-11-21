@@ -4,7 +4,6 @@ const members = [
   { name: "FooFish", role: "App 开发" },
   { name: "PyCmg", role: "Web 开发" },
   { name: "Jackie Ruan", role: "后端开发" },
-  { name: "PATCHHHHH" },
 ];
 
 export default function DevelopmentTeam() {

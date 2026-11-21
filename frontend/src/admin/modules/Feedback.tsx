@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAdminState } from "../../app/admin-state";
 import { useApp } from "../../app/state";
 import { mediaUrl } from "../../api/models";
+import { feedbackCategories, feedbackCategoryLabel, type FeedbackCategory } from "../../api/feedback";
 import { statusText, useCommand } from "../../features/v4/shared";
 import {
   Async,
@@ -51,6 +52,11 @@ export default function Feedback() {
     [page, setPage] = useAdminState("feedback.page", 1),
     [status, setStatus] = useAdminState<Status>("feedback.status", "OPEN"),
     [kind, setKind] = useAdminState<Kind>("feedback.kind", "ALL"),
+    [filters, setFilters] = useAdminState<{
+      category?: FeedbackCategory;
+      submitterId?: number;
+      appVersion?: string;
+    }>("feedback.filters", {}),
     [selected, setSelected] = useAdminState<number | undefined>(
       "feedback.selected",
       undefined,
@@ -67,14 +73,17 @@ export default function Feedback() {
     retry: false,
   }).data;
   const open = (n?: number) => (status === "OPEN" && n ? `（${n}）` : "");
+  const showCategory = kind === "ALL" || kind === "FEEDBACK";
   const q = useQuery({
-    queryKey: ["admin", "feedback", page, status, kind],
+    queryKey: ["admin", "feedback", page, status, kind, filters],
     queryFn: () =>
       api.adminFeedbackCases({
         page,
         pageSize: 12,
         status,
         kind: kind === "ALL" ? undefined : kind,
+        ...filters,
+        category: showCategory ? filters.category : undefined,
       }),
   });
   return (
@@ -108,12 +117,73 @@ export default function Feedback() {
             </option>
             <option value="REPORT">举报{open(counts?.report)}</option>
           </select>
+          <details className="ew-admin-feedback-filters">
+            <summary>筛选条件</summary>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                const data = new FormData(event.currentTarget);
+                setFilters({
+                  category: (data.get("category") || undefined) as
+                    FeedbackCategory | undefined,
+                  submitterId: Number(data.get("submitterId")) || undefined,
+                  appVersion:
+                    String(data.get("appVersion") || "").trim() || undefined,
+                });
+                setPage(1);
+                setSelected(undefined);
+              }}
+            >
+              {showCategory && (
+                <Field label="反馈分类">
+                  <select name="category" defaultValue={filters.category ?? ""}>
+                    <option value="">全部分类</option>
+                    {Object.entries(feedbackCategories).map(
+                      ([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </Field>
+              )}
+              <Field label="提交人 ID">
+                <input
+                  name="submitterId"
+                  type="number"
+                  min="1"
+                  step="1"
+                  max={Number.MAX_SAFE_INTEGER}
+                  defaultValue={filters.submitterId}
+                />
+              </Field>
+              <Field label="应用版本">
+                <input
+                  name="appVersion"
+                  maxLength={32}
+                  defaultValue={filters.appVersion}
+                />
+              </Field>
+              <button type="submit" className="ew-admin-btn">
+                应用筛选
+              </button>
+            </form>
+          </details>
         </header>
         <Async
           query={q}
           rows={6}
           empty={!q.data?.items?.length}
-          emptyTitle={status === "OPEN" ? "都处理完了" : "还没有已处理的记录"}
+          emptyTitle={
+            filters.appVersion ||
+            filters.submitterId ||
+            (showCategory && filters.category)
+              ? "没有符合筛选条件的记录"
+              : status === "OPEN"
+                ? "都处理完了"
+                : "还没有已处理的记录"
+          }
           emptyHint={
             status === "OPEN" ? "新的反馈、纠错和举报会出现在这里。" : undefined
           }
@@ -127,7 +197,8 @@ export default function Feedback() {
                 >
                   <span className="ew-admin-case-top">
                     <Pill tone={kindTone[item.view?.kind ?? ""]} dot={false}>
-                      {statusText(item.view?.kind)}
+                      {feedbackCategoryLabel(item.view) ??
+                        statusText(item.view?.kind)}
                     </Pill>
                     <time>{ago(item.view?.createdAt)}</time>
                   </span>
@@ -201,7 +272,10 @@ function CaseDetail({
     path = targetPath(view?.target);
   return (
     <>
-      <button className="ew-admin-btn is-ghost ew-admin-split-back" onClick={onBack}>
+      <button
+        className="ew-admin-btn is-ghost ew-admin-split-back"
+        onClick={onBack}
+      >
         <Icon name="back" size={16} />
         返回列表
       </button>
@@ -211,7 +285,7 @@ function CaseDetail({
             <header>
               <div>
                 <Pill tone={kindTone[view.kind ?? ""]} dot={false}>
-                  {statusText(view.kind)}
+                  {feedbackCategoryLabel(view) ?? statusText(view.kind)}
                 </Pill>
                 <Pill tone={view.status === "OPEN" ? "warn" : "good"}>
                   {view.status === "OPEN"
@@ -223,7 +297,9 @@ function CaseDetail({
                 #{view.id} · {dateTime(view.createdAt)}
               </span>
             </header>
-            <p className="ew-admin-case-body">{view.text || "未填写补充说明"}</p>
+            <p className="ew-admin-case-body">
+              {view.text || "未填写补充说明"}
+            </p>
             {!!view.screenshots?.length && (
               <div className="ew-admin-shots">
                 {view.screenshots.map(
@@ -250,7 +326,10 @@ function CaseDetail({
                 [
                   "提交人",
                   data.submitterId ? (
-                    <Link className="ew-admin-link" to={`/users/${data.submitterId}`}>
+                    <Link
+                      className="ew-admin-link"
+                      to={`/users/${data.submitterId}`}
+                    >
                       {(data as { submitterName?: string | null })
                         .submitterName || "用户"}{" "}
                       #{data.submitterId}
@@ -259,7 +338,9 @@ function CaseDetail({
                     "—"
                   ),
                 ],
-                ["问题类型", view.reason || "—"],
+                ...(view.reason
+                  ? [["问题类型", view.reason] as [string, string]]
+                  : []),
                 [
                   "关联内容",
                   view.target ? (
@@ -279,6 +360,20 @@ function CaseDetail({
                 ["处理时间", view.closedAt ? dateTime(view.closedAt) : "—"],
               ]}
             />
+            {data.submissionDevice && (
+              <section aria-label="提交时的设备">
+                <h3>提交时的设备</h3>
+                <Meta
+                  items={[
+                    ["平台", data.submissionDevice.platform || "—"],
+                    ["型号", data.submissionDevice.model || "—"],
+                    ["系统版本", data.submissionDevice.osVersion || "—"],
+                    ["应用版本", data.submissionDevice.appVersion || "—"],
+                    ["构建号", data.submissionDevice.appBuild || "—"],
+                  ]}
+                />
+              </section>
+            )}
             {data.targetUnavailable && (
               <Notice tone="warn">
                 关联内容已不可见，可能已被删除或隐藏。
