@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { instantMotion } from "../motion/runtime";
+import { UserAvatar } from "../components/UserAvatar";
 
 type Drag = {
   id: number;
@@ -17,13 +18,38 @@ type Drag = {
   samples: { y: number; time: number }[];
 };
 
+export function ProfileToolbarIdentity({
+  name,
+  avatar,
+}: {
+  name: string;
+  avatar?: string | null;
+}) {
+  return (
+    <div className="mobile-profile-summary" aria-hidden="true">
+      <UserAvatar
+        className="mobile-profile-mini-avatar"
+        avatar={avatar}
+        name={name}
+      />
+      <strong title={name} role="heading" aria-level={1}>
+        {name}
+      </strong>
+    </div>
+  );
+}
+
 export default function ProfileSheet({
+  label = "我的内容",
+  className = "",
   contentKey,
   tabs,
   children,
 }: {
-  contentKey: string;
-  tabs: ReactNode;
+  label?: string;
+  className?: string;
+  contentKey?: string;
+  tabs?: ReactNode;
   children: ReactNode;
 }) {
   const sheet = useRef<HTMLDivElement>(null);
@@ -39,12 +65,12 @@ export default function ProfileSheet({
     const panel = sheet.current!;
     const screen = panel.parentElement!;
     const toolbar = screen.querySelector<HTMLElement>(
-      ".mobile-profile-actions",
+      ".profile-collapse-toolbar",
     )!;
     const summary = toolbar.querySelector<HTMLElement>(
       ".mobile-profile-summary",
     )!;
-    const stage = screen.querySelector<HTMLElement>(".mobile-profile-stage")!;
+    const stage = screen.querySelector<HTMLElement>("[data-profile-stage]")!;
     let lastProgress = -1;
 
     function sync() {
@@ -57,6 +83,7 @@ export default function ProfileSheet({
         destination.current = null;
       if (open !== stage.inert) {
         stage.inert = open;
+        stage.setAttribute("aria-hidden", String(open));
         summary.setAttribute("aria-hidden", String(!open));
         setExpanded(open);
       }
@@ -65,6 +92,10 @@ export default function ProfileSheet({
       if (progress === lastProgress) return;
       lastProgress = progress;
       toolbar.style.setProperty("--profile-collapse", String(progress));
+      toolbar.style.setProperty(
+        "--profile-scroll-offset",
+        `${Math.max(0, offset)}px`,
+      );
       toolbar.toggleAttribute("data-compact", progress >= 0.5);
       nav.current!.style.setProperty(
         "--profile-corner",
@@ -176,12 +207,16 @@ export default function ProfileSheet({
   }
 
   return (
-    <div ref={sheet} className="mobile-profile-sheet" data-expanded={expanded}>
+    <div
+      ref={sheet}
+      className={`mobile-profile-sheet ${className}`.trimEnd()}
+      data-expanded={expanded}
+    >
       <div ref={nav} className="mobile-profile-sheet-nav">
         <button
           type="button"
           className="mobile-profile-sheet-handle"
-          aria-label={expanded ? "收起我的内容" : "展开我的内容"}
+          aria-label={`${expanded ? "收起" : "展开"}${label}`}
           aria-expanded={expanded}
           aria-controls={contentId}
           onPointerDown={pointerDown}
@@ -213,7 +248,7 @@ export default function ProfileSheet({
         id={contentId}
         className="mobile-profile-sheet-content"
         role="region"
-        aria-label="我的内容"
+        aria-label={label}
       >
         {children}
       </div>

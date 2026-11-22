@@ -25,7 +25,7 @@ import { peopleHref } from "../features/profile-people";
 import ProfileGrowth from "../features/ProfileGrowth";
 import { useMyProfileCover } from "../features/useMyProfileCover";
 import { visualFor } from "./catalog";
-import ProfileSheet from "./ProfileSheet";
+import ProfileSheet, { ProfileToolbarIdentity } from "./ProfileSheet";
 import { FoodTile, MobileEmpty, PrimaryButton } from "./ui";
 
 const profileTabs = [
@@ -173,18 +173,12 @@ export default function MobileProfile() {
     });
   }
   return (
-    <div className="design-screen mobile-profile-screen" data-screen="G-Me">
-      <header className="mobile-profile-actions">
-        <div className="mobile-profile-summary" aria-hidden="true">
-          <UserAvatar
-            className="mobile-profile-mini-avatar"
-            avatar={user?.avatar}
-            name={name}
-          />
-          <strong title={name} role="heading" aria-level={1}>
-            {name}
-          </strong>
-        </div>
+    <div
+      className="design-screen profile-scroll-screen mobile-profile-screen"
+      data-screen="G-Me"
+    >
+      <header className="profile-collapse-toolbar mobile-profile-actions">
+        <ProfileToolbarIdentity name={name} avatar={user?.avatar} />
         <WorkspaceSwitch className="mobile-profile-admin-link" iconSize={19} />
         <ProfileEditLink aria-label="编辑资料">
           <SquarePen size={19} aria-hidden="true" />
@@ -195,7 +189,7 @@ export default function MobileProfile() {
           <span>设置</span>
         </Link>
       </header>
-      <div className="mobile-profile-stage">
+      <div className="mobile-profile-stage" data-profile-stage>
         <div
           className="mobile-profile-cover"
           data-cover-kind={illustration ? "illustration" : "photo"}

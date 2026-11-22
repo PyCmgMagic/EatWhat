@@ -4,15 +4,21 @@
   background: var(--paper);
 }
 .ew-mobile-feature > .mobile-public-profile {
+  --profile-edge: 20px;
+  --header-lead: max(0px, calc(40px - var(--profile-safe-top)));
+  --header-space: calc(var(--header-lead) + var(--profile-toolbar-height));
   max-width: 520px;
-  min-height: 100dvh;
-  background: var(--paper);
+  height: 100dvh;
+  min-height: 0;
+  background: var(--profile-surface);
 }
 .mobile-user-stage {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   min-height: 400px;
+  margin-top: calc(-1 * var(--header-space));
+  padding-top: calc(var(--header-space) - 6px);
   padding-bottom: 80px;
   background: color-mix(in srgb, var(--profile-stage), #1b1512 var(--stage-shade, 0%));
   color: var(--profile-on);
@@ -40,20 +46,38 @@
   opacity: 0.5;
 }
 .mobile-user-header {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: max(40px, env(safe-area-inset-top)) 8px 0;
+  --compact-actions-width: 144px;
+  --toolbar-ink: var(--night-ink, var(--ink));
+  gap: 4px;
+  margin-top: var(--header-lead);
+  padding: var(--profile-safe-top) 8px 6px;
+  color: color-mix(in srgb, var(--toolbar-ink) clamp(0%, calc((var(--profile-collapse) - .27) * 500%), 100%), var(--profile-on));
+}
+/* Occlude the scrolling cover before the small identity becomes visible. */
+.mobile-user-header::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: color-mix(in srgb, var(--profile-surface) calc(100% * var(--profile-collapse)), var(--profile-stage));
+  opacity: min(1, calc(var(--profile-collapse) * 4));
+  pointer-events: none;
+}
+.mobile-user-header .mobile-profile-summary {
+  color: var(--toolbar-ink);
+}
+.mobile-user-header:not(:has(.mobile-user-more-trigger)) {
+  --compact-actions-width: 96px;
 }
 .mobile-user-header-actions {
   display: flex;
+  flex: none;
   align-items: center;
   gap: 4px;
 }
 .mobile-user-header > a,
 .mobile-user-header .mobile-user-more-trigger {
+  flex: none;
   display: grid;
   place-items: center;
   width: 44px;
@@ -62,37 +86,58 @@
   border-radius: var(--radius-pill);
   background: transparent;
   color: inherit;
+  transition: none;
 }
 .mobile-user-header .mobile-user-more-trigger {
-  background: rgba(35, 28, 24, 0.5);
-  color: var(--paper);
+  background: rgb(35 28 24 / calc(.5 * var(--label-space)));
+  color: color-mix(in srgb, var(--toolbar-ink) calc(100% * var(--actions-progress)), #fff);
 }
 .mobile-public-profile .mobile-user-follow {
+  --button-surface: linear-gradient(180deg, var(--night-raised, var(--paper)), var(--night-layer, var(--paper-bottom)));
+  --button-shadow: var(--shadow-button-light);
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: calc(6px * var(--label-space));
+  width: calc(44px + (4em + 12px) * var(--label-space));
   min-height: 44px;
-  padding: 0 16px;
+  padding: 0;
   border: 0;
   border-radius: var(--radius-pill);
-  background: linear-gradient(180deg, var(--paper), var(--paper-bottom));
-  color: var(--ink);
+  background: transparent;
+  color: var(--toolbar-ink);
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
-  box-shadow: var(--shadow-button-light);
   transition: transform 90ms ease;
+}
+.mobile-user-follow::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--button-surface);
+  box-shadow: var(--button-shadow);
+  opacity: var(--label-space);
+}
+.mobile-user-follow .follow-label {
+  min-inline-size: 0;
+  max-width: calc(4em * min(1, 1.7 * var(--label-space)));
+  overflow: hidden;
+  opacity: var(--label-opacity);
 }
 .mobile-user-follow:active {
   transform: translateY(1px);
 }
-.mobile-user-follow[aria-pressed="true"] {
-  background: rgba(35, 28, 24, 0.64);
-  color: var(--paper);
-  box-shadow:
+.mobile-public-profile .mobile-user-follow[aria-pressed="true"] {
+  --button-surface: rgb(35 28 24 / 64%);
+  --button-shadow:
     inset 0 1px 0 #ffffff40,
     inset 0 -2px 0 #0000001a;
+  color: color-mix(in srgb, var(--toolbar-ink) calc(100% * var(--actions-progress)), #fff);
 }
 .mobile-user-identity {
   position: relative;
@@ -174,20 +219,13 @@
   font-weight: 900;
 }
 .mobile-user-sheet {
-  position: relative;
-  min-height: max(360px, calc(100dvh - 372px));
   margin-top: -28px;
-  padding: 10px 20px max(32px, env(safe-area-inset-bottom));
-  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
-  background: var(--paper);
 }
-.mobile-user-sheet-handle {
-  display: block;
-  width: 36px;
-  height: 4px;
-  margin: 0 auto 14px;
-  border-radius: var(--radius-pill);
-  background: var(--handle);
+.mobile-user-sheet .mobile-profile-sheet-content {
+  padding: 0 var(--profile-edge) max(32px, env(safe-area-inset-bottom));
+}
+.mobile-user-sheet :is(a, button, input, select) {
+  scroll-margin-block-start: calc(var(--profile-toolbar-height) + 32px);
 }
 .mobile-user-foods-heading {
   display: flex;
@@ -430,7 +468,7 @@
   color: var(--ink);
 }
 .mobile-user-more {
-  inset: max(92px, calc(env(safe-area-inset-top) + 52px))
+  inset: calc(var(--profile-toolbar-height) + 2px + max(0px, var(--header-lead) - var(--profile-scroll-offset, 0px)))
     max(16px, calc((100vw - 520px) / 2 + 16px)) auto auto;
   width: min(240px, calc(100vw - 32px));
   margin: 0;

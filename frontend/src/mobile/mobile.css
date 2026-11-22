@@ -982,15 +982,11 @@ html[data-motion-input="keyboard"] .design-fab-surface {
   height: 100%;
   zoom: 1;
 }
-.mobile-profile-screen {
+.profile-scroll-screen {
   --profile-edge: clamp(16px, 5.5vw, 28px);
   --profile-safe-top: max(6px, env(safe-area-inset-top));
   --profile-toolbar-height: calc(var(--profile-safe-top) + 50px);
   --profile-surface: var(--night-surface, #fff);
-  --profile-blue: #9abbdc;
-  --profile-text: var(--night-ink, #221e1b);
-  --profile-muted: #49484a;
-  --profile-glass: rgb(255 255 255 / 42%);
   position: relative;
   width: 100%;
   height: 100%;
@@ -999,6 +995,12 @@ html[data-motion-input="keyboard"] .design-fab-surface {
   overflow-anchor: none;
   overscroll-behavior-y: contain;
   scrollbar-width: none;
+}
+.mobile-profile-screen {
+  --profile-blue: #9abbdc;
+  --profile-text: var(--night-ink, #221e1b);
+  --profile-muted: #49484a;
+  --profile-glass: rgb(255 255 255 / 42%);
   background: var(--profile-blue);
   color: var(--profile-text);
 }
@@ -1016,13 +1018,12 @@ html[data-motion-input="keyboard"] .design-fab-surface {
   margin-top: calc(-1 * var(--profile-toolbar-height));
   padding: var(--profile-toolbar-height) var(--profile-edge) clamp(20px, 3dvh, 29px);
 }
-.mobile-profile-actions {
+.profile-collapse-toolbar {
   --profile-collapse: 0;
   --actions-travel: min(1, calc(var(--profile-collapse) * 1.45));
   --actions-progress: calc(var(--actions-travel) * var(--actions-travel) * (3 - 2 * var(--actions-travel)));
   --label-space: calc(1 - var(--actions-progress));
   --label-opacity: clamp(0, calc(1 - 2 * var(--actions-progress)), 1);
-  --compact-actions-width: 96px;
   position: sticky;
   top: 0;
   z-index: 3;
@@ -1030,6 +1031,9 @@ html[data-motion-input="keyboard"] .design-fab-surface {
   display: flex;
   align-items: center;
   height: var(--profile-toolbar-height);
+}
+.mobile-profile-actions {
+  --compact-actions-width: 96px;
   padding: var(--profile-safe-top) var(--profile-edge) 6px;
   background: color-mix(in srgb, var(--profile-surface) calc(100% * var(--profile-collapse)), var(--profile-blue));
 }
@@ -1297,8 +1301,8 @@ html[data-motion-input="keyboard"] .design-fab-surface {
   padding: 16px var(--profile-edge) var(--mobile-nav-clearance);
 }
 @media (prefers-reduced-motion: reduce) {
-  .mobile-profile-actions { --profile-collapse: 0 !important; }
-  .mobile-profile-actions[data-compact] { --profile-collapse: 1 !important; }
+  .profile-collapse-toolbar { --profile-collapse: 0 !important; }
+  .profile-collapse-toolbar[data-compact] { --profile-collapse: 1 !important; }
 }
 .mobile-profile-sheet .mobile-data-grid {
   padding-bottom: 0;

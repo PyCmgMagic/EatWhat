@@ -12,7 +12,7 @@ async function validateAllSheets(page) {
     errors = [];
   p.setDefaultTimeout(10000);
   p.on("pageerror", (error) => errors.push(error.message));
-  const base = "http://127.0.0.1:5173/?demo=1&view=mobile#";
+  const base = new URL("/?demo=1&view=mobile#", page.url()).href;
   const cdp = await context.newCDPSession(p);
   async function drag(handle, delta, cancel = false) {
     await handle.scrollIntoViewIfNeeded();
@@ -37,7 +37,7 @@ async function validateAllSheets(page) {
     await p.waitForFunction(
       ({ label, state }) => {
         const control = Array.from(
-          document.querySelectorAll(".mobile-sheet-handle"),
+          document.querySelectorAll(".mobile-sheet-handle, .mobile-profile-sheet-handle"),
         ).find((e) => e.getAttribute("aria-label")?.endsWith(label));
         return (
           control?.getAttribute("aria-expanded") === String(state) &&
@@ -94,7 +94,9 @@ async function validateAllSheets(page) {
         await drag(handle, -Math.min(300, original.y - 32));
         await settled(handle, true);
         const expanded = await handle.boundingBox();
-        const toolbarBox = label === "推荐内容" ? await toolbar.boundingBox() : null;
+        const publicToolbar = p.locator(".mobile-user-header");
+        const toolbarBox = label === "推荐内容" ? await toolbar.boundingBox()
+          : label === "食友分享" ? await publicToolbar.boundingBox() : null;
         const misplaced = toolbarBox
           ? Math.abs(expanded.y - toolbarBox.y - toolbarBox.height) > 1
           : expanded.y > 45;
@@ -102,6 +104,19 @@ async function validateAllSheets(page) {
           throw new Error(
             `${route} did not expand at ${width}px: ${JSON.stringify({ original, expanded })}`,
           );
+        if (label === "食友分享") {
+          await publicToolbar.getByRole("heading").waitFor();
+          const follow = await publicToolbar.locator(".mobile-user-follow").boundingBox();
+          const more = publicToolbar.getByRole("button", { name: "更多食友操作" });
+          const trigger = await more.boundingBox();
+          if (follow.width !== 44 || Math.abs(follow.y - trigger.y) > 1)
+            throw new Error("Compact profile actions must stay aligned at 44px");
+          await more.click();
+          const menu = await publicToolbar.locator(":popover-open").boundingBox();
+          if (Math.abs(menu.y - trigger.y - trigger.height - 8) > 1)
+            throw new Error("Profile menu lost its toolbar anchor");
+          await p.keyboard.press("Escape");
+        }
         if (width === 390 && route === "/")
           await p.screenshot({
             path: "output/playwright/home-sheet-expanded.png",

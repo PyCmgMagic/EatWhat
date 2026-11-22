@@ -24,7 +24,8 @@ import { DesignIcon as Icon, ReactionIcon, useMobile } from "../mobile/ui";
 import { followLabel, peopleHref } from "./profile-people";
 import { CatalogCard, FeaturePage, FeatureState, FoodManage } from "./Catalog";
 import { visualFor } from "../mobile/catalog";
-import SheetHandle from "../mobile/SheetHandle";
+import ProfileSheet, { ProfileToolbarIdentity } from "../mobile/ProfileSheet";
+import { UserAvatar } from "../components/UserAvatar";
 import { useFoodImageRefresh } from "./media";
 import { ProfileFoodLike } from "./ProfileFoodLike";
 import "./api-v2.css";
@@ -836,7 +837,6 @@ export function MobileUserProfile() {
   const follow = useTask("关注状态已更新", undefined, ["user", "social"]);
   const back = useReturnTo("/me"),
     moreId = useId();
-  const [avatarFailed, setAvatarFailed] = useState(false);
   const [manage, setManage] = useState(false);
   const self = user?.id === id,
     ready = !!id && !!q.data;
@@ -844,9 +844,10 @@ export function MobileUserProfile() {
   const canManage = !self && user?.role === "admin";
   const following = q.data?.isFollowingHim === true,
     followsMe = q.data?.isFollowingMe === true;
+  const name = q.data?.displayName || (ready ? "校园食友" : "食友主页");
   return (
     <div
-      className="ew-feature mobile-public-profile"
+      className="ew-feature design-screen profile-scroll-screen mobile-public-profile"
       style={
         {
           "--profile-stage": visual.stage,
@@ -855,7 +856,80 @@ export function MobileUserProfile() {
         } as CSSProperties
       }
     >
-      <div className="mobile-user-stage">
+      <header
+        className="profile-collapse-toolbar mobile-user-header"
+        aria-label={self ? "我的公开主页" : "食友主页"}
+      >
+        <Link to={back} aria-label="返回">
+          <Icon name="back" size={24} />
+        </Link>
+        <ProfileToolbarIdentity name={name} avatar={q.data?.avatar} />
+        <div className="mobile-user-header-actions">
+          {ready &&
+            (self ? (
+              <ProfileEditLink
+                className="mobile-user-follow"
+                aria-label="编辑资料"
+              >
+                <Icon name="edit" size={18} />
+                <span className="follow-label">编辑资料</span>
+              </ProfileEditLink>
+            ) : (
+              <button
+                className="mobile-user-follow"
+                aria-pressed={following}
+                aria-busy={follow.isPending}
+                disabled={follow.isPending || q.data?.isFollowingHim == null}
+                onClick={() => follow.run(() => api.follow(id!, following))}
+              >
+                <ReactionIcon kind="follow" size={18} />
+                <span className="follow-label">
+                  {follow.isPending ? "更新中…" : followLabel(q.data!)}
+                </span>
+              </button>
+            ))}
+          {ready && !self && (
+            <button
+              type="button"
+              className="mobile-user-more-trigger"
+              popoverTarget={moreId}
+              aria-label="更多食友操作"
+            >
+              <Icon name="more" size={24} />
+            </button>
+          )}
+        </div>
+        {ready && !self && (
+          <div id={moreId} popover="auto" className="mobile-user-more">
+            {canManage && (
+              <button
+                type="button"
+                className="mobile-user-manage"
+                role="switch"
+                aria-checked={manage}
+                onClick={() => setManage(!manage)}
+              >
+                <span className="mobile-user-manage-text">
+                  管理
+                  <em>开启后可编辑、删除 TA 的菜品</em>
+                </span>
+                <span
+                  className="mobile-user-switch"
+                  data-on={manage ? "true" : undefined}
+                  aria-hidden="true"
+                >
+                  <i />
+                </span>
+              </button>
+            )}
+            <BlockControl
+              userId={id!}
+              onAction={() => document.getElementById(moreId)?.hidePopover()}
+            />
+          </div>
+        )}
+      </header>
+      <div className="mobile-user-stage" data-profile-stage>
         <div className="mobile-user-plate" aria-hidden="true">
           {coverSrc && failedCover !== coverSrc ? (
             <img
@@ -870,63 +944,18 @@ export function MobileUserProfile() {
             <Icon name="bowl" size={92} />
           )}
         </div>
-        <header
-          className="mobile-user-header"
-          aria-label={self ? "我的公开主页" : "食友主页"}
-        >
-          <Link to={back} aria-label="返回">
-            <Icon name="back" size={24} />
-          </Link>
-          <div className="mobile-user-header-actions">
-            {ready &&
-              (self ? (
-                <ProfileEditLink className="mobile-user-follow">
-                  编辑资料
-                </ProfileEditLink>
-              ) : (
-                <button
-                  className="mobile-user-follow"
-                  aria-pressed={following}
-                  aria-busy={follow.isPending}
-                  disabled={follow.isPending || q.data?.isFollowingHim == null}
-                  onClick={() => follow.run(() => api.follow(id!, following))}
-                >
-                  <ReactionIcon kind="follow" size={18} />
-                  <span className="follow-label">
-                    {follow.isPending ? "更新中…" : followLabel(q.data!)}
-                  </span>
-                </button>
-              ))}
-            {ready && !self && (
-              <button
-                type="button"
-                className="mobile-user-more-trigger"
-                popoverTarget={moreId}
-                aria-label="更多食友操作"
-              >
-                <Icon name="more" size={24} />
-              </button>
-            )}
-          </div>
-        </header>
         {ready ? (
           <section
             className="mobile-user-identity"
             aria-labelledby="mobile-user-name"
           >
-            <div className="mobile-user-avatar">
-              {mediaUrl(q.data!.avatar) && !avatarFailed ? (
-                <img
-                  src={mediaUrl(q.data!.avatar)}
-                  alt="食友头像"
-                  onError={() => setAvatarFailed(true)}
-                />
-              ) : (
-                Array.from(q.data!.displayName || "食")[0]
-              )}
-            </div>
+            <UserAvatar
+              className="mobile-user-avatar"
+              avatar={q.data!.avatar}
+              name={name}
+            />
             <h1 id="mobile-user-name">
-              {q.data!.displayName || "校园食友"}
+              {name}
               {q.data!.level != null && (
                 <span className="user-level-badge">Lv.{q.data!.level}</span>
               )}
@@ -982,8 +1011,7 @@ export function MobileUserProfile() {
           <div className="mobile-user-loading-title">食友主页</div>
         )}
       </div>
-      <section className="mobile-user-sheet" aria-label="食友分享">
-        <SheetHandle label="食友分享" />
+      <ProfileSheet className="mobile-user-sheet" label="食友分享">
         {!id ? (
           <FeatureState empty="食友编号无效" />
         ) : q.isPending || (q.isError && !q.data) ? (
@@ -1005,36 +1033,7 @@ export function MobileUserProfile() {
             />
           </>
         )}
-      </section>
-      {ready && !self && (
-        <div id={moreId} popover="auto" className="mobile-user-more">
-          {canManage && (
-            <button
-              type="button"
-              className="mobile-user-manage"
-              role="switch"
-              aria-checked={manage}
-              onClick={() => setManage(!manage)}
-            >
-              <span className="mobile-user-manage-text">
-                管理
-                <em>开启后可编辑、删除 TA 的菜品</em>
-              </span>
-              <span
-                className="mobile-user-switch"
-                data-on={manage ? "true" : undefined}
-                aria-hidden="true"
-              >
-                <i />
-              </span>
-            </button>
-          )}
-          <BlockControl
-            userId={id!}
-            onAction={() => document.getElementById(moreId)?.hidePopover()}
-          />
-        </div>
-      )}
+      </ProfileSheet>
     </div>
   );
 }
