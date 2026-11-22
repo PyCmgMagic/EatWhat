@@ -1,0 +1,39 @@
+.account-restriction {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--line, #e5d8ba);
+  border-radius: 16px;
+  background: var(--surface, #fffaf0);
+  color: var(--ink, #231c18);
+}
+.account-restriction p {
+  margin: 6px 0 0;
+  line-height: 1.5;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.account-restriction-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.account-restriction-actions a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 22px;
+  color: inherit;
+  background: var(--paper, #f3eee6);
+  font-weight: 600;
+  text-decoration: none;
+}
+.account-restriction-actions a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}

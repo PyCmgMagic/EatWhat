@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { AccountRestriction } from "../components/AccountRestriction";
 import { useQuery } from "@tanstack/react-query";
 import {
   Bookmark,
@@ -272,6 +273,7 @@ export default function MobileProfile() {
           />
         }
       >
+        <AccountRestriction />
         <div
           id={panelId}
           role="tabpanel"

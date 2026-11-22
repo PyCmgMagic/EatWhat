@@ -5,6 +5,7 @@ import {
   type Transport,
 } from "./client";
 import { requestAccess } from "./access-policy";
+import { bannedActionMessage, bannedRequestAllowed } from "./banned-access";
 
 type Identity = {
   verified?: boolean | null;
@@ -72,24 +73,44 @@ export function withActionAccess(
     // Their pages retain existing login/verification gates and error handling.
     const command = (options.method ?? "GET").toUpperCase() !== "GET";
     const requirement = requestAccess(path, options);
+    const restrictedAllowed = bannedRequestAllowed(path, options);
+    let identity = deps.user();
+    if (!options.public && identity?.banned && !restrictedAllowed)
+      throw new ApiError(bannedActionMessage, "USER_DISABLED");
+    // Login-only writes can publish too (e.g. profile edits). Do not equate
+    // student verification with permission to act while the account is banned.
+    if (
+      command &&
+      session &&
+      !options.public &&
+      !restrictedAllowed &&
+      !identity
+    ) {
+      identity = await deps.loadUser();
+      options.signal?.throwIfAborted();
+      if (!current())
+        throw new ApiError(
+          "页面或账号已变化，请重新操作。",
+          "ACTION_CANCELLED",
+        );
+      if (identity.banned)
+        throw new ApiError(bannedActionMessage, "USER_DISABLED");
+    }
     if (command && requirement !== "public") {
       options.signal?.throwIfAborted();
       const unavailable = deps.unavailable?.(path);
       if (unavailable) throw new ApiError(unavailable, "ACTION_UNAVAILABLE");
       if (!session) blocked("login");
       if (requirement === "verified" || requirement === "verifiedOrAdmin") {
-        const user = deps.user() ?? (await deps.loadUser());
+        const user = identity ?? (await deps.loadUser());
         options.signal?.throwIfAborted();
         if (!current())
           throw new ApiError(
             "页面或账号已变化，请重新操作。",
             "ACTION_CANCELLED",
           );
-        if (user.banned)
-          throw new ApiError(
-            "账号暂时无法操作，请联系管理员。",
-            "USER_DISABLED",
-          );
+        if (user.banned && !restrictedAllowed)
+          throw new ApiError(bannedActionMessage, "USER_DISABLED");
         if (
           user.verified !== true &&
           !(requirement === "verifiedOrAdmin" && user.role === "admin")

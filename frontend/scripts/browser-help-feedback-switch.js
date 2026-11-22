@@ -6,7 +6,8 @@ async (page) => {
   const assert = (value, message) => {
     if (!value) throw new Error(message);
   };
-  for (const width of [320, 390, 520, 1440]) {
+  // Mobile uses standalone pages; browser-mobile-feedback.js covers that flow.
+  for (const width of [1440]) {
     const mobile = width < 640;
     const context = await page.context().browser().newContext({
       viewport: { width, height: mobile ? 844 : 1000 },

@@ -5,6 +5,7 @@ import { UserAvatar } from "../components/UserAvatar";
 import { UserTitle } from "../components/UserTitle";
 import {
   useEffect,
+  useId,
   useRef,
   useState,
   type CSSProperties,
@@ -23,7 +24,9 @@ import { useFoodPhoto } from "../features/media";
 import { useCelebration } from "../features/food-reactions";
 import { DesignIcon, ReactionIcon } from "./ui";
 import { DishMoreActions } from "./DishMoreActions";
+import { useDishScroll } from "./useDishScroll";
 import { visualFor } from "./catalog";
+import "./sheet-handle.css";
 import "./dish-detail.css";
 import { SupplementPrice } from "../features/SupplementPrice";
 import { FoodCommentPreview } from "../features/comments/Comments";
@@ -47,10 +50,7 @@ type Props = {
   footer: ReactNode;
 };
 
-function useOptimisticReaction(
-  serverValue: boolean,
-  onToggle: () => unknown,
-) {
+function useOptimisticReaction(serverValue: boolean, onToggle: () => unknown) {
   const [pending, setPending] = useState<boolean | null>(null);
   const active = pending ?? serverValue;
   const celebration = useCelebration(260);
@@ -107,6 +107,8 @@ export default function DishDetail({
   management,
   footer,
 }: Props) {
+  const { screen, handleProps } = useDishScroll();
+  const sheetId = useId();
   const visual = visualFor(food, demo),
     src = mediaUrl(food.pictureUrl?.[0]);
   const photo = useFoodPhoto(src);
@@ -154,6 +156,7 @@ export default function DishDetail({
   );
   return (
     <article
+      ref={screen}
       className="design-screen mobile-dish-screen"
       data-screen="G-Dish"
       data-food-stage={visual.stageTone}
@@ -165,40 +168,46 @@ export default function DishDetail({
         } as CSSProperties
       }
     >
+      <header className="dish-toolbar" aria-label="菜品操作">
+        <Link className="dish-icon-button" to={back} aria-label="返回">
+          <DesignIcon name="back" size={22} />
+        </Link>
+        <div className="dish-toolbar-summary" aria-hidden="true">
+          <strong role="heading" aria-level={1} title={food.name || "这道菜"}>
+            {food.name || "这道菜"}
+          </strong>
+          <span>{money(food.price)}</span>
+        </div>
+        <div className="dish-toolbar-actions">
+          <button
+            type="button"
+            className={`dish-icon-button dish-favorite${favorite.celebrating ? " is-celebrating" : ""}`}
+            aria-label={favorite.active ? "取消收藏" : "收藏"}
+            aria-pressed={favorite.active}
+            disabled={favoriteDisabled}
+            onClick={favorite.toggle}
+          >
+            <ReactionIcon kind="favorite" size={22} />
+          </button>
+          <button
+            type="button"
+            className="dish-icon-button"
+            aria-label="分享菜品"
+            onClick={onShare}
+          >
+            <DesignIcon name="share" size={22} />
+          </button>
+          {food.id && (
+            <DishMoreActions
+              key={food.id}
+              foodId={food.id}
+              foodName={food.name}
+              management={management}
+            />
+          )}
+        </div>
+      </header>
       <div className="dish-hero">
-        <header className="dish-toolbar">
-          <Link className="dish-icon-button" to={back} aria-label="返回">
-            <DesignIcon name="back" size={22} />
-          </Link>
-          <div className="dish-toolbar-actions">
-            <button
-              type="button"
-              className={`dish-icon-button dish-favorite${favorite.celebrating ? " is-celebrating" : ""}`}
-              aria-label={favorite.active ? "取消收藏" : "收藏"}
-              aria-pressed={favorite.active}
-              disabled={favoriteDisabled}
-              onClick={favorite.toggle}
-            >
-              <ReactionIcon kind="favorite" size={22} />
-            </button>
-            <button
-              type="button"
-              className="dish-icon-button"
-              aria-label="分享菜品"
-              onClick={onShare}
-            >
-              <DesignIcon name="share" size={22} />
-            </button>
-            {food.id && (
-              <DishMoreActions
-                key={food.id}
-                foodId={food.id}
-                foodName={food.name}
-                management={management}
-              />
-            )}
-          </div>
-        </header>
         <div className="dish-hero-content">
           <div className="dish-hero-copy">
             <span className="dish-category">
@@ -240,7 +249,15 @@ export default function DishDetail({
           </div>
         </div>
       </div>
-      <div className="dish-sheet mobile-detail-sheet">
+      <div className="dish-sheet mobile-detail-sheet" id={sheetId}>
+        <button
+          type="button"
+          className="mobile-sheet-handle dish-sheet-handle"
+          aria-controls={sheetId}
+          {...handleProps}
+        >
+          <span aria-hidden="true" />
+        </button>
         {restaurantId ? (
           <Link
             className="dish-shop"

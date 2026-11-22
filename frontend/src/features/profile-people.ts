@@ -64,9 +64,8 @@ export function canReadPeople({
 }) {
   return (
     authenticated &&
-    !banned &&
     !!ownerId &&
     !!accountId &&
-    (ownerId === accountId || (profileReady && visible === true))
+    (ownerId === accountId || (!banned && profileReady && visible === true))
   );
 }

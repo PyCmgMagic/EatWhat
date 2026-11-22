@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { AccountRestriction } from "../components/AccountRestriction";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
@@ -294,6 +295,7 @@ export default function ProfileOverview() {
   const greeting = mealGreeting(new Date().getHours());
   return (
     <div className="profile-overview pp-page pp-overview">
+      <AccountRestriction />
       <ProfilePageHead
         title={`${greeting.hello}，${greeting.ask}`}
         detail="抽一张今日食签，或者接着看看最近的上传和收藏。"

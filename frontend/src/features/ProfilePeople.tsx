@@ -99,7 +99,7 @@ export function ProfilePeopleDialog() {
   const profile = useQuery({
     queryKey: ["user", id],
     queryFn: () => api.otherUser(id!),
-    enabled: open && !!session && !!user && !user.banned && !!id,
+    enabled: open && !!session && !!user && (!user.banned || own) && !!id,
   });
   const visible =
     tab === "fans"
@@ -200,7 +200,7 @@ export function ProfilePeopleDialog() {
     content = <State loading />;
   else if (me.isError)
     content = <State error={me.error} retry={() => void me.refetch()} />;
-  else if (user?.banned)
+  else if (user?.banned && !own)
     content = (
       <State title="账号暂时无法使用" detail="请联系平台管理员了解账号状态。" />
     );

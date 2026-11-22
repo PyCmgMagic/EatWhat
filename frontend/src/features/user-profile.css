@@ -249,6 +249,8 @@
     sans-serif;
 }
 .mobile-user-foods-heading > button {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -262,54 +264,68 @@
   font-size: 13px;
 }
 .mobile-user-foods-heading > button[aria-expanded="true"] {
-  background: var(--mist);
   color: var(--ink);
 }
 .mobile-user-filter-reveal {
-  --filter-duration: 185ms;
-  --filter-ease: cubic-bezier(.32, .08, .42, 1);
-  --filter-origin: calc(100% - 36px) 0;
   display: grid;
   grid-template-rows: 0fr;
 }
 .mobile-user-filter-reveal:not([inert]) {
-  --filter-duration: 310ms;
-  --filter-ease: cubic-bezier(.22, .76, .28, 1);
   grid-template-rows: 1fr;
 }
 .mobile-user-filter-clip {
   display: flow-root;
   min-height: 0;
-  overflow: clip;
-}
-.mobile-user-filter-reveal:not([inert]) .mobile-user-filter-clip {
-  overflow-clip-margin: 3px;
 }
 .mobile-user-filters {
+  --filter-radius: 14px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
   margin: 0 0 16px;
+  padding: 10px;
+  border-radius: var(--filter-radius);
+  background: var(--mist);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent);
+}
+.mobile-user-filter-reveal[inert] .mobile-user-filters {
+  visibility: hidden;
 }
 @media (prefers-reduced-motion: no-preference) {
   html:not([data-motion-input="keyboard"]) .mobile-user-filter-reveal {
-    transition: grid-template-rows var(--filter-duration) var(--filter-ease);
+    transition: grid-template-rows 235ms cubic-bezier(.33, .05, .42, 1);
+  }
+  html:not([data-motion-input="keyboard"]) .mobile-user-filter-reveal:not([inert]) {
+    transition: grid-template-rows 345ms cubic-bezier(.22, .76, .28, 1);
   }
   html:not([data-motion-input="keyboard"]) .mobile-user-filters {
-    clip-path: circle(0 at var(--filter-origin));
-    transform-origin: var(--filter-origin);
-    transform: translateY(-6px) scale(.92, .84);
-    opacity: 0;
+    --tap-x: var(--filter-tap-x, 90%);
+    clip-path: inset(0 calc(100% - var(--tap-x) - 4px) 0 calc(var(--tap-x) - 4px) round 4px / 50%);
+    transform-origin: center top;
+    transform: translateY(var(--filter-tap-y, -30px)) scaleY(var(--filter-seed-scale, .06));
+    background-color: color-mix(in srgb, var(--ink-muted) 55%, var(--mist));
     transition:
-      clip-path var(--filter-duration) var(--filter-ease),
-      transform var(--filter-duration) var(--filter-settle, var(--filter-ease)),
-      opacity 140ms ease-out;
+      clip-path 175ms cubic-bezier(.36, .05, .58, 1),
+      transform 195ms 40ms cubic-bezier(.32, .1, .42, 1),
+      background-color 150ms, visibility 0s 235ms;
   }
   html:not([data-motion-input="keyboard"]) .mobile-user-filter-reveal:not([inert]) .mobile-user-filters {
-    --filter-settle: cubic-bezier(.2, 1.5, .42, 1);
-    clip-path: circle(150% at var(--filter-origin));
+    /* Drop from the tap before widening into the panel. */
+    clip-path: inset(0 0 0 0 round var(--filter-radius));
     transform: none;
+    background-color: var(--mist);
+    transition:
+      clip-path 310ms 18ms cubic-bezier(.36, .16, .26, 1),
+      transform 320ms cubic-bezier(.22, .76, .3, 1.07),
+      background-color 240ms ease-out;
+  }
+  html:not([data-motion-input="keyboard"]) .mobile-user-filters > * {
+    opacity: 0;
+    transition: opacity 90ms ease-out;
+  }
+  html:not([data-motion-input="keyboard"]) .mobile-user-filter-reveal:not([inert]) .mobile-user-filters > * {
     opacity: 1;
+    transition: opacity 155ms 105ms ease-out;
   }
   html:not([data-motion-input="keyboard"]) .mobile-user-foods-heading > button {
     transition: background-color 160ms ease-out, color 160ms ease-out, transform 120ms ease-out;
@@ -325,7 +341,7 @@
   min-width: 0;
   padding: 2px 4px 2px 14px;
   border-radius: var(--radius-pill);
-  background: var(--mist);
+  background: var(--paper);
 }
 .mobile-user-search > .design-icon {
   flex: none;
@@ -349,14 +365,14 @@
   padding: 8px;
   border: 0;
   border-radius: var(--radius-pill);
-  background: var(--paper);
+  background: var(--mist);
   font-size: 13px;
   font-weight: 600;
 }
 .mobile-user-filters .ew-select > button.ew-select-trigger {
   border: 0;
   border-radius: var(--radius-pill);
-  background: var(--mist);
+  background: var(--paper);
   box-shadow: none;
   padding: 8px 14px;
 }

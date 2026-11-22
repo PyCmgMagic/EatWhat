@@ -21,11 +21,13 @@ export function FeedbackScreenshots({
   disabled,
   onAdd,
   onRemove,
+  compact = false,
 }: {
   files: File[];
   disabled: boolean;
   onAdd: (files: File[]) => void;
   onRemove: (index: number) => void;
+  compact?: boolean;
 }) {
   const urls = useRef(new Map<File, string>());
   const [photos, setPhotos] = useState<EditableFoodPhoto[]>([]);
@@ -59,6 +61,7 @@ export function FeedbackScreenshots({
     <FoodPhotoPicker
       photos={photos}
       feedback
+      compact={compact}
       disabled={disabled}
       onAdd={onAdd}
       onRemove={onRemove}

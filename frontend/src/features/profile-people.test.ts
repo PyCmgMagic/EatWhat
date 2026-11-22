@@ -90,6 +90,7 @@ describe("people list privacy gate", () => {
         visible: false,
       }),
     ).toBe(true);
+    expect(canReadPeople({ ...other, ownerId: 10, banned: true, visible: false })).toBe(true);
   });
   it("requires explicit confirmed visibility for somebody else's list", () => {
     for (const visible of [undefined, null, false])

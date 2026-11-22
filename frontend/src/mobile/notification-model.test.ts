@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 import {
   notificationGroups,
   notificationTime,
+  mobileNotificationTime,
   notificationView,
   type NotificationCard,
 } from "./notification-model";
@@ -101,7 +102,7 @@ it("does not link removed content or an unavailable target", () => {
     ).href,
   ).toBeUndefined();
 });
-it("groups and sorts messages by Beijing calendar days across midnight", () => {
+it("starts a new week at Monday midnight in Beijing", () => {
   const groups = notificationGroups(
     [
       card({ id: "2", day: "2026-11-15", latestAt: now - 3_600_000 }),
@@ -110,12 +111,29 @@ it("groups and sorts messages by Beijing calendar days across midnight", () => {
     ],
     now,
   );
-  expect(groups.map((group) => group.label)).toEqual([
-    "今天",
-    "昨天",
-    "11月14日",
-  ]);
-  expect(groups.map((group) => group.items[0].id)).toEqual(["1", "2", "3"]);
+  expect(groups.map((group) => group.label)).toEqual(["今天", "更早"]);
+  expect(groups.map((group) => group.items.map(item => item.id))).toEqual([["1"], ["2", "3"]]);
+});
+it("keeps this week's messages together and normalizes second timestamps before sorting", () => {
+  const sunday = Date.parse("2026-11-22T05:52:00Z");
+  const groups = notificationGroups([
+    card({ id: "old", day: "2026-11-15", latestAt: sunday - 7 * 86_400_000 }),
+    card({ id: "friday", day: "2026-11-20", latestAt: sunday - 2 * 86_400_000 }),
+    card({ id: "today", day: "2026-11-22", latestAt: sunday / 1000 }),
+    card({ id: "yesterday", day: "2026-11-21", latestAt: (sunday - 86_400_000) / 1000 }),
+  ], sunday);
+  expect(groups.map(group => group.label)).toEqual(["今天", "本周", "更早"]);
+  expect(groups.map(group => group.items.map(item => item.id))).toEqual([["today"], ["yesterday", "friday"], ["old"]]);
+  expect(mobileNotificationTime(sunday - 86_400_000, sunday)).toBe("昨天");
+  expect(mobileNotificationTime(sunday - 2 * 86_400_000, sunday)).toBe("周五");
+  expect(mobileNotificationTime(now - 11 * 60_000, now)).toBe("昨天");
+});
+it("shows named removal reasons and device details without an unsafe content link", () => {
+  expect(notificationView(card({ data: { detail: { type: "content_removed", title: "123", reason: "删除测试数据" } } } as unknown as Partial<NotificationCard>))).toMatchObject({
+    title: "你上传的「123」已被删除", body: "原因：删除测试数据", href: undefined,
+  });
+  expect(notificationView(card({ data: { detail: { type: "new_device_login", device: "WEB" } } } as unknown as Partial<NotificationCard>)).device).toEqual({ name: "网页版", desktop: true });
+  expect(notificationView(card({ kind: "follow", data: null, actors: [{ id: 21, name: "小林" }] } as Partial<NotificationCard>)).actor?.id).toBe(21);
 });
 it("formats recent messages and tolerates missing timestamps", () => {
   expect(notificationTime(now - 600_000, now)).toBe("10 分钟前");

@@ -15,12 +15,14 @@ export function FoodPhotoPicker({
   onAdd,
   onRemove,
   feedback = false,
+  compact = false,
 }: {
   photos: EditableFoodPhoto[];
   disabled: boolean;
   onAdd: (files: File[]) => void;
   onRemove: (index: number) => void;
   feedback?: boolean;
+  compact?: boolean;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const previewTrigger = useRef<HTMLButtonElement>(null);
@@ -28,8 +30,9 @@ export function FoodPhotoPicker({
   const removedIndex = useRef<number | null>(null);
   useLayoutEffect(() => {
     if (removedIndex.current === null || !grid.current) return;
-    const previews =
-      grid.current.querySelectorAll<HTMLButtonElement>(".food-photo-preview");
+    const previews = grid.current.querySelectorAll<HTMLButtonElement>(
+      ".food-photo-preview",
+    );
     const next =
       previews[Math.min(removedIndex.current, previews.length - 1)] ??
       grid.current.querySelector<HTMLButtonElement>(".food-photo-add");
@@ -70,11 +73,19 @@ export function FoodPhotoPicker({
         role="group"
         aria-label={feedback ? "反馈截图" : "菜品照片"}
         data-feedback={feedback || undefined}
+        data-compact={compact || undefined}
       >
         <header className="food-photo-heading">
-          <Heading>{feedback ? "截图（可选）" : "菜品照片"}</Heading>
+          <Heading>
+            {feedback
+              ? compact
+                ? "截图（选填，最多 3 张）"
+                : "截图（可选）"
+              : "菜品照片"}
+          </Heading>
           <span role="status" aria-live="polite">
-            {photos.length} / {limit} 张
+            {photos.length} / {limit}
+            {!compact && " 张"}
           </span>
         </header>
         {!feedback && (
@@ -163,12 +174,14 @@ export function FoodPhotoPicker({
                 onClick={() => input.current?.click()}
               >
                 <span className="food-photo-add-icon">
-                  <Icon name="add" size={24} />
+                  <Icon name="add" size={compact ? 32 : 24} />
                 </span>
-                <strong>
-                  {feedback || photos.length ? `添加${item}` : "添加菜品照片"}
-                </strong>
-                {(!feedback || !photos.length) && (
+                {!compact && (
+                  <strong>
+                    {feedback || photos.length ? `添加${item}` : "添加菜品照片"}
+                  </strong>
+                )}
+                {!compact && (!feedback || !photos.length) && (
                   <small>
                     {photos.length
                       ? `还可添加 ${remaining} 张`

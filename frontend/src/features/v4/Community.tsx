@@ -1,4 +1,5 @@
 import { commentLikeLink } from "../../api/notifications";
+import { MessageSquareText } from "lucide-react";
 import { errorMessage } from "../../api/client";
 import {
   feedbackCategories,
@@ -70,15 +71,19 @@ type TargetType = "FOOD" | "RESTAURANT" | "COMMENT" | "USER";
 export function FeedbackForm({
   kind = "feedback",
   showHeader = true,
+  mobile = false,
 }: {
   kind?: "feedback" | "report" | "catalog";
   showHeader?: boolean;
+  mobile?: boolean;
 }) {
   const app = useApp(),
+    queryClient = useQueryClient(),
     nav = useNavigate(),
     location = useLocation(),
     [params] = useSearchParams(),
     task = useCommand();
+  const appeal = kind === "feedback" && params.get("appeal") === "1";
   const targetId = Number(params.get("id") ?? params.get("restaurantId")),
     rawType = params.get("type"),
     targetType: TargetType = ["FOOD", "RESTAURANT", "COMMENT", "USER"].includes(
@@ -90,7 +95,7 @@ export function FeedbackForm({
         : "FOOD";
   const validTarget = Number.isSafeInteger(targetId) && targetId > 0;
   const active = usePageLifetime();
-  const draftKey = `feedback:${app.user?.id}:${kind}:${targetType}:${validTarget ? targetId : "general"}`;
+  const draftKey = `feedback:${app.user?.id}:${appeal ? "appeal" : kind}:${targetType}:${validTarget ? targetId : "general"}`;
   const [draft, setDraft, clearDraft] = useSessionDraft(draftKey, {
     text: "",
     category: "" as FeedbackCategory | "",
@@ -102,8 +107,8 @@ export function FeedbackForm({
     checking?: ReturnType<typeof checkScreenshots>;
   }>(draftKey, { files: [], uploaded: new WeakMap() });
   const { text, reason } = draft;
-  const category = draft.category ?? "";
-  const textLimit = kind === "feedback" ? 500 : 2000;
+  const category = appeal ? "OTHER" : draft.category ?? "";
+  const textLimit = kind === "feedback" ? (appeal ? 493 : 500) : 2000;
   const { files, uploaded, checking } = attachments;
   useEffect(() => {
     if (!files.length && !checking) return;
@@ -157,11 +162,13 @@ export function FeedbackForm({
     <Shell
       back={back}
       title={
-        kind === "report"
+        appeal ? "账号申诉" : kind === "report"
           ? "举报内容"
           : kind === "catalog"
             ? "店铺信息有误"
-            : "帮助与反馈"
+            : mobile
+              ? "反馈"
+              : "帮助与反馈"
       }
       detail="每一条建议都会进入你的反馈记录，处理后可查看回复。"
       heading={
@@ -197,6 +204,9 @@ export function FeedbackForm({
           </p>
         ) : (
           <form
+            className={
+              mobile && kind === "feedback" ? "mobile-feedback-form" : undefined
+            }
             aria-busy={!!checking || task.busy}
             onSubmit={(e) => {
               e.preventDefault();
@@ -205,6 +215,8 @@ export function FeedbackForm({
                 async (command) => {
                   if (kind === "feedback" && !text.trim())
                     throw new Error("请填写反馈内容。");
+                  if (mobile && kind === "feedback" && !category)
+                    throw new Error("请选择反馈分类。");
                   if ([...text].length > textLimit)
                     throw new Error(`内容最多填写 ${textLimit} 个字。`);
                   if (kind === "feedback") {
@@ -221,7 +233,7 @@ export function FeedbackForm({
                     }
                     return app.api.createFeedback(
                       {
-                        text: text.trim(),
+                        text: appeal ? `【账号申诉】 ${text.trim()}` : text.trim(),
                         category: category || undefined,
                         screenshotKeys: files.map((file) =>
                           uploaded.get(file)!,
@@ -257,6 +269,9 @@ export function FeedbackForm({
                 (result) => {
                   clearDraft();
                   clearAttachments();
+                  void queryClient.invalidateQueries({
+                    queryKey: ["feedback", "mine"],
+                  });
                   if (active.current)
                     nav(`/feedback/mine/${result.id}`, {
                       state: {
@@ -269,28 +284,57 @@ export function FeedbackForm({
             }}
           >
             <fieldset disabled={task.busy || task.uncertain}>
-              {kind === "feedback" && (
-                <Field label="反馈分类">
-                  <select
-                    value={category}
-                    onChange={(event) => {
-                      const value = event.target.value as FeedbackCategory | "";
-                      setDraft((previous) => ({
-                        ...previous,
-                        category: value,
-                      }));
-                    }}
-                  >
-                    <option value="">请选择（选填）</option>
-                    {Object.entries(feedbackCategories).map(
-                      ([value, label]) => (
-                        <option key={value} value={value}>
-                          {label}
-                        </option>
-                      ),
-                    )}
-                  </select>
-                </Field>
+              {kind === "feedback" && mobile && !appeal ? (
+                <div
+                  className="mobile-feedback-categories"
+                  role="radiogroup"
+                  aria-label="反馈分类"
+                  aria-required="true"
+                >
+                  {Object.entries(feedbackCategories).map(([value, label]) => (
+                    <label key={value}>
+                      <input
+                        type="radio"
+                        name="feedback-category"
+                        value={value}
+                        checked={category === value}
+                        required
+                        onChange={() =>
+                          setDraft((previous) => ({
+                            ...previous,
+                            category: value as FeedbackCategory,
+                          }))
+                        }
+                      />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                kind === "feedback" && !appeal && (
+                  <Field label="反馈分类">
+                    <select
+                      value={category}
+                      onChange={(event) => {
+                        const value = event.target.value as
+                          FeedbackCategory | "";
+                        setDraft((previous) => ({
+                          ...previous,
+                          category: value,
+                        }));
+                      }}
+                    >
+                      <option value="">请选择（选填）</option>
+                      {Object.entries(feedbackCategories).map(
+                        ([value, label]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </Field>
+                )
               )}
               {kind !== "feedback" && (
                 <Field label="问题类型">
@@ -306,19 +350,27 @@ export function FeedbackForm({
                   </select>
                 </Field>
               )}
-              <Field label={kind === "feedback" ? "反馈内容" : "补充说明"}>
+              <Field label={appeal ? "申诉说明" : kind === "feedback" ? "反馈内容" : "补充说明"}>
                 <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   maxLength={textLimit}
                   placeholder={
-                    kind === "feedback"
-                      ? category === "PROBLEM"
-                        ? "你做了哪些操作？预期看到什么，实际发生了什么？"
-                        : category === "SUGGESTION"
-                          ? "你想完成什么？现在有哪些地方不方便？"
-                          : "写下你想反馈的内容…"
-                      : "补充一些细节，帮助我们更准确地了解问题…"
+                    appeal ? "说明你希望复核的问题，可附上相关截图。" : mobile && kind === "feedback"
+                      ? !category
+                        ? "先选一类，再写反馈内容"
+                        : category === "PROBLEM"
+                          ? "请描述遇到的问题…"
+                          : category === "SUGGESTION"
+                            ? "写下你的建议…"
+                            : "写下你想反馈的内容…"
+                      : kind === "feedback"
+                        ? category === "PROBLEM"
+                          ? "你做了哪些操作？预期看到什么，实际发生了什么？"
+                          : category === "SUGGESTION"
+                            ? "你想完成什么？现在有哪些地方不方便？"
+                            : "写下你想反馈的内容…"
+                        : "补充一些细节，帮助我们更准确地了解问题…"
                   }
                   required={kind === "feedback"}
                 />
@@ -328,6 +380,7 @@ export function FeedbackForm({
               </span>
               {kind === "feedback" && (
                 <FeedbackScreenshots
+                  compact={mobile}
                   files={files}
                   disabled={task.busy || task.uncertain || !!checking}
                   onAdd={addScreenshots}
@@ -339,8 +392,22 @@ export function FeedbackForm({
                   }
                 />
               )}
-              <button className="primary" type="submit" disabled={!!checking}>
-                {task.busy ? "正在提交…" : "提交"}
+              {mobile && kind === "feedback" && (
+                <p className="mobile-feedback-device-note">
+                  提交时会附上设备和版本信息，方便排查问题。
+                </p>
+              )}
+              <button
+                className="primary"
+                type="submit"
+                disabled={
+                  !!checking ||
+                  (mobile &&
+                    kind === "feedback" &&
+                    (!category || !text.trim() || [...text].length > textLimit))
+                }
+              >
+                {task.busy ? "正在提交…" : appeal ? "提交申诉" : "提交"}
               </button>
             </fieldset>
             <CommandState task={task} />
@@ -353,9 +420,11 @@ export function FeedbackForm({
 export function FeedbackRecords({
   id,
   showHeader = true,
+  mobile = false,
 }: {
   id?: number;
   showHeader?: boolean;
+  mobile?: boolean;
 }) {
   const { api } = useApp(),
     location = useLocation(),
@@ -381,7 +450,7 @@ export function FeedbackRecords({
     );
   return (
     <Shell
-      title="帮助与反馈"
+      title={mobile ? "我的反馈" : "帮助与反馈"}
       heading={showHeader ? <ProfileHelpHeader /> : false}
       back={
         typeof location.state?.feedbackReturnTo === "string" &&
@@ -394,32 +463,46 @@ export function FeedbackRecords({
     >
       <QueryView
         query={list}
-        empty={!list.data?.items?.length}
+        empty={!mobile && !list.data?.items?.length}
         emptyTitle="还没有留下反馈"
         emptyIllustration="yangzhi"
         emptyDetail="有建议或遇到问题时，随时告诉我们。提交后可以在这里查看进度与回复。"
       >
-        <Card>
-          {list.data?.items?.map((item) => (
-            <Link
-              className="v4-row"
-              to={`/feedback/mine/${item.id}`}
-              key={item.id}
-            >
-              <div>
-                <strong>{feedbackCategoryLabel(item) ?? statusText(item.kind)}</strong>
-                <p>
-                  {item.text ||
-                    (item.reason && feedbackReasons[item.reason]) ||
-                    "查看处理进度"}
-                </p>
-                <small>{timeText(item.createdAt)}</small>
-              </div>
-              <Badge value={item.status} />
-            </Link>
-          ))}
-        </Card>
-        <Pager page={page} hasNext={list.data?.hasNext} onChange={setPage} />
+        {mobile && !list.data?.items?.length ? (
+          <div className="mobile-feedback-empty" role="status">
+            <span className="mobile-feedback-empty-icon" aria-hidden="true">
+              <MessageSquareText size={32} strokeWidth={2} />
+            </span>
+            <h2>还没有提交过反馈</h2>
+            <p>提交的反馈、信息有误和举报会记录在这里，处理后可以查看结果。</p>
+          </div>
+        ) : (
+          <Card>
+            {list.data?.items?.map((item) => (
+              <Link
+                className="v4-row"
+                to={`/feedback/mine/${item.id}`}
+                key={item.id}
+              >
+                <div>
+                  <strong>
+                    {feedbackCategoryLabel(item) ?? statusText(item.kind)}
+                  </strong>
+                  <p>
+                    {item.text ||
+                      (item.reason && feedbackReasons[item.reason]) ||
+                      "查看处理进度"}
+                  </p>
+                  <small>{timeText(item.createdAt)}</small>
+                </div>
+                <Badge value={item.status} />
+              </Link>
+            ))}
+          </Card>
+        )}
+        {!!list.data?.items?.length && (
+          <Pager page={page} hasNext={list.data?.hasNext} onChange={setPage} />
+        )}
       </QueryView>
     </Shell>
   );

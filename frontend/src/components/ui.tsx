@@ -6,7 +6,8 @@ import {
   type ReactNode,
 } from "react";
 import { BRAND_SLOGAN } from "../app/brand";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { bannedPageAllowed } from "../api/banned-access";
 import { ContentSkeleton } from "./LoadingSkeleton";
 import { AccessWelcome } from "./AccessWelcome";
 import {
@@ -173,20 +174,24 @@ export function Gate({
   children,
   verified = true,
   recovery = false,
+  allowBanned,
 }: {
   children: ReactNode;
   verified?: boolean;
   recovery?: boolean;
+  /** Read-only account pages may remain available; login and verification still apply. */
+  allowBanned?: boolean;
 }) {
   const { session, user, me } = useApp();
+  const { pathname } = useLocation();
   if (recovery) return children;
   if (!session) return <AccessWelcome />;
   if (me.isPending) return <Loading />;
   if (me.isError)
     return <ErrorState error={me.error} retry={() => void me.refetch()} />;
-  if (user?.banned)
+  if (user?.banned && !(allowBanned ?? bannedPageAllowed(pathname)))
     return (
-      <Empty title="账号暂时无法使用">
+      <Empty title="账号暂时无法使用" action={<Link className="text-link" to="/feedback?appeal=1">申诉</Link>}>
         {user.banReason || "请联系管理员了解账号状态。"}
       </Empty>
     );

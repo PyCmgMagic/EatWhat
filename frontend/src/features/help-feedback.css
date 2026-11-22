@@ -5,3 +5,246 @@
 .help-feedback-page > .v4-page {
   padding: 0;
 }
+
+/* Phone screens use the page itself as the form surface. */
+.mobile-help-feedback {
+  --feedback-ink: #262321;
+  --feedback-muted: #726c67;
+  --feedback-bg: #fff;
+  --feedback-chip-bg: #f4f3f1;
+  --feedback-line: #e5e1dd;
+  min-height: 100dvh;
+  padding: max(16px, env(safe-area-inset-top))
+    max(24px, env(safe-area-inset-right)) max(32px, env(safe-area-inset-bottom))
+    max(24px, env(safe-area-inset-left));
+  background: var(--feedback-bg);
+  color: var(--feedback-ink);
+}
+.mobile-help-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  margin: 0 0 40px -10px;
+}
+.mobile-help-back {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 48px;
+  color: inherit;
+  border-radius: 50%;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.mobile-help-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.mobile-help-feedback .v4-page {
+  color: inherit;
+}
+.mobile-help-feedback .v4-page .v4-card {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.mobile-help-feedback .mobile-feedback-form > fieldset {
+  display: grid;
+  gap: 28px;
+}
+.mobile-feedback-categories {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 320px;
+  gap: 8px;
+}
+.mobile-feedback-categories label {
+  position: relative;
+  min-width: 0;
+  cursor: pointer;
+}
+.mobile-feedback-categories input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.mobile-feedback-categories span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px;
+  border-radius: 999px;
+  background: var(--feedback-chip-bg);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.mobile-feedback-categories input:checked + span {
+  background: var(--feedback-ink);
+  color: var(--feedback-bg);
+  font-weight: 600;
+}
+.mobile-feedback-categories input:focus-visible + span,
+.mobile-help-back:focus-visible,
+.mobile-help-links a:focus-visible {
+  outline: 2px solid var(--feedback-ink);
+  outline-offset: 4px;
+}
+.mobile-feedback-categories input:disabled + span {
+  opacity: 0.6;
+}
+.mobile-help-feedback .mobile-feedback-form .v4-field {
+  gap: 12px;
+}
+.mobile-help-feedback .mobile-feedback-form .v4-field > span {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--feedback-muted);
+}
+.mobile-help-feedback .mobile-feedback-form textarea {
+  min-height: 140px;
+  height: clamp(140px, 19dvh, 180px);
+  padding: 0 0 16px;
+  border: 0;
+  border-bottom: 1px solid var(--feedback-line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--feedback-ink);
+  font-size: 18px;
+  line-height: 1.65;
+  resize: none;
+  scroll-margin-block: 24px;
+}
+.mobile-help-feedback .mobile-feedback-form textarea::placeholder {
+  color: var(--feedback-muted);
+  opacity: 1;
+}
+.mobile-help-feedback .mobile-feedback-form textarea:focus {
+  border-color: var(--feedback-ink);
+  outline: none;
+  box-shadow: none;
+}
+.mobile-help-feedback .mobile-feedback-form .v4-field-counter {
+  margin: -20px 0 0;
+  color: var(--feedback-muted);
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.mobile-help-feedback .food-photo-picker[data-compact] .food-photo-heading {
+  justify-content: flex-start;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.mobile-help-feedback
+  .food-photo-picker[data-compact]
+  .food-photo-heading
+  :is(h3, span) {
+  margin: 0;
+  color: var(--feedback-muted);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+.mobile-help-feedback .food-photo-picker[data-compact] .food-photo-grid {
+  grid-template-columns: repeat(3, minmax(0, 76px));
+  gap: 14px;
+}
+.mobile-help-feedback .food-photo-picker[data-compact] .food-photo-add {
+  grid-column: auto;
+  width: 100%;
+  min-height: 0;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: var(--feedback-chip-bg);
+  color: var(--feedback-ink);
+}
+.mobile-help-feedback .food-photo-picker[data-compact] .food-photo-add-icon {
+  width: 36px;
+  height: 36px;
+  background: transparent;
+}
+.mobile-help-feedback .food-photo-picker[data-compact] .food-photo-help {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--feedback-muted);
+}
+.mobile-help-feedback .mobile-feedback-form .mobile-feedback-device-note {
+  margin: 8px 0 -12px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--feedback-muted);
+}
+.mobile-help-feedback .mobile-feedback-form button[type="submit"] {
+  width: 100%;
+  min-height: 58px;
+  padding: 14px 24px;
+  border-radius: 999px;
+  background: var(--feedback-ink);
+  color: var(--feedback-bg);
+  font-size: 18px;
+  font-weight: 600;
+  box-shadow: none;
+}
+.mobile-help-feedback .mobile-feedback-form button[type="submit"]:disabled {
+  background: #f0eeeb;
+  color: #b1afaa;
+  opacity: 1;
+}
+.mobile-feedback-empty {
+  padding-top: clamp(44px, 7dvh, 72px);
+  text-align: center;
+}
+.mobile-feedback-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: var(--feedback-chip-bg);
+  color: var(--feedback-muted);
+}
+.mobile-feedback-empty h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+.mobile-feedback-empty p {
+  max-width: 390px;
+  margin: 0 auto;
+  color: var(--feedback-muted);
+  font-size: 16px;
+  line-height: 1.6;
+}
+.mobile-help-links {
+  display: grid;
+  margin-bottom: 24px;
+}
+.mobile-help-links a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  color: inherit;
+  border-bottom: 1px solid var(--feedback-line);
+  text-decoration: none;
+}
+.mobile-help-feedback .profile-help-actions {
+  display: none;
+}

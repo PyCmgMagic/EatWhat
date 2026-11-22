@@ -20,6 +20,9 @@ let root: Root;
 let cache: QueryClient;
 let unreadById: Map<number, number>;
 let readAllCalls: number;
+let following: boolean;
+let failFollow: boolean;
+let failReadAll: boolean;
 const ok = (data: unknown) => new Response(JSON.stringify({ code: 0, data }));
 
 function Destination() {
@@ -73,6 +76,9 @@ beforeEach(async () => {
     [95, 2],
   ]);
   readAllCalls = 0;
+  following = true;
+  failFollow = false;
+  failReadAll = false;
   writeSession({ tokenName: "satoken", tokenValue: "notifications" });
   vi.stubGlobal(
     "fetch",
@@ -93,7 +99,14 @@ beforeEach(async () => {
         );
       if (path.endsWith("/notification/cards/read-all")) {
         readAllCalls++;
+        if (failReadAll) return Promise.resolve(new Response(JSON.stringify({ code: 400, msg: "标记失败，请重试" }), { status: 400 }));
         unreadById.clear();
+        return Promise.resolve(ok(null));
+      }
+      if (path.endsWith("/user/userInfo")) return Promise.resolve(ok({ id: 30, displayName: "FooFish", isFollowingHim: following, isFollowingMe: true }));
+      if (/\/user\/(follow|unfollow)$/.test(path)) {
+        if (failFollow) return Promise.resolve(new Response(JSON.stringify({ code: 400, msg: "关注更新失败" }), { status: 400 }));
+        following = path.endsWith("/follow");
         return Promise.resolve(ok(null));
       }
       const read = path.match(/\/notification\/cards\/(\d+)\/read$/);
@@ -105,6 +118,10 @@ beforeEach(async () => {
         return Promise.resolve(
           ok({
             items: [
+              {
+                id: 90, kind: "follow", column: "FOLLOWS", memberCount: 1, unreadMemberCount: 0,
+                latestAt: Date.now(), actors: [{ id: 30, displayName: "FooFish" }],
+              },
               {
                 id: 96,
                 kind: "new_device_login",
@@ -300,7 +317,7 @@ it("links the latest comment actor's avatar separately from the desktop notifica
 
 it("opens the commenter's profile from the mobile avatar without following the notification content link", async () => {
   await renderNotifications(true);
-  const actorLink = '.mobile-inbox a[aria-label="查看小林的主页"]';
+  const actorLink = '.mobile-inbox-row:has(.mobile-inbox-action[href="/foods/7"]) a[aria-label="查看小林的主页"]';
   await spin(() => !!host.querySelector(actorLink));
   const avatar = host.querySelector<HTMLAnchorElement>(actorLink)!;
   const content = avatar.closest("li")?.querySelector(".mobile-inbox-action");
@@ -326,4 +343,60 @@ it("opens the commenter's profile from the mobile avatar without following the n
           init?.method === "POST",
       ),
   ).toBe(true);
+});
+
+it("uses a separate device card and keeps failed mark-all operations retryable on mobile", async () => {
+  await renderNotifications(true);
+  await spin(() => !!host.querySelector('.mobile-inbox-device[href="/settings/devices"]'));
+  const device = host.querySelector(".mobile-inbox-device")!;
+  expect(device.textContent).toContain("Chrome · Android");
+  expect(device.textContent).toContain("不是本人登录时，可以让它下线");
+  expect(host.querySelector(".mobile-inbox-views")).toBeNull();
+  const readAll = host.querySelector<HTMLButtonElement>(".mobile-inbox-header > button")!;
+  await spin(() => !readAll.disabled);
+  failReadAll = true;
+  await act(async () => readAll.click());
+  await spin(() => document.body.textContent!.includes("标记失败，请重试"));
+  expect(host.querySelectorAll('[aria-label="未读"]')).toHaveLength(3);
+  expect(readAll.disabled).toBe(false);
+  failReadAll = false;
+  await act(async () => readAll.click());
+  await spin(() => !host.querySelector('[aria-label="未读"]'));
+  expect(readAll.disabled).toBe(true);
+  expect(readAllCalls).toBe(2);
+});
+
+it("updates the real follow relationship without navigating or marking the message read", async () => {
+  await renderNotifications(true);
+  const button = () => host.querySelector<HTMLButtonElement>(".mobile-inbox-follow")!;
+  await spin(() => button()?.textContent === "已互关" && !button().disabled);
+  await act(async () => button().click());
+  await spin(() => button()?.textContent === "回关" && !button().disabled);
+  expect(following).toBe(false);
+  expect(host.querySelector("output")).toBeNull();
+  failFollow = true;
+  await act(async () => button().click());
+  await spin(() => document.body.textContent!.includes("关注更新失败"));
+  expect(button().textContent).toBe("回关");
+  expect(button().getAttribute("aria-pressed")).toBe("false");
+  failFollow = false;
+  await act(async () => button().click());
+  await spin(() => button()?.textContent === "已互关");
+  expect(following).toBe(true);
+  expect(vi.mocked(fetch).mock.calls.some(([url]) => String(url).includes("/notification/cards/90/read"))).toBe(false);
+});
+
+it("restores the mobile category after opening a message and supports keyboard category navigation", async () => {
+  await renderNotifications(true);
+  await spin(() => !!host.querySelector("#inbox-tab-COMMENTS"));
+  await act(async () => host.querySelector<HTMLButtonElement>("#inbox-tab-COMMENTS")!.click());
+  await spin(() => !!host.querySelector('.mobile-inbox-action[href="/foods/7"]'));
+  await act(async () => host.querySelector<HTMLAnchorElement>('.mobile-inbox-action[href="/foods/7"]')!.click());
+  expect(host.querySelector("output")?.textContent).toBe("/foods/7");
+  await act(async () => host.querySelector("button")!.click());
+  await spin(() => host.querySelector("#inbox-tab-COMMENTS")?.getAttribute("aria-selected") === "true");
+  await act(async () => host.querySelector("#inbox-tab-COMMENTS")!.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true })));
+  expect(host.querySelector("#inbox-tab-SYSTEM")?.getAttribute("aria-selected")).toBe("true");
+  expect(document.activeElement?.id).toBe("inbox-tab-SYSTEM");
+  expect(host.querySelector('.mobile-inbox-announcement-link[href="/announcements"]')).not.toBeNull();
 });

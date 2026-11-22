@@ -66,11 +66,11 @@ function ProfileSectionHeader({
   );
 }
 
-export function ProfileHelpHeader() {
+export function ProfileHelpHeader({ title = "帮助与反馈" }: { title?: string } = {}) {
   if (useContext(DesktopSettingsContext))
     return (
       <>
-        <SettingsPageHeader title="帮助与反馈" back="/settings" />
+        <SettingsPageHeader title={title} back="/settings" />
         <ProfileSectionNav section="help" />
       </>
     );
@@ -78,7 +78,7 @@ export function ProfileHelpHeader() {
     <ProfileSectionHeader
       section="help"
       eyebrow="使用帮助"
-      title="帮助与反馈"
+      title={title}
       detail="查找常见问题，提交建议，并查看处理进度与回复。"
     />
   );

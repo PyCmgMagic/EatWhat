@@ -5,6 +5,7 @@ import { useLoginDialog } from "../app/auth-dialog";
 import { useVerificationDialog } from "../app/verification-dialog";
 import { actionUnavailable, requestAccess } from "../api/access-policy";
 import type { RequestOptions } from "../api/client";
+import { bannedActionMessage, bannedRequestAllowed } from "../api/banned-access";
 export function useActionAccess() {
   const { session, user, toast } = useApp(),
     loc = useLocation(),
@@ -31,8 +32,8 @@ export function useActionAccess() {
       );
       return false;
     }
-    if (user?.banned) {
-      toast("账号暂时无法操作，请联系管理员。");
+    if (user?.banned && (typeof target === "boolean" || !bannedRequestAllowed(target.path, target.options))) {
+      toast(bannedActionMessage);
       return false;
     }
     if (verified && user?.verified !== true) {

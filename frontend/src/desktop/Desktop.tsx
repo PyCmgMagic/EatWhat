@@ -7,6 +7,7 @@ import { SupplementPrice } from "../features/SupplementPrice";
 import { BRAND_SLOGAN } from "../app/brand";
 import { foodAuthor } from "../api/models";
 import ProfileOverview from "../features/ProfileOverview";
+import { bannedPageAllowed } from "../api/banned-access";
 import ProfileSpaceHeader from "../features/ProfileSpaceHeader";
 import { ProfileEmpty, ProfilePageHead } from "../features/ProfilePage";
 import HelpFeedback, { isHelpFeedbackPath } from "../features/HelpFeedback";
@@ -599,7 +600,9 @@ function DesktopPage({
   ].includes(screen) ? (
     content
   ) : (
-    <DesktopGate verified={false}>{content}</DesktopGate>
+    <DesktopGate verified={false}>
+      {content}
+    </DesktopGate>
   );
 }
 const CommentDestination = lazy(() =>
@@ -669,12 +672,15 @@ function DesktopSource({
 }
 function DesktopGate({
   verified = true,
+  allowBanned,
   children,
 }: {
   verified?: boolean;
+  allowBanned?: boolean;
   children: ReactNode;
 }) {
   const { session, user, me } = useApp();
+  const { pathname } = useLocation();
   if (!session) return <AccessWelcome />;
   if (me.isPending) return <DesktopRouteSkeleton />;
   if (me.error)
@@ -685,7 +691,7 @@ function DesktopGate({
         </button>
       </Status>
     );
-  if (user?.banned)
+  if (user?.banned && !(allowBanned ?? bannedPageAllowed(pathname)))
     return (
       <Status
         title="账号暂时无法使用"

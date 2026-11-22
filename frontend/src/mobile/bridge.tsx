@@ -1,4 +1,6 @@
 import MobileProfile from "./MobileProfile";
+import { bannedPageAllowed } from "../api/banned-access";
+import { androidAppDownload } from "../features/settings-nav";
 import { useFeedbackState } from "../components/feedback";
 import { unreadCount } from "../api/notifications";
 import { DishIllustration } from "../components/DishIllustration";
@@ -2338,6 +2340,13 @@ export function useDesignBridge(
               <span>个性化</span>
               <DesignIcon name="chevronRight" size={20} />
             </Link>
+            <a href={androidAppDownload.href} style={p.style}>
+              <DesignIcon name={androidAppDownload.icon} size={22} />
+              <span style={{ flex: 1, fontSize: 16 }}>
+                {androidAppDownload.name}
+              </span>
+              <DesignIcon name="chevronRight" size={20} />
+            </a>
             <a {...p}>
               <DesignIcon name="info" size={22} />
               <span style={{ flex: 1 }}>关于</span>
@@ -3203,7 +3212,10 @@ export function useDesignBridge(
   const denied =
     !accountPending &&
     !publicScreens.has(screen) &&
-    (!session || accountUnavailable || verificationRequired || user?.banned);
+    (!session ||
+      accountUnavailable ||
+      verificationRequired ||
+      (user?.banned && !bannedPageAllowed(location.pathname)));
   let before: ReactNode;
   if (accountUnavailable)
     before = (

@@ -33,8 +33,9 @@ export default function V4Routes() {
   if (path === "/auth/device-recovery") return <Devices />;
   if (path === "/auth/mobile-recovery") return <MobileChange />;
   if (path === "/auth/account-recovery") return <AccountRecovery />;
-  if (path === "/notifications" || path === "/announcements")
-    return <Messages />;
+  if (path === "/notifications")
+    return <Gate verified={false}><Messages /></Gate>;
+  if (path === "/announcements") return <Messages />;
   if (path === "/restaurants/directory") return <Directory />;
   if (path === "/features") return <Features />;
   if (

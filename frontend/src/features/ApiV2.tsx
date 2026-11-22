@@ -7,7 +7,14 @@ import { authNext, useReturnTo } from "../app/navigation";
 import { historyEntry, historyTime } from "../desktop/history";
 import { emptyHistoryCache, historyCacheFilters } from "./history-cache";
 import { useSendSignal } from "./useSendSignal";
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+} from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   keepPreviousData,
@@ -148,6 +155,31 @@ export function UserFoods({
   });
   if (!session)
     return <LoginLink to="/auth/password">登录后查看分享 →</LoginLink>;
+  function toggleFilters(event: MouseEvent<HTMLButtonElement>) {
+    const panel = form.current;
+    if (!toolsOpen && panel && !panel.getAnimations().length) {
+      const bounds = panel.parentElement!.getBoundingClientRect();
+      const button = event.currentTarget.getBoundingClientRect();
+      const x = event.detail ? event.clientX : button.left + button.width / 2;
+      const y = event.detail ? event.clientY : button.top + button.height / 2;
+      // The mobile shell can be zoomed. The clip uses local panel coordinates.
+      const scale = panel.offsetWidth / bounds.width;
+      const diameter = 8;
+      const height = panel.offsetHeight;
+      panel.style.transition = "none";
+      panel.style.setProperty(
+        "--filter-tap-x",
+        `${((x - bounds.left) / bounds.width) * 100}%`,
+      );
+      panel.style.setProperty("--filter-tap-y", `${(y - bounds.top) * scale - diameter / 2}px`);
+      panel.style.setProperty("--filter-seed-scale", String(diameter / height));
+      // Establish the new point before the open transition reads its start pose.
+      panel.getBoundingClientRect();
+      panel.style.removeProperty("transition");
+    }
+    setToolsOpen((open) => !open);
+  }
+
   const filterForm = (
     <form
       ref={form}
@@ -259,7 +291,7 @@ export function UserFoods({
             aria-label="搜索和筛选分享"
             aria-expanded={toolsOpen}
             aria-controls={filtersId}
-            onClick={() => setToolsOpen((open) => !open)}
+            onClick={toggleFilters}
           >
             <Icon name="search" size={20} />
             <span>筛选</span>

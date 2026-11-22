@@ -359,6 +359,9 @@ function MobileWorkspace() {
   const navigationSection =
     ["/me/edit", "/me/details", "/settings/personalization"].includes(loc.pathname) ||
     findAboutPage(loc.pathname) ||
+    isHelpFeedbackPath(loc.pathname) ||
+    ["/notifications", "/announcements"].includes(loc.pathname) ||
+    /^\/feedback\/mine\/\d+$/.test(loc.pathname) ||
     myCommentsPage
       ? null
       : loc.pathname === "/" || loc.pathname === "/home-photo"
@@ -557,9 +560,7 @@ function MobileWorkspace() {
                 ) : !desktop &&
                   !reference &&
                   isHelpFeedbackPath(loc.pathname) ? (
-                  <div className="ew-mobile-feature profile-mobile-page">
-                    <HelpFeedback />
-                  </div>
+                  <HelpFeedback mobile />
                 ) : !desktop &&
                   !reference &&
                   mobileSettingsPages[loc.pathname] ? (
@@ -567,7 +568,7 @@ function MobileWorkspace() {
                 ) : !desktop &&
                   !reference &&
                   loc.pathname === "/notifications" ? (
-                  <Gate verified={false}>
+                  <Gate verified={false} allowBanned>
                     <MobileNotifications />
                   </Gate>
                 ) : !desktop &&

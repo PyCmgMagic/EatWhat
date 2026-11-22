@@ -1,6 +1,7 @@
 import type { RequestOptions } from "./client";
 import { requestAccessRules } from "./access-rules.generated";
 import type { Schema } from "./models";
+import { withdrawalAllowed } from "./banned-access";
 
 export function actionUnavailable(
   remote: Schema["ClientConfigResponse"] | undefined,
@@ -26,10 +27,7 @@ export function actionUnavailable(
 }
 
 export type AccessRequirement =
-  | "public"
-  | "login"
-  | "verified"
-  | "verifiedOrAdmin";
+  "public" | "login" | "verified" | "verifiedOrAdmin";
 /** Backend v2 commands the APIv7 document (the generated rules) lacks. */
 const v2Rules = [
   ["POST", "/recommend/dismiss/{id}", "login"],
@@ -63,6 +61,13 @@ export function requestAccess(
   path: string,
   options: RequestOptions = {},
 ): AccessRequirement {
+  if (withdrawalAllowed(path, options)) return "login";
+  // These legacy aliases send a binding code in v2, which does not need student verification.
+  if (
+    (options.method ?? "GET").toUpperCase() === "POST" &&
+    ["/user/getCode", "/auth/getCode"].includes(path)
+  )
+    return "login";
   const rule = rules.find(
     (item) =>
       item.method === (options.method ?? "GET").toUpperCase() &&

@@ -45,6 +45,16 @@ export function notificationView(item: NotificationCard) {
     (item.memberCount ?? 0) > actors.length && actors.length
       ? `${names}等 ${item.memberCount} 人`
       : names;
+  const interactive = [
+    "like",
+    "comment_like",
+    "favorite",
+    "follow",
+    "comment",
+    "reply",
+    "tag",
+  ].includes(kind);
+  const actor = interactive ? item.actors?.[0] : undefined;
   let title = "系统通知",
     body = detail.content || detail.text || "",
     icon = "bell";
@@ -106,9 +116,11 @@ export function notificationView(item: NotificationCard) {
       href = "/settings/devices";
       break;
     case "content_removed":
-      title = "你发布的内容已被删除";
-      body = [detail.title, detail.reason].filter(Boolean).join("：");
-      icon = "shield";
+      title = detail.title
+        ? `你上传的「${detail.title}」已被删除`
+        : "你发布的内容已被删除";
+      body = detail.reason ? `原因：${detail.reason}` : body;
+      icon = "delete";
       href = undefined;
       break;
     case "account_banned":
@@ -143,11 +155,28 @@ export function notificationView(item: NotificationCard) {
       title =
         detail.title || (actors.length ? `${who}与你有了新互动` : "系统通知");
   }
-  return { title, body, icon, href };
+  const device =
+    kind === "new_device_login"
+      ? {
+          name:
+            detail.deviceName ||
+            (detail.device === "WEB" ? "网页版" : detail.device) ||
+            "新设备",
+          desktop:
+            detail.device === "WEB" ||
+            /Windows|macOS|Linux|桌面|网页/i.test(detail.deviceName ?? ""),
+        }
+      : undefined;
+  return { title, body, icon, href, kind, actor, who, device };
 }
 
 const beijingDay = (time: number) =>
   new Date(time + 8 * 3_600_000).toISOString().slice(0, 10);
+
+const startOfWeek = (now: number) => {
+  const today = Date.parse(beijingDay(now));
+  return today - ((new Date(today).getUTCDay() + 6) % 7) * 86_400_000;
+};
 export function notificationGroups(
   items: NotificationCard[],
   now = Date.now(),
@@ -156,8 +185,12 @@ export function notificationGroups(
     string,
     { key: string; label: string; items: NotificationCard[] }
   >();
+  const today = beijingDay(now);
+  const week = startOfWeek(now);
   for (const item of [...items].sort(
-    (a, b) => (b.latestAt ?? 0) - (a.latestAt ?? 0),
+    (a, b) =>
+      (historyTime(b.latestAt, now)?.getTime() ?? 0) -
+      (historyTime(a.latestAt, now)?.getTime() ?? 0),
   )) {
     const time = historyTime(item.latestAt, now);
     const day =
@@ -166,18 +199,33 @@ export function notificationGroups(
         : time
           ? beijingDay(time.getTime())
           : "unknown";
-    const label =
-      day === beijingDay(now)
-        ? "今天"
-        : day === beijingDay(now - 86_400_000)
-          ? "昨天"
-          : day === "unknown"
-            ? "更早"
-            : `${Number(day.slice(5, 7))}月${Number(day.slice(8, 10))}日`;
-    if (!groups.has(day)) groups.set(day, { key: day, label, items: [] });
-    groups.get(day)!.items.push(item);
+    const key =
+      day === today
+        ? "today"
+        : Date.parse(day) >= week && day < today
+          ? "week"
+          : "earlier";
+    const label = key === "today" ? "今天" : key === "week" ? "本周" : "更早";
+    if (!groups.has(key)) groups.set(key, { key, label, items: [] });
+    groups.get(key)!.items.push(item);
   }
-  return [...groups.values()];
+  return ["today", "week", "earlier"].flatMap((key) => groups.get(key) ?? []);
+}
+
+export function mobileNotificationTime(
+  value: number | null | undefined,
+  now = Date.now(),
+) {
+  const date = historyTime(value, now);
+  if (!date) return "";
+  const day = beijingDay(date.getTime());
+  if (day === beijingDay(now)) return notificationTime(value, now);
+  if (day === beijingDay(now - 86_400_000)) return "昨天";
+  if (Date.parse(day) >= startOfWeek(now))
+    return ["周日", "周一", "周二", "周三", "周四", "周五", "周六"][
+      new Date(day).getUTCDay()
+    ];
+  return `${day.slice(0, 4) === beijingDay(now).slice(0, 4) ? "" : day.slice(0, 4) + "年"}${Number(day.slice(5, 7))}月${Number(day.slice(8, 10))}日`;
 }
 export function notificationTime(
   value: number | null | undefined,

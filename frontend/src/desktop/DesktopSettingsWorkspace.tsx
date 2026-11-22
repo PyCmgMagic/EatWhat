@@ -6,6 +6,7 @@ import {
   DesktopSettingsContext,
   settingsNavGroups,
   settingsOverview,
+  type SettingsNavItem,
 } from "../features/settings-nav";
 import { DesignIcon as Icon } from "../mobile/ui";
 import "./settings-workspace.css";
@@ -18,7 +19,14 @@ export default function DesktopSettingsWorkspace({
   children: ReactNode;
 }) {
   const { pathname } = useLocation();
-  function navLink(item: typeof settingsOverview) {
+  function navLink(item: SettingsNavItem) {
+    if (item.href !== undefined)
+      return (
+        <a key={item.href} href={item.href}>
+          <Icon name={item.icon} size={19} />
+          {item.name}
+        </a>
+      );
     const current = category === item.to;
     return (
       <Link
@@ -43,7 +51,9 @@ export default function DesktopSettingsWorkspace({
               <div className="pc-settings-nav-group" key={group.title}>
                 <p>{group.title}</p>
                 {group.items
-                  .filter((item) => !isRetiredV2(item.to))
+                  .filter(
+                    (item) => item.href !== undefined || !isRetiredV2(item.to),
+                  )
                   .map(navLink)}
               </div>
             ))}

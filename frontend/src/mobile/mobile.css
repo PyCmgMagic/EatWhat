@@ -403,6 +403,11 @@ button:disabled {
 .design-navigation {
   --glass-light-x: 26%;
   --glass-light-y: 0%;
+  --glass-shadow:
+    0 3px 1px -1px #e9e8e55c,
+    0 2px 3px #25201b0a,
+    0 8px 22px #25201b12,
+    0 0 0 0.5px #746d621f;
   --nav-tint: color-mix(in srgb, var(--night-surface, #fffaf5) calc(100% - var(--nav-transparency, 87%)), transparent);
   width: 100%;
   height: 60px;
@@ -419,11 +424,7 @@ button:disabled {
   padding: 5px;
   border-radius: 30px;
   background: transparent;
-  box-shadow:
-    0 4px 0 -1px #e9e8e56b,
-    0 9px 24px #25201b14,
-    0 2px 5px #25201b0a,
-    0 0 0 0.5px #746d6229;
+  box-shadow: var(--glass-shadow);
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 2px;
@@ -436,10 +437,10 @@ button:disabled {
   pointer-events: none;
   background-color: var(--nav-tint);
   box-shadow:
-    inset 0 2px 2px #ffffffd9,
-    inset 2px 0 3px #ffffff99,
-    inset -1px 0 2px #ffffff66,
-    inset 0 -2px 2px #625b4f26;
+    inset 0 1px 0 #fff,
+    inset 1.5px 1.5px 2.5px #ffffffb3,
+    inset -1px -1.5px 1.5px #625b4f38,
+    inset 0 -3.5px 2px -2px #ffffffbf;
 }
 .design-glass-filter {
   position: absolute;
@@ -453,18 +454,17 @@ button:disabled {
   border-radius: inherit;
   pointer-events: none;
   z-index: 2;
-  /* Bright opposing arcs and a darker equator describe a convex glass edge. */
+  /* Directional bright arcs and an inner reflection reveal the curved rim. */
   border: 1.5px solid transparent;
   background: conic-gradient(
-      from 125deg,
+      from 0deg,
       #fffffff2,
-      #ffffff26 14%,
-      #555f6540 24%,
-      #ffffff 39%,
-      #dce8ee80 49%,
-      #ffffff1a 62%,
-      #625c5233 74%,
-      #ffffff 91%,
+      #ffffff66 14%,
+      #625b4f40 30%,
+      #ffffffcc 52%,
+      #ffffff26 66%,
+      #625b4f33 76%,
+      #fffffff2 90%,
       #fffffff2
     )
     border-box;
@@ -491,6 +491,10 @@ button:disabled {
     #ffffff0a 42%,
     transparent 68%
   );
+  box-shadow:
+    inset 0 1px 0 #ffffffb3,
+    inset 0 -0.75px 0 #ffffffcc,
+    inset 0 0 0 0.5px #ffffff66;
   opacity: 0.4;
 }
 .design-nav-lens {
@@ -609,11 +613,7 @@ button:disabled {
   display: grid;
   place-items: center;
   pointer-events: none;
-  box-shadow:
-    0 4px 0 -1px #e9e8e56b,
-    0 9px 24px #25201b14,
-    0 2px 5px #25201b0a,
-    0 0 0 0.5px #746d6229;
+  box-shadow: var(--glass-shadow);
   transform: translate(0, 0) scale(1, 1);
   transition: transform var(--glass-release-duration, 600ms)
     cubic-bezier(0.2, 0.9, 0.25, 1.08);

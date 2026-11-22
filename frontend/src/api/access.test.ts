@@ -7,6 +7,7 @@ import {
   type AccessPrompt,
 } from "./access";
 import { actionUnavailable, requestAccess } from "./access-policy";
+import { withdrawalAllowed } from "./banned-access";
 import {
   AccessRequiredError,
   ApiError,
@@ -109,7 +110,7 @@ describe("shared request permissions", () => {
       )) {
         if (!operation.summary?.includes("【需verified】")) continue;
         expect(requestAccess(path.replace(/\{[^}]+\}/g, "7"), { method })).toBe(
-          "verified",
+          withdrawalAllowed(path.replace(/\{[^}]+\}/g, "7"), { method }) || ["/user/getCode", "/auth/getCode"].includes(path) ? "login" : "verified",
         );
         count++;
       }
@@ -141,7 +142,6 @@ describe("shared request permissions", () => {
   it.each([
     ["POST", "/foods/7/favorite"],
     ["POST", "/foods/7/like"],
-    ["POST", "/foods/7/unlike"],
     ["POST", "/foods/7/tags/custom"],
     ["DELETE", "/foods/my/7"],
     ["POST", "/user/follow"],
@@ -150,7 +150,6 @@ describe("shared request permissions", () => {
     ["PUT", "/restaurant/7/rating"],
     ["PUT", "/foods/7/rating"],
     ["POST", "/activity/spring/posts"],
-    ["POST", "/user/getCode"],
   ])(
     "blocks %s %s without any button guard or network write",
     async (method, path) => {
@@ -172,11 +171,13 @@ describe("shared request permissions", () => {
       AccessRequiredError,
     );
     await s.api.favorite(7, true);
+    await s.api.like(7, true);
     await s.api.unfavoriteRestaurant(7);
     expect(
       s.send.mock.calls.map(([path, options]) => [path, options.method]),
     ).toEqual([
       ["/foods/7/unfavorite", "POST"],
+      ["/foods/7/unlike", "POST"],
       ["/restaurant/7/favorite", "DELETE"],
     ]);
   });

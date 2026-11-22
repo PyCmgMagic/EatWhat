@@ -126,7 +126,7 @@ export function CommentReactions({
   async function respond(reaction: CommentReactionType) {
     if (pending.current) return;
     const selected = counts.get(reaction)?.selected !== true;
-    if (!access()) return;
+    if (!access({ path: `/comments/${commentId}/reactions/${reaction}`, options: { method: selected ? "PUT" : "DELETE" } })) return;
     const viewer = user?.id ?? "guest";
     const affected = {
       predicate: (query: Query) =>
