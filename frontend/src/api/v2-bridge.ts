@@ -402,12 +402,15 @@ function growth(v: Json | null) {
   };
 }
 /** /telemetry/consent → APIv7 telemetry consent (no revisions in v2). */
-const telemetry = (v: Json | null) => ({
-  enabled: v?.enabled === true,
-  retentionDays: v?.retentionDays ?? null,
-  policyVersion: "v2",
-  revision: 0,
-});
+const telemetry = (v: Json | null) =>
+  typeof v?.enabled === "boolean"
+    ? {
+        enabled: v.enabled,
+        retentionDays: v.retentionDays ?? null,
+        policyVersion: "v2",
+        revision: 0,
+      }
+    : null;
 const DELETION_KEY = "eatwhat-deletion-key";
 /** Saved on this device when the account asked to be deleted (v2). */
 export function deletionKey(): string | undefined {

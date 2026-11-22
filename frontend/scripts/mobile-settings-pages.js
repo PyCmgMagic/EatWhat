@@ -27,6 +27,7 @@ async function validateSettingsPages(page) {
   let privacy = { followingsVisible: true, fansVisible: true },
     personalized = true;
   let preferences = { likedTags: ["清淡"], dislikedTags: ["太甜"] };
+  let telemetryEnabled = false;
   const notifications = [
     { category: "COMMENTS", enabled: true, revision: 1 },
     { category: "LIKES_AND_FAVORITES", enabled: false, revision: 2 },
@@ -103,13 +104,11 @@ async function validateSettingsPages(page) {
         n.enabled = false;
         n.revision++;
         data = { state: "APPLIED" };
-      } else if (path === "/api/telemetry/consent")
-        data = {
-          enabled: false,
-          policyVersion: "qa-v1",
-          retentionDays: 30,
-          revision: 1,
-        };
+      } else if (path === "/api/telemetry/consent") {
+        if (method === "PUT") telemetryEnabled = true;
+        if (method === "DELETE") telemetryEnabled = false;
+        data = { enabled: telemetryEnabled, retentionDays: 30 };
+      } else if (path === "/api/telemetry/events") data = { accepted: 1 };
       else if (path === "/api/auth/verify") data = ["EMAIL"];
       return r.fulfill({ status: 200, json: { code: 0, data } });
     },
@@ -124,7 +123,6 @@ async function validateSettingsPages(page) {
     "/settings/devices",
     "/settings/phone",
     "/settings/delete",
-    "/settings/telemetry",
     "/settings/preferences",
     "/verify",
     "/data-notice",
@@ -287,12 +285,22 @@ async function validateSettingsPages(page) {
       "Cancellation confirmation bypassed",
     );
     await open("/settings/telemetry");
-    assert(
-      await p
-        .getByRole("button", { name: "开启使用统计", exact: true })
-        .isDisabled(),
-      "Telemetry consent requirement changed",
-    );
+    await p.waitForURL("**#/settings/privacy");
+    const sharing = p.getByRole("switch", { name: "分享使用统计", exact: true });
+    await sharing.waitFor();
+    assert(!(await sharing.isChecked()), "Opening privacy settings enabled statistics");
+    await sharing.press("Space");
+    await p.getByText("使用统计已开启", { exact: true }).waitFor();
+    await p.reload();
+    assert(await sharing.isChecked(), "Statistics consent did not survive reload");
+    await sharing.press("Space");
+    const confirm = p.getByRole("dialog", { name: "关闭使用统计？" });
+    await confirm.getByRole("button", { name: "取消", exact: true }).click();
+    assert(telemetryEnabled && await sharing.isChecked(), "Cancel disabled statistics");
+    await sharing.press("Space");
+    await confirm.getByRole("button", { name: "关闭并删除统计" }).click();
+    await p.getByText("使用统计已关闭", { exact: true }).waitFor();
+    assert(!(await sharing.isChecked()), "Statistics still enabled after confirmation");
     await open("/verify?next=%2Ffoods%2F71");
     assert(
       (await p
@@ -313,7 +321,7 @@ async function validateSettingsPages(page) {
     assert(errors.length === 0, errors.join("\n"));
     assert(
       JSON.stringify(writes.filter((write) => write.path !== "/api/device/register").map((write) => write.path)) ===
-        JSON.stringify(["/api/user/changePrivacy", "/api/user/recommendation-settings", "/api/user/recommendation-profile/preferences"]),
+        JSON.stringify(["/api/user/changePrivacy", "/api/user/recommendation-settings", "/api/user/recommendation-profile/preferences", "/api/telemetry/consent", "/api/telemetry/events", "/api/telemetry/consent"]),
       "Unexpected API writes: " + JSON.stringify(writes),
     );
     return {

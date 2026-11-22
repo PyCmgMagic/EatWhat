@@ -6,6 +6,7 @@ import { DesktopSettingsPage } from "../desktop/DesktopAccount";
 import ApiV2Routes from "../features/ApiV2Routes";
 import V4Routes from "../features/v4/Routes";
 import { Preferences } from "../features/Account";
+import Personalization from "../theme/Personalization";
 import AboutPage from "../features/AboutPage";
 import { findAboutPage } from "../features/about-navigation";
 import { mobileSettingsPages } from "./routes";
@@ -39,6 +40,8 @@ export default function MobileSettingsPages() {
       <ApiV2Routes />
     ) : page.source === "preferences" ? (
       <Preferences />
+    ) : path === "/settings/personalization" ? (
+      <Personalization showBottomNavigation />
     ) : page.public ? (
       <DesktopSettingsPage />
     ) : (

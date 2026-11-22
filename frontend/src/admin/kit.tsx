@@ -486,7 +486,11 @@ export function Confirm({
 }
 
 /* ---------- data display ---------- */
-export function Meta({ items }: { items: [ReactNode, ReactNode][] }) {
+export function Meta({
+  items,
+}: {
+  items: ReadonlyArray<readonly [ReactNode, ReactNode]>;
+}) {
   return (
     <dl className="ew-admin-meta">
       {items.map(([term, value], i) => (

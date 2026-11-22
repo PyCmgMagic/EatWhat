@@ -1,12 +1,11 @@
 .personalization {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
   align-items: start;
   color: var(--night-ink, #231c18);
 }
 .personalization-entry {
-  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;

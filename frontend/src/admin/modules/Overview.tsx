@@ -297,7 +297,9 @@ export default function Overview() {
             <ul className="ew-admin-list">
               {cases.data?.items?.slice(0, 5).map((item) => (
                 <li key={item.view?.id}>
-                  <Link to="/admin/feedback" state={{ caseId: item.view?.id }}>
+                  <Link
+                    to={item.view?.id ? `/admin/feedback?case=${item.view.id}` : "/admin/feedback"}
+                  >
                     <Pill
                       tone={item.view?.kind === "REPORT" ? "bad" : "info"}
                       dot={false}

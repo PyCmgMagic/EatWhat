@@ -366,7 +366,7 @@ export function Cancellation() {
   }, []);
   if (deleteAt)
     return (
-      <Shell title="注销账号" back="/">
+      <Shell title="注销账号" back="/" advice={false}>
         <Card title="已申请注销">
           <p>
             账号已进入 7 天冷静期，将在 {timeText(deleteAt)}{" "}
@@ -386,115 +386,137 @@ export function Cancellation() {
       </Shell>
     );
   return (
-    <Shell title="注销账号" back="/settings/account">
-      <Card>
-        <div className="v4-lifecycle-icon">
-          <Icon name="document" size={30} />
-        </div>
-        <h2>离开前，请了解注销的影响</h2>
-        <p>
-          提交后账号进入 7
-          天冷静期：期间账号不能使用、所有设备退出登录，冷静期结束后彻底删除。冷静期内在这台设备重新登录可以撤销。
-        </p>
-        <fieldset
-          className="v6-cancellation-options"
-          disabled={task.busy || task.uncertain}
+    <Shell title="注销账号" back="/settings/account" advice={false}>
+      <div className="cancellation-layout">
+        <section
+          className="cancellation-impact"
+          aria-labelledby="cancellation-impact-title"
         >
-          <legend>你发布的评论和回复如何处理？</legend>
-          <label className="v4-check">
-            <input
-              type="radio"
-              name="deleteComments"
-              checked={!deleteComments}
-              onChange={() => setDeleteComments(false)}
-            />
-            匿名保留（默认）
-          </label>
-          <p>显示为“已注销用户”，其他同学仍可看到和回复。</p>
-          <label className="v4-check">
-            <input
-              type="radio"
-              name="deleteComments"
-              checked={deleteComments}
-              onChange={() => setDeleteComments(true)}
-            />
-            彻底删除时一并删除
-          </label>
-        </fieldset>
-        {hasPhone ? (
-          <>
-            <Field label={`手机号 ${app.user?.phone ?? ""} 收到的验证码`}>
+          <h2 id="cancellation-impact-title">
+            <Icon name="info" size={20} />
+            注销的影响
+          </h2>
+          <dl>
+            <dt>提交申请后</dt>
+            <dd>所有设备都会退出登录，账号暂停使用。</dd>
+            <dt>7 天冷静期内</dt>
+            <dd>用这台设备重新登录，即可撤销申请。</dd>
+            <dt>冷静期结束后</dt>
+            <dd>账号将被彻底删除，无法恢复。</dd>
+          </dl>
+        </section>
+        <div className="cancellation-controls">
+          <fieldset
+            className="cancellation-options"
+            disabled={task.busy || task.uncertain}
+          >
+            <legend>你发布的评论和回复如何处理？</legend>
+            <label className="v4-check">
               <input
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={6}
+                type="radio"
+                name="deleteComments"
+                aria-labelledby="cancellation-keep-label"
+                aria-describedby="cancellation-keep-detail"
+                checked={!deleteComments}
+                onChange={() => setDeleteComments(false)}
+              />
+              <span>
+                <span id="cancellation-keep-label">匿名保留</span>
+                <small id="cancellation-keep-detail">
+                  显示为“已注销用户”，其他同学仍可看到和回复。
+                </small>
+              </span>
+            </label>
+            <label className="v4-check">
+              <input
+                type="radio"
+                name="deleteComments"
+                checked={deleteComments}
+                onChange={() => setDeleteComments(true)}
+              />
+              随账号一并删除
+            </label>
+          </fieldset>
+          {hasPhone ? (
+            <div className="cancellation-verification">
+              <label htmlFor="cancellation-code">
+                短信验证码（尾号 {app.user?.phone?.slice(-4)}）
+              </label>
+              <div className="cancellation-code-row">
+                <input
+                  id="cancellation-code"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  placeholder="6 位验证码"
+                />
+                <button
+                  type="button"
+                  disabled={send.busy || send.uncertain || cooldown > 0}
+                  onClick={() =>
+                    void send.run(
+                      () => app.api.accountDeleteCode(sendSignal()),
+                      () => {
+                        setCooldown(60);
+                        send.say("验证码已发送。");
+                      },
+                    )
+                  }
+                >
+                  {cooldown > 0 ? `${cooldown} 秒后可重发` : "发送验证码"}
+                </button>
+              </div>
+              <CommandState task={send} />
+            </div>
+          ) : (
+            <Field label="登录密码">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
               />
             </Field>
+          )}
+          <div className="cancellation-confirm">
+            <label>
+              <input
+                type="checkbox"
+                checked={ack}
+                onChange={(e) => setAck(e.target.checked)}
+              />
+              我已了解注销的影响，确认申请注销。
+            </label>
             <button
-              type="button"
-              disabled={send.busy || send.uncertain || cooldown > 0}
+              className="danger"
+              disabled={
+                !ack ||
+                task.busy ||
+                task.uncertain ||
+                (hasPhone ? !/^\d{6}$/.test(code) : !password)
+              }
               onClick={() =>
-                void send.run(
-                  () => app.api.accountDeleteCode(sendSignal()),
-                  () => {
-                    setCooldown(60);
-                    send.say("验证码已发送。");
+                void task.run(
+                  () =>
+                    app.api.deleteAccount({
+                      ...(hasPhone ? { code } : { password }),
+                      deleteComments,
+                    }),
+                  async (r) => {
+                    saveDeletionKey(r.deletionKey);
+                    setDeleteAt(r.deleteAt);
                   },
                 )
               }
             >
-              {cooldown > 0 ? `${cooldown} 秒后可重发` : "发送验证码"}
+              申请注销
             </button>
-            <CommandState task={send} />
-          </>
-        ) : (
-          <Field label="登录密码">
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-            />
-          </Field>
-        )}
-        <label className="v4-check">
-          <input
-            type="checkbox"
-            checked={ack}
-            onChange={(e) => setAck(e.target.checked)}
-          />
-          我已了解注销的影响，确认申请注销。
-        </label>
-        <div className="v4-actions">
-          <button
-            className="danger"
-            disabled={
-              !ack ||
-              task.busy ||
-              task.uncertain ||
-              (hasPhone ? !/^\d{6}$/.test(code) : !password)
-            }
-            onClick={() =>
-              void task.run(
-                () =>
-                  app.api.deleteAccount({
-                    ...(hasPhone ? { code } : { password }),
-                    deleteComments,
-                  }),
-                async (r) => {
-                  saveDeletionKey(r.deletionKey);
-                  setDeleteAt(r.deleteAt);
-                },
-              )
-            }
-          >
-            申请注销
-          </button>
+          </div>
+          <CommandState task={task} />
         </div>
-        <CommandState task={task} />
-      </Card>
+      </div>
     </Shell>
   );
 }
@@ -1084,86 +1106,6 @@ export function PushSettings() {
         )}
         <CommandState task={task} />
       </Card>
-    </Shell>
-  );
-}
-export function TelemetrySettings() {
-  const { api } = useApp(),
-    cache = useQueryClient(),
-    q = useQuery({
-      queryKey: ["telemetry", "consent"],
-      queryFn: () => api.telemetryConsent(),
-    }),
-    [ack, setAck] = useState(false),
-    task = useCommand();
-  return (
-    <Shell title="使用统计" back="/settings/privacy">
-      <QueryView query={q}>
-        <Card>
-          <div className="v4-privacy-hero">
-            <span className="v4-icon-tile is-green">
-              <Icon name="lock" size={27} />
-            </span>
-            <div>
-              <span className="v4-kicker">选择权，一直在你手里</span>
-              <h2>是否分享使用统计，由你决定。</h2>
-            </div>
-          </div>
-          <p>
-            默认开启，可以随时关闭，关闭时会删除已收集的事件。只上报预设事件和这台设备的安装 ID，不采集你输入的文字或网址。保留时间：
-            {q.data?.retentionDays ?? "待确认"} 天。
-          </p>
-          <label className="v4-check">
-            <input
-              type="checkbox"
-              checked={ack}
-              onChange={(e) => setAck(e.target.checked)}
-            />
-            我了解并同意按此政策开启最小使用统计。
-          </label>
-          <div className="v4-actions">
-            <button
-              disabled={task.busy || !q.data || (!q.data.enabled && !ack)}
-              onClick={() =>
-                void task.run(
-                  () => {
-                    const body = {
-                      policyVersion: q.data!.policyVersion!,
-                      expectedRevision: q.data!.revision!,
-                    };
-                    return q.data!.enabled
-                      ? api.disableTelemetry(body)
-                      : api.saveTelemetryConsent({ ...body, enabled: true });
-                  },
-                  async (r) => {
-                    await cache.invalidateQueries({ queryKey: ["telemetry"] });
-                    task.say(
-                      r.enabled ? "使用统计已开启。" : "使用统计已关闭。",
-                    );
-                    if (r.enabled && r.revision != null)
-                      try {
-                        await api.telemetryEvents({
-                          consentRevision: r.revision,
-                          events: [
-                            {
-                              eventId: crypto.randomUUID(),
-                              properties: { event: "app_open" },
-                            },
-                          ],
-                        });
-                      } catch {
-                        task.say("使用统计已开启，本次统计事件未能发送。");
-                      }
-                  },
-                )
-              }
-            >
-              {q.data?.enabled ? "关闭使用统计" : "开启使用统计"}
-            </button>
-          </div>
-          <CommandState task={task} />
-        </Card>
-      </QueryView>
     </Shell>
   );
 }

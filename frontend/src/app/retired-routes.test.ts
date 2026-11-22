@@ -9,6 +9,14 @@ it.each(["/settings/about/us", "/settings/about/us/"])(
   },
 );
 
+it.each(["/settings/telemetry", "/settings/telemetry/"])(
+  "opens privacy settings for a saved statistics link to %s",
+  (path) => {
+    expect(retiredRouteDestination(path, "", true)).toBe("/settings/privacy");
+    expect(retiredRouteDestination(path, "", false)).toBe("/settings/privacy");
+  },
+);
+
 it.each([false, true])(
   "redirects legacy username registration to SMS registration, signed in: %s",
   (signedIn) => {
@@ -55,7 +63,6 @@ describe("retired cross-site bookmarks", () => {
     "/auth/password",
     "/verify",
     "/settings/privacy",
-    "/settings/telemetry",
     "/settings/delete",
     "/settings/notifications",
     "/me/growth",

@@ -4,13 +4,24 @@ async (page) => {
   await c.route(u=>u.hostname!=='127.0.0.1'&&u.hostname!=='localhost',r=>{outside.push(r.request().url());return r.abort()});
   await c.route(u=>u.pathname.startsWith('/api/'),r=>r.abort());
   const base='http://127.0.0.1:5173/?demo=1';
-  const go=async(path,admin=false)=>{await p.goto(base+(admin?'&persona=admin':'')+'#'+path);await p.locator(path==='/restaurants/directory'?'.pc-nearby-list-title h2, .mobile-nearby-heading h1':'.v4-heading h1').waitFor()};
+  const go=async(path,admin=false)=>{await p.goto(base+(admin?'&persona=admin':'')+'#'+path);await p.locator(path==='/settings/privacy'?'.privacy-settings':path==='/restaurants/directory'?'.pc-nearby-list-title h2, .mobile-nearby-heading h1':'.v4-heading h1').waitFor()};
   const assert=(x,msg)=>{if(!x)throw new Error(msg)};
   try{
     await go('/feedback');await p.getByLabel('反馈内容',{exact:true}).fill('APIv4 浏览器验收反馈');await p.getByRole('button',{name:'提交',exact:true}).click();await p.waitForURL(/#\/feedback\/mine\/\d+/);await p.getByText('APIv4 浏览器验收反馈',{exact:true}).waitFor();checks.push('PC 反馈创建与私有记录');
     await go('/admin/v4',true);await p.getByRole('button',{name:/意见反馈 · APIv4 浏览器验收反馈/}).click();await p.getByLabel('回复提交人').fill('感谢建议，已处理');await p.getByRole('button',{name:'确认提交结论',exact:true}).click();await p.getByText('已记录已采纳，已生成通知。',{exact:true}).waitFor();checks.push('管理反馈结论与公开回复');
     await go('/notifications');await p.getByText(/意见反馈：已采纳/).waitFor();await p.getByRole('button',{name:'标为已读',exact:true}).click();await p.getByText('未读通知 0 条',{exact:true}).waitFor();checks.push('消息卡片类型化结果与已读计数');
-    await go('/settings/telemetry');await p.getByRole('checkbox').check();await p.getByRole('button',{name:'开启使用统计',exact:true}).click();await p.getByRole('button',{name:'关闭使用统计',exact:true}).click();await p.getByRole('button',{name:'开启使用统计',exact:true}).waitFor();checks.push('统计显式同意、发送及关闭');
+    await go('/settings/privacy');
+    const sharing = p.getByRole('switch', {name: '分享使用统计', exact: true});
+    const disableSharing = async () => {
+      await sharing.click();
+      await p.getByRole('dialog', {name: '关闭使用统计？'}).getByRole('button', {name: '关闭并删除统计'}).click();
+      await p.locator('input[aria-label="分享使用统计"]:not(:checked):enabled').waitFor();
+    };
+    if (await sharing.isChecked()) await disableSharing();
+    await sharing.click();
+    await p.locator('input[aria-label="分享使用统计"]:checked:enabled').waitFor();
+    await disableSharing();
+    checks.push('隐私设置内开启统计、发送及确认关闭');
     await go('/settings/notifications');await p.getByRole('button',{name:'登记此设备',exact:true}).click();await p.getByText('当前设备已登记。',{exact:true}).waitFor();await p.getByRole('button',{name:'查询上次操作结果',exact:true}).click();await p.getByText('通知操作已登记。',{exact:true}).waitFor();const first=p.getByRole('button',{name:'关闭',exact:true}).first();await first.click();await p.getByRole('button',{name:'开启',exact:true}).first().click();checks.push('推送设备登记、命令回执与带版本开关');
     await go('/settings/devices');await p.getByRole('button',{name:'下线其他设备',exact:true}).click();await p.getByRole('button',{name:'确认下线',exact:true}).click();await p.getByRole('button',{name:'查询恢复状态',exact:true}).click();await p.getByRole('button',{name:'恢复当前设备会话',exact:true}).click();await p.getByText('当前设备会话已恢复。',{exact:true}).waitFor();checks.push('设备撤销 PENDING、状态查询与明确会话恢复');
     await go('/settings/phone');await p.getByLabel('新的手机号',{exact:true}).fill('13900000000');await p.getByRole('button',{name:'继续验证',exact:true}).click();await p.getByRole('button',{name:'发送新手机号验证码',exact:true}).click();await p.getByRole('button',{name:'完成验证',exact:true}).click();await p.getByLabel('新手机号验证码',{exact:true}).fill('123456');await p.getByLabel('登录密码',{exact:true}).fill('demo-password');await p.getByRole('button',{name:'确认更换手机号',exact:true}).click();await p.getByRole('button',{name:'查询当前设备恢复',exact:true}).click();await p.getByRole('button',{name:'恢复当前设备会话',exact:true}).click();await p.getByText('当前设备会话已恢复。',{exact:true}).waitFor();checks.push('手机号准备、独立 CAPTCHA、提交及恢复');
@@ -19,7 +30,7 @@ async (page) => {
     const sub=await p.evaluate(()=>{const x=JSON.parse(localStorage.getItem('eatwhat-demo-prototype-v3'));return x.v4.submissions.find(s=>s.candidate.name==='审核验收菜')});assert(sub&&!await p.evaluate(id=>JSON.parse(localStorage.getItem('eatwhat-demo-prototype-v3')).foods.some(f=>f.id===id),sub.id),'待审核菜品提前公开');checks.push('发布待审核私有修订与临时图片');
     await go('/admin/v4',true);await p.getByRole('button',{name:'提交审核',exact:true}).click();await p.getByRole('button',{name:/审核验收菜/}).click();await p.getByRole('checkbox').check();await p.getByRole('button',{name:'提交审核结论',exact:true}).click();await p.getByText('审核结果：已发布。',{exact:true}).waitFor();assert(await p.evaluate(id=>JSON.parse(localStorage.getItem('eatwhat-demo-prototype-v3')).foods.some(f=>f.id===id),sub.id),'审核通过未发布');checks.push('管理员审核通过后公开');
     await go('/restaurants/directory');await p.getByRole('button',{name:/^筛选店铺/}).click();await p.getByRole('radio',{name:'15 元以下'}).check();await p.getByRole('dialog').getByRole('button',{name:/^看 \d+ 家$/}).click();await p.waitForURL(url=>url.hash.includes('price=UNDER_15'));await p.screenshot({path:'output/playwright/api-v4-directory-desktop.png',fullPage:true});checks.push('附近页内筛选与查询结果');
-    await p.setViewportSize({width:390,height:844});for(const path of ['/features','/feedback/mine','/notifications','/topics/current','/settings/devices','/settings/phone','/settings/notifications','/settings/telemetry','/restaurants/directory']){await go(path);await p.evaluate(async()=>{await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))});assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'手机横向溢出 '+path)}await p.screenshot({path:'output/playwright/api-v4-mobile-directory.png',fullPage:true});checks.push('390px 九个新增页面无横向溢出');
+    await p.setViewportSize({width:390,height:844});for(const path of ['/features','/feedback/mine','/notifications','/topics/current','/settings/devices','/settings/phone','/settings/notifications','/settings/privacy','/restaurants/directory']){await go(path);await p.evaluate(async()=>{await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))});assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'手机横向溢出 '+path)}await p.screenshot({path:'output/playwright/api-v4-mobile-directory.png',fullPage:true});checks.push('390px 九个新增页面无横向溢出');
     assert(errors.length===0,'页面异常 '+JSON.stringify(errors));assert(outside.length===0,'请求外网 '+JSON.stringify(outside));return {checks,pageErrors:errors,externalRequests:outside.length};
   }catch(e){await p.screenshot({path:'output/playwright/api-v4-browser-failure.png',fullPage:true});throw new Error(JSON.stringify({checks,error:e.message,text:await p.locator('main').innerText()}))}finally{await c.close()}
 }

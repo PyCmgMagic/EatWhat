@@ -332,7 +332,7 @@
 }
 .mobile-settings-page
   .mobile-settings-content
-  :is(.v4-advice-tip, .pc-secondary-verification, .v4-privacy-hero) {
+  :is(.v4-advice-tip, .pc-secondary-verification) {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -343,7 +343,7 @@
 }
 .mobile-settings-page
   .mobile-settings-content
-  :is(.v4-icon-tile, .v4-lifecycle-icon) {
+  .v4-icon-tile {
   flex-shrink: 0;
   width: 36px;
   height: 36px;

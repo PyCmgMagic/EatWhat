@@ -49,6 +49,7 @@ async function validateAccountSettings(page) {
         writes.push(path);
       let data = [];
       if (path === "/api/user/info") data = user;
+      else if (path === "/api/telemetry/consent") data = { enabled: false, retentionDays: 7 };
       else if (path === "/api/campus/list")
         data = [{ id: 1, name: "软件园", open: true, isDefault: true }];
       else if (path === "/api/remote-config")
@@ -239,13 +240,7 @@ async function validateAccountSettings(page) {
     );
     await p.setViewportSize({ width: 390, height: 844 });
     await p.goto(origin + "/?demo=0#/settings/privacy");
-    await p.getByRole("link", { name: "使用统计授权", exact: true }).waitFor();
-    assert(
-      (await p
-        .getByRole("link", { name: "使用统计授权", exact: true })
-        .getAttribute("href")) === "#/settings/telemetry",
-      "Statistics authorization is missing from privacy settings",
-    );
+    await p.getByRole("switch", { name: "分享使用统计", exact: true }).waitFor();
     await p.goto(origin + "/?demo=0#/settings/about");
     const about = p.getByRole("navigation", { name: "关于栏目" });
     await about.getByRole("link", { name: "开发团队", exact: true }).click();

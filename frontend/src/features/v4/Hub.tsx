@@ -193,11 +193,11 @@ const groups = [
         keywords: "消息 推送 关闭",
       },
       {
-        to: "/settings/telemetry",
-        title: "使用统计授权",
-        detail: "管理使用统计与隐私授权",
+        to: "/settings/privacy",
+        title: "隐私设置",
+        detail: "管理主页可见性、推荐和使用统计",
         icon: "lock",
-        keywords: "隐私 数据 收集",
+        keywords: "隐私 数据 收集 使用统计授权 屏蔽",
       },
       {
         to: "/settings",

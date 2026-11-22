@@ -263,7 +263,7 @@ export default function AdminApp() {
             <h1 id="admin-page-title" tabIndex={-1}>
               {module?.title ?? "页面不存在"}
             </h1>
-            {module && <p>{module.detail}</p>}
+            {module && module.id !== "feedback" && <p>{module.detail}</p>}
           </header>
           {Page ? (
             <div className="admin-content" data-module={module.id}>

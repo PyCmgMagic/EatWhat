@@ -1,80 +1,65 @@
-import { useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Inbox } from "lucide-react";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { useAdminState } from "../../app/admin-state";
 import { useApp } from "../../app/state";
-import { mediaUrl } from "../../api/models";
-import { feedbackCategories, feedbackCategoryLabel, type FeedbackCategory } from "../../api/feedback";
-import { statusText, useCommand } from "../../features/v4/shared";
+import { parseId } from "../../api/models";
 import {
-  Async,
-  Field,
-  Icon,
-  Meta,
-  Notice,
-  Pager,
-  Pill,
-  Segmented,
-  ago,
-  dateTime,
-  type Tone,
-} from "../kit";
+  feedbackCategories,
+  feedbackCategoryLabel,
+  feedbackReasons,
+  type FeedbackCategory,
+  type FeedbackCase,
+} from "../../api/feedback";
+import { Async, Field, Icon, Pager, Pill, dateTime, type Tone } from "../kit";
+import { statusText } from "../../features/v4/shared";
+import FeedbackCaseDetail from "./FeedbackCaseDetail";
 
 type Status = "OPEN" | "CLOSED";
-type Kind = "ALL" | "FEEDBACK" | "CATALOG_ERROR" | "REPORT";
-type Outcome = "ACCEPTED" | "REJECTED" | "RESOLVED";
-const kindTone: Record<string, Tone> = {
-  FEEDBACK: "info",
-  CATALOG_ERROR: "warn",
-  REPORT: "bad",
-};
-const targetPath = (
-  target?: { type?: string | null; id?: number | null } | null,
-) =>
-  target?.type === "FOOD"
-    ? `/foods/${target.id}`
-    : target?.type === "RESTAURANT"
-      ? `/restaurants/${target.id}`
-      : target?.type === "USER"
-        ? `/users/${target.id}`
-        : undefined;
-const targetName: Record<string, string> = {
-  FOOD: "菜品",
-  RESTAURANT: "餐厅",
-  COMMENT: "评论",
-  USER: "用户",
+type Kind = "ALL" | NonNullable<FeedbackCase["kind"]>;
+type Filters = {
+  category?: FeedbackCategory;
+  submitterId?: number;
+  appVersion?: string;
 };
 
 export default function Feedback() {
-  const { api } = useApp(),
-    cache = useQueryClient(),
-    location = useLocation(),
-    [page, setPage] = useAdminState("feedback.page", 1),
-    [status, setStatus] = useAdminState<Status>("feedback.status", "OPEN"),
-    [kind, setKind] = useAdminState<Kind>("feedback.kind", "ALL"),
-    [filters, setFilters] = useAdminState<{
-      category?: FeedbackCategory;
-      submitterId?: number;
-      appVersion?: string;
-    }>("feedback.filters", {}),
-    [selected, setSelected] = useAdminState<number | undefined>(
-      "feedback.selected",
-      undefined,
-    );
-  // The overview links straight to one case.
-  const linked = (location.state as { caseId?: number } | null)?.caseId;
-  useEffect(() => {
-    if (linked) setSelected(linked);
-  }, [linked]);
+  const { api } = useApp();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [params, setParams] = useSearchParams();
+  const selected =
+    parseId(params.get("case") ?? undefined) ?? location.state?.caseId;
+  const [page, setPage] = useAdminState("feedback.page", 1);
+  const [status, setStatus] = useAdminState<Status>("feedback.status", "OPEN");
+  const [kind, setKind] = useAdminState<Kind>("feedback.kind", "ALL");
+  const [filters, setFilters] = useAdminState<Filters>("feedback.filters", {});
+  const [expanded, setExpanded] = useState(false);
+  const filterButton = useRef<HTMLButtonElement>(null);
+  const activeStatus = useRef<HTMLButtonElement>(null);
+  const pending = status === "OPEN";
+  const showCategory = kind === "ALL" || kind === "FEEDBACK";
+  const applied = [
+    showCategory && filters.category && feedbackCategories[filters.category],
+    filters.submitterId && `提交人 #${filters.submitterId}`,
+    filters.appVersion && `版本 ${filters.appVersion}`,
+  ].filter(Boolean);
+  const filtered = kind !== "ALL" || applied.length > 0;
   const counts = useQuery({
     queryKey: ["admin", "feedback", "counts"],
     queryFn: () => api.feedbackCounts(),
     staleTime: 60000,
     retry: false,
   }).data;
-  const open = (n?: number) => (status === "OPEN" && n ? `（${n}）` : "");
-  const showCategory = kind === "ALL" || kind === "FEEDBACK";
-  const q = useQuery({
+  const typeCount = (count?: number) =>
+    pending && count && !applied.length ? `（${count}）` : "";
+  const query = useQuery({
     queryKey: ["admin", "feedback", page, status, kind, filters],
     queryFn: () =>
       api.adminFeedbackCases({
@@ -86,40 +71,95 @@ export default function Feedback() {
         category: showCategory ? filters.category : undefined,
       }),
   });
+  const { items, totalPages, totalItems, hasNext } = query.data ?? {};
+  // Resolving the last case on a page can shrink the queue.
+  const lastPage = totalPages == null ? undefined : Math.max(1, totalPages);
+  useEffect(() => {
+    if (lastPage !== undefined && page > lastPage) setPage(lastPage);
+  }, [page, lastPage, setPage]);
+
+  function switchStatus(next: Status) {
+    setStatus(next);
+    setPage(1);
+  }
+  function clearFilters() {
+    setKind("ALL");
+    setFilters({});
+    setExpanded(false);
+    setPage(1);
+    filterButton.current?.focus();
+  }
+  function caseParams(id?: number) {
+    const next = new URLSearchParams(params);
+    if (id) next.set("case", String(id));
+    else next.delete("case");
+    return next;
+  }
+  function closeDetail() {
+    if (location.state?.fromFeedbackList) void navigate(-1);
+    else setParams(caseParams(), { replace: true, state: null });
+  }
   return (
-    <div className="ew-admin-split" data-open={selected ? "" : undefined}>
-      <section className="ew-admin-split-list" aria-label="反馈列表">
-        <header>
-          <Segmented
-            label="处理状态"
-            value={status}
-            onChange={(value) => {
-              setStatus(value);
-              setPage(1);
-            }}
-            options={[
-              ["OPEN", "待处理"],
-              ["CLOSED", "已处理"],
-            ]}
-          />
-          <select
-            aria-label="类型"
-            value={kind}
-            onChange={(e) => {
-              setKind(e.target.value as Kind);
-              setPage(1);
-            }}
-          >
-            <option value="ALL">全部类型{open(counts?.total)}</option>
-            <option value="FEEDBACK">意见反馈{open(counts?.feedback)}</option>
-            <option value="CATALOG_ERROR">
-              店铺纠错{open(counts?.catalogError)}
-            </option>
-            <option value="REPORT">举报{open(counts?.report)}</option>
-          </select>
-          <details className="ew-admin-feedback-filters">
-            <summary>筛选条件</summary>
+    <>
+      <section
+        className="ew-admin-panel ew-feedback-inbox"
+        aria-label="反馈列表"
+      >
+        <header className="ew-feedback-toolbar">
+          <div className="ew-feedback-views" role="group" aria-label="处理状态">
+            {(["OPEN", "CLOSED"] as const).map((value) => (
+              <button
+                key={value}
+                type="button"
+                ref={status === value ? activeStatus : undefined}
+                aria-pressed={status === value}
+                onClick={() => switchStatus(value)}
+              >
+                {value === "OPEN" ? "待处理" : "已处理"}
+                {value === "OPEN" && counts?.total != null && (
+                  <span>{counts.total}</span>
+                )}
+              </button>
+            ))}
+          </div>
+          <div className="ew-feedback-tools">
+            <select
+              aria-label="反馈类型"
+              value={kind}
+              onChange={(event) => {
+                const next = event.target.value as Kind;
+                setKind(next);
+                if (next !== "ALL" && next !== "FEEDBACK" && filters.category)
+                  setFilters({ ...filters, category: undefined });
+                setPage(1);
+              }}
+            >
+              <option value="ALL">全部类型</option>
+              <option value="FEEDBACK">
+                意见反馈{typeCount(counts?.feedback)}
+              </option>
+              <option value="CATALOG_ERROR">
+                店铺纠错{typeCount(counts?.catalogError)}
+              </option>
+              <option value="REPORT">举报{typeCount(counts?.report)}</option>
+            </select>
+            <button
+              ref={filterButton}
+              className="ew-admin-btn"
+              type="button"
+              aria-expanded={expanded}
+              aria-controls="feedback-filters"
+              onClick={() => setExpanded(!expanded)}
+            >
+              <Icon name="filter" size={15} /> 更多筛选
+              {applied.length > 0 && ` (${applied.length})`}
+            </button>
+          </div>
+        </header>
+        <div id="feedback-filters" hidden={!expanded}>
+          {expanded && (
             <form
+              className="ew-feedback-filters"
               onSubmit={(event) => {
                 event.preventDefault();
                 const data = new FormData(event.currentTarget);
@@ -131,7 +171,8 @@ export default function Feedback() {
                     String(data.get("appVersion") || "").trim() || undefined,
                 });
                 setPage(1);
-                setSelected(undefined);
+                setExpanded(false);
+                filterButton.current?.focus();
               }}
             >
               {showCategory && (
@@ -165,327 +206,163 @@ export default function Feedback() {
                   defaultValue={filters.appVersion}
                 />
               </Field>
-              <button type="submit" className="ew-admin-btn">
+              <button className="ew-admin-btn is-primary" type="submit">
                 应用筛选
               </button>
             </form>
-          </details>
-        </header>
-        <Async
-          query={q}
-          rows={6}
-          empty={!q.data?.items?.length}
-          emptyTitle={
-            filters.appVersion ||
-            filters.submitterId ||
-            (showCategory && filters.category)
-              ? "没有符合筛选条件的记录"
-              : status === "OPEN"
-                ? "都处理完了"
-                : "还没有已处理的记录"
-          }
-          emptyHint={
-            status === "OPEN" ? "新的反馈、纠错和举报会出现在这里。" : undefined
-          }
-        >
-          <ul className="ew-admin-cases">
-            {q.data?.items?.map((item) => (
-              <li key={item.view?.id}>
-                <button
-                  aria-current={selected === item.view?.id || undefined}
-                  onClick={() => setSelected(item.view!.id!)}
-                >
-                  <span className="ew-admin-case-top">
-                    <Pill tone={kindTone[item.view?.kind ?? ""]} dot={false}>
-                      {feedbackCategoryLabel(item.view) ??
-                        statusText(item.view?.kind)}
-                    </Pill>
-                    <time>{ago(item.view?.createdAt)}</time>
-                  </span>
-                  <strong>
-                    {item.targetName || item.view?.text || "未填写说明"}
-                  </strong>
-                  {item.targetName && item.view?.text && (
-                    <span className="ew-admin-case-text">{item.view.text}</span>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </Async>
-        <Pager
-          page={page}
-          total={q.data?.totalItems}
-          totalPages={q.data?.totalPages}
-          hasNext={q.data?.hasNext}
-          onChange={setPage}
-        />
-      </section>
-      <section className="ew-admin-split-detail" aria-label="反馈详情">
-        {selected ? (
-          <CaseDetail
-            key={selected}
-            id={selected}
-            onBack={() => setSelected(undefined)}
-            onResolved={() => {
-              void q.refetch();
-              void cache.invalidateQueries({
-                queryKey: ["admin", "feedback", "counts"],
-              });
-            }}
-          />
-        ) : (
-          <div className="ew-admin-state is-tall">
-            <Icon name="feedback" size={30} />
-            <strong>选择一条反馈查看详情</strong>
-            <p>在左侧列表中选择后，可以在这里查看内容并给出处理结论。</p>
+          )}
+        </div>
+        {applied.length > 0 && (
+          <div className="ew-feedback-applied">
+            <span>{applied.join(" · ")}</span>
+            {!!items?.length && (
+              <button className="ew-admin-link" onClick={clearFilters}>
+                清除全部筛选
+              </button>
+            )}
           </div>
         )}
-      </section>
-    </div>
-  );
-}
-
-function CaseDetail({
-  id,
-  onBack,
-  onResolved,
-}: {
-  id: number;
-  onBack: () => void;
-  onResolved: () => void;
-}) {
-  const { api } = useApp(),
-    [outcome, setOutcome] = useAdminState<Outcome>(
-      `feedback.${id}.outcome`,
-      "ACCEPTED",
-    ),
-    [reply, setReply] = useAdminState(`feedback.${id}.reply`, ""),
-    [note, setNote] = useAdminState(`feedback.${id}.note`, ""),
-    task = useCommand();
-  const detail = useQuery({
-    queryKey: ["admin", "feedback", "detail", id],
-    queryFn: () => api.adminFeedbackCase(id),
-  });
-  const data = detail.data,
-    view = data?.view,
-    path = targetPath(view?.target);
-  return (
-    <>
-      <button
-        className="ew-admin-btn is-ghost ew-admin-split-back"
-        onClick={onBack}
-      >
-        <Icon name="back" size={16} />
-        返回列表
-      </button>
-      <Async query={detail} rows={6}>
-        {view && (
-          <article className="ew-admin-case">
-            <header>
-              <div>
-                <Pill tone={kindTone[view.kind ?? ""]} dot={false}>
-                  {feedbackCategoryLabel(view) ?? statusText(view.kind)}
-                </Pill>
-                <Pill tone={view.status === "OPEN" ? "warn" : "good"}>
-                  {view.status === "OPEN"
-                    ? "待处理"
-                    : statusText(view.outcome ?? view.status)}
-                </Pill>
+        <Async query={query} rows={5}>
+          {items?.length ? (
+            <>
+              <div className="ew-feedback-columns" aria-hidden="true">
+                <span>反馈内容</span>
+                <span>提交人</span>
+                <span>{pending ? "提交时间" : "处理时间"}</span>
+                <span />
               </div>
-              <span>
-                #{view.id} · {dateTime(view.createdAt)}
-              </span>
-            </header>
-            <p className="ew-admin-case-body">
-              {view.text || "未填写补充说明"}
-            </p>
-            {!!view.screenshots?.length && (
-              <div className="ew-admin-shots">
-                {view.screenshots.map(
-                  (image, i) =>
-                    mediaUrl(image.url) && (
-                      <a
-                        key={i}
-                        href={mediaUrl(image.url)}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        <img
-                          src={mediaUrl(image.url)}
-                          alt={`截图 ${i + 1}`}
-                          loading="lazy"
-                        />
-                      </a>
-                    ),
+              <ul className="ew-feedback-list">
+                {items.map(
+                  ({ view, targetName, submitterName, submitterId }) => {
+                    if (!view?.id) return null;
+                    const reason =
+                      view.reason &&
+                      (feedbackReasons[view.reason] ?? view.reason);
+                    const title =
+                      view.text || reason || targetName || `反馈 #${view.id}`;
+                    const tone: Tone =
+                      view.kind === "REPORT"
+                        ? "bad"
+                        : view.kind === "CATALOG_ERROR"
+                          ? "warn"
+                          : "info";
+                    return (
+                      <li key={view.id}>
+                        <Link
+                          to={{ search: caseParams(view.id).toString() }}
+                          state={{
+                            fromFeedbackList: true,
+                            preserveScroll: true,
+                          }}
+                          aria-haspopup="dialog"
+                        >
+                          <span className="ew-feedback-subject">
+                            <strong>{title}</strong>
+                            <span className="ew-feedback-context">
+                              <Pill tone={tone} dot={false}>
+                                {feedbackCategoryLabel(view) ??
+                                  statusText(view.kind)}
+                              </Pill>
+                              {targetName && targetName !== title && (
+                                <span>{targetName}</span>
+                              )}
+                              {!pending && view.outcome && (
+                                <span>{statusText(view.outcome)}</span>
+                              )}
+                            </span>
+                          </span>
+                          <span className="ew-feedback-person">
+                            <span className="sr-only">提交人 </span>
+                            {submitterName ||
+                              (submitterId ? `用户 #${submitterId}` : "—")}
+                          </span>
+                          <time>
+                            <span className="sr-only">
+                              {pending ? "提交时间" : "处理时间"}{" "}
+                            </span>
+                            {dateTime(pending ? view.createdAt : view.closedAt)}
+                          </time>
+                          <span className="ew-feedback-row-action">
+                            {pending ? "处理" : "查看"}
+                            <Icon name="chevronRight" size={14} />
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  },
+                )}
+              </ul>
+            </>
+          ) : (
+            <div className="ew-feedback-empty">
+              <div
+                className="ew-feedback-empty-icon"
+                aria-hidden="true"
+                data-clear={(pending && !filtered) || undefined}
+              >
+                {filtered ? (
+                  <Icon name="filter" size={28} />
+                ) : pending ? (
+                  <>
+                    <Inbox size={32} strokeWidth={1.65} />
+                    <i>
+                      <Icon name="check" size={12} />
+                    </i>
+                  </>
+                ) : (
+                  <Icon name="history" size={30} />
                 )}
               </div>
-            )}
-            <Meta
-              items={[
-                [
-                  "提交人",
-                  data.submitterId ? (
-                    <Link
-                      className="ew-admin-link"
-                      to={`/users/${data.submitterId}`}
-                    >
-                      {(data as { submitterName?: string | null })
-                        .submitterName || "用户"}{" "}
-                      #{data.submitterId}
-                    </Link>
-                  ) : (
-                    "—"
-                  ),
-                ],
-                ...(view.reason
-                  ? [["问题类型", view.reason] as [string, string]]
-                  : []),
-                [
-                  "关联内容",
-                  view.target ? (
-                    path && !data.targetUnavailable ? (
-                      <Link className="ew-admin-link" to={path}>
-                        {data.targetName ||
-                          `${targetName[view.target.type ?? ""]} #${view.target.id}`}
-                        <Icon name="external" size={13} />
-                      </Link>
-                    ) : (
-                      `${data.targetName ?? ""} ${targetName[view.target.type ?? ""] ?? ""} #${view.target.id}`
-                    )
-                  ) : (
-                    "无"
-                  ),
-                ],
-                ["处理时间", view.closedAt ? dateTime(view.closedAt) : "—"],
-              ]}
-            />
-            {data.submissionDevice && (
-              <section aria-label="提交时的设备">
-                <h3>提交时的设备</h3>
-                <Meta
-                  items={[
-                    ["平台", data.submissionDevice.platform || "—"],
-                    ["型号", data.submissionDevice.model || "—"],
-                    ["系统版本", data.submissionDevice.osVersion || "—"],
-                    ["应用版本", data.submissionDevice.appVersion || "—"],
-                    ["构建号", data.submissionDevice.appBuild || "—"],
-                  ]}
-                />
-              </section>
-            )}
-            {data.targetUnavailable && (
-              <Notice tone="warn">
-                关联内容已不可见，可能已被删除或隐藏。
-              </Notice>
-            )}
-            {data.catalogChangeRequired && (
-              <Notice tone="warn">
-                这条纠错还需要到餐厅管理中更新目录。
-                <Link
-                  className="ew-admin-link"
-                  to={`/admin/restaurants?keyword=${encodeURIComponent(data.targetName ?? "")}`}
-                >
-                  去维护餐厅
-                </Link>
-              </Notice>
-            )}
-            {view.reply && (
-              <div className="ew-admin-quote">
-                <span>给提交人的回复</span>
-                <p>{view.reply}</p>
-              </div>
-            )}
-            {!!data.actions?.length && (
-              <>
-                <h3 className="ew-admin-subhead">处理记录</h3>
-                <ol className="ew-admin-timeline">
-                  {data.actions.map((a, i) => (
-                    <li key={a.decisionId ?? i}>
-                      <strong>{statusText(a.outcome ?? a.action)}</strong>
-                      <span>
-                        {a.adminId ? `管理员 #${a.adminId}` : "系统"}
-                        {a.createdAt ? ` · ${dateTime(a.createdAt)}` : ""}
-                      </span>
-                      {a.internalNote && <p>内部备注：{a.internalNote}</p>}
-                    </li>
-                  ))}
-                </ol>
-              </>
-            )}
-            {view.status === "OPEN" && (
-              <form
-                className="ew-admin-resolve"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void task.run(
-                    (commandId) =>
-                      api.resolveFeedback(
-                        id,
-                        {
-                          outcome,
-                          reply: reply.trim(),
-                          internalNote: note.trim(),
-                        },
-                        commandId,
-                      ),
-                    async (r) => {
-                      setReply("");
-                      setNote("");
-                      task.say(
-                        `已记录${statusText(r.outcome)}，${r.notified ? "已通知提交人" : "未生成通知"}。`,
-                      );
-                      onResolved();
-                      await detail.refetch();
-                    },
-                  );
+              <h2 aria-live="polite">
+                {filtered
+                  ? "没有符合条件的反馈"
+                  : pending
+                    ? "暂无待处理反馈"
+                    : "暂无已处理记录"}
+              </h2>
+              <button
+                className="ew-admin-btn"
+                onClick={() => {
+                  if (filtered) clearFilters();
+                  else {
+                    switchStatus(pending ? "CLOSED" : "OPEN");
+                    requestAnimationFrame(() => activeStatus.current?.focus());
+                  }
                 }}
               >
-                <h3 className="ew-admin-subhead">处理结论</h3>
-                <Segmented
-                  label="结论"
-                  value={outcome}
-                  onChange={setOutcome}
-                  options={[
-                    ["ACCEPTED", "采纳 / 已核实"],
-                    ["REJECTED", "驳回 / 无问题"],
-                    ...(view.kind === "FEEDBACK"
-                      ? ([["RESOLVED", "已处理"]] as const)
-                      : []),
-                  ]}
-                />
-                <Field label="回复提交人" hint="对方会在反馈记录中看到">
-                  <textarea
-                    rows={3}
-                    value={reply}
-                    onChange={(e) => setReply(e.target.value)}
-                  />
-                </Field>
-                <Field label="内部备注" hint="仅管理员可见">
-                  <textarea
-                    rows={2}
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                  />
-                </Field>
-                {task.uncertain && (
-                  <Notice tone="warn">
-                    上次提交的结果尚未确认，请刷新查看处理记录，避免重复提交。
-                  </Notice>
-                )}
-                <div className="ew-admin-form-actions">
-                  <button
-                    className="ew-admin-btn is-primary"
-                    disabled={task.busy || task.uncertain}
-                  >
-                    {task.busy ? "提交中…" : "提交结论"}
-                  </button>
-                </div>
-              </form>
-            )}
-          </article>
-        )}
-      </Async>
+                {filtered
+                  ? "清除筛选"
+                  : pending
+                    ? "查看已处理记录"
+                    : "返回待处理"}
+                <Icon name="chevronRight" size={14} />
+              </button>
+            </div>
+          )}
+          {(page > 1 || hasNext || (totalPages ?? 0) > 1) && (
+            <Pager
+              page={page}
+              total={totalItems}
+              totalPages={totalPages}
+              hasNext={hasNext}
+              onChange={setPage}
+            />
+          )}
+        </Async>
+      </section>
+      {selected && (
+        <FeedbackCaseDetail
+          key={selected}
+          id={selected}
+          onClose={closeDetail}
+          onReturnToQueue={() => {
+            closeDetail();
+            requestAnimationFrame(() =>
+              activeStatus.current?.focus({ preventScroll: true }),
+            );
+          }}
+        />
+      )}
     </>
   );
 }

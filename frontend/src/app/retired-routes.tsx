@@ -36,6 +36,7 @@ export function retiredRouteDestination(
   if (current !== path) return current + search;
   const pathname = path.replace(/\/+$/, "");
   if (pathname === "/settings/about/us") return aboutHome.path;
+  if (pathname === "/settings/telemetry") return "/settings/privacy";
   const gone = v2Retired.find(([pattern]) => pattern.test(pathname));
   if (gone) return gone[1];
   if (!retired.has(pathname)) return null;

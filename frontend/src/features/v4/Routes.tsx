@@ -10,7 +10,6 @@ import {
   MobileChange,
   Cancellation,
   AccountRecovery,
-  TelemetrySettings,
 } from "./Account";
 import {
   FeedbackForm,
@@ -65,7 +64,6 @@ export default function V4Routes() {
   else if (path === "/settings/phone") page = <MobileChange />;
   else if (path === "/settings/delete") page = <Cancellation />;
   else if (path === "/settings/notifications") page = <NotificationSettings />;
-  else if (path === "/settings/telemetry") page = <TelemetrySettings />;
   else if (path === "/feedback") page = <FeedbackForm />;
   else if (path === "/reports/new") page = <FeedbackForm kind="report" />;
   else if (path === "/restaurants/correction")

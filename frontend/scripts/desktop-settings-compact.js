@@ -14,6 +14,7 @@ async function validateDesktopSettingsCompact(page) {
     let data=[];
     if(path==="/api/user/info") data=user;
     else if(path==="/api/user/userInfo") data={...user,fansVisible:true,followingsVisible:true};
+    else if(path==="/api/telemetry/consent") data={enabled:true,retentionDays:7};
     else if(path==="/api/campus/list") data=[{id:1,name:"软件园",open:true,isDefault:true}];
     else if(path==="/api/remote-config") data={configVersion:1,flags:{},params:{},maintenance:{mode:"NONE"},announcements:[],versions:{}};
     else if(path==="/api/user/activity") data={firstUseToday:false,experienceAdded:0};
@@ -63,7 +64,7 @@ async function validateDesktopSettingsCompact(page) {
     checks.push("Account detail: six rows, masked phone, unset username/password and unverified state");
     await menu.getByRole("link",{name:"隐私设置"}).click();
     await p.getByRole("button",{name:"屏蔽名单",exact:true}).waitFor();
-    await p.getByRole("link",{name:"使用统计授权",exact:true}).waitFor();
+    await p.getByRole("switch",{name:"分享使用统计",exact:true}).waitFor();
     await menu.getByRole("link",{name:"帮助与反馈"}).click();
     await p.getByRole("searchbox",{name:"搜索使用帮助"}).fill("收藏");
     await p.getByRole("link",{name:"返回设置",exact:true}).waitFor();

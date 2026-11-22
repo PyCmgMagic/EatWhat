@@ -70,6 +70,7 @@
 .privacy-settings-row-copy > span {
   color: var(--privacy-muted);
   font-size: 12px;
+  white-space: pre-line;
 }
 .privacy-settings-switch-row input {
   appearance: none;

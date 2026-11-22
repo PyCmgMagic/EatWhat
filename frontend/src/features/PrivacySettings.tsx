@@ -1,11 +1,12 @@
 import { useId, useState } from "react";
-import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
+import { Modal } from "../components/ui";
 import { useTask } from "../components/useTask";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { BlockedListDialog } from "./ApiV2";
+import "./v4/confirm-dialog.css";
 import "./privacy-settings.css";
 
 function PrivacySwitch({
@@ -19,7 +20,7 @@ function PrivacySwitch({
   detail?: string;
   checked: boolean;
   disabled?: boolean;
-  onChange: (value: boolean) => void;
+  onChange: (value: boolean, control: HTMLInputElement) => void;
 }) {
   const detailId = useId();
   return (
@@ -35,7 +36,9 @@ function PrivacySwitch({
         aria-describedby={detail ? detailId : undefined}
         checked={checked}
         disabled={disabled}
-        onChange={(event) => onChange(event.target.checked)}
+        onChange={({ currentTarget }) =>
+          onChange(currentTarget.checked, currentTarget)
+        }
       />
     </label>
   );
@@ -207,6 +210,126 @@ function RecommendationSettings({
   );
 }
 
+function TelemetrySettings() {
+  const { api, user, toast } = useApp();
+  const cache = useQueryClient();
+  const queryKey = ["telemetry", "consent", user?.id];
+  const query = useQuery({ queryKey, queryFn: () => api.telemetryConsent() });
+  const consent = query.data;
+  const consentVersion =
+    consent?.policyVersion && consent.revision != null
+      ? {
+          policyVersion: consent.policyVersion,
+          expectedRevision: consent.revision,
+        }
+      : null;
+  const [confirmTrigger, setConfirmTrigger] = useState<HTMLInputElement | null>(
+    null,
+  );
+  const save = useTask();
+
+  function saveConsent(enabled: boolean) {
+    if (!consentVersion || enabled === consent?.enabled) {
+      setConfirmTrigger(null);
+      return;
+    }
+    save.run(async () => {
+      await cache.cancelQueries({ queryKey });
+      let saved;
+      try {
+        saved = enabled
+          ? await api.saveTelemetryConsent({ ...consentVersion, enabled: true })
+          : await api.disableTelemetry(consentVersion);
+      } catch (error) {
+        await query.refetch();
+        throw error;
+      } finally {
+        setConfirmTrigger(null);
+      }
+      cache.setQueryData(queryKey, saved);
+      if (enabled && saved.enabled && saved.revision != null) {
+        try {
+          await api.telemetryEvents({
+            consentRevision: saved.revision,
+            events: [
+              {
+                eventId: crypto.randomUUID(),
+                properties: { event: "app_open" },
+              },
+            ],
+          });
+        } catch {
+          toast("使用统计已开启，本次统计事件未能发送。");
+          return;
+        }
+      }
+      toast(saved.enabled ? "使用统计已开启" : "使用统计已关闭", {
+        tone: "success",
+      });
+    });
+  }
+
+  return (
+    <section
+      className="privacy-settings-card"
+      aria-labelledby="privacy-data-title"
+      aria-busy={save.isPending}
+    >
+      <h2 id="privacy-data-title" className="privacy-settings-title">
+        数据授权
+      </h2>
+      {query.isPending ? (
+        <ContentSkeleton kind="rows" count={1} />
+      ) : query.isError ||
+        !consentVersion ||
+        typeof consent?.enabled !== "boolean" ? (
+        <LoadError
+          text="暂时无法读取使用统计设置。"
+          retry={() => void query.refetch()}
+        />
+      ) : (
+        <PrivacySwitch
+          label="分享使用统计"
+          detail={`仅记录预设操作和安装标识${consent.retentionDays != null ? `，保留 ${consent.retentionDays} 天` : ""}。\n不收集输入的文字或网址。`}
+          checked={consent.enabled}
+          disabled={save.isPending}
+          onChange={(next, control) =>
+            next ? saveConsent(true) : setConfirmTrigger(control)
+          }
+        />
+      )}
+      {confirmTrigger && (
+        <Modal
+          title="关闭使用统计？"
+          className="v4-confirm-dialog"
+          returnFocus={confirmTrigger}
+          onClose={() => setConfirmTrigger(null)}
+          dismissible={!save.isPending}
+        >
+          <p>关闭后将删除已收集的使用统计，无法恢复。</p>
+          <div className="v4-confirm-actions">
+            <button
+              type="button"
+              disabled={save.isPending}
+              onClick={() => setConfirmTrigger(null)}
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              className="is-danger"
+              disabled={save.isPending}
+              onClick={() => saveConsent(false)}
+            >
+              {save.isPending ? "正在关闭…" : "关闭并删除统计"}
+            </button>
+          </div>
+        </Modal>
+      )}
+    </section>
+  );
+}
+
 export default function PrivacySettings() {
   const [blockedOpen, setBlockedOpen] = useState(false);
 
@@ -216,24 +339,7 @@ export default function PrivacySettings() {
         <VisibilitySettings />
         <div className="privacy-settings-side">
           <RecommendationSettings onOpenBlocked={() => setBlockedOpen(true)} />
-          <section
-            className="privacy-settings-card"
-            aria-labelledby="privacy-data-title"
-          >
-            <h2 id="privacy-data-title" className="privacy-settings-title">
-              数据授权
-            </h2>
-            <Link
-              className="privacy-settings-row privacy-settings-entry"
-              to="/settings/telemetry"
-            >
-              <span className="privacy-settings-entry-icon">
-                <Icon name="document" size={17} />
-              </span>
-              <strong>使用统计授权</strong>
-              <Icon name="chevronRight" size={17} />
-            </Link>
-          </section>
+          <TelemetrySettings />
         </div>
       </div>
       {blockedOpen && (

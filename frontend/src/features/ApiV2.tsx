@@ -148,6 +148,91 @@ export function UserFoods({
   });
   if (!session)
     return <LoginLink to="/auth/password">登录后查看分享 →</LoginLink>;
+  const filterForm = (
+    <form
+      ref={form}
+      id={filtersId}
+      className={compact ? "mobile-user-filters" : "ew-v2-filter"}
+      role="search"
+      aria-label="筛选食友分享"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const data = new FormData(e.currentTarget);
+        setFilters({
+          keyword: String(data.get("keyword") || "").trim(),
+          category: String(data.get("category") || ""),
+          sort: String(data.get("sort")),
+        });
+        setPage(1);
+      }}
+    >
+      {compact ? (
+        <div className="mobile-user-search">
+          <Icon name="search" size={20} />
+          <input
+            name="keyword"
+            type="search"
+            enterKeyHint="search"
+            aria-label="搜索食友分享"
+            placeholder="搜一道分享的菜"
+            maxLength={64}
+          />
+          <button type="submit">搜索</button>
+        </div>
+      ) : (
+        <input
+          name="keyword"
+          aria-label="搜索食友分享"
+          placeholder="在分享中搜一道菜"
+          maxLength={64}
+        />
+      )}
+      <Select
+        name="category"
+        aria-label="分享分类"
+        value={compact ? filters.category : undefined}
+        onChange={
+          compact
+            ? (event) => {
+                setFilters((current) => ({
+                  ...current,
+                  category: event.target.value,
+                }));
+                setPage(1);
+              }
+            : undefined
+        }
+      >
+        {categories.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.label}
+          </option>
+        ))}
+      </Select>
+      <Select
+        name="sort"
+        aria-label="分享排序"
+        value={compact ? filters.sort : undefined}
+        onChange={
+          compact
+            ? (event) => {
+                setFilters((current) => ({
+                  ...current,
+                  sort: event.target.value,
+                }));
+                setPage(1);
+              }
+            : undefined
+        }
+      >
+        <option value="NEWEST">最新分享</option>
+        <option value="POPULAR">最多获赞</option>
+        <option value="PRICE_ASC">价格从低到高</option>
+        <option value="PRICE_DESC">价格从高到低</option>
+      </Select>
+      {!compact && <button className="ew-button">筛选</button>}
+    </form>
+  );
   return (
     <div
       className={`ew-feature ew-v2-foods${compact ? " mobile-user-foods" : ""}`}
@@ -174,97 +259,24 @@ export function UserFoods({
             aria-label="搜索和筛选分享"
             aria-expanded={toolsOpen}
             aria-controls={filtersId}
-            onClick={() => setToolsOpen(!toolsOpen)}
+            onClick={() => setToolsOpen((open) => !open)}
           >
             <Icon name="search" size={20} />
             <span>筛选</span>
           </button>
         </header>
       )}
-      <form
-        ref={form}
-        id={filtersId}
-        hidden={compact && !toolsOpen}
-        className={compact ? "mobile-user-filters" : "ew-v2-filter"}
-        role="search"
-        aria-label="筛选食友分享"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const data = new FormData(e.currentTarget);
-          setFilters({
-            keyword: String(data.get("keyword") || "").trim(),
-            category: String(data.get("category") || ""),
-            sort: String(data.get("sort")),
-          });
-          setPage(1);
-        }}
-      >
-        {compact ? (
-          <div className="mobile-user-search">
-            <Icon name="search" size={20} />
-            <input
-              name="keyword"
-              type="search"
-              enterKeyHint="search"
-              aria-label="搜索食友分享"
-              placeholder="搜一道分享的菜"
-              maxLength={64}
-            />
-            <button type="submit">搜索</button>
-          </div>
-        ) : (
-          <input
-            name="keyword"
-            aria-label="搜索食友分享"
-            placeholder="在分享中搜一道菜"
-            maxLength={64}
-          />
-        )}
-        <Select
-          name="category"
-          aria-label="分享分类"
-          value={compact ? filters.category : undefined}
-          onChange={
-            compact
-              ? (event) => {
-                  setFilters((current) => ({
-                    ...current,
-                    category: event.target.value,
-                  }));
-                  setPage(1);
-                }
-              : undefined
-          }
+      {compact ? (
+        <div
+          className="mobile-user-filter-reveal"
+          aria-hidden={!toolsOpen}
+          inert={!toolsOpen}
         >
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.label}
-            </option>
-          ))}
-        </Select>
-        <Select
-          name="sort"
-          aria-label="分享排序"
-          value={compact ? filters.sort : undefined}
-          onChange={
-            compact
-              ? (event) => {
-                  setFilters((current) => ({
-                    ...current,
-                    sort: event.target.value,
-                  }));
-                  setPage(1);
-                }
-              : undefined
-          }
-        >
-          <option value="NEWEST">最新分享</option>
-          <option value="POPULAR">最多获赞</option>
-          <option value="PRICE_ASC">价格从低到高</option>
-          <option value="PRICE_DESC">价格从高到低</option>
-        </Select>
-        {!compact && <button className="ew-button">筛选</button>}
-      </form>
+          <div className="mobile-user-filter-clip">{filterForm}</div>
+        </div>
+      ) : (
+        filterForm
+      )}
       {compact &&
         (filters.keyword || filters.category || filters.sort !== "NEWEST") && (
           <div className="mobile-user-applied-filters" role="status">

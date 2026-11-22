@@ -101,11 +101,6 @@ export const mobileSettingsPages: Record<
     back: "/settings",
     source: "v4",
   },
-  "/settings/telemetry": {
-    title: "使用统计",
-    back: "/settings/privacy",
-    source: "v4",
-  },
   "/settings/preferences": {
     title: "口味偏好",
     back: "/settings/personalization",

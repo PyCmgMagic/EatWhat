@@ -18,19 +18,10 @@
   padding: clamp(20px, 2.5vw, 36px);
 }
 .pc-settings-navigation {
-  position: sticky;
-  top: calc(var(--header-height, 80px) + 12px);
   display: grid;
   gap: 14px;
-  max-height: calc(100dvh - var(--header-height, 80px) - 32px);
-  overflow-y: auto;
-  scrollbar-width: thin;
   padding: 4px 16px 4px 4px;
   border-right: 1px solid var(--pc-line);
-}
-.pc-profile-space-content .pc-settings-navigation {
-  top: calc(var(--header-height, 80px) + 76px);
-  max-height: calc(100dvh - var(--header-height, 80px) - 96px);
 }
 .pc-settings-navigation a {
   display: flex;
@@ -154,13 +145,10 @@
     gap: 22px;
     padding: 20px;
   }
-  .pc-settings-workspace .pc-settings-navigation {
-    position: static;
+  .pc-settings-navigation {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-    max-height: none;
-    overflow: visible;
     padding: 0 0 14px;
     border: 0;
     border-bottom: 1px solid var(--pc-line);

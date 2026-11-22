@@ -1,6 +1,12 @@
 import { commentLikeLink } from "../../api/notifications";
 import { errorMessage } from "../../api/client";
-import { feedbackCategories, feedbackCategoryLabel, type FeedbackCategory, type FeedbackCase } from "../../api/feedback";
+import {
+  feedbackCategories,
+  feedbackCategoryLabel,
+  feedbackReasons,
+  type FeedbackCategory,
+  type FeedbackCase,
+} from "../../api/feedback";
 import { DesignIcon as Icon, ReactionIcon } from "../../mobile/ui";
 import { RestaurantCard, TopicCard, TopicHero } from "./Cards";
 import { useContext, useEffect, useState } from "react";
@@ -61,16 +67,6 @@ import {
 } from "./shared";
 
 type TargetType = "FOOD" | "RESTAURANT" | "COMMENT" | "USER";
-const reasons = {
-  WRONG_NAME: "店名不正确",
-  WRONG_LOCATION: "位置不准确",
-  CLOSED: "店铺已停业",
-  DUPLICATE: "重复店铺",
-  OTHER: "其他问题",
-  NOT_REAL_PHOTO: "非真实照片",
-  ADVERTISING: "广告信息",
-  ILLEGAL_OR_UNFRIENDLY: "不友善或违规内容",
-};
 export function FeedbackForm({
   kind = "feedback",
   showHeader = true,
@@ -304,7 +300,7 @@ export function FeedbackForm({
                   >
                     {options.map((x) => (
                       <option key={x} value={x}>
-                        {reasons[x as keyof typeof reasons]}
+                        {feedbackReasons[x]}
                       </option>
                     ))}
                   </select>
@@ -414,8 +410,7 @@ export function FeedbackRecords({
                 <strong>{feedbackCategoryLabel(item) ?? statusText(item.kind)}</strong>
                 <p>
                   {item.text ||
-                    (item.reason &&
-                      reasons[item.reason as keyof typeof reasons]) ||
+                    (item.reason && feedbackReasons[item.reason]) ||
                     "查看处理进度"}
                 </p>
                 <small>{timeText(item.createdAt)}</small>
@@ -437,7 +432,7 @@ export function CaseContent({ value }: { value: FeedbackCase }) {
       {value.reason && (
         <p>
           问题类型：
-          {reasons[value.reason as keyof typeof reasons] ?? value.reason}
+          {feedbackReasons[value.reason] ?? value.reason}
         </p>
       )}
       <div className="v4-images">

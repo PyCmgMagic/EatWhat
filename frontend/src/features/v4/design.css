@@ -1602,27 +1602,6 @@
   background: #e7efe2;
   color: #546e4a;
 }
-.v4-page .v4-lifecycle-icon {
-  background: #f8e8df;
-  color: #885c47;
-  width: 62px;
-  height: 62px;
-  display: grid;
-  place-items: center;
-  border-radius: 19px;
-  margin-bottom: 25px;
-}
-.v4-page .v4-privacy-hero {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  margin-bottom: 25px;
-}
-.v4-page .v4-privacy-hero h2 {
-  font-size: 19px;
-  line-height: 1.6;
-  margin: 9px 0 0;
-}
 .v4-page .v4-directory-layout {
   display: grid;
   grid-template-columns: 252px minmax(0, 1fr);
@@ -2623,13 +2602,6 @@
   .v4-page .v4-steps li b {
     font-size: 10px;
   }
-  .v4-page .v4-privacy-hero {
-    gap: 12px;
-    align-items: flex-start;
-  }
-  .v4-page .v4-privacy-hero h2 {
-    font-size: 18px;
-  }
   .v4-page .v4-admin-main .v4-card {
     padding: 22px;
   }
@@ -2778,45 +2750,118 @@
   opacity: 1;
 }
 
-.v4-page fieldset.v6-cancellation-options {
-  display: block;
-  border: 1px solid #e9e0d7;
+.cancellation-layout {
+  display: grid;
+  align-items: start;
+  gap: 24px;
+}
+.cancellation-impact {
+  padding: 20px;
   border-radius: 16px;
-  margin: 20px 0;
-  padding: 16px;
+  background: var(--night-layer, #f8f5f1);
+}
+.cancellation-impact h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.cancellation-impact h2 .design-icon {
+  color: var(--night-muted, #796554);
+}
+.cancellation-impact dl {
+  margin: 16px 0 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.cancellation-impact dt {
+  font-weight: 700;
+}
+.cancellation-impact dd {
+  margin: 2px 0 0;
+  color: var(--night-muted, var(--v4-muted));
+}
+.cancellation-impact dd + dt {
+  margin-top: 14px;
+}
+.cancellation-controls {
+  display: grid;
+  gap: 24px;
   min-width: 0;
 }
-.v6-cancellation-options legend {
-  padding: 0 6px;
+.v4-page fieldset.cancellation-options {
+  min-inline-size: 0;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.cancellation-options legend {
+  margin-bottom: 10px;
+  padding: 0;
+  font-size: 16px;
   font-weight: 700;
+  line-height: 1.5;
+}
+.cancellation-options small {
+  display: block;
+  margin-top: 2px;
+  color: var(--night-muted, var(--v4-muted));
+  font-size: 13px;
+  line-height: 1.6;
+}
+.cancellation-verification {
+  display: grid;
+  gap: 8px;
+}
+.cancellation-verification > label,
+.cancellation-controls .v4-field > span {
+  color: inherit;
+  font-size: 14px;
+  font-weight: 700;
+}
+.cancellation-code-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+.cancellation-code-row button {
+  border-radius: 12px;
   font-size: 14px;
 }
-.v6-cancellation-options p {
-  padding-left: 27px;
-  font-size: 12px;
+.cancellation-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--night-line, var(--v4-line));
 }
-.v4-page .v6-cancellation-options p,
-.mobile-settings-page .mobile-settings-content .v6-cancellation-options p {
-  margin: 0 0 12px;
-  font-size: 13px;
+.cancellation-confirm label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 14px;
+  cursor: pointer;
 }
-.v4-page .v6-cancellation-options p:last-child {
-  margin-bottom: 0;
+.cancellation-confirm input[type="checkbox"] {
+  margin: 0;
 }
-/* 选项本身已经是卡片，fieldset 不再多画一层边框，标题当小标题用。 */
-.v4-page fieldset.v6-cancellation-options {
-  border: 0;
-  margin: 18px 0 22px;
-  padding: 0;
+.cancellation-confirm button {
+  margin-inline-start: auto;
+  min-width: 112px;
 }
-.v4-page .v6-cancellation-options legend {
-  padding: 0;
-  margin-bottom: 10px;
-  color: #504338;
-  font-size: 13px;
-  font-weight: 700;
+@container settings-panel (min-width: 640px) {
+  .cancellation-layout {
+    grid-template-columns: minmax(210px, 1fr) minmax(0, 1.85fr);
+    gap: clamp(24px, 4cqi, 40px);
+  }
 }
-.v4-page .v6-cancellation-options > .v4-check + p {
-  padding-left: 47px;
-  margin: 6px 0 14px;
+@media (max-width: 600px) {
+  .cancellation-confirm button {
+    width: 100%;
+  }
 }

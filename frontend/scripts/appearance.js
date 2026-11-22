@@ -48,6 +48,9 @@ async (page) => {
     await themeIs(second, "light");
     await second.close();
     await openPersonalization();
+    const bottomNavigation = p.getByRole("group", { name: "底部导航", exact: true });
+    assert(await bottomNavigation.count() === 0, "Desktop personalization includes mobile navigation settings");
+    await p.getByRole("link", { name: "口味偏好", exact: true }).waitFor();
     await p.getByRole("radio", { name: "跟随系统" }).check();
     await p.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
     await themeIs(p, "dark");
@@ -114,6 +117,12 @@ async (page) => {
     await p.reload();
     await slider.waitFor();
     assert(await slider.inputValue() === "99", "Slider choice lost on reload");
+    await p.setViewportSize({ width: 640, height: 844 });
+    await p.locator(".pc-header").waitFor();
+    await bottomNavigation.waitFor({ state: "detached" });
+    await p.setViewportSize({ width: 639, height: 844 });
+    await slider.waitFor();
+    assert(await slider.inputValue() === "99", "Switching layouts reset mobile transparency");
     await home.close();
     await p.getByRole("radio", { name: "跟随系统" }).check();
     await p.emulateMedia({ colorScheme: "light" });

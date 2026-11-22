@@ -1,5 +1,7 @@
 async function validateNotificationSoon(page) {
-  const base = "http://127.0.0.1:5173";
+  const base = new URL(page.url()).origin;
+  if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(base))
+    throw new Error("请在本地开发页面运行");
   const context = await page
     .context()
     .browser()
@@ -36,7 +38,10 @@ async function validateNotificationSoon(page) {
           json: { code: 50000, msg: "未捕获异常" },
         });
       }
-      if (route.request().method() !== "GET") {
+      if (
+        route.request().method() !== "GET" &&
+        !["/api/device/register", "/api/user/activity"].includes(url.pathname)
+      ) {
         errors.push("Unexpected write: " + url.pathname);
         return route.abort();
       }
@@ -60,7 +65,10 @@ async function validateNotificationSoon(page) {
         };
       else if (url.pathname === "/api/campus/list")
         data = [{ id: 1, name: "软件园", open: true, isDefault: true }];
-      else if (url.pathname === "/api/notification/unread/count") data = 0;
+      else if (url.pathname === "/api/notification/cards/unread/count")
+        data = { cards: 0, members: 0 };
+      else if (url.pathname === "/api/user/activity")
+        data = { firstUseToday: false, experienceAdded: 0 };
       else if (url.pathname.includes("notification"))
         data = { items: [], totalItems: 0, hasNext: false };
       return route.fulfill({ status: 200, json: { code: 0, data } });
@@ -72,6 +80,8 @@ async function validateNotificationSoon(page) {
   const path = base + "/?demo=0#/settings/notifications";
   try {
     for (const [width, height] of [
+      [1380, 680],
+      [1024, 560],
       [320, 640],
       [390, 844],
       [520, 844],
@@ -79,7 +89,45 @@ async function validateNotificationSoon(page) {
     ]) {
       await p.setViewportSize({ width, height });
       await p.goto(path);
-      await p.getByRole("heading", { name: "敬请期待", exact: true }).waitFor();
+      const card = p.locator(".notification-coming-soon");
+      await card.waitFor();
+      if (width >= 1024) {
+        const panel = p.getByRole("region", { name: "设置内容" });
+        const menu = p.getByRole("navigation", { name: "设置导航" });
+        const cardBounds = await card.boundingBox(),
+          panelBounds = await panel.boundingBox();
+        assert(
+          Math.abs(cardBounds.width - panelBounds.width) < 2 &&
+            cardBounds.height < cardBounds.width,
+          `Desktop status card is ${cardBounds.width} × ${cardBounds.height} in a ${panelBounds.width}px panel`,
+        );
+        assert(
+          (await menu
+            .getByRole("link", { name: "帮助与反馈", exact: true })
+            .count()) === 1,
+          "Repeated help entry",
+        );
+        assert(
+          (await menu
+            .getByRole("link", { name: "通知偏好", exact: true })
+            .getAttribute("aria-current")) === "page",
+          "Missing current setting",
+        );
+        const scrollState = await menu.evaluate(async (nav) => {
+          const top = () => nav.getBoundingClientRect().top + window.scrollY;
+          const start = top();
+          window.scrollTo({ top: start, behavior: "instant" });
+          await new Promise(requestAnimationFrame);
+          return {
+            drift: Math.abs(top() - start),
+            clipped: nav.scrollHeight > nav.clientHeight + 1,
+          };
+        });
+        assert(
+          scrollState.drift < 2 && !scrollState.clipped,
+          "Settings menu moved independently or clipped its links during page scroll",
+        );
+      }
       await p.locator(".notification-coming-soon img").evaluate(async (img) => {
         await img.decode();
       });
@@ -96,7 +144,9 @@ async function validateNotificationSoon(page) {
           "Obsolete error/device UI remains: " + unwanted,
         );
       assert(
-        (await p.locator("h1").filter({ visible: true }).count()) === 1,
+        (await p
+          .getByRole("heading", { level: 1, name: "通知偏好", exact: true })
+          .count()) === 1,
         "Duplicate page headings",
       );
       assert(
@@ -105,7 +155,10 @@ async function validateNotificationSoon(page) {
         )),
         "Horizontal overflow at " + width,
       );
-      const action = p.getByRole("link", { name: "先去逛逛", exact: true });
+      await card
+        .getByRole("heading", { name: "通知偏好暂未开放", exact: true })
+        .waitFor();
+      const action = card.getByRole("link", { name: "去发现页", exact: true });
       await action.scrollIntoViewIfNeeded();
       await action.evaluate((element) =>
         element.scrollIntoView({ block: "center" }),
@@ -135,11 +188,17 @@ async function validateNotificationSoon(page) {
     flagOn = false;
     await p.setViewportSize({ width: 390, height: 844 });
     await p.goto(path);
-    await p.getByRole("heading", { name: "敬请期待", exact: true }).waitFor();
+    await p
+      .getByRole("heading", { name: "通知偏好暂未开放", exact: true })
+      .waitFor();
     await p.getByRole("link", { name: "返回设置", exact: true }).click();
     await p.waitForURL(/#\/settings$/);
-    await p.getByRole("link", { name: /^通知/ }).click();
-    await p.getByRole("heading", { name: "敬请期待", exact: true }).waitFor();
+    await p.setViewportSize({ width: 1380, height: 680 });
+    const menu = p.getByRole("navigation", { name: "设置导航" });
+    await menu.getByRole("link", { name: "通知偏好", exact: true }).click();
+    await p
+      .getByRole("heading", { name: "通知偏好暂未开放", exact: true })
+      .waitFor();
     assert(
       !pushRequests.length,
       "Unreleased push API was contacted: " + pushRequests.join(","),
@@ -154,7 +213,9 @@ async function validateNotificationSoon(page) {
     await p
       .locator(".notification-coming-soon .dish-illustration > svg")
       .waitFor();
-    await p.getByRole("heading", { name: "敬请期待", exact: true }).waitFor();
+    await p
+      .getByRole("heading", { name: "通知偏好暂未开放", exact: true })
+      .waitFor();
     checks.push(
       "The inline bowl SVG fallback keeps the page intact if the illustration asset fails",
     );

@@ -19,9 +19,12 @@ const choices = [
   { value: "dark", label: "深色" },
 ] as const;
 
-export default function Personalization() {
+export default function Personalization({
+  showBottomNavigation = false,
+}: {
+  showBottomNavigation?: boolean;
+}) {
   const appearance = useAppearance();
-  const transparency = useNavTransparency();
   return (
     <div className="personalization">
       <Link className="personalization-entry" to="/settings/preferences">
@@ -49,44 +52,51 @@ export default function Personalization() {
           ))}
         </div>
       </fieldset>
-      <fieldset>
-        <legend>底部导航</legend>
-        <div
-          className="personalization-preview"
-          role="img"
-          aria-label="底部导航外观预览"
-        >
-          <div inert>
-            <DesignNavigation
-              active="home"
-              action={
-                <span className="design-fab">
-                  <PublishButtonSurface />
-                </span>
-              }
-            />
-          </div>
-        </div>
-        <div className="personalization-value">
-          <label htmlFor="nav-transparency">透明度</label>
-          <span aria-hidden="true">{transparency}%</span>
-        </div>
-        <input
-          id="nav-transparency"
-          type="range"
-          min={0}
-          max={100}
-          step={1}
-          value={transparency}
-          aria-valuetext={transparency + "%"}
-          onChange={(event) =>
-            setNavTransparency(event.currentTarget.valueAsNumber)
-          }
-        />
-        <small className="personalization-system-note">
-          系统辅助显示已启用，底部导航使用实色背景。
-        </small>
-      </fieldset>
+      {showBottomNavigation && <BottomNavigationSettings />}
     </div>
+  );
+}
+
+function BottomNavigationSettings() {
+  const transparency = useNavTransparency();
+  return (
+    <fieldset>
+      <legend>底部导航</legend>
+      <div
+        className="personalization-preview"
+        role="img"
+        aria-label="底部导航外观预览"
+      >
+        <div inert>
+          <DesignNavigation
+            active="home"
+            action={
+              <span className="design-fab">
+                <PublishButtonSurface />
+              </span>
+            }
+          />
+        </div>
+      </div>
+      <div className="personalization-value">
+        <label htmlFor="nav-transparency">透明度</label>
+        <span aria-hidden="true">{transparency}%</span>
+      </div>
+      <input
+        id="nav-transparency"
+        type="range"
+        min={0}
+        max={100}
+        step={1}
+        value={transparency}
+        aria-valuetext={transparency + "%"}
+        onChange={(event) =>
+          setNavTransparency(event.currentTarget.valueAsNumber)
+        }
+      />
+      <small className="personalization-system-note">
+        系统辅助显示已启用，底部导航使用实色背景。
+      </small>
+    </fieldset>
   );
 }
