@@ -81,6 +81,7 @@
 
 /* 屏蔽入口在介绍卡上是配角：白色半透明，别和关注按钮抢注意力。 */
 .pc-friend-actions .ew-v2-block-control {
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -155,69 +156,6 @@
   opacity: 0.72;
 }
 
-.pc-friend-relations {
-  display: grid;
-  gap: 10px;
-}
-
-.pc-friend-relation {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 64px;
-  padding: 12px 16px;
-  border: 1px solid var(--overview-line, #efe7de);
-  border-radius: 18px;
-  background: #fff;
-  color: var(--overview-ink, #231c18) !important;
-  font-size: 14px;
-  transition:
-    border-color 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.pc-friend-relation:hover {
-  border-color: #dfd2c2;
-  box-shadow: 0 10px 24px rgb(52 39 28 / 7%);
-}
-
-.pc-friend-relation .design-icon:first-child {
-  color: #86735f;
-}
-
-.pc-friend-relation > span {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  min-width: 0;
-}
-
-.pc-friend-relation b {
-  font-size: 20px;
-  font-weight: 780;
-  font-variant-numeric: tabular-nums;
-}
-
-.pc-friend-relation small {
-  color: var(--overview-muted, #827367);
-  font-size: 12px;
-}
-
-.pc-friend-relation .design-icon:last-child {
-  margin-left: auto;
-  color: #b6a695;
-}
-
-.pc-friend-relation.is-locked {
-  background: #faf7f3;
-  cursor: default;
-}
-
-.pc-friend-relation.is-locked:hover {
-  border-color: var(--overview-line, #efe7de);
-  box-shadow: none;
-}
-
 .pc-friend-record {
   margin: 18px 0 0;
   color: var(--overview-muted, #827367);
@@ -267,14 +205,20 @@
     padding: 22px 18px 24px;
   }
 
+  .pc-friend-space .profile-overview-hero-top {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
   .pc-friend-actions {
+    max-width: 100%;
+    margin-inline-start: auto;
     gap: 8px;
   }
 
-  .pc-friend-follow,
-  .pc-friend-actions .ew-v2-block-control .ew-button {
-    min-height: 40px;
-    padding: 0 14px;
+  .pc-friend-space .pc-friend-actions :is(.pc-friend-follow, .ew-v2-block-control .ew-button, .pc-friend-manage) {
+    gap: 6px;
+    padding-inline: 8px;
     font-size: 12px;
   }
 }

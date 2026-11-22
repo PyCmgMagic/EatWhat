@@ -197,10 +197,9 @@ it("renders a friend page on the profile-space shell", async () => {
   expect(host.querySelector(".pc-friend-record")?.textContent).toContain(
     "分享了 2 道菜",
   );
-  const relations = [...host.querySelectorAll(".pc-friend-relation")].map(
-    (row) => row.getAttribute("href"),
-  );
-  expect(relations).toEqual([
+  const relations = [...host.querySelectorAll('a[href*="people="]')];
+  expect(relations.every((link) => link.closest(".profile-overview-social"))).toBe(true);
+  expect(relations.map((link) => link.getAttribute("href"))).toEqual([
     "/users/21?people=fans",
     "/users/21?people=follow",
   ]);

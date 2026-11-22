@@ -336,54 +336,6 @@ export function DesktopUser() {
                   )}
                 </div>
               )}
-            </section>
-            <section
-              className="profile-overview-collection"
-              aria-labelledby="friend-archive"
-            >
-              <div className="profile-overview-section-heading">
-                <div className="profile-overview-section-title">
-                  <h2 id="friend-archive">
-                    {self ? "我的校园美食档案" : "TA 的校园美食档案"}
-                  </h2>
-                </div>
-              </div>
-              <div className="pc-friend-relations">
-                {people.map((person) =>
-                  person.visible ? (
-                    <Link
-                      key={person.key}
-                      className="pc-friend-relation"
-                      to={peopleHref(
-                        loc.pathname,
-                        loc.search,
-                        person.key as "fans" | "follow",
-                      )}
-                      state={{ profilePeopleFrom: loc.key }}
-                      preventScrollReset
-                    >
-                      <Icon name="me" size={22} />
-                      <span>
-                        <b>{person.count ?? "—"}</b> {person.name}
-                      </span>
-                      <Icon name="chevronRight" size={18} />
-                    </Link>
-                  ) : (
-                    <div
-                      key={person.key}
-                      className="pc-friend-relation is-locked"
-                    >
-                      <Icon name="lock" size={22} />
-                      <span>
-                        <b>{person.name}</b>
-                        <small>
-                          {person.pending ? "公开状态待确认" : "对方没有公开"}
-                        </small>
-                      </span>
-                    </div>
-                  ),
-                )}
-              </div>
               <p className="pc-friend-record">
                 {self ? "你" : "TA"}分享了 {u.uploadedFoodsCount ?? "—"} 道菜，
                 添加了 {u.uploadedRestaurantsCount ?? "—"} 家店。
