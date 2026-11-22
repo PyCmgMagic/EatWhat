@@ -95,7 +95,7 @@ import { MobileDishOptions } from "../features/DishAvailability";
 import SheetHandle from "./SheetHandle";
 import HomeSheetHandle from "./HomeSheetHandle";
 import DishPhotoPicker from "./DishPhotoPicker";
-import HomeOrbit, { dragHomePlates, homePlateSpacing } from "./HomeOrbit";
+import HomeOrbit, { dragHomePlates, homeOrbitDragAngle } from "./HomeOrbit";
 import TagPanel from "./TagPanel";
 import AvatarSourceSheet from "./AvatarSourceSheet";
 import ProfileEditor from "./ProfileEditor";
@@ -273,7 +273,7 @@ export function useDesignBridge(
       id: number;
       x: number;
       y: number;
-      step: number;
+      plateWidth: number;
       axis: "x" | "y" | null;
     } | null,
   });
@@ -892,7 +892,7 @@ export function useDesignBridge(
         id: e.pointerId,
         x: e.clientX,
         y: e.clientY,
-        step: plate.offsetWidth * homePlateSpacing,
+        plateWidth: plate.offsetWidth,
         axis: null,
       };
       down(e);
@@ -905,8 +905,10 @@ export function useDesignBridge(
       if (!pointer.axis && Math.max(Math.abs(dx), Math.abs(dy)) >= 6)
         pointer.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
       if (pointer.axis === "x" && homeOrbit.current && !instantMotion()) {
-        const progress = Math.max(-1, Math.min(1, dx / pointer.step));
-        scheduler.update(homeOrbit.current, progress);
+        scheduler.update(
+          homeOrbit.current,
+          homeOrbitDragAngle(dx, pointer.plateWidth),
+        );
       }
     };
     const endDrag = (steps: number) => {

@@ -100,6 +100,7 @@ export function DiscoveryList({
         aria-busy={feed.isFetching}
       >
         <Link
+          hidden
           className="discovery-draw-link"
           to={"/recommend/pick?" + drawParams}
           state={{ discoveryFrom: location.pathname + location.search }}

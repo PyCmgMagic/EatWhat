@@ -189,6 +189,46 @@ async function validateProfileAvatarEdit(
       fullPage: true,
     });
     const zoom = p.getByRole("slider", { name: "缩放", exact: false });
+    const smaller = cropDialog.getByRole("button", { name: "缩小头像" });
+    const larger = cropDialog.getByRole("button", { name: "放大头像" });
+    check(await smaller.isDisabled(), "Minimum zoom disables the minus button");
+    await larger.click();
+    check((await zoom.inputValue()) === "1.25", "Zoom in without dragging");
+    await smaller.click();
+    check((await zoom.inputValue()) === "1", "Zoom out without dragging");
+    if (view === "mobile") {
+      await zoom.scrollIntoViewIfNeeded();
+      const box = await zoom.boundingBox();
+      check(
+        box.x >= 64 && width - box.x - box.width >= 64 && box.height >= 44,
+        "Zoom slider has a finger-sized target clear of both screen edges",
+      );
+      const url = p.url();
+      const y = box.y + box.height / 2;
+      const cdp = await context.newCDPSession(p);
+      try {
+        await cdp.send("Input.dispatchTouchEvent", {
+          type: "touchStart", touchPoints: [{ x: box.x + 8, y }],
+        });
+        for (const fraction of [0.2, 0.4, 0.6]) {
+          await cdp.send("Input.dispatchTouchEvent", {
+            type: "touchMove", touchPoints: [{ x: box.x + box.width * fraction, y }],
+          });
+        }
+        const enlarged = Number(await zoom.inputValue());
+        await cdp.send("Input.dispatchTouchEvent", {
+          type: "touchMove", touchPoints: [{ x: box.x + box.width * 0.3, y }],
+        });
+        await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+        check(Number(await zoom.inputValue()) < enlarged, "Dragging back reduces zoom");
+      } finally {
+        await cdp.detach();
+      }
+      check(
+        Number(await zoom.inputValue()) > 1 && p.url() === url && (await cropDialog.isVisible()),
+        "Touch-drag zooms the avatar and keeps the editor open",
+      );
+    }
     if (layout.zoom.x >= 0 && layout.zoom.right <= layout.width) {
       await zoom.focus();
       for (let i = 0; i < 10; i++) await p.keyboard.press("ArrowRight");

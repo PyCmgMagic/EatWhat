@@ -436,9 +436,23 @@
   font-weight: 700;
   pointer-events: auto;
   width: fit-content;
+  max-width: 100%;
+}
+.pc-hero-shop > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pc-hero-shop > .design-icon {
+  flex-shrink: 0;
+}
+.pc-hero-shop-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 6px;
 }
 .pc-hero-dismiss {
-  margin: 6px 0 0;
   padding: 0;
   border: 0;
   background: none;
@@ -457,16 +471,35 @@
 .pc-hero-dismiss:disabled {
   cursor: wait;
 }
+.pc-hero-distance,
+.pc-hero-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
 .pc-hero-distance {
-  display: block;
-  font: 500 14px "Bricolage Grotesque Variable";
-  opacity: 0.75;
-  margin-top: 4px;
+  pointer-events: auto;
+}
+.pc-hero-price-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin-top: 20px;
 }
 .pc-hero-price {
   font: 800 62px/1 "Bricolage Grotesque Variable";
   letter-spacing: -3px;
-  margin-top: 20px;
+}
+.pc-home .pc-hero-price.is-unknown {
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: normal;
 }
 .pc-hero-food {
   --plate-size: 474px;
@@ -2290,9 +2323,6 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
     line-height: 1.06;
     min-height: 167px;
   }
-  .pc-hero-copy .pc-hero-price {
-    margin-top: 23px;
-  }
   .pc-hero-food {
     --plate-size: 510px;
     --plate-right: 142px;
@@ -2345,9 +2375,6 @@ html[data-pc-motion-input="keyboard"] .pc-motion-tabs > .pc-tab-indicator {
   .pc-hero-copy h1 {
     font-size: 63px;
     min-height: 133px;
-  }
-  .pc-hero-copy .pc-hero-price {
-    margin-top: 25px;
   }
   .pc-hero-actions {
     gap: 10px;

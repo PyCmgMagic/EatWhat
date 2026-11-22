@@ -32,6 +32,7 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
+import { Star } from "lucide-react";
 import { NotFound, useReturnTo } from "../app/navigation";
 import {
   keepPreviousData,
@@ -125,7 +126,8 @@ import { FoodCover } from "../components/FoodCover";
 import { UserAvatar } from "../components/UserAvatar";
 import { UserTitle } from "../components/UserTitle";
 import { FoodReportDialog } from "../features/FoodReportDialog";
-import { FoodRating } from "../features/FoodRating";
+import { FoodRating, ratingText } from "../features/FoodRating";
+import { distanceText } from "../features/RecommendShops";
 import { availabilityText } from "../features/DishAvailability";
 import RestaurantMap from "../features/RestaurantMap";
 import HeaderSearch from "./DesktopSearch";
@@ -818,6 +820,7 @@ function Plate({
 function DesktopHome() {
   const discovery = useHomeDiscovery();
   const { hero: query, heroFoods: list } = discovery;
+  const { area } = useArea();
   const { session } = useApp(), m = useMobile(), [n, setN] = useState(0),
     pointer = useRef<{ id: number; x: number; radius: number } | null>(null),
     orbitMotion = useRef(createHeroOrbitScheduler()),
@@ -848,6 +851,11 @@ function DesktopHome() {
         {sheet}
       </div>
     );
+  const distance = distanceText(food.distanceMeters) || visual.dist;
+  const distanceOrigin =
+    area?.source === "device" ? "距你" : `距${area?.name || "所选位置"}`;
+  const score = ratingText((food as Food & V2Food).rating);
+  const canDismiss = !!(session && food.restaurantId);
   return (
     <div className="pc-home">
       <RecommendationControls />
@@ -875,25 +883,49 @@ function DesktopHome() {
           <Link
             to={`/restaurants/${food.restaurantId}`}
             className="pc-hero-shop"
+            title={food.restaurantName ?? undefined}
           >
-            {food.restaurantName}
+            <span>{food.restaurantName}</span>
             <Icon name="chevronRight" size={16} />
           </Link>
-          {session && food.restaurantId && (
-            <button
-              type="button"
-              className="pc-hero-dismiss"
-              aria-haspopup="dialog"
-              disabled={discovery.dismissing}
-              onClick={() => discovery.requestDismiss(food)}
+          {(distance || canDismiss) && (
+            <div className="pc-hero-shop-meta">
+              {distance && (
+                <span
+                  className="pc-hero-distance"
+                  title={`${distanceOrigin} ${distance}`}
+                >
+                  <Icon name="nearby" size={15} />
+                  <span className="sr-only">{distanceOrigin} </span>
+                  {distance}
+                </span>
+              )}
+              {canDismiss && (
+                <button
+                  type="button"
+                  className="pc-hero-dismiss"
+                  aria-haspopup="dialog"
+                  disabled={discovery.dismissing}
+                  onClick={() => discovery.requestDismiss(food)}
+                >
+                  不想吃这家
+                </button>
+              )}
+            </div>
+          )}
+          <div className="pc-hero-price-row">
+            <span
+              className={`pc-hero-price${food.price == null ? " is-unknown" : ""}`}
             >
-              不想吃这家
-            </button>
-          )}
-          {visual.dist && (
-            <span className="pc-hero-distance">{visual.dist}</span>
-          )}
-          <div className="pc-hero-price">{money(food.price)}</div>
+              {money(food.price)}
+            </span>
+            {score && (
+              <span className="pc-hero-score">
+                <Star size={15} aria-hidden="true" />
+                {score}
+              </span>
+            )}
+          </div>
         </div>
         <div
           className="pc-hero-food"

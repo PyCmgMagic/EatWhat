@@ -133,12 +133,18 @@ button:disabled {
 }
 .mobile-home-orbit {
   --plate-size: clamp(205px, 70vw, 338px);
+  /* The fade opens toward the lower left, where the plate exits the arc. */
+  --plate-mask: linear-gradient(
+    98deg,
+    transparent 31%,
+    rgb(0 0 0 / 32%) 41%,
+    black 50%
+  );
   position: absolute;
   inset: 0;
   pointer-events: none;
-  /* Fade plates at the edge of the copy as they slide across the stage. */
-  -webkit-mask-image: linear-gradient(to right, transparent 46%, black 49%);
-  mask-image: linear-gradient(to right, transparent 46%, black 49%);
+  -webkit-mask-image: var(--plate-mask);
+  mask-image: var(--plate-mask);
 }
 .mobile-home-orbit .mobile-home-plate {
   position: absolute;
@@ -146,7 +152,11 @@ button:disabled {
   top: max(104px, calc(100% - var(--plate-size) - 120px));
   width: var(--plate-size);
   aspect-ratio: 1;
-  transition: transform 280ms var(--ease-move), opacity 140ms ease-out;
+  /* Keep the outgoing plate visible through most of the arc. */
+  transition: transform 280ms var(--ease-move), opacity 100ms ease-out 180ms;
+}
+.mobile-home-orbit .mobile-home-plate[data-orbit-offset="0"] {
+  transition-delay: 0ms;
 }
 .mobile-home-orbit[data-dragging] .mobile-home-plate,
 html[data-motion-input="keyboard"] .mobile-home-orbit .mobile-home-plate {
@@ -1035,19 +1045,15 @@ html[data-motion-input="keyboard"] .design-fab-surface {
   scrollbar-width: none;
 }
 .mobile-profile-screen {
-  --profile-blue: #9abbdc;
-  --profile-text: var(--night-ink, #221e1b);
-  --profile-muted: #49484a;
-  --profile-glass: rgb(255 255 255 / 42%);
-  background: var(--profile-blue);
-  color: var(--profile-text);
+  --profile-glass: var(--profile-ghost);
+  background: var(--profile-stage);
+  color: var(--night-ink, #221e1b);
 }
-:root[data-theme="dark"] .mobile-profile-screen {
-  --profile-blue: #30465d;
-  --profile-muted: color-mix(in srgb, var(--night-ink) 65%, var(--night-muted));
-  --profile-glass: rgb(242 246 255 / 15%);
+.mobile-profile-screen[data-food-stage="deep"] {
+  --profile-glass: rgb(35 28 24 / 18%);
 }
 .mobile-profile-stage {
+  color: var(--profile-on);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -1072,8 +1078,16 @@ html[data-motion-input="keyboard"] .design-fab-surface {
 }
 .mobile-profile-actions {
   --compact-actions-width: 96px;
+  --toolbar-ink: var(--night-ink, #221e1b);
   padding: var(--profile-safe-top) var(--profile-edge) 6px;
-  background: color-mix(in srgb, var(--profile-surface) calc(100% * var(--profile-collapse)), var(--profile-blue));
+  background: color-mix(in srgb, var(--profile-surface) calc(100% * var(--profile-collapse)), var(--profile-stage));
+  color: var(--profile-on);
+}
+.mobile-profile-actions[data-compact] {
+  color: var(--toolbar-ink);
+}
+.mobile-profile-actions .mobile-profile-summary {
+  color: var(--toolbar-ink);
 }
 .mobile-profile-summary {
   display: flex;
@@ -1130,7 +1144,7 @@ html[data-motion-input="keyboard"] .design-fab-surface {
   padding: 0;
   border: 0;
   border-radius: 99px;
-  color: var(--profile-text);
+  color: inherit;
   background: transparent;
   gap: calc(5px * var(--label-space));
   font-size: 15px;
@@ -1230,7 +1244,7 @@ html[data-motion-input="keyboard"] .design-fab-surface {
   margin: 5px 0 0;
   max-width: 66%;
   overflow: hidden;
-  color: var(--profile-muted);
+  color: inherit;
   font-size: 15px;
   line-height: 1.45;
   text-overflow: ellipsis;
@@ -1253,7 +1267,7 @@ html[data-motion-input="keyboard"] .design-fab-surface {
   font-variant-numeric: tabular-nums;
 }
 .mobile-profile-statistics > * > span {
-  color: var(--profile-muted);
+  color: inherit;
   font-size: 14px;
 }
 @media (orientation: landscape) and (max-height: 500px) {

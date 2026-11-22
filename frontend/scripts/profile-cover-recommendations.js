@@ -19,6 +19,7 @@ async (page) => {
     const dish = (id) => ({
       id, accountId: 1, restaurantId: 3, restaurantName: "食堂", category: "主食",
       name: id === 13 ? "番茄盖饭" : "面条" + id, price: 8,
+      stageColor: id === 13 ? "redoil" : "porcelain",
       pictureKeys: id === 13 ? keys : ["foods/fixture/other"], pictureUrls: id === 13 ? keys.map((k) => images[k]) : ["/assets/dumplings.jpg"],
     });
     const envelope = (items, hasNext = false) => ({ items, hasNext, totalItems: items.length });
@@ -69,12 +70,22 @@ async (page) => {
     });
     const open = (path) => p.goto(base + "/?demo=0&view=" + view + "#" + path, { waitUntil: "domcontentloaded", timeout: 15000 });
     const assert = (condition, message) => { if (!condition) throw Error(message); };
+    const waitForCoverColor = (rgb) => p.waitForFunction(({ selector, rgb }) => {
+      const surface = document.querySelector(selector);
+      if (!surface) return false;
+      const pixel = document.createElement("canvas").getContext("2d");
+      pixel.fillStyle = getComputedStyle(surface).backgroundColor;
+      pixel.fillRect(0, 0, 1, 1);
+      const actual = pixel.getImageData(0, 0, 1, 1).data;
+      return rgb.every((channel, i) => Math.abs(actual[i] - channel) <= 1);
+    }, { selector: view === "desktop" ? ".profile-overview-hero" : ".mobile-profile-screen", rgb });
     try {
       await open("/me");
       const trigger = p.getByRole("button", { name: "更换主页封面" });
       const sheet = p.getByRole("dialog", { name: "更换主页封面" });
       const updates = () => calls.filter(c => c.path === "/user/updateInfo");
       await trigger.waitFor();
+      await waitForCoverColor([157, 184, 217]);
       assert(await trigger.evaluate(el => !el.textContent.trim() && !el.querySelector("svg, img")), "cover background has a visible edit label");
       await trigger.click({ position: { x: 80, y: 90 } });
       await sheet.getByRole("button", { name: "面条1", pressed: true }).waitFor();
@@ -89,14 +100,17 @@ async (page) => {
       await sheet.getByRole("button", { name: "番茄盖饭" }).click();
       await sheet.getByRole("alert").waitFor();
       assert(!coverFoodId, "failed save changed the cover");
+      await waitForCoverColor([157, 184, 217]);
       await sheet.getByRole("button", { name: "番茄盖饭" }).click();
       await sheet.waitFor({ state: "hidden" });
       assert(coverFoodId === 13, "cover save was not acknowledged");
       assert(updates().every(c => Object.keys(c.body).join() === "coverFoodId"), "cover save changed other profile fields");
       const cover = p.locator(view === "desktop" ? ".profile-overview-cover" : ".mobile-profile-cover");
       await cover.locator('img[src="/assets/noodles.jpg"]').waitFor();
+      await waitForCoverColor([168, 50, 28]);
       await p.reload();
       await cover.locator('img[src="/assets/noodles.jpg"]').waitFor();
+      await waitForCoverColor([168, 50, 28]);
       await trigger.press("Enter");
       await sheet.getByRole("button", { name: "下一页" }).click();
       await sheet.getByRole("button", { name: "番茄盖饭", pressed: true }).click();
@@ -114,11 +128,13 @@ async (page) => {
       await p.getByText("已看完本轮推荐", { exact: true }).waitFor();
       assert(calls.some((call) => call.path === "/recommend" && call.q.page === "2" && call.q.mealTime === "lunch"), "wrong continuation");
       assert(await p.locator(".rec-shop-card").count() === 2, "appending lost a recommendation");
-      await p.getByRole("link", { name: "随机选一家" }).click();
+      assert(await p.getByRole("link", { name: "随机选一家" }).count() === 0, "the draw link is still available on discovery");
+      assert(await p.locator(".discovery-draw-link").evaluate(link => link.getClientRects().length === 0), "the draw link still takes up space");
+      await open("/recommend/pick?kind=food&mealTime=lunch");
       await p.getByRole("heading", { name: "随机选一家" }).waitFor();
       const drawCalls = () => calls.filter((c) => c.path === "/recommend/pick");
       assert(drawCalls().length === 0, "entering the draw page consumed a pick");
-      assert(await p.getByLabel("饭点", { exact: true }).inputValue() === "lunch", "did not carry the meal");
+      assert(await p.getByLabel("饭点", { exact: true }).inputValue() === "lunch", "did not apply the meal from the URL");
       await p.getByRole("button", { name: "抽一张餐牌", exact: true }).dblclick();
       await p.getByRole("link", { name: "去看店铺" }).waitFor();
       assert(drawCalls().length === 1, "a double click consumed multiple picks");
@@ -127,7 +143,7 @@ async (page) => {
       await p.goBack();
       await p.getByRole("heading", { name: "第二家店" }).waitFor();
       await p.getByRole("link", { name: "返回发现" }).click();
-      await p.getByRole("link", { name: "随机选一家" }).click();
+      await open("/recommend/pick?kind=food&mealTime=dinner");
       await p.getByRole("button", { name: "抽取左侧餐牌" }).click();
       await p.locator(".draw-card[data-picked]").evaluateAll(cards =>
         cards.forEach(card => card.getAnimations().forEach(animation => animation.pause())));

@@ -337,6 +337,34 @@
 .pc-profile-crop .pc-crop-controls {
   align-self: center;
 }
+.pc-avatar-zoom {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.pc-avatar-zoom button {
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--profile-border, #e5dcd4);
+  border-radius: 50%;
+  background: var(--profile-input, #fcfaf8);
+  color: inherit;
+  font: inherit;
+  font-size: 22px;
+  line-height: 1;
+  touch-action: manipulation;
+}
+.pc-avatar-zoom button:disabled {
+  opacity: 0.45;
+}
+.pc-profile-crop .pc-avatar-zoom input {
+  min-width: 0;
+  height: 44px;
+  margin: 0;
+  touch-action: none;
+}
 .pc-profile-crop .pc-icon-button {
   border: 1px solid var(--profile-border);
   border-radius: 10px;

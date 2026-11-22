@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type CSSProperties } from "react";
 import { AccountRestriction } from "../components/AccountRestriction";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -12,7 +12,7 @@ import {
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import WorkspaceSwitch from "../admin/WorkspaceSwitch";
 import { errorMessage } from "../api/client";
-import { mediaUrl, parseId } from "../api/models";
+import { parseId } from "../api/models";
 import { ProfileEditLink } from "../app/profile-navigation";
 import { isDemo } from "../app/runtime";
 import { useApp } from "../app/state";
@@ -21,7 +21,6 @@ import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { MarkerTabs } from "../components/MarkerTabs";
 import { MobileHistoryContent } from "../features/ApiV2";
 import { UserAvatar } from "../components/UserAvatar";
-import { useFoodPhoto } from "../features/media";
 import { peopleHref } from "../features/profile-people";
 import ProfileGrowth from "../features/ProfileGrowth";
 import { useMyProfileCover } from "../features/useMyProfileCover";
@@ -143,10 +142,8 @@ export default function MobileProfile() {
     queryFn: () => api.otherUser(user!.id!),
     enabled: !!user?.id,
   });
-  const { cover, fallback, uploadCount } = useMyProfileCover(!!user?.id);
-  const src = mediaUrl(cover.pictureUrl?.[0]);
-  const photo = useFoodPhoto(src);
-  const illustration = cover === fallback || photo.unavailable;
+  const { cover, src, onImageError, illustration, visual, pending, uploadCount } =
+    useMyProfileCover(!!user?.id);
   const name = user?.displayName || "同学";
   const uploads = personal.data?.uploadedFoodsCount ?? uploadCount;
   const stats = [
@@ -178,6 +175,12 @@ export default function MobileProfile() {
     <div
       className="design-screen profile-scroll-screen mobile-profile-screen"
       data-screen="G-Me"
+      data-food-stage={visual.stageTone}
+      style={{
+        "--profile-stage": visual.stage,
+        "--profile-on": visual.on,
+        "--profile-ghost": visual.ghost,
+      } as CSSProperties}
     >
       <header className="profile-collapse-toolbar mobile-profile-actions">
         <ProfileToolbarIdentity name={name} avatar={user?.avatar} />
@@ -197,14 +200,14 @@ export default function MobileProfile() {
           data-cover-kind={illustration ? "illustration" : "photo"}
           aria-hidden="true"
         >
-          {illustration ? (
-            <img src={mediaUrl(fallback.pictureUrl?.[0])} alt="" />
+          {pending ? null : illustration ? (
+            <img src={src} alt="" />
           ) : (
             <FoodCover
               src={src}
               crop={cover.coverCrop}
               alt=""
-              onError={photo.onError}
+              onError={onImageError}
             />
           )}
         </div>

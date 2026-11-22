@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
-import { type Food } from "../api/models";
+import { isDemo } from "../app/runtime";
+import { mediaUrl, type Food } from "../api/models";
 import { stageCode } from "../api/food-display";
-import { demoDishes } from "../mobile/catalog";
+import { demoDishes, visualFor } from "../mobile/catalog";
+import { useFoodPhoto } from "./media";
 
 export function useMyProfileCover(enabled: boolean) {
   const { api, user, session } = useApp();
@@ -27,16 +29,30 @@ export function useMyProfileCover(enabled: boolean) {
     pictureUrl: [`/prototype/assets/dishes/${dish.asset}.svg`],
     stageColor: stageCode(dish.stage),
   };
+  const food =
+    selectedFood ??
+    uploads.data?.items?.find((item) => item.pictureUrl?.[0]) ??
+    fallback;
+  const photo = useFoodPhoto(mediaUrl(food.pictureUrl?.[0]));
+  const cover = photo.unavailable ? fallback : food;
+  const pending =
+    !!session &&
+    (!user?.id ||
+      (enabled && (needsDefault ? uploads.isPending : selected.isPending)));
   return {
-    cover:
-      selectedFood ??
-      uploads.data?.items?.find((food) => !!food.pictureUrl?.[0]) ??
-      fallback,
-    fallback,
+    cover,
+    illustration: cover === fallback,
+    src: mediaUrl(cover.pictureUrl?.[0]),
+    onImageError: photo.onError,
+    visual: pending
+      ? {
+          stage: "#E8E1D8",
+          on: "#231C18",
+          ghost: "rgba(35,28,24,0.08)",
+          stageTone: "light",
+        }
+      : visualFor(cover, isDemo),
     uploadCount: uploads.data?.totalItems,
-    pending:
-      !!session &&
-      (!user?.id ||
-        (enabled && (needsDefault ? uploads.isPending : selected.isPending))),
+    pending,
   };
 }

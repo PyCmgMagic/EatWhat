@@ -1,9 +1,9 @@
 export const heroOrbitStep = 55;
 
 /** Keep the same transform list so the browser interpolates the angle on an arc. */
-export function heroPlateTransform(angle: number) {
+export function heroPlateTransform(angle: number, radius = "var(--orbit-radius)") {
   const scale = 1 - 0.15 * Math.min(1, Math.abs(angle) / heroOrbitStep);
-  const arc = `translateY(var(--orbit-radius)) rotate(${angle}deg) translateY(calc(-1 * var(--orbit-radius)))`;
+  const arc = `translateY(${radius}) rotate(${angle}deg) translateY(calc(-1 * ${radius}))`;
   return `${arc} scale(${scale})`;
 }
 

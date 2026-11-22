@@ -374,8 +374,8 @@
   cursor: pointer;
 }
 .draw-actions .draw-primary {
-  background: var(--draw-ink);
-  color: var(--draw-surface);
+  background: var(--night-ink, #26221e);
+  color: var(--night-surface, #fffcf7);
 }
 .draw-actions .draw-primary:hover {
   filter: brightness(1.14);

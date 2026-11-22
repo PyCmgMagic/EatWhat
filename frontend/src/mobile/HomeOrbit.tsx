@@ -2,23 +2,41 @@ import { mediaUrl, type Food } from "../api/models";
 import { FoodCover } from "../components/FoodCover";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
 import { useFoodPhoto } from "../features/media";
-import { heroOrbitSlots } from "../motion/hero-orbit";
+import { heroOrbitSlots, heroPlateTransform } from "../motion/hero-orbit";
 import { useLayoutEffect, type RefObject } from "react";
 import { visualFor } from "./catalog";
 
-export const homePlateSpacing = 1.1;
+// A 60° step at this radius keeps adjacent plates about 1.1 widths apart.
+const homeOrbitStep = 60;
+const homeOrbitRadiusPercent = 127;
+const homeOrbitFadeAngle = 12;
+const radiansPerDegree = Math.PI / 180;
+const maxDragRatio = Math.sin(homeOrbitStep * radiansPerDegree);
 
-function homePlateTransform(offset: number) {
-  return `translateX(calc(var(--plate-size) * ${offset * homePlateSpacing})) rotate(${offset * 6}deg)`;
+export function homeOrbitDragAngle(distance: number, plateWidth: number) {
+  const radius = (plateWidth * homeOrbitRadiusPercent) / 100;
+  const ratio = Math.max(-maxDragRatio, Math.min(maxDragRatio, distance / radius));
+  return Math.asin(ratio) / radiansPerDegree;
 }
 
-export function dragHomePlates(element: HTMLElement, progress = 0) {
+function homePlateStyle(angle: number) {
+  // The pivot sits straight below the plate, so the arc is horizontal at its top.
+  const transform = heroPlateTransform(angle, `${homeOrbitRadiusPercent}%`);
+  const opacity = Math.max(
+    0,
+    Math.min(1, (homeOrbitStep - Math.abs(angle)) / homeOrbitFadeAngle),
+  );
+  return { transform, opacity };
+}
+
+export function dragHomePlates(element: HTMLElement, angle = 0) {
   for (const plate of element.querySelectorAll<HTMLElement>(
     "[data-orbit-offset]",
   )) {
-    plate.style.transform = homePlateTransform(
-      Number(plate.dataset.orbitOffset) + progress,
-    );
+    const offset = Number(plate.dataset.orbitOffset);
+    const { transform, opacity } = homePlateStyle(offset * homeOrbitStep + angle);
+    plate.style.transform = transform;
+    plate.style.opacity = String(opacity);
   }
 }
 
@@ -53,7 +71,7 @@ export default function HomeOrbit({
   demo: boolean;
 }) {
   useLayoutEffect(() => {
-    // React's transform prop is unchanged when a short drag snaps back.
+    // The style props are unchanged when a short drag snaps back.
     if (!dragging && orbitRef.current) dragHomePlates(orbitRef.current);
   }, [dragging, orbitRef]);
 
@@ -76,10 +94,7 @@ export default function HomeOrbit({
             data-orbit-slot={slot}
             data-orbit-offset={offset}
             data-food-id={food.id}
-            style={{
-              transform: homePlateTransform(offset),
-              opacity: Math.abs(offset) <= 1 ? 1 : 0,
-            }}
+            style={homePlateStyle(offset * homeOrbitStep)}
           >
             <OrbitPlate food={food} demo={demo} />
           </div>

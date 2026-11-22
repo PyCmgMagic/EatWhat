@@ -129,6 +129,31 @@ export default function CropDialog({
       }),
     );
   }
+  function stepZoom(amount: number) {
+    setCrop((current) =>
+      constrain({
+        ...current,
+        zoom: Math.max(1, Math.min(MAX_PHOTO_ZOOM, current.zoom + amount)),
+      }),
+    );
+  }
+  const zoomValue = Number(crop.zoom.toFixed(2));
+  const zoomSlider = (
+    <input
+      id="pc-crop-zoom"
+      type="range"
+      min="1"
+      max={MAX_PHOTO_ZOOM}
+      step="0.05"
+      value={crop.zoom}
+      aria-valuetext={`${zoomValue} 倍`}
+      disabled={busy}
+      onChange={(event) => {
+        const zoom = Number(event.target.value);
+        setCrop((current) => constrain({ ...current, zoom }));
+      }}
+    />
+  );
   return (
     <dialog
       ref={dialog}
@@ -142,7 +167,9 @@ export default function CropDialog({
       <header>
         <div>
           <h2 id="pc-crop-title">{isAvatar ? "调整头像" : "调整菜品照片"}</h2>
-          <p id="pc-crop-input-help">滚轮缩放，按住照片拖动。</p>
+          <p id="pc-crop-input-help">
+            {isAvatar ? "拖动照片调整位置。" : "滚轮缩放，按住照片拖动。"}
+          </p>
         </div>
         <button
           type="button"
@@ -242,21 +269,31 @@ export default function CropDialog({
             </>
           )}
           <label htmlFor="pc-crop-zoom">
-            缩放 <span>{crop.zoom.toFixed(1)}×</span>
+            缩放 <span aria-hidden="true">{zoomValue}×</span>
           </label>
-          <input
-            id="pc-crop-zoom"
-            type="range"
-            min="1"
-            max={MAX_PHOTO_ZOOM}
-            step="0.05"
-            value={crop.zoom}
-            disabled={busy}
-            onChange={(event) => {
-              const zoom = Number(event.target.value);
-              setCrop((current) => constrain({ ...current, zoom }));
-            }}
-          />
+          {isAvatar ? (
+            <div className="pc-avatar-zoom">
+              <button
+                type="button"
+                aria-label="缩小头像"
+                disabled={busy || crop.zoom <= 1}
+                onClick={() => stepZoom(-0.25)}
+              >
+                −
+              </button>
+              {zoomSlider}
+              <button
+                type="button"
+                aria-label="放大头像"
+                disabled={busy || crop.zoom >= MAX_PHOTO_ZOOM}
+                onClick={() => stepZoom(0.25)}
+              >
+                +
+              </button>
+            </div>
+          ) : (
+            zoomSlider
+          )}
           <button
             type="button"
             className={isAvatar ? "pc-profile-action" : "pc-small-link"}

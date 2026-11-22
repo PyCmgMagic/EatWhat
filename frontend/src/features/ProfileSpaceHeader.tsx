@@ -4,13 +4,10 @@ import { Link, useLocation } from "react-router-dom";
 import { BRAND_SLOGAN } from "../app/brand";
 import { ProfileEditLink } from "../app/profile-navigation";
 import { profileSection } from "../app/profile-workspace";
-import { isDemo } from "../app/runtime";
 import { mediaUrl } from "../api/models";
 import { DesignIcon as Icon } from "../mobile/ui";
-import { visualFor } from "../mobile/catalog";
 import { useApp } from "../app/state";
 import { FoodCover } from "../components/FoodCover";
-import { useFoodPhoto } from "./media";
 import { peopleHref } from "./profile-people";
 import ProfileGrowth from "./ProfileGrowth";
 import { useMyProfileCover } from "./useMyProfileCover";
@@ -65,23 +62,13 @@ export default function ProfileSpaceHeader() {
     enabled: !!session && !!user?.id,
   });
   const {
-    cover: profileCover,
-    fallback: defaultProfileCover,
+    cover: displayedProfileCover,
+    src: profileCoverSrc,
+    illustration,
+    onImageError,
+    visual: heroVisual,
     pending: profileCoverPending,
   } = useMyProfileCover(!!session && !!user?.id);
-  const profileCoverSrc = mediaUrl(profileCover.pictureUrl?.[0]);
-  const profilePhoto = useFoodPhoto(profileCoverSrc);
-  const displayedProfileCover = profilePhoto.unavailable
-    ? defaultProfileCover
-    : profileCover;
-  const profileVisual = visualFor(displayedProfileCover, isDemo);
-  const heroVisual = profileCoverPending
-    ? {
-        stage: "#E8E1D8",
-        on: "var(--ink)",
-        ghost: "rgba(35,28,24,0.08)",
-      }
-    : profileVisual;
   const section = profileSection(location.pathname);
   const activeTab =
     location.pathname === "/me/shares" &&
@@ -110,19 +97,15 @@ export default function ProfileSpaceHeader() {
       >
         <div
           className="profile-overview-cover"
-          data-cover-kind={
-            displayedProfileCover === defaultProfileCover
-              ? "illustration"
-              : "photo"
-          }
+          data-cover-kind={illustration ? "illustration" : "photo"}
           data-cover-loading={profileCoverPending || undefined}
           aria-hidden="true"
         >
           {profileCoverPending ? (
             <span className="profile-overview-cover-loading" />
-          ) : displayedProfileCover === defaultProfileCover ? (
+          ) : illustration ? (
             <img
-              src={mediaUrl(defaultProfileCover.pictureUrl?.[0])}
+              src={profileCoverSrc}
               alt=""
               draggable={false}
             />
@@ -132,7 +115,7 @@ export default function ProfileSpaceHeader() {
               crop={displayedProfileCover.coverCrop}
               alt=""
               draggable={false}
-              onError={profilePhoto.onError}
+              onError={onImageError}
             />
           )}
         </div>

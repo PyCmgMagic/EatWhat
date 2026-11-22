@@ -47,7 +47,14 @@ async function validateMobileHomeOrbit(page) {
     const measurePlate = (el) => {
       const style = getComputedStyle(el);
       const matrix = new DOMMatrix(style.transform);
-      return { x: matrix.e, y: matrix.f, duration: style.transitionDuration };
+      return {
+        x: matrix.e,
+        y: matrix.f,
+        angle: Math.atan2(matrix.b, matrix.a) * 180 / Math.PI,
+        radius: el.offsetHeight * 1.27,
+        opacity: Number(style.opacity),
+        duration: style.transitionDuration,
+      };
     };
     const shuffle = p.getByRole("button", { name: "换一个", exact: true });
     const settle = () =>
@@ -72,6 +79,14 @@ async function validateMobileHomeOrbit(page) {
       );
       const { x, y } = await current().evaluate(measurePlate);
       assert(x === 0 && y === 0, "Selected plate did not return to its slot");
+      assert(
+        await p.locator(".mobile-home-plate").evaluateAll((plates) =>
+          plates.every((plate) =>
+            getComputedStyle(plate).opacity === (plate.dataset.orbitOffset === "0" ? "1" : "0"),
+          ),
+        ),
+        "An adjacent plate is still visible after settling",
+      );
       assert(
         (await p.locator(".mobile-home-copy h1").innerText()) === foods[i].name,
         "Photo/title mismatch",
@@ -107,7 +122,6 @@ async function validateMobileHomeOrbit(page) {
             const style = getComputedStyle(el),
               m = new DOMMatrix(style.transform);
             window.__orbitSamples.push({
-              angle: (Math.atan2(m.b, m.a) * 180) / Math.PI,
               x: m.e,
               y: m.f,
               opacity: +style.opacity,
@@ -121,29 +135,32 @@ async function validateMobileHomeOrbit(page) {
         await shuffle.click();
         await p.waitForFunction(() => window.__orbitDone);
         const samples = await p.evaluate(() => window.__orbitSamples);
-        const spacing = await outgoing.evaluate((el) => el.offsetWidth * 1.1);
+        await settle();
+        const end = await outgoing.evaluate(measurePlate);
+        const { radius } = end;
+        const spacing = radius * Math.sqrt(3) / 2;
         assert(
           samples.every(
-            (s) => s.connected && s.opacity === 1 && Math.abs(s.y) < 1,
+            (s) => s.connected &&
+              (s.y >= end.y * 0.8 || s.opacity === 1) &&
+              Math.abs(Math.hypot(s.x, s.y - radius) - radius) < 1,
           ),
-          "Outgoing plate lost visibility or changed height during the slide",
+          "Outgoing plate faded early or left the centered circular path",
         );
         assert(
-          samples.some((s) => s.x < -5 && s.x > -spacing + 5),
-          "No intermediate horizontal motion",
+          samples.some((s) => s.x < -5 && s.x > -spacing + 5 && s.y > radius / 5),
+          "No intermediate motion along the arc",
         );
         assert(
           samples.every((s, i) => !i || s.x <= samples[i - 1].x + 0.1),
-          "Wrap reversed the slide direction",
+          "Wrap reversed the orbit direction",
         );
-        await settle();
-        const end = await outgoing.evaluate((el) => {
-          const matrix = new DOMMatrix(getComputedStyle(el).transform);
-          return { x: matrix.e, angle: Math.atan2(matrix.b, matrix.a) * 180 / Math.PI };
-        });
         assert(
-          Math.abs(end.x + spacing) < 1 && Math.abs(end.angle + 6) < 0.1,
-          `Slide did not settle with a small roll: ${JSON.stringify(end)}, spacing ${spacing}`,
+          Math.abs(end.x + spacing) < 1 &&
+            Math.abs(end.y - radius / 2) < 1 &&
+            Math.abs(end.angle + 60) < 0.1 &&
+            end.opacity === 0,
+          `Orbit did not settle at the expected end of the arc: ${JSON.stringify(end)}`,
         );
         assert(
           await incoming.evaluate(
@@ -154,7 +171,7 @@ async function validateMobileHomeOrbit(page) {
         await verify(step);
       }
       checks.push(
-        `${width}px: two-food wrap keeps both plates on a horizontal path; photo, title and link agree`,
+        `${width}px: two-food wrap follows the arc and hides the outgoing plate at rest; photo, title and link agree`,
       );
 
       // Freeze the CSS transitions to inspect the hand-off visually.
@@ -166,7 +183,7 @@ async function validateMobileHomeOrbit(page) {
         }),
       );
       await p.screenshot({
-        path: `output/playwright/home-slide-mid-${width}.png`,
+        path: `output/playwright/home-orbit-mid-${width}.png`,
       });
       await p
         .locator(".mobile-home-orbit")
@@ -192,17 +209,26 @@ async function validateMobileHomeOrbit(page) {
           return Math.abs(new DOMMatrix(getComputedStyle(el).transform).e - distance) < 1;
         }, dx);
         const during = await current().evaluate(measurePlate);
+        const expectedY = during.radius - Math.sqrt(during.radius ** 2 - dx ** 2);
         assert(
-          during.duration === "0s" && Math.abs(during.y) < 1,
-          "Drag does not follow the pointer horizontally",
+          during.duration === "0s" && Math.abs(during.y - expectedY) < 1,
+          "Drag does not follow the pointer along the arc",
         );
         assert(
           await p
             .locator(
               `.mobile-home-plate[data-orbit-offset="${dx < 0 ? 1 : -1}"]`,
             )
-            .evaluate((el) => getComputedStyle(el).opacity === "1"),
-          "Adjacent plate did not appear during drag",
+            .evaluate((el) => Number(getComputedStyle(el).opacity) > 0),
+          "Incoming plate did not appear during drag",
+        );
+        assert(
+          await p
+            .locator(
+              `.mobile-home-plate[data-orbit-offset="${dx < 0 ? -1 : 1}"]`,
+            )
+            .evaluate((el) => getComputedStyle(el).opacity === "0"),
+          "Plate on the opposite side appeared during drag",
         );
         await p.mouse.up();
       };
