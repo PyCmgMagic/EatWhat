@@ -116,15 +116,19 @@ it("asks unverified users to verify first", async () => {
   expect(host.querySelector("form")).toBeNull();
 });
 
-it("lets a verified user switch shop kind to buffet", async () => {
+it.each([
+  ["甜点饮品", "drink"],
+  ["自助", "buffet"],
+])("saves the shop type %s as %s", async (label, kind) => {
   await open();
-  await act(async () => checkbox("自助").click());
+  expect(checkbox("美食").checked).toBe(true);
+  await act(async () => checkbox(label).click());
   const save = host.querySelector<HTMLButtonElement>("button.ew-button")!;
   expect(save.disabled).toBe(false);
   await act(async () => save.click());
   await act(async () => {});
   expect(api.editRestaurant).toHaveBeenCalledWith(9, {
-    kind: "buffet",
+    kind,
     priceBand: "FROM_15_TO_30",
     mealTimes: ["lunch", "dinner", "night"],
     categories: ["粉面"],

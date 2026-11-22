@@ -49,6 +49,14 @@ async function verifyMobilePublishFooter(page) {
       await tab.evaluate(() => window.scrollTo(0, 0));
       await checkFooter();
       await tab.getByRole("button", { name: "展开发布表单" }).tap();
+      const [nameLine, priceLine] = await Promise.all([
+        fields.getByRole("textbox", { name: "菜名", exact: true }).boundingBox(),
+        fields.getByRole("textbox", { name: "价格", exact: true }).locator("..").boundingBox(),
+      ]);
+      if (!nameLine || !priceLine || Math.abs(nameLine.y - priceLine.y) > 1 ||
+          Math.abs(nameLine.y + nameLine.height - priceLine.y - priceLine.height) > 1) {
+        throw new Error(`${viewport.width}px 下菜名和价格的输入行未对齐`);
+      }
       for (const fraction of [0, 0.5, 1]) {
         await fields.evaluate((el, fraction) => {
           el.scrollTop = (el.scrollHeight - el.clientHeight) * fraction;

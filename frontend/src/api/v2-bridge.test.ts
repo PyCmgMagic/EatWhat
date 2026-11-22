@@ -892,13 +892,15 @@ describe("v2 bridge", () => {
     it("adds anyway with force when the person insists", async () => {
       duplicate.answer = "new";
       const { request, sent } = backend(reply);
+      const picture = "restaurants/2026/11/storefront.jpg";
       const result: any = await request("/restaurant/add", {
         method: "POST",
-        body: shop,
+        body: { ...shop, pictureUrl: [picture] },
       });
       expect(result.id).toBe(9);
       expect(sent.at(-1)?.body).toMatchObject({
         name: "一口面馆",
+        picture,
         force: true,
       });
     });

@@ -2,13 +2,25 @@ import { mediaUrl, type Food } from "../api/models";
 import { FoodCover } from "../components/FoodCover";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
 import { useFoodPhoto } from "../features/media";
-import {
-  heroOrbitSlots,
-  heroOrbitStep,
-  heroPlateTransform,
-} from "../motion/hero-orbit";
+import { heroOrbitSlots } from "../motion/hero-orbit";
+import { useLayoutEffect, type RefObject } from "react";
 import { visualFor } from "./catalog";
-import type { CSSProperties } from "react";
+
+export const homePlateSpacing = 1.1;
+
+function homePlateTransform(offset: number) {
+  return `translateX(calc(var(--plate-size) * ${offset * homePlateSpacing})) rotate(${offset * 6}deg)`;
+}
+
+export function dragHomePlates(element: HTMLElement, progress = 0) {
+  for (const plate of element.querySelectorAll<HTMLElement>(
+    "[data-orbit-offset]",
+  )) {
+    plate.style.transform = homePlateTransform(
+      Number(plate.dataset.orbitOffset) + progress,
+    );
+  }
+}
 
 function OrbitPlate({ food, demo }: { food: Food; demo: boolean }) {
   const src = mediaUrl(food.pictureUrl?.[0]);
@@ -30,19 +42,29 @@ function OrbitPlate({ food, demo }: { food: Food; demo: boolean }) {
 export default function HomeOrbit({
   foods,
   position,
-  drag,
-  transition,
+  dragging,
+  orbitRef,
   demo,
 }: {
   foods: Food[];
   position: number;
-  drag: number;
-  transition: string;
+  dragging: boolean;
+  orbitRef: RefObject<HTMLDivElement | null>;
   demo: boolean;
 }) {
+  useLayoutEffect(() => {
+    // React's transform prop is unchanged when a short drag snaps back.
+    if (!dragging && orbitRef.current) dragHomePlates(orbitRef.current);
+  }, [dragging, orbitRef]);
+
   if (!foods.length) return null;
   return (
-    <div className="mobile-home-orbit" aria-hidden="true">
+    <div
+      className="mobile-home-orbit"
+      ref={orbitRef}
+      data-dragging={dragging || undefined}
+      aria-hidden="true"
+    >
       {heroOrbitSlots(position, Math.min(foods.length, 4)).map((slot) => {
         const food =
           foods[((slot % foods.length) + foods.length) % foods.length];
@@ -54,23 +76,10 @@ export default function HomeOrbit({
             data-orbit-slot={slot}
             data-orbit-offset={offset}
             data-food-id={food.id}
-            style={
-              {
-                // Put the pivot below/right so the departing plate follows the
-                // circle below the stage instead of crossing the title and price.
-                transform: heroPlateTransform(
-                  offset * heroOrbitStep + drag,
-                  55,
-                ),
-                opacity:
-                  offset === 0 || (drag !== 0 && Math.abs(offset) === 1)
-                    ? 1
-                    : 0,
-                "--orbit-transition": transition,
-                // Keep the outgoing plate visible until it has left the focus area.
-                transitionDelay: offset === 0 ? "0ms, 0ms" : "0ms, 180ms",
-              } as CSSProperties
-            }
+            style={{
+              transform: homePlateTransform(offset),
+              opacity: Math.abs(offset) <= 1 ? 1 : 0,
+            }}
           >
             <OrbitPlate food={food} demo={demo} />
           </div>

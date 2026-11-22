@@ -203,6 +203,7 @@ const screenTitles: Record<string, string> = {
 };
 
 const nativeTitles: Record<string, string> = {
+  "/recommend/pick": "随机选一家",
   "/design": "设计预览",
   "/me/shares": "我的分享",
   "/me/details": "更多资料",

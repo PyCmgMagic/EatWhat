@@ -597,7 +597,25 @@ function HomeBridgeContent() {
     },
     false,
   );
-  return <output data-testid="home-index">{state.n}</output>;
+  const plates = homeValues.node({
+    screen: "G2-Home",
+    node: {
+      id: -1,
+      tag: "div",
+      attrs: {},
+      children: [{ id: -2, tag: "img", attrs: { style: "top: 570px" }, children: [] }],
+    },
+    props: {},
+    children: [],
+    scope: {},
+    text: "",
+  });
+  return (
+    <>
+      {plates}
+      <output data-testid="home-index">{state.n}</output>
+    </>
+  );
 }
 function HomeBridge() {
   const mobile = {
@@ -653,17 +671,18 @@ it("advances the mobile carousel once per action without state updates on every 
   expect(host.querySelector('[data-testid="home-index"]')!.textContent).toBe(
     "1",
   );
-  const element = document.createElement("div");
-  await act(async () =>
-    homeValues!.values.down({ clientX: 0, currentTarget: element }),
-  );
-  await act(async () =>
-    homeValues!.values.move({ clientX: -50, currentTarget: element }),
-  );
+  const plate = host.querySelector('[data-orbit-offset="0"]')!;
+  Object.defineProperty(plate, "offsetWidth", { value: 273 });
+  const pointer = { button: 0, pointerId: 1, clientX: 100, clientY: 200 };
+  await act(async () => homeValues!.values.down(pointer));
+  await act(async () => {
+    homeValues!.values.move({ ...pointer, clientX: 65 });
+    homeValues!.values.move({ ...pointer, clientX: 50 });
+  });
   expect(host.querySelector('[data-testid="home-index"]')!.textContent).toBe(
     "1",
   );
-  await act(async () => homeValues!.values.up());
+  await act(async () => homeValues!.values.up({ ...pointer, clientX: 50 }));
   expect(host.querySelector('[data-testid="home-index"]')!.textContent).toBe(
     "2",
   );

@@ -95,7 +95,7 @@ import { MobileDishOptions } from "../features/DishAvailability";
 import SheetHandle from "./SheetHandle";
 import HomeSheetHandle from "./HomeSheetHandle";
 import DishPhotoPicker from "./DishPhotoPicker";
-import HomeOrbit from "./HomeOrbit";
+import HomeOrbit, { dragHomePlates, homePlateSpacing } from "./HomeOrbit";
 import TagPanel from "./TagPanel";
 import AvatarSourceSheet from "./AvatarSourceSheet";
 import ProfileEditor from "./ProfileEditor";
@@ -105,7 +105,7 @@ import { withDraftTag, withDraftTags } from "./draft-tags";
 import { useActionAccess } from "../features/access";
 import { useContentMotion } from "../motion/hooks";
 import { instantMotion } from "../motion/runtime";
-import { createHeroOrbitScheduler, heroOrbitStep } from "../motion/hero-orbit";
+import { createHeroOrbitScheduler } from "../motion/hero-orbit";
 import { peopleHref } from "../features/profile-people";
 import { AccessWelcome } from "../components/AccessWelcome";
 import { useDeviceLocation } from "../features/useDeviceLocation";
@@ -266,10 +266,16 @@ export function useDesignBridge(
     controller.state.stageChoice === undefined
       ? m.draft.stage
       : controller.state.stageChoice;
+  const homeOrbit = useRef<HTMLDivElement>(null);
   const orbitMotion = useRef({
-    scheduler: createHeroOrbitScheduler(),
-    angle: 0,
-    startX: 0,
+    scheduler: createHeroOrbitScheduler(dragHomePlates),
+    pointer: null as {
+      id: number;
+      x: number;
+      y: number;
+      step: number;
+      axis: "x" | "y" | null;
+    } | null,
   });
   useEffect(() => () => orbitMotion.current.scheduler.cancel(), []);
   const access = useActionAccess();
@@ -863,10 +869,6 @@ export function useDesignBridge(
     }));
   }
   if (homeScreens.has(screen) && !reference) {
-    values.tr =
-      instantMotion() || controller.state.dragging
-        ? "none"
-        : "transform 360ms cubic-bezier(0.25,1,0.5,1), opacity 200ms ease-out";
     const list = carouselFoods,
       N = list.length,
       n = controller.state.n ?? 0,
@@ -881,42 +883,62 @@ export function useDesignBridge(
     }));
     values.down = (e: React.PointerEvent<HTMLElement>) => {
       const state = orbitMotion.current;
-      state.scheduler.cancel();
-      state.angle = 0;
-      state.startX = e.clientX;
+      if (N < 2 || e.button !== 0 || state.pointer) return;
+      const plate = homeOrbit.current?.querySelector<HTMLElement>(
+        '[data-orbit-offset="0"]',
+      );
+      if (!plate?.offsetWidth) return;
+      state.pointer = {
+        id: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        step: plate.offsetWidth * homePlateSpacing,
+        axis: null,
+      };
       down(e);
     };
     values.move = (e: React.PointerEvent<HTMLElement>) => {
-      if (!controller.state.dragging) return;
-      const state = orbitMotion.current,
-        target = e.currentTarget as HTMLElement,
-        degrees = (e.clientX - state.startX) / 7.5;
-      state.angle = Math.max(
-        -heroOrbitStep * 1.1,
-        Math.min(heroOrbitStep * 1.1, degrees),
-      );
-      state.scheduler.update(target, state.angle, 55);
+      const { pointer, scheduler } = orbitMotion.current;
+      if (!pointer || pointer.id !== e.pointerId) return;
+      const dx = e.clientX - pointer.x;
+      const dy = e.clientY - pointer.y;
+      if (!pointer.axis && Math.max(Math.abs(dx), Math.abs(dy)) >= 6)
+        pointer.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      if (pointer.axis === "x" && homeOrbit.current && !instantMotion()) {
+        const progress = Math.max(-1, Math.min(1, dx / pointer.step));
+        scheduler.update(homeOrbit.current, progress);
+      }
     };
-    values.up = () => {
-      if (!controller.state.dragging) return;
-      const state = orbitMotion.current,
-        steps = state.angle < -4 ? 1 : state.angle > 4 ? -1 : 0;
+    const endDrag = (steps: number) => {
+      const state = orbitMotion.current;
       state.scheduler.cancel();
-      state.angle = 0;
+      state.pointer = null;
       controller.setState({
         n: (controller.state.n ?? 0) + steps,
         drag: 0,
         dragging: false,
       });
     };
+    values.up = (e: React.PointerEvent<HTMLElement>) => {
+      const pointer = orbitMotion.current.pointer;
+      if (!pointer || pointer.id !== e.pointerId) return;
+      const dx = e.clientX - pointer.x;
+      const dy = e.clientY - pointer.y;
+      const horizontal =
+        pointer.axis === "x" ||
+        (pointer.axis === null && Math.abs(dx) > Math.abs(dy));
+      endDrag(horizontal && Math.abs(dx) > 30 && N > 1 ? -Math.sign(dx) : 0);
+    };
+    values.cancelDrag = (e: React.PointerEvent<HTMLElement>) => {
+      const { pointer } = orbitMotion.current;
+      if (pointer && pointer.id === e.pointerId) endDrag(0);
+    };
     values.next = () => {
+      if (N < 2) return;
       orbitMotion.current.scheduler.cancel();
-      orbitMotion.current.angle = 0;
+      orbitMotion.current.pointer = null;
       next();
     };
-    if (N < 2) {
-      values.next = values.down = values.move = values.up = () => {};
-    }
   }
   if (screen === "G-Login" && !reference) {
     values.agreed = true;
@@ -1618,8 +1640,8 @@ export function useDesignBridge(
           <HomeOrbit
             foods={carouselFoods}
             position={controller.state.n ?? 0}
-            drag={controller.state.drag ?? 0}
-            transition={values.tr}
+            dragging={!!controller.state.dragging}
+            orbitRef={homeOrbit}
             demo={isDemo}
           />
         );
@@ -1628,12 +1650,15 @@ export function useDesignBridge(
       if (tag === "a" && n.attrs.href === "G-Dish.dc.html" && featuredFood?.id)
         p.href = `#/foods/${featuredFood.id}`;
       if (n.attrs.role === "group") {
-        p.style = { ...p.style, top: "162px" };
-        p.onPointerCancel = () => {
-          orbitMotion.current.scheduler.cancel();
-          orbitMotion.current.angle = 0;
-          controller.setState({ drag: 0, dragging: false });
+        p["aria-label"] = "左右滑动换一道菜";
+        p.style = {
+          ...p.style,
+          top: "104px",
+          bottom: "90px",
+          height: "auto",
+          touchAction: "pan-y pinch-zoom",
         };
+        p.onPointerCancel = p.onLostPointerCapture = values.cancelDrag;
       }
       if (tag === "header")
         return (
@@ -2156,8 +2181,6 @@ export function useDesignBridge(
             {React.createElement(tag, p, ...view.children)}
           </>
         );
-      if (id === 31)
-        p.style = { ...st, display: "flex", alignItems: "center", minHeight: 44 };
       if (id === 35)
         return (
           <div className="mobile-publish-note">

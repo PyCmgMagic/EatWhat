@@ -1,0 +1,470 @@
+.shop-draw {
+  --draw-ink: var(--night-ink, #26221e);
+  --draw-muted: var(--night-muted, #695f56);
+  --draw-line: var(--night-outline, #d7cec3);
+  --draw-surface: var(--night-surface, #fffcf7);
+  width: min(calc(100% - 40px), 1080px);
+  margin: 0 auto;
+  padding: 12px 0 max(32px, env(safe-area-inset-bottom));
+  color: var(--draw-ink);
+}
+.pc-main .shop-draw {
+  width: min(100%, 1080px);
+}
+.draw-topline,
+.draw-topline > *,
+.draw-fields,
+.draw-actions,
+.draw-actions > *,
+.draw-result-head,
+.draw-result p {
+  display: flex;
+  align-items: center;
+}
+.draw-topline {
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.draw-topline > * {
+  gap: 6px;
+  min-height: 44px;
+  font-size: 13px;
+}
+.draw-topline a {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 650;
+}
+.draw-topline > span {
+  color: var(--draw-muted);
+}
+.shop-draw :is(button, a, select):focus-visible {
+  outline: 3px solid #3875bd;
+  outline-offset: 3px;
+}
+.draw-counter {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  grid-template-areas: "intro table" "footer table";
+  column-gap: clamp(26px, 5.2vw, 78px);
+  padding: clamp(24px, 4vw, 56px);
+  border-radius: 32px;
+  background: var(--draw-surface);
+}
+.draw-intro {
+  grid-area: intro;
+  align-self: end;
+  min-width: 0;
+}
+.draw-intro h1 {
+  margin: 0 0 24px;
+  font-size: clamp(40px, 4.8vw, 65px);
+  line-height: 1.12;
+  font-weight: 850;
+  letter-spacing: -0.06em;
+}
+.draw-fields {
+  gap: 7px;
+  flex-wrap: wrap;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.draw-field {
+  display: inline-flex;
+  min-width: 0;
+}
+.draw-select {
+  display: inline-flex;
+  position: relative;
+}
+.draw-select select {
+  appearance: none;
+  field-sizing: content;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 0 28px 0 12px;
+  border: 1px solid var(--draw-line);
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 550;
+  cursor: pointer;
+}
+.draw-select option {
+  color: var(--draw-ink);
+  background: var(--draw-surface);
+}
+.draw-select svg {
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.draw-table {
+  grid-area: table;
+  isolation: isolate;
+  position: relative;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  container-type: inline-size;
+  min-width: 0;
+  min-height: clamp(330px, 32vw, 418px);
+  overflow: hidden;
+  padding: 22px 0;
+  border-radius: 22px;
+  background: #dce9ed;
+}
+/* Wide pencil rings echo the outlines of the porcelain plates on the home page. */
+.draw-table::before,
+.draw-table::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  aspect-ratio: 1;
+  border: 1px solid #748f9e3d;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.draw-table::before {
+  width: 95%;
+  left: -58%;
+  top: -56%;
+  box-shadow: 0 0 0 12px #ffffff20;
+}
+.draw-table::after {
+  width: 72%;
+  right: -40%;
+  bottom: -51%;
+  box-shadow: 0 0 0 13px #ffffff28;
+}
+.draw-deck,
+.draw-notice {
+  grid-area: 1 / 1;
+}
+.draw-deck {
+  display: grid;
+  width: 100%;
+  place-items: center;
+}
+.draw-deck[inert] {
+  visibility: hidden;
+}
+.draw-card {
+  --spread: 0%;
+  --tilt: -3deg;
+  --rise: -2%;
+  --card-color: #244a79;
+  --card-ink: #f7e8bc;
+  position: relative;
+  grid-area: 1 / 1;
+  z-index: 2;
+  display: block;
+  width: clamp(118px, 33cqw, 176px);
+  aspect-ratio: 0.718;
+  padding: 5px;
+  border: 1px solid #51442c45;
+  border-radius: 14px;
+  background: #fffaf0;
+  box-shadow:
+    0 2px 1px #6d614938,
+    0 9px 13px -6px #35404b4f;
+  transform: translate(var(--spread), var(--rise)) rotate(var(--tilt));
+  transform-origin: 50% 84%;
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease;
+  cursor: pointer;
+}
+.draw-deck .draw-card {
+  color: var(--card-ink);
+}
+.draw-card:first-child {
+  --spread: -53%;
+  --tilt: -18deg;
+  --rise: 6%;
+  --card-color: #eabb64;
+  --card-ink: #72472d;
+  z-index: 0;
+}
+.draw-card:last-child {
+  --spread: 53%;
+  --tilt: 16deg;
+  --rise: 5%;
+  --card-color: #b9614d;
+  --card-ink: #ffe0b5;
+  z-index: 1;
+}
+.draw-card-print {
+  position: absolute;
+  inset: 5px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--card-color);
+  border-radius: 9px;
+}
+.draw-card-print::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid currentColor;
+  border-radius: 7px;
+  opacity: 0.66;
+}
+.draw-medallion {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 84%;
+  aspect-ratio: 0.83;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+.draw-medallion::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  opacity: 0.52;
+}
+.draw-medallion img {
+  display: block;
+  width: 92%;
+  height: auto;
+  pointer-events: none;
+}
+.draw-mark-top,
+.draw-mark-bottom {
+  position: absolute;
+  width: 9%;
+  height: auto;
+  fill: currentColor;
+  stroke-width: 1.2;
+}
+.draw-mark-top {
+  left: 12%;
+  top: 9%;
+}
+.draw-mark-bottom {
+  right: 12%;
+  bottom: 9%;
+}
+@media (hover: hover) {
+  .draw-card:enabled:hover {
+    transform: translate(var(--spread), calc(var(--rise) - 6%))
+      rotate(var(--tilt));
+  }
+}
+.draw-card:focus-visible,
+.draw-card[data-picked] {
+  z-index: 3;
+}
+.draw-counter[data-state="drawing"] .draw-card:not([data-picked]) {
+  opacity: 0.36;
+}
+.draw-notice {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.draw-result {
+  position: relative;
+  width: min(82%, 346px);
+  padding: clamp(18px, 6cqw, 30px);
+  background: #fffaf0;
+  color: #263e58;
+  border: 1px solid #aab9bd;
+  border-radius: 15px;
+  box-shadow:
+    4px 5px 0 -1px #f3e6c6,
+    4px 5px 0 #9a9f9e,
+    0 14px 20px -14px #203a52aa;
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+}
+.draw-result-head {
+  justify-content: space-between;
+  color: #496680;
+  font-size: 13px;
+  font-weight: 650;
+}
+.draw-result-head svg {
+  fill: currentColor;
+}
+.draw-result-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 15px 0 0;
+  padding-bottom: 16px;
+}
+.draw-result h2 {
+  margin: 0;
+  font-size: clamp(27px, 8.7cqw, 43px);
+  font-weight: 800;
+  line-height: 1.17;
+  letter-spacing: -0.035em;
+}
+.draw-result-image {
+  flex: none;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  width: clamp(50px, 15cqw, 74px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #e3e9df;
+}
+.draw-result-image > :is(img, .food-cover-frame) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.draw-result p {
+  margin: 5px 0 0;
+  gap: 7px;
+  align-items: baseline;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #52606b;
+}
+.draw-result-main + p {
+  border-top: 1px solid #d5d9d4;
+  padding-top: 12px;
+}
+.draw-result p svg {
+  flex: none;
+  align-self: start;
+  margin-top: 3px;
+}
+.draw-footer {
+  grid-area: footer;
+  align-self: start;
+  padding-top: 30px;
+  min-width: 0;
+}
+.draw-actions {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.draw-actions > * {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  min-height: 48px;
+  padding-inline: 18px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 660;
+  text-decoration: none;
+  cursor: pointer;
+}
+.draw-actions .draw-primary {
+  background: var(--draw-ink);
+  color: var(--draw-surface);
+}
+.draw-actions .draw-primary:hover {
+  filter: brightness(1.14);
+}
+.draw-again {
+  background: transparent;
+  border-color: var(--draw-line);
+  color: var(--draw-ink);
+}
+.draw-actions > button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.draw-feedback {
+  margin: 0 0 12px;
+  color: var(--draw-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+:root[data-theme="dark"] .draw-table {
+  background: #293c47;
+}
+@keyframes draw-turn-card {
+  from {
+    opacity: 0;
+    transform: perspective(700px) rotateY(-70deg) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .draw-result {
+    animation: draw-turn-card 280ms cubic-bezier(0.16, 0.76, 0.24, 1) both;
+  }
+}
+:root[data-motion-input="keyboard"] .draw-result {
+  animation: none;
+}
+@media (max-width: 760px) {
+  .shop-draw {
+    width: min(calc(100% - 32px), 510px);
+    padding-top: max(4px, env(safe-area-inset-top));
+  }
+  .draw-topline {
+    margin-bottom: 10px;
+  }
+  .draw-counter {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "intro" "table" "footer";
+    gap: 0;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .draw-intro h1 {
+    margin-bottom: 16px;
+    font-size: clamp(36px, 8.6vw, 45px);
+  }
+  .draw-fields {
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+  .draw-table {
+    min-height: clamp(246px, 78vw, 350px);
+    border-radius: 20px;
+  }
+  .draw-footer {
+    padding-top: 14px;
+  }
+  .draw-actions > * {
+    flex: 1;
+  }
+  .draw-actions .draw-primary:not(:only-child) {
+    flex: 1.4;
+  }
+}
+@media (max-width: 360px) {
+  .shop-draw {
+    width: calc(100% - 24px);
+  }
+  .draw-select select {
+    padding-inline: 9px 23px;
+    font-size: 13px;
+  }
+  .draw-card {
+    min-width: 0;
+    width: 33cqw;
+  }
+}

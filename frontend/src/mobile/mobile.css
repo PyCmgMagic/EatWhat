@@ -133,11 +133,12 @@ button:disabled {
 }
 .mobile-home-orbit {
   --plate-size: clamp(205px, 70vw, 338px);
-  /* Scale the original 430 / 320 orbit with its plate on narrow screens. */
-  --orbit-radius: calc(var(--plate-size) * 1.34375);
   position: absolute;
   inset: 0;
   pointer-events: none;
+  /* Fade plates at the edge of the copy as they slide across the stage. */
+  -webkit-mask-image: linear-gradient(to right, transparent 46%, black 49%);
+  mask-image: linear-gradient(to right, transparent 46%, black 49%);
 }
 .mobile-home-orbit .mobile-home-plate {
   position: absolute;
@@ -145,7 +146,14 @@ button:disabled {
   top: max(104px, calc(100% - var(--plate-size) - 120px));
   width: var(--plate-size);
   aspect-ratio: 1;
-  transition: var(--orbit-transition, none);
+  transition: transform 280ms var(--ease-move), opacity 140ms ease-out;
+}
+.mobile-home-orbit[data-dragging] .mobile-home-plate,
+html[data-motion-input="keyboard"] .mobile-home-orbit .mobile-home-plate {
+  transition: none;
+}
+.mobile-home-orbit[data-dragging] .mobile-home-plate {
+  will-change: transform;
 }
 .mobile-home-plate > :is(img, .food-cover-frame) {
   display: block;

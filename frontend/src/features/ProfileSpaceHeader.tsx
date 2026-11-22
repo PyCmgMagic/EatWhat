@@ -14,6 +14,7 @@ import { useFoodPhoto } from "./media";
 import { peopleHref } from "./profile-people";
 import ProfileGrowth from "./ProfileGrowth";
 import { useMyProfileCover } from "./useMyProfileCover";
+import { ProfileCoverPicker } from "./ProfileCoverPicker";
 import "./profile-overview.css";
 
 const tabs = [
@@ -135,6 +136,9 @@ export default function ProfileSpaceHeader() {
             />
           )}
         </div>
+        {session && !!user?.id && (
+          <ProfileCoverPicker key={user.id} displayedId={displayedProfileCover.id} />
+        )}
         <div className="profile-overview-hero-top">
           <span className="profile-overview-eyebrow">我的美食档案</span>
           <ProfileEditLink className="profile-overview-edit">

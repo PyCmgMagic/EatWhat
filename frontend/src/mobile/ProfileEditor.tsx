@@ -1,7 +1,6 @@
 import { Select } from "../components/Select";
 import { PROFILE_SIGNATURE_LIMIT, type ProfileForm } from "../desktop/profile";
 import "./profile-editor.css";
-import { ProfileCoverPicker } from "../features/ProfileCoverPicker";
 
 export default function ProfileEditor({
   form,
@@ -80,7 +79,6 @@ export default function ProfileEditor({
           )}
         </div>
         <fieldset className="mobile-profile-editor-fields" disabled={busy}>
-          <ProfileCoverPicker value={form.coverFoodId} disabled={busy} onChange={(coverFoodId) => onChange({ coverFoodId })} />
           <div className="mobile-profile-editor-field">
             <label htmlFor="nick">
               昵称 <span>{form.name.length} / 12</span>

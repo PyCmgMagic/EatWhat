@@ -25,6 +25,7 @@ import { DishIllustration } from "../components/DishIllustration";
 import "./friend-profile.css";
 import RestaurantLocationField from "../features/RestaurantLocationField";
 import { NewShopSearch } from "../features/NewShopSearch";
+import { ShopPhotoField } from "../features/ShopPhotoField";
 import { useNewShop } from "../features/useNewShop";
 import "./new-shop.css";
 import { PageSkeleton } from "../components/LoadingSkeleton";
@@ -447,6 +448,11 @@ export function DesktopNewShop() {
                 onAddressChange={(address) => flow.update({ address })}
                 disabled={busy}
               />
+              <ShopPhotoField
+                preview={flow.photoPreview}
+                onChange={flow.setPhoto}
+                disabled={busy}
+              />
             </section>
             <section
               className="pc-new-shop-section"
@@ -472,8 +478,8 @@ export function DesktopNewShop() {
           >
             <div className="pc-new-shop-preview-art">
               <img
-                src="/assets/restaurants/campus-storefront.webp"
-                alt=""
+                src={flow.photoPreview ?? "/assets/restaurants/campus-storefront.webp"}
+                alt={flow.photoPreview ? "门头照片预览" : ""}
                 width={768}
                 height={512}
               />
@@ -495,7 +501,9 @@ export function DesktopNewShop() {
                 form="new-shop-form"
                 disabled={!flow.canSubmit}
               >
-                {flow.pending ? "正在提交…" : "提交新店"}
+                {flow.uploadingPhoto
+                  ? "正在上传门头照片…"
+                  : flow.pending ? "正在提交…" : "提交新店"}
                 <Icon name="chevronRight" size={17} />
               </button>
             </div>

@@ -22,6 +22,7 @@ type ShopDraft = {
   address: string;
   point?: MapPoint;
   traits: ShopTraits;
+  photo?: { file: File; key?: string };
   uncertain: boolean;
 };
 const desktopDrafts = new Map<number, ShopDraft>();
@@ -37,6 +38,7 @@ function draftFor(choice: ShopChoice): ShopDraft {
     address: choice.place?.address ?? "",
     point: choice.place?.point,
     traits: defaultShopTraits(),
+    photo: undefined,
     uncertain: false,
   };
 }
@@ -48,7 +50,7 @@ function sameShop(a: ShopChoice, b: ShopChoice) {
 }
 
 export function useNewShop(rememberDraft = false) {
-  const { api, user, toast } = useApp();
+  const { api, user, toast, upload } = useApp();
   const { area } = useArea();
   const m = useMobile();
   const nav = useNavigate();
@@ -70,6 +72,17 @@ export function useNewShop(rememberDraft = false) {
   );
   const currentDraft = useRef(draft);
   const formRef = useRef<HTMLFormElement>(null);
+  const photoFile = draft.photo?.file;
+  const [photoPreview, setPhotoPreview] = useState<string>();
+  useEffect(() => {
+    if (!photoFile || !details) {
+      setPhotoPreview(undefined);
+      return;
+    }
+    const url = URL.createObjectURL(photoFile);
+    setPhotoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photoFile, details]);
 
   function update(patch: Partial<ShopDraft>) {
     const next = { ...currentDraft.current, ...patch };
@@ -82,7 +95,7 @@ export function useNewShop(rememberDraft = false) {
     if (details) formRef.current?.focus({ preventScroll: true });
   }, [details]);
 
-  const dirty = !!(draft.name || draft.address || draft.point);
+  const dirty = !!(draft.name || draft.address || draft.point || photoFile);
   useEffect(() => {
     if (!rememberDraft || !dirty) return;
     function leave(event: BeforeUnloadEvent) {
@@ -121,12 +134,25 @@ export function useNewShop(rememberDraft = false) {
   function submit() {
     if (!canSubmit) return;
     task.run(async () => {
+      const name = boundedText(draft.name, 20, "店名");
+      const address = boundedText(draft.address, restaurantAddressLimit, "地址");
+      const point = requireShopLocation(draft.point);
+      let picture = draft.photo?.key;
+      if (draft.photo && !picture) {
+        picture = await upload(draft.photo.file, "restaurants");
+        if (
+          !active.current ||
+          !formRef.current ||
+          currentDraft.current.photo !== draft.photo
+        ) return;
+        update({ photo: { file: draft.photo.file, key: picture } });
+      }
       try {
-        const name = boundedText(draft.name, 20, "店名");
         const created = await api.createRestaurant({
           name,
-          address: boundedText(draft.address, restaurantAddressLimit, "地址"),
-          ...requireShopLocation(draft.point),
+          address,
+          ...point,
+          ...(picture ? { pictureUrl: [picture] } : {}),
           hubId: area?.hubId,
           ...draft.traits,
         });
@@ -159,6 +185,9 @@ export function useNewShop(rememberDraft = false) {
     back,
     draft,
     update,
+    photoPreview,
+    setPhoto: (file?: File) => update({ photo: file ? { file } : undefined }),
+    uploadingPhoto: task.isPending && !!draft.photo && !draft.photo.key,
     submit,
     busy,
     canSubmit,

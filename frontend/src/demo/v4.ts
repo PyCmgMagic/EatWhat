@@ -912,7 +912,18 @@ export function handleV4(
     const pick = path === "/recommend/pick";
     const batch = demoRecommendationPage(shops, v.exposure ??= {},
       readSession() && s.personalized !== false ? user : undefined, mealTime, Number(q.page ?? 1), 20, pick);
-    if (pick) return ok({ mealTime, restaurant: batch.items[0] ?? null });
+    if (pick) {
+      const card = batch.items[0];
+      return ok({
+        mealTime,
+        restaurant: card ? {
+          ...card,
+          signatureFoods: card.signatureFoods.map((dish) => ({
+            ...dish, pictureUrl: dish.coverUrl ?? null,
+          })),
+        } : null,
+      });
+    }
     const ids = new Set(batch.items.map((shop) => shop.id));
     return ok({ ...batch, mealTime, shops: batch.items, items: eligible.filter((food) => ids.has(food.restaurantId)).slice(0, Number(q.size ?? 8)) });
   }

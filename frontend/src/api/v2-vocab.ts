@@ -25,10 +25,10 @@ export const MAX_DISH_TAGS = 3;
 export const dislikableTags = ["辣", "麻"];
 
 export const shopKinds = [
-  { id: "food", name: "吃饭" },
-  { id: "drink", name: "饮品" },
+  { id: "food", name: "美食" },
+  { id: "drink", name: "甜点饮品" },
   { id: "buffet", name: "自助" },
-];
+] as const;
 /** Fallback only: pages read the live list with useShopOptions(). */
 export const shopCategories = [
   "米饭炒菜",

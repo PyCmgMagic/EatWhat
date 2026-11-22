@@ -399,8 +399,8 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       (await recommendFeed(limit, filters)).items,
     /** Dishes plus the meal slot the backend used (null when unknown). */
     recommendFeed,
-    pickShop: (filters: Pick<RecommendFilters, "kind" | "mealTime" | "scene" | "gcjLng" | "gcjLat">) =>
-      data<{ restaurant: { id: number; name?: string } | null }>("/recommend/pick", { query: filters }),
+    pickShop: (filters: Pick<RecommendFilters, "kind" | "mealTime" | "scene" | "gcjLng" | "gcjLat">, signal?: AbortSignal) =>
+      data<V2["schemas"]["Pick"]>("/recommend/pick", { query: filters, signal }),
     food: (id: number) => data<Food>(`/foods/detail/${id}`),
     foods: (
       restaurantId: number | undefined,

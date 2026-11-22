@@ -128,6 +128,12 @@
   gap: 8px;
   align-items: stretch;
 }
+.mobile-page-native.mobile-new-shop .ew-shop-traits [data-trait="kind"] {
+  grid-template-columns: minmax(0, 1fr) minmax(max-content, 1.25fr) minmax(0, 1fr);
+}
+.mobile-page-native.mobile-new-shop [data-trait="kind"] > label {
+  gap: 4px;
+}
 .mobile-page-native.mobile-new-shop .ew-shop-traits [data-trait="meals"] {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }

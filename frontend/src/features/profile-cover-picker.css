@@ -1,114 +1,179 @@
-.profile-cover-picker {
-  min-width: 0;
-  color: var(--night-ink, #302720);
-}
-.profile-cover-picker button {
-  font: inherit;
+.profile-cover-background {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
   color: inherit;
   cursor: pointer;
 }
-.profile-cover-picker button:focus-visible {
+.profile-cover-background:focus-visible {
   outline: 3px solid currentColor;
-  outline-offset: 2px;
+  outline-offset: -5px;
 }
-.profile-cover-picker .profile-cover-trigger {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  text-align: left;
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid var(--night-line, #e4dcd1);
-  border-radius: 14px;
-  background: var(--night-layer, #faf7f2);
+/* Let taps on uncovered space pass through the profile's layout boxes. */
+.profile-cover-background
+  ~ :is(
+    .profile-overview-hero-top,
+    .profile-overview-identity,
+    .profile-overview-social,
+    .mobile-profile-identity
+  ) {
+  pointer-events: none;
 }
-.profile-cover-trigger > svg {
-  margin-inline-start: auto;
-  flex: none;
+.profile-cover-background ~ * :is(a, button, input) {
+  pointer-events: auto;
 }
-.profile-cover-trigger[aria-expanded="true"] > svg {
-  transform: rotate(180deg);
+.mobile-profile-stage > .mobile-profile-identity {
+  z-index: 2;
 }
-.profile-cover-trigger strong,
-.profile-cover-trigger small {
-  display: block;
+.modal.profile-cover-sheet {
+  position: fixed;
+  inset: auto 0
+    max(
+      0px,
+      calc(100dvh - var(--visible-top, 0px) - var(--visible-height, 100dvh))
+    );
+  width: min(100%, 620px);
+  max-width: 100%;
+  max-height: min(82dvh, calc(var(--visible-height, 100dvh) - 12px));
+  margin: 0 auto;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 25px 25px 0 0;
+  background: var(--night-canvas, #fffaf4);
+  color: var(--night-ink, #302720);
+  box-shadow: 0 -8px 40px #24170e26;
 }
-.profile-cover-trigger small {
-  margin-top: 3px;
-  color: var(--night-muted, #685c52);
+.modal.profile-cover-sheet::backdrop {
+  background: rgb(35 28 24 / 45%);
 }
-.profile-cover-sample,
-.profile-cover-choices button > span {
-  display: grid;
-  place-items: center;
+.profile-cover-sheet > .modal-pad {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+  padding: 0 20px max(20px, env(safe-area-inset-bottom));
+}
+.profile-cover-sheet .mobile-sheet-handle,
+.profile-cover-sheet .mobile-sheet-handle:active {
+  order: -1;
+  margin: 0;
+  width: 100%;
+  height: 26px;
+}
+.profile-cover-sheet .modal-pad > h2 {
+  margin: 0;
+  padding: 5px 46px 16px 0;
+  font-size: 22px;
+  line-height: 1.4;
+}
+.profile-cover-sheet .modal-close {
+  position: absolute;
+  top: 17px;
+  right: 12px;
+  width: 44px;
+  height: 44px;
+  color: inherit;
+  background: transparent;
+}
+.profile-cover-contents {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 3px;
+}
+.profile-cover-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 95px), 1fr));
+  gap: 14px 10px;
+}
+.profile-cover-choices > button {
+  min-width: 0;
+  padding: 0;
+  color: inherit;
+  border: 0;
+  background: transparent;
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+}
+.profile-cover-thumb {
+  position: relative;
+  display: block;
   overflow: hidden;
   aspect-ratio: 1;
-  background: var(--night-raised, #eee6da);
+  border-radius: 14px;
+  background: var(--night-layer, #eee6db);
 }
-.profile-cover-sample {
-  width: 48px;
-  flex: none;
-  border-radius: 50%;
-}
-.profile-cover-picker img {
+.profile-cover-thumb > :is(img, .food-cover-frame) {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.profile-cover-choices {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 84px), 1fr));
-  gap: 10px;
-  padding: 14px 2px;
-}
-.profile-cover-choices button {
-  min-width: 0;
-  padding: 4px;
-  border: 2px solid transparent;
-  border-radius: 12px;
-  background: transparent;
-  text-align: start;
-}
-.profile-cover-choices button[aria-pressed="true"] {
-  border-color: currentColor;
-}
-.profile-cover-choices button > span {
-  border-radius: 8px;
-}
-.profile-cover-choices svg {
+.profile-cover-choices [aria-pressed="true"] .profile-cover-thumb::after {
+  content: "";
   position: absolute;
-  right: 4px;
-  bottom: 4px;
+  inset: 0;
+  border: 3px solid #ffca45;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.profile-cover-check {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: grid;
+  place-items: center;
+  width: 23px;
+  height: 23px;
   border-radius: 50%;
-  background: #302720;
-  color: white;
+  background: #ffca45;
+  color: #332615;
 }
 .profile-cover-choices strong {
   display: block;
-  padding: 4px 0;
-  font-size: 13px;
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
-.profile-cover-picker nav {
+.profile-cover-sheet nav {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--night-line, #e8ded3);
+  font-size: 13px;
 }
-.profile-cover-picker nav button,
-.profile-cover-picker p button {
+.profile-cover-sheet nav button {
   min-height: 44px;
-  border: 0;
-  background: transparent;
-  text-decoration: underline;
 }
-.profile-cover-picker button:disabled {
+.profile-cover-sheet button:disabled {
   opacity: 0.5;
   cursor: default;
 }
-.profile-cover-picker p,
-.profile-cover-picker nav {
-  font-size: 13px;
+.profile-cover-sheet button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+.profile-cover-contents > p,
+.profile-cover-feedback {
+  margin: 8px 0;
+  font-size: 14px;
+}
+.modal.profile-cover-sheet[open] {
+  transform: none;
+}
+@starting-style {
+  .modal.profile-cover-sheet[open] {
+    transform: translateY(100%);
+  }
 }

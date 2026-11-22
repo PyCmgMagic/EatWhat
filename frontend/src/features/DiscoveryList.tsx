@@ -1,17 +1,14 @@
 import { useId, type ReactNode } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import { useApp } from "../app/state";
+import { Link, useLocation } from "react-router-dom";
 import {
-  ConciergeBell,
-  CupSoda,
   ListFilter,
   MapPin,
+  ChevronRight,
   Shuffle,
-  Soup,
   ThumbsUp,
 } from "lucide-react";
 import { MarkerTabs } from "../components/MarkerTabs";
+import { ShopKindIcon } from "../components/ShopKindIcon";
 import { Select } from "../components/Select";
 import { discoveryKinds } from "../app/discovery-category";
 import { errorMessage } from "../api/client";
@@ -22,41 +19,6 @@ import { RecommendShopList } from "./RecommendShops";
 import type { useHomeDiscovery } from "./useHomeDiscovery";
 import "./discovery-list.css";
 
-const icons = { food: Soup, drink: CupSoda, buffet: ConciergeBell };
-function PickShop({
-  filters,
-}: {
-  filters: ReturnType<typeof useHomeDiscovery>["pickFilters"];
-}) {
-  const { api } = useApp();
-  const pick = useMutation({ mutationFn: () => api.pickShop(filters) });
-  const shop = pick.data?.restaurant;
-  return (
-    <div className="discovery-pick">
-      <button
-        type="button"
-        disabled={pick.isPending}
-        onClick={() => pick.mutate()}
-      >
-        <Shuffle size={15} aria-hidden="true" />
-        {pick.isPending ? "正在选店…" : "随机选一家"}
-      </button>
-      <span role="status">
-        {shop ? (
-          <Link to={`/restaurants/${shop.id}`}>
-            {shop.name || "查看店铺"} →
-          </Link>
-        ) : pick.isError ? (
-          errorMessage(pick.error)
-        ) : pick.isSuccess ? (
-          "当前条件下没有可选店铺"
-        ) : (
-          ""
-        )}
-      </span>
-    </div>
-  );
-}
 const sortButtons = {
   recommended: { icon: ListFilter, shortLabel: "排序" },
   distance: { icon: MapPin, shortLabel: "距离" },
@@ -74,6 +36,9 @@ export function DiscoveryList({
 }) {
   const { kind, setKind, feed, shops, dishes } = discovery;
   const mobile = useMobile();
+  const location = useLocation();
+  const drawParams = new URLSearchParams({ kind, scene: mobile.scene });
+  if (discovery.pickMeal) drawParams.set("mealTime", discovery.pickMeal);
   const id = useId();
   const hasResults = (shops ?? dishes).length > 0;
   const { icon: SortIcon, shortLabel } = sortButtons[discovery.sort];
@@ -81,10 +46,11 @@ export function DiscoveryList({
     <>
       <div className="discovery-toolbar">
         <MarkerTabs
-          items={discoveryKinds.map(({ id, name }) => {
-            const Icon = icons[id];
-            return { id, name, icon: <Icon aria-hidden="true" size={18} /> };
-          })}
+          items={discoveryKinds.map(({ id, name }) => ({
+            id,
+            name,
+            icon: <ShopKindIcon kind={id} />,
+          }))}
           value={kind}
           onChange={setKind}
           panelId={id}
@@ -131,9 +97,15 @@ export function DiscoveryList({
         className="discovery-results"
         aria-busy={feed.isFetching}
       >
-        {hasResults && (
-          <PickShop key={discovery.pickScope} filters={discovery.pickFilters} />
-        )}
+        <Link
+          className="discovery-draw-link"
+          to={"/recommend/pick?" + drawParams}
+          state={{ discoveryFrom: location.pathname + location.search }}
+        >
+          <Shuffle size={16} aria-hidden="true" />
+          随机选一家
+          <ChevronRight size={15} aria-hidden="true" />
+        </Link>
         {hasResults &&
           (shops ? (
             <RecommendShopList

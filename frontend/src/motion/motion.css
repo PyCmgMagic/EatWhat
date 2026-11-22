@@ -252,10 +252,6 @@ html[data-motion-input="keyboard"] .pc-hero-food > .pc-plate {
 .pc-motion-tabs > .pc-tab-indicator {
   will-change: transform;
 }
-.mobile-home-orbit .mobile-home-plate {
-  will-change: transform, opacity;
-}
-
 /* Native dialogs keep their top layer during close in supporting browsers. */
 dialog {
   opacity: 0;

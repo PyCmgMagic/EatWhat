@@ -1,11 +1,7 @@
 import { useSearchParams } from "react-router-dom";
 import type { Restaurant } from "../api/models";
-import type { RecommendScene, V2Shop } from "../api/v2-vocab";
-export const discoveryKinds = [
-  { id: "food", name: "美食" },
-  { id: "drink", name: "甜点饮品" },
-  { id: "buffet", name: "自助" },
-] as const;
+import { shopKinds, type RecommendScene, type V2Shop } from "../api/v2-vocab";
+export const discoveryKinds = shopKinds;
 export type DiscoveryKind = (typeof discoveryKinds)[number]["id"];
 export type DiscoverySort = "recommended" | "distance" | "rating";
 

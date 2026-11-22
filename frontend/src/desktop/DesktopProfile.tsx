@@ -18,7 +18,6 @@ import { useProfileDraft } from "../app/profile-draft";
 import { useProfileReturnTo } from "../app/profile-navigation";
 import { PageHead, Section } from "./secondary";
 import "./profile.css";
-import { ProfileCoverPicker } from "../features/ProfileCoverPicker";
 
 type Avatar = Draft["images"][number];
 
@@ -311,7 +310,6 @@ export default function DesktopProfile() {
             </div>
           </Section>
           <Section title="更多资料">
-            <ProfileCoverPicker value={form.coverFoodId} disabled={busy} onChange={(coverFoodId) => change({ coverFoodId })} />
             <div className="pc-profile-fields">
               <div className="pc-profile-field">
                 <label htmlFor="profile-gender">性别</label>

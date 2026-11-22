@@ -49,7 +49,7 @@ const actionNames: Record<string, string> = {
   edit: "修改",
   restore: "恢复",
 };
-const named = (list: { id: string; name: string }[], v: unknown) =>
+const named = (list: readonly { id: string; name: string }[], v: unknown) =>
   list.find((x) => x.id === v)?.name ?? String(v);
 const isBlank = (value: unknown) =>
   value == null || value === "" || (Array.isArray(value) && !value.length);

@@ -54,7 +54,6 @@ function useProfileDraftState(editing: boolean) {
     legacy
       ? {
           name: legacy.nick,
-          coverFoodId: saved.coverFoodId,
           signature: legacy.sign,
           gender: legacy.gender,
           birthday: legacy.birthday,

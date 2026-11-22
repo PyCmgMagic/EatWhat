@@ -25,6 +25,7 @@ import { useFoodPhoto } from "../features/media";
 import { peopleHref } from "../features/profile-people";
 import ProfileGrowth from "../features/ProfileGrowth";
 import { useMyProfileCover } from "../features/useMyProfileCover";
+import { ProfileCoverPicker } from "../features/ProfileCoverPicker";
 import { visualFor } from "./catalog";
 import ProfileSheet, { ProfileToolbarIdentity } from "./ProfileSheet";
 import { FoodTile, MobileEmpty, PrimaryButton } from "./ui";
@@ -207,6 +208,9 @@ export default function MobileProfile() {
             />
           )}
         </div>
+        {!!user?.id && (
+          <ProfileCoverPicker key={user.id} displayedId={illustration ? undefined : cover.id} />
+        )}
         <section className="mobile-profile-identity" aria-label="我的资料">
           <UserAvatar
             className="mobile-profile-avatar"

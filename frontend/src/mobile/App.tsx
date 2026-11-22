@@ -72,6 +72,7 @@ import { profileSection } from "../app/profile-workspace";
 import { Catalog } from "../features/Catalog";
 import { RecommendationControls } from "../features/Account";
 import { EditFood } from "../features/EditFood";
+const ShopDraw = lazy(() => import("../features/ShopDraw"));
 import { EditRestaurant, isShopEditPath } from "../features/EditRestaurant";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { useContentMotion, useExitPresence } from "../motion/hooks";
@@ -83,6 +84,7 @@ import { ProfileDraftProvider } from "../app/profile-draft";
 import { useVisibleViewport } from "../app/viewport";
 import RestaurantLocationField from "../features/RestaurantLocationField";
 import { NewShopSearch } from "../features/NewShopSearch";
+import { ShopPhotoField } from "../features/ShopPhotoField";
 import { useNewShop } from "../features/useNewShop";
 import SheetHandle from "./SheetHandle";
 import { ShopTraitsFields } from "../features/ShopTraits";
@@ -340,7 +342,9 @@ function MobileWorkspace() {
     setFlowLayout({ flow, desktop: preferredDesktop });
   const desktop =
     flow && flowLayout.flow === flow ? flowLayout.desktop : preferredDesktop;
-  const responsiveAuthPage = isStandaloneLoginPath(loc.pathname) ? (
+  const responsivePage = loc.pathname === "/recommend/pick" ? (
+    <ShopDraw />
+  ) : isStandaloneLoginPath(loc.pathname) ? (
     <LoginPage desktop={desktop} />
   ) : loc.pathname === "/auth/password-conflict/reset" ? (
     <div className={desktop ? undefined : "ew-mobile-feature"}>
@@ -548,7 +552,7 @@ function MobileWorkspace() {
               enabled={desktop}
               screen={screen}
               overlay={!!panelPresence.value || !!noticePresence.value}
-              responsivePage={responsiveAuthPage}
+              responsivePage={responsivePage}
             >
               <Suspense fallback={<ContentSkeleton kind="form" count={3} />}>
                 {!desktop &&
@@ -916,6 +920,11 @@ function NewShop() {
             onAddressChange={(address) => flow.update({ address })}
             disabled={busy}
           />
+          <ShopPhotoField
+            preview={flow.photoPreview}
+            onChange={flow.setPhoto}
+            disabled={busy}
+          />
           <ShopTraitsFields
             value={draft.traits}
             onChange={(traits) => flow.update({ traits })}
@@ -924,7 +933,9 @@ function NewShop() {
           />
           <footer className="mobile-new-shop-footer">
             <PrimaryButton disabled={!flow.canSubmit}>
-              {flow.pending ? "正在添加…" : "添加并继续"}
+              {flow.uploadingPhoto
+                ? "正在上传门头照片…"
+                : flow.pending ? "正在添加…" : "添加并继续"}
             </PrimaryButton>
           </footer>
         </form>

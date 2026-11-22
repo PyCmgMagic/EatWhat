@@ -144,8 +144,7 @@ export function useHomeDiscovery(enabled = true) {
     feed,
     refresh: () =>
       cache.resetQueries({ queryKey: options(kind).queryKey, exact: true }),
-    pickFilters: { ...filters, kind, mealTime: pages[0]?.mealTime ?? mealTime },
-    pickScope: JSON.stringify(options(kind).queryKey),
+    pickMeal: pages[0]?.mealTime ?? mealTime,
     kind,
     setKind,
     sort: activeSort,

@@ -6,6 +6,7 @@ import {
   shopKinds,
 } from "../api/v2-vocab";
 import { FieldMark } from "./FieldMark";
+import { ShopKindIcon } from "../components/ShopKindIcon";
 import type { ReactNode } from "react";
 import { useShopOptions } from "./shop-options";
 import "./latest.css";
@@ -92,9 +93,11 @@ export function ShopTraitsFields({
             <input
               type="radio"
               name="shop-kind"
+              value={k.id}
               checked={value.kind === k.id}
               onChange={() => set({ kind: k.id })}
             />
+            <ShopKindIcon kind={k.id} size={16} />
             {k.name}
           </label>
         ))}

@@ -1,10 +1,10 @@
 export const heroOrbitStep = 55;
 
 /** Keep the same transform list so the browser interpolates the angle on an arc. */
-export function heroPlateTransform(angle: number, tilt = 0) {
+export function heroPlateTransform(angle: number) {
   const scale = 1 - 0.15 * Math.min(1, Math.abs(angle) / heroOrbitStep);
   const arc = `translateY(var(--orbit-radius)) rotate(${angle}deg) translateY(calc(-1 * var(--orbit-radius)))`;
-  return `${tilt ? `rotate(${-tilt}deg) ` : ""}${arc}${tilt ? ` rotate(${tilt}deg)` : ""} scale(${scale})`;
+  return `${arc} scale(${scale})`;
 }
 
 /** Logical slots keep visible plates continuous when the food index wraps. */
@@ -24,30 +24,25 @@ export function nearestHeroPosition(
 }
 
 /** Update the moving plates directly; pointer movement does not re-render the page. */
-export function dragHeroOrbit(element: HTMLElement, angle = 0, tilt = 0) {
+export function dragHeroOrbit(element: HTMLElement, angle = 0) {
   for (const plate of element.querySelectorAll<HTMLElement>(
     "[data-orbit-offset]",
   )) {
     const offset = Number(plate.dataset.orbitOffset);
-    plate.style.transform = heroPlateTransform(
-      offset * heroOrbitStep + angle,
-      tilt,
-    );
+    plate.style.transform = heroPlateTransform(offset * heroOrbitStep + angle);
   }
 }
 
-export function createHeroOrbitScheduler() {
+export function createHeroOrbitScheduler(applyDrag = dragHeroOrbit) {
   let frame = 0;
-  let pending: { element: HTMLElement; angle: number; tilt: number } | null =
-    null;
+  let pending: { element: HTMLElement; delta: number } | null = null;
   return {
-    update(element: HTMLElement, angle = 0, tilt = 0) {
-      pending = { element, angle, tilt };
+    update(element: HTMLElement, delta = 0) {
+      pending = { element, delta };
       if (frame) return;
       frame = requestAnimationFrame(() => {
         frame = 0;
-        if (pending)
-          dragHeroOrbit(pending.element, pending.angle, pending.tilt);
+        if (pending) applyDrag(pending.element, pending.delta);
         pending = null;
       });
     },
