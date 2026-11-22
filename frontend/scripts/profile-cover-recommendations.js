@@ -129,6 +129,8 @@ async (page) => {
       await p.getByRole("link", { name: "返回发现" }).click();
       await p.getByRole("link", { name: "随机选一家" }).click();
       await p.getByRole("button", { name: "抽取左侧餐牌" }).click();
+      await p.locator(".draw-card[data-picked]").evaluateAll(cards =>
+        cards.forEach(card => card.getAnimations().forEach(animation => animation.pause())));
       await p.getByRole("heading", { name: "第二家店" }).waitFor();
       drawResponse = "empty";
       await p.getByRole("button", { name: "再抽一张" }).click();

@@ -409,12 +409,9 @@
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .draw-result {
+  .draw-result[data-animate] {
     animation: draw-turn-card 280ms cubic-bezier(0.16, 0.76, 0.24, 1) both;
   }
-}
-:root[data-motion-input="keyboard"] .draw-result {
-  animation: none;
 }
 @media (max-width: 760px) {
   .shop-draw {

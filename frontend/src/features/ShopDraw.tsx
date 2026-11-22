@@ -31,6 +31,7 @@ const cards = [
   { position: "中间", art: "jiaozi" },
   { position: "右侧", art: "yangzhi" },
 ] as const;
+const flipDuration = 570;
 type Filters = {
   kind: DiscoveryKind;
   scene: RecommendScene;
@@ -180,6 +181,7 @@ function DrawCounter({
   const active = useRef<AbortController | null>(null);
   const deck = useRef<HTMLDivElement>(null);
   const [pickedIndex, setPickedIndex] = useState(1);
+  const [animateReveal, setAnimateReveal] = useState(false);
   const motion = useRef<Animation | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const focusResult = useRef(false);
@@ -206,9 +208,13 @@ function DrawCounter({
     setMessage("");
     setShop(undefined);
     cache.removeQueries({ queryKey: ["shop-draw", scope], exact: true });
+    let revealTimer: number | undefined;
     try {
       const card = deck.current?.querySelectorAll("button")[index];
+      let flip: Promise<void> | undefined;
+      setAnimateReveal(false);
       if (card?.animate && !instantMotion()) {
+        setAnimateReveal(true);
         motion.current = trackMotion(
           card.animate(
             [
@@ -219,16 +225,25 @@ function DrawCounter({
               },
               { transform: "perspective(800px) rotateY(78deg) scale(1.04)" },
             ],
-            { duration: 570, easing: "ease-in-out", fill: "forwards" },
+            { duration: flipDuration, easing: "ease-in-out", fill: "forwards" },
           ),
         );
+        // A background tab can suspend its animation timeline after the request returns.
+        const finished = motion.current.finished;
+        flip = new Promise<void>((resolve) => {
+          revealTimer = window.setTimeout(resolve, flipDuration + 80);
+          void finished.then(
+            () => resolve(),
+            () => resolve(),
+          );
+        });
       }
       const [result] = await Promise.all([
         api.pickShop(
           { ...filters, gcjLng: lng, gcjLat: lat },
           controller.signal,
         ),
-        motion.current?.finished.catch(() => {}),
+        flip,
       ]);
       if (controller.signal.aborted) return;
       if (result.restaurant === null) {
@@ -244,6 +259,7 @@ function DrawCounter({
     } catch (error) {
       if (!controller.signal.aborted) setMessage(errorMessage(error));
     } finally {
+      window.clearTimeout(revealTimer);
       motion.current?.cancel();
       motion.current = null;
       if (!controller.signal.aborted) setDrawing(false);
@@ -321,7 +337,10 @@ function DrawCounter({
         >
           {drawing && <span className="sr-only">正在翻牌</span>}
           {shop && (
-            <div className="draw-result">
+            <div
+              className="draw-result"
+              data-animate={animateReveal || undefined}
+            >
               <div className="draw-result-head">
                 <span>抽到了</span>
                 <Sparkle size={18} aria-hidden="true" />
