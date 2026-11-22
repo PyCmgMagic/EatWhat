@@ -259,6 +259,8 @@ async function validateSettingsPages(page) {
       "Invalid password form submitted",
     );
     await p.goto(base + "/settings/notifications");
+    await p.getByRole("heading", { name: "通知偏好暂未开放", exact: true }).waitFor();
+    await p.getByRole("link", { name: "返回设置", exact: true }).click();
     await p.waitForURL("**#/settings");
     assert(
       !writes.some((x) => x.path.startsWith("/api/push/")),
@@ -309,7 +311,7 @@ async function validateSettingsPages(page) {
       "Verification return target lost",
     );
     checks.push(
-      "Mocked interactions: visibility/personalization/preferences save, retired notification route, password validation, cancellation gate, verification return",
+      "Mocked interactions: visibility/personalization/preferences save, notification placeholder and return, password validation, cancellation gate, verification return",
     );
     await p.setViewportSize({ width: 1280, height: 900 });
     await p.goto(base + "/settings/privacy");
