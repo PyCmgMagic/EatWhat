@@ -21,7 +21,7 @@ import type {
 } from "../api/models";
 
 import { demoDishes } from "../mobile/catalog";
-import { stageCode } from "../api/food-display";
+import { mealOptions, stageCode } from "../api/food-display";
 import { wgsToGcj } from "../api/models";
 import { parseHubImport } from "../api/sync-management";
 import { demoSync, seedSync, type DemoSync } from "./sync";
@@ -394,7 +394,7 @@ export const demoTransport: Transport = async (path, options) => {
     f.restaurantAddress ??= r?.address;
     f.restaurantGcjLng ??= r?.gcjLng;
     f.restaurantGcjLat ??= r?.gcjLat;
-    f.mealTimes ??= ["breakfast", "lunch", "dinner", "night"];
+    f.mealTimes ??= mealOptions.map((meal) => meal.id);
     f.pictureKeys = f.pictureUrl?.map((url, index) => {
       const stored = f.pictureKeys?.[index];
       return stored?.startsWith("foods/") ? stored : url.startsWith("foods/") ? url : `foods/demo/${f.id}-${index}`;
@@ -430,9 +430,12 @@ export const demoTransport: Transport = async (path, options) => {
       "/user/activity",
       "/user/growth",
       "/user/growth/ledger",
+      "/user/titles",
       "/admin/engagement/stats",
       "/admin/engagement/stats/range",
-    ].includes(path)
+    ].includes(path) ||
+    (method === "DELETE" && path === "/user/titles/equipped") ||
+    (method === "PUT" && path.startsWith("/user/titles/equipped/"))
   ) {
     if (
       path.startsWith("/admin/") &&
@@ -733,6 +736,7 @@ export const demoTransport: Transport = async (path, options) => {
       ...s.user,
       level: demoGrowthProgress((s.growth ??= { entries: [] })).level,
       totalExperience: demoGrowthProgress(s.growth).totalExperience,
+      title: demoGrowthProgress(s.growth).title,
       hasPassword: s.user.hasPassword ?? true,
       role: persona === "admin" ? "admin" : "user",
       verified: persona !== "unverified",
@@ -1021,7 +1025,7 @@ export const demoTransport: Transport = async (path, options) => {
     const items = filterFoods(s.foods, q)
       .filter((f) => !dismissed.has(f.restaurantId ?? 0))
       .filter((f) => !s.blocked!.includes(f.accountId ?? 0))
-      .filter((f) => !q.mealTime || f.mealTimes?.includes(q.mealTime as any))
+      .filter((f) => !q.mealTime || f.mealTimes?.some((slot) => slot === q.mealTime))
       .slice(0, Number(q.size ?? q.limit ?? 8));
     result = items;
   } else if (/^\/foods\/by-user\/\d+$/.test(path))
@@ -1264,6 +1268,10 @@ export const demoTransport: Transport = async (path, options) => {
         Number(q.userId) === s.user.id
           ? demoGrowthProgress((s.growth ??= { entries: [] })).level
           : 3,
+      title:
+        Number(q.userId) === s.user.id && s.growth
+          ? demoGrowthProgress(s.growth).title
+          : null,
       fansCount: demoPeople(s, Number(q.userId), "followers").length,
       followingsCount: demoPeople(s, Number(q.userId), "followings").length,
       earnedLikes:

@@ -10,16 +10,18 @@ describe("meal slots", () => {
     expect(mealSlotAt(beijing("05:00"))).toBe("breakfast");
     expect(mealSlotAt(beijing("09:59"))).toBe("breakfast");
     expect(mealSlotAt(beijing("10:00"))).toBe("lunch");
-    expect(mealSlotAt(beijing("14:59"))).toBe("lunch");
-    expect(mealSlotAt(beijing("15:00"))).toBe("dinner");
+    expect(mealSlotAt(beijing("13:59"))).toBe("lunch");
+    expect(mealSlotAt(beijing("14:00"))).toBe("afternoon_tea");
+    expect(mealSlotAt(beijing("16:59"))).toBe("afternoon_tea");
+    expect(mealSlotAt(beijing("17:00"))).toBe("dinner");
     expect(mealSlotAt(beijing("20:30"))).toBe("dinner");
     expect(mealSlotAt(beijing("21:00"))).toBe("night");
     expect(mealSlotAt(beijing("00:30"))).toBe("night");
   });
 
   it("ends a slot at its next boundary, across midnight for night", () => {
-    expect(mealSlotEnd(beijing("15:20"))).toBe(beijing("21:00"));
-    expect(mealSlotEnd(beijing("10:00"))).toBe(beijing("15:00"));
+    expect(mealSlotEnd(beijing("15:20"))).toBe(beijing("17:00"));
+    expect(mealSlotEnd(beijing("10:00"))).toBe(beijing("14:00"));
     expect(mealSlotEnd(beijing("22:10"))).toBe(
       Date.parse("2026-11-15T05:00:00+08:00"),
     );

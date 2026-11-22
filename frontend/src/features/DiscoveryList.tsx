@@ -37,7 +37,9 @@ export function DiscoveryList({
   const { kind, setKind, feed, shops, dishes } = discovery;
   const mobile = useMobile();
   const location = useLocation();
-  const drawParams = new URLSearchParams({ kind, scene: mobile.scene });
+  const tea = (discovery.pickMeal ?? mobile.mealTime) === "afternoon_tea" || (!discovery.pickMeal && mobile.meal === "下午茶");
+  const drawParams = new URLSearchParams({ scene: mobile.scene });
+  if (kind !== "food") drawParams.set("kind", kind);
   if (discovery.pickMeal) drawParams.set("mealTime", discovery.pickMeal);
   const id = useId();
   const hasResults = (shops ?? dishes).length > 0;
@@ -48,7 +50,7 @@ export function DiscoveryList({
         <MarkerTabs
           items={discoveryKinds.map(({ id, name }) => ({
             id,
-            name,
+            name: tea && id === "food" ? "下午茶" : name,
             icon: <ShopKindIcon kind={id} />,
           }))}
           value={kind}

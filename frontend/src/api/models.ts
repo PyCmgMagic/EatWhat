@@ -1,5 +1,6 @@
 import type { components } from "./schema";
 import type { V2Schema } from "./backend-v2";
+import type { MealSlot } from "./food-display";
 import { demoEnabled } from "../app/mode";
 // Readers tolerate nullable historical data; write DTOs follow the current contract.
 type ReadModel<T> = T extends (infer U)[]
@@ -14,6 +15,7 @@ export type Schema = {
 };
 export type Food = Omit<
   Schema["FoodVOResponse"],
+  | "mealTimes"
   | "restaurantAddress"
   | "restaurantGcjLng"
   | "restaurantGcjLat"
@@ -29,6 +31,7 @@ export type Food = Omit<
     | "hubId"
     | "hubName"
   > & {
+    mealTimes?: MealSlot[] | null;
     /** v2 dish details enrich the author with their public profile avatar and title. */
     user?:
       | (NonNullable<Schema["FoodVOResponse"]["user"]> & {

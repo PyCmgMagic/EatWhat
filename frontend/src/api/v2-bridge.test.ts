@@ -432,7 +432,7 @@ describe("v2 bridge", () => {
       query: {
         size: 8,
         campusId: 1,
-        mealTime: "dinner",
+        mealTime: "afternoon_tea",
         scene: "delivery",
         category: "dessert",
       },
@@ -440,6 +440,7 @@ describe("v2 bridge", () => {
     expect(sent.map((s) => s.path)).toEqual(["/foods/list"]);
     expect(sent[0].query).toMatchObject({
       category: "饮品甜品",
+      mealTime: "afternoon_tea",
       scene: "delivery",
     });
     await request<any[]>("/foods/recommend", {

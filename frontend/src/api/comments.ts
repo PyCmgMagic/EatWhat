@@ -26,7 +26,7 @@ export type CommentReaction = {
   selected: boolean;
 };
 
-/** 后端 v2 返回的作者主页信息；历史数据可能没有作者。 */
+/** authorTitle：作者当前佩戴的称号（后端 v2），没有时为 null。 */
 export type CommentView = Schema["CommentViewResponse"] & {
   rootId?: number | null;
   authorId?: number | null;

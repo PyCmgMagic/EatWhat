@@ -45,7 +45,15 @@ export interface ExperienceRule {
   dailyCap: number;
 }
 
-/** v2 在等级、用户信息、评论作者上带 title（满级称号"老吃家"），旧接口没有这个字段。 */
+export interface UserTitleEntry {
+  code: string;
+  name: string;
+  requiredExperience: number;
+  acquiredAt: number | null;
+  equipped: boolean;
+}
+
+/** v2 在等级、用户信息、评论作者上带 title（当前佩戴的称号），旧接口没有这个字段。 */
 export function userTitle(value: unknown): string | null {
   const t = (value as { title?: unknown } | null | undefined)?.title;
   return typeof t === "string" && t.trim() ? t.trim() : null;

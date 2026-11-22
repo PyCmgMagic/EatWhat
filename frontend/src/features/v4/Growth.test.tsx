@@ -32,6 +32,7 @@ beforeEach(async () => {
         return Promise.resolve(
           ok({ id: 11, displayName: "食友甲", verified: true, banned: false }),
         );
+      if (path.endsWith("/user/titles")) return Promise.resolve(ok([]));
       if (path.endsWith("/user/level/logs"))
         return Promise.resolve(
           ok({

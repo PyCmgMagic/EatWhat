@@ -1,3 +1,4 @@
+import type { UserTitleEntry } from "./growth";
 import type { operations } from "./backend-v2-schema";
 import { boundedText, normalizedTag, restaurantAddressLimit } from "./content-rules";
 import { putImage } from "./storage-upload";
@@ -175,6 +176,13 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         background: true,
       }),
     growth: () => data<Schema["GrowthProgressResponse"]>("/user/growth"),
+    myTitles: () => data<UserTitleEntry[]>("/user/titles"),
+    setEquippedTitle: (code: string | null) =>
+      code === null
+        ? request<void>("/user/titles/equipped", { method: "DELETE" })
+        : request<void>(`/user/titles/equipped/${encodeURIComponent(code)}`, {
+            method: "PUT",
+          }),
     growthLedger: (page = 1, pageSize = 20) => {
       if (
         !Number.isInteger(page) ||

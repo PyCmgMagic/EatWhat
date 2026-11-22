@@ -868,5 +868,20 @@ export const endpoints = {
     "method": "DELETE",
     "path": "/auth/sessions/{sessionId}",
     "access": "login"
+  },
+  "putUserTitlesEquippedByCode": {
+    "method": "PUT",
+    "path": "/user/titles/equipped/{code}",
+    "access": "login"
+  },
+  "getUserTitles": {
+    "method": "GET",
+    "path": "/user/titles",
+    "access": "login"
+  },
+  "deleteUserTitlesEquipped": {
+    "method": "DELETE",
+    "path": "/user/titles/equipped",
+    "access": "login"
   }
 } as const;

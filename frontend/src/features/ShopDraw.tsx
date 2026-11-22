@@ -20,7 +20,7 @@ import { mediaUrl } from "../api/models";
 import { FoodCover } from "../components/FoodCover";
 import { useFoodPhoto } from "./media";
 import type { V2Schema } from "../api/backend-v2";
-import { mealOptions, type MealSlot } from "../api/food-display";
+import { mealOptions, mealSlotAt, type MealSlot } from "../api/food-display";
 import { recommendScenes, type RecommendScene } from "../api/v2-vocab";
 import { useMobile } from "../mobile/ui";
 import { instantMotion, trackMotion } from "../motion/runtime";
@@ -33,7 +33,7 @@ const cards = [
 ] as const;
 const flipDuration = 570;
 type Filters = {
-  kind: DiscoveryKind;
+  kind?: DiscoveryKind;
   scene: RecommendScene;
   mealTime?: MealSlot;
 };
@@ -90,16 +90,18 @@ export default function ShopDraw() {
       changedField.current = null;
     }
   }, [location.search]);
+  const mealTime = params.has("mealTime")
+    ? mealOptions.find((item) => item.id === params.get("mealTime"))?.id
+    : mobile.mealTime;
+  const tea = (mealTime ?? mealSlotAt(Date.now())) === "afternoon_tea";
   const filters: Filters = {
     kind:
       discoveryKinds.find((item) => item.id === params.get("kind"))?.id ??
-      "food",
+      (tea ? undefined : "food"),
     scene:
       recommendScenes.find((item) => item.id === params.get("scene"))?.id ??
       mobile.scene,
-    mealTime: params.has("mealTime")
-      ? mealOptions.find((item) => item.id === params.get("mealTime"))?.id
-      : mobile.mealTime,
+    mealTime,
   };
   const origin = location.state?.discoveryFrom;
   const back =
@@ -290,8 +292,10 @@ function DrawCounter({
           <DrawField
             name="kind"
             label="分类"
-            value={filters.kind}
-            options={discoveryKinds}
+            value={filters.kind ?? "auto"}
+            options={(filters.mealTime ?? mealSlotAt(Date.now())) === "afternoon_tea"
+              ? [{ id: "auto", name: "美食和饮品" }, ...discoveryKinds]
+              : discoveryKinds}
             onChange={(v) => changeFilter("kind", v)}
           />
         </fieldset>

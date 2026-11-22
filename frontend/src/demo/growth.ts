@@ -7,7 +7,11 @@ import type { Query } from "../api/client";
 import { ApiError } from "../api/client";
 import type { Schema } from "../api/models";
 
-export type DemoGrowth = { entries: Schema["ExperienceEntryResponse"][] };
+export type DemoGrowth = {
+  entries: Schema["ExperienceEntryResponse"][];
+  titleAcquiredAt?: number;
+  titleEquipped?: boolean;
+};
 /** 后端 v2 /user/level 的 rules，演示模式与真实接口保持同一套经验来源。 */
 const DEMO_RULES: ExperienceRule[] = [
   { source: "daily_use", name: "每日使用", amount: 5, dailyCap: 1 },
@@ -22,9 +26,9 @@ const DEMO_RULES: ExperienceRule[] = [
 ];
 function progress(
   state: DemoGrowth,
-): Schema["GrowthProgressResponse"] & { rules: ExperienceRule[] } {
+): Schema["GrowthProgressResponse"] & { rules: ExperienceRule[]; title: string | null } {
   const total = state.entries.reduce((sum, e) => sum + (e.experience ?? 0), 0);
-  const levels = [0, 30, 100, 250, 500, 1000, 2000, 4000, 8000, 16000];
+  const levels = [0, 30, 100, 250, 500, 1000, 2000, 3500, 6000, 10000];
   const index = levels.filter((start) => total >= start).length - 1,
     next = levels[index + 1] ?? null;
   return {
@@ -38,6 +42,7 @@ function progress(
     levelRuleVersion: "growth-levels-v1",
     dailyExperience: 5,
     rules: DEMO_RULES,
+    title: state.titleEquipped ? "老吃家" : null,
   };
 }
 export function demoGrowth(
@@ -99,6 +104,33 @@ export function demoGrowth(
       ruleVersion: "daily-use-v1",
       createdAt: now.toISOString(),
     });
+  if (!state.titleAcquiredAt && progress(state).maxLevel) {
+    state.titleAcquiredAt = now.getTime();
+    state.titleEquipped = true;
+  }
+  if (path === "/user/titles")
+    return [
+      {
+        code: "veteran_foodie",
+        name: "老吃家",
+        requiredExperience: 10000,
+        acquiredAt: state.titleAcquiredAt ?? null,
+        equipped: state.titleEquipped ?? false,
+      },
+    ];
+  if (path === "/user/titles/equipped") {
+    state.titleEquipped = false;
+    return null;
+  }
+  if (path.startsWith("/user/titles/equipped/")) {
+    if (
+      !state.titleAcquiredAt ||
+      path !== "/user/titles/equipped/veteran_foodie"
+    )
+      throw new ApiError("尚未获得该称号", 10001);
+    state.titleEquipped = true;
+    return null;
+  }
   if (path === "/user/activity")
     return {
       businessDate: today,

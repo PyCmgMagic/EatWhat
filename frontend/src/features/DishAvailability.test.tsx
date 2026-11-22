@@ -47,7 +47,11 @@ it("follows the shop until a meal time is picked, and back when cleared", async 
 
   await render({ mealTimes: ["dinner"], deliveryEnabled: false }, onChange);
   expect(box("跟随店铺").checked).toBe(false);
-  // Kept in the backend's order whatever the click order.
+  await act(async () => box("下午茶").click());
+  expect(onChange).toHaveBeenLastCalledWith({
+    mealTimes: ["afternoon_tea", "dinner"],
+    deliveryEnabled: false,
+  });
   await act(async () => box("早饭").click());
   expect(onChange).toHaveBeenLastCalledWith({
     mealTimes: ["breakfast", "dinner"],
@@ -74,7 +78,7 @@ it("describes when a dish is served and whether it delivers", () => {
   ).toBe("早饭供应 · 可外卖");
   expect(
     availabilityText({
-      effectiveMealTimes: ["breakfast", "lunch", "dinner", "night"],
+      effectiveMealTimes: ["breakfast", "lunch", "afternoon_tea", "dinner", "night"],
       deliveryEnabled: false,
     }),
   ).toBe("仅堂食");

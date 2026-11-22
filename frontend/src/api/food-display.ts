@@ -32,6 +32,7 @@ export function stageCode(hex: string): Stage {
 export const mealOptions = [
   { id: "breakfast", name: "早饭" },
   { id: "lunch", name: "午饭" },
+  { id: "afternoon_tea", name: "下午茶" },
   { id: "dinner", name: "晚饭" },
   { id: "night", name: "夜宵" },
 ] as const;
@@ -51,20 +52,19 @@ export function mealName(code: string | undefined) {
  */
 export const mealHours: Record<MealSlot, string> = {
   breakfast: "05:00–10:00",
-  lunch: "10:00–15:00",
-  dinner: "15:00–21:00",
+  lunch: "10:00–14:00",
+  afternoon_tea: "14:00–17:00",
+  dinner: "17:00–21:00",
   night: "21:00–05:00",
 };
 const HOUR = 3_600_000;
 export function mealSlotAt(at: number): MealSlot {
   const h = new Date(at + 8 * HOUR).getUTCHours();
-  return h >= 5 && h < 10
-    ? "breakfast"
-    : h >= 10 && h < 15
-      ? "lunch"
-      : h >= 15 && h < 21
-        ? "dinner"
-        : "night";
+  if (h < 5 || h >= 21) return "night";
+  if (h < 10) return "breakfast";
+  if (h < 14) return "lunch";
+  if (h < 17) return "afternoon_tea";
+  return "dinner";
 }
 /** When the Beijing meal slot containing `at` ends. */
 export function mealSlotEnd(at: number) {

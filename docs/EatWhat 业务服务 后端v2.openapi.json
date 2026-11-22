@@ -4571,15 +4571,18 @@
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "string"
-          }
+            "type" : "string",
+            "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
+          },
+          "description" : "afternoon_tea 表示下午茶，北京时间 14:00 至 17:00。"
         }, {
           "name" : "kind",
           "in" : "query",
           "required" : false,
           "schema" : {
             "type" : "string"
-          }
+          },
+          "description" : "下午茶默认推荐供应下午茶的美食和甜点饮品店。其他饭点默认只推荐美食。"
         }, {
           "name" : "page",
           "in" : "query",
@@ -4663,15 +4666,18 @@
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "string"
-          }
+            "type" : "string",
+            "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
+          },
+          "description" : "afternoon_tea 表示下午茶，北京时间 14:00 至 17:00。"
         }, {
           "name" : "kind",
           "in" : "query",
           "required" : false,
           "schema" : {
             "type" : "string"
-          }
+          },
+          "description" : "下午茶默认推荐供应下午茶的美食和甜点饮品店。其他饭点默认只推荐美食。"
         } ],
         "responses" : {
           "200" : {
@@ -5174,8 +5180,10 @@
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "string"
-          }
+            "type" : "string",
+            "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
+          },
+          "description" : "afternoon_tea 表示下午茶，北京时间 14:00 至 17:00。"
         }, {
           "name" : "page",
           "in" : "query",
@@ -5262,8 +5270,10 @@
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "string"
-          }
+            "type" : "string",
+            "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
+          },
+          "description" : "afternoon_tea 表示下午茶，北京时间 14:00 至 17:00。"
         }, {
           "name" : "page",
           "in" : "query",
@@ -6415,6 +6425,82 @@
           "satoken" : [ ]
         } ]
       }
+    },
+    "/user/titles/equipped/{code}" : {
+      "put" : {
+        "tags" : [ "用户 · User" ],
+        "summary" : "【需登录】佩戴已获得的称号",
+        "operationId" : "equipTitle",
+        "parameters" : [ {
+          "name" : "code",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ],
+        "description" : "切换到本人已获得的称号。同时最多佩戴一个，未获得或不存在的称号返回业务码 10001。"
+      }
+    },
+    "/user/titles" : {
+      "get" : {
+        "tags" : [ "用户 · User" ],
+        "summary" : "【需登录】获取我的称号和解锁条件",
+        "operationId" : "myTitles",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultListUserTitle"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ],
+        "description" : "返回所有称号及本人获得、佩戴状态。首次达到经验门槛时永久获得，之后扣回经验仍保留。首次获得自动佩戴。"
+      }
+    },
+    "/user/titles/equipped" : {
+      "delete" : {
+        "tags" : [ "用户 · User" ],
+        "summary" : "【需登录】取消佩戴称号",
+        "operationId" : "clearTitle",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultVoid"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
     }
   },
   "components" : {
@@ -6707,7 +6793,8 @@
           "mealTimes" : {
             "type" : "array",
             "items" : {
-              "type" : "string"
+              "type" : "string",
+              "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
             }
           },
           "priceBand" : {
@@ -6881,7 +6968,8 @@
           "mealTimes" : {
             "type" : "array",
             "items" : {
-              "type" : "string"
+              "type" : "string",
+              "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
             }
           },
           "deliveryEnabled" : {
@@ -7660,7 +7748,8 @@
           "mealTimes" : {
             "type" : "array",
             "items" : {
-              "type" : "string"
+              "type" : "string",
+              "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
             }
           },
           "priceBand" : {
@@ -7840,7 +7929,8 @@
           "mealTimes" : {
             "type" : "array",
             "items" : {
-              "type" : "string"
+              "type" : "string",
+              "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
             }
           },
           "deliveryEnabled" : {
@@ -9501,7 +9591,8 @@
           "mealTimes" : {
             "type" : "array",
             "items" : {
-              "type" : "string"
+              "type" : "string",
+              "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
             }
           },
           "priceBand" : {
@@ -9831,7 +9922,8 @@
           "mealTimes" : {
             "type" : "array",
             "items" : {
-              "type" : "string"
+              "type" : "string",
+              "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
             }
           },
           "priceBand" : {
@@ -9889,7 +9981,8 @@
         "type" : "object",
         "properties" : {
           "mealTime" : {
-            "type" : "string"
+            "type" : "string",
+            "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
           },
           "currentPage" : {
             "type" : "integer",
@@ -10009,7 +10102,8 @@
         "type" : "object",
         "properties" : {
           "mealTime" : {
-            "type" : "string"
+            "type" : "string",
+            "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
           },
           "restaurant" : {
             "$ref" : "#/components/schemas/Card"
@@ -10533,7 +10627,8 @@
           "mealTimes" : {
             "type" : "array",
             "items" : {
-              "type" : "string"
+              "type" : "string",
+              "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
             }
           }
         }
@@ -10645,13 +10740,15 @@
           "mealTimes" : {
             "type" : "array",
             "items" : {
-              "type" : "string"
+              "type" : "string",
+              "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
             }
           },
           "effectiveMealTimes" : {
             "type" : "array",
             "items" : {
-              "type" : "string"
+              "type" : "string",
+              "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
             }
           },
           "deliveryEnabled" : {
@@ -10803,13 +10900,15 @@
           "mealTimes" : {
             "type" : "array",
             "items" : {
-              "type" : "string"
+              "type" : "string",
+              "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
             }
           },
           "effectiveMealTimes" : {
             "type" : "array",
             "items" : {
-              "type" : "string"
+              "type" : "string",
+              "enum" : [ "breakfast", "lunch", "dinner", "night", "afternoon_tea" ]
             }
           },
           "deliveryEnabled" : {
@@ -11986,6 +12085,51 @@
         "properties" : {
           "reason" : {
             "type" : "string"
+          }
+        }
+      },
+      "ResultListUserTitle" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/UserTitle"
+            }
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "UserTitle" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "requiredExperience" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "acquiredAt" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "获得时间（Unix 毫秒）。未获得时为 null，旧账号补发时记录补发时间。"
+          },
+          "equipped" : {
+            "type" : "boolean"
           }
         }
       }

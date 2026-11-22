@@ -15,13 +15,13 @@ export const dishAvailabilityOf = (food: V2Food): DishAvailability => ({
   mealTimes: food.mealTimes ?? [],
   deliveryEnabled: !!food.deliveryEnabled,
 });
-/** Backend order: breakfast, lunch, dinner, night. */
+/** Display meal times in chronological order. */
 const ordered = (ids: string[]) =>
   mealTimeNames.filter((m) => ids.includes(m.id)).map((m) => m.id);
 export const sameMealTimes = (a: string[], b: string[]) =>
   ordered(a).join() === ordered(b).join();
 
-/** "早饭供应 · 可外卖"; all four meal times are not worth a mention. */
+/** "早饭供应 · 可外卖"; all meal times are not worth a mention. */
 export function availabilityText(food: V2Food) {
   const meals = ordered(food.effectiveMealTimes ?? []);
   const when =

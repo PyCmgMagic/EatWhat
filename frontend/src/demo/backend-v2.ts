@@ -1,3 +1,4 @@
+import { mealOptions, mealSlotAt } from "../api/food-display";
 import { endpoints } from "../api/backend-v2-endpoints";
 import type { Operation, V2Schema } from "../api/backend-v2";
 import type { Envelope, RequestOptions } from "../api/client";
@@ -177,7 +178,7 @@ function seed(): Data {
     hubName: "软件园商圈",
     deliveryEnabled: index !== 2,
     kind: "food",
-    mealTimes: ["breakfast", "lunch", "dinner", "night"],
+    mealTimes: mealOptions.map((meal) => meal.id),
     priceBand: "FROM_15_TO_30",
     dineIn: { rate: 0.9, count: 8 },
     delivery: { rate: 0.8, count: 5 },
@@ -504,6 +505,12 @@ export function demoTransport(
           delivery: state.ratings[uid + ":" + id + ":delivery"] ?? null,
         }
       : null;
+  const recommendationMeal =
+    name === "recommend" || name === "pick"
+      ? String(q.mealTime || mealSlotAt(Date.now()))
+      : undefined;
+  const effectiveMeals = (food: DemoFood, shop?: Shop): readonly string[] =>
+    food.mealTimes?.length ? food.mealTimes : (shop?.mealTimes ?? []);
   const withViewer = (shop: Shop) => {
     const gcjLng = Number(q.gcjLng),
       gcjLat = Number(q.gcjLat);
@@ -526,7 +533,13 @@ export function demoTransport(
       // Featured dishes: best smoothed score first, signature dishes win ties,
       // then likes (the backend's rule for recommendation cards).
       signatureFoods: state.foods
-        .filter((food) => food.restaurantId === shop.id)
+        .filter(
+          (food) =>
+            food.restaurantId === shop.id &&
+            (!recommendationMeal ||
+              (effectiveMeals(food, shop).includes(recommendationMeal) &&
+                (q.scene !== "delivery" || food.deliveryEnabled))),
+        )
         .sort(
           (a, b) =>
             smoothed(b.id) - smoothed(a.id) ||
@@ -693,10 +706,10 @@ export function demoTransport(
     isLiked: uid ? idList(state.foodLikes).includes(food.id) : null,
     isFavorite: uid ? idList(state.foodFavorites).includes(food.id) : null,
     mealTimes: food.mealTimes ?? [],
-    effectiveMealTimes: food.mealTimes?.length
-      ? food.mealTimes
-      : (state.shops.find((shop) => shop.id === food.restaurantId)?.mealTimes ??
-        []),
+    effectiveMealTimes: effectiveMeals(
+      food,
+      state.shops.find((shop) => shop.id === food.restaurantId),
+    ),
     deliveryEnabled: food.deliveryEnabled ?? false,
     rating: foodRating(food.id),
     myRating: uid ? (state.foodRatings[food.id]?.[user] ?? null) : null,
@@ -1035,28 +1048,16 @@ export function demoTransport(
       return ok(paged(candidateList()));
     case "recommend":
     case "pick": {
-      const hour = Number(
-        new Intl.DateTimeFormat("en-GB", {
-          timeZone: "Asia/Shanghai",
-          hour: "2-digit",
-          hourCycle: "h23",
-        }).format(new Date()),
-      );
-      const mealTime =
-        q.mealTime ??
-        (hour >= 5 && hour < 10
-          ? "breakfast"
-          : hour >= 10 && hour < 15
-            ? "lunch"
-            : hour >= 15 && hour < 21
-              ? "dinner"
-              : "night");
+      const mealTime = recommendationMeal!;
+      const kind =
+        q.kind || (mealTime === "afternoon_tea" ? undefined : "food");
       const pool = candidateList().filter(
         (shop) =>
           !shop.permanentlyClosed &&
-          shop.kind === (q.kind ?? "food") &&
-          (!["breakfast", "night"].includes(String(mealTime)) ||
-            shop.mealTimes?.includes(String(mealTime))) &&
+          (kind ? shop.kind === kind : shop.kind === "food" || shop.kind === "drink") &&
+          (q.scene !== "delivery" || shop.signatureFoods.length > 0) &&
+          (!["breakfast", "afternoon_tea", "night"].includes(mealTime) ||
+            shop.mealTimes?.some((slot) => slot === mealTime)) &&
           !(state.dismissed[user + ":" + shop.id] > Date.now()) &&
           !shop.tags?.some((tag) =>
             state.preferences[user]?.dislikedTags?.includes(tag),
@@ -1210,20 +1211,30 @@ export function demoTransport(
         maxPictures: 6,
         maxTags: 3,
         maxSignatures: 3,
+        mealTimes: mealOptions.map((meal) => meal.id),
       });
-    case "getFoodsList":
-    case "getAdminFoodsList": {
-      let foods = state.foods.filter(
-        (food) =>
-          (!q.restaurantId || food.restaurantId === Number(q.restaurantId)) &&
-          (!q.keyword || matches(food.name)) &&
-          (!q.category || food.category === q.category) &&
-          (!q.signatureOnly || food.signature),
-      );
+    case "getAdminFoodsList":
+    case "getFoodsList": {
+      const meal =
+        q.mealTime ||
+        (name === "getFoodsList" && !q.restaurantId
+          ? mealSlotAt(Date.now())
+          : undefined);
+      let foods = state.foods
+        .map(withFoodViewer)
+        .filter(
+          (food) =>
+            (!q.restaurantId || food.restaurantId === Number(q.restaurantId)) &&
+            (!q.keyword || matches(food.name)) &&
+            (!q.category || food.category === q.category) &&
+            (!meal || food.effectiveMealTimes.includes(String(meal))) &&
+            (q.scene !== "delivery" || food.deliveryEnabled) &&
+            (!q.signatureOnly || food.signature),
+        );
       if (q.sort === "POPULAR")
         foods = foods.sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0));
       return ok(paged(foods.map((food) => ({
-        ...withFoodViewer(food),
+        ...food,
         ...(name === "getAdminFoodsList" ? { uploaderName: state.people.find((p) => p.id === food.accountId)?.displayName ?? null } : {}),
       }))));
     }
@@ -1298,7 +1309,7 @@ export function demoTransport(
     }
     case "postFoodsUpload":
     case "putFoodsEditById": {
-      const dishMeals = ["breakfast", "lunch", "dinner", "night"];
+      const dishMeals = mealOptions.map((meal) => meal.id);
       const previous = state.foods.find((item) => item.id === id);
       const nextId =
         previous?.id ?? Math.max(0, ...state.foods.map((item) => item.id)) + 1;
@@ -1353,7 +1364,9 @@ export function demoTransport(
         createdAt: previous?.createdAt ?? Date.now(),
         updatedAt: Date.now(),
       };
-      if (list("mealTimes").some((meal) => !dishMeals.includes(meal)))
+      if (
+        list("mealTimes").some((meal) => !dishMeals.some((id) => id === meal))
+      )
         return fail(10001, "mealTimes 取值无效");
       state.foods = [
         ...state.foods.filter((item) => item.id !== nextId),
@@ -1698,6 +1711,12 @@ export function demoTransport(
       if (name === "putUserRecommendationSettings")
         demoToggles.personalized = payload.personalized !== false;
       return ok({ personalized: demoToggles.personalized });
+    case "getUserTitles":
+      return ok([{ code: "veteran_foodie", name: "老吃家", requiredExperience: 10000, acquiredAt: null, equipped: false }]);
+    case "deleteUserTitlesEquipped":
+      return ok();
+    case "putUserTitlesEquippedByCode":
+      return fail(10001, "尚未获得该称号");
     case "getUserLevel":
       return ok({
         level: 3,

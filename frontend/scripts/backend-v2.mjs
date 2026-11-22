@@ -165,6 +165,7 @@ export async function readBackendV2() {
     Object.values(content)[0].schema = ref(schema);
   };
 
+  const mealTimes = schemas.FoodView.properties.mealTimes;
   schemas.FoodV2 = object({
     id: int64,
     restaurantId: int64,
@@ -187,8 +188,8 @@ export async function readBackendV2() {
     isFavorite: nullable(bool),
     createdAt: int64,
     updatedAt: int64,
-    mealTimes: array(string),
-    effectiveMealTimes: array(string),
+    mealTimes,
+    effectiveMealTimes: mealTimes,
     deliveryEnabled: bool,
     rating: ref("Rating"),
     myRating: nullable(int32),
@@ -218,7 +219,7 @@ export async function readBackendV2() {
     stageColor: string,
     stageAlternates: array(string),
     coverCrop: ref("CoverCrop"),
-    mealTimes: array(string),
+    mealTimes,
     deliveryEnabled: bool,
   });
   schemas.FoodOptions = object({
@@ -228,7 +229,7 @@ export async function readBackendV2() {
     maxPictures: int32,
     maxTags: int32,
     maxSignatures: int32,
-    mealTimes: array(string),
+    mealTimes,
   });
   schemas.ResultFoodV2 = result(ref("FoodV2"));
   schemas.PageResultFoodV2 = page(ref("FoodV2"));
@@ -460,7 +461,7 @@ export async function readBackendV2() {
 }
 
 const { spec, endpoints, callbacks } = await readBackendV2();
-if (Object.keys(endpoints).length !== 171 || callbacks.length !== 8) {
+if (Object.keys(endpoints).length !== 174 || callbacks.length !== 8) {
   throw new Error(
     "Backend v2 operation count changed; review the client coverage.",
   );

@@ -41,12 +41,7 @@ export const shopCategories = [
 ];
 export const MAX_SHOP_CATEGORIES = 2;
 export const MAX_SHOP_TAGS = 3;
-export const mealTimes = [
-  { id: "breakfast", name: "早饭" },
-  { id: "lunch", name: "午饭" },
-  { id: "dinner", name: "晚饭" },
-  { id: "night", name: "夜宵" },
-];
+export { mealOptions as mealTimes } from "./food-display";
 export const priceBands = [
   { id: "UNDER_15", name: "15 元以下" },
   { id: "FROM_15_TO_30", name: "15–30 元" },

@@ -32,6 +32,9 @@ export type AccessRequirement =
 const v2Rules = [
   ["POST", "/recommend/dismiss/{id}", "login"],
   ["GET", "/foods/likes", "login"],
+  ["GET", "/user/titles", "login"],
+  ["PUT", "/user/titles/equipped/{code}", "login"],
+  ["DELETE", "/user/titles/equipped", "login"],
   ["PUT", "/foods/{id}/rating", "verified"],
   ["DELETE", "/foods/{id}/rating", "login"],
   ["PUT", "/comments/{id}/reactions/{reaction}", "verifiedOrAdmin"],

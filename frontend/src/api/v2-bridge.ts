@@ -1033,7 +1033,7 @@ const routes: [string, RegExp, Handler][] = [
       const delivery = query.scene === "delivery";
       // The default food tab and the carousel share a batch. Category requests
       // pass the shop kind to the ranking service in both scenes.
-      const includeShops = !delivery || !!query.kind;
+      const includeShops = !delivery || !!query.kind || query.page != null;
       const feed = await call("/recommend", {
         query: {
           ...omit(query, ["mealTime", "kind", "gcjLng", "gcjLat"]),

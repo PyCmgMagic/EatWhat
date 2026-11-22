@@ -2666,6 +2666,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/user/titles/equipped/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * 【需登录】佩戴已获得的称号
+         * @description 切换到本人已获得的称号。同时最多佩戴一个，未获得或不存在的称号返回业务码 10001。
+         */
+        put: operations["putUserTitlesEquippedByCode"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/titles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】获取我的称号和解锁条件
+         * @description 返回所有称号及本人获得、佩戴状态。首次达到经验门槛时永久获得，之后扣回经验仍保留。首次获得自动佩戴。
+         */
+        get: operations["getUserTitles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/titles/equipped": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 【需登录】取消佩戴称号 */
+        delete: operations["deleteUserTitlesEquipped"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2778,7 +2835,7 @@ export interface components {
             picture?: string;
             permanentlyClosed?: boolean;
             kind?: string;
-            mealTimes?: string[];
+            mealTimes?: ("breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea")[];
             priceBand?: string;
             categories?: string[];
             tags?: string[];
@@ -2839,7 +2896,7 @@ export interface components {
             stageColor?: string;
             stageAlternates?: string[];
             coverCrop?: components["schemas"]["CoverCrop"];
-            mealTimes?: string[];
+            mealTimes?: ("breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea")[];
             deliveryEnabled?: boolean;
         };
         FoodEditResult: {
@@ -3138,7 +3195,7 @@ export interface components {
             poi?: string;
             picture?: string;
             kind?: string;
-            mealTimes?: string[];
+            mealTimes?: ("breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea")[];
             priceBand?: string;
             categories?: string[];
             tags?: string[];
@@ -3199,7 +3256,7 @@ export interface components {
             stageColor?: string;
             stageAlternates?: string[];
             coverCrop?: components["schemas"]["CoverCrop"];
-            mealTimes?: string[];
+            mealTimes?: ("breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea")[];
             deliveryEnabled?: boolean;
         };
         SuggestRequest: {
@@ -3826,7 +3883,7 @@ export interface components {
             isFavorite?: boolean | null;
             deliveryEnabled?: boolean;
             kind?: string;
-            mealTimes?: string[];
+            mealTimes?: ("breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea")[];
             priceBand?: string;
             categories?: string[];
             tags?: string[];
@@ -3955,7 +4012,7 @@ export interface components {
             hubName?: string | null;
             distanceMeters?: number | null;
             kind?: string;
-            mealTimes?: string[];
+            mealTimes?: ("breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea")[];
             priceBand?: string;
             categories?: string[];
             tags?: string[];
@@ -3972,7 +4029,8 @@ export interface components {
             count?: number;
         };
         Feed: {
-            mealTime?: string;
+            /** @enum {string} */
+            mealTime?: "breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea";
             /** Format: int64 */
             currentPage?: number;
             items?: components["schemas"]["Card"][];
@@ -4015,7 +4073,8 @@ export interface components {
             timestamp?: number;
         };
         Pick: {
-            mealTime?: string;
+            /** @enum {string} */
+            mealTime?: "breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea";
             restaurant?: components["schemas"]["Card"] | null;
         };
         ResultPick: {
@@ -4225,7 +4284,7 @@ export interface components {
             maxTags?: number;
             /** Format: int32 */
             maxSignatures?: number;
-            mealTimes?: string[];
+            mealTimes?: ("breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea")[];
         };
         ResultFoodOptions: {
             /** Format: int32 */
@@ -4263,8 +4322,8 @@ export interface components {
             createdAt?: number;
             /** Format: int64 */
             updatedAt?: number;
-            mealTimes?: string[];
-            effectiveMealTimes?: string[];
+            mealTimes?: ("breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea")[];
+            effectiveMealTimes?: ("breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea")[];
             deliveryEnabled?: boolean;
             rating?: components["schemas"]["Rating"];
             myRating?: number | null;
@@ -4318,8 +4377,8 @@ export interface components {
             createdAt?: number;
             /** Format: int64 */
             updatedAt?: number;
-            mealTimes?: string[];
-            effectiveMealTimes?: string[];
+            mealTimes?: ("breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea")[];
+            effectiveMealTimes?: ("breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea")[];
             deliveryEnabled?: boolean;
             rating?: components["schemas"]["Rating"];
             /** Format: int32 */
@@ -4791,6 +4850,26 @@ export interface components {
         DeleteRequest: {
             reason?: string;
         };
+        ResultListUserTitle: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["UserTitle"][];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        UserTitle: {
+            code?: string;
+            name?: string;
+            /** Format: int64 */
+            requiredExperience?: number;
+            /**
+             * Format: int64
+             * @description 获得时间（Unix 毫秒）。未获得时为 null，旧账号补发时记录补发时间。
+             */
+            acquiredAt?: number | null;
+            equipped?: boolean;
+        };
         AdminResetPassword: {
             password: string;
         };
@@ -4836,8 +4915,8 @@ export interface components {
             createdAt?: number;
             /** Format: int64 */
             updatedAt?: number;
-            mealTimes?: string[];
-            effectiveMealTimes?: string[];
+            mealTimes?: ("breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea")[];
+            effectiveMealTimes?: ("breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea")[];
             deliveryEnabled?: boolean;
             rating?: components["schemas"]["Rating"];
             myRating?: number | null;
@@ -8044,7 +8123,9 @@ export interface operations {
                 scene?: string;
                 gcjLng?: number;
                 gcjLat?: number;
-                mealTime?: string;
+                /** @description afternoon_tea 表示下午茶，北京时间 14:00 至 17:00。 */
+                mealTime?: "breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea";
+                /** @description 下午茶默认推荐供应下午茶的美食和甜点饮品店。其他饭点默认只推荐美食。 */
                 kind?: string;
                 page?: number;
                 pageSize?: number;
@@ -8092,7 +8173,9 @@ export interface operations {
                 scene?: string;
                 gcjLng?: number;
                 gcjLat?: number;
-                mealTime?: string;
+                /** @description afternoon_tea 表示下午茶，北京时间 14:00 至 17:00。 */
+                mealTime?: "breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea";
+                /** @description 下午茶默认推荐供应下午茶的美食和甜点饮品店。其他饭点默认只推荐美食。 */
                 kind?: string;
             };
             header?: never;
@@ -8396,7 +8479,8 @@ export interface operations {
                 signatureOnly?: boolean;
                 sort?: string;
                 scene?: string;
-                mealTime?: string;
+                /** @description afternoon_tea 表示下午茶，北京时间 14:00 至 17:00。 */
+                mealTime?: "breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea";
                 page?: number;
                 pageSize?: number;
             };
@@ -8426,7 +8510,8 @@ export interface operations {
                 signatureOnly?: boolean;
                 sort?: string;
                 scene?: string;
-                mealTime?: string;
+                /** @description afternoon_tea 表示下午茶，北京时间 14:00 至 17:00。 */
+                mealTime?: "breakfast" | "lunch" | "dinner" | "night" | "afternoon_tea";
                 page?: number;
                 pageSize?: number;
             };
@@ -9209,6 +9294,68 @@ export interface operations {
             path: {
                 sessionId: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultVoid"];
+                };
+            };
+        };
+    };
+    putUserTitlesEquippedByCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultVoid"];
+                };
+            };
+        };
+    };
+    getUserTitles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultListUserTitle"];
+                };
+            };
+        };
+    };
+    deleteUserTitlesEquipped: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;

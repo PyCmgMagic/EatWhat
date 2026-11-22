@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import { ProfileWorkspaceContext } from "../../app/profile-workspace";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { errorMessage } from "../../api/client";
 import { useApp } from "../../app/state";
 import { DesignIcon as Icon } from "../../mobile/ui";
 import { DishIllustration } from "../../components/DishIllustration";
@@ -26,6 +27,21 @@ export default function Growth() {
     queryKey: ["growth", user?.id, "progress"],
     queryFn: () => api.growth(),
     enabled: !!user?.id,
+  });
+  const titles = useQuery({
+    queryKey: ["growth", user?.id, "titles"],
+    queryFn: () => api.myTitles(),
+    enabled: !!user?.id,
+  });
+  const cache = useQueryClient();
+  const equip = useMutation({
+    mutationFn: api.setEquippedTitle,
+    onSuccess: () =>
+      Promise.all(
+        [["growth", user?.id], ["me"], ["user"], ["comments"]].map((queryKey) =>
+          cache.invalidateQueries({ queryKey }),
+        ),
+      ),
   });
   const ledger = useQuery({
     queryKey: ["growth", user?.id, "ledger", page],
@@ -127,6 +143,37 @@ export default function Growth() {
               无需签到或领取，升级也不会扣除经验。
             </p>
           )}
+        </QueryView>
+      </Card>
+      <Card title="我的称号">
+        <QueryView query={titles}>
+          <ul className="growth-ledger">
+            {titles.data?.map((item) => (
+              <li key={item.code}>
+                <div>
+                  <strong>{item.name}</strong>
+                  <small>
+                    {item.acquiredAt == null
+                      ? `累计 ${item.requiredExperience.toLocaleString()} 经验后获得`
+                      : `${timeText(item.acquiredAt)} 获得`}
+                  </small>
+                </div>
+                {item.acquiredAt != null && (
+                  <button
+                    type="button"
+                    disabled={equip.isPending || user?.banned === true}
+                    aria-label={`${item.equipped ? "取消佩戴" : "佩戴"}${item.name}`}
+                    onClick={() =>
+                      equip.mutate(item.equipped ? null : item.code)
+                    }
+                  >
+                    {item.equipped ? "取消佩戴" : "佩戴"}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+          {equip.isError && <p role="alert">{errorMessage(equip.error)}</p>}
         </QueryView>
       </Card>
       <section className="v4-card growth-records">

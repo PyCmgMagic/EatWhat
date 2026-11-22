@@ -31,7 +31,7 @@ export function useHomeDiscovery(enabled = true) {
   const { api, toast } = useApp();
   const cache = useQueryClient();
   const { area, ready = true } = useArea();
-  const { mealKey, mealTime, scene, noteServedMeal, confirm } = useMobile();
+  const { meal, mealKey, mealTime, scene, noteServedMeal, confirm } = useMobile();
   const batchSize = recommendationBatchSize(useRemoteConfig().data);
   const { kind, setKind, sort, setSort } = useDiscoveryFilters();
   const [dismissed, setDismissed] = useState<number[]>([]);
@@ -61,7 +61,7 @@ export function useHomeDiscovery(enabled = true) {
           batchSize,
           {
             ...filters,
-            kind: key,
+            kind: key === "food" && (pageParam.mealTime === "afternoon_tea" || (!pageParam.mealTime && meal === "下午茶")) ? undefined : key,
             ...pageParam,
             deviceId: guestDeviceId(),
           },
