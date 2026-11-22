@@ -2,6 +2,7 @@ import { useFeedbackState } from "../components/feedback";
 import { stageSurface } from "../mobile/catalog";
 import {
   DishAvailabilityFields,
+  MobileDishOptions,
   dishAvailabilityOf,
   sameMealTimes,
 } from "./DishAvailability";
@@ -589,20 +590,14 @@ function EditForm({
                 })}
               </div>
             </fieldset>
-            <fieldset className="mobile-publish-tags">
-              <legend>招牌菜</legend>
-              <div>
-                <button
-                  type="button"
-                  aria-pressed={signature}
-                  onClick={() => updateFields({ signature: !signature })}
-                >
-                  这是这家店的招牌
-                </button>
-              </div>
-            </fieldset>
-            <DishAvailabilityFields
-              variant="chips"
+            <MobileDishOptions
+              signature={signature}
+              onSignatureChange={(signature) => updateFields({ signature })}
+              shopMeals={
+                originalServing.mealTimes.length
+                  ? undefined
+                  : (food as Food & V2Food).effectiveMealTimes
+              }
               value={serving}
               disabled={busy || uncertain}
               onChange={(serving) => updateFields({ serving })}

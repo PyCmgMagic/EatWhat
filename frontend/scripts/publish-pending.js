@@ -35,6 +35,8 @@ async function verifyPublishPending(page) {
     let uploads = 0,
       creates = 0,
       failCreate = true;
+    let submitted;
+    const note = "汤很鲜\n可以少放辣。";
     await context.addInitScript(() => {
       if (location.hostname === "127.0.0.1")
         localStorage.setItem(
@@ -57,7 +59,12 @@ async function verifyPublishPending(page) {
         return route.fulfill({ status: 200, body: "" });
       }
       if (!path.startsWith("/api/")) return route.continue();
-      const shop = { id: 7, name: "等待状态测试餐厅", address: "软件园" };
+      const shop = {
+        id: 7,
+        name: "等待状态测试餐厅",
+        address: "软件园",
+        mealTimes: ["lunch", "dinner"],
+      };
       let data = [];
       if (path === "/api/user/info")
         data = {
@@ -93,6 +100,7 @@ async function verifyPublishPending(page) {
         data = { key: "foods/pending-test.png" };
       else if (path === "/api/foods/upload") {
         creates++;
+        submitted = request.postDataJSON();
         markCreate();
         await createGate;
         if (failCreate)
@@ -121,8 +129,7 @@ async function verifyPublishPending(page) {
       if (mobile)
         await p
           .getByRole("link", {
-            name: "下一步：给等待状态测试餐厅加菜",
-            exact: true,
+            name: /下一步，填写菜品/,
           })
           .click();
       await p
@@ -137,9 +144,22 @@ async function verifyPublishPending(page) {
         buffer: await photo.body(),
       };
       if (mobile) {
+        const meals = p.getByRole("group", { name: "适合哪顿，选填" });
+        await meals.getByText("跟店里一样，午饭、晚饭", { exact: true }).waitFor();
+        await meals.getByRole("button", { name: "早饭", exact: true }).click();
+        await meals.getByRole("button", { name: "恢复跟随店铺" }).click();
+        await meals.getByText("跟店里一样，午饭、晚饭", { exact: true }).waitFor();
+        await meals.getByRole("button", { name: "晚饭", exact: true }).click();
+        await meals.getByRole("button", { name: "午饭", exact: true }).click();
+        await p.getByRole("switch", { name: "能点外卖" }).check();
+        const signature = p.getByRole("switch", { name: "招牌菜" });
+        await signature.focus();
+        await p.keyboard.press("Space");
+        assert(await signature.isChecked(), "空格键未开启招牌菜");
+        await p.getByRole("textbox", { name: "说两句，选填" }).fill(note);
         const chooser = p.waitForEvent("filechooser");
         await p
-          .getByRole("button", { name: "再加一张照片", exact: true })
+          .getByRole("button", { name: "添加菜品照片", exact: true })
           .click();
         await (await chooser).setFiles(file);
         await p.waitForURL("**#/publish/crop");
@@ -184,6 +204,14 @@ async function verifyPublishPending(page) {
         });
       releaseUpload();
       await creating;
+      if (mobile)
+        assert(
+          submitted.signature === true &&
+            submitted.deliveryEnabled === true &&
+            submitted.mealTimes.join(",") === "lunch,dinner" &&
+            submitted.description === note,
+          "照片裁剪后提交的菜品选项或备注有误",
+        );
       const sending = p.getByRole("button", { name: "正在发布…", exact: true });
       await sending.waitFor();
       assert(!(await sending.isEnabled()), `${width}px 提交中未禁用发布`);

@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { mealTimes as mealTimeNames, type V2Food } from "../api/v2-vocab";
 import "./dish-availability.css";
 
@@ -40,27 +41,139 @@ export function availabilityText(food: V2Food) {
  * When the dish is served and whether it can be ordered for delivery. v2 keeps
  * both on the dish; the shop's delivery flag is only a summary of its dishes.
  */
+type AvailabilityProps = {
+  value: DishAvailability;
+  onChange: (next: DishAvailability) => void;
+  disabled?: boolean;
+};
+
+function toggleMeal(selected: string[], id: string) {
+  return ordered(
+    selected.includes(id)
+      ? selected.filter((meal) => meal !== id)
+      : [...selected, id],
+  );
+}
+
+function DishSwitch({
+  label,
+  detail,
+  checked,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  detail?: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  const detailId = useId();
+  return (
+    <label className="dish-option-switch">
+      <span>
+        {label}
+        {detail && <small id={detailId}>{detail}</small>}
+      </span>
+      <input
+        type="checkbox"
+        role="switch"
+        aria-label={label}
+        aria-describedby={detail ? detailId : undefined}
+        checked={checked}
+        disabled={disabled}
+        onChange={(event) => onChange(event.currentTarget.checked)}
+      />
+    </label>
+  );
+}
+
+export function MobileDishOptions({
+  value,
+  onChange,
+  disabled,
+  shopMeals,
+  signature,
+  onSignatureChange,
+}: AvailabilityProps & {
+  shopMeals?: string[] | null;
+  signature: boolean;
+  onSignatureChange: (checked: boolean) => void;
+}) {
+  const mealLabel = useId();
+  const inheritedMeals = mealTimeNames
+    .filter((meal) => shopMeals?.includes(meal.id))
+    .map((meal) => meal.name);
+  return (
+    <>
+      <div
+        className="mobile-publish-tags"
+        role="group"
+        aria-labelledby={mealLabel}
+      >
+        <p className="dish-meal-heading">
+          <span id={mealLabel}>适合哪顿，选填</span>
+          {value.mealTimes.length ? (
+            <button
+              type="button"
+              className="dish-meal-reset"
+              disabled={disabled}
+              onClick={() => onChange({ ...value, mealTimes: [] })}
+            >
+              恢复跟随店铺
+            </button>
+          ) : (
+            <span>
+              跟店里一样
+              {inheritedMeals.length > 0 && `，${inheritedMeals.join("、")}`}
+            </span>
+          )}
+        </p>
+        <div>
+          {mealTimeNames.map((meal) => (
+            <button
+              key={meal.id}
+              type="button"
+              disabled={disabled}
+              aria-pressed={value.mealTimes.includes(meal.id)}
+              onClick={() =>
+                onChange({
+                  ...value,
+                  mealTimes: toggleMeal(value.mealTimes, meal.id),
+                })
+              }
+            >
+              {meal.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="dish-option-switches">
+        <DishSwitch
+          label="能点外卖"
+          checked={value.deliveryEnabled}
+          disabled={disabled}
+          onChange={(deliveryEnabled) =>
+            onChange({ ...value, deliveryEnabled })
+          }
+        />
+        <DishSwitch
+          label="招牌菜"
+          detail="每家店最多 3 道招牌菜"
+          checked={signature}
+          disabled={disabled}
+          onChange={onSignatureChange}
+        />
+      </div>
+    </>
+  );
+}
+
 export function DishAvailabilityFields({
   value,
   onChange,
   disabled,
-  variant = "form",
-}: {
-  value: DishAvailability;
-  onChange: (next: DishAvailability) => void;
-  disabled?: boolean;
-  /** "chips": the mobile publish sheet's toggle buttons. */
-  variant?: "form" | "chips";
-}) {
-  const toggleMeal = (id: string) =>
-    onChange({
-      ...value,
-      mealTimes: ordered(
-        value.mealTimes.includes(id)
-          ? value.mealTimes.filter((x) => x !== id)
-          : [...value.mealTimes, id],
-      ),
-    });
+}: AvailabilityProps) {
   const inherit = !value.mealTimes.length;
   const meals = [
     {
@@ -73,43 +186,12 @@ export function DishAvailabilityFields({
       id: m.id,
       name: m.name,
       on: value.mealTimes.includes(m.id),
-      set: () => toggleMeal(m.id),
+      set: () =>
+        onChange({ ...value, mealTimes: toggleMeal(value.mealTimes, m.id) }),
     })),
   ];
   const setDelivery = (deliveryEnabled: boolean) =>
     onChange({ ...value, deliveryEnabled });
-  if (variant === "chips")
-    return (
-      <>
-        <fieldset className="mobile-publish-tags" disabled={disabled}>
-          <legend>供应饭点</legend>
-          <div>
-            {meals.map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                aria-pressed={m.on}
-                onClick={m.set}
-              >
-                {m.name}
-              </button>
-            ))}
-          </div>
-        </fieldset>
-        <fieldset className="mobile-publish-tags" disabled={disabled}>
-          <legend>外卖</legend>
-          <div>
-            <button
-              type="button"
-              aria-pressed={value.deliveryEnabled}
-              onClick={() => setDelivery(!value.deliveryEnabled)}
-            >
-              这道菜可以点外卖
-            </button>
-          </div>
-        </fieldset>
-      </>
-    );
   return (
     <fieldset className="dish-availability" disabled={disabled}>
       <div className="ew-meals" role="group" aria-label="供应饭点">

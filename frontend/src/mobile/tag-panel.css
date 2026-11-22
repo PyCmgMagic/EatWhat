@@ -222,7 +222,6 @@
   border: 1px dashed #9a8b80;
 }
 
-/* v2 publish: taste tags and the signature flag are toggles. */
 .mobile-publish-tag-groups {
   display: grid;
   gap: 16px;
@@ -236,6 +235,48 @@
 }
 .mobile-publish-tags button:disabled {
   opacity: 0.45;
+}
+.mobile-publish-note {
+  display: grid;
+  gap: 8px;
+}
+.mobile-publish-note label,
+.mobile-publish-note span {
+  color: var(--night-muted, #6e625b);
+  font-size: 13px;
+}
+.mobile-publish-note > div {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px 8px;
+  border-radius: 16px;
+  background: var(--night-layer, #f4f2ef);
+}
+.mobile-publish-note > div:focus-within {
+  outline: 2px solid var(--night-gold-text, #835b25);
+  outline-offset: 2px;
+}
+.mobile-publish-note textarea {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--night-ink, #231c18);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.5;
+  resize: none;
+}
+.mobile-publish-note textarea:focus-visible {
+  outline: 0;
+  box-shadow: none;
+}
+.mobile-publish-note textarea::placeholder {
+  color: var(--night-muted, #756a61);
+}
+.mobile-publish-note span {
+  justify-self: end;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Prominent AI helper card sits right above category & taste choices. */

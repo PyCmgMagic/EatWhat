@@ -91,7 +91,7 @@ import {
 import { FoodManage } from "../features/Catalog";
 import DishDetail from "./DishDetail";
 import { PhotoPreviewButton } from "../components/PhotoPreviewButton";
-import { DishAvailabilityFields } from "../features/DishAvailability";
+import { MobileDishOptions } from "../features/DishAvailability";
 import SheetHandle from "./SheetHandle";
 import HomeSheetHandle from "./HomeSheetHandle";
 import DishPhotoPicker from "./DishPhotoPicker";
@@ -2063,6 +2063,16 @@ export function useDesignBridge(
         };
     }
     if (screen === "G-AddDish") {
+      if (id === 1) {
+        p.className = `${p.className} mobile-publish-screen`;
+        p.style = { ...st, minHeight: 0 };
+      }
+      if (id === 51)
+        return (
+          <footer {...p} className="mobile-publish-footer" style={undefined}>
+            {view.children}
+          </footer>
+        );
       const photoDisabled = busy || photoBusy || publishUncertain;
       const stage = draftStage(m.draft);
       const darkStage = ["#C9442B", "#A8321C", "#8F5B24"].includes(
@@ -2127,11 +2137,30 @@ export function useDesignBridge(
         );
       if (id === 31)
         p.style = { ...st, display: "flex", alignItems: "center", minHeight: 44 };
+      if (id === 35)
+        return (
+          <div className="mobile-publish-note">
+            <label htmlFor="dish-desc">说两句，选填</label>
+            <div>
+              <textarea
+                id="dish-desc"
+                rows={3}
+                maxLength={200}
+                value={values.desc}
+                onChange={values.setDesc}
+                disabled={busy || publishUncertain}
+                aria-describedby="dish-desc-count"
+                placeholder="好吃在哪，有什么要注意的"
+              />
+              <span id="dish-desc-count">{values.descLen} / 200</span>
+            </div>
+          </div>
+        );
       if (id === 45)
         return (
           <div className="mobile-publish-tag-groups">
             <fieldset className="mobile-publish-tags">
-              <legend>口味，最多 {MAX_DISH_TAGS} 个，可选</legend>
+              <legend>口味，最多 {MAX_DISH_TAGS} 个</legend>
               <div>
                 {(systemTags.data ?? []).map((t) => {
                   const on = !!m.draft.systemTagIds?.includes(t.id!);
@@ -2158,20 +2187,11 @@ export function useDesignBridge(
                 })}
               </div>
             </fieldset>
-            <fieldset className="mobile-publish-tags">
-              <legend>招牌菜</legend>
-              <div>
-                <button
-                  type="button"
-                  aria-pressed={!!m.draft.signature}
-                  onClick={() => m.setDraft({ signature: !m.draft.signature })}
-                >
-                  这是这家店的招牌
-                </button>
-              </div>
-            </fieldset>
-            <DishAvailabilityFields
-              variant="chips"
+            <MobileDishOptions
+              shopMeals={(restaurant.data as V2Shop | undefined)?.mealTimes}
+              signature={!!m.draft.signature}
+              onSignatureChange={(signature) => m.setDraft({ signature })}
+              disabled={busy || publishUncertain}
               value={{
                 mealTimes: m.draft.mealTimes ?? [],
                 deliveryEnabled: !!m.draft.deliveryEnabled,
@@ -2206,14 +2226,22 @@ export function useDesignBridge(
             <Link to="/publish">换一家</Link>
           </div>
         );
-      if (id === 19)
+      if (id === 19) {
+        const [handle, destination, nameAndPrice, note, ...choices] =
+          view.children;
         return (
           <div
             {...p}
             className="mobile-publish-fields"
-            style={{ ...st, bottom: 96, overflowY: "auto", paddingBottom: 24 }}
+            style={{
+              ...st,
+              bottom: "var(--publish-footer-height)",
+              overflowY: "auto",
+              paddingBottom: "calc(24px + var(--publish-keyboard-inset))",
+            }}
           >
-            {view.children.slice(0, 2)}
+            {handle}
+            {destination}
             <input
               ref={dishPhotoInput}
               type="file"
@@ -2255,9 +2283,12 @@ export function useDesignBridge(
                 if (image.url.startsWith("blob:")) URL.revokeObjectURL(image.url);
               }}
             />
-            {view.children.slice(2)}
+            {nameAndPrice}
+            {choices}
+            {note}
           </div>
         );
+      }
       if (id === 2) {
         const cover = m.draft.images[0];
         return (

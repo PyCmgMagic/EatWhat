@@ -1,6 +1,89 @@
 .dish-availability {
   display: contents;
 }
+.dish-meal-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  margin: 0 0 8px;
+  color: var(--night-muted, #6e625b);
+  font-size: 13px;
+}
+.dish-meal-heading .dish-meal-reset {
+  min-height: 32px;
+  margin-block: -6px;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--night-ink, #493c32);
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.dish-option-switches {
+  display: grid;
+  gap: 8px;
+}
+.dish-option-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 50px;
+  padding-block: 4px;
+  color: var(--night-ink, #231c18);
+  font-size: 16px;
+  cursor: pointer;
+}
+.dish-option-switch small {
+  display: block;
+  margin-top: 3px;
+  color: var(--night-muted, #6e625b);
+  font-size: 13px;
+}
+.dish-option-switch input {
+  appearance: none;
+  display: grid;
+  align-items: center;
+  flex: none;
+  width: 52px;
+  height: 32px;
+  margin: 0;
+  padding: 3px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--night-outline, #ded7d0);
+  cursor: inherit;
+}
+.dish-option-switch input::before {
+  content: "";
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px #231c1833;
+}
+.dish-option-switch input:checked {
+  background: var(--night-gold-text, #493523);
+}
+.dish-option-switch input:checked::before {
+  transform: translateX(20px);
+}
+.dish-option-switch input:focus-visible {
+  outline: 2px solid var(--night-gold-text, #835b25);
+  outline-offset: 3px;
+}
+@media (forced-colors: active) {
+  .dish-option-switch input {
+    appearance: auto;
+  }
+  .dish-option-switch input::before {
+    content: none;
+  }
+}
 .dish-availability-note {
   margin: 6px 0 0;
   font-size: 13px;

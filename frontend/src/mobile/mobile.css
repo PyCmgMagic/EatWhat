@@ -44,6 +44,36 @@ a {
 img {
   display: block;
 }
+.mobile-publish-screen {
+  --publish-bottom-padding: max(
+    16px,
+    calc(env(safe-area-inset-bottom) / var(--mobile-scale, 1))
+  );
+  --publish-footer-height: calc(12px + 52px + var(--publish-bottom-padding));
+  --publish-keyboard-inset: 0px;
+}
+html[data-viewport-occluded="true"] .mobile-publish-screen {
+  --publish-keyboard-inset: max(
+    0px,
+    calc(
+      (100dvh - var(--visible-top) - var(--visible-height)) /
+        var(--mobile-scale, 1)
+    )
+  );
+}
+.mobile-publish-footer {
+  position: fixed;
+  inset-inline: 0;
+  bottom: var(--publish-keyboard-inset);
+  z-index: 2;
+  width: inherit;
+  max-width: 100%;
+  height: var(--publish-footer-height);
+  margin-inline: auto;
+  padding: 12px 20px var(--publish-bottom-padding);
+  background: var(--night-surface, #fff);
+  box-shadow: 0 -1px 0 var(--night-line, #efe9e4);
+}
 .mobile-publish-fields > * {
   flex-shrink: 0;
 }
