@@ -1,7 +1,14 @@
 // @vitest-environment jsdom
 import { act } from "react";
+import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AppProvider } from "../../app/context";
 import { writeSession } from "../../app/runtime";
@@ -10,14 +17,25 @@ import { Messages } from "./Messages";
 
 let host: HTMLDivElement;
 let root: Root;
-let unreadMembers: number;
-let unreadCard: number;
+let cache: QueryClient;
+let unreadById: Map<number, number>;
 let readAllCalls: number;
 const ok = (data: unknown) => new Response(JSON.stringify({ code: 0, data }));
 
 function Destination() {
-  const { pathname } = useLocation();
-  return <output>{pathname}</output>;
+  const { pathname, search } = useLocation();
+  const navigate = useNavigate();
+  return (
+    <>
+      <output>{pathname}{search}</output>
+      <button onClick={() => navigate(-1)}>返回</button>
+    </>
+  );
+}
+
+function Inbox({ mobile }: { mobile: boolean }) {
+  cache = useQueryClient();
+  return mobile ? <MobileNotifications /> : <Messages />;
 }
 
 async function renderNotifications(mobile = false) {
@@ -26,11 +44,10 @@ async function renderNotifications(mobile = false) {
       <AppProvider>
         <MemoryRouter initialEntries={["/notifications"]}>
           <Routes>
-            <Route
-              path="/notifications"
-              element={mobile ? <MobileNotifications /> : <Messages />}
-            />
+            <Route path="/notifications" element={<Inbox mobile={mobile} />} />
             <Route path="/users/:id" element={<Destination />} />
+            <Route path="/foods/:id" element={<Destination />} />
+            <Route path="/comments" element={<Destination />} />
           </Routes>
         </MemoryRouter>
       </AppProvider>,
@@ -50,8 +67,11 @@ beforeEach(async () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   localStorage.clear();
   sessionStorage.clear();
-  unreadMembers = 2;
-  unreadCard = 1;
+  unreadById = new Map([
+    [96, 1],
+    [92, 1],
+    [95, 2],
+  ]);
   readAllCalls = 0;
   writeSession({ tokenName: "satoken", tokenValue: "notifications" });
   vi.stubGlobal(
@@ -64,16 +84,23 @@ beforeEach(async () => {
         );
       if (path.endsWith("/notification/cards/unread/count"))
         return Promise.resolve(
-          ok({ members: unreadMembers, cards: unreadCard }),
+          ok({
+            members: [...unreadById.values()].reduce(
+              (sum, count) => sum + count, 0,
+            ),
+            cards: unreadById.size,
+          }),
         );
       if (path.endsWith("/notification/cards/read-all")) {
         readAllCalls++;
-        unreadMembers = 0;
-        unreadCard = 0;
+        unreadById.clear();
         return Promise.resolve(ok(null));
       }
-      if (path.endsWith("/notification/cards/92/read"))
+      const read = path.match(/\/notification\/cards\/(\d+)\/read$/);
+      if (read && init?.method === "POST") {
+        unreadById.delete(Number(read[1]));
         return Promise.resolve(ok(null));
+      }
       if (path.endsWith("/notification/cards"))
         return Promise.resolve(
           ok({
@@ -86,7 +113,7 @@ beforeEach(async () => {
                   deviceName: "Chrome · Android",
                 },
                 memberCount: 1,
-                unreadMemberCount: unreadCard,
+                unreadMemberCount: unreadById.get(96) ?? 0,
                 latestAt: Date.now(),
                 actors: [],
               },
@@ -94,7 +121,7 @@ beforeEach(async () => {
                 id: 91,
                 kind: "like",
                 memberCount: 1,
-                unreadMemberCount: unreadCard,
+                unreadMemberCount: 0,
                 latestAt: Date.now(),
                 actors: [{ id: 22, displayName: "Maycry" }],
               },
@@ -103,7 +130,7 @@ beforeEach(async () => {
                 kind: "comment_like",
                 target: { domain: "comments", id: 7 },
                 memberCount: 2,
-                unreadMemberCount: 0,
+                unreadMemberCount: unreadById.get(95) ?? 0,
                 latestAt: Date.now(),
                 actors: [
                   { id: 23, displayName: "小林" },
@@ -115,7 +142,7 @@ beforeEach(async () => {
                 kind: "comment",
                 target: { domain: "foods", id: 7 },
                 memberCount: 2,
-                unreadMemberCount: unreadCard,
+                unreadMemberCount: unreadById.get(92) ?? 0,
                 latestAt: Date.now(),
                 actors: [
                   { id: 23, displayName: "小林", avatar: "/assets/lin.png" },
@@ -157,6 +184,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await act(async () => root.unmount());
+  cache.clear();
   host.remove();
   writeSession(null);
   vi.unstubAllGlobals();
@@ -168,7 +196,7 @@ it("marks every PC notification read and refreshes the unread state", async () =
     ".profile-message-read-all",
   )!;
   await spin(() => !button.disabled);
-  expect(host.textContent).toContain("2 条未读");
+  expect(host.textContent).toContain("4 条未读");
   expect(host.textContent).toContain("Maycry赞了你的分享");
   expect(host.textContent).toContain("小林、小吴赞了你的评论");
   expect(host.querySelector('.profile-message-heading a[href="/comments?commentId=7"]')).not.toBeNull();
@@ -207,6 +235,38 @@ it("marks every PC notification read and refreshes the unread state", async () =
       ),
   ).toBe(true);
 });
+
+it.each([
+  ["查看内容", ".profile-message-target", "/foods/7", 3],
+  ["查看评论", ".profile-message-target", "/comments?commentId=7", 2],
+  ["评论通知标题", ".profile-message-heading a", "/comments?commentId=7", 2],
+] as const)(
+  "marks the opened notification read via %s",
+  async (_, selector, href, remaining) => {
+    const link = () =>
+      host.querySelector<HTMLAnchorElement>(`${selector}[href="${href}"]`);
+    const unreadDot = () =>
+      link()?.closest("article")?.querySelector('[aria-label="未读"]');
+    await spin(() => !!unreadDot());
+    cache.setQueryData(["notifications", "unread"], 4);
+
+    await act(async () => link()!.click());
+    expect(host.querySelector("output")?.textContent).toBe(href);
+    await act(async () => host.querySelector("button")!.click());
+
+    await spin(() => !!link() && !unreadDot());
+    expect(host.textContent).toContain(`${remaining} 条未读`);
+    expect(host.querySelectorAll('[aria-label="未读"]')).toHaveLength(2);
+    expect(cache.getQueryState(["notifications", "unread"])?.isInvalidated).toBe(true);
+
+    await act(async () => link()!.click());
+    const readRequests = vi.mocked(fetch).mock.calls.filter(
+      ([url, init]) =>
+        /\/notification\/cards\/\d+\/read$/.test(String(url)) && init?.method === "POST",
+    );
+    expect(readRequests).toHaveLength(1);
+  },
+);
 
 it("links the latest comment actor's avatar separately from the desktop notification target", async () => {
   const actorLink = 'a[aria-label="查看小林的主页"]';

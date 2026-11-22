@@ -1,4 +1,5 @@
 import { commentLikeLink } from "../../api/notifications";
+import { errorMessage } from "../../api/client";
 import { feedbackCategories, feedbackCategoryLabel, type FeedbackCategory, type FeedbackCase } from "../../api/feedback";
 import { DesignIcon as Icon, ReactionIcon } from "../../mobile/ui";
 import { RestaurantCard, TopicCard, TopicHero } from "./Cards";
@@ -10,7 +11,7 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import {
   useMemoryDraft,
@@ -749,6 +750,15 @@ export function NotificationCardsPanel() {
       queryKey: ["notification-cards", "unread"],
       queryFn: () => api.unreadCards(),
     });
+  const readCard = useMutation({
+    mutationFn: api.readCard,
+    onSuccess: () =>
+      Promise.all([
+        cache.invalidateQueries({ queryKey: ["notification-cards"] }),
+        cache.invalidateQueries({ queryKey: ["notifications", "unread"] }),
+      ]),
+    onError: (error) => toast(errorMessage(error), { tone: "error" }),
+  });
   const markAllRead = () =>
     task.run(
       () => api.readAll(),
@@ -826,7 +836,7 @@ export function NotificationCardsPanel() {
           <button
             type="button"
             className="profile-message-read-all"
-            disabled={task.busy || !unread.data?.members}
+            disabled={task.busy || readCard.isPending || !unread.data?.members}
             onClick={() => void markAllRead()}
           >
             <Icon name="check" size={15} />
@@ -882,6 +892,9 @@ export function NotificationCardsPanel() {
                                 ? (extra?.title ?? "公告")
                                 : "系统通知",
                 title = actorNames ? `${actorNames}${actionText}` : systemTitle;
+              const markRead = () => {
+                if (item.id && item.unreadMemberCount) readCard.mutate(item.id);
+              };
               return (
                 <article
                   className="profile-message-row"
@@ -924,7 +937,13 @@ export function NotificationCardsPanel() {
                   <div className="profile-message-copy">
                     <div className="profile-message-heading">
                       <strong>
-                        {item.kind === "comment_like" && link ? <Link to={link}>{title}</Link> : title}
+                        {item.kind === "comment_like" && link ? (
+                          <Link to={link} onClick={markRead}>
+                            {title}
+                          </Link>
+                        ) : (
+                          title
+                        )}
                       </strong>
                       {!!item.unreadMemberCount && (
                         <span
@@ -1003,8 +1022,13 @@ export function NotificationCardsPanel() {
                       <small>关联内容已不可见</small>
                     ) : (
                       link && (
-                        <Link className="profile-message-target" to={link}>
-                          {item.kind === "comment_like" ? "查看评论" : "查看内容"} <Icon name="chevronRight" size={15} />
+                        <Link
+                          className="profile-message-target"
+                          to={link}
+                          onClick={markRead}
+                        >
+                          {item.kind === "comment_like" ? "查看评论" : "查看内容"}{" "}
+                          <Icon name="chevronRight" size={15} />
                         </Link>
                       )
                     )}
@@ -1012,20 +1036,8 @@ export function NotificationCardsPanel() {
                   {!!item.unreadMemberCount && (
                     <button
                       className="profile-message-read"
-                      disabled={task.busy}
-                      onClick={() =>
-                        void task.run(
-                          () => api.readCard(item.id!),
-                          async () => {
-                            await cache.invalidateQueries({
-                              queryKey: ["notification-cards"],
-                            });
-                            await cache.invalidateQueries({
-                              queryKey: ["notifications", "unread"],
-                            });
-                          },
-                        )
-                      }
+                      disabled={task.busy || readCard.isPending}
+                      onClick={markRead}
                     >
                       <Icon name="check" size={15} />
                       标为已读
