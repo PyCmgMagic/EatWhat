@@ -12,8 +12,9 @@ async (page) => {
       const p = await context.newPage();
       p.setDefaultTimeout(8000);
       const errors = [], requests = [];
-      const user = { id: 10, displayName: '封禁账号测试', verified, banned: true, banReason: '测试封禁原因', role: 'user' };
+      const user = { id: 10, displayName: '封禁账号测试', verified, banned: true, banReason: '测试封禁原因', banUntil: Date.now() + 86400000, role: 'user', hasPassword: true };
       let unread = 1;
+      let appealText = '', denyPassword = false;
       p.on('pageerror', error => errors.push(error.message));
       await context.addInitScript(() => {
         if (new URLSearchParams(location.search).has('guest')) localStorage.removeItem('eatwhat-session');
@@ -36,6 +37,16 @@ async (page) => {
           data: { type: 'account_banned', reason: '测试封禁原因' },
         }], hasNext: false };
         else if (path === '/api/notification/cards/read-all') { unread = 0; data = null; }
+        else if (path === '/api/feedback/messages') {
+          appealText = request.postDataJSON().text;
+          data = { id: 88, duplicate: false };
+        } else if (path === '/api/feedback/mine/88') data = { id: 88, kind: 'FEEDBACK', category: 'OTHER', status: 'OPEN', text: appealText, createdAt: Date.now(), screenshots: [] };
+        else if (path === '/api/auth/changePassword') {
+          if (denyPassword) return route.fulfill({ status: 200, json: { code: 30002, msg: '服务端暂不允许此操作' } });
+          data = null;
+        } else if (path === '/api/auth/sessions') data = { devices: [], nextCursor: null };
+        else if (path === '/api/auth/sessions/revoke-others') data = null;
+        else if (path === '/api/user/followings' || path === '/api/user/followers') data = { items: [], totalItems: 0, hasNext: false };
         return route.fulfill({ status: 200, json: { code: 0, data } });
       });
       const visit = path => p.goto(base + '/?demo=0&view=' + view + '#' + path);
@@ -55,6 +66,40 @@ async (page) => {
         await p.reload();
         await profile().waitFor();
         await p.screenshot({ path: 'output/playwright/banned-' + view + '-profile-' + verified + '.png', fullPage: true });
+        const restriction = p.getByRole('region', { name: '账号受限状态' });
+        await restriction.getByText('测试封禁原因', { exact: true }).waitFor();
+        await restriction.getByRole('link', { name: '申诉', exact: true }).click();
+        await p.getByRole('heading', { name: '账号申诉', exact: true }).waitFor();
+        await p.getByRole('textbox', { name: '申诉说明', exact: true }).fill('请复核这次账号限制。');
+        await p.getByRole('button', { name: '提交申诉', exact: true }).click();
+        await p.waitForURL(url => url.hash === '#/feedback/mine/88');
+        await p.getByText('【账号申诉】 请复核这次账号限制。', { exact: true }).waitFor();
+        assert(appealText === '【账号申诉】 请复核这次账号限制。', 'Appeal did not reach existing feedback API');
+
+        for (const path of ['/favorites', '/likes', '/history', '/me/shares?tab=comments', '/settings', '/settings/account', '/settings/privacy', '/settings/notifications', '/feedback/mine']) {
+          await visit(path);
+          await p.waitForFunction(() => !document.querySelector('.mobile-page-skeleton'));
+          assert(await p.getByRole('heading', { name: '账号暂时无法使用', exact: true }).count() === 0, view + ': blocked ' + path);
+        }
+        await visit('/settings/password');
+        const password = p.getByRole('form', { name: '修改密码表单' });
+        await password.getByLabel('当前密码', { exact: true }).fill('old-fixture-password');
+        await password.getByLabel('新密码', { exact: true }).fill('new-fixture-password');
+        await password.getByLabel('再次输入新密码', { exact: true }).fill('new-fixture-password');
+        await password.getByRole('button', { name: '更新密码', exact: true }).click();
+        await p.getByText('密码已更新。', { exact: true }).waitFor();
+        // API rejections remain visible; a front-end exception never overrides the server.
+        denyPassword = true;
+        await password.getByLabel('当前密码', { exact: true }).fill('new-fixture-password');
+        await password.getByLabel('新密码', { exact: true }).fill('third-fixture-password');
+        await password.getByLabel('再次输入新密码', { exact: true }).fill('third-fixture-password');
+        await password.getByRole('button', { name: '更新密码', exact: true }).click();
+        await p.getByText('服务端暂不允许此操作', { exact: true }).waitFor();
+        await p.getByRole('button', { name: '关闭提示', exact: true }).click();
+        await visit('/settings/devices');
+        await p.getByRole('button', { name: '下线其他设备', exact: true }).click();
+        await p.getByRole('dialog').getByRole('button', { name: '确认下线', exact: true }).click();
+        await p.getByText('已下线其他设备', { exact: true }).waitFor();
 
         // The account's system message remains readable and can be marked read.
         await visit('/');
@@ -95,7 +140,7 @@ async (page) => {
           assert(!requests.slice(requestCount).some(r => r.path === '/api/user/info' || r.path === '/api/notification/cards'), 'Guest fetched account content');
         }
         assert(errors.length === 0, errors.join('; '));
-        results.push({ view, verified, profile: 'passed', notifications: 'passed', readAll: 'passed', restrictedRoutes: 'passed', normalAccount: 'passed', loginRequired: 'passed' });
+        results.push({ view, verified, profile: 'passed', notifications: 'passed', readAll: 'passed', appeal: 'passed', security: 'passed', serverDenial: 'passed', restrictedRoutes: 'passed', normalAccount: 'passed', loginRequired: 'passed' });
       } catch (error) {
         await p.screenshot({ path: 'output/playwright/banned-' + view + '-failure.png', fullPage: true });
         throw error;
