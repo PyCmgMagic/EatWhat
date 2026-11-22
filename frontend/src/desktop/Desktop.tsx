@@ -4,7 +4,8 @@ import { DiscoveryList } from "../features/DiscoveryList";
 import { PhotoPreviewButton } from "../components/PhotoPreviewButton";
 import { useHomeDiscovery } from "../features/useHomeDiscovery";
 import { SupplementPrice } from "../features/SupplementPrice";
-import { BRAND_SLOGAN } from "../app/brand";
+import { BRAND_NAME, BRAND_PREFIX, BRAND_SLOGAN } from "../app/brand";
+import { BrandLogo } from "../components/BrandLogo";
 import { foodAuthor } from "../api/models";
 import ProfileOverview from "../features/ProfileOverview";
 import { bannedPageAllowed } from "../api/banned-access";
@@ -237,15 +238,12 @@ function DesktopHeader() {
   return (
     <header className="pc-header">
       <div className="pc-header-inner">
-        <Link className="pc-brand" to="/" aria-label="山软今天吃什么，回到发现">
-          <span className="pc-brand-symbol">
-            <Icon name="bowl" size={29} />
-          </span>
+        <Link className="pc-brand" to="/" aria-label={`${BRAND_NAME}，回到发现`}>
+          <BrandLogo className="pc-brand-symbol" />
           <span>
             <b>
-              山软<span>今天吃什么</span>
+              {BRAND_PREFIX}<span>今天吃什么</span>
             </b>
-            <small>{BRAND_SLOGAN}</small>
           </span>
         </Link>
         <SlidingTabs label="桌面主导航" active={active} navigation>
@@ -386,7 +384,7 @@ function DesktopFooter() {
   return (
     <footer className="pc-footer">
       <span>
-        山软今天吃什么 <span className="pc-footer-separator" />
+        {BRAND_NAME} <span className="pc-footer-separator" />
         {BRAND_SLOGAN}
       </span>
       <div>
@@ -661,7 +659,7 @@ function DesktopSource({
     >
       {auth && (
         <aside className="pc-auth-stage">
-          <span className="pc-eyebrow">山软今天吃什么</span>
+          <span className="pc-eyebrow">{BRAND_NAME}</span>
           <h1>{BRAND_SLOGAN}</h1>
           <img src="/prototype/assets/dishes/yuntun.svg" alt="一碗鲜虾云吞" />
         </aside>
@@ -826,11 +824,11 @@ function DesktopHome() {
     food = list[index], visual = food ? visualFor(food, isDemo) : null;
   useContentMotion(copy, food?.id ?? undefined, n, "y");
   useEffect(() => {
-    document.title = "发现 · 山软今天吃什么";
+    document.title = `发现 · ${BRAND_NAME}`;
   }, []);
   const sheet = (
     <section className={`pc-discovery-sheet${food && visual ? "" : " is-standalone"}`}>
-      <DiscoveryList discovery={discovery} renderDishes={(foods) => (
+      <DiscoveryList masonry discovery={discovery} renderDishes={(foods) => (
         <div className="pc-food-grid">
           {foods.map((food) => <FoodCard key={food.id} food={food} />)}
         </div>
@@ -1752,7 +1750,7 @@ export function DesktopShares() {
       placeholderData: keepPreviousData,
     });
   useEffect(() => {
-    document.title = `${tab === "comments" ? "我的评论" : "我的上传"} · 山软今天吃什么`;
+    document.title = `${tab === "comments" ? "我的评论" : "我的上传"} · ${BRAND_NAME}`;
   }, [tab]);
   return (
     <section className="pc-profile-content profile-shares" data-tab={tab}>

@@ -107,6 +107,20 @@
 .about-home .about-heading {
   margin-bottom: 28px;
 }
+.about-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-block: 24px 32px;
+  text-align: center;
+}
+.about-brand h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 750;
+  line-height: 1.5;
+}
 .about-version h2,
 .about-version p {
   margin: 0;

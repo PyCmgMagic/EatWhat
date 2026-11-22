@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
-import { BRAND_SLOGAN } from "../app/brand";
+import { BRAND_NAME, BRAND_PREFIX, BRAND_SLOGAN } from "../app/brand";
+import { BrandLogo } from "./BrandLogo";
 import { Link, useLocation } from "react-router-dom";
 import { LoginLink, useLoginDialog } from "../app/auth-dialog";
 import {
@@ -9,7 +10,6 @@ import {
   Heart,
   Send,
   ShieldCheck,
-  UserRound,
   UsersRound,
 } from "lucide-react";
 import "./access-welcome.css";
@@ -77,9 +77,11 @@ function LoginRequired({ canvas = false, footer }: AccessProps) {
       aria-labelledby={titleId}
     >
       <div className="ew-login-required-content">
-        <span className="ew-login-required-avatar" aria-hidden="true">
-          <UserRound size={30} strokeWidth={1.6} />
-        </span>
+        <BrandLogo
+          size={80}
+          className="ew-login-required-logo"
+          alt={BRAND_NAME}
+        />
         <h1 id={titleId}>{copy.heading}</h1>
         <p>{copy.detail}</p>
         <LoginLink className="ew-login-required-primary" to={to}>
@@ -113,7 +115,7 @@ function VerificationWelcome({ canvas = false, footer }: AccessProps) {
       <div className="ew-access-stage">
         <header className="ew-access-brand">
           <span>
-            山软 <span aria-hidden="true">·</span> 今天吃什么
+            {BRAND_PREFIX} <span aria-hidden="true">·</span> 今天吃什么
           </span>
           {location.pathname !== "/me" && (
             <Link to="/" aria-label="返回发现">

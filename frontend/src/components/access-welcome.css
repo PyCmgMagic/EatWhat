@@ -15,15 +15,8 @@
   max-width: 340px;
   margin: auto;
 }
-.ew-login-required-avatar {
-  display: grid;
-  place-items: center;
-  width: 68px;
-  height: 68px;
+.ew-login-required-logo {
   margin: 0 auto 20px;
-  border-radius: 50%;
-  background: #ebe3db;
-  color: #6e625b;
 }
 .ew-login-required h1 {
   margin: 0;

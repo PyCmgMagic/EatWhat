@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "../../app/brand";
 import {
   useEffect,
   useId,
@@ -1366,7 +1367,7 @@ export function MobileComments() {
       : `/foods/${foodId}`
     : "/";
   useEffect(() => {
-    document.title = `${writing ? "发表评论" : "菜品评论"} · 山软今天吃什么`;
+    document.title = `${writing ? "发表评论" : "菜品评论"} · ${BRAND_NAME}`;
   }, [writing]);
   if (!foodId && commentId && !writing)
     return (

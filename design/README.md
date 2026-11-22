@@ -1,4 +1,4 @@
-# 山软今天吃什么 · HTML 交互设计稿
+# 沙软今天吃什么 · HTML 交互设计稿
 
 入口：[index.html](index.html)；独立手机预览：[mobile.html](mobile.html)。
 

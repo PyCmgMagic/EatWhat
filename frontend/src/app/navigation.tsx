@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "./brand";
 import {
   createContext,
   useContext,
@@ -240,7 +241,7 @@ export function useReturnTo(fallback: string) {
 }
 export function NotFound() {
   useLayoutEffect(() => {
-    document.title = "页面不存在 · 山软今天吃什么";
+    document.title = `页面不存在 · ${BRAND_NAME}`;
   }, []);
   return (
     <section

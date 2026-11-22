@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "../app/brand";
 import MobileProfile from "./MobileProfile";
 import { bannedPageAllowed } from "../api/banned-access";
 import { androidAppDownload } from "../features/settings-nav";
@@ -1827,7 +1828,7 @@ export function useDesignBridge(
           }
           onLike={() => reactions.toggle("like")}
           onFavorite={() => reactions.toggle("favorite")}
-          onShare={() => void sharing.share(liveFood.name ?? "山软今天吃什么")}
+          onShare={() => void sharing.share(liveFood.name ?? BRAND_NAME)}
           onTags={() => {
             if (
               access({
@@ -1902,7 +1903,7 @@ export function useDesignBridge(
           </header>
         );
       if (id === 10) {
-        p.onClick = () => void sharing.share(r.name ?? "山软今天吃什么");
+        p.onClick = () => void sharing.share(r.name ?? BRAND_NAME);
         p.style = { ...st, background: undefined };
       }
       if (id === 12) {
@@ -2516,7 +2517,8 @@ export function useDesignBridge(
         if (id === 15) p.style = { ...p.style, bottom: 168, paddingBottom: 12 };
         if (id === 27) p.style = { ...p.style, top: "auto", bottom: 108 };
       } else if (id === 15) {
-        p.className = `${p.className ?? ""} mobile-pick-shop-list`;
+        // The page scrolls, so this fluid list must not inherit the artboard's scroll region.
+        p.className = "mobile-pick-shop-list";
         p.style = undefined;
       }
       if (tag === "span" && clean(text).includes("离你近的排在前面"))

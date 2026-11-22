@@ -1,5 +1,5 @@
 import { Component, createRef, type ReactNode, type ErrorInfo } from "react";
-import { BRAND_SLOGAN } from "../app/brand";
+import { BRAND_NAME, BRAND_SLOGAN } from "../app/brand";
 import "@fontsource-variable/noto-sans-sc";
 import "../mobile/generated/tokens.css";
 import "./error-boundary.css";
@@ -18,7 +18,7 @@ export class ErrorBoundary extends Component<
   }
   componentDidCatch(_error: Error, _info: ErrorInfo) {
     /* Render a recovery action without logging sensitive request data. */
-    document.title = "页面暂时无法显示 · 山软今天吃什么";
+    document.title = `页面暂时无法显示 · ${BRAND_NAME}`;
     this.heading.current?.focus();
   }
   render() {
@@ -34,7 +34,7 @@ export class ErrorBoundary extends Component<
               d="M9 17.5v1a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5v-1m-4-.5h2a8 8 0 0 0 8-8V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v2a8 8 0 0 0 8 8Z"
             />
           </svg>
-          <span>山软今天吃什么</span>
+          <span>{BRAND_NAME}</span>
         </header>
         <main className="fatal-error-main">
           <div className="fatal-error-content">

@@ -1,3 +1,4 @@
+import { BRAND_PREFIX } from "./brand";
 import {
   createContext,
   lazy,
@@ -10,7 +11,8 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { Soup, X } from "lucide-react";
+import { X } from "lucide-react";
+import { BrandLogo } from "../components/BrandLogo";
 import {
   Link,
   useLocation,
@@ -329,10 +331,8 @@ function LoginDialog({
       <div className="ew-login-dialog-inner">
         <header className="ew-login-dialog-header">
           <span className="ew-login-dialog-brand">
-            <span className="ew-login-dialog-mark" aria-hidden="true">
-              <Soup size={20} strokeWidth={1.7} />
-            </span>
-            山软 <i aria-hidden="true">·</i> 今天吃什么
+            <BrandLogo size={40} />
+            {BRAND_PREFIX} <i aria-hidden="true">·</i> 今天吃什么
           </span>
           <button
             type="button"

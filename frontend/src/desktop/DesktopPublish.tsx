@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "../app/brand";
 import { useFeedbackState } from "../components/feedback";
 import { DishAvailabilityFields } from "../features/DishAvailability";
 import {
@@ -129,7 +130,7 @@ export default function DesktopPublish() {
     !hasName && "填写菜名",
   ].filter(Boolean);
   useEffect(() => {
-    document.title = "分享一道菜 · 山软今天吃什么";
+    document.title = `分享一道菜 · ${BRAND_NAME}`;
   }, []);
   useEffect(() => {
     if (location.pathname !== "/publish" && m.shopId)

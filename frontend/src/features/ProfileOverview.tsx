@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "../app/brand";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { AccountRestriction } from "../components/AccountRestriction";
 import { Link } from "react-router-dom";
@@ -274,7 +275,7 @@ function GrowthGlance() {
 export default function ProfileOverview() {
   const { api, user, session } = useApp();
   useEffect(() => {
-    document.title = "我的 · 山软今天吃什么";
+    document.title = `我的 · ${BRAND_NAME}`;
   }, []);
   const favorites = useQuery({
     queryKey: ["foods", "profile-overview-favorites", user?.id],

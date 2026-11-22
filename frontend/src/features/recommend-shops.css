@@ -478,3 +478,82 @@
     transition: none;
   }
 }
+
+.rec-shop-list.is-masonry {
+  --rec-track: 4px;
+  --rec-ink: var(--night-ink, #231c18);
+  --rec-muted: var(--night-muted, #75685d);
+  --rec-line: var(--night-line, #e9e2da);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 308px), 1fr));
+  gap: 16px;
+}
+.is-masonry[data-measured] {
+  grid-auto-rows: var(--rec-track);
+  row-gap: 0;
+}
+.is-masonry[data-measured] > .rec-shop-card {
+  grid-row-end: span var(--rec-span);
+}
+.is-masonry > .rec-shop-card {
+  background: var(--night-surface, white);
+  border-radius: 18px;
+}
+.is-masonry .rec-shop-direction {
+  flex-direction: row-reverse;
+  align-items: baseline;
+  align-self: start;
+  gap: 6px;
+}
+.is-masonry .rec-shop-direction svg {
+  align-self: center;
+}
+.is-masonry .rec-shop-no-dish {
+  min-height: 44px;
+  padding: 8px 12px;
+  background: var(--night-layer, #f8f5f1);
+}
+.is-masonry .rec-shop-dishes:not([data-count="2"]) > li:first-child {
+  .rec-shop-dish {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .rec-shop-dish-photo {
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    border-radius: 12px;
+  }
+  .rec-shop-dish-info {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 2px 10px;
+    padding: 0;
+  }
+  .rec-shop-dish-meta {
+    display: contents;
+  }
+  .rec-shop-dish-price {
+    grid-area: 1 / 2;
+    align-self: baseline;
+    white-space: nowrap;
+  }
+  .rec-shop-dish-price > strong {
+    font-size: 23px;
+  }
+  .rec-shop-dish-score {
+    grid-area: 2 / 1;
+  }
+}
+/* Saved dish crops use a square frame. Clip that frame to the wide preview. */
+.is-masonry .rec-shop-dish-image:has(> .food-cover-frame) {
+  inset: 50% 0 auto;
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+}
+.is-masonry .food-cover-frame > img {
+  max-width: none;
+}
+.is-masonry .rec-shop-dish-score {
+  color: var(--night-gold-text, #84601f);
+}

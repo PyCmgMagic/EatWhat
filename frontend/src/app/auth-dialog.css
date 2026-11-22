@@ -56,16 +56,6 @@
   color: #b19c7d;
   font-style: normal;
 }
-.ew-login-dialog-mark {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  margin-right: 1px;
-  border-radius: 11px;
-  background: #f7dfaa;
-  color: #765421;
-}
 .ew-login-dialog-close {
   display: grid;
   place-items: center;

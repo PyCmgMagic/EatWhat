@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, Star } from "lucide-react";
 import type { Food, Restaurant } from "../api/models";
@@ -225,17 +226,50 @@ export function RecommendShopCard({
 
 export function RecommendShopList({
   shops,
+  masonry = false,
   scene = "dine_in",
   onOpenShop,
   onOpenFood,
 }: {
   shops: Restaurant[];
+  masonry?: boolean;
   scene?: RecommendScene;
   onOpenShop?: (shop: Restaurant) => void;
   onOpenFood?: (dish: Signature) => void;
 }) {
+  const listRef = useRef<HTMLDivElement>(null);
+  const shopIds = shops.map((shop) => shop.id).join(",");
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list || !masonry || typeof ResizeObserver === "undefined") return;
+    const styles = getComputedStyle(list);
+    const track = parseFloat(styles.getPropertyValue("--rec-track"));
+    const gap = parseFloat(styles.columnGap);
+    // Span small grid tracks by the card's natural height. The browser packs
+    // cards in source order, which also preserves the order of links for Tab.
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const card = entry.target as HTMLElement;
+        const height = entry.borderBoxSize?.[0]?.blockSize ?? card.offsetHeight;
+        card.style.setProperty(
+          "--rec-span",
+          String(Math.ceil((height + gap) / track)),
+        );
+      }
+      list.dataset.measured = "true";
+    });
+    for (const card of list.children)
+      observer.observe(card, { box: "border-box" });
+    return () => {
+      observer.disconnect();
+      delete list.dataset.measured;
+    };
+  }, [masonry, shopIds]);
   return (
-    <div className="rec-shop-list">
+    <div
+      ref={listRef}
+      className={`rec-shop-list${masonry ? " is-masonry" : ""}`}
+    >
       {shops.map((shop, i) => (
         <RecommendShopCard
           key={shop.id}

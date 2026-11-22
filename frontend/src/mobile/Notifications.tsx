@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "../app/brand";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
@@ -262,7 +263,7 @@ export default function MobileNotifications() {
     read.mutate(item.id);
   };
   useEffect(() => {
-    document.title = `${isAnnouncements ? "站点公告" : "消息"} · 山软今天吃什么`;
+    document.title = `${isAnnouncements ? "站点公告" : "消息"} · ${BRAND_NAME}`;
   }, [isAnnouncements]);
   const select = (value: NotificationColumn) =>
     setParams(

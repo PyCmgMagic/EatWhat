@@ -1,4 +1,4 @@
-# 山软今天吃什么
+# 沙软今天吃什么
 
 校园店铺推荐、评价和收藏平台。正式前端位于 [`frontend/`](frontend/README.md)，历史设计画板位于 [`prototype/`](prototype/README.md)。
 

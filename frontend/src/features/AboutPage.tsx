@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "../app/brand";
 import {
   ChevronLeft,
   ChevronRight,
@@ -8,8 +9,10 @@ import {
 import { lazy, Suspense, useContext, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { buildNumber, webVersion } from "../app/version";
+import { BrandLogo } from "../components/BrandLogo";
 import { aboutHome, openSource, productionTeam } from "./about-navigation";
 import DevelopmentTeam from "./DevelopmentTeam";
+import { QQGroup } from "./QQGroup";
 import SettingsPageHeader from "./SettingsPageHeader";
 import { DesktopSettingsContext } from "./settings-nav";
 import "./about.css";
@@ -23,7 +26,7 @@ function VersionInfo() {
         ? "本地构建"
         : "构建号未提供"
       : `构建 ${buildNumber}`;
-  const text = `山软今天吃什么 Web ${webVersion}（${build}）`;
+  const text = `${BRAND_NAME} Web ${webVersion}（${build}）`;
   const [copyState, setCopyState] = useState<"idle" | "copied" | "manual">(
     "idle",
   );
@@ -53,7 +56,7 @@ function VersionInfo() {
           ? "已复制版本号和构建信息。"
           : copyState === "manual"
             ? "请手动复制下方的版本信息。"
-            : "如需要向他人提供版本号，请将所有内容进行转述。"}
+            : ""}
       </p>
       {copyState === "manual" && (
         <input
@@ -101,6 +104,10 @@ function AboutRow({
 function AboutDirectory() {
   return (
     <>
+      <div className="about-brand">
+        <BrandLogo size={80} />
+        <h2>{BRAND_NAME}</h2>
+      </div>
       <VersionInfo />
       <nav className="about-directory" aria-label="关于栏目">
         <div className="about-list about-feedback-links">
@@ -116,6 +123,10 @@ function AboutDirectory() {
             detail="提交记录与处理结果"
             icon={<Clock size={22} aria-hidden="true" />}
           />
+        </div>
+        <div>
+          <QQGroup group="chat" />
+          <QQGroup group="feedback" />
         </div>
         <div className="about-list">
           <AboutRow

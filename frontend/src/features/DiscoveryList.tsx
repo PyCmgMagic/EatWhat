@@ -27,9 +27,11 @@ const sortButtons = {
 
 export function DiscoveryList({
   discovery,
+  masonry = false,
   renderDishes,
 }: {
   discovery: ReturnType<typeof useHomeDiscovery>;
+  masonry?: boolean;
   renderDishes: (foods: Food[]) => ReactNode;
 }) {
   const { kind, setKind, feed, shops, dishes } = discovery;
@@ -94,6 +96,7 @@ export function DiscoveryList({
         {hasResults &&
           (shops ? (
             <RecommendShopList
+              masonry={masonry}
               shops={shops}
               scene={mobile.scene}
               onOpenShop={(shop) => shop.id && mobile.setShopId(shop.id)}

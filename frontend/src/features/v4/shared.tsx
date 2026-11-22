@@ -1,5 +1,5 @@
 import { useFeedbackState } from "../../components/feedback";
-import { BRAND_SLOGAN } from "../../app/brand";
+import { BRAND_NAME, BRAND_SLOGAN } from "../../app/brand";
 import {
   useRef,
   useContext,
@@ -189,7 +189,7 @@ export function Shell({
     ((section === "feedback" && !path.startsWith("/feedback/mine")) ||
       section === "account");
   useEffect(() => {
-    document.title = title + " · 山软今天吃什么";
+    document.title = `${title} · ${BRAND_NAME}`;
   }, [title]);
   return (
     <div className="v4-page" data-section={section} data-route={path}>

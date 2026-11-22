@@ -1,3 +1,4 @@
+import { BRAND_NAME, BRAND_PREFIX } from "../app/brand";
 import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -6,7 +7,7 @@ import { PhoneLoginForm, RecoverPassword } from "../features/Account";
 import { DishCarousel } from "../components/DishCarousel";
 import AuthLanding from "../components/AuthLanding";
 import { isPhoneAuthPath } from "../app/auth-routes";
-import { BRAND_SLOGAN } from "../app/brand";
+import { BrandLogo } from "../components/BrandLogo";
 import { DesignIcon as Icon } from "./ui";
 import "./login.css";
 
@@ -17,7 +18,7 @@ export default function LoginPage({ desktop }: { desktop: boolean }) {
   const recovery = path === "/auth/forgot";
   const title = recovery ? "找回密码" : phone ? "手机登录 / 注册" : "登录";
   useEffect(() => {
-    document.title = `${title} · 山软今天吃什么`;
+    document.title = `${title} · ${BRAND_NAME}`;
   }, [title]);
 
   if (path === "/auth") return <AuthLanding desktop={desktop} />;
@@ -42,8 +43,12 @@ export default function LoginPage({ desktop }: { desktop: boolean }) {
             <Icon name="back" size={17} />
             回到发现
           </Link>
-          <span className="pc-eyebrow">山软 · 今天吃什么</span>
-          <h1>{BRAND_SLOGAN}</h1>
+          <div className="pc-auth-brand">
+            <BrandLogo size={80} />
+            <h1>
+              {BRAND_PREFIX}<br />今天吃什么
+            </h1>
+          </div>
           <DishCarousel />
         </aside>
       ) : (

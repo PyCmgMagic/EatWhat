@@ -18,7 +18,7 @@ import { useApp } from "../app/state";
 import { isDemo } from "../app/runtime";
 import { LoginLink } from "../app/auth-dialog";
 import { errorMessage } from "../api/client";
-import { Avatar, Icon } from "./kit";
+import { Avatar, Icon, num } from "./kit";
 import WorkspaceSwitch from "./WorkspaceSwitch";
 import { ThemeToggle } from "../theme/AppearanceControl";
 import "./admin.css";
@@ -58,6 +58,27 @@ function Brand({ to }: { to: string }) {
         EatWhat<small>管理后台</small>
       </span>
     </Link>
+  );
+}
+
+function UserTotal() {
+  const { api } = useApp();
+  const summary = useQuery({
+    queryKey: ["admin", "summary"],
+    queryFn: () => api.summary(),
+  });
+  const total = summary.data?.totalUsers;
+  return (
+    <p aria-live="polite">
+      用户总数{" "}
+      {total != null ? (
+        <strong>{num(total)} 人</strong>
+      ) : summary.isPending ? (
+        "加载中…"
+      ) : (
+        "暂时无法获取"
+      )}
+    </p>
   );
 }
 
@@ -263,7 +284,11 @@ export default function AdminApp() {
             <h1 id="admin-page-title" tabIndex={-1}>
               {module?.title ?? "页面不存在"}
             </h1>
-            {module && module.id !== "feedback" && <p>{module.detail}</p>}
+            {module?.id === "users" ? (
+              <UserTotal />
+            ) : (
+              module && module.id !== "feedback" && <p>{module.detail}</p>
+            )}
           </header>
           {Page ? (
             <div className="admin-content" data-module={module.id}>

@@ -1,0 +1,71 @@
+.qq-group {
+  border-radius: 16px;
+  background: light-dark(#f8f8f6, #202022);
+  color: light-dark(#262321, #f1f1f2);
+}
+
+.qq-group + .qq-group {
+  margin-top: 2px;
+}
+
+.qq-group summary {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  min-height: 56px;
+  padding: 10px 16px;
+  border-radius: inherit;
+  list-style: none;
+  cursor: pointer;
+}
+
+.qq-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.qq-group summary:hover {
+  background: light-dark(#f3f0eb, #29292d);
+}
+
+.qq-group-chevron {
+  margin-inline-start: auto;
+}
+
+.qq-group[open] .qq-group-chevron {
+  transform: rotate(180deg);
+}
+
+.qq-group-content {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 0 16px 12px;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Frame the invitation card while keeping the full poster available to save. */
+.qq-group-content img {
+  width: min(100%, 300px);
+  height: auto;
+  aspect-ratio: 1284 / 1440;
+  object-fit: cover;
+  object-position: center 37%;
+  margin-bottom: 8px;
+  border-radius: 12px;
+}
+
+.qq-group-content a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 12px;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.qq-group :is(summary, a):focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}

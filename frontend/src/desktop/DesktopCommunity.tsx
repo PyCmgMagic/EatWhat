@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "../app/brand";
 import "../features/user-level.css";
 import { UserTitle } from "../components/UserTitle";
 import { userTitle } from "../api/growth";
@@ -99,7 +100,7 @@ export function DesktopUser() {
   // 管理员在别人主页的临时「管理」开关：默认关闭，离开页面即复位。
   const [manage, setManage] = useState(false);
   useEffect(() => {
-    document.title = "食友主页 · 山软今天吃什么";
+    document.title = `食友主页 · ${BRAND_NAME}`;
   }, []);
   if (!id)
     return (

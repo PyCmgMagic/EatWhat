@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "../app/brand";
 import { useFeedbackState } from "../components/feedback";
 import { Select } from "../components/Select";
 import { useContext, useEffect, useRef, useState, type FormEvent } from "react";
@@ -57,7 +58,7 @@ export default function DesktopProfile() {
     maxDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   useEffect(() => {
-    document.title = "编辑个人资料 · 山软今天吃什么";
+    document.title = `编辑个人资料 · ${BRAND_NAME}`;
   }, []);
   useEffect(() => {
     const warn = (e: BeforeUnloadEvent) => {

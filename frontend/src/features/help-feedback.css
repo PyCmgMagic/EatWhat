@@ -5,6 +5,9 @@
 .help-feedback-page > .v4-page {
   padding: 0;
 }
+.help-feedback-page > .qq-group {
+  margin-top: 24px;
+}
 
 /* Phone screens use the page itself as the form surface. */
 .mobile-help-feedback {

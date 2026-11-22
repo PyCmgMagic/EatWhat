@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "../app/brand";
 import { useEffect, type ReactNode } from "react";
 import SettingsPageHeader from "../features/SettingsPageHeader";
 import "./account-settings.css";
@@ -19,7 +20,7 @@ export default function SettingsFrame({
   list?: boolean;
 }) {
   useEffect(() => {
-    document.title = title + " · 山软今天吃什么";
+    document.title = `${title} · ${BRAND_NAME}`;
   }, [title]);
   return (
     <section className="mobile-settings-page mobile-account-settings">

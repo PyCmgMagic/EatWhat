@@ -1,0 +1,9 @@
+.brand-logo {
+  display: block;
+  flex: none;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 24%;
+  /* Hide the source image's thin white strip without changing the artwork. */
+  clip-path: inset(0 0 2% round 24%);
+}

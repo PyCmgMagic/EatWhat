@@ -7,6 +7,7 @@ import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { Gate } from "../components/ui";
 import ProfileHelp from "./ProfileHelp";
 import { ProfileHelpHeader } from "./ProfileSectionNav";
+import { QQGroup } from "./QQGroup";
 import "./help-feedback.css";
 
 const FeedbackForm = lazy(() =>
@@ -65,6 +66,7 @@ export default function HelpFeedback({ mobile = false }: { mobile?: boolean }) {
           </Gate>
         )}
       </Suspense>
+      {pathname === "/feedback" && !appeal && <QQGroup group="feedback" />}
     </section>
   );
 }

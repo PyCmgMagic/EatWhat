@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "../app/brand";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { localDestination, useReturnTo } from "../app/navigation";
@@ -36,7 +37,7 @@ export default function SettingsHome() {
   const verificationKnown = typeof user?.verified === "boolean";
   const passwordKnown = typeof user?.hasPassword === "boolean";
   useEffect(() => {
-    document.title = "设置总览 · 山软今天吃什么";
+    document.title = `设置总览 · ${BRAND_NAME}`;
   }, []);
   const facts: AccountFact[] = [
     {

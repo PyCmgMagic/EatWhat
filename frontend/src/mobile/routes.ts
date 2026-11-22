@@ -1,3 +1,4 @@
+import { BRAND_NAME } from "../app/brand";
 import { restaurantHistoryId } from "../features/v4-paths";
 import { aboutPages } from "../features/about-navigation";
 
@@ -226,19 +227,18 @@ const nativeTitles: Record<string, string> = {
 };
 
 export function browserTitle(path: string) {
-  const brand = "山软今天吃什么";
   if (path.startsWith("/reference/")) {
     let key: string;
     try {
       key = decodeURIComponent(path.slice("/reference/".length));
     } catch {
-      return `页面不存在 · ${brand}`;
+      return `页面不存在 · ${BRAND_NAME}`;
     }
     return screenTitles[key]
-      ? `${screenTitles[key]} · 原型预览 · ${brand}`
-      : `页面不存在 · ${brand}`;
+      ? `${screenTitles[key]} · 原型预览 · ${BRAND_NAME}`
+      : `页面不存在 · ${BRAND_NAME}`;
   }
-  if (restaurantHistoryId(path) !== undefined) return `修改记录 · ${brand}`;
+  if (restaurantHistoryId(path) !== undefined) return `修改记录 · ${BRAND_NAME}`;
   const dynamic = /^\/foods\/\d+\/edit$/.test(path)
     ? "编辑菜品"
     : /^\/restaurants\/\d+\/edit$/.test(path)
@@ -257,5 +257,5 @@ export function browserTitle(path: string) {
     mobileSettingsPages[path]?.title ??
     screenTitles[screenForPath(path)] ??
     dynamic;
-  return `${title ?? "页面不存在"} · ${brand}`;
+  return `${title ?? "页面不存在"} · ${BRAND_NAME}`;
 }

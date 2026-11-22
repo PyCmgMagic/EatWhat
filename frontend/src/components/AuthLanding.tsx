@@ -1,6 +1,7 @@
+import { BRAND_PREFIX } from "../app/brand";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { BRAND_SLOGAN } from "../app/brand";
+import { BrandLogo } from "./BrandLogo";
 import { localDestination } from "../app/navigation";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { DishCarousel } from "./DishCarousel";
@@ -37,18 +38,13 @@ export default function AuthLanding({ desktop }: { desktop: boolean }) {
       >
         <AuthPageCurl to={returnTo} />
         <div className="auth-landing-intro">
-          <span>山软</span>
+          <BrandLogo size={80} className="auth-landing-logo" />
+          <span>{BRAND_PREFIX}</span>
           <h1 id="auth-landing-title">
             今天
             <br />
             吃什么
           </h1>
-          <p>
-            {BRAND_SLOGAN}
-            <span className="auth-landing-thought" aria-hidden="true">
-              🤔
-            </span>
-          </p>
         </div>
         <DishCarousel />
       </section>

@@ -1,3 +1,4 @@
+import { BRAND_PREFIX } from "./brand";
 import "./auth-dialog.css";
 import "./policy-consent.css";
 
@@ -54,7 +55,7 @@ export function askDuplicateShop(
         <header class="ew-login-dialog-header">
           <span class="ew-login-dialog-brand">
             <span class="ew-login-dialog-mark" aria-hidden="true">?</span>
-            山软 <i aria-hidden="true">·</i> 今天吃什么
+            ${BRAND_PREFIX} <i aria-hidden="true">·</i> 今天吃什么
           </span>
         </header>
         <div class="ew-login-dialog-content">
