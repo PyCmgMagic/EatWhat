@@ -194,13 +194,6 @@
 :root[data-theme="dark"] .pc-button.light:hover:not(:disabled) {
   background: #353330;
 }
-:root[data-theme="dark"] .pc-dish-like[aria-pressed="true"] {
-  background: var(--night-red-soft);
-  color: var(--night-red-text) !important;
-  box-shadow:
-    inset 0 0 0 1px rgb(255 159 142 / 28%),
-    0 2px 8px rgb(0 0 0 / 25%);
-}
 
 /* Scene toggle on dark surfaces */
 :root[data-theme="dark"] .ew-scene-toggle:not([data-tone="stage"]) {
@@ -273,16 +266,6 @@
 :root[data-theme="dark"] .pc-restaurant-hero {
   background: linear-gradient(120deg, #f3c46e 0%, #f6d385 100%);
   color: #231c18;
-}
-:root[data-theme="dark"] .pc-restaurant-hero .pc-eyebrow {
-  color: #6e4c1f;
-}
-:root[data-theme="dark"] .pc-restaurant-stat {
-  background: rgb(255 255 255 / 26%);
-  border-color: rgb(255 255 255 / 38%);
-}
-:root[data-theme="dark"] .pc-restaurant-stat span {
-  color: #5d431f;
 }
 :root[data-theme="dark"] .pc-restaurant-actions .pc-button:not(.light) {
   background: linear-gradient(180deg, #3b312b, #231c18);

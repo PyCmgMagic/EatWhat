@@ -1,6 +1,16 @@
 .discovery-results {
   min-width: 0;
 }
+.discovery-pick, .discovery-pagination {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px;
+}
+.discovery-pick { padding-block: 4px 10px; font-size: 14px; }
+.discovery-pick button {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 44px;
+  border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer;
+}
+.discovery-pick a { color: inherit; text-underline-offset: 3px; }
+.discovery-pagination { justify-content: center; }
 .discovery-toolbar {
   container-type: inline-size;
   display: flex;

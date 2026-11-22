@@ -66,7 +66,7 @@ export function RecommendationControls() {
       <button
         disabled={fetching > 0}
         onClick={() =>
-          void cache.invalidateQueries({
+          void cache.resetQueries({
             queryKey: ["foods", "mobile-recommend"],
           })
         }

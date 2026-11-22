@@ -7,7 +7,7 @@ async (page) => {
     id: 91, name: "PyCmgMagic", category: "staple", price: 2,
     restaurantId: 1, restaurantName: "滨寿司", accountId: 21,
     user: { id: 21, displayName: "PyCmg" },
-    stageColor: "matcha", likesCount: 0, isLiked: false, isFavorite: false,
+    stageColor: "matcha", likeCount: 9, isLiked: false, isFavorite: false,
     coverCrop: {centerX:0.25, centerY:0.5, diameter:0.5},
     tags: [], pictureUrls: ["/prototype/assets/photos/sq_luosi.png", "/assets/dessert.jpg"],
   };
@@ -41,6 +41,11 @@ async (page) => {
   await context.route(url => url.origin === base && url.pathname.startsWith("/api/"), async route => {
     const path = new URL(route.request().url()).pathname;
     if (["/api/user/activity", "/api/device/register"].includes(path) && route.request().method() === "POST") {
+      return route.fulfill({json:{code:0,data:null}});
+    }
+    if (["/api/foods/91/like", "/api/foods/91/unlike"].includes(path) && route.request().method() === "POST") {
+      const isLiked = path.endsWith("/like");
+      current = { ...current, isLiked, likeCount: food.likeCount + Number(isLiked) };
       return route.fulfill({json:{code:0,data:null}});
     }
     if (route.request().method() !== "GET") { writes.push(path); return route.abort(); }
@@ -141,7 +146,7 @@ async (page) => {
     await reader.focus();
     await reader.press("End");
     await p.waitForFunction(() => document.querySelector(".pc-dish-reading").scrollTop > 0);
-    await p.getByRole("group", { name: "我的评分" }).getByRole("button").last().click({ trial: true });
+    await reader.getByRole("region", { name: "菜品评分" }).getByRole("button").click({ trial: true });
     const more = p.locator(".pc-dish-more summary");
     await more.click();
     const report = p.getByRole("button", { name: "举报菜品", exact: true });
@@ -180,11 +185,22 @@ async (page) => {
     await confirmation.getByRole("button", {name:"取消",exact:true}).click();
     await confirmation.waitFor({state:"hidden"});
     assert(!(await more.evaluate(el => el.parentElement.open)), "Management menu stayed open after deletion was cancelled");
-    for (let attempt=0; attempt<2; attempt++) {
-      await p.evaluate(() => window.scrollTo(0,0));
-      await p.getByRole("link", {name:"食友讨论",exact:true}).click();
-      await p.waitForFunction(() => window.scrollY>0 && document.getElementById("food-discussion").getBoundingClientRect().top < innerHeight/2);
+    const actions = p.locator(".pc-dish-actions");
+    assert(await actions.getByRole("link").count() === 1 && await shop.isVisible(), "Unexpected dish action link");
+    const like = actions.getByRole("button");
+    const likeStyle = () => like.evaluate(el => {
+      const {x, y, width, height} = el.getBoundingClientRect();
+      const {background, boxShadow} = getComputedStyle(el);
+      return {x, y, width, height, background, boxShadow};
+    });
+    await like.hover();
+    const beforeLike = await likeStyle();
+    for (const [pressed, count] of [[true, "10"], [false, "9"]]) {
+      await like.click();
+      await actions.locator(`button[aria-pressed="${pressed}"]`).getByText(count, {exact:true}).waitFor();
+      assert(JSON.stringify(await likeStyle()) === JSON.stringify(beforeLike), "Like toggle changed its size, position or surface");
     }
+    await p.getByRole("heading", { name: /吃过的人说/ }).scrollIntoViewIfNeeded();
     const desktopColors = await coverColors(".pc-dish-stage", "::before");
     await p.setViewportSize({width:390,height:844});
     await p.goto(base + "/?demo=0&view=mobile#/foods/91");

@@ -14,6 +14,7 @@ export function FoodPhotoPicker({
   disabled,
   onAdd,
   onRemove,
+  onMove,
   feedback = false,
   compact = false,
 }: {
@@ -21,6 +22,7 @@ export function FoodPhotoPicker({
   disabled: boolean;
   onAdd: (files: File[]) => void;
   onRemove: (index: number) => void;
+  onMove?: (source: string, target: string) => void;
   feedback?: boolean;
   compact?: boolean;
 }) {
@@ -43,6 +45,11 @@ export function FoodPhotoPicker({
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useFeedbackState();
   const [preview, setPreview] = useState<number>();
+  function movePreview(target: number) {
+    if (preview == null || !photos[target] || !onMove) return;
+    onMove(photos[preview].url, photos[target].url);
+    setPreview(target);
+  }
   const limit = feedback ? 3 : 9;
   const remaining = Math.max(0, limit - photos.length);
   const item = feedback ? "截图" : "照片";
@@ -89,7 +96,9 @@ export function FoodPhotoPicker({
           </span>
         </header>
         {!feedback && (
-          <p className="food-photo-caption">首张为封面，点击照片可预览。</p>
+          <p className="food-photo-caption">{onMove && photos.length > 1
+            ? "点击照片可预览、调整顺序或设为封面。"
+            : "首张为封面，点击照片可预览。"}</p>
         )}
         <div
           className="food-photo-dropzone"
@@ -123,7 +132,7 @@ export function FoodPhotoPicker({
         >
           <div className="food-photo-grid" ref={grid}>
             {photos.map((photo, index) => (
-              <div className="food-photo-tile" key={photo.url + index}>
+              <div className="food-photo-tile" key={photo.url}>
                 <button
                   type="button"
                   className="food-photo-preview"
@@ -236,6 +245,14 @@ export function FoodPhotoPicker({
               src={photos[preview].url}
               alt={`${feedback ? "反馈截图" : "菜品照片"} ${preview + 1}`}
             />
+            {onMove && photos.length > 1 && (
+              <div className="food-photo-order" role="group" aria-label="调整照片顺序">
+                <button type="button" disabled={disabled || preview === 0} onClick={() => movePreview(0)}>设为封面</button>
+                <button type="button" disabled={disabled || preview === 0} onClick={() => movePreview(preview - 1)}>向前移</button>
+                <button type="button" disabled={disabled || preview === photos.length - 1} onClick={() => movePreview(preview + 1)}>向后移</button>
+                <span role="status">{preview === 0 ? "当前封面" : `当前第 ${preview + 1} 张`}</span>
+              </div>
+            )}
           </Modal>,
           document.body,
         )}

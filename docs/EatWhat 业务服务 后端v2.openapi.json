@@ -4541,6 +4541,7 @@
     "/recommend" : {
       "get" : {
         "tags" : [ "推荐 · Recommend" ],
+        "description" : "个性化推荐按用户、日期、饭点记录已推荐店铺。第 1 页（含省略 page）优先返回本轮未推荐的店，不足时将历史店铺补在末尾，整页计入新一轮。第 2 页起只返回本轮剩余的店，耗尽时 hasNext=false。游客及关闭个性化的用户按普通分页。",
         "operationId" : "list_4",
         "parameters" : [ {
           "name" : "scene",
@@ -5079,6 +5080,14 @@
         "summary" : "【需登录】我的分享：我首次发布的菜品",
         "operationId" : "my",
         "parameters" : [ {
+          "name" : "foodId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
           "name" : "page",
           "in" : "query",
           "required" : false,
@@ -6455,6 +6464,10 @@
           },
           "birthday" : {
             "type" : "string"
+          },
+          "coverFoodId" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "signature" : {
             "type" : "string"
@@ -9091,6 +9104,10 @@
           },
           "birthday" : {
             "type" : "string"
+          },
+          "coverFoodId" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "signature" : {
             "type" : "string"

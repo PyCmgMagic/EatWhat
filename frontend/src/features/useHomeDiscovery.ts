@@ -1,5 +1,9 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  infiniteQueryOptions,
+  useInfiniteQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   useDiscoveryFilters,
   sortRecommendedShops,
@@ -12,6 +16,17 @@ import type { Food } from "../api/models";
 import { useMobile } from "../mobile/ui";
 import { recommendationBatchSize, useRemoteConfig } from "./v4/Remote";
 
+// A pick or a second tab can start another round between two list requests.
+function distinctById<T extends { id?: number | null }>(items: T[]) {
+  const seen = new Set<number>();
+  return items.filter(({ id }) => {
+    if (id == null) return true;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+}
+
 export function useHomeDiscovery(enabled = true) {
   const { api, toast } = useApp();
   const cache = useQueryClient();
@@ -21,33 +36,54 @@ export function useHomeDiscovery(enabled = true) {
   const { kind, setKind, sort, setSort } = useDiscoveryFilters();
   const [dismissed, setDismissed] = useState<number[]>([]);
   const [dismissing, setDismissing] = useState(false);
-  const options = (key: DiscoveryKind) => ({
-    queryKey: [
-      "foods",
-      "mobile-recommend",
-      mealKey,
-      scene,
-      area?.gcjLng,
-      area?.gcjLat,
-      key,
-      batchSize,
-    ],
-    queryFn: async () => {
-      const feed = await api.recommendFeed(batchSize, {
-        kind: key,
-        mealTime,
+  const filters = {
+    mealTime,
+    scene,
+    gcjLng: area?.gcjLng,
+    gcjLat: area?.gcjLat,
+  };
+  const firstPage: { page: number; mealTime?: string } = { page: 1, mealTime };
+  const options = (key: DiscoveryKind) =>
+    infiniteQueryOptions({
+      queryKey: [
+        "foods",
+        "mobile-recommend",
+        mealKey,
         scene,
-        gcjLng: area?.gcjLng,
-        gcjLat: area?.gcjLat,
-        deviceId: guestDeviceId(),
-      });
-      if (!mealTime && key === "food") noteServedMeal(feed.mealTime);
-      return feed;
-    },
-    enabled: enabled && ready,
-  });
-  const hero = useQuery(options("food"));
-  const selected = useQuery({
+        area?.gcjLng,
+        area?.gcjLat,
+        key,
+        batchSize,
+      ],
+      initialPageParam: firstPage,
+      queryFn: async ({ pageParam, signal }) => {
+        const feed = await api.recommendFeed(
+          batchSize,
+          {
+            ...filters,
+            kind: key,
+            ...pageParam,
+            deviceId: guestDeviceId(),
+          },
+          signal,
+        );
+        if (!mealTime && key === "food" && pageParam.page === 1)
+          noteServedMeal(feed.mealTime);
+        return feed;
+      },
+      getNextPageParam: (last, _pages, previous) =>
+        last.hasNext
+          ? {
+              page: previous.page + 1,
+              mealTime: last.mealTime ?? previous.mealTime,
+            }
+          : undefined,
+      refetchOnReconnect: false,
+      refetchOnMount: false,
+      enabled: enabled && ready,
+    });
+  const hero = useInfiniteQuery(options("food"));
+  const selected = useInfiniteQuery({
     ...options(kind),
     enabled: enabled && ready && kind !== "food",
   });
@@ -70,8 +106,11 @@ export function useHomeDiscovery(enabled = true) {
             (prev) =>
               prev && {
                 ...prev,
-                items: prev.items.filter((dish) => dish.restaurantId !== id),
-                shops: prev.shops?.filter((shop) => shop.id !== id) ?? null,
+                pages: prev.pages.map((page) => ({
+                  ...page,
+                  items: page.items.filter((dish) => dish.restaurantId !== id),
+                  shops: page.shops?.filter((shop) => shop.id !== id) ?? null,
+                })),
               },
           );
           toast(`30 天内不再推荐${shop}`);
@@ -84,7 +123,15 @@ export function useHomeDiscovery(enabled = true) {
       "点错了",
     );
   }
-  const shops = feed.data?.shops?.filter((shop) => visible(shop.id));
+  const pages = feed.data?.pages ?? [];
+  const shops = pages[0]?.shops
+    ? distinctById(
+        pages
+          .flatMap((page) => page.shops ?? [])
+          .filter((shop) => visible(shop.id)),
+      )
+    : null;
+  const first = hero.data?.pages[0];
   const canSortByDistance = !!shops?.some(
     (shop) => shop.distanceMeters != null,
   );
@@ -95,6 +142,10 @@ export function useHomeDiscovery(enabled = true) {
   return {
     hero,
     feed,
+    refresh: () =>
+      cache.resetQueries({ queryKey: options(kind).queryKey, exact: true }),
+    pickFilters: { ...filters, kind, mealTime: pages[0]?.mealTime ?? mealTime },
+    pickScope: JSON.stringify(options(kind).queryKey),
     kind,
     setKind,
     sort: activeSort,
@@ -102,10 +153,13 @@ export function useHomeDiscovery(enabled = true) {
     canSortByDistance,
     requestDismiss,
     dismissing,
-    heroFoods:
-      hero.data?.items.filter((dish) => visible(dish.restaurantId)) ?? [],
-    heroHasShops: hero.data?.shops?.some((shop) => visible(shop.id)),
+    heroFoods: first?.items.filter((dish) => visible(dish.restaurantId)) ?? [],
+    heroHasShops: first?.shops?.some((shop) => visible(shop.id)),
     shops: shops && sortRecommendedShops(shops, activeSort, scene),
-    dishes: feed.data?.items.filter((dish) => visible(dish.restaurantId)) ?? [],
+    dishes: distinctById(
+      pages
+        .flatMap((page) => page.items)
+        .filter((dish) => visible(dish.restaurantId)),
+    ),
   };
 }

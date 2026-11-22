@@ -92,13 +92,10 @@ async function validatePublishDestination(page) {
   const destination = p.locator(".mobile-publish-destination");
   try {
     await p.goto(base + "/?demo=0#/publish");
-    await p.getByRole("radio", { name: /渔见17码头/ }).click();
     const failure = p.waitForResponse((r) =>
       r.url().includes("/restaurant/detail/7"),
     );
-    await p
-      .getByRole("link", { name: "下一步：给渔见17码头加菜", exact: true })
-      .click();
+    await p.getByRole("button", { name: /渔见17码头/ }).click();
     await destination.getByText(shops[0].name, { exact: true }).waitFor();
     assert(
       !(await destination.innerText()).includes("所选餐厅"),
@@ -142,13 +139,7 @@ async function validatePublishDestination(page) {
     await destination
       .getByRole("link", { name: "换一家", exact: true })
       .click();
-    await p.getByRole("radio", { name: new RegExp(shops[1].name) }).click();
-    await p
-      .getByRole("link", {
-        name: `下一步：给${shops[1].name}加菜`,
-        exact: true,
-      })
-      .click();
+    await p.getByRole("button", { name: new RegExp(shops[1].name) }).click();
     await destination.getByText(shops[1].name, { exact: true }).waitFor();
     assert(
       !(await destination.innerText()).includes(shops[0].name),

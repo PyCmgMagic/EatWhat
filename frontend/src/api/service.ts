@@ -31,6 +31,7 @@ import type {
   Restaurant,
   Hub,
   User,
+  ProfileUpdate,
   Page,
   CustomTag,
   Notification,
@@ -67,6 +68,7 @@ export type RecommendFilters = {
   kind?: string;
   category?: string;
   size?: number;
+  page?: number;
   deviceId?: string;
 };
 
@@ -116,17 +118,19 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
   const recommendFeed = async (
     limit = 8,
     filters: RecommendFilters = {},
+    signal?: AbortSignal,
   ): Promise<{
     items: Food[];
     mealTime: string | null;
     /** Ranked shops and their featured dishes, when the endpoint returns shop cards. */
     shops: Restaurant[] | null;
+    hasNext: boolean;
   }> => {
     // Deployed servers return data as an array; the checked-in API contract
     // still describes a page. Normalize both here for desktop and mobile.
     const result = await data<
       Food[] | (Page<Food> & { mealTime?: string | null; shops?: Restaurant[] })
-    >("/foods/recommend", { query: { size: limit, ...filters } });
+    >("/foods/recommend", { query: { size: limit, ...filters }, signal });
     const items = Array.isArray(result) ? result : result.items;
     if (!Array.isArray(items))
       throw new ApiError(
@@ -137,6 +141,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       items,
       mealTime: Array.isArray(result) ? null : (result.mealTime ?? null),
       shops: Array.isArray(result) ? null : (result.shops ?? null),
+      hasNext: !Array.isArray(result) && result.hasNext === true,
     };
   };
   const post = (
@@ -353,7 +358,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       }),
     logout: () => post("/auth/logout"),
     me: () => data<User>("/user/info"),
-    updateProfile: (body: Schema["UpdateUserInfoDTORequest"]) =>
+    updateProfile: (body: ProfileUpdate) =>
       request<void>("/user/updateInfo", { method: "PUT", body }),
     changePassword: (body: Schema["ChangePwdDTORequest"]) =>
       post("/auth/changePassword", body),
@@ -394,6 +399,8 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       (await recommendFeed(limit, filters)).items,
     /** Dishes plus the meal slot the backend used (null when unknown). */
     recommendFeed,
+    pickShop: (filters: Pick<RecommendFilters, "kind" | "mealTime" | "scene" | "gcjLng" | "gcjLat">) =>
+      data<{ restaurant: { id: number; name?: string } | null }>("/recommend/pick", { query: filters }),
     food: (id: number) => data<Food>(`/foods/detail/${id}`),
     foods: (
       restaurantId: number | undefined,
@@ -426,8 +433,8 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         public: true,
         signal,
       }),
-    myFoods: (page = 1) =>
-      data<Page<Food>>("/foods/my", { query: { page, pageSize: 12 } }),
+    myFoods: (page = 1, foodId?: number) =>
+      data<Page<Food>>("/foods/my", { query: { page, pageSize: 12, foodId } }),
     favorites: (page = 1, filters?: FoodFilters) =>
       data<Page<Food>>("/foods/favorites", {
         query: { page, pageSize: 12, ...filters },

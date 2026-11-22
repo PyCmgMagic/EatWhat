@@ -1,49 +1,34 @@
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { rasterizeGlass } from "./glass-optics";
+import "./liquid-glass.css";
 
 // Sample the live backdrop through a convex capsule: a gently magnified centre
 // flows into a steeper rim. No copied page content or captured frames are used.
-const refractionScale = 40;
-
-function bevelMap(width: number, height: number) {
+function opticalMaps(width: number, height: number, density: number) {
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
   const context = canvas.getContext("2d");
   if (!context) return undefined;
-  const image = context.createImageData(width, height);
-  const radius = height / 2;
-  const bevel = Math.min(13, radius * 0.44);
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const px = x + 0.5 - width / 2;
-      const py = y + 0.5 - height / 2;
-      const qx = Math.abs(px) - (width / 2 - radius);
-      const qy = Math.abs(py);
-      const length = Math.hypot(Math.max(qx, 0), qy);
-      const distance = radius - length;
-      const t = Math.max(0, Math.min(1, 1 - distance / bevel));
-      const bend = Math.sin(t * Math.PI * 0.5) ** 2;
-      const nx = (Math.max(qx, 0) / (length || 1)) * Math.sign(px);
-      const ny = (qy / (length || 1)) * Math.sign(py);
-      // Inward sampling enlarges the scene. The rim's curved normal adds the
-      // compression at the edge that distinguishes glass from a uniform blur.
-      const dx = -px * 0.045 - nx * bend * 11;
-      const dy = -py * 0.2 - ny * bend * 11;
-      const offset = (y * width + x) * 4;
-      image.data[offset] = 255 * (0.5 + dx / refractionScale);
-      image.data[offset + 1] = 255 * (0.5 + dy / refractionScale);
-      image.data[offset + 2] = 128;
-      image.data[offset + 3] = 255;
-    }
-  }
-  context.putImageData(image, 0, 0);
-  return canvas.toDataURL();
+  const raster = rasterizeGlass(width, height, density);
+  canvas.width = raster.width;
+  canvas.height = raster.height;
+  const encode = (data: Uint8ClampedArray) => {
+    const image = context.createImageData(raster.width, raster.height);
+    image.data.set(data);
+    context.putImageData(image, 0, 0);
+    return canvas.toDataURL();
+  };
+  return {
+    displacement: encode(raster.displacement),
+    lighting: encode(raster.lighting),
+    scale: raster.scale,
+  };
 }
 
 export function LiquidGlass() {
   const id = `nav-glass-${useId().replace(/:/g, "")}`;
   const surface = useRef<HTMLSpanElement>(null);
-  const [map, setMap] = useState<string>();
+  const [maps, setMaps] = useState<ReturnType<typeof opticalMaps>>();
+  const [refracting, setRefracting] = useState(false);
 
   useEffect(() => {
     // DevTools can use an iPhone/Safari UA while still running Chromium.
@@ -51,7 +36,7 @@ export function LiquidGlass() {
     const chromium =
       "chrome" in window ||
       /\b(Chrome|HeadlessChrome|Chromium|Edg)\//.test(navigator.userAgent);
-    if (!chromium) return;
+    setRefracting(chromium);
     const element = surface.current;
     if (!element || typeof ResizeObserver === "undefined") return;
     const transparency = matchMedia("(prefers-reduced-transparency: reduce)");
@@ -61,16 +46,17 @@ export function LiquidGlass() {
     const update = () => {
       if (transparency.matches || contrast.matches || forced.matches) {
         lastSize = "";
-        setMap(undefined);
+        setMaps(undefined);
         return;
       }
       // Layout dimensions ignore a pressed parent's transform.
       const width = element.offsetWidth;
       const height = element.offsetHeight;
-      const size = `${width}:${height}`;
+      const density = Math.min(window.devicePixelRatio || 1, 2);
+      const size = `${width}:${height}:${density}`;
       if (!width || !height || size === lastSize) return;
       lastSize = size;
-      setMap(bevelMap(width, height));
+      setMaps(opticalMaps(width, height, density));
     };
     const observer = new ResizeObserver(update);
     observer.observe(element);
@@ -91,10 +77,17 @@ export function LiquidGlass() {
       ref={surface}
       className="design-glass-backdrop"
       aria-hidden="true"
-      data-refracting={map ? "true" : undefined}
-      style={{ "--glass-refraction": `url("#${id}")` } as CSSProperties}
+      data-optics={maps ? "true" : undefined}
+      data-refracting={maps && refracting ? "true" : undefined}
+      style={
+        {
+          boxShadow: maps ? "none" : undefined,
+          "--glass-refraction": `url("#${id}")`,
+          "--glass-lighting": maps ? `url("${maps.lighting}")` : undefined,
+        } as CSSProperties
+      }
     >
-      {map && (
+      {maps && refracting && (
         <svg
           className="design-glass-filter"
           width="0"
@@ -111,7 +104,7 @@ export function LiquidGlass() {
               colorInterpolationFilters="sRGB"
             >
               <feImage
-                href={map}
+                href={maps.displacement}
                 width="100%"
                 height="100%"
                 preserveAspectRatio="none"
@@ -120,7 +113,7 @@ export function LiquidGlass() {
               <feDisplacementMap
                 in="SourceGraphic"
                 in2="bevel"
-                scale={refractionScale}
+                scale={maps.scale}
                 xChannelSelector="R"
                 yChannelSelector="G"
               />

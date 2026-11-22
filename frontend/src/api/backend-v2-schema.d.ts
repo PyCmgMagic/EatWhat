@@ -1818,7 +1818,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 推荐店铺列表 */
+        /**
+         * 推荐店铺列表
+         * @description 个性化推荐按用户、日期、饭点记录已推荐店铺。第 1 页（含省略 page）优先返回本轮未推荐的店，不足时将历史店铺补在末尾，整页计入新一轮。第 2 页起只返回本轮剩余的店，耗尽时 hasNext=false。游客及关闭个性化的用户按普通分页。
+         */
         get: operations["recommend"];
         put?: never;
         post?: never;
@@ -2685,6 +2688,8 @@ export interface components {
             avatar?: string;
             gender?: string;
             birthday?: string;
+            /** Format: int64 */
+            coverFoodId?: number;
             signature?: string;
         };
         ResultVoid: {
@@ -3664,6 +3669,8 @@ export interface components {
             banUntil?: number | null;
             gender?: string;
             birthday?: string;
+            /** Format: int64 */
+            coverFoodId?: number;
             signature?: string;
             fansVisible?: boolean;
             followingsVisible?: boolean;
@@ -8359,6 +8366,7 @@ export interface operations {
     getFoodsMy: {
         parameters: {
             query?: {
+                foodId?: number;
                 page?: number;
                 pageSize?: number;
             };

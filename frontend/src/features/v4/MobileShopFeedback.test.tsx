@@ -65,7 +65,7 @@ afterEach(async () => {
   host.remove();
 });
 
-async function open() {
+async function renderFeedback() {
   await act(async () =>
     root.render(
       <QueryClientProvider client={new QueryClient()}>
@@ -79,6 +79,11 @@ async function open() {
     await act(async () => new Promise((resolve) => setTimeout(resolve, 10)));
 }
 
+async function open() {
+  await renderFeedback();
+  await act(async () => host.querySelector("summary")!.click());
+}
+
 const yes = () =>
   host.querySelector<HTMLButtonElement>(".shop-voice-option.is-yes");
 const no = () =>
@@ -88,20 +93,26 @@ const switchScene = (name: string) =>
     ...host.querySelectorAll<HTMLButtonElement>(".shop-voice-scenes button"),
   ].find((button) => button.textContent === name)!;
 
-it("shows the recommendation rate and count without shop traits or extra copy", async () => {
-  await open();
-  expect(host.querySelector(".shop-voice-number strong")?.textContent).toBe(
+it("starts with a compact summary and toggles the vote controls without voting", async () => {
+  await renderFeedback();
+  const details = host.querySelector("details")!;
+  const summary = details.querySelector("summary")!;
+  expect(details.open).toBe(false);
+  expect(summary.querySelector(".shop-voice-number strong")?.textContent).toBe(
     "86%",
   );
-  expect(host.querySelector(".shop-voice-count")?.textContent).toBe(
+  expect(summary.querySelector(".shop-voice-count")?.textContent).toBe(
     "23 人评价",
   );
   expect(host.querySelector("h2")?.textContent).toBe("食友评价");
-  expect(host.querySelector(".shop-voice-chips")).toBeNull();
   expect(host.querySelector(".shop-voice-scenes")).toBeNull();
-  expect(host.querySelector(".shop-voice-caption")).toBeNull();
-  expect(host.querySelector(".shop-voice-hint")).toBeNull();
+  expect(summary.contains(yes())).toBe(false);
+  await act(async () => summary.click());
+  expect(details.open).toBe(true);
   expect(yes()?.getAttribute("aria-pressed")).toBe("false");
+  await act(async () => summary.click());
+  expect(details.open).toBe(false);
+  expect(api.rateRestaurantScene).not.toHaveBeenCalled();
 });
 
 it("records a recommendation for the dine-in scene", async () => {

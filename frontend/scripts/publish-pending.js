@@ -125,13 +125,7 @@ async function verifyPublishPending(page) {
       await p.goto(
         `${base}/?demo=0&view=${mobile ? "mobile" : "desktop"}#/publish`,
       );
-      await p.getByRole("radio", { name: /等待状态测试餐厅/ }).click();
-      if (mobile)
-        await p
-          .getByRole("link", {
-            name: /下一步，填写菜品/,
-          })
-          .click();
+      await p.getByRole(mobile ? "button" : "radio", { name: /等待状态测试餐厅/ }).click();
       await p
         .getByRole("textbox", { name: "菜名", exact: true })
         .fill("等待状态测试菜");

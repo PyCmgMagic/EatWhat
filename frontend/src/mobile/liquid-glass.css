@@ -1,0 +1,39 @@
+/* The optical map replaces decorative outlines only after it is ready. */
+:root
+  .design-navigation
+  :is(nav, .design-fab-surface):has(
+    > .design-glass-backdrop[data-optics="true"]
+  )::before {
+  background: none;
+  border: 0;
+}
+:root
+  .design-navigation
+  :is(nav, .design-fab-surface):has(
+    > .design-glass-backdrop[data-optics="true"]
+  )::after {
+  box-shadow: none;
+}
+.design-glass-backdrop[data-optics="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--glass-lighting) center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+:root[data-theme="dark"] .design-navigation [data-refracting="true"] {
+  --nav-dark-filter: blur(1.6px) var(--glass-refraction) brightness(0.48)
+    saturate(1.2);
+}
+/* Preferences take effect immediately, including before React clears maps. */
+@media (prefers-reduced-transparency: reduce),
+  (prefers-contrast: more),
+  (forced-colors: active) {
+  :root[data-theme="dark"] .design-navigation [data-refracting="true"] {
+    --nav-dark-filter: none;
+  }
+  .design-glass-backdrop[data-optics="true"]::after {
+    display: none;
+  }
+}

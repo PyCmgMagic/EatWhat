@@ -161,6 +161,13 @@ const publicScreens = new Set([
   "G-PhotoPipeline",
 ]);
 const homeScreens = new Set(["G2-Home", "G-HomePhoto"]);
+const pickShopClasses: Record<number, string> = {
+  2: "mobile-pick-shop-header",
+  8: "mobile-pick-shop-title",
+  9: "mobile-pick-shop-search",
+  13: "mobile-pick-shop-area",
+  27: "mobile-pick-shop-create",
+};
 const qstyle = (on: boolean) => ({
   on: on ? "true" : "false",
   bg: on ? "#231C18" : "#F4EFEB",
@@ -170,6 +177,7 @@ const qstyle = (on: boolean) => ({
 function clean(text: string) {
   return text.replace(/\s+/g, " ").trim();
 }
+
 function matches(view: NodeView, text: string) {
   return clean(view.text) === text;
 }
@@ -486,28 +494,40 @@ export function useDesignBridge(
     enabled: browse && screen === "G-PanelPlace",
     placeholderData: (previous) => previous,
   });
-  const queryKeyword =
-    screen === "G-Search" ? String(controller.state.q ?? "") : search;
+  const pickingShop = screen === "G-PickShop";
+  const queryKeyword = pickingShop
+    ? search.trim()
+    : String(controller.state.q ?? "");
   const debouncedKeyword = useDebouncedSearch(queryKeyword);
+  const shopPage = pickingShop ? 1 : page;
+  const shopLimit = pickingShop && !debouncedKeyword ? 5 : 12;
   const shops = useQuery({
-    queryKey: ["restaurants", "mobile-search", area, debouncedKeyword, page],
-    queryFn: () =>
-      area
+    queryKey: [
+      "restaurants",
+      "mobile-search",
+      area,
+      debouncedKeyword,
+      shopPage,
+      shopLimit,
+    ],
+    queryFn: () => {
+      const filters = {
+        keyword: debouncedKeyword || undefined,
+        page: shopPage,
+        pageSize: shopLimit,
+      };
+      return area
         ? api.restaurantSearch({
-            keyword: debouncedKeyword || undefined,
-            gcjLng: area!.gcjLng,
-            gcjLat: area!.gcjLat,
-            hubId: area?.hubId,
-            page,
-            pageSize: 12,
+            ...filters,
+            gcjLng: area.gcjLng,
+            gcjLat: area.gcjLat,
+            hubId: area.hubId,
+            sort: pickingShop && !debouncedKeyword ? "DISTANCE" : undefined,
           })
-        : api.browseRestaurants({
-            keyword: debouncedKeyword || undefined,
-            page,
-            pageSize: 12,
-          }),
-    enabled: browse && ["G-PickShop", "G-Search"].includes(screen),
-    placeholderData: keepPreviousData,
+        : api.browseRestaurants(filters);
+    },
+    enabled: pickingShop ? verified : browse && screen === "G-Search",
+    placeholderData: pickingShop ? undefined : keepPreviousData,
   });
   const relevant = homeScreens.has(screen)
     ? recommendations
@@ -1079,34 +1099,33 @@ export function useDesignBridge(
         }),
     }));
   }
-  if (screen === "G-PickShop" && !reference) {
-    const list = shops.data?.items ?? [],
-      chosen = list.find((r) => r.id === m.shopId);
-    values.chosen =
-      chosen?.name ||
-      (m.draft.restaurantId === m.shopId && m.draft.shopName) ||
-      "选中的餐厅";
-    values.rows = list.map((r) => ({
-      id: r.id,
-      name: r.name,
-      dist: "",
-      hub: r.address ?? "",
-      tint: "#F4EFEB",
-      img: mediaUrl(r.pictureUrl?.[0]) ?? "/assets/restaurants/shop.svg",
-      ...qstyle(r.id === m.shopId),
-      bg: r.id === m.shopId ? "#FFF0C3" : "#F4EFEB",
-      ring: r.id === m.shopId ? "#231C18" : "#D9D0C9",
-      fill: r.id === m.shopId ? "#231C18" : "transparent",
-      check: r.id === m.shopId ? 1 : 0,
-      pick: () => {
-        m.setShopId(r.id!);
-        m.setDraft({
-          restaurantId: r.id!,
-          shopName: r.name ?? "",
-          restaurantPicked: true,
-        });
-      },
-    }));
+  if (pickingShop && !reference) {
+    values.rows = (shops.data?.items ?? []).flatMap((shop) => {
+      const id = shop.id;
+      if (id == null) return [];
+      const current = m.draft.restaurantPicked && m.draft.restaurantId === id;
+      return [
+        {
+          id,
+          name: shop.name,
+          hub: shop.address ?? "",
+          img: mediaUrl(shop.pictureUrl?.[0]) ?? "/assets/restaurants/shop.svg",
+          tint: "#F4EFEB",
+          bg: current ? "#FFF0C3" : "#F4EFEB",
+          current,
+          pick: () => {
+            if (!access(true)) return;
+            m.setShopId(id);
+            m.setDraft({
+              restaurantId: id,
+              shopName: shop.name ?? "",
+              restaurantPicked: true,
+            });
+            nav("/publish/dish");
+          },
+        },
+      ];
+    });
   }
   if (screen === "G-History" && !reference) {
     values.rows = (history.data?.items ?? []).map((h) => {
@@ -1957,11 +1976,13 @@ export function useDesignBridge(
             className="mobile-restaurant-rating-link"
             onClick={() => {
               const panel = document.getElementById("restaurant-evaluation");
+              const details = panel?.querySelector("details");
+              if (details) details.open = true;
               panel?.scrollIntoView({
                 block: "center",
                 behavior: instantMotion() ? "instant" : "smooth",
               });
-              (panel?.querySelector("select") ?? panel)?.focus({
+              (details?.querySelector("summary") ?? panel)?.focus({
                 preventScroll: true,
               });
             }}
@@ -2467,110 +2488,101 @@ export function useDesignBridge(
       if (n.attrs.role === "tab")
         p.onClick = () => unavailable("消息按类型查询");
     }
-    if (screen === "G-PickShop") {
-      if (!reference) {
-        if (id === 1)
-          return (
-            <div
-              {...p}
-              className={`${p.className ?? ""} mobile-pick-shop-screen`}
-              style={undefined}
-            >
-              <div className="mobile-pick-shop-top">
-                {view.children[0]}
-                {view.children[1]}
-                {view.children[2]}
-                {view.children[3]}
-              </div>
-              <div className="mobile-pick-shop-body">
-                {view.children[4]}
-                {view.children[5]}
-              </div>
-              {view.children[6]}
+    if (pickingShop) {
+      if (id === 1)
+        return (
+          <div {...p} className="mobile-pick-shop-screen" style={undefined}>
+            <div className="mobile-pick-shop-top">
+              {view.children.slice(0, 4)}
             </div>
-          );
-        if (id === 2) {
-          p.className = `${p.className ?? ""} mobile-pick-shop-header`;
-          p.style = undefined;
-        }
-        if (id === 8) {
-          p.className = `${p.className ?? ""} mobile-pick-shop-title`;
-          p.style = undefined;
-        }
-        if (id === 9) {
-          p.className = `${p.className ?? ""} mobile-pick-shop-search`;
-          p.style = undefined;
-        }
-        if (id === 13) {
-          p.className = `${p.className ?? ""} mobile-pick-shop-area`;
-          p.style = undefined;
-        }
-        if (id === 27) {
-          p.className = `${p.className ?? ""} mobile-pick-shop-create`;
-          p.style = undefined;
-        }
-        if (id === 29) {
-          p.className = `${p.className ?? ""} mobile-pick-shop-footer`;
-          p.style = undefined;
-        }
-      }
-      if (n.attrs.role === "radio") {
-        p.className = `${p.className ?? ""} mobile-pick-shop-row`;
-        p.style = { ...p.style, height: "auto", padding: "8px 12px 8px 10px" };
-      }
-      if (tag === "span" && n.children.includes("{{r.name}}")) {
-        p.className = `${p.className ?? ""} mobile-pick-shop-name`;
-        p.title = view.scope.r?.name;
-      }
-      if (tag === "span" && n.children.includes("{{r.hub}}"))
-        return (
-          <span
-            {...p}
-            className={`${p.className ?? ""} mobile-pick-shop-address`}
-            style={{ ...p.style, display: "block" }}
-            title={view.scope.r?.hub}
-          >
-            {view.scope.r?.hub}
-          </span>
+            <div className="mobile-pick-shop-body">
+              {view.children.slice(4, 6)}
+            </div>
+          </div>
         );
-      if (tag === "a" && n.attrs.href === "G-AddDish.dc.html")
-        return (
-          <a
-            {...p}
-            className={`${p.className ?? ""} mobile-pick-shop-next`}
-            aria-label={`下一步，填写菜品${m.shopId ? `，已选择${values.chosen}` : ""}`}
-          >
-            下一步，填写菜品
-            <DesignIcon name="chevronRight" size={17} />
-          </a>
-        );
-      if (reference) {
-        if (id === 15) p.style = { ...p.style, bottom: 168, paddingBottom: 12 };
-        if (id === 27) p.style = { ...p.style, top: "auto", bottom: 108 };
-      } else if (id === 15) {
-        // The page scrolls, so this fluid list must not inherit the artboard's scroll region.
-        p.className = "mobile-pick-shop-list";
+      if (pickShopClasses[id]) {
+        p.className = pickShopClasses[id];
         p.style = undefined;
       }
-      if (tag === "span" && clean(text).includes("离你近的排在前面"))
-        return <span {...p}>当前查询区域：{area?.name ?? "待选择"}</span>;
+      if (id === 13)
+        return area?.name ? (
+          <span {...p}>当前查询区域：{area.name}</span>
+        ) : null;
       if (tag === "input") {
         delete p.defaultValue;
         p.value = search;
-        p.onChange = (e: any) => setSearch(e.target.value);
+        p.onChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+          setSearch(e.target.value);
       }
       if (id === 15)
         return (
-          <div {...p}>
-            {shops.data?.items?.length ? (
+          <div
+            className="mobile-pick-shop-list"
+            role="group"
+            aria-label="选择店铺"
+          >
+            {queryKeyword !== debouncedKeyword || shops.isPending ? (
+              <ContentSkeleton kind="rows" count={3} />
+            ) : shops.isError && !shops.data ? (
+              <MobileEmpty
+                title="店铺加载失败"
+                action={
+                  <button
+                    type="button"
+                    className="mobile-inline-link"
+                    onClick={() => void shops.refetch()}
+                  >
+                    重新加载
+                  </button>
+                }
+              />
+            ) : values.rows.length ? (
               <>
                 {view.children}
-                <More />
+                {debouncedKeyword && shops.data?.hasNext && (
+                  <p role="status" className="mobile-pick-shop-hint">
+                    匹配店铺较多，可以补全店名或分店名。
+                  </p>
+                )}
               </>
             ) : (
-              shopList()
+              <MobileEmpty
+                title={
+                  debouncedKeyword ? "没有找到匹配的店铺" : "当前区域暂无店铺"
+                }
+              />
             )}
           </div>
+        );
+      if (n.attrs.role === "radio")
+        return (
+          <button
+            type="button"
+            className="mobile-pick-shop-row"
+            style={{ ...st, height: "auto", padding: "8px 12px 8px 10px" }}
+            aria-current={scope.r.current || undefined}
+            onClick={scope.r.pick}
+          >
+            {view.children.slice(0, 2)}
+            <DesignIcon name="chevronRight" size={18} />
+          </button>
+        );
+      if (id === 21)
+        return (
+          <span {...p} className="mobile-pick-shop-name" title={scope.r.name}>
+            {scope.r.name}
+          </span>
+        );
+      if (id === 22)
+        return (
+          <span
+            {...p}
+            className="mobile-pick-shop-address"
+            style={{ ...st, display: "block" }}
+            title={scope.r.hub}
+          >
+            {scope.r.hub}
+          </span>
         );
     }
     if (screen === "G-Search" && id === 43)
@@ -2940,7 +2952,7 @@ export function useDesignBridge(
 
   function More() {
     const query = (
-      ["G-PickShop", "G-Search"].includes(screen)
+      screen === "G-Search"
         ? shops
         : relevant
     ) as { data?: { hasNext?: boolean }; isFetching?: boolean } | null;
@@ -3063,20 +3075,6 @@ export function useDesignBridge(
     }
     if (screen === "G-AddDish" && label === "发布") {
       void publish();
-      return;
-    }
-    if (screen === "G-PickShop" && target === "G-AddDish.dc.html") {
-      const selected = shops.data?.items?.find((r) => r.id === m.shopId);
-      if (!selected) {
-        m.notice("先选一家店。");
-        return;
-      }
-      m.setDraft({
-        restaurantId: selected.id!,
-        shopName: selected.name ?? "",
-        restaurantPicked: true,
-      });
-      nav("/publish/dish");
       return;
     }
     if (screen === "G-AddDish" && target === "G-Crop.dc.html") {

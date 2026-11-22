@@ -158,11 +158,16 @@ async function verifyBackendV2(page) {
     await heading(account, "一口面馆").waitFor();
     await button(account, "收藏店铺").click();
     await button(account, "取消收藏").waitFor();
-    await button(account, "外卖").click();
-    await button(account, "推荐").click();
-    await button(account, "撤销评价").waitFor();
-    await button(account, "撤销评价").click();
-    await button(account, "撤销评价").waitFor({ state: "hidden" });
+    const feedback = account.getByRole("region", { name: "食友评价" });
+    await feedback.locator("summary").click();
+    await button(feedback, "外卖").click();
+    await button(feedback, "推荐").click();
+    await feedback
+      .getByRole("button", { name: "推荐", exact: true, pressed: true })
+      .click();
+    await feedback
+      .getByRole("button", { name: "推荐", exact: true, pressed: false })
+      .waitFor();
     await open(account, "/favorites");
     await account.getByRole("link", { name: /一口面馆/ }).waitFor();
     checks.push("手机验证码失败与成功、学校认证、换绑、外卖评价、店铺收藏 390");

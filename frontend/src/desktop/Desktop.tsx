@@ -90,11 +90,8 @@ const V4Routes = lazy(() => import("../features/v4/Routes"));
 const ApiV2Routes = lazy(() => import("../features/ApiV2Routes"));
 const DesktopPublish = lazy(() => import("./DesktopPublish"));
 const DesktopProfile = lazy(() => import("./DesktopProfile"));
-const RestaurantActions = lazy(() =>
-  import("../features/v4/Community").then((m) => ({
-    default: m.RestaurantActions,
-  })),
-);
+import { DesktopRestaurantFeedback } from "./DesktopRestaurantFeedback";
+import { RestaurantHeaderFavorite } from "../features/v4/RestaurantHeaderFavorite";
 const FoodExtras = lazy(() =>
   import("../features/v4/DetailExtras").then((m) => ({
     default: m.FoodExtras,
@@ -115,7 +112,13 @@ import { EditFood } from "../features/EditFood";
 import { EditRestaurant, isShopEditPath } from "../features/EditRestaurant";
 import { useActionAccess } from "../features/access";
 import { mealCode } from "../api/food-display";
-import { foodCategories, type V2Food } from "../api/v2-vocab";
+import {
+  foodCategories,
+  shopFactLabels,
+  shopRatingScenes,
+  type V2Food,
+  type V2Shop,
+} from "../api/v2-vocab";
 import { useFoodImageRefresh, useFoodPhoto } from "../features/media";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
 import { FoodCover } from "../components/FoodCover";
@@ -1385,7 +1388,6 @@ function DesktopDish() {
       if (message) toast(message, { tone: "error" });
     },
   });
-  const likeCelebration = useCelebration(260);
   const favCelebration = useCelebration(260);
   const shop = useQuery({
     queryKey: ["restaurants", "detail", food?.restaurantId],
@@ -1518,38 +1520,17 @@ function DesktopDish() {
               <div className="pc-dish-actions">
                 <button
                   type="button"
-                  className={`pc-button light pc-dish-like${likeCelebration.celebrating ? " is-celebrating" : ""}`}
+                  className="pc-dish-like"
                   aria-label={food.isLiked ? "取消喜欢这道菜" : "喜欢这道菜"}
                   aria-pressed={food.isLiked === true}
                   disabled={
                     !!session && user?.verified === true && food.isLiked == null
                   }
-                  onClick={() => {
-                    if (food.isLiked !== true) likeCelebration.trigger();
-                    else likeCelebration.stop();
-                    void reactions.toggle("like");
-                  }}
+                  onClick={() => void reactions.toggle("like")}
                 >
                   <ReactionIcon kind="like" size={21} />
                   <b className="pc-dish-like-count">{food.likesCount ?? "—"}</b>
                 </button>
-                <Link
-                  className="pc-discussion-jump"
-                  to={`/foods/${id}?section=comments`}
-                  onClick={(e) => {
-                    // Scroll on every click: after the first one the URL no
-                    // longer changes, so the discussion would not react.
-                    const target = document.getElementById("food-discussion");
-                    if (!target) return; // not loaded yet: let the link do it
-                    e.preventDefault();
-                    target.scrollIntoView({
-                      block: "start",
-                      behavior: instantMotion() ? "instant" : "smooth",
-                    });
-                  }}
-                >
-                  <Icon name="comment" size={15} /> 食友讨论
-                </Link>
                 <Link
                   className="pc-button"
                   to={`/restaurants/${food.restaurantId}`}
@@ -1579,7 +1560,7 @@ function DesktopDish() {
 }
 function DesktopRestaurant() {
   const returnTo = useReturnTo("/nearby");
-  const { api } = useApp(),
+  const { api, session } = useApp(),
     m = useMobile(),
     loc = useLocation(),
     id = parseId(loc.pathname.split("/").pop()) ?? m.shopId,
@@ -1594,7 +1575,7 @@ function DesktopRestaurant() {
       queryFn: () => api.foods(id, page),
       placeholderData: keepPreviousData,
     }),
-    shop = query.data;
+    shop = query.data as (Restaurant & V2Shop) | undefined;
   const featuredFood = foods.data?.items?.[0];
   return (
     <QueryStatus query={query} skeleton="restaurant">
@@ -1608,35 +1589,41 @@ function DesktopRestaurant() {
             <Icon name="chevronRight" size={14} />
             <span>{shop.name}</span>
           </div>
-          <section className="pc-restaurant-hero">
+          <section className="pc-restaurant-hero has-reviews">
             <RestaurantMoreActions key={id} id={id} name={shop.name} desktop />
+            {session ? (
+              <RestaurantHeaderFavorite
+                key={`favorite-${id}`}
+                id={id}
+                className="pc-shop-save"
+                title={shop.isFavorite ? "取消收藏店铺" : "收藏店铺"}
+              />
+            ) : (
+              <LoginLink
+                to="/auth/password"
+                className="pc-shop-save"
+                aria-label="登录后收藏店铺"
+                title="登录后收藏店铺"
+              >
+                <Icon name="bookmark" size={22} />
+              </LoginLink>
+            )}
             <div className="pc-restaurant-hero-copy">
-              <span className="pc-eyebrow">好味道，也值得被分享</span>
               <h1>{shop.name}</h1>
               <p className="pc-restaurant-address">
                 <Icon name="nearby" size={18} />
                 <span>{shop.address ?? "地址待补充"}</span>
               </p>
-              <div className="pc-restaurant-stats">
-                <div className="pc-restaurant-stat">
-                  <strong>{foods.data?.totalItems ?? "—"}</strong>
-                  <span>道已分享菜品</span>
-                </div>
-                <div className="pc-restaurant-stat">
-                  <strong>
-                    {shop.recommendationRate == null
-                      ? "—"
-                      : `${shop.recommendationRate}%`}
-                  </strong>
-                  <span>
-                    {shop.ratingSummaryState === "SYNC_PENDING"
-                      ? "评分同步中"
-                      : shop.recommendationRate == null
-                        ? "评分人数不足"
-                        : "食友推荐率"}
-                  </span>
-                </div>
-              </div>
+              <ul className="pc-shop-facts" aria-label="店铺特点">
+                {shopFactLabels(shop).map((fact, index) => (
+                  <li key={`${index}-${fact}`}>{fact}</li>
+                ))}
+                {shopRatingScenes(shop).length > 1 &&
+                  shop.ratingSummaryState !== "SYNC_PENDING" &&
+                  shop.recommendationRate != null && (
+                    <li>综合推荐率 {shop.recommendationRate}%</li>
+                  )}
+              </ul>
               <div className="pc-restaurant-actions">
                 <button
                   className="pc-button"
@@ -1695,14 +1682,11 @@ function DesktopRestaurant() {
               )}
             </div>
           </section>
-          <Suspense fallback={<ContentSkeleton kind="rows" count={1} />}>
-            <RestaurantActions id={id} hideMaintenance />
-          </Suspense>
+          <DesktopRestaurantFeedback key={id} id={id} shop={shop} />
           <section className="pc-content-sheet is-standalone">
             <div className="pc-section-toolbar">
               <div>
-                <h2>这家店的好味道</h2>
-                <p>从招牌菜到日常一餐，看看食友们的真实分享</p>
+                <h2>菜品</h2>
               </div>
               <span className="pc-menu-count">
                 {foods.data?.totalItems ?? "—"} 道菜品

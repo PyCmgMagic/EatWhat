@@ -2458,6 +2458,11 @@ body:has(
   flex-direction: column;
   gap: 6px;
 }
+.mobile-pick-shop-hint {
+  margin: 6px 10px;
+  color: var(--night-muted, #6e625b);
+  font-size: 13px;
+}
 .mobile-pick-shop-create {
   display: flex;
   align-items: center;
@@ -2472,19 +2477,6 @@ body:has(
   font-size: 15px;
   font-weight: 600;
   text-decoration: none;
-}
-.mobile-pick-shop-footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 5;
-  margin-top: auto;
-  padding: 12px 20px max(18px, calc(12px + env(safe-area-inset-bottom)));
-  background: rgb(255 255 255 / 92%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow:
-    0 -8px 24px rgb(35 28 24 / 7%),
-    0 -1px 0 #efe9e4;
 }
 .mobile-pick-shop-row {
   min-height: 72px;
@@ -2502,14 +2494,6 @@ body:has(
   text-overflow: ellipsis;
   white-space: nowrap;
   line-height: 18px;
-}
-.mobile-pick-shop-next {
-  width: 100%;
-  box-sizing: border-box;
-  min-width: 0;
-  padding: 0 20px;
-  white-space: nowrap;
-  text-align: center;
 }
 .mobile-publish-destination {
   gap: 16px;

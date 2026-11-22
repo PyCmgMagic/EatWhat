@@ -31,10 +31,9 @@ import { shopEditPath } from "../EditRestaurant";
 import { useArea } from "../../app/area";
 import { type Schema, money, mediaUrl } from "../../api/models";
 import {
-  priceBands,
-  ratingScenes,
+  shopFactLabels,
+  shopRatingScenes,
   rateText,
-  shopKinds,
   type RatingValue,
   type V2Shop,
 } from "../../api/v2-vocab";
@@ -1375,21 +1374,8 @@ export function RestaurantActions({
   const refresh = async () => {
     await cache.invalidateQueries({ queryKey: ["restaurants"] });
   };
-  const scenes = ratingScenes.filter(
-    (scene) =>
-      scene.id === "dine_in" ||
-      v2Shop?.deliveryEnabled ||
-      (v2Shop?.delivery?.count ?? 0) > 0 ||
-      Boolean(v2Shop?.myRatings?.delivery),
-  );
-  const facts = shop
-    ? [
-        shopKinds.find((k) => k.id === v2Shop?.kind)?.name,
-        ...(v2Shop?.categories ?? []),
-        priceBands.find((p) => p.id === shop.priceBand)?.name,
-        v2Shop?.deliveryEnabled ? "可外卖" : "仅堂食",
-      ].filter(Boolean)
-    : [];
+  const scenes = shopRatingScenes(v2Shop);
+  const facts = v2Shop ? shopFactLabels(v2Shop) : [];
   return (
     <div className="v4-inline restaurant-hub">
       <div
@@ -1531,9 +1517,6 @@ export function RestaurantActions({
             {facts.map((fact, index) => (
               <span key={`${fact}-${index}`}>{fact}</span>
             ))}
-            {!!v2Shop?.tags?.length && (
-              <span>口味：{v2Shop.tags.join("、")}</span>
-            )}
           </div>
         </div>
       )}

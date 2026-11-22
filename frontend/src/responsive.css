@@ -952,9 +952,6 @@
     right: -50px;
     pointer-events: none;
   }
-  .pc-restaurant-stats {
-    flex-wrap: wrap;
-  }
   .pc-restaurant-actions {
     flex-wrap: wrap;
   }

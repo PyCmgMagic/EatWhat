@@ -1,9 +1,13 @@
 import { useId, type ReactNode } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { useApp } from "../app/state";
 import {
   ConciergeBell,
   CupSoda,
   ListFilter,
   MapPin,
+  Shuffle,
   Soup,
   ThumbsUp,
 } from "lucide-react";
@@ -19,6 +23,40 @@ import type { useHomeDiscovery } from "./useHomeDiscovery";
 import "./discovery-list.css";
 
 const icons = { food: Soup, drink: CupSoda, buffet: ConciergeBell };
+function PickShop({
+  filters,
+}: {
+  filters: ReturnType<typeof useHomeDiscovery>["pickFilters"];
+}) {
+  const { api } = useApp();
+  const pick = useMutation({ mutationFn: () => api.pickShop(filters) });
+  const shop = pick.data?.restaurant;
+  return (
+    <div className="discovery-pick">
+      <button
+        type="button"
+        disabled={pick.isPending}
+        onClick={() => pick.mutate()}
+      >
+        <Shuffle size={15} aria-hidden="true" />
+        {pick.isPending ? "正在选店…" : "随机选一家"}
+      </button>
+      <span role="status">
+        {shop ? (
+          <Link to={`/restaurants/${shop.id}`}>
+            {shop.name || "查看店铺"} →
+          </Link>
+        ) : pick.isError ? (
+          errorMessage(pick.error)
+        ) : pick.isSuccess ? (
+          "当前条件下没有可选店铺"
+        ) : (
+          ""
+        )}
+      </span>
+    </div>
+  );
+}
 const sortButtons = {
   recommended: { icon: ListFilter, shortLabel: "排序" },
   distance: { icon: MapPin, shortLabel: "距离" },
@@ -93,6 +131,9 @@ export function DiscoveryList({
         className="discovery-results"
         aria-busy={feed.isFetching}
       >
+        {hasResults && (
+          <PickShop key={discovery.pickScope} filters={discovery.pickFilters} />
+        )}
         {hasResults &&
           (shops ? (
             <RecommendShopList
@@ -109,7 +150,44 @@ export function DiscoveryList({
             renderDishes(dishes)
           ))}
         {feed.isPending && !hasResults && <ContentSkeleton count={2} />}
-        {(feed.isError || (!feed.isPending && !hasResults)) && (
+        {(hasResults || feed.hasNextPage) && (
+          <div className="discovery-status discovery-pagination">
+            {feed.isFetchNextPageError && (
+              <p role="status">{errorMessage(feed.error)}</p>
+            )}
+            {feed.hasNextPage ? (
+              <button
+                type="button"
+                disabled={feed.isFetching}
+                onClick={() =>
+                  void feed.fetchNextPage({ cancelRefetch: false })
+                }
+              >
+                {feed.isFetchingNextPage
+                  ? "正在加载…"
+                  : feed.isFetchNextPageError
+                    ? "重试加载更多"
+                    : "加载更多店铺"}
+              </button>
+            ) : (
+              <>
+                {(feed.data?.pages.length ?? 0) > 1 && (
+                  <span role="status">已看完本轮推荐</span>
+                )}
+                {!masonry && (
+                  <button
+                    type="button"
+                    disabled={feed.isFetching}
+                    onClick={() => void discovery.refresh()}
+                  >
+                    换一批推荐
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        )}
+        {!hasResults && !feed.hasNextPage && !feed.isPending && (
           <div className="discovery-status" role="status">
             <p>
               {feed.isError
@@ -119,7 +197,7 @@ export function DiscoveryList({
             <button
               type="button"
               disabled={feed.isFetching}
-              onClick={() => void feed.refetch()}
+              onClick={() => void discovery.refresh()}
             >
               {feed.isError ? "重新加载" : "刷新推荐"}
             </button>

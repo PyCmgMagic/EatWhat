@@ -8,66 +8,100 @@ async function verifyMobilePublishShopScroll(page) {
   try {
     const tab = await context.newPage();
     const touch = await context.newCDPSession(tab);
-    const lastShop = tab.getByRole("radio").last();
-    const createShop = tab.getByRole("link", { name: "没找到？新建一家店" });
-    const next = tab.getByRole("link", { name: /下一步，填写菜品/ });
-    for (const viewport of [
-      { width: 360, height: 668 },
-      { width: 390, height: 844 },
-    ]) {
-      await tab.setViewportSize(viewport);
-      await tab.goto(new URL("/?demo=1#/publish", page.url()).href);
-      await lastShop.waitFor();
-      const x = viewport.width / 2;
-      const y = Math.round(viewport.height * 0.65);
-      if (
-        !(await tab.evaluate(
-          ({ x, y }) =>
-            !!document.elementFromPoint(x, y)?.closest('[role="radio"]'),
-          { x, y },
-        ))
-      )
-        throw new Error("滑动起点必须位于店铺卡片上");
+    await context.addInitScript(() => {
+      const shops = Array.from({ length: 25 }, (_, i) => ({
+        id: i + 1,
+        name: `测试店铺${i + 1}号`,
+        address: "软件园",
+        hubId: 1,
+        kind: "food",
+      }));
+      localStorage.setItem("eatwhat-v2-demo-data", JSON.stringify({ shops }));
+      localStorage.setItem(
+        "eatwhat-session",
+        JSON.stringify({
+          tokenName: "satoken",
+          tokenValue: "v2-demo-student",
+        }),
+      );
+    });
+    const rows = tab
+      .getByRole("group", { name: "选择店铺" })
+      .getByRole("button");
+    const search = tab.getByRole("searchbox", { name: "搜店名" });
+    const newShop = tab.getByRole("link", { name: "没找到？新建一家店" });
+    const waitForCount = (count) =>
+      tab.waitForFunction(
+        (expected) =>
+          document.querySelectorAll(".mobile-pick-shop-row").length ===
+          expected,
+        count,
+      );
+    for (const width of [360, 390]) {
+      await tab.setViewportSize({ width, height: width === 360 ? 668 : 844 });
+      await tab.goto(new URL("/?demo=v2#/publish", page.url()).href);
+      await waitForCount(5);
+      const otherShop = Array.from(
+        { length: 25 },
+        (_, i) => `测试店铺${i + 1}号`,
+      );
+      const suggestions = await rows
+        .locator(".mobile-pick-shop-name")
+        .allTextContents();
+      const target = otherShop.find((name) => !suggestions.includes(name));
+      await rows.first().tap();
+      await tab
+        .locator(".mobile-publish-destination")
+        .getByText(suggestions[0], { exact: true })
+        .waitFor();
+      await tab
+        .getByRole("textbox", { name: "菜名", exact: true })
+        .fill("我的菜品草稿");
+      await tab.getByRole("link", { name: "换一家" }).tap();
+      await search.fill("测试店铺");
+      await waitForCount(12);
+      await rows.first().scrollIntoViewIfNeeded();
+      const {
+        x,
+        y,
+        width: rowWidth,
+        height: rowHeight,
+      } = await rows.first().boundingBox();
+      const start = { x: x + rowWidth / 2, y: y + rowHeight / 2 };
       await touch.send("Input.dispatchTouchEvent", {
         type: "touchStart",
-        touchPoints: [{ x, y }],
+        touchPoints: [start],
       });
-      for (let offset = 30; offset <= 300; offset += 30) {
+      for (const delta of [30, 60, 90, 120])
         await touch.send("Input.dispatchTouchEvent", {
           type: "touchMove",
-          touchPoints: [{ x, y: y - offset }],
+          touchPoints: [{ x: start.x, y: start.y - delta }],
         });
-      }
-      // Hold before lifting so the next tap selects a shop instead of stopping a fling.
-      await tab.waitForTimeout(180);
       await touch.send("Input.dispatchTouchEvent", {
         type: "touchEnd",
         touchPoints: [],
       });
+      await tab.waitForFunction(() => window.scrollY > 0);
+      await newShop.scrollIntoViewIfNeeded();
+      await newShop.tap({ trial: true });
+      if ((await rows.count()) !== 12) throw new Error("滑动后店铺结果被追加");
+      await search.fill(target);
+      await rows.filter({ hasText: target }).tap();
       await tab
-        .waitForFunction(() => window.scrollY > 0, null, { timeout: 2000 })
-        .catch(() => {
-          throw new Error("从店铺卡片上滑后，页面滚动距离仍为 0");
-        });
-      await tab.waitForFunction(
-        () =>
-          document
-            .querySelector(".mobile-pick-shop-create")
-            .getBoundingClientRect().bottom <=
-          document
-            .querySelector(".mobile-pick-shop-footer")
-            .getBoundingClientRect().top +
-            1,
-      );
-      const footer = await next.boundingBox();
-      if (footer.y < 0 || footer.y + footer.height > viewport.height)
-        throw new Error("滑到底部后，下一步按钮超出屏幕");
-      await createShop.tap({ trial: true });
-      await lastShop.tap();
-      if ((await lastShop.getAttribute("aria-checked")) !== "true")
-        throw new Error("最后一家店未被选中");
-      await next.tap();
-      await tab.waitForURL("**#/publish/dish");
+        .locator(".mobile-publish-destination")
+        .getByText(target, { exact: true })
+        .waitFor();
+      if (
+        (await tab
+          .getByRole("textbox", { name: "菜名", exact: true })
+          .inputValue()) !== "我的菜品草稿"
+      )
+        throw new Error("换店时菜品草稿丢失");
+      await tab.getByRole("link", { name: "换一家" }).tap();
+      await search.fill("查无此店");
+      await tab.getByText("没有找到匹配的店铺").waitFor();
+      await newShop.tap();
+      await tab.getByRole("heading", { name: "添加一家店" }).waitFor();
     }
   } finally {
     await context.close();

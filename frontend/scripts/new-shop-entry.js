@@ -4,8 +4,9 @@ async function validateNewShopEntry(page) {
     throw new Error("Use the local demo server.");
   await page.goto(base + "/?demo=1&view=mobile#/publish");
   await page
-    .getByRole("radio", { name: "小碗菜 万达金街 1 层", exact: true })
+    .getByRole("button", { name: "小碗菜 万达金街 1 层", exact: true })
     .click();
+  await page.getByRole("link", { name: "换一家", exact: true }).click();
   await page
     .getByRole("link", { name: "没找到？新建一家店", exact: true })
     .click();
@@ -38,11 +39,11 @@ async function validateNewShopEntry(page) {
     throw new Error("返回搜店后丢失了同一家店的草稿。");
   await page.getByRole("button", { name: "返回搜店", exact: true }).click();
   await page.getByRole("link", { name: "返回", exact: true }).click();
-  const selected = page.getByRole("radio", {
+  const selected = page.getByRole("button", {
     name: "小碗菜 万达金街 1 层",
     exact: true,
   });
-  if ((await selected.getAttribute("aria-checked")) !== "true")
+  if ((await selected.getAttribute("aria-current")) !== "true")
     throw new Error("返回后丢失了原先选择的店铺。");
   await page
     .getByRole("link", { name: "没找到？新建一家店", exact: true })

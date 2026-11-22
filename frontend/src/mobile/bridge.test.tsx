@@ -806,114 +806,73 @@ it("keeps selected category and description across G-AddDish remounts when submi
   expect(submittedBody?.description).toBe("清甜解暑");
 });
 
-it("lays out G-PickShop in fluid document flow with a sticky bottom dock for the next step", async () => {
+it("opens the dish form with the tapped restaurant and keeps the new-shop entry accessible", async () => {
   writeSession({ tokenValue: "pick-token", tokenName: "satoken" });
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      if (url.includes("/user/userInfo")) return ok(account);
+      if (url.includes("/user/info") || url.includes("/user/userInfo"))
+        return ok(account);
       if (url.includes("/campus") || url.includes("/hub")) return ok([]);
-      if (url.includes("/restaurant/list"))
-        return ok({ items: [{ id: 1, name: "食堂" }], hasNext: false });
+      if (/\/restaurant\/(browse|search)/.test(url))
+        return ok({ items: [{ id: 1, name: "食堂" }], hasNext: true });
       return ok({});
     }),
   );
 
   function PickShopInner() {
-    const controller = {
-      state: {},
-      setState: noop,
-    } as unknown as Controller;
+    const location = useLocation();
+    const controller = { state: {}, setState: noop } as unknown as Controller;
     const bridge = useDesignBridge("G-PickShop", controller, {}, false);
-    const footerProps: Record<string, any> = {
-      style: { position: "absolute", bottom: 0 },
-    };
-    const nextProps: Record<string, any> = { href: "G-AddDish.dc.html" };
-    const nextNode = bridge.node({
-      screen: "G-PickShop",
-      node: {
-        id: 30,
-        tag: "a",
-        attrs: { href: "G-AddDish.dc.html" },
-        children: [],
-      },
-      props: nextProps,
-      children: ["下一步"],
-      scope: {},
-      text: "下一步",
-    }) ?? <a {...nextProps}>下一步</a>;
-    const footerNode = bridge.node({
-      screen: "G-PickShop",
-      node: { id: 29, tag: "div", attrs: {}, children: [] },
-      props: footerProps,
-      children: [nextNode],
-      scope: {},
-      text: "",
-    }) ?? <div {...footerProps}>{nextNode}</div>;
     return (
       <>
         {bridge.node({
           screen: "G-PickShop",
           node: { id: 1, tag: "div", attrs: {}, children: [] },
-          props: { style: { width: "390px", height: "844px" } },
+          props: {},
           children: [
-            <header key="h" data-id="2" />,
-            <h1 key="t" data-id="8">
-              在哪家吃的？
-            </h1>,
-            <label key="s" data-id="9" />,
-            <span key="a" data-id="13" />,
-            <div key="l" data-id="15" />,
-            <a key="c" href="G-NewShop.dc.html" data-id="27">
-              没找到？新建一家店
+            null,
+            null,
+            null,
+            null,
+            <div key="list">
+              {bridge.values.rows.map((r: Values) => (
+                <button key={r.id} onClick={r.pick}>
+                  {r.name}
+                </button>
+              ))}
+            </div>,
+            <a key="new" href="/restaurants/new">
+              新建一家店
             </a>,
-            footerNode,
+            <a key="next" href="/publish/dish">
+              下一步
+            </a>,
           ],
           scope: {},
           text: "",
         })}
+        <output>{location.pathname}</output>
       </>
     );
   }
-
+  const setShopId = vi.fn(),
+    setDraft = vi.fn();
   const mobile = {
-    foodId: 1,
     shopId: 7,
-    setFoodId: noop,
-    setShopId: noop,
-    panel: null,
-    openPanel: noop,
-    closePanel: noop,
-    notice: noop,
-    confirm: noop,
-    go: noop,
-    draft: {
-      name: "",
-      price: "",
-      category: "staple",
-      description: "",
-      tags: [],
-      stage: "#F3C46E",
-      images: [],
-    },
-    setDraft: noop,
-    setTagId: noop,
-    meal: "晚饭",
-    mealAuto: true,
-    mealKey: "auto:dinner",
-    setMeal: noop,
-    setMealAuto: noop,
+    setShopId,
+    setDraft,
+    draft: { tags: [], images: [] },
     noteServedMeal: noop,
-    scene: "auto" as const,
-    setScene: noop,
+    scene: "dine_in",
+    mealKey: "auto:dinner",
   } as unknown as MobileState;
-
   await act(async () =>
     root.render(
       <AppProvider>
         <AreaProvider>
-          <MemoryRouter>
+          <MemoryRouter initialEntries={["/publish"]}>
             <MobileContext.Provider value={mobile}>
               <PickShopInner />
             </MobileContext.Provider>
@@ -922,18 +881,23 @@ it("lays out G-PickShop in fluid document flow with a sticky bottom dock for the
       </AppProvider>,
     ),
   );
-
-  const screen = host.querySelector(".mobile-pick-shop-screen");
-  expect(screen).not.toBeNull();
-  expect(screen?.querySelector(".mobile-pick-shop-top")).not.toBeNull();
-  const body = screen?.querySelector(".mobile-pick-shop-body");
-  expect(body?.querySelector('[data-id="27"]')).not.toBeNull();
-  const footer = screen?.querySelector<HTMLElement>(".mobile-pick-shop-footer");
-  expect(footer).not.toBeNull();
-  expect(footer?.style.position).toBe("");
-  expect(footer?.querySelector(".mobile-pick-shop-next")?.textContent).toContain(
-    "下一步，填写菜品",
+  await spin(() =>
+    Boolean(host.querySelector(".mobile-pick-shop-body button")),
   );
+  expect(host.querySelector('a[href="/restaurants/new"]')).not.toBeNull();
+  expect(host.querySelector('a[href="/publish/dish"]')).toBeNull();
+  await act(async () =>
+    host
+      .querySelector<HTMLButtonElement>(".mobile-pick-shop-body button")!
+      .click(),
+  );
+  expect(setShopId).toHaveBeenCalledWith(1);
+  expect(setDraft).toHaveBeenCalledWith({
+    restaurantId: 1,
+    shopName: "食堂",
+    restaurantPicked: true,
+  });
+  expect(host.querySelector("output")?.textContent).toBe("/publish/dish");
 });
 
 it("places the G-AddDish AI autofill card prominently right before category instead of beside the dish name", async () => {

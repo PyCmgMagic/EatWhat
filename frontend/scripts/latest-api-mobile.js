@@ -8,7 +8,7 @@ async(page)=>{
  try{
   await page.evaluate(()=>localStorage.setItem('eatwhat-demo-session',JSON.stringify({tokenName:'satoken',tokenValue:'isolated-demo-token'})));
   await page.setViewportSize({width:390,height:844});await go('/publish');await page.reload();
-  await page.getByRole('radio',{name:/袁记云饺/}).click();await page.getByRole('link',{name:/下一步/}).click();
+  await page.getByRole('button',{name:/袁记云饺/}).click();
   await page.getByRole('textbox',{name:'菜名',exact:true}).fill('移动新版验收菜');await page.getByRole('textbox',{name:'价格',exact:true}).fill('0.001');
   await page.getByRole('button',{name:'再加一张照片'}).click();
   await page.waitForURL(/#\/publish\/crop/);await page.getByRole('slider',{name:'缩放'}).fill('1.1');await page.getByRole('link',{name:'完成',exact:true}).click();await page.waitForURL(/#\/publish\/dish/);

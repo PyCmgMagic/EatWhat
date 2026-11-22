@@ -297,7 +297,17 @@ function EditForm({
         if (next[0].key !== food.pictureKeys?.[0])
           body.coverCrop = { centerX: 0.5, centerY: 0.5, diameter: 1 };
       }
-      await api.editMyFood(food.id!, foodEditBody(food, body));
+      const result = await api.editMyFood(food.id!, foodEditBody(food, body));
+      if (body.pictureUrl && result?.pictureKeys) {
+        const urlsByKey = new Map(food.pictureKeys?.map((key, index) => [key, food.pictureUrl?.[index]]));
+        const pictureKeys = result.pictureKeys;
+        const urls = pictureKeys.map((key) => urlsByKey.get(key) || mediaUrl(key));
+        if (urls.every((url): url is string => !!url)) {
+          cache.setQueryData<Food>(["foods", "detail", food.id], (previous) => previous && ({
+            ...previous, pictureKeys, pictureUrl: urls, coverCrop: body.coverCrop ?? previous.coverCrop,
+          }));
+        }
+      }
       clearFields();
       clearPhotos();
       photos.forEach((p) => {
@@ -658,6 +668,7 @@ function EditForm({
                 disabled={busy || uncertain}
                 onAdd={addFiles}
                 onRemove={removePhoto}
+                onMove={movePhoto}
               />
             <label>
               舞台色

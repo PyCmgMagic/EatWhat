@@ -1,9 +1,10 @@
-import type { Schema, User } from "../api/models";
+import type { ProfileUpdate, User } from "../api/models";
 
 export const PROFILE_SIGNATURE_LIMIT = 100;
 
 export type ProfileForm = {
   name: string;
+  coverFoodId?: number;
   signature: string;
   gender: string;
   // Unknown saved birthday formats stay untouched until explicitly changed.
@@ -13,6 +14,7 @@ export function profileForm(user: User): ProfileForm {
   const date = user.birthday;
   return {
     name: user.displayName ?? "",
+    coverFoodId: user.coverFoodId ?? undefined,
     signature: user.signature ?? "",
     gender: user.gender ?? "",
     birthday:
@@ -24,7 +26,9 @@ export function profileForm(user: User): ProfileForm {
   };
 }
 export function profileChanges(form: ProfileForm, saved: ProfileForm) {
-  const body: Schema["UpdateUserInfoDTORequest"] = {};
+  const body: ProfileUpdate = {};
+  if (form.coverFoodId != null && form.coverFoodId !== saved.coverFoodId)
+    body.coverFoodId = form.coverFoodId;
   if (form.name.trim() !== saved.name.trim())
     body.displayName = form.name.trim();
   if (form.signature !== saved.signature) body.signature = form.signature;

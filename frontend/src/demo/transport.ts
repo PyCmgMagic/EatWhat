@@ -395,7 +395,10 @@ export const demoTransport: Transport = async (path, options) => {
     f.restaurantGcjLng ??= r?.gcjLng;
     f.restaurantGcjLat ??= r?.gcjLat;
     f.mealTimes ??= ["breakfast", "lunch", "dinner", "night"];
-    f.pictureKeys ??= f.pictureUrl ?? [];
+    f.pictureKeys = f.pictureUrl?.map((url, index) => {
+      const stored = f.pictureKeys?.[index];
+      return stored?.startsWith("foods/") ? stored : url.startsWith("foods/") ? url : `foods/demo/${f.id}-${index}`;
+    }) ?? [];
     if (f.user !== null)
       f.user = f.accountId
         ? {
@@ -735,6 +738,9 @@ export const demoTransport: Transport = async (path, options) => {
       verified: persona !== "unverified",
     };
   } else if (path === "/user/updateInfo") {
+    if (b.coverFoodId != null && !s.foods.some((food) =>
+      food.id === b.coverFoodId && food.accountId === s.user.id && food.pictureUrl?.[0]))
+      throw new ApiError("请选择自己上传且有封面图的菜品", 10001);
     Object.assign(s.user, b);
     if (b.displayName)
       s.foods
@@ -896,6 +902,7 @@ export const demoTransport: Transport = async (path, options) => {
     save();
   } else if (path.startsWith("/foods/delete/")) {
     s.foods = s.foods.filter((f) => f.id !== Number(path.split("/").pop()));
+    if (s.user.coverFoodId === Number(path.split("/").pop())) s.user.coverFoodId = null;
     save();
   } else if (path === "/admin/food-tags") {
     if (method === "GET") result = paginate(s.publicTags, q);
@@ -1040,7 +1047,7 @@ export const demoTransport: Transport = async (path, options) => {
     );
   else if (path === "/foods/my")
     result = paginate(
-      s.foods.filter((f) => f.accountId === 10),
+      s.foods.filter((f) => f.accountId === s.user.id && (q.foodId == null || f.id === Number(q.foodId))),
       q,
     );
   else if (path === "/foods/list" || path === "/admin/foods/list")
@@ -1116,10 +1123,18 @@ export const demoTransport: Transport = async (path, options) => {
       owned = s.foods.find((f) => f.id === id);
     if (!owned || owned.accountId !== s.user.id)
       throw new ApiError("只能管理自己的菜品。", 403, 403);
-    if (method === "DELETE") s.foods = s.foods.filter((f) => f.id !== id);
+    if (method === "DELETE") {
+      s.foods = s.foods.filter((f) => f.id !== id);
+      if (s.user.coverFoodId === id) s.user.coverFoodId = null;
+    }
     else if (method === "PUT") {
+      const pictures = new Map(owned.pictureKeys?.map((key, index) => [key, owned.pictureUrl?.[index]]));
       Object.assign(owned, b);
-      if (b.pictureUrl) owned.pictureKeys = b.pictureUrl as string[];
+      if (b.pictureUrl) {
+        owned.pictureKeys = b.pictureUrl as string[];
+        owned.pictureUrl = owned.pictureKeys.map((key) => pictures.get(key) || key);
+      }
+      result = { id, pictureKeys: owned.pictureKeys };
     }
     save();
   } else if (food) {

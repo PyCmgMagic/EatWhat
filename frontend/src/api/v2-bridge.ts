@@ -170,7 +170,7 @@ export function food(v: Json | null | undefined): Json | null {
     category: newToOldCategory[v.category] ?? "other",
     categoryLabel: v.category ?? null,
     pictureUrl: pictures,
-    pictureKeys: v.pictureKeys ?? keys(pictures) ?? [],
+    pictureKeys: v.pictureKeys ?? pictures.map((url) => pictureKey(url) ?? ""),
     systemTags: tags.map((name) => ({
       id: tagId(name),
       name,
@@ -815,6 +815,7 @@ const routes: [string, RegExp, Handler][] = [
           gender: body.gender,
           birthday: body.birthday,
           signature: body.signature,
+          coverFoodId: body.coverFoodId,
         },
       }),
   ],
@@ -991,7 +992,7 @@ const routes: [string, RegExp, Handler][] = [
     /^\/foods\/(favorites|likes|my)$/,
     async ({ match, query, call }) =>
       page(
-        await call(match.input!, { query: omit(query, ["page", "pageSize"]) }),
+        await call(match.input!, { query: omit(query, match[1] === "my" ? ["page", "pageSize", "foodId"] : ["page", "pageSize"]) }),
         food,
       ),
   ],
@@ -1037,7 +1038,7 @@ const routes: [string, RegExp, Handler][] = [
         query: {
           ...omit(query, ["mealTime", "kind", "gcjLng", "gcjLat"]),
           scene: delivery ? "delivery" : "dine_in",
-          ...(includeShops ? { page: 1, pageSize: DINE_IN_SHOPS } : {}),
+          ...(includeShops ? { page: query.page ?? 1, pageSize: DINE_IN_SHOPS } : {}),
         },
       });
       const shops: Json[] = feed?.items ?? [];
@@ -1049,6 +1050,7 @@ const routes: [string, RegExp, Handler][] = [
         items: items.slice(0, size),
         ...(includeShops ? { shops: shops.map((shop) => restaurant(shop)) } : {}),
         mealTime: feed?.mealTime ?? null,
+        hasNext: feed?.hasNext === true,
       };
     },
   ],

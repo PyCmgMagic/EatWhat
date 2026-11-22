@@ -6,7 +6,7 @@ async (page) => {
  const original=await page.evaluate(()=>localStorage.getItem('eatwhat-demo-comments-v1'));
  try {
   await page.evaluate(()=>localStorage.removeItem('eatwhat-demo-comments-v1'));await page.reload();
-  await page.getByRole('link',{name:'食友讨论',exact:true}).click();await page.waitForURL('**#/foods/4?section=comments');
+  await page.goto(base+'/foods/4?section=comments');
   await page.getByRole('article',{name:'小林的评论',exact:true}).waitFor();
   if(await page.locator('.food-comment').count()!==3)throw new Error('Mock 评论数量不符');
   await page.waitForFunction(()=>{const top=document.querySelector('#food-discussion').getBoundingClientRect().top;return top>=94&&top<=150});

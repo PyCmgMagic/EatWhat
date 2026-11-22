@@ -51,8 +51,7 @@ async (page) => {
   await page.getByRole('link').filter({hasText:'袁记云饺'}).last().waitFor();
   await page.screenshot({path:'output/prototype/app-nearby.png'});
   await goto('/publish');
-  await page.getByRole('radio',{name:/袁记云饺/}).click();
-  await page.getByRole('link',{name:/下一步/}).click();
+  await page.getByRole('button',{name:/袁记云饺/}).click();
   await page.getByRole('textbox',{name:'菜名',exact:true}).fill('验收测试菜');
   await page.getByRole('textbox',{name:'价格',exact:true}).fill('0');
   const chooser=page.waitForEvent('filechooser');

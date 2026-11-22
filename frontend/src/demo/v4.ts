@@ -1,6 +1,8 @@
 import { ApiError, type RequestOptions, type Query } from "../api/client";
 import { readSession } from "../app/runtime";
 import { demoFeedbackFields } from "./feedback";
+import { mealSlotAt } from "../api/food-display";
+import { demoRecommendationPage, type DemoExposure } from "./recommendations";
 import {
   dislikableTags,
   shopCategories,
@@ -32,6 +34,7 @@ export type DemoV4 = {
   topics: Row[];
   favorites: number[];
   dismissedShops?: Record<number, Record<number, number>>;
+  exposure?: DemoExposure;
   ratings: Record<string, string>;
   /** 店铺场景评价：`${restaurantId}:${scene}` -> RECOMMEND / NOT_RECOMMEND */
   sceneRatings: Record<string, string>;
@@ -50,6 +53,7 @@ type Context = {
   user: User;
   foods: Food[];
   blocked?: number[];
+  personalized?: boolean;
   restaurants: Restaurant[];
   tags: CustomTag[];
 };
@@ -887,7 +891,8 @@ export function handleV4(
       stageColor: foods[0]?.stageColor ?? null,
     };
   };
-  if (path === "/foods/recommend" && q.kind) {
+  if ((path === "/foods/recommend" && q.kind) || path === "/recommend/pick") {
+    const mealTime = String(q.mealTime ?? mealSlotAt(Date.now()));
     const dismissed = dismissedShopIds(s);
     const eligible = s.foods.filter((food: Food & V2Food) =>
       !s.blocked?.includes(food.accountId ?? 0) &&
@@ -897,15 +902,19 @@ export function handleV4(
     const shops = s.restaurants
       .filter((shop) => !dismissed.has(shop.id ?? 0))
       .map(restaurant)
-      .filter((shop) => (shop.kind ?? "food") === q.kind && !shop.permanentlyClosed &&
+      .filter((shop) => (shop.kind ?? "food") === (q.kind ?? "food") && !shop.permanentlyClosed &&
         (q.scene !== "delivery" || shop.deliveryEnabled !== false))
       .map((shop) => ({
         ...shop,
         signatureFoods: eligible.filter((food) => food.restaurantId === shop.id).slice(0, 3)
           .map((food) => ({ ...food, coverUrl: food.pictureUrl?.[0] })),
       }));
-    const ids = new Set(shops.map((shop) => shop.id));
-    return ok({ shops, items: eligible.filter((food) => ids.has(food.restaurantId)).slice(0, Number(q.size ?? 8)) });
+    const pick = path === "/recommend/pick";
+    const batch = demoRecommendationPage(shops, v.exposure ??= {},
+      readSession() && s.personalized !== false ? user : undefined, mealTime, Number(q.page ?? 1), 20, pick);
+    if (pick) return ok({ mealTime, restaurant: batch.items[0] ?? null });
+    const ids = new Set(batch.items.map((shop) => shop.id));
+    return ok({ ...batch, mealTime, shops: batch.items, items: eligible.filter((food) => ids.has(food.restaurantId)).slice(0, Number(q.size ?? 8)) });
   }
   if (
     [

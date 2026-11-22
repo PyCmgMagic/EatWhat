@@ -1,4 +1,5 @@
 import type { components } from "./schema";
+import type { V2Schema } from "./backend-v2";
 import { demoEnabled } from "../app/mode";
 // Readers tolerate nullable historical data; write DTOs follow the current contract.
 type ReadModel<T> = T extends (infer U)[]
@@ -55,7 +56,9 @@ export function foodAuthor(
 export type Hub = Schema["HubResponse"];
 export type User = Omit<Schema["UserInfoDTOResponse"], "birthday"> & {
   birthday?: string | number | null;
+  coverFoodId?: number | null;
 };
+export type ProfileUpdate = Schema["UpdateUserInfoDTORequest"] & Pick<V2Schema["UpdateInfo"], "coverFoodId">;
 export type CustomTag = Schema["MyCustomTagVOResponse"];
 export type Notification = Schema["NotificationDTOResponse"];
 export type Page<T> = {

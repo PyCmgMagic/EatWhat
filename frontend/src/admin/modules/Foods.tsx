@@ -147,7 +147,7 @@ export default function Foods() {
                   <th>分类</th>
                   <th className="is-num">价格</th>
                   <th className="is-num">点赞</th>
-                  <th>分享者</th>
+                  <th>首次分享者</th>
                   <th>发布</th>
                   <th aria-label="操作" />
                 </tr>
@@ -254,7 +254,7 @@ function FoodEditor({ food, onClose }: { food: Food; onClose: () => void }) {
               ) as Schema["EditFoodDTORequest"]["category"],
             }),
           );
-          toast(result?.revisionId ? "修改已提交审核。" : "菜品资料已更新。", {
+          toast(result?.moderationStatus === "PENDING" ? "修改已提交审核。" : "菜品资料已更新。", {
             tone: "success",
           });
         });

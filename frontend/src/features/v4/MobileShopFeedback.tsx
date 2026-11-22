@@ -1,11 +1,13 @@
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ChevronDown, Heart } from "lucide-react";
 import { errorMessage } from "../../api/client";
 import type { Restaurant } from "../../api/models";
 import { LoginLink } from "../../app/auth-dialog";
 import { useApp } from "../../app/state";
 import {
   ratingScenes,
+  shopRatingScenes,
   type RatingValue,
   type V2Shop,
 } from "../../api/v2-vocab";
@@ -96,13 +98,7 @@ export function MobileShopFeedback({ id }: { id: number }) {
   });
   const shop = q.data;
   const v2 = shop as (typeof shop & V2Shop) | undefined;
-  const scenes = ratingScenes.filter(
-    (scene) =>
-      scene.id === "dine_in" ||
-      v2?.deliveryEnabled ||
-      (v2?.delivery?.count ?? 0) > 0 ||
-      Boolean(v2?.myRatings?.delivery),
-  );
+  const scenes = shopRatingScenes(v2);
   const scene =
     scenes.find((item) => item.id === selectedScene) ?? ratingScenes[0];
   const stat = v2?.[scene.key];
@@ -183,46 +179,22 @@ export function MobileShopFeedback({ id }: { id: number }) {
     }
   };
 
-  const promptText =
+  const myVote =
     mine === "RECOMMEND"
-      ? "你已推荐这家店 · 再次点击可取消"
+      ? "已推荐"
       : mine === "NOT_RECOMMEND"
-        ? "你暂不推荐这家店 · 再次点击可取消"
-        : "去过这家店吗？投一票帮同学参考是否值得一去";
+        ? "已选不推荐"
+        : null;
 
   return (
     <>
-      <div className="shop-voice-heading">
-        <h2>食友评价</h2>
-        {shop &&
-          (scenes.length > 1 ? (
-            <div
-              className="shop-voice-scenes"
-              role="group"
-              aria-label="评价场景"
-            >
-              {scenes.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  aria-pressed={scene.id === item.id}
-                  onClick={() => setSelectedScene(item.id)}
-                >
-                  {item.name}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <span className="shop-voice-scene">{scene.name} · 店铺口碑</span>
-          ))}
-      </div>
+      <h2 className="sr-only">食友评价</h2>
       {q.isPending ? (
         <div
           className="shop-voice is-loading"
           aria-busy="true"
           aria-label="加载评价"
         >
-          <span />
           <span />
         </div>
       ) : q.error && !shop ? (
@@ -237,41 +209,57 @@ export function MobileShopFeedback({ id }: { id: number }) {
           </button>
         </div>
       ) : (
-        <div className="shop-voice">
-          <div className="shop-voice-top">
-            <div
+        <details className="shop-voice">
+          <summary className="shop-voice-entry">
+            <Heart size={17} aria-hidden="true" />
+            <span
               className="shop-voice-score"
               aria-live="polite"
               aria-atomic="true"
             >
-              {count > 0 ? (
-                <>
-                  {rate != null && (
-                    <p className="shop-voice-number">
-                      <strong>
-                        {rate}
-                        <em>%</em>
-                      </strong>
-                      <span>推荐这家店</span>
-                    </p>
-                  )}
-                  <p className="shop-voice-count">{count} 人评价</p>
-                </>
+              {rate != null ? (
+                <span className="shop-voice-number">
+                  <strong>{rate}%</strong> {scene.name}推荐
+                </span>
               ) : (
-                <>
-                  <p className="shop-voice-empty">暂无评价</p>
-                  <span className="shop-voice-invite">成为首位推荐食友</span>
-                </>
+                <span>{scene.name}评价</span>
               )}
-            </div>
+              {count > 0 ? (
+                <span className="shop-voice-count">{count} 人评价</span>
+              ) : (
+                <span className="shop-voice-empty">暂无评价</span>
+              )}
+            </span>
+            <span className="shop-voice-action">
+              <span className="when-closed">{myVote ?? "去评价"}</span>
+              <span className="when-open">收起</span>
+              <ChevronDown size={16} aria-hidden="true" />
+            </span>
+          </summary>
+          <div className="shop-voice-panel">
+            {scenes.length > 1 && (
+              <div
+                className="shop-voice-scenes"
+                role="group"
+                aria-label="评价场景"
+              >
+                {scenes.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    aria-pressed={scene.id === item.id}
+                    onClick={() => setSelectedScene(item.id)}
+                  >
+                    {item.name}
+                  </button>
+                ))}
+              </div>
+            )}
             {count > 0 && rate != null && (
               <div className="shop-voice-meter" aria-hidden="true">
                 <span style={{ width: `${rate}%` }} />
               </div>
             )}
-          </div>
-          <p className="shop-voice-prompt">{promptText}</p>
-          <div className="shop-voice-vote">
             {session ? (
               <div
                 className="shop-voice-options"
@@ -322,8 +310,11 @@ export function MobileShopFeedback({ id }: { id: number }) {
                 登录后评价这家店
               </LoginLink>
             )}
+            {session && myVote && (
+              <p className="shop-voice-prompt">{myVote} · 再点一次可取消</p>
+            )}
           </div>
-        </div>
+        </details>
       )}
     </>
   );

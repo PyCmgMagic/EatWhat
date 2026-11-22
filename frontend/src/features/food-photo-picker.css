@@ -2,6 +2,13 @@
   container: food-photos / inline-size;
   min-width: 0;
 }
+.food-photo-order { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+.food-photo-order button {
+  min-height: 44px; padding: 0 12px; border: 1px solid var(--night-line, #ddd4ca);
+  border-radius: 10px; background: transparent; color: inherit; font: inherit; cursor: pointer;
+}
+.food-photo-order button:disabled { opacity: .45; cursor: default; }
+.food-photo-order span { font-size: 13px; }
 .food-photo-heading {
   display: flex;
   align-items: center;

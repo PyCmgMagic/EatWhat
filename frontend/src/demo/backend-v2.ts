@@ -3,6 +3,7 @@ import type { Operation, V2Schema } from "../api/backend-v2";
 import type { Envelope, RequestOptions } from "../api/client";
 import { reactionSummary } from "./comment-reactions";
 import { demoFeedbackFields } from "./feedback";
+import { demoRecommendationPage, type DemoExposure } from "./recommendations";
 import { codePoints, restaurantAddressLimit } from "../api/content-rules";
 
 import {
@@ -54,7 +55,7 @@ type Data = {
   blocks: Record<number, number[]>;
   images: Record<string, string>;
   revokedDevices: number[];
-  seen: Record<string, number[]>;
+  exposure?: DemoExposure;
   foods: DemoFood[];
   foodLikes: Record<number, number[]>;
   foodFavorites: Record<number, number[]>;
@@ -289,7 +290,6 @@ function seed(): Data {
     blocks: {},
     images: {},
     revokedDevices: [],
-    seen: {},
     foods,
     foodLikes: { 1: [1] },
     foodFavorites: { 1: [2] },
@@ -424,6 +424,14 @@ export function demoTransport(
   const { name, rule } = found;
   const params = found.pattern.exec(path)?.groups;
   const state = load();
+  for (const food of state.foods) {
+    food.pictureKeys ??= (food.pictureUrls ?? []).map((url, index) => {
+      const existing = Object.keys(state.images).find((key) => key.startsWith("foods/") && state.images[key] === url);
+      const key = existing ?? `foods/demo/${food.id}-${index}`;
+      state.images[key] = url;
+      return key;
+    });
+  }
   const uid = !options.public && token ? tokens[token] : undefined;
   const person = state.people.find((person) => person.id === uid);
   const current = state.policies[0];
@@ -877,8 +885,11 @@ export function demoTransport(
       state.revokedDevices.push(user);
       return write();
     case "updateInfo":
+      if (payload.coverFoodId != null && !state.foods.some((food) =>
+        food.id === payload.coverFoodId && food.accountId === user && food.pictureUrls?.[0]))
+        return fail(10001, "请选择自己上传且有封面图的菜品");
       Object.assign(person!, {
-        ...body,
+        ...Object.fromEntries(Object.entries(body).filter(([, value]) => value != null)),
         avatar: state.images[body.avatar] ?? person?.avatar,
       });
       return write();
@@ -1040,10 +1051,6 @@ export function demoTransport(
             : hour >= 15 && hour < 21
               ? "dinner"
               : "night");
-      const seenKey =
-        user +
-        ":" +
-        new Date().toLocaleDateString("zh-CN", { timeZone: "Asia/Shanghai" });
       const pool = candidateList().filter(
         (shop) =>
           !shop.permanentlyClosed &&
@@ -1055,44 +1062,9 @@ export function demoTransport(
             state.preferences[user]?.dislikedTags?.includes(tag),
           ),
       );
-      let seen = state.seen[seenKey] ?? [];
-      let eligible = uid
-        ? pool.filter((shop) => !seen.includes(shop.id))
-        : pool;
-      if (!eligible.length) {
-        eligible = pool;
-        seen = [];
-      }
-      const chosen =
-        name === "pick"
-          ? eligible.slice(0, 5)[
-              Math.floor(Math.random() * Math.min(5, eligible.length))
-            ]
-          : undefined;
-      const items = uid ? eligible.slice(0, size) : paged(eligible).items;
-      if (uid) {
-        state.seen[seenKey] = [
-          ...seen,
-          ...(name === "pick"
-            ? chosen
-              ? [chosen.id]
-              : []
-            : items.map((shop) => shop.id)),
-        ];
-        save(state);
-      }
-      return ok(
-        name === "pick"
-          ? { mealTime, restaurant: chosen ?? null }
-          : {
-              ...paged(eligible),
-              items,
-              mealTime,
-              hasNext: uid
-                ? eligible.length > items.length
-                : page * size < eligible.length,
-            },
-      );
+      const batch = demoRecommendationPage(pool, state.exposure ??= {},
+        demoToggles.personalized ? uid : undefined, String(mealTime), page, size, name === "pick");
+      return write(name === "pick" ? { mealTime, restaurant: batch.items[0] ?? null } : { ...batch, mealTime });
     }
     case "dismiss":
       state.dismissed[user + ":" + id] = Date.now() + 30 * 86400000;
@@ -1239,7 +1211,8 @@ export function demoTransport(
         maxTags: 3,
         maxSignatures: 3,
       });
-    case "getFoodsList": {
+    case "getFoodsList":
+    case "getAdminFoodsList": {
       let foods = state.foods.filter(
         (food) =>
           (!q.restaurantId || food.restaurantId === Number(q.restaurantId)) &&
@@ -1249,7 +1222,10 @@ export function demoTransport(
       );
       if (q.sort === "POPULAR")
         foods = foods.sort((a, b) => (b.likeCount ?? 0) - (a.likeCount ?? 0));
-      return ok(paged(foods.map(withFoodViewer)));
+      return ok(paged(foods.map((food) => ({
+        ...withFoodViewer(food),
+        ...(name === "getAdminFoodsList" ? { uploaderName: state.people.find((p) => p.id === food.accountId)?.displayName ?? null } : {}),
+      }))));
     }
     case "getFoodDuplicates": {
       const key = (value: unknown) =>
@@ -1286,7 +1262,7 @@ export function demoTransport(
       return ok(
         paged(
           state.foods
-            .filter((food) => food.accountId === user)
+            .filter((food) => food.accountId === user && (q.foodId == null || food.id === Number(q.foodId)))
             .map(withFoodViewer),
         ),
       );
@@ -1353,6 +1329,10 @@ export function demoTransport(
         pictureUrls: pictureKeys.length
           ? pictureKeys.map((key) => state.images[key] ?? key)
           : (previous?.pictureUrls ?? []),
+        pictureKeys: pictureKeys.length ? pictureKeys : previous?.pictureKeys,
+        coverCrop: (payload.coverCrop as DemoFood["coverCrop"]) ?? previous?.coverCrop,
+        stageColor: text("stageColor") || previous?.stageColor,
+        stageAlternates: payload.stageAlternates ? list("stageAlternates") : previous?.stageAlternates,
         tags:
           payload.tags === undefined ? (previous?.tags ?? []) : list("tags"),
         signature:
@@ -1382,10 +1362,12 @@ export function demoTransport(
       return write({
         id: nextId,
         revisionId: previous ? Date.now() : undefined,
+        ...(previous ? { pictureKeys: next.pictureKeys ?? [] } : {}),
       });
     }
     case "deleteFoodsDeleteById":
       state.foods = state.foods.filter((food) => food.id !== id);
+      state.people.forEach((owner) => { if (owner.coverFoodId === id) delete owner.coverFoodId; });
       return write();
     case "postFoodsByIdLike":
     case "postFoodsByIdUnlike":

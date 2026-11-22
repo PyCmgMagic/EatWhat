@@ -94,6 +94,26 @@ export type V2Shop = {
   myRatings?: { dineIn?: string | null; delivery?: string | null } | null;
   poi?: string | null;
 };
+export function shopRatingScenes(shop?: V2Shop) {
+  return ratingScenes.filter(
+    (scene) =>
+      scene.id === "dine_in" ||
+      shop?.deliveryEnabled ||
+      (shop?.delivery?.count ?? 0) > 0 ||
+      Boolean(shop?.myRatings?.delivery),
+  );
+}
+
+export function shopFactLabels(shop: V2Shop & { priceBand?: string | null }) {
+  return [
+    shopKinds.find((kind) => kind.id === shop.kind)?.name,
+    ...(shop.categories ?? []),
+    priceBands.find((band) => band.id === shop.priceBand)?.name,
+    shop.deliveryEnabled ? "可外卖" : "仅堂食",
+    ...(shop.tags?.length ? [`口味：${shop.tags.join("、")}`] : []),
+  ].filter((fact): fact is string => Boolean(fact));
+}
+
 export function rateText(stat: SceneStat | null | undefined) {
   if (!stat?.count) return "还没有评价";
   return stat.rate == null
