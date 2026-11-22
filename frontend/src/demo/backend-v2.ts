@@ -1712,7 +1712,7 @@ export function demoTransport(
         demoToggles.personalized = payload.personalized !== false;
       return ok({ personalized: demoToggles.personalized });
     case "getUserTitles":
-      return ok([{ code: "veteran_foodie", name: "老吃家", requiredExperience: 10000, acquiredAt: null, equipped: false }]);
+      return ok([]);
     case "deleteUserTitlesEquipped":
       return ok();
     case "putUserTitlesEquippedByCode":

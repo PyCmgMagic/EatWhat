@@ -48,6 +48,7 @@ export default function Growth() {
     queryFn: () => api.growthLedger(page),
     enabled: !!user?.id,
   });
+  const ownedTitles = titles.data?.filter((item) => item.acquiredAt != null) ?? [];
   const g = progress.data,
     percent = growthPercent(g),
     title = userTitle(g),
@@ -145,20 +146,16 @@ export default function Growth() {
           )}
         </QueryView>
       </Card>
-      <Card title="我的称号">
-        <QueryView query={titles}>
-          <ul className="growth-ledger">
-            {titles.data?.map((item) => (
-              <li key={item.code}>
-                <div>
-                  <strong>{item.name}</strong>
-                  <small>
-                    {item.acquiredAt == null
-                      ? `累计 ${item.requiredExperience.toLocaleString()} 经验后获得`
-                      : `${timeText(item.acquiredAt)} 获得`}
-                  </small>
-                </div>
-                {item.acquiredAt != null && (
+      {(ownedTitles.length > 0 || titles.isError) && (
+        <Card title="我的称号">
+          <QueryView query={titles}>
+            <ul className="growth-ledger">
+              {ownedTitles.map((item) => (
+                <li key={item.code}>
+                  <div>
+                    <strong>{item.name}</strong>
+                    <small>{timeText(item.acquiredAt)} 获得</small>
+                  </div>
                   <button
                     type="button"
                     disabled={equip.isPending || user?.banned === true}
@@ -169,13 +166,13 @@ export default function Growth() {
                   >
                     {item.equipped ? "取消佩戴" : "佩戴"}
                   </button>
-                )}
-              </li>
-            ))}
-          </ul>
-          {equip.isError && <p role="alert">{errorMessage(equip.error)}</p>}
-        </QueryView>
-      </Card>
+                </li>
+              ))}
+            </ul>
+            {equip.isError && <p role="alert">{errorMessage(equip.error)}</p>}
+          </QueryView>
+        </Card>
+      )}
       <section className="v4-card growth-records">
         <details className="growth-disclosure" open={embedded}>
           <summary className="growth-disclosure-summary">

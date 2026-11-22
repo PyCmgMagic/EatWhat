@@ -49,7 +49,7 @@ export interface UserTitleEntry {
   code: string;
   name: string;
   requiredExperience: number;
-  acquiredAt: number | null;
+  acquiredAt: number;
   equipped: boolean;
 }
 

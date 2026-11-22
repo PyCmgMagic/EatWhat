@@ -2694,8 +2694,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * 【需登录】获取我的称号和解锁条件
-         * @description 返回所有称号及本人获得、佩戴状态。首次达到经验门槛时永久获得，之后扣回经验仍保留。首次获得自动佩戴。
+         * 【需登录】获取我已获得的称号
+         * @description 只返回本人已获得的称号及佩戴状态，没有已获得的称号时返回空数组。首次达到经验门槛时永久获得，之后扣回经验仍保留。首次获得自动佩戴。
          */
         get: operations["getUserTitles"];
         put?: never;
@@ -4865,9 +4865,9 @@ export interface components {
             requiredExperience?: number;
             /**
              * Format: int64
-             * @description 获得时间（Unix 毫秒）。未获得时为 null，旧账号补发时记录补发时间。
+             * @description 获得时间（Unix 毫秒）。旧账号补发时记录补发时间。
              */
-            acquiredAt?: number | null;
+            acquiredAt?: number;
             equipped?: boolean;
         };
         AdminResetPassword: {

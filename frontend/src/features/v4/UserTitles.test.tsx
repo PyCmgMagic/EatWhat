@@ -26,6 +26,7 @@ it("keeps a downgraded owner's title available and refreshes the displayed title
       }
       if (path.endsWith("/user/titles")) {
         data = [
+          { code: "locked", name: "未解锁测试称号", acquiredAt: null, equipped: false },
           {
             code: "veteran_foodie",
             name: "老吃家",
@@ -71,6 +72,7 @@ it("keeps a downgraded owner's title available and refreshes the displayed title
       ),
     );
     const remove = await button("取消佩戴老吃家");
+    expect(host.textContent).not.toContain("未解锁测试称号");
     expect(host.querySelector(".user-title-badge")?.textContent).toBe("老吃家");
     await act(async () => remove.click());
     const wear = await button("佩戴老吃家");

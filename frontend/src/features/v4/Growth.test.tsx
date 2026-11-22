@@ -105,6 +105,7 @@ it("tucks the experience rules and ledger into collapsed entries", async () => {
   const records = host.querySelector<HTMLDetailsElement>(
     ".growth-records > details",
   )!;
+  expect(host.textContent).not.toContain("我的称号");
   expect(rules.open).toBe(false);
   expect(records.open).toBe(false);
   expect(host.textContent).toContain("怎么获得经验");

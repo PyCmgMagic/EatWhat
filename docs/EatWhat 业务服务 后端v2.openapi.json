@@ -6460,7 +6460,7 @@
     "/user/titles" : {
       "get" : {
         "tags" : [ "用户 · User" ],
-        "summary" : "【需登录】获取我的称号和解锁条件",
+        "summary" : "【需登录】获取我已获得的称号",
         "operationId" : "myTitles",
         "responses" : {
           "200" : {
@@ -6477,7 +6477,7 @@
         "security" : [ {
           "satoken" : [ ]
         } ],
-        "description" : "返回所有称号及本人获得、佩戴状态。首次达到经验门槛时永久获得，之后扣回经验仍保留。首次获得自动佩戴。"
+        "description" : "只返回本人已获得的称号及佩戴状态，没有已获得的称号时返回空数组。首次达到经验门槛时永久获得，之后扣回经验仍保留。首次获得自动佩戴。"
       }
     },
     "/user/titles/equipped" : {
@@ -12124,9 +12124,9 @@
             "format" : "int64"
           },
           "acquiredAt" : {
-            "type" : [ "integer", "null" ],
+            "type" : "integer",
             "format" : "int64",
-            "description" : "获得时间（Unix 毫秒）。未获得时为 null，旧账号补发时记录补发时间。"
+            "description" : "获得时间（Unix 毫秒）。旧账号补发时记录补发时间。"
           },
           "equipped" : {
             "type" : "boolean"

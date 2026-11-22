@@ -108,16 +108,18 @@ export function demoGrowth(
     state.titleAcquiredAt = now.getTime();
     state.titleEquipped = true;
   }
-  if (path === "/user/titles")
+  if (path === "/user/titles") {
+    if (state.titleAcquiredAt == null) return [];
     return [
       {
         code: "veteran_foodie",
         name: "老吃家",
         requiredExperience: 10000,
-        acquiredAt: state.titleAcquiredAt ?? null,
+        acquiredAt: state.titleAcquiredAt,
         equipped: state.titleEquipped ?? false,
       },
     ];
+  }
   if (path === "/user/titles/equipped") {
     state.titleEquipped = false;
     return null;
