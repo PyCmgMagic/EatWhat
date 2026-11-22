@@ -1,0 +1,37 @@
+.ew-animated-surface {
+  border-radius: 18px;
+  color: #231c18;
+  animation: none !important;
+  transition: none !important;
+}
+.ew-animated-surface[data-state="closed"] {
+  pointer-events: none;
+}
+.ew-anchored-surface {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.ew-animated-surface[data-chrome] > .ew-anchored-surface {
+  background: #fff;
+  border: 1px solid #e9dfd1;
+  box-shadow:
+    0 14px 42px -12px #3929192e,
+    0 3px 9px #39291908;
+}
+.ew-anchored-viewport {
+  overflow: hidden;
+  border-radius: inherit;
+  max-height: inherit;
+  transform-origin: inherit;
+}
+.ew-anchored-content {
+  position: relative;
+  max-height: inherit;
+  padding: var(--anchored-padding, 6px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  transform-origin: inherit;
+  scrollbar-width: thin;
+}

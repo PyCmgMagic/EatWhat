@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useExitPresence } from "../motion/hooks";
 import { DesignIcon } from "./ui";
 import "./home-search.css";
+import { AnimatedSurface } from "../components/AnchoredPopover";
 
 /** Shared with the desktop header search (`features/DesktopSearch.tsx`). */
 const recentKey = "eatwhat-recent-searches-v1";
@@ -62,7 +63,9 @@ export function HomeSearchButton({
       onClick={onOpen}
     >
       <DesignIcon name="search" size={22} />
-      <span className="mobile-home-action-label" aria-hidden="true">搜索</span>
+      <span className="mobile-home-action-label" aria-hidden="true">
+        搜索
+      </span>
     </button>
   );
 }
@@ -165,6 +168,7 @@ function SearchSurface({
       aria-modal="true"
       aria-label="搜索"
       data-exiting={exiting ? "" : undefined}
+      inert={exiting || undefined}
     >
       <button
         type="button"
@@ -172,7 +176,14 @@ function SearchSurface({
         aria-label="关闭搜索"
         onClick={onClose}
       />
-      <div className="ew-home-search-layer">
+      <AnimatedSurface
+        open={!exiting}
+        duration={180}
+        closeDuration={100}
+        padding={0}
+        chrome={false}
+        className="ew-home-search-layer"
+      >
         <form
           className="search-field ew-home-search-bar"
           role="search"
@@ -289,7 +300,7 @@ function SearchSurface({
             </button>
           )}
         </div>
-      </div>
+      </AnimatedSurface>
     </div>
   );
 }

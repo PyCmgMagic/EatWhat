@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { ActionMenu } from "../components/AnchoredPopover";
 import type { Food } from "../api/models";
 import { FoodManage } from "../features/Catalog";
 import { DesignIcon } from "../mobile/ui";
@@ -10,68 +10,19 @@ export function DishMoreActions({
   food: Food;
   onReport: () => void;
 }) {
-  const disclosure = useRef<HTMLDetailsElement>(null);
-  const trigger = useRef<HTMLElement>(null);
-
-  function dismiss() {
-    if (!disclosure.current?.open) return;
-    disclosure.current.open = false;
-    trigger.current?.focus({ preventScroll: true });
-  }
-
-  useEffect(() => {
-    const details = disclosure.current!;
-    function outside(event: PointerEvent) {
-      if (details.open && !details.contains(event.target as Node))
-        details.open = false;
-    }
-    function escape(event: KeyboardEvent) {
-      if (event.key === "Escape" && details.open) {
-        event.preventDefault();
-        dismiss();
-      }
-    }
-    document.addEventListener("pointerdown", outside);
-    document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("pointerdown", outside);
-      document.removeEventListener("keydown", escape);
-    };
-  }, []);
-
   return (
-    <details
+    <ActionMenu
       className="pc-dish-more"
-      ref={disclosure}
-      onBlur={(event) => {
-        if (
-          event.relatedTarget &&
-          !event.currentTarget.contains(event.relatedTarget)
-        ) {
-          event.currentTarget.open = false;
-        }
-      }}
+      triggerClassName="pc-icon-button"
+      panelClassName="pc-dish-more-panel"
+      label="更多菜品操作"
+      icon={<DesignIcon name="more" size={20} />}
     >
-      <summary
-        className="pc-icon-button"
-        aria-label="更多菜品操作"
-        title="更多菜品操作"
-        ref={trigger}
-      >
-        <DesignIcon name="more" size={20} />
-      </summary>
-      <div
-        className="pc-dish-more-panel"
-        onClick={(event) => {
-          if ((event.target as Element).closest("a, button")) dismiss();
-        }}
-      >
-        <FoodManage food={food} inMenu anyone />
-        <button type="button" aria-haspopup="dialog" onClick={onReport}>
-          <DesignIcon name="report" size={16} />
-          举报菜品
-        </button>
-      </div>
-    </details>
+      <FoodManage food={food} inMenu anyone />
+      <button type="button" aria-haspopup="dialog" onClick={onReport}>
+        <DesignIcon name="report" size={16} />
+        举报菜品
+      </button>
+    </ActionMenu>
   );
 }

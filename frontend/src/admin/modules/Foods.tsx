@@ -1,3 +1,4 @@
+import { Select } from "../../components/Select";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -84,7 +85,7 @@ export default function Foods() {
             placeholder="搜索菜名"
           />
         </label>
-        <select
+        <Select inline motionDuration={200} closeDuration={100}
           name="category"
           aria-label="菜品分类"
           defaultValue={filters.category ?? ""}
@@ -94,8 +95,8 @@ export default function Foods() {
               {category.id ? category.label : "全部分类"}
             </option>
           ))}
-        </select>
-        <select
+        </Select>
+        <Select inline motionDuration={200} closeDuration={100}
           name="sort"
           aria-label="排序"
           defaultValue={filters.sort ?? "NEWEST"}
@@ -105,7 +106,7 @@ export default function Foods() {
               {label}
             </option>
           ))}
-        </select>
+        </Select>
         <input
           name="id"
           className="is-narrow"
@@ -291,7 +292,7 @@ function FoodEditor({ food, onClose }: { food: Food; onClose: () => void }) {
           />
         </Field>
         <Field label="基础分类">
-          <select name="category" defaultValue={food.category || "other"}>
+          <Select inline motionDuration={200} closeDuration={100} name="category" defaultValue={food.category || "other"}>
             {categories
               .filter((c) => c.id)
               .map((c) => (
@@ -299,7 +300,7 @@ function FoodEditor({ food, onClose }: { food: Food; onClose: () => void }) {
                   {c.label}
                 </option>
               ))}
-          </select>
+          </Select>
         </Field>
         <Field label="描述" wide>
           <textarea

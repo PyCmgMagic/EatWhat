@@ -1,10 +1,10 @@
+import { Select } from "../components/Select";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
-  ChevronDown,
   MapPin,
   RotateCcw,
   Layers,
@@ -54,8 +54,8 @@ function DrawField({
 }) {
   return (
     <label className="draw-field">
-      <span className="draw-select">
-        <select
+      <span className="draw-select" data-draw-field={name}>
+        <Select inline motionDuration={200} closeDuration={100}
           name={name}
           aria-label={label}
           value={value}
@@ -66,8 +66,7 @@ function DrawField({
               {item.name}
             </option>
           ))}
-        </select>
-        <ChevronDown size={13} aria-hidden="true" />
+        </Select>
       </span>
     </label>
   );
@@ -83,8 +82,8 @@ export default function ShopDraw() {
   useLayoutEffect(() => {
     if (changedField.current) {
       section.current
-        ?.querySelector<HTMLSelectElement>(
-          `select[name="${changedField.current}"]`,
+        ?.querySelector<HTMLButtonElement>(
+          `[data-draw-field="${changedField.current}"] [role="combobox"]`,
         )
         ?.focus({ preventScroll: true });
       changedField.current = null;

@@ -57,8 +57,12 @@
     transform 140ms ease-out;
 }
 .ew-home-search[data-exiting] .ew-home-search-layer {
-  opacity: 0;
-  transform: translateY(-6px);
+  pointer-events: none;
+}
+.ew-home-search-layer .ew-anchored-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .ew-home-search-bar {
   margin: 0;
@@ -192,4 +196,8 @@
     animation: none;
     transition: none;
   }
+}
+html[data-motion-input="keyboard"] .ew-home-search-scrim {
+  animation: none;
+  transition: none;
 }

@@ -1,3 +1,4 @@
+import { Select } from "../../components/Select";
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Inbox } from "lucide-react";
@@ -123,7 +124,7 @@ export default function Feedback() {
             ))}
           </div>
           <div className="ew-feedback-tools">
-            <select
+            <Select inline motionDuration={200} closeDuration={100}
               aria-label="反馈类型"
               value={kind}
               onChange={(event) => {
@@ -142,7 +143,7 @@ export default function Feedback() {
                 店铺纠错{typeCount(counts?.catalogError)}
               </option>
               <option value="REPORT">举报{typeCount(counts?.report)}</option>
-            </select>
+            </Select>
             <button
               ref={filterButton}
               className="ew-admin-btn"
@@ -177,7 +178,7 @@ export default function Feedback() {
             >
               {showCategory && (
                 <Field label="反馈分类">
-                  <select name="category" defaultValue={filters.category ?? ""}>
+                  <Select inline motionDuration={200} closeDuration={100} name="category" defaultValue={filters.category ?? ""}>
                     <option value="">全部分类</option>
                     {Object.entries(feedbackCategories).map(
                       ([value, label]) => (
@@ -186,7 +187,7 @@ export default function Feedback() {
                         </option>
                       ),
                     )}
-                  </select>
+                  </Select>
                 </Field>
               )}
               <Field label="提交人 ID">

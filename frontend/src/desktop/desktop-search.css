@@ -57,7 +57,6 @@
 .pc-header-search-wrap[data-closing="true"] .pc-header-search-backdrop {
   animation: pc-header-search-backdrop-out 220ms ease-in both;
 }
-.pc-header-search-wrap[data-closing="true"] .pc-header-search,
 .pc-header-search-wrap[data-closing="true"] .pc-header-search-panel {
   pointer-events: none;
 }
@@ -222,4 +221,8 @@
   .pc-header-search-panel {
     animation: none;
   }
+}
+html[data-motion-input="keyboard"] .pc-header-search-backdrop {
+  animation: none;
+  transition: none;
 }

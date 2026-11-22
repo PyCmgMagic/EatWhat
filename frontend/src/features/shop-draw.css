@@ -80,7 +80,7 @@
   display: inline-flex;
   position: relative;
 }
-.draw-select select {
+.draw-select .ew-select-trigger {
   appearance: none;
   field-sizing: content;
   min-height: 44px;
@@ -99,7 +99,7 @@
   color: var(--draw-ink);
   background: var(--draw-surface);
 }
-.draw-select svg {
+.draw-select > svg {
   position: absolute;
   right: 9px;
   top: 50%;
@@ -456,7 +456,7 @@
   .shop-draw {
     width: calc(100% - 24px);
   }
-  .draw-select select {
+  .draw-select .ew-select-trigger {
     padding-inline: 9px 23px;
     font-size: 13px;
   }

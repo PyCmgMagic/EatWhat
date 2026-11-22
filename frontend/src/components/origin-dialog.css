@@ -1,0 +1,27 @@
+/* Local entry -> modal surface. The native dialog still owns focus and backdrop. */
+.modal[data-origin-motion] {
+  transform-origin: 0 0;
+  transform: none;
+  opacity: 1;
+  background: transparent !important;
+  box-shadow: none;
+  overflow: hidden;
+  transition: none;
+}
+.modal[data-origin-motion]::backdrop {
+  transition-duration: 180ms;
+}
+.origin-dialog-surface {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--night-surface, #fffdfa);
+  box-shadow: 0 14px 42px #231c182e;
+  pointer-events: none;
+}
+.modal[data-origin-motion] > .modal-pad {
+  max-height: inherit;
+  overflow: auto;
+  overscroll-behavior: contain;
+  transform-origin: 0 0;
+}

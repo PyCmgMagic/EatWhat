@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ActionMenu } from "../components/AnchoredPopover";
+import { useState, type ReactNode } from "react";
 import { FoodReportDialog } from "../features/FoodReportDialog";
 import { FoodEditHistoryDialog } from "../features/v4/EditHistory";
 import { DesignIcon } from "./ui";
@@ -12,88 +13,39 @@ export function DishMoreActions({
   foodName?: string | null;
   management: ReactNode;
 }) {
-  const disclosure = useRef<HTMLDetailsElement>(null);
-  const trigger = useRef<HTMLElement>(null);
   const [panel, setPanel] = useState<"history" | "report" | null>(null);
 
-  function dismiss() {
-    if (!disclosure.current?.open) return;
-    disclosure.current.open = false;
-    trigger.current?.focus({ preventScroll: true });
-  }
-
-  useEffect(() => {
-    const details = disclosure.current!;
-    function outside(event: PointerEvent) {
-      if (details.open && !details.contains(event.target as Node))
-        details.open = false;
-    }
-    function escape(event: KeyboardEvent) {
-      if (event.key === "Escape" && details.open) {
-        event.preventDefault();
-        dismiss();
-      }
-    }
-    document.addEventListener("pointerdown", outside);
-    document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("pointerdown", outside);
-      document.removeEventListener("keydown", escape);
-    };
-  }, []);
-
   function open(next: "history" | "report") {
-    dismiss();
     setPanel(next);
   }
 
   return (
     <>
-      <details
+      <ActionMenu
         className="dish-more"
-        ref={disclosure}
-        onBlur={(event) => {
-          if (
-            event.relatedTarget &&
-            !event.currentTarget.contains(event.relatedTarget)
-          )
-            event.currentTarget.open = false;
-        }}
+        triggerClassName="dish-icon-button"
+        panelClassName="dish-more-panel"
+        label="更多菜品操作"
+        icon={<DesignIcon name="more" size={22} />}
       >
-        <summary
-          className="dish-icon-button"
-          aria-label="更多菜品操作"
-          ref={trigger}
+        {management}
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          onClick={() => open("history")}
         >
-          <DesignIcon name="more" size={22} />
-        </summary>
-        <div
-          className="dish-more-panel"
-          role="group"
-          aria-label="菜品相关操作"
-          onClick={(event) => {
-            if ((event.target as Element).closest("a, button")) dismiss();
-          }}
+          <DesignIcon name="history" size={18} />
+          修改记录
+        </button>
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          onClick={() => open("report")}
         >
-          {management}
-          <button
-            type="button"
-            aria-haspopup="dialog"
-            onClick={() => open("history")}
-          >
-            <DesignIcon name="history" size={18} />
-            修改记录
-          </button>
-          <button
-            type="button"
-            aria-haspopup="dialog"
-            onClick={() => open("report")}
-          >
-            <DesignIcon name="report" size={18} />
-            举报这道菜
-          </button>
-        </div>
-      </details>
+          <DesignIcon name="report" size={18} />
+          举报这道菜
+        </button>
+      </ActionMenu>
       {panel === "history" && (
         <FoodEditHistoryDialog id={foodId} onClose={() => setPanel(null)} />
       )}

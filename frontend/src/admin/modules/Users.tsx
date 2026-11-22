@@ -1,3 +1,4 @@
+import { Select } from "../../components/Select";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -81,12 +82,12 @@ export default function Users() {
             defaultValue={filters.keyword}
           />
         </label>
-        <select name="role" aria-label="角色" defaultValue={filters.role ?? ""}>
+        <Select inline motionDuration={200} closeDuration={100} name="role" aria-label="角色" defaultValue={filters.role ?? ""}>
           <option value="">全部角色</option>
           <option value="user">用户</option>
           <option value="admin">管理员</option>
-        </select>
-        <select
+        </Select>
+        <Select inline motionDuration={200} closeDuration={100}
           name="verified"
           aria-label="学生认证"
           defaultValue={String(filters.verified ?? "")}
@@ -94,8 +95,8 @@ export default function Users() {
           <option value="">认证不限</option>
           <option value="true">已认证</option>
           <option value="false">未认证</option>
-        </select>
-        <select
+        </Select>
+        <Select inline motionDuration={200} closeDuration={100}
           name="banned"
           aria-label="账号状态"
           defaultValue={String(filters.banned ?? "")}
@@ -103,7 +104,7 @@ export default function Users() {
           <option value="">状态不限</option>
           <option value="false">正常</option>
           <option value="true">封禁中</option>
-        </select>
+        </Select>
         <button className="ew-admin-btn is-primary">查询</button>
         {filtered && (
           <button

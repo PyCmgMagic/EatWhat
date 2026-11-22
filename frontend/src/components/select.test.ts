@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, createElement as h, useState, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { Select } from "./Select";
+import { MotionEnvironment } from "../motion/hooks";
 
 let container: HTMLDivElement, root: Root;
 const option = (value: string, label: string, disabled = false) =>
@@ -222,5 +223,142 @@ describe("custom select interaction and native form contract", () => {
         .querySelector(".ew-select-option .ew-select-swatch")
         ?.getAttribute("style"),
     ).toContain("rgb(255, 207, 68)");
+  });
+});
+
+describe("animated popup lifecycle", () => {
+  let reduced: boolean;
+  let media: MediaQueryList;
+  const animations: Array<{
+    currentTime: number;
+    duration: number;
+    finished: Promise<void>;
+    cancel: ReturnType<typeof vi.fn>;
+    finish: () => void;
+  }> = [];
+  const originalAnimate = Object.getOwnPropertyDescriptor(
+    Element.prototype,
+    "animate",
+  );
+  const pointerClick = (element: Element) =>
+    act(() => {
+      element.dispatchEvent(
+        new MouseEvent("click", { bubbles: true, detail: 1 }),
+      );
+    });
+  const settleAnimations = async () =>
+    act(async () => {
+      animations.slice(-3).forEach((animation) => animation.finish());
+    });
+
+  beforeEach(() => {
+    reduced = false;
+    animations.length = 0;
+    media = Object.assign(new EventTarget(), {
+      media: "(prefers-reduced-motion: reduce)",
+    }) as MediaQueryList;
+    Object.defineProperty(media, "matches", { get: () => reduced });
+    vi.stubGlobal("matchMedia", () => media);
+    Object.defineProperty(Element.prototype, "animate", {
+      configurable: true,
+      value: vi.fn((_frames, timing: KeyframeAnimationOptions) => {
+        let resolve!: () => void, reject!: (reason: Error) => void;
+        const finished = new Promise<void>((yes, no) => {
+          resolve = yes;
+          reject = no;
+        });
+        const animation = {
+          currentTime: 0,
+          duration: Number(timing.duration),
+          finished,
+          cancel: vi.fn(() => reject(new Error("cancelled"))),
+          finish: () => {
+            animation.currentTime = animation.duration;
+            resolve();
+          },
+        };
+        animations.push(animation);
+        return animation as unknown as Animation;
+      }),
+    });
+  });
+  afterEach(() => {
+    if (originalAnimate)
+      Object.defineProperty(Element.prototype, "animate", originalAnimate);
+    else Reflect.deleteProperty(Element.prototype, "animate");
+    delete document.documentElement.dataset.motionInput;
+    delete document.documentElement.dataset.pcMotionInput;
+    vi.unstubAllGlobals();
+  });
+
+  it("retains the same top-layer surface through closing and rapid reopening", async () => {
+    render({ defaultValue: "a" });
+    pointerClick(button());
+    const panel = document.querySelector<HTMLElement>(".ew-select-popup")!;
+    const hide = vi.fn();
+    panel.hidePopover = hide;
+    vi.spyOn(panel, "matches").mockImplementation(
+      (selector) => selector === ":popover-open",
+    );
+    await settleAnimations();
+    pointerClick(button());
+    const closing = animations.slice(-3);
+    expect(panel.hasAttribute("inert")).toBe(true);
+    expect(panel.getAttribute("aria-hidden")).toBe("true");
+    expect(menu()).not.toBeNull();
+    expect(hide).not.toHaveBeenCalled();
+    closing.forEach((animation) => {
+      animation.currentTime = animation.duration / 2;
+    });
+    pointerClick(button());
+    expect(document.querySelector(".ew-select-popup")).toBe(panel);
+    expect(panel.hasAttribute("inert")).toBe(false);
+    await act(async () => closing.forEach((animation) => animation.finish()));
+    await settleAnimations();
+    expect(menu()).not.toBeNull();
+    expect(hide).not.toHaveBeenCalled();
+    pointerClick(button());
+    await settleAnimations();
+    expect(menu()).toBeNull();
+    expect(hide).toHaveBeenCalledOnce();
+  });
+
+  it("finishes a closing popup if reduced motion is enabled mid-flight", async () => {
+    act(() =>
+      root.render(
+        h(
+          "div",
+          null,
+          h(MotionEnvironment),
+          h(Select, { "aria-label": "饭点" }, options),
+        ),
+      ),
+    );
+    pointerClick(button());
+    await settleAnimations();
+    pointerClick(button());
+    expect(menu()).not.toBeNull();
+    await act(async () => {
+      reduced = true;
+      media.dispatchEvent(new Event("change"));
+    });
+    expect(menu()).toBeNull();
+    const count = animations.length;
+    pointerClick(button());
+    expect(menu()).not.toBeNull();
+    expect(animations).toHaveLength(count);
+  });
+
+  it("keeps asynchronous options on screen without restarting their animation", () => {
+    render({ defaultValue: "a" });
+    pointerClick(button());
+    const panel = document.querySelector(".ew-select-popup");
+    const count = animations.length;
+    render({ defaultValue: "a" }, [...options, option("new", "夜宵")]);
+    expect(document.querySelector(".ew-select-popup")).toBe(panel);
+    expect(menu()?.textContent).toContain("夜宵");
+    expect(animations).toHaveLength(count);
+    key("Escape");
+    expect(menu()).toBeNull();
   });
 });

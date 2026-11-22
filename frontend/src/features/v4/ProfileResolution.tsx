@@ -1,3 +1,4 @@
+import { Select } from "../../components/Select";
 import { useState } from "react";
 import { useApp } from "../../app/state";
 import {
@@ -41,7 +42,7 @@ export default function ProfileResolution({
         选择要保留的资料候选。提交时校验当前修订号，版本变化时需要重新比较。
       </p>
       <Field label="保留的候选">
-        <select
+        <Select inline motionDuration={200} closeDuration={100}
           value={selected}
           onChange={(e) => {
             setSelected(e.target.value);
@@ -54,7 +55,7 @@ export default function ProfileResolution({
               {String(h.id)}
             </option>
           ))}
-        </select>
+        </Select>
       </Field>
       {heads.map((h) => (
         <details key={String(h.id)} open={selected === h.id}>

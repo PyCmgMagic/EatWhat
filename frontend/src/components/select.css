@@ -6,6 +6,9 @@
   max-width: 100%;
   vertical-align: middle;
 }
+.ew-select[data-inline] {
+  width: auto;
+}
 /* Keep the native control available to forms without exposing a second selector. */
 .ew-select > select.ew-select-native {
   position: absolute !important;
@@ -106,22 +109,45 @@
   z-index: 1200;
   inset: auto;
   margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  color: #231c18;
+  font-family: "Noto Sans SC Variable", "PingFang SC", sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.ew-select-popup[data-exiting] {
+  pointer-events: none;
+}
+.ew-select-surface {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 1px solid #e9dfd1;
+  border-radius: inherit;
+  background: #fffefa;
+  box-shadow:
+    0 14px 42px -12px #3929192e,
+    0 3px 9px #39291908;
+}
+.ew-select-viewport {
+  max-height: inherit;
+  overflow: hidden;
+  border-radius: inherit;
+  transform-origin: inherit;
+}
+.ew-select-content {
+  position: relative;
+  max-height: inherit;
   padding: 7px;
   overflow: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: #d8cbbc transparent;
-  border: 1px solid #e9dfd1;
-  border-radius: 18px;
-  background: #fffefa;
-  color: #231c18;
-  box-shadow:
-    0 14px 42px -12px #3929192e,
-    0 3px 9px #39291908;
-  font-family: "Noto Sans SC Variable", "PingFang SC", sans-serif;
-  font-size: 13px;
-  line-height: 1.5;
-  animation: ew-select-enter 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: inherit;
 }
 .ew-select-popup::backdrop {
   background: transparent;
@@ -211,16 +237,6 @@
 .mobile-demo-marker .ew-select > .ew-select-trigger {
   font-size: 11px;
 }
-@keyframes ew-select-enter {
-  from {
-    opacity: 0;
-    transform: translateY(4px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
 @media (max-width: 599px) {
   .ew-select > button.ew-select-trigger {
     font-size: 16px;
@@ -240,12 +256,15 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ew-select-popup {
-    animation: none;
-  }
   .ew-select-trigger,
   .ew-select-chevron,
   .ew-select-option {
     transition: none !important;
   }
+}
+:root[data-motion-input="keyboard"] .ew-select-trigger,
+:root[data-motion-input="keyboard"] .ew-select-chevron,
+:root[data-motion-input="keyboard"] .ew-select-option,
+.ew-select[data-instant] .ew-select-chevron {
+  transition: none !important;
 }

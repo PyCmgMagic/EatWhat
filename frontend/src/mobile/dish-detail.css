@@ -132,7 +132,7 @@
 .dish-more summary::-webkit-details-marker {
   display: none;
 }
-.dish-more[open] summary {
+.dish-more[data-open] > button {
   border-color: currentColor;
 }
 .dish-more-panel {

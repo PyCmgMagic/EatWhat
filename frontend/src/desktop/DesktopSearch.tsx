@@ -2,6 +2,8 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { DesignIcon as Icon } from "../mobile/ui";
 import "./desktop-search.css";
+import { AnimatedSurface } from "../components/AnchoredPopover";
+import { instantMotion, trackMotion } from "../motion/runtime";
 
 type SearchKind = "food" | "shop";
 type RecentSearch = { query: string; kind: SearchKind };
@@ -77,28 +79,32 @@ export default function DesktopSearch() {
       !element ||
       !previous ||
       typeof element.animate !== "function" ||
+      !window.matchMedia ||
+      instantMotion() ||
       (typeof window.matchMedia === "function" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches)
     )
       return;
     const next = element.getBoundingClientRect();
     if (!previous.width || !next.width) return;
-    const animation = element.animate(
-      [
-        {
-          left: `${previous.left}px`,
-          top: `${previous.top}px`,
-          width: `${previous.width}px`,
-          height: `${previous.height}px`,
-        },
-        {
-          left: `${next.left}px`,
-          top: `${next.top}px`,
-          width: `${next.width}px`,
-          height: `${next.height}px`,
-        },
-      ],
-      { duration: 280, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+    const animation = trackMotion(
+      element.animate(
+        [
+          {
+            left: `${previous.left}px`,
+            top: `${previous.top}px`,
+            width: `${previous.width}px`,
+            height: `${previous.height}px`,
+          },
+          {
+            left: `${next.left}px`,
+            top: `${next.top}px`,
+            width: `${next.width}px`,
+            height: `${next.height}px`,
+          },
+        ],
+        { duration: 280, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+      ),
     );
     animation.onfinish = () => {
       origin.current = null;
@@ -113,33 +119,40 @@ export default function DesktopSearch() {
       setClosing(false);
       return;
     }
+    if (!element.animate || !window.matchMedia || instantMotion()) {
+      setClosing(false);
+      return;
+    }
     const next = element.getBoundingClientRect();
     if (!previous.width || !next.width) {
       setClosing(false);
       return;
     }
-    const animation = element.animate(
-      [
-        {
-          left: `${previous.left}px`,
-          top: `${previous.top}px`,
-          width: `${previous.width}px`,
-          height: `${previous.height}px`,
-          padding: "0px 12px",
-          backgroundColor: "var(--pc-paper)",
-          boxShadow: "0 0 0 1px var(--pc-line), 0 12px 32px rgba(56, 43, 30, 0.1)",
-        },
-        {
-          left: `${next.left}px`,
-          top: `${next.top}px`,
-          width: `${next.width}px`,
-          height: `${next.height}px`,
-          padding: "0px 12px",
-          backgroundColor: "var(--pc-mist)",
-          boxShadow: "0 0 0 0 rgba(216, 197, 160, 0)",
-        },
-      ],
-      { duration: 220, easing: "cubic-bezier(0.4, 0, 1, 1)" },
+    const animation = trackMotion(
+      element.animate(
+        [
+          {
+            left: `${previous.left}px`,
+            top: `${previous.top}px`,
+            width: `${previous.width}px`,
+            height: `${previous.height}px`,
+            padding: "0px 12px",
+            backgroundColor: "var(--pc-paper)",
+            boxShadow:
+              "0 0 0 1px var(--pc-line), 0 12px 32px rgba(56, 43, 30, 0.1)",
+          },
+          {
+            left: `${next.left}px`,
+            top: `${next.top}px`,
+            width: `${next.width}px`,
+            height: `${next.height}px`,
+            padding: "0px 12px",
+            backgroundColor: "var(--pc-mist)",
+            boxShadow: "0 0 0 0 rgba(216, 197, 160, 0)",
+          },
+        ],
+        { duration: 220, easing: "cubic-bezier(0.4, 0, 1, 1)" },
+      ),
     );
     returnAnimation.current = animation;
     animation.onfinish = () => {
@@ -151,7 +164,13 @@ export default function DesktopSearch() {
   }, [open, closing]);
 
   function showSearch(source?: HTMLElement) {
-    if (closing) return;
+    if (closing) {
+      origin.current = form.current?.getBoundingClientRect() ?? null;
+      returnAnimation.current?.cancel();
+      setClosing(false);
+      setOpen(true);
+      return;
+    }
     if (!open) {
       const rect = (source ?? form.current)?.getBoundingClientRect() ?? null;
       origin.current = rect;
@@ -169,6 +188,8 @@ export default function DesktopSearch() {
       !element ||
       !target ||
       typeof element.animate !== "function" ||
+      !window.matchMedia ||
+      instantMotion() ||
       (typeof window.matchMedia === "function" &&
         window.matchMedia("(prefers-reduced-motion: reduce)").matches)
     ) {
@@ -305,7 +326,11 @@ export default function DesktopSearch() {
           </button>
         </form>
         {(open || closing) && (
-          <div
+          <AnimatedSurface
+            open={open}
+            duration={180}
+            closeDuration={100}
+            padding={10}
             className="pc-header-search-panel"
             id={panelId}
             role="dialog"
@@ -374,7 +399,7 @@ export default function DesktopSearch() {
                 ))}
               </section>
             )}
-          </div>
+          </AnimatedSurface>
         )}
       </div>
       <button

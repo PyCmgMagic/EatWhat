@@ -124,6 +124,7 @@ export function FoodRating({ food }: { food: Food }) {
           title="给这道菜评分"
           className="food-rating-dialog"
           returnFocus={trigger}
+          motionOrigin={trigger}
           onClose={() => setTrigger(null)}
         >
           <div

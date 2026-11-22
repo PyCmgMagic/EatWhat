@@ -1,4 +1,5 @@
 import WorkspaceSwitch from "../admin/WorkspaceSwitch";
+import { AnchoredPopover } from "../components/AnchoredPopover";
 import { ThemeToggle } from "../theme/AppearanceControl";
 import { DiscoveryList } from "../features/DiscoveryList";
 import { PhotoPreviewButton } from "../components/PhotoPreviewButton";
@@ -342,46 +343,53 @@ function HeaderAccount() {
           (user?.displayName?.slice(0, 1) ?? <Icon name="me" size={20} />)
         )}
       </button>
-      {open && (
-        <div id="pc-account-popover" className="pc-account-popover">
-          <div className="pc-account-summary">
-            <strong>{user?.displayName || "我的账号"}</strong>
-            <span>
-              {user?.verified ? "学生身份已认证" : "今天也要好好吃饭"}
-            </span>
-          </div>
-          <div className="pc-account-links">
-            <Link to="/me">
-              <Icon name="me" size={18} /> 个人主页
-            </Link>
-            <Link to="/settings">
-              <Icon name="settings" size={18} /> 账号设置
-            </Link>
-            <WorkspaceSwitch />
-          </div>
-          <div className="pc-account-popover-footer">
-            <button
-              type="button"
-              className="pc-account-logout"
-              disabled={busy}
-              onClick={async () => {
-                if (busy) return;
-                setBusy(true);
-                try {
-                  await signOut();
-                  navigate("/auth");
-                } catch (error) {
-                  setBusy(false);
-                  toast(errorMessage(error), { tone: "error" });
-                }
-              }}
-            >
-              <Icon name="logout" size={18} />
-              {busy ? "正在退出…" : "退出登录"}
-            </button>
-          </div>
+      <AnchoredPopover
+        open={open}
+        onClose={() => setOpen(false)}
+        anchor={trigger}
+        id="pc-account-popover"
+        width={238}
+        padding={10}
+        className="pc-account-popover"
+        onClick={(event) => {
+          if ((event.target as Element).closest("a")) setOpen(false);
+        }}
+      >
+        <div className="pc-account-summary">
+          <strong>{user?.displayName || "我的账号"}</strong>
+          <span>{user?.verified ? "学生身份已认证" : "今天也要好好吃饭"}</span>
         </div>
-      )}
+        <div className="pc-account-links">
+          <Link to="/me">
+            <Icon name="me" size={18} /> 个人主页
+          </Link>
+          <Link to="/settings">
+            <Icon name="settings" size={18} /> 账号设置
+          </Link>
+          <WorkspaceSwitch />
+        </div>
+        <div className="pc-account-popover-footer">
+          <button
+            type="button"
+            className="pc-account-logout"
+            disabled={busy}
+            onClick={async () => {
+              if (busy) return;
+              setBusy(true);
+              try {
+                await signOut();
+                navigate("/auth");
+              } catch (error) {
+                setBusy(false);
+                toast(errorMessage(error), { tone: "error" });
+              }
+            }}
+          >
+            <Icon name="logout" size={18} />
+            {busy ? "正在退出…" : "退出登录"}
+          </button>
+        </div>
+      </AnchoredPopover>
     </div>
   );
 }

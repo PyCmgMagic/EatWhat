@@ -69,47 +69,47 @@ export function SupplementPrice({
           className="v4-confirm-dialog supplement-price-dialog"
           dismissible={!busy}
           returnFocus={trigger}
+          motionOrigin={trigger}
           onClose={() => setOpen(false)}
         >
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void submit();
-            }}
-          >
-            <p>
-              吃过「{food.name || "这道菜"}」？填上你付的价格，帮后来的人参考。
-            </p>
-            <label className="supplement-price-field">
-              <span aria-hidden="true">¥</span>
-              <input
-                aria-label="价格（元）"
-                inputMode="decimal"
-                autoFocus
-                placeholder="如 18"
-                value={value}
-                disabled={busy}
-                onChange={(e) => setValue(e.target.value)}
-              />
-            </label>
-            {error && (
-              <p className="supplement-price-error" role="alert">
-                {error}
+          {(dismiss) => (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void submit();
+              }}
+            >
+              <p>
+                吃过「{food.name || "这道菜"}
+                」？填上你付的价格，帮后来的人参考。
               </p>
-            )}
-            <div className="v4-confirm-actions">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => setOpen(false)}
-              >
-                取消
-              </button>
-              <button type="submit" className="is-danger" disabled={busy}>
-                {busy ? "正在保存…" : "保存"}
-              </button>
-            </div>
-          </form>
+              <label className="supplement-price-field">
+                <span aria-hidden="true">¥</span>
+                <input
+                  aria-label="价格（元）"
+                  inputMode="decimal"
+                  autoFocus
+                  placeholder="如 18"
+                  value={value}
+                  disabled={busy}
+                  onChange={(e) => setValue(e.target.value)}
+                />
+              </label>
+              {error && (
+                <p className="supplement-price-error" role="alert">
+                  {error}
+                </p>
+              )}
+              <div className="v4-confirm-actions">
+                <button type="button" disabled={busy} onClick={dismiss}>
+                  取消
+                </button>
+                <button type="submit" className="is-danger" disabled={busy}>
+                  {busy ? "正在保存…" : "保存"}
+                </button>
+              </div>
+            </form>
+          )}
         </Modal>
       )}
     </>

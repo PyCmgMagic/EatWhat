@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useId,
   useRef,
   type KeyboardEventHandler,
@@ -48,6 +49,8 @@ import { duplicateFoodId, errorMessage } from "../api/client";
 import { useApp } from "../app/state";
 import { mediaUrl } from "../api/models";
 import { useSurfaceDismiss } from "../motion/hooks";
+import { createAnchoredPopoverMotion } from "../motion/anchored-popover";
+import "./origin-dialog.css";
 import { ToastError } from "./feedback";
 const icons = {
   discover: LayoutGrid,
@@ -206,20 +209,38 @@ export function Modal({
   className = "",
   dismissible = true,
   returnFocus,
+  motionOrigin,
   onKeyDown,
 }: {
   title: string;
-  children: ReactNode;
+  children: ReactNode | ((dismiss: () => void) => ReactNode);
   onClose: () => void;
   className?: string;
   dismissible?: boolean;
   returnFocus?: HTMLElement | null;
+  motionOrigin?: HTMLElement | null;
   onKeyDown?: KeyboardEventHandler<HTMLDialogElement>;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const surface = useRef<HTMLDivElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  const originMotion = useRef<ReturnType<
+    typeof createAnchoredPopoverMotion
+  > | null>(null);
+  const closing = useRef(false);
+  const closeCallback = useRef(onClose);
+  closeCallback.current = onClose;
   const titleId = useId();
-  const dismiss = useSurfaceDismiss(ref, onClose);
-  useEffect(() => {
+  const defaultDismiss = useSurfaceDismiss(ref, onClose);
+  const dismiss = () => {
+    if (!dismissible || closing.current) return;
+    if (!originMotion.current || !ref.current) return defaultDismiss();
+    closing.current = true;
+    ref.current.dataset.dismissing = "true";
+    ref.current.inert = true;
+    originMotion.current.setOpen(false, () => closeCallback.current());
+  };
+  useLayoutEffect(() => {
     const dialog = ref.current;
     const previousFocus =
       returnFocus ?? (document.activeElement as HTMLElement | null);
@@ -236,7 +257,68 @@ export function Modal({
     root.style.overflow = "hidden";
     const lost = scrollbar - gutter();
     if (lost > 0) body.style.paddingRight = `${lost}px`;
+    // Measure after the native dialog enters its top layer. Only the shell
+    // changes size; counter-scaling keeps controls readable throughout.
+    if (
+      dialog &&
+      surface.current &&
+      content.current &&
+      motionOrigin?.isConnected
+    ) {
+      let target = dialog.getBoundingClientRect();
+      let source = motionOrigin.getBoundingClientRect();
+      let settled = false;
+      if (
+        target.width > 0 &&
+        target.height > 0 &&
+        source.width > 0 &&
+        source.height > 0
+      ) {
+        let zoom = target.width / (dialog.offsetWidth || target.width);
+        const motion = createAnchoredPopoverMotion(
+          dialog,
+          surface.current,
+          content.current,
+          {
+            openDuration: 340,
+            closeDuration: 180,
+            origin: () => {
+              // A settled card can move when the viewport or its contents change.
+              if (settled) {
+                target = dialog.getBoundingClientRect();
+                zoom = target.width / (dialog.offsetWidth || target.width);
+              }
+              if (motionOrigin.isConnected) {
+                const next = motionOrigin.getBoundingClientRect();
+                if (next.width > 0 && next.height > 0) source = next;
+              }
+              return {
+                x: (source.left - target.left) / zoom,
+                y: (source.top - target.top) / zoom,
+                sx: Math.max(0.05, source.width / target.width),
+                sy: Math.max(0.05, source.height / target.height),
+              };
+            },
+          },
+        );
+        originMotion.current = motion;
+        motion.setOpen(true, () => {
+          settled = true;
+        });
+      }
+    }
     return () => {
+      originMotion.current?.cancel();
+      originMotion.current = null;
+      // Strict Mode may mount again on the same DOM; restore its destination box.
+      if (motionOrigin && dialog) {
+        dialog.style.transform = "";
+        if (surface.current) surface.current.style.opacity = "";
+        if (content.current) {
+          content.current.style.transform = "";
+          content.current.style.opacity = "";
+        }
+      }
       dialog?.close();
       root.style.overflow = prev;
       body.style.paddingRight = prevPadding;
@@ -248,6 +330,7 @@ export function Modal({
     <dialog
       ref={ref}
       className={`modal ${className}`}
+      data-origin-motion={motionOrigin ? "true" : undefined}
       aria-labelledby={titleId}
       onKeyDown={onKeyDown}
       onCancel={(e) => {
@@ -258,7 +341,14 @@ export function Modal({
         if (dismissible && e.target === ref.current) dismiss();
       }}
     >
-      <div className="modal-pad">
+      {motionOrigin && (
+        <div
+          ref={surface}
+          className="origin-dialog-surface"
+          aria-hidden="true"
+        />
+      )}
+      <div ref={content} className="modal-pad">
         <button
           className="modal-close"
           onClick={dismiss}
@@ -268,7 +358,7 @@ export function Modal({
           <Icon name="close" />
         </button>
         <h2 id={titleId}>{title}</h2>
-        {children}
+        {typeof children === "function" ? children(dismiss) : children}
       </div>
     </dialog>
   );

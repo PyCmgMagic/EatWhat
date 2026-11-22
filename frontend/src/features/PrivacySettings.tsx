@@ -303,27 +303,32 @@ function TelemetrySettings() {
           title="关闭使用统计？"
           className="v4-confirm-dialog"
           returnFocus={confirmTrigger}
+          motionOrigin={confirmTrigger}
           onClose={() => setConfirmTrigger(null)}
           dismissible={!save.isPending}
         >
-          <p>关闭后将删除已收集的使用统计，无法恢复。</p>
-          <div className="v4-confirm-actions">
-            <button
-              type="button"
-              disabled={save.isPending}
-              onClick={() => setConfirmTrigger(null)}
-            >
-              取消
-            </button>
-            <button
-              type="button"
-              className="is-danger"
-              disabled={save.isPending}
-              onClick={() => saveConsent(false)}
-            >
-              {save.isPending ? "正在关闭…" : "关闭并删除统计"}
-            </button>
-          </div>
+          {(dismiss) => (
+            <>
+              <p>关闭后将删除已收集的使用统计，无法恢复。</p>
+              <div className="v4-confirm-actions">
+                <button
+                  type="button"
+                  disabled={save.isPending}
+                  onClick={dismiss}
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  className="is-danger"
+                  disabled={save.isPending}
+                  onClick={() => saveConsent(false)}
+                >
+                  {save.isPending ? "正在关闭…" : "关闭并删除统计"}
+                </button>
+              </div>
+            </>
+          )}
         </Modal>
       )}
     </section>

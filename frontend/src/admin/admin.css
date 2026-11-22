@@ -73,7 +73,7 @@ body.admin-mode #root {
   font: inherit;
   cursor: pointer;
 }
-.admin-app :where(input, select, textarea) {
+.admin-app :where(input, :is(select, .ew-select-trigger), textarea) {
   width: 100%;
   min-height: 38px;
   padding: 7px 12px;
@@ -98,7 +98,7 @@ body.admin-mode #root {
   resize: vertical;
   min-height: 76px;
 }
-.admin-app :where(input, select, textarea):focus-visible {
+.admin-app :where(input, :is(select, .ew-select-trigger), textarea):focus-visible {
   outline: none;
   border-color: var(--ad-ink);
   box-shadow: 0 0 0 3px rgb(31 26 23 / 10%);
@@ -917,7 +917,7 @@ body.admin-mode #root {
   align-items: center;
   gap: 8px;
 }
-.ew-admin-toolbar > :where(select, input) {
+.ew-admin-toolbar > :where(:is(select, .ew-select-trigger), input) {
   width: auto;
   min-width: 130px;
 }
@@ -1333,7 +1333,7 @@ a.ew-admin-stat:hover {
 .ew-feedback-tools {
   gap: 8px;
 }
-.ew-feedback-tools select {
+.ew-feedback-tools :is(select, .ew-select-trigger) {
   width: auto;
   min-width: 112px;
 }
@@ -1567,10 +1567,10 @@ a.ew-admin-stat:hover {
     width: 100%;
     padding: 10px 16px;
   }
-  .ew-feedback-tools select {
+  .ew-feedback-tools :is(select, .ew-select-trigger) {
     flex: 1;
   }
-  .ew-feedback-tools :is(button, select),
+  .ew-feedback-tools :is(button, :is(select, .ew-select-trigger)),
   .ew-feedback-empty button {
     min-height: 44px;
   }

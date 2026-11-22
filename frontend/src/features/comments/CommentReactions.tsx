@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { AnchoredPopover } from "../../components/AnchoredPopover";
+import { useId, useRef, useState } from "react";
 import { useQueryClient, type Query } from "@tanstack/react-query";
 import { SmilePlus } from "lucide-react";
 import {
@@ -85,24 +86,6 @@ export function CommentReactions({
   const opener = useRef<HTMLButtonElement>(null);
   const pending = useRef(false);
   const [open, setOpen] = useState(false);
-  // Keeps the picker mounted while its exit animation plays.
-  const [closing, setClosing] = useState(false);
-  const wasOpen = useRef(false);
-  useEffect(() => {
-    const justClosed = wasOpen.current && !open;
-    wasOpen.current = open;
-    if (!justClosed) {
-      setClosing(false);
-      return;
-    }
-    const reduced = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (reduced || document.documentElement.dataset.motionInput === "keyboard") return;
-    setClosing(true);
-    const timer = window.setTimeout(() => setClosing(false), 170);
-    return () => window.clearTimeout(timer);
-  }, [open]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const counts = new Map(reactions.map((value) => [value.reaction, value]));
@@ -112,21 +95,16 @@ export function CommentReactions({
     opener.current?.focus();
   };
 
-  // Close the floating picker on an outside tap.
-  const root = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const onPointer = (event: PointerEvent) => {
-      if (!root.current?.contains(event.target as Node)) setOpen(false);
-    };
-    document.addEventListener("pointerdown", onPointer);
-    return () => document.removeEventListener("pointerdown", onPointer);
-  }, [open]);
-
   async function respond(reaction: CommentReactionType) {
     if (pending.current) return;
     const selected = counts.get(reaction)?.selected !== true;
-    if (!access({ path: `/comments/${commentId}/reactions/${reaction}`, options: { method: selected ? "PUT" : "DELETE" } })) return;
+    if (
+      !access({
+        path: `/comments/${commentId}/reactions/${reaction}`,
+        options: { method: selected ? "PUT" : "DELETE" },
+      })
+    )
+      return;
     const viewer = user?.id ?? "guest";
     const affected = {
       predicate: (query: Query) =>
@@ -167,10 +145,10 @@ export function CommentReactions({
 
   return (
     <div
-      ref={root}
       className="comments-reactions"
       onKeyDown={(event) => {
         if (open && event.key === "Escape") {
+          event.preventDefault();
           event.stopPropagation();
           close();
         }
@@ -207,22 +185,26 @@ export function CommentReactions({
           <span>表情</span>
         </button>
       </div>
-      <div
+      <AnchoredPopover
         id={pickerId}
+        open={open}
+        onClose={() => setOpen(false)}
+        anchor={opener}
+        side="top"
+        align="start"
+        width={commentReactionOptions.length * 46 + 10}
+        duration={180}
+        closeDuration={100}
         className="comments-reaction-popover"
-        data-state={open ? "open" : "closed"}
-        hidden={!open && !closing}
-        inert={!open}
       >
         <div
           className="comments-reaction-picker"
           role="group"
           aria-label="选择回应表情"
         >
-          {commentReactionOptions.map(({ reaction, emoji, label }, index) => (
+          {commentReactionOptions.map(({ reaction, emoji, label }) => (
             <button
               key={reaction}
-              style={{ "--i": index } as CSSProperties}
               type="button"
               aria-label={label}
               title={label}
@@ -234,7 +216,7 @@ export function CommentReactions({
             </button>
           ))}
         </div>
-      </div>
+      </AnchoredPopover>
       {error && (
         <span className="comments-error" role="alert">
           {error}

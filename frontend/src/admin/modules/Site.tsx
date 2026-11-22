@@ -1,3 +1,4 @@
+import { Select } from "../../components/Select";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAdminState } from "../../app/admin-state";
@@ -890,13 +891,13 @@ function AiSettingsEditor({
           <input name="model" defaultValue={value.model ?? ""} />
         </Field>
         <Field label="返回格式" hint="不支持 json_schema 时改用 json_object">
-          <select
+          <Select inline motionDuration={200} closeDuration={100}
             name="format"
             defaultValue={value.responseFormat || "json_schema"}
           >
             <option value="json_schema">json_schema（推荐）</option>
             <option value="json_object">json_object</option>
-          </select>
+          </Select>
         </Field>
         <label className="ew-admin-switch-row" data-wide>
           <Toggle

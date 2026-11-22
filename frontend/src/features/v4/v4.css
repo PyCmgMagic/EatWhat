@@ -93,7 +93,7 @@
   font-weight: 700;
 }
 .v4-page input:not([type="checkbox"]):not([type="radio"]),
-.v4-page select,
+.v4-page :is(select, .ew-select-trigger),
 .v4-page textarea {
   font: inherit;
   background: #faf7f4;
@@ -234,7 +234,7 @@
   padding-top: 14px;
 }
 .v4-inline button,
-.v4-inline select {
+.v4-inline :is(select, .ew-select-trigger) {
   font: inherit;
   border: 1px solid #e7dcd2;
   border-radius: 20px;

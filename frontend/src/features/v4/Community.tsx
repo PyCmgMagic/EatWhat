@@ -1,3 +1,4 @@
+import { Select } from "../../components/Select";
 import { commentLikeLink } from "../../api/notifications";
 import { MessageSquareText } from "lucide-react";
 import { errorMessage } from "../../api/client";
@@ -312,7 +313,7 @@ export function FeedbackForm({
               ) : (
                 kind === "feedback" && !appeal && (
                   <Field label="反馈分类">
-                    <select
+                    <Select inline motionDuration={200} closeDuration={100}
                       value={category}
                       onChange={(event) => {
                         const value = event.target.value as
@@ -331,13 +332,13 @@ export function FeedbackForm({
                           </option>
                         ),
                       )}
-                    </select>
+                    </Select>
                   </Field>
                 )
               )}
               {kind !== "feedback" && (
                 <Field label="问题类型">
-                  <select
+                  <Select inline motionDuration={200} closeDuration={100}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                   >
@@ -346,7 +347,7 @@ export function FeedbackForm({
                         {feedbackReasons[x]}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </Field>
               )}
               <Field label={appeal ? "申诉说明" : kind === "feedback" ? "反馈内容" : "补充说明"}>
@@ -1421,7 +1422,7 @@ export function RestaurantActions({
                 {scenes.map((scene) => (
                   <label className="restaurant-rating-control" key={scene.id}>
                     <span>{scene.name}体验</span>
-                    <select
+                    <Select inline motionDuration={200} closeDuration={100}
                       aria-label={`我的${scene.name}评价`}
                       value={v2Shop?.myRatings?.[scene.key] ?? ""}
                       disabled={!shop || task.busy || task.uncertain}
@@ -1437,7 +1438,7 @@ export function RestaurantActions({
                       <option value="">暂未评价</option>
                       <option value="RECOMMEND">推荐这家店</option>
                       <option value="NOT_RECOMMEND">暂不推荐</option>
-                    </select>
+                    </Select>
                   </label>
                 ))}
               </>

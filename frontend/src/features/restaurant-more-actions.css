@@ -34,7 +34,7 @@
 }
 .restaurant-more-trigger:hover,
 .restaurant-more-trigger:focus-visible,
-.restaurant-more[open] > summary {
+.restaurant-more[data-open] > button {
   background: rgb(255 255 255 / 45%);
 }
 .restaurant-more-trigger::-webkit-details-marker {

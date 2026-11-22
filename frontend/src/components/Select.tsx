@@ -13,6 +13,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "lucide-react";
+import { createAnchoredPopoverMotion } from "../motion/anchored-popover";
 import "./select.css";
 
 type Props = Omit<
@@ -23,6 +24,9 @@ type Props = Omit<
   popupClassName?: string;
   compactLabel?: string;
   icon?: ReactNode;
+  motionDuration?: number;
+  closeDuration?: number;
+  inline?: boolean;
 };
 type Option = {
   value: string;
@@ -103,6 +107,9 @@ export function Select({
   popupClassName,
   compactLabel,
   icon,
+  motionDuration = 340,
+  closeDuration = 120,
+  inline = false,
   ...props
 }: Props) {
   const generated = useId(),
@@ -119,6 +126,8 @@ export function Select({
     options[0];
   const [open, setOpen] = useState(false),
     [active, setActive] = useState(-1);
+  const [retained, setRetained] = useState(false);
+  const present = open || retained;
   const [invalid, setInvalid] = useState(false);
   const [position, setPosition] = useState<CSSProperties>({
     visibility: "hidden",
@@ -126,7 +135,13 @@ export function Select({
   const native = useRef<HTMLSelectElement>(null),
     trigger = useRef<HTMLButtonElement>(null);
   const popup = useRef<HTMLDivElement>(null),
+    surface = useRef<HTMLDivElement>(null),
+    content = useRef<HTMLDivElement>(null),
     search = useRef({ text: "", time: 0 });
+  const popupMotion = useRef<ReturnType<
+    typeof createAnchoredPopoverMotion
+  > | null>(null);
+  const instant = useRef(false);
   const host =
     trigger.current?.closest("dialog, [role='dialog']") ?? document.body;
 
@@ -145,7 +160,7 @@ export function Select({
           ? options.findIndex((o) => !o.disabled)
           : selectedIndex,
     );
-    setPosition({ visibility: "hidden" });
+    if (!present) setPosition({ visibility: "hidden" });
     search.current = { text: "", time: 0 };
     setOpen(true);
   }
@@ -162,6 +177,7 @@ export function Select({
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>) {
+    instant.current = true;
     const key = event.key;
     if (key === "Escape" && open) {
       event.preventDefault();
@@ -244,17 +260,29 @@ export function Select({
   }, [disabled]);
 
   useLayoutEffect(() => {
-    if (!open || !popup.current || !trigger.current) return;
-    const panel = popup.current,
-      button = trigger.current;
-    // The top layer avoids clipping by scroll containers and transformed pages.
+    if (!present || !popup.current) return;
+    const panel = popup.current;
+    // Keep the top-layer surface mounted through its exit and any reversal.
     if (typeof panel.showPopover === "function" && panel.isConnected) {
       try {
         panel.showPopover();
       } catch {
-        // Already open or detached mid-update: keep the inline panel instead of crashing.
+        // The inline portal also works when the top-layer API is unavailable.
       }
     }
+    return () => {
+      if (
+        typeof panel.hidePopover === "function" &&
+        panel.matches(":popover-open")
+      )
+        panel.hidePopover();
+    };
+  }, [present]);
+
+  useLayoutEffect(() => {
+    if (!present || !popup.current || !trigger.current) return;
+    const panel = popup.current,
+      button = trigger.current;
     const update = () => {
       const rect = button.getBoundingClientRect(),
         viewport = window.visualViewport;
@@ -275,22 +303,30 @@ export function Select({
       );
       const below = height + offsetY - rect.bottom - 18,
         above = rect.top - offsetY - 18;
-      const needed = Math.min(panel.scrollHeight * scale, 300);
+      const needed = Math.min(
+        (content.current?.scrollHeight ?? panel.scrollHeight) * scale,
+        344,
+      );
       const flip = below < needed && above > below;
       const maxHeight = Math.max(60, Math.min(344, flip ? above : below));
+      const left = Math.max(
+        offsetX + 12,
+        Math.min(rect.left, offsetX + width - popupWidth - 12),
+      );
+      const origin = Math.max(
+        12,
+        Math.min(popupWidth - 12, rect.left + rect.width / 2 - left),
+      );
+      panel.dataset.side = flip ? "top" : "bottom";
       setPosition({
         width: popupWidth / scale,
         maxHeight: maxHeight / scale,
-        left:
-          Math.max(
-            offsetX + 12,
-            Math.min(rect.left, offsetX + width - popupWidth - 12),
-          ) / scale,
+        left: left / scale,
         top:
           (flip
             ? Math.max(offsetY + 12, rect.top - Math.min(needed, maxHeight) - 8)
             : rect.bottom + 8) / scale,
-        transformOrigin: flip ? "bottom left" : "top left",
+        transformOrigin: `${origin / scale}px ${flip ? "bottom" : "top"}`,
       });
     };
     update();
@@ -304,8 +340,10 @@ export function Select({
       if (
         !panel.contains(event.target as Node) &&
         !button.contains(event.target as Node)
-      )
+      ) {
+        instant.current = false;
         setOpen(false);
+      }
     };
     document.addEventListener("pointerdown", outside, true);
     window.addEventListener("scroll", scroll, true);
@@ -319,23 +357,60 @@ export function Select({
       window.removeEventListener("resize", update);
       window.visualViewport?.removeEventListener("resize", update);
       window.visualViewport?.removeEventListener("scroll", update);
-      if (
-        typeof panel.hidePopover === "function" &&
-        panel.matches(":popover-open")
-      )
-        panel.hidePopover();
     };
-  }, [open, children]);
+  }, [present, children]);
+
+  useLayoutEffect(() => {
+    if (!present || !popup.current || !surface.current || !content.current)
+      return;
+    const controller = createAnchoredPopoverMotion(
+      popup.current,
+      surface.current,
+      content.current,
+      { openDuration: motionDuration, closeDuration },
+    );
+    popupMotion.current = controller;
+    return () => {
+      controller.cancel();
+      popupMotion.current = null;
+    };
+  }, [present]);
+
+  useLayoutEffect(() => {
+    if (open) setRetained(true);
+    popupMotion.current?.setOpen(
+      open,
+      () => {
+        if (!open) setRetained(false);
+      },
+      instant.current,
+    );
+  }, [open, present]);
 
   useEffect(() => {
-    if (open && active >= 0)
-      popup.current
-        ?.querySelector<HTMLElement>(`[data-index="${active}"]`)
-        ?.scrollIntoView?.({ block: "nearest" });
+    const scroll = content.current;
+    const option = scroll?.querySelector<HTMLElement>(
+      `[data-index="${active}"]`,
+    );
+    if (!open || !scroll || !option) return;
+    // Scroll only the list, not the animated clipping viewport or the page.
+    if (option.offsetTop < scroll.scrollTop)
+      scroll.scrollTop = option.offsetTop;
+    else if (
+      option.offsetTop + option.offsetHeight >
+      scroll.scrollTop + scroll.clientHeight
+    )
+      scroll.scrollTop =
+        option.offsetTop + option.offsetHeight - scroll.clientHeight;
   }, [active, open]);
 
   return (
-    <span className="ew-select" data-open={open || undefined}>
+    <span
+      className="ew-select"
+      data-open={open || undefined}
+      data-instant={instant.current || undefined}
+      data-inline={inline || undefined}
+    >
       <button
         ref={trigger}
         id={triggerId}
@@ -360,7 +435,11 @@ export function Select({
         onBlur={(event) => {
           if (!popup.current?.contains(event.relatedTarget)) setOpen(false);
         }}
-        onClick={() => (open ? setOpen(false) : show())}
+        onClick={(event) => {
+          instant.current = event.detail === 0;
+          if (open) setOpen(false);
+          else show();
+        }}
       >
         {icon && (
           <span className="ew-select-icon" aria-hidden="true">
@@ -409,11 +488,14 @@ export function Select({
       >
         {children}
       </select>
-      {open &&
+      {present &&
         createPortal(
           <div
             ref={popup}
             popover="manual"
+            inert={!open}
+            aria-hidden={!open || undefined}
+            data-exiting={!open || undefined}
             className={
               popupClassName
                 ? `ew-select-popup ${popupClassName}`
@@ -422,64 +504,78 @@ export function Select({
             style={position}
             onMouseDown={(event) => event.preventDefault()}
           >
-            {menuLabel && <div className="ew-select-caption">{menuLabel}</div>}
             <div
-              id={listId}
-              role="listbox"
-              aria-label={menuLabel ?? props["aria-label"]}
-              aria-labelledby={
-                !menuLabel && !props["aria-label"] ? triggerId : undefined
-              }
-            >
-              {options.map((option, index) => (
-                <div key={`${option.value}-${index}`}>
-                  {option.group &&
-                    option.group !== options[index - 1]?.group && (
-                      <div className="ew-select-caption">{option.group}</div>
-                    )}
-                  <div
-                    id={`${listId}-${index}`}
-                    role="option"
-                    aria-selected={option.value === selected?.value}
-                    aria-disabled={option.disabled || undefined}
-                    className="ew-select-option"
-                    data-active={active === index || undefined}
-                    data-index={index}
-                    onPointerMove={(event) => {
-                      if (event.pointerType === "mouse" && !option.disabled)
-                        setActive(index);
-                    }}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      choose(index);
-                    }}
-                  >
-                    {option.color && (
-                      <i
-                        className="ew-select-swatch"
-                        style={{ background: option.color }}
-                      />
-                    )}
-                    <span className="ew-select-option-copy">
-                      <span>{option.label}</span>
-                      {option.description && (
-                        <small>{option.description}</small>
-                      )}
-                    </span>
-                    {option.value === selected?.value && (
-                      <Check
-                        className="ew-select-check"
-                        size={16}
-                        strokeWidth={2.4}
-                        aria-hidden="true"
-                      />
-                    )}
-                  </div>
+              ref={surface}
+              className="ew-select-surface"
+              aria-hidden="true"
+            />
+            <div className="ew-select-viewport">
+              <div ref={content} className="ew-select-content">
+                {menuLabel && (
+                  <div className="ew-select-caption">{menuLabel}</div>
+                )}
+                <div
+                  id={listId}
+                  role="listbox"
+                  aria-label={menuLabel ?? props["aria-label"]}
+                  aria-labelledby={
+                    !menuLabel && !props["aria-label"] ? triggerId : undefined
+                  }
+                >
+                  {options.map((option, index) => (
+                    <div key={`${option.value}-${index}`}>
+                      {option.group &&
+                        option.group !== options[index - 1]?.group && (
+                          <div className="ew-select-caption">
+                            {option.group}
+                          </div>
+                        )}
+                      <div
+                        id={`${listId}-${index}`}
+                        role="option"
+                        aria-selected={option.value === selected?.value}
+                        aria-disabled={option.disabled || undefined}
+                        className="ew-select-option"
+                        data-active={active === index || undefined}
+                        data-index={index}
+                        onPointerMove={(event) => {
+                          if (event.pointerType === "mouse" && !option.disabled)
+                            setActive(index);
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          instant.current = event.detail === 0;
+                          choose(index);
+                        }}
+                      >
+                        {option.color && (
+                          <i
+                            className="ew-select-swatch"
+                            style={{ background: option.color }}
+                          />
+                        )}
+                        <span className="ew-select-option-copy">
+                          <span>{option.label}</span>
+                          {option.description && (
+                            <small>{option.description}</small>
+                          )}
+                        </span>
+                        {option.value === selected?.value && (
+                          <Check
+                            className="ew-select-check"
+                            size={16}
+                            strokeWidth={2.4}
+                            aria-hidden="true"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {!options.length && (
+                    <div className="ew-select-caption">暂无可选项</div>
+                  )}
                 </div>
-              ))}
-              {!options.length && (
-                <div className="ew-select-caption">暂无可选项</div>
-              )}
+              </div>
             </div>
           </div>,
           host,

@@ -2,6 +2,7 @@ import "./user-level.css";
 import { UserTitle } from "../components/UserTitle";
 import { userTitle } from "../api/growth";
 import { Select } from "../components/Select";
+import { AnchoredPopover } from "../components/AnchoredPopover";
 import { isDemo, readSession, sameSession } from "../app/runtime";
 import { authNext, useReturnTo } from "../app/navigation";
 import { historyEntry, historyTime } from "../desktop/history";
@@ -882,6 +883,9 @@ export function MobileUserProfile() {
   const back = useReturnTo("/me"),
     moreId = useId();
   const [manage, setManage] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreTrigger = useRef<HTMLButtonElement>(null);
+  useEffect(() => setMoreOpen(false), [id]);
   const self = user?.id === id,
     ready = !!id && !!q.data;
   // 「管理」是管理员的临时开关：默认关闭，离开页面即复位。
@@ -936,7 +940,10 @@ export function MobileUserProfile() {
             <button
               type="button"
               className="mobile-user-more-trigger"
-              popoverTarget={moreId}
+              ref={moreTrigger}
+              aria-expanded={moreOpen}
+              aria-controls={moreId}
+              onClick={() => setMoreOpen((value) => !value)}
               aria-label="更多食友操作"
             >
               <Icon name="more" size={24} />
@@ -944,7 +951,15 @@ export function MobileUserProfile() {
           )}
         </div>
         {ready && !self && (
-          <div id={moreId} popover="auto" className="mobile-user-more">
+          <AnchoredPopover
+            id={moreId}
+            open={moreOpen}
+            onClose={() => setMoreOpen(false)}
+            anchor={moreTrigger}
+            width={240}
+            duration={220}
+            className="mobile-user-more"
+          >
             {canManage && (
               <button
                 type="button"
@@ -966,11 +981,8 @@ export function MobileUserProfile() {
                 </span>
               </button>
             )}
-            <BlockControl
-              userId={id!}
-              onAction={() => document.getElementById(moreId)?.hidePopover()}
-            />
-          </div>
+            <BlockControl userId={id!} onAction={() => setMoreOpen(false)} />
+          </AnchoredPopover>
         )}
       </header>
       <div className="mobile-user-stage" data-profile-stage>

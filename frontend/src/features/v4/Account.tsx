@@ -1,3 +1,4 @@
+import { Select } from "../../components/Select";
 import { DesignIcon as Icon } from "../../mobile/ui";
 import { useState, useEffect } from "react";
 import { Modal } from "../../components/ui";
@@ -48,50 +49,53 @@ export function Devices() {
       className="v4-confirm-dialog"
       dismissible={!task.busy}
       returnFocus={trigger}
+      motionOrigin={trigger}
       onClose={() => setConfirm(null)}
     >
-      <p>
-        {confirm === "others"
-          ? "除了这台设备，其他登录中的设备都会退出登录，这台设备不受影响。"
-          : `${target ? `「${deviceName(target)}」` : "这台设备"}将退出登录，需要重新登录才能使用。`}
-      </p>
-      <div className="v4-confirm-actions">
-        <button
-          type="button"
-          disabled={task.busy}
-          onClick={() => setConfirm(null)}
-        >
-          取消
-        </button>
-        <button
-          type="button"
-          className="is-danger"
-          disabled={task.busy || task.uncertain}
-          onClick={() =>
-            void task.run(
-              (id) =>
-                confirm === "others"
-                  ? // The v4 contract still asks for these; backend v2 ignores them.
-                    app.api.revokeOtherSessions({
-                      commandId: id,
-                      recoveryCapability: capability(),
-                    })
-                  : app.api.revokeSession(confirm),
-              async () => {
-                // Backend v2 signs devices out at once; say what happened.
-                const name = target ? `「${deviceName(target)}」` : "这台设备";
-                setConfirm(null);
-                app.toast(
-                  confirm === "others" ? "已下线其他设备" : `已下线${name}`,
-                );
-                await cache.invalidateQueries({ queryKey: ["devices"] });
-              },
-            )
-          }
-        >
-          {task.busy ? "正在下线…" : "确认下线"}
-        </button>
-      </div>
+      {(dismiss) => (
+        <>
+          <p>
+            {confirm === "others"
+              ? "除了这台设备，其他登录中的设备都会退出登录，这台设备不受影响。"
+              : `${target ? `「${deviceName(target)}」` : "这台设备"}将退出登录，需要重新登录才能使用。`}
+          </p>
+          <div className="v4-confirm-actions">
+            <button type="button" disabled={task.busy} onClick={dismiss}>
+              取消
+            </button>
+            <button
+              type="button"
+              className="is-danger"
+              disabled={task.busy || task.uncertain}
+              onClick={() =>
+                void task.run(
+                  (id) =>
+                    confirm === "others"
+                      ? // The v4 contract still asks for these; backend v2 ignores them.
+                        app.api.revokeOtherSessions({
+                          commandId: id,
+                          recoveryCapability: capability(),
+                        })
+                      : app.api.revokeSession(confirm),
+                  async () => {
+                    // Backend v2 signs devices out at once; say what happened.
+                    const name = target
+                      ? `「${deviceName(target)}」`
+                      : "这台设备";
+                    setConfirm(null);
+                    app.toast(
+                      confirm === "others" ? "已下线其他设备" : `已下线${name}`,
+                    );
+                    await cache.invalidateQueries({ queryKey: ["devices"] });
+                  },
+                )
+              }
+            >
+              {task.busy ? "正在下线…" : "确认下线"}
+            </button>
+          </div>
+        </>
+      )}
     </Modal>
   );
   return (
@@ -579,11 +583,16 @@ export function AccountRecovery() {
             }}
           >
             <Field label="恢复的操作">
-              <select name="kind">
+              <Select
+                inline
+                motionDuration={200}
+                closeDuration={100}
+                name="kind"
+              >
                 <option value="cancellation">注销申请</option>
                 <option value="devices">设备下线</option>
                 <option value="mobile">手机号换绑</option>
-              </select>
+              </Select>
             </Field>
             <Field label="导入已保存的恢复文件">
               <input
@@ -674,13 +683,16 @@ export function AccountRecovery() {
           }}
         >
           <Field label="验证方式">
-            <select
+            <Select
+              inline
+              motionDuration={200}
+              closeDuration={100}
               value={mode}
               onChange={(e) => setMode(e.target.value as typeof mode)}
             >
               <option value="password">密码验证</option>
               <option value="phone">手机号验证</option>
-            </select>
+            </Select>
           </Field>
           {mode === "password" ? (
             <>
