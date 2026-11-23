@@ -129,7 +129,10 @@ export default function DishPhotoEditor({
   }
 
   return (
-    <main className="mobile-crop-screen" aria-busy={busy}>
+    <main
+      className={`mobile-crop-screen${showCover ? " mobile-crop-with-cover" : ""}`}
+      aria-busy={busy}
+    >
       <header className="mobile-crop-toolbar">
         <button
           className="mobile-crop-cancel"
@@ -149,9 +152,7 @@ export default function DishPhotoEditor({
           {busy ? "处理中…" : "完成"}
         </button>
       </header>
-      <div
-        className={`mobile-crop-body${showCover ? " mobile-crop-with-cover" : ""}`}
-      >
+      <div className="mobile-crop-body">
         <div
           className="mobile-crop-frame"
           role="group"

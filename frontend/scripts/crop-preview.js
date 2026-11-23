@@ -117,6 +117,7 @@ async function validateCropPreview(page) {
         () => document.querySelector('img[alt="所选照片"]')?.naturalWidth > 0,
       );
       const palette = p.getByRole("radiogroup", { name: "舞台颜色" });
+      const followCover = p.getByRole("button", { name: "跟随封面" });
       const done = p.getByRole("button", { name: "完成", exact: true });
       const cancel = p.getByRole("button", { name: "取消", exact: true });
       const slider = p.getByRole("slider", { name: "缩放", exact: true });
@@ -139,6 +140,47 @@ async function validateCropPreview(page) {
       const cdp = await context.newCDPSession(p);
       const sendTouch = (type, touchPoints) =>
         cdp.send("Input.dispatchTouchEvent", { type, touchPoints });
+      if (width === 390) {
+        await p.setViewportSize({ width, height: 720 });
+        const initialDone = await done.boundingBox();
+        const swipeFrom = async (control, distance) => {
+          const { x, y, width, height } = await control.boundingBox();
+          const start = { x: x + width / 2, y: y + height / 2 };
+          await sendTouch("touchStart", [start]);
+          for (let step = 1; step <= 8; step++) {
+            await sendTouch("touchMove", [
+              { ...start, y: start.y + (distance * step) / 8 },
+            ]);
+          }
+          await sendTouch("touchEnd", []);
+        };
+        await swipeFrom(palette.getByRole("radio").first(), -104);
+        await p.waitForFunction(() => window.scrollY >= 32, undefined, {
+          timeout: 1500,
+        });
+        assert(
+          (await done.boundingBox()).y === initialDone.y,
+          "Done moved during the palette swipe",
+        );
+        assert(
+          (await followCover.getAttribute("aria-pressed")) === "true",
+          "Swiping selected a color",
+        );
+        await palette.getByRole("radio").first().check();
+        await swipeFrom(followCover, 104);
+        await p.waitForFunction(() => window.scrollY === 0, undefined, {
+          timeout: 1500,
+        });
+        assert(
+          (await followCover.getAttribute("aria-pressed")) === "false",
+          "Swiping activated Follow Cover",
+        );
+        await followCover.tap();
+        await p.setViewportSize({ width, height });
+        checks.push(
+          "390×720: vertical swipes on the color swatch and Follow Cover scroll the editor",
+        );
+      }
       if (width === 320) {
         await p.setViewportSize({ width, height: 300 });
         const initialDone = await done.boundingBox();
@@ -297,7 +339,6 @@ async function validateCropPreview(page) {
         (await geometry()).image.x < beforeKeyboard.image.x,
         "Keyboard could not move the photo",
       );
-      const followCover = p.getByRole("button", { name: "跟随封面" });
       await palette.getByRole("radio").first().check();
       assert(
         (await followCover.getAttribute("aria-pressed")) === "false",

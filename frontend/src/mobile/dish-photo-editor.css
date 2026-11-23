@@ -4,6 +4,7 @@
 }
 
 .mobile-crop-screen {
+  --crop-reserved: 152px;
   --crop-edge: max(16px, env(safe-area-inset-left), env(safe-area-inset-right));
   --crop-safe-top: env(safe-area-inset-top, 0px);
   --crop-safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -55,7 +56,6 @@
 }
 
 .mobile-crop-body {
-  --crop-reserved: 152px;
   display: grid;
   justify-items: center;
   align-items: center;
@@ -162,6 +162,7 @@
   padding: 10px;
   border-radius: 18px;
   background: var(--crop-panel);
+  touch-action: pan-y pinch-zoom;
 }
 
 .mobile-crop-palette {
@@ -270,6 +271,15 @@
   overflow: hidden;
   border-radius: 50%;
   box-shadow: 0 0 0 2px #fff;
+}
+
+@media (orientation: portrait) {
+  .mobile-crop-with-cover {
+    /* Keep enough range to bring the color controls above the bottom edge. */
+    --crop-scroll-clearance: 56px;
+    min-height: calc(100dvh + var(--crop-scroll-clearance));
+    padding-bottom: var(--crop-scroll-clearance);
+  }
 }
 
 @media (orientation: landscape) and (min-width: 540px) {
