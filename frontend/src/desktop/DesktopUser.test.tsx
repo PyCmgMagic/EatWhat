@@ -352,8 +352,31 @@ it("uses the viewer's relationships on another profile and refreshes the row aft
 });
 
 it("opens the own public page in edit mode", async () => {
+  const fetchProfile = globalThis.fetch;
+  let resolveViewer!: (response: Response) => void;
+  const viewer = new Promise<Response>((resolve) => {
+    resolveViewer = resolve;
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: RequestInfo | URL, init?: RequestInit) =>
+      String(input).split("?")[0].endsWith("/user/info")
+        ? viewer
+        : fetchProfile(input, init),
+    ),
+  );
   await render("/users/11");
   await spin(() => !!host.querySelector(".profile-overview-hero"));
+  expect(host.querySelector(".profile-overview-edit")).toBeNull();
+  await act(async () => {
+    resolveViewer(
+      ok({ id: 11, displayName: "我自己", verified: true, banned: false }),
+    );
+  });
+  await spin(() =>
+    !!host.querySelector(".profile-overview-edit") &&
+    !!host.querySelector(".pc-friend-shares .ew-food-manage"),
+  );
 
   expect(host.querySelector(".pc-friend-follow")).toBeNull();
   expect(host.querySelector(".profile-overview-edit")?.textContent).toContain(
