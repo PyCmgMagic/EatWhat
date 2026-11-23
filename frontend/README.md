@@ -200,6 +200,8 @@ APIv3 的授权状态查询仅返回 `status`、`identityReady`、`policyVersion
 
 新版验收脚本在仓库根目录执行，使用独立 Playwright CLI 浏览器：
 
+图片专项使用 `scripts/browser-food-cover.js`，覆盖桌面首页、详情页和移动端在深浅色主题下的横图、竖图、方图及未裁剪封面；检查实际渲染尺寸，防止通用图片样式限制裁剪取景。`scripts/browser-dish-responsive.js` 同时检查详情页布局、大图预览、操作菜单的键盘展开与回收，以及举报对话框打开和取消。搜店焦点专项为 `scripts/browser-new-shop-search-focus.js`，覆盖手机和桌面的深浅色主题。
+
 ```powershell
 npx --yes --package @playwright/cli playwright-cli -s=eatwhat-latest open "http://127.0.0.1:5173/?demo=1"
 npx --yes --package @playwright/cli playwright-cli -s=eatwhat-latest run-code --filename frontend/scripts/latest-api-ui.js

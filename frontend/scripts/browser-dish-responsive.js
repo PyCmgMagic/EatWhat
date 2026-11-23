@@ -118,7 +118,14 @@ async (page) => {
     const framing = await cover.evaluate(img => ({w:parseFloat(img.style.width),left:parseFloat(img.style.left),top:parseFloat(img.style.top)}));
     assert(Math.abs(framing.w-200)<1 && Math.abs(framing.left)<1 && Math.abs(framing.top+50)<1, "Off-center crop did not match the stored source rectangle");
     await p.locator("#food-discussion").waitFor();
-    assert(await p.locator(".pc-dish-more").getByText("举报菜品", { exact: true }).count() === 1, "Missing or duplicate desktop report entry");
+    const more = p.getByRole("button", { name: "更多菜品操作", exact: true });
+    assert(await more.count() === 1, "Missing or duplicate desktop action menu");
+    await more.press("ArrowDown");
+    const menu = p.getByRole("group", { name: "更多菜品操作", exact: true });
+    assert(await menu.getByRole("button", { name: "举报菜品", exact: true }).count() === 1,
+      "Missing or duplicate desktop report entry");
+    await p.keyboard.press("Escape");
+    assert(await more.getAttribute("aria-expanded") === "false", "Action menu did not close");
     const nextPhoto = p.getByRole("button", { name: "下一张照片", exact: true });
     await nextPhoto.press("Enter");
     assert(await cover.count() === 0, "Secondary photo inherited the cover crop");
@@ -147,14 +154,20 @@ async (page) => {
     await reader.press("End");
     await p.waitForFunction(() => document.querySelector(".pc-dish-reading").scrollTop > 0);
     await reader.getByRole("region", { name: "菜品评分" }).getByRole("button").click({ trial: true });
-    const more = p.locator(".pc-dish-more summary");
     await more.click();
     const report = p.getByRole("button", { name: "举报菜品", exact: true });
     assert(await report.getAttribute("aria-haspopup") === "dialog", "Report dialog entry changed");
     await report.click({ trial: true });
     assert(!(await p.getByRole("link", {name:"编辑菜品"}).count()), "Guests can see owner actions");
     await p.keyboard.press("Escape");
-    assert(await more.evaluate(el => document.activeElement === el && !el.parentElement.open), "Escape did not dismiss and restore focus");
+    assert(await more.evaluate(el => document.activeElement === el && el.getAttribute("aria-expanded") === "false"), "Escape did not dismiss and restore focus");
+    await more.press("Enter");
+    await report.click();
+    const reportDialog = p.getByRole("dialog", { name: "举报菜品", exact: true });
+    await reportDialog.getByText(current.name, { exact: true }).waitFor();
+    await reportDialog.getByRole("button", { name: "取消", exact: true }).click();
+    await reportDialog.waitFor({ state: "hidden" });
+    assert(await more.getAttribute("aria-expanded") === "false", "Action menu stayed open after reporting was cancelled");
 
     // Loading uses the same height budget instead of briefly restoring a 690px panel.
     current = food;
@@ -184,7 +197,7 @@ async (page) => {
     await confirmation.getByText(/删除「PyCmgMagic」/).waitFor();
     await confirmation.getByRole("button", {name:"取消",exact:true}).click();
     await confirmation.waitFor({state:"hidden"});
-    assert(!(await more.evaluate(el => el.parentElement.open)), "Management menu stayed open after deletion was cancelled");
+    assert(await more.getAttribute("aria-expanded") === "false", "Management menu stayed open after deletion was cancelled");
     const actions = p.locator(".pc-dish-actions");
     assert(await actions.getByRole("link").count() === 1 && await shop.isVisible(), "Unexpected dish action link");
     const like = actions.getByRole("button");

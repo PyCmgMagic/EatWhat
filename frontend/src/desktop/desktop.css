@@ -20,6 +20,10 @@
 .pc-app img {
   max-width: 100%;
 }
+.pc-app .food-cover-frame > img {
+  /* Cropped photos must extend beyond the frame before it clips them. */
+  max-width: none;
+}
 .pc-compact-search {
   display: none;
 }

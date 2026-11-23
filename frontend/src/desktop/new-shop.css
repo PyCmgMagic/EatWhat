@@ -71,8 +71,8 @@
   background: #f9f6f1;
 }
 
-.pc-secondary-new-shop .new-shop-search-bar:focus-within {
-  border-color: #a07127;
+.pc-secondary-new-shop .new-shop-search-bar:has(input:focus-visible) {
+  background: var(--night-raised, #eee7df);
 }
 
 .pc-secondary-new-shop .new-shop-search .new-shop-search-submit {

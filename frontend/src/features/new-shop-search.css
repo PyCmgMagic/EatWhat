@@ -31,6 +31,7 @@
   padding: 0;
   border: 0;
   outline: none;
+  appearance: none;
   background: transparent;
   box-shadow: none;
   color: inherit;
@@ -46,9 +47,15 @@
   appearance: none;
 }
 
-.new-shop-search-bar:focus-within {
-  border-color: #aa792c;
-  box-shadow: 0 0 0 3px #e4b76038;
+/* Keep the composite field seamless when global focus styles apply. */
+.new-shop-search .new-shop-search-bar input:is(:focus, :focus-visible) {
+  border: 0;
+  outline: none;
+  box-shadow: none;
+}
+
+.new-shop-search-bar:has(input:focus-visible) {
+  background: var(--night-raised, #ebe5dd);
 }
 
 .new-shop-search button {
