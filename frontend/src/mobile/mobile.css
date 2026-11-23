@@ -113,6 +113,7 @@ button:disabled {
 .mobile-home-screen {
   --home-safe-top: max(12px, env(safe-area-inset-top));
   --home-toolbar-height: calc(var(--home-safe-top) + 52px);
+  --marker-stage: var(--home-stage);
   width: 100% !important;
   height: auto !important;
   min-height: 100dvh !important;
@@ -1046,6 +1047,7 @@ html[data-motion-input="keyboard"] .design-fab-surface {
 }
 .mobile-profile-screen {
   --profile-glass: var(--profile-ghost);
+  --marker-stage: var(--profile-stage);
   background: var(--profile-stage);
   color: var(--night-ink, #221e1b);
 }
@@ -1363,14 +1365,10 @@ html[data-motion-input="keyboard"] .design-fab-surface {
   grid-column: 1 / -1;
 }
 .marker-tabs.mobile-profile-tabs {
-  --marker-color: #a5c4e1;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(0, 1fr);
   gap: 0;
-}
-:root[data-theme="dark"] .mobile-profile-tabs {
-  --marker-color: #49647c;
 }
 .marker-tabs.mobile-profile-tabs button {
   min-width: 44px;

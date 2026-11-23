@@ -1531,12 +1531,15 @@ export function useDesignBridge(
           <div
             {...p}
             className={`${p.className ?? ""} mobile-home-screen${homeWithoutRecommendations ? " mobile-home-unavailable" : ""}`}
+            style={
+              { ...p.style, "--home-stage": values.s.stage } as React.CSSProperties
+            }
           >
             {view.children[toolbarIndex]}
             <div
               className="mobile-home-hero"
               data-food-stage={carouselFoods.length ? values.s.stageTone : undefined}
-              style={{ background: values.s.stage }}
+              style={{ backgroundColor: "var(--home-stage)" }}
             >
               {view.children.slice(0, toolbarIndex)}
               <div className="mobile-home-preferences" style={{ color: values.s.on }}>
@@ -1584,7 +1587,11 @@ export function useDesignBridge(
       }
       if (tag === "header")
         return (
-          <header {...p} className="mobile-home-toolbar" style={{ color: values.s.on, backgroundColor: values.s.stage }}>
+          <header
+            {...p}
+            className="mobile-home-toolbar"
+            style={{ color: values.s.on, backgroundColor: "var(--home-stage)" }}
+          >
             {view.children}
           </header>
         );

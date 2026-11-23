@@ -1,4 +1,9 @@
 .marker-tabs {
+  --marker-color: color-mix(
+    in srgb,
+    var(--marker-stage) 44%,
+    var(--night-surface, #fff)
+  );
   display: flex;
   align-items: center;
   gap: clamp(4px, 3.5vw, 24px);
@@ -24,6 +29,8 @@
   gap: 5px;
   padding: 0 4px;
   line-height: 1.5;
+  scale: 1;
+  transition: scale var(--motion-fast) var(--ease-enter);
 }
 .marker-tabs button > span::before {
   content: "";
@@ -31,27 +38,35 @@
   z-index: -1;
   inset: 32% -1px 5%;
   border-radius: 5px 8px 9px 3px;
-  background: var(--marker-color, var(--night-action, #d6bea2));
+  background-color: var(--marker-color, var(--night-action, #d6bea2));
   transform: rotate(-2deg) skewX(-12deg);
   clip-path: inset(0 100% 0 0);
+  transition: background-color var(--motion-surface) ease-out;
 }
 .marker-tabs button[aria-selected="true"] {
   color: var(--night-ink, #271e18);
   font-weight: 750;
 }
+.marker-tabs button[aria-selected="true"] > span {
+  scale: 1.045;
+}
 .marker-tabs button[aria-selected="true"] > span::before {
   clip-path: inset(0);
-  transition: clip-path 230ms cubic-bezier(0.3, 0.08, 0.22, 1);
+  transition:
+    clip-path 230ms cubic-bezier(0.3, 0.08, 0.22, 1),
+    background-color var(--motion-surface) ease-out;
 }
 .marker-tabs button:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: -2px;
   border-radius: 6px;
 }
+html[data-motion-input="keyboard"] .marker-tabs button > span,
 html[data-motion-input="keyboard"] .marker-tabs button > span::before {
   transition: none;
 }
 @media (prefers-reduced-motion: reduce) {
+  .marker-tabs button[aria-selected] > span,
   .marker-tabs button[aria-selected] > span::before {
     transition: none;
   }
