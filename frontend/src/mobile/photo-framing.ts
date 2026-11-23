@@ -1,16 +1,17 @@
 export type PhotoFraming = { x: number; y: number; zoom: number };
+export const PHOTO_FRAMING_SIZE = 300;
 
 /** Drag offsets use a 300px crop circle, independent of the rendered size. */
 export function photoFraming(
   width: number,
   height: number,
   crop: PhotoFraming,
-  frame = 300,
+  frame = PHOTO_FRAMING_SIZE,
 ) {
   const shortest = Math.min(width, height);
   const zoom = Math.max(1, crop.zoom);
-  const maxX = ((width / shortest) * 300 * zoom - 300) / 2;
-  const maxY = ((height / shortest) * 300 * zoom - 300) / 2;
+  const maxX = (((width / shortest) * zoom - 1) * PHOTO_FRAMING_SIZE) / 2;
+  const maxY = (((height / shortest) * zoom - 1) * PHOTO_FRAMING_SIZE) / 2;
   const x = Math.max(-maxX, Math.min(maxX, crop.x));
   const y = Math.max(-maxY, Math.min(maxY, crop.y));
   const size = shortest / zoom;
@@ -19,13 +20,13 @@ export function photoFraming(
   return {
     crop: { x, y, zoom },
     source: {
-      x: (width - size) / 2 - (x * size) / 300,
-      y: (height - size) / 2 - (y * size) / 300,
+      x: (width - size) / 2 - (x * size) / PHOTO_FRAMING_SIZE,
+      y: (height - size) / 2 - (y * size) / PHOTO_FRAMING_SIZE,
       size,
     },
     image: {
-      left: (frame - displayWidth) / 2 + (x * frame) / 300,
-      top: (frame - displayHeight) / 2 + (y * frame) / 300,
+      left: (frame - displayWidth) / 2 + (x * frame) / PHOTO_FRAMING_SIZE,
+      top: (frame - displayHeight) / 2 + (y * frame) / PHOTO_FRAMING_SIZE,
       width: displayWidth,
       height: displayHeight,
     },

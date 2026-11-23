@@ -358,6 +358,7 @@ function MobileWorkspace() {
       ? Math.min(1, viewport.width / 390)
       : Math.min(520, viewport.width) / 390;
   const height = Math.max(640, viewport.height / scale);
+  const fluidCrop = !reference && screen === "G-Crop";
   const myCommentsPage =
     loc.pathname === "/me/shares" && new URLSearchParams(loc.search).get("tab") === "comments";
   const navigationSection =
@@ -650,18 +651,19 @@ function MobileWorkspace() {
                   </div>
                 ) : (
                   <div
-                    className={`mobile-viewport${!reference && ["G2-Home", "G-HomePhoto"].includes(screen) ? " mobile-fluid-home" : ""}${!reference && screen === "G-Dish" ? " mobile-fluid-detail" : ""}${!reference && screen === "G-Detail" ? " mobile-fluid-restaurant" : ""}${!reference && screen === "G-PickShop" ? " mobile-fluid-pick-shop" : ""}${!reference && screen === "G-EditProfile" ? " mobile-fluid-profile-edit" : ""}${!reference && screen === "G-Me" ? " mobile-fluid-profile" : ""}`}
+                    className={`mobile-viewport${!reference && ["G2-Home", "G-HomePhoto"].includes(screen) ? " mobile-fluid-home" : ""}${!reference && screen === "G-Dish" ? " mobile-fluid-detail" : ""}${!reference && screen === "G-Detail" ? " mobile-fluid-restaurant" : ""}${!reference && screen === "G-PickShop" ? " mobile-fluid-pick-shop" : ""}${!reference && screen === "G-EditProfile" ? " mobile-fluid-profile-edit" : ""}${!reference && screen === "G-Me" ? " mobile-fluid-profile" : ""}${fluidCrop ? " mobile-fluid-crop" : ""}`}
                     style={
                       {
-                        minHeight:
-                          !reference &&
-                          ["G-Detail", "G-EditProfile", "G-PickShop"].includes(
-                            screen,
-                          )
+                        minHeight: fluidCrop
+                          ? undefined
+                          : !reference &&
+                              ["G-Detail", "G-EditProfile", "G-PickShop"].includes(
+                                screen,
+                              )
                             ? viewport.height
                             : height * scale,
-                        maxWidth: reference ? 390 : 520,
-                        "--mobile-scale": scale,
+                        maxWidth: fluidCrop ? 760 : reference ? 390 : 520,
+                        "--mobile-scale": fluidCrop ? 1 : scale,
                       } as any
                     }
                   >

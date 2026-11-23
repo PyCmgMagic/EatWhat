@@ -5,15 +5,21 @@ async function validateCropPreview(page) {
   const assert = (ok, message) => {
     if (!ok) throw new Error(message);
   };
-  for (const [width, photoWidth, photoHeight] of [
-    [320, 800, 800],
-    [390, 1200, 800],
-    [520, 800, 1200],
+  for (const [width, height, photoWidth, photoHeight] of [
+    [320, 520, 800, 800],
+    [390, 640, 1200, 800],
+    [667, 375, 800, 1200],
   ]) {
     const context = await page
       .context()
       .browser()
-      .newContext({ viewport: { width, height: 844 } });
+      .newContext({
+        viewport: { width, height },
+        isMobile: true,
+        hasTouch: true,
+        colorScheme: width === 390 ? "dark" : "light",
+        reducedMotion: width === 320 ? "reduce" : "no-preference",
+      });
     const p = await context.newPage();
     p.setDefaultTimeout(10000);
     p.on("pageerror", (e) => errors.push(e.message));
@@ -42,7 +48,7 @@ async function validateCropPreview(page) {
       (u) => u.pathname.startsWith("/api/"),
       (r) => {
         const path = new URL(r.request().url()).pathname;
-        if (r.request().method() !== "GET") {
+        if (r.request().method() !== "GET" && path !== "/api/device/register") {
           errors.push("Unexpected mutation: " + path);
           return r.abort();
         }
@@ -72,7 +78,7 @@ async function validateCropPreview(page) {
       },
     );
     try {
-      await p.goto(base + "/?demo=0#/publish/dish");
+      await p.goto(base + "/?demo=0&view=mobile#/publish/dish");
       const png = await p.evaluate(
         ({ w, h }) => {
           const canvas = document.createElement("canvas");
@@ -96,13 +102,11 @@ async function validateCropPreview(page) {
         },
         { w: photoWidth, h: photoHeight },
       );
-      const chooser = p.waitForEvent("filechooser");
-      await p
-        .getByRole("button", { name: "再加一张照片", exact: true })
-        .click();
-      await (
-        await chooser
-      ).setFiles({
+      const [chooser] = await Promise.all([
+        p.waitForEvent("filechooser"),
+        p.getByRole("button", { name: "加一张照片", exact: true }).click(),
+      ]);
+      await chooser.setFiles({
         name: "crop-grid.png",
         mimeType: "image/png",
         buffer: Buffer.from(png, "base64"),
@@ -112,17 +116,56 @@ async function validateCropPreview(page) {
       await p.waitForFunction(
         () => document.querySelector('img[alt="所选照片"]')?.naturalWidth > 0,
       );
+      const palette = p.getByRole("radiogroup", { name: "舞台颜色" });
+      const done = p.getByRole("button", { name: "完成", exact: true });
+      const cancel = p.getByRole("button", { name: "取消", exact: true });
+      const slider = p.getByRole("slider", { name: "缩放", exact: true });
+      for (const control of [
+        done,
+        cancel,
+        palette,
+        p.getByAltText("首页裁剪预览").locator(".."),
+      ]) {
+        const bounds = await control.boundingBox();
+        assert(
+          bounds &&
+            bounds.x >= 0 &&
+            bounds.y >= 0 &&
+            bounds.x + bounds.width <= width &&
+            bounds.y + bounds.height <= height,
+          `${width}×${height}: ${await control.innerText()} is outside the viewport`,
+        );
+      }
+      const cdp = await context.newCDPSession(p);
+      const sendTouch = (type, touchPoints) =>
+        cdp.send("Input.dispatchTouchEvent", { type, touchPoints });
+      if (width === 320) {
+        await p.setViewportSize({ width, height: 300 });
+        const initialDone = await done.boundingBox();
+        await sendTouch("touchStart", [{ x: 8, y: 220 }]);
+        for (let y = 204; y >= 60; y -= 16)
+          await sendTouch("touchMove", [{ x: 8, y }]);
+        await sendTouch("touchEnd", []);
+        await p.waitForFunction(() => window.scrollY > 24);
+        assert(
+          (await done.boundingBox()).y === initialDone.y,
+          "Done moved during scrolling",
+        );
+        assert(
+          (await cancel.boundingBox()).y === initialDone.y,
+          "Cancel moved during scrolling",
+        );
+        await p.setViewportSize({ width, height });
+        await p.evaluate(() => window.scrollTo(0, 0));
+        checks.push(
+          "320×300: swiping beside the photo scrolls and keeps both actions visible",
+        );
+      }
       const geometry = () =>
         p.evaluate(() => {
           const image = document.querySelector('img[alt="所选照片"]');
           const preview = document.querySelector('img[alt="首页裁剪预览"]');
-          const stage = image.parentElement.getBoundingClientRect(),
-            scale = stage.width / 390;
-          const frame = {
-            x: stage.x + 45 * scale,
-            y: stage.y + 50 * scale,
-            width: 300 * scale,
-          };
+          const frame = image.parentElement.getBoundingClientRect().toJSON();
           const thumb = preview.parentElement.getBoundingClientRect();
           const crop = (img, frame) => {
             const b = img.getBoundingClientRect();
@@ -135,7 +178,7 @@ async function validateCropPreview(page) {
           return {
             main: crop(image, frame),
             preview: crop(preview, thumb),
-            scale,
+            scale: frame.width / 300,
             image: image.getBoundingClientRect().toJSON(),
             frame,
           };
@@ -156,8 +199,64 @@ async function validateCropPreview(page) {
         );
         return g;
       };
-      await compare("Initial");
-      await p.getByRole("slider", { name: "缩放", exact: true }).fill("1.6");
+      const initial = await compare("Initial");
+      const viewportScale = await p.evaluate(() => visualViewport.scale);
+      const touch = (id, dx, dy) => ({
+        id,
+        x: initial.frame.x + initial.frame.width / 2 + dx * initial.scale,
+        y: initial.frame.y + initial.frame.height / 2 + dy * initial.scale,
+      });
+      await sendTouch("touchStart", [touch(1, -50, 15)]);
+      await sendTouch("touchStart", [touch(1, -50, 15), touch(2, 50, 15)]);
+      for (let delta = 4; delta <= 40; delta += 4) {
+        await sendTouch("touchMove", [
+          touch(1, -50 - delta, 15),
+          touch(2, 50 + delta, 15),
+        ]);
+      }
+      await p.waitForFunction(
+        () => Number(document.querySelector('input[type="range"]').value) > 1.7,
+      );
+      const pinched = await compare("Pinch out");
+      assert(
+        Math.abs(Number(await slider.inputValue()) - 1.8) < 0.03,
+        "Pinch did not track both fingers",
+      );
+      const anchorY = 0.55;
+      assert(
+        Math.abs(
+          pinched.main.y +
+            pinched.main.size * anchorY -
+            initial.main.y -
+            initial.main.size * anchorY,
+        ) < 0.2,
+        "The photo content moved away from the midpoint between the fingers",
+      );
+      for (let delta = 36; delta >= 0; delta -= 4) {
+        await sendTouch("touchMove", [
+          touch(1, -50 - delta, 15),
+          touch(2, 50 + delta, 15),
+        ]);
+      }
+      await sendTouch("touchEnd", []);
+      await p.waitForFunction(
+        () => Number(document.querySelector('input[type="range"]').value) === 1,
+      );
+      assert(
+        (await p.evaluate(() => visualViewport.scale)) === viewportScale,
+        "Pinch zoomed the page",
+      );
+      await p.getByRole("button", { name: "放大照片" }).tap();
+      assert(
+        Number(await slider.inputValue()) === 1.25,
+        "Zoom in button did not work",
+      );
+      await p.getByRole("button", { name: "缩小照片" }).tap();
+      assert(
+        Number(await slider.inputValue()) === 1,
+        "Zoom out button did not work",
+      );
+      await slider.fill("1.6");
       const before = await compare("Zoomed");
       const cx = before.frame.x + before.frame.width / 2,
         cy = before.frame.y + before.frame.width / 2;
@@ -176,7 +275,7 @@ async function validateCropPreview(page) {
         Math.abs(after.image.y - before.image.y + 18 * before.scale) < 1,
         "Vertical drag does not track the finger",
       );
-      await p.getByRole("slider", { name: "缩放", exact: true }).fill("1");
+      await slider.fill("1");
       await compare("Zoom reset");
       // Exercise an edge pan with the original landscape/portrait still available.
       const middle = await geometry();
@@ -191,7 +290,25 @@ async function validateCropPreview(page) {
         Math.abs(edge.main.x) < 0.1 && Math.abs(edge.main.y) < 0.1,
         "Cannot select the first corner of a rectangular original",
       );
-      await p.getByRole("slider", { name: "缩放", exact: true }).fill("1.4");
+      await slider.fill("1.4");
+      const beforeKeyboard = await geometry();
+      await p.getByRole("group", { name: /照片取景/ }).press("ArrowLeft");
+      assert(
+        (await geometry()).image.x < beforeKeyboard.image.x,
+        "Keyboard could not move the photo",
+      );
+      const followCover = p.getByRole("button", { name: "跟随封面" });
+      await palette.getByRole("radio").first().check();
+      assert(
+        (await followCover.getAttribute("aria-pressed")) === "false",
+        "Could not choose a custom color",
+      );
+      await followCover.click();
+      assert(
+        (await followCover.getAttribute("aria-pressed")) === "true",
+        "Could not restore automatic cover color",
+      );
+      if (width === 390) await palette.getByRole("radio").first().check();
       const selected = await compare("Final");
       const expected = await p.evaluate((source) => {
         const c = document.createElement("canvas");
@@ -214,7 +331,7 @@ async function validateCropPreview(page) {
         path: `output/playwright/crop-preview-${width}.png`,
         fullPage: true,
       });
-      await p.getByRole("link", { name: "完成", exact: true }).click();
+      await done.click();
       await p.waitForURL(/#\/publish\/dish/);
       const diff = await p.evaluate(async (expected) => {
         const file = [...window.__cropFiles.values()].findLast((f) =>
@@ -242,8 +359,31 @@ async function validateCropPreview(page) {
         "Saved crop differs from the visible selection: average RGB difference " +
           diff,
       );
+      if (width === 390) {
+        await p.getByRole("button", { name: "编辑第 1 张照片" }).click();
+        await p.waitForURL(/#\/publish\/crop/);
+        await p.waitForFunction(
+          () =>
+            !document.querySelector(".mobile-crop-done")?.disabled &&
+            document.querySelector('img[alt="所选照片"]')?.naturalWidth > 0,
+        );
+        const reopened = await compare("Reopened cover photo");
+        for (const key of ["x", "y", "size"]) {
+          assert(
+            Math.abs(reopened.main[key] - selected.main[key]) < 0.1,
+            "The saved framing was not restored",
+          );
+        }
+        assert(
+          (await followCover.getAttribute("aria-pressed")) === "false",
+          "The saved color choice was not restored",
+        );
+        await cancel.click();
+        await p.waitForURL(/#\/publish\/dish/);
+        checks.push("Saved cover opens with the same framing and custom color");
+      }
       checks.push(
-        `${width}px / ${photoWidth}×${photoHeight}: initial, zoom, pan, edges, thumbnail match; saved image pixel difference ${diff.toFixed(2)}`,
+        `${width}×${height} / ${photoWidth}×${photoHeight}: visible controls, pinch out/in, buttons, drag, keyboard, palette, matching preview and export (RGB difference ${diff.toFixed(2)})`,
       );
     } catch (error) {
       await p.screenshot({

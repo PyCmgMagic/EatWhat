@@ -53,14 +53,6 @@ export class DesignController extends Component<any, any> {
             ),
           ),
         });
-      if (props.screen === "G-Crop" && props.draft?.photoEdit) {
-        const edit = props.draft.photoEdit;
-        Object.assign(patch, {
-          ox: edit.framing.x,
-          oy: edit.framing.y,
-          zoom: edit.framing.zoom,
-        });
-      }
       if (props.screen === "G-Search")
         Object.assign(patch, { q: "", tab: "shop" });
       if (props.screen === "G-Follows")

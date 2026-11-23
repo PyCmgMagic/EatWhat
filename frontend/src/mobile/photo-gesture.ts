@@ -38,22 +38,23 @@ export function createPhotoGesture() {
       if (!pointers.has(id) || !start) return undefined;
       pointers.set(id, point);
       const points = measure()!;
-      const zoom =
-        pointers.size === 2 && start.distance > 0
-          ? Math.max(
-              1,
-              Math.min(
-                MAX_PHOTO_ZOOM,
-                (start.crop.zoom * points.distance) / start.distance,
-              ),
-            )
+      if (pointers.size === 2 && start.distance === 0) {
+        if (points.distance > 0) rebase();
+        return crop;
+      }
+      const requestedZoom =
+        start.distance > 0
+          ? (start.crop.zoom * points.distance) / start.distance
           : start.crop.zoom;
+      const zoom = Math.max(1, Math.min(MAX_PHOTO_ZOOM, requestedZoom));
       const ratio = zoom / start.crop.zoom;
       crop = constrain({
         x: points.centre.x - (start.centre.x - start.crop.x) * ratio,
         y: points.centre.y - (start.centre.y - start.crop.y) * ratio,
         zoom,
       });
+      // Discard movement past the zoom limit so reversing responds immediately.
+      if (zoom !== requestedZoom) rebase();
       return crop;
     },
     up(id: number) {

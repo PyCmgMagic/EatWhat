@@ -68,11 +68,20 @@ it("limits zoom to 1–3 and never exposes blank edges", () => {
   expect(reset.zoom).toBe(1);
 });
 
+it("responds as soon as a pinch reverses after reaching the zoom limit", () => {
+  const gesture = createPhotoGesture();
+  gesture.down(1, { x: -25, y: 0 }, initial);
+  gesture.down(2, { x: 25, y: 0 }, initial);
+  expect(gesture.move(2, { x: 175, y: 0 }, constrain)?.zoom).toBe(3);
+  expect(gesture.move(2, { x: 165, y: 0 }, constrain)?.zoom).toBeLessThan(3);
+});
+
 it("resets cancelled gestures and handles coincident fingers without invalid numbers", () => {
   const gesture = createPhotoGesture();
   gesture.down(1, { x: 0, y: 0 }, initial);
   gesture.down(2, { x: 0, y: 0 }, initial);
   expect(gesture.move(2, { x: 50, y: 0 }, constrain)).toEqual(initial);
+  expect(gesture.move(2, { x: 100, y: 0 }, constrain)?.zoom).toBe(2);
   gesture.reset();
   expect(gesture.move(2, { x: 100, y: 0 }, constrain)).toBeUndefined();
   expect(gesture.down(3, { x: 0, y: 0 }, { x: 0, y: 0, zoom: 2 })).toBe(true);

@@ -69,24 +69,15 @@ import { SceneToggle } from "../features/SceneToggle";
 import { AiTagSuggest, draftPictureKeys } from "../features/AiTagSuggest";
 import { DishDuplicateHint } from "../features/DishDuplicateHint";
 import { screenRoutes, panelScreens, pendingScreens } from "./routes";
-import {
-  adjustPhoto,
-  recommendPhotoStage,
-  sampleStageColors,
-  saveVisual,
-} from "./photos";
+import { adjustPhoto, recommendPhotoStage, saveVisual } from "./photos";
 import { applyPhotoEdit, draftStage } from "./draft-photo-edit";
-import { photoFraming, type PhotoFraming } from "./photo-framing";
-import { createPhotoGesture, MAX_PHOTO_ZOOM } from "./photo-gesture";
+import type { PhotoFraming } from "./photo-framing";
 import {
   mealHours,
   mealName,
   mealOptions,
   mealSlotAt,
   publishDisplay,
-  stageCode,
-  stageNames,
-  stagePalette,
 } from "../api/food-display";
 import { FoodManage } from "../features/Catalog";
 import DishDetail from "./DishDetail";
@@ -95,6 +86,7 @@ import { MobileDishOptions } from "../features/DishAvailability";
 import SheetHandle from "./SheetHandle";
 import HomeSheetHandle from "./HomeSheetHandle";
 import DishPhotoPicker from "./DishPhotoPicker";
+import DishPhotoEditor from "./DishPhotoEditor";
 import HomeOrbit, { dragHomePlates, homeOrbitDragAngle } from "./HomeOrbit";
 import TagPanel from "./TagPanel";
 import AvatarSourceSheet from "./AvatarSourceSheet";
@@ -231,41 +223,6 @@ export function useDesignBridge(
   const dishPhotoInput = useRef<HTMLInputElement>(null);
   const photoOpening = useRef(false);
   const [photoBusy, setPhotoBusy] = useState(false);
-  const [cropImage, setCropImage] = useState<HTMLImageElement | null>(null);
-  const [cropPalette, setCropPalette] = useState<{
-    url: string;
-    colors: string[];
-  }>();
-  const cropX = controller.state.ox ?? 0;
-  const cropY = controller.state.oy ?? 0;
-  const cropZoom = controller.state.zoom ?? 1;
-  useEffect(() => {
-    if (
-      reference ||
-      screen !== "G-Crop" ||
-      !coverEdit ||
-      !photoEdit ||
-      cropImage?.getAttribute("src") !== photoEdit.url
-    )
-      return;
-    const timer = setTimeout(() => {
-      const colors = sampleStageColors(cropImage, {
-        x: cropX,
-        y: cropY,
-        zoom: cropZoom,
-      });
-      setCropPalette({ url: photoEdit.url, colors });
-    }, 120);
-    return () => clearTimeout(timer);
-  }, [reference, screen, coverEdit, photoEdit, cropImage, cropX, cropY, cropZoom]);
-  const cropCandidates =
-    cropPalette && cropPalette.url === photoEdit?.url
-      ? cropPalette.colors
-      : photoEdit?.candidates ?? [];
-  const manualCropStage: string | null | undefined =
-    controller.state.stageChoice === undefined
-      ? m.draft.stage
-      : controller.state.stageChoice;
   const homeOrbit = useRef<HTMLDivElement>(null);
   const orbitMotion = useRef({
     scheduler: createHeroOrbitScheduler(dragHomePlates),
@@ -313,7 +270,6 @@ export function useDesignBridge(
   );
   const tagAdding = useRef(false),
     publishLock = useRef(false);
-  const cropGesture = useRef(createPhotoGesture());
   const publishUncertain = screen === "G-AddDish" && !!m.draft.publishUncertain;
   const busy =
     localBusy ||
@@ -717,6 +673,49 @@ export function useDesignBridge(
       image.framing ?? { x: 0, y: 0, zoom: 1 },
       image.url,
     );
+  }
+  function cancelPhotoEdit() {
+    if (busy || !photoEdit) return;
+    URL.revokeObjectURL(photoEdit.url);
+    m.setDraft({ photoEdit: undefined });
+    nav("/publish/dish");
+  }
+  function savePhotoEdit(framing: PhotoFraming, stageChoice?: string | null) {
+    if (busy || !photoEdit) return;
+    const page = location.key;
+    void run(async () => {
+      const result = await adjustPhoto(photoEdit.source, framing);
+      if (
+        activeLocation.current !== page ||
+        draftRef.current.photoEdit !== photoEdit
+      )
+        return;
+      const url = URL.createObjectURL(result.file);
+      let images: Draft["images"];
+      try {
+        images = applyPhotoEdit(
+          draftRef.current.images,
+          photoEdit,
+          result,
+          url,
+          framing,
+        );
+      } catch (failure) {
+        URL.revokeObjectURL(url);
+        throw failure;
+      }
+      m.setDraft({
+        images,
+        ...(coverEdit && stageChoice !== undefined
+          ? { stage: stageChoice ?? undefined }
+          : {}),
+        photoEdit: undefined,
+      });
+      URL.revokeObjectURL(photoEdit.url);
+      if (photoEdit.targetUrl?.startsWith("blob:"))
+        URL.revokeObjectURL(photoEdit.targetUrl);
+      nav("/publish/dish");
+    });
   }
   async function publish() {
     if (
@@ -1211,88 +1210,6 @@ export function useDesignBridge(
       pick: () => controller.setState({ q: r.word, tab: "shop" }),
     }));
   }
-  if (screen === "G-Crop" && !reference) {
-    const selected = manualCropStage ?? cropCandidates[0] ?? stagePalette.broth;
-    const choices = [...new Set([...cropCandidates, selected])];
-    values.colors = choices.map((hex) => ({
-      name: stageNames[stageCode(hex)],
-      hex,
-      on: hex === selected ? "true" : "false",
-      ring: hex === selected ? 3 : 0,
-      ring2: hex === selected ? 5 : 0,
-      pick: () => {
-        if (!busy) controller.setState({ stageChoice: hex });
-      },
-    }));
-    values.pick = {
-      hex: selected,
-      on: ["#C9442B", "#A8321C", "#8F5B24"].includes(selected)
-        ? "#FFFFFF"
-        : "#231C18",
-    };
-    const position = (crop: PhotoFraming) =>
-      photoFraming(
-        controller.state.photoWidth ?? 300,
-        controller.state.photoHeight ?? 300,
-        crop,
-      ).crop;
-    const setPosition = (crop: PhotoFraming) => {
-      controller.setState({ ox: crop.x, oy: crop.y, zoom: crop.zoom });
-    };
-    const point = (event: React.PointerEvent<HTMLElement>) => {
-      const bounds = event.currentTarget.getBoundingClientRect();
-      const scale = bounds.width / 390;
-      return {
-        x: (event.clientX - bounds.left) / scale - 195,
-        y: (event.clientY - bounds.top) / scale - 200,
-      };
-    };
-    values.down = (event: React.PointerEvent<HTMLElement>) => {
-      if (busy || event.button !== 0) return;
-      if (
-        cropGesture.current.down(event.pointerId, point(event), {
-          x: controller.state.ox ?? 0,
-          y: controller.state.oy ?? 0,
-          zoom: controller.state.zoom ?? 1,
-        })
-      ) {
-        event.preventDefault();
-        try {
-          event.currentTarget.setPointerCapture(event.pointerId);
-        } catch {
-          /* A cancelled native pointer can disappear before capture. */
-        }
-      }
-    };
-    values.move = (event: React.PointerEvent<HTMLElement>) => {
-      if (busy) {
-        cropGesture.current.reset();
-        return;
-      }
-      const crop = cropGesture.current.move(
-        event.pointerId,
-        point(event),
-        position,
-      );
-      if (crop) setPosition(crop);
-    };
-    values.up = (event: React.PointerEvent<HTMLElement>) => {
-      cropGesture.current.up(event.pointerId);
-    };
-    values.zoomTo = (event: any) => {
-      cropGesture.current.reset();
-      setPosition(
-        position({
-          x: controller.state.ox ?? 0,
-          y: controller.state.oy ?? 0,
-          zoom: Math.max(
-            1,
-            Math.min(MAX_PHOTO_ZOOM, Number(event.target.value)),
-          ),
-        }),
-      );
-    };
-  }
   if (screen === "G-SettingsPrivacy" && !reference) {
     values.lists = [
       {
@@ -1346,6 +1263,19 @@ export function useDesignBridge(
       tag = n.tag,
       id = n.id;
     if (screen === "G-Me" && id === 1) return <MobileProfile />;
+    if (screen === "G-Crop" && id === 1 && photoEdit)
+      return (
+        <DishPhotoEditor
+          key={photoEdit.url}
+          edit={photoEdit}
+          cover={
+            coverEdit ? { name: m.draft.name, stage: m.draft.stage } : undefined
+          }
+          busy={busy}
+          onCancel={cancelPhotoEdit}
+          onApply={savePhotoEdit}
+        />
+      );
     if (screen === "G-Settings" && id === 25) return null;
     if (screen === "G-PanelTag" && id === 5) {
       const close = () => (m.panel ? m.closePanel() : nav(`/foods/${foodId}`));
@@ -1420,16 +1350,6 @@ export function useDesignBridge(
       };
       if (labels[screen]) return <SheetHandle label={labels[screen]} />;
     }
-    if (
-      screen === "G-Crop" &&
-      tag === "div" &&
-      n.children.some(
-        (child) =>
-          typeof child !== "string" &&
-          child.attrs["aria-label"] === "自动去掉背景",
-      )
-    )
-      return null;
     if (typeof p["aria-label"] === "string")
       p["aria-label"] = p["aria-label"].replace(/待接入/g, "敬请期待");
     if (tag === "span" && clean(text) === "待接入")
@@ -2672,80 +2592,6 @@ export function useDesignBridge(
         </span>
       );
     if (
-      screen === "G-Crop" &&
-      tag === "img" &&
-      String(n.attrs.src).includes("luosi") &&
-      photoEdit
-    ) {
-      const preview = String(n.attrs.src).includes("sq_luosi");
-      const layout = photoFraming(
-        controller.state.photoWidth ?? 300,
-        controller.state.photoHeight ?? 300,
-        {
-          x: controller.state.ox ?? 0,
-          y: controller.state.oy ?? 0,
-          zoom: controller.state.zoom ?? 1,
-        },
-        preview ? 100 : 300,
-      ).image;
-      p.src = photoEdit.url;
-      p.alt = preview ? "首页裁剪预览" : "所选照片";
-      p.onLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
-        const image = event.currentTarget;
-        if (!preview && coverEdit) setCropImage(image);
-        if (
-          controller.state.photoWidth !== image.naturalWidth ||
-          controller.state.photoHeight !== image.naturalHeight
-        )
-          controller.setState({
-            photoWidth: image.naturalWidth,
-            photoHeight: image.naturalHeight,
-          });
-      };
-      p.style = {
-        ...st,
-        position: "absolute",
-        left: (preview ? 0 : 45) + layout.left,
-        top: (preview ? 0 : 50) + layout.top,
-        width: layout.width,
-        height: layout.height,
-        maxWidth: "none",
-        objectFit: "fill",
-        transform: "none",
-        userSelect: "none",
-        pointerEvents: "none",
-      };
-    }
-    if (screen === "G-Crop") {
-      if (!coverEdit && (id === 23 || id === 30)) return null;
-      if (tag === "span" && clean(text) === "从照片里推荐") {
-        return (
-          <button
-            type="button"
-            className="crop-follow-cover"
-            aria-pressed={manualCropStage == null}
-            disabled={busy}
-            onClick={() => controller.setState({ stageChoice: null })}
-          >
-            跟随封面
-          </button>
-        );
-      }
-      if (tag === "div" && n.attrs.role === "group") {
-        p["aria-label"] = "照片取景，单指拖动、双指缩放";
-        p.onLostPointerCapture = values.up;
-      }
-      if (tag === "span" && clean(text) === "拖动、缩放，把主菜放进圈里")
-        return <span {...p}>单指拖动，双指缩放</span>;
-      if (tag === "input" && p.type === "range") {
-        p.min = 1;
-        p.max = MAX_PHOTO_ZOOM;
-        p.disabled = busy;
-      }
-    }
-    if (screen === "G-Crop" && tag === "span" && clean(text) === "柳州螺蛳粉")
-      return <span {...p}>{m.draft.name || "你的这道菜"}</span>;
-    if (
       screen === "G-PanelPlace" &&
       n.attrs.role === "radiogroup" &&
       n.attrs["aria-label"] === "校区"
@@ -3106,60 +2952,6 @@ export function useDesignBridge(
       chooseFiles();
       return;
     }
-    if (screen === "G-Crop" && target === "G-AddDish.dc.html") {
-      if (busy) return;
-      const edit = draftRef.current.photoEdit;
-      if (label === "取消") {
-        if (edit) URL.revokeObjectURL(edit.url);
-        m.setDraft({ photoEdit: undefined });
-        nav("/publish/dish");
-        return;
-      }
-      const page = location.key;
-      const pickedStage = controller.state.stageChoice as string | null | undefined;
-      void run(async () => {
-        if (!edit) throw new Error("先选择一张照片。");
-        const framing = photoFraming(
-          controller.state.photoWidth ?? 300,
-          controller.state.photoHeight ?? 300,
-          {
-            x: controller.state.ox ?? 0,
-            y: controller.state.oy ?? 0,
-            zoom: controller.state.zoom ?? 1,
-          },
-        ).crop;
-        const result = await adjustPhoto(edit.source, framing);
-        if (
-          activeLocation.current !== page ||
-          draftRef.current.photoEdit !== edit
-        )
-          return;
-        const url = URL.createObjectURL(result.file);
-        let images: Draft["images"];
-        try {
-          images = applyPhotoEdit(
-            draftRef.current.images,
-            edit,
-            result,
-            url,
-            framing,
-          );
-        } catch (failure) {
-          URL.revokeObjectURL(url);
-          throw failure;
-        }
-        m.setDraft({
-          images,
-          ...(coverEdit && pickedStage !== undefined ? { stage: pickedStage ?? undefined } : {}),
-          photoEdit: undefined,
-        });
-        URL.revokeObjectURL(edit.url);
-        if (edit.targetUrl?.startsWith("blob:"))
-          URL.revokeObjectURL(edit.targetUrl);
-        nav("/publish/dish");
-      });
-      return;
-    }
     if (screen === "G-Settings" && label === "退出") {
       void run(async () => {
         await app.signOut();
@@ -3401,21 +3193,6 @@ export function useDesignBridge(
           </button>
           <p>本地模拟数据，无需账号和密码</p>
         </div>
-      )}
-      {screen === "G-Crop" && coverEdit && (
-        <span
-          style={{
-            position: "absolute",
-            left: 20,
-            right: 20,
-            bottom: 12,
-            fontSize: 11,
-            color: "rgba(255,255,255,.7)",
-            textAlign: "center",
-          }}
-        >
-          舞台色与裁剪后的照片将在发布时同步保存
-        </span>
       )}
       {((error && (duplicate || uncertain)) || publishUncertain) &&
         !["G-PasswordLogin", "G-PanelTag"].includes(screen) && (

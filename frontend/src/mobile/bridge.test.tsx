@@ -174,31 +174,14 @@ function PhotoWorkflowScreen({
   const screen = crop ? "G-Crop" : "G-AddDish";
   const bridge = useDesignBridge(screen, controller, { cats: [] }, false);
   if (crop)
-    return (
-      <>
-        {["取消", "完成"].map((text) => {
-          const props = { href: "G-AddDish.dc.html", "data-testid": text };
-          bridge.node({
-            screen,
-            node: {
-              id: -1,
-              tag: "a",
-              attrs: { href: "G-AddDish.dc.html" },
-              children: [text],
-            },
-            props,
-            children: [text],
-            text,
-            scope: {},
-          });
-          return (
-            <a key={text} {...props}>
-              {text}
-            </a>
-          );
-        })}
-      </>
-    );
+    return bridge.node({
+      screen,
+      node: { id: 1, tag: "div", attrs: {}, children: [] },
+      props: {},
+      children: [],
+      text: "",
+      scope: {},
+    });
   return (
     <>
       {bridge.node({
@@ -392,7 +375,7 @@ it("discards a cancelled new photo instead of adding it to the publishing draft"
   expect(host.querySelector('[data-testid="photo-count"]')?.textContent).toBe(
     "0",
   );
-  await click('[data-testid="取消"]');
+  await click(".mobile-crop-cancel");
   expect(host.querySelector('[data-testid="photo-route"]')?.textContent).toBe(
     "/publish/dish",
   );
@@ -407,18 +390,24 @@ it("discards a cancelled new photo instead of adding it to the publishing draft"
 it("edits a thumbnail without deleting it and deletes only through its separate remove button", async () => {
   await renderPhotoWorkflow();
   await click('[aria-label="添加菜品照片"]');
-  await spin(() => !!host.querySelector('[data-testid="完成"]'));
-  await click('[data-testid="完成"]');
+  await spin(() => !!host.querySelector('img[alt="所选照片"]'));
+  const image = host.querySelector<HTMLImageElement>('img[alt="所选照片"]')!;
+  Object.defineProperties(image, {
+    naturalWidth: { value: 800 },
+    naturalHeight: { value: 600 },
+  });
+  await act(async () => image.dispatchEvent(new Event("load")));
+  await click(".mobile-crop-done");
   await spin(() => !!host.querySelector('[aria-label="编辑第 1 张照片"]'));
   const original = host
     .querySelector(".mobile-publish-photo img")
     ?.getAttribute("src");
   await click('[aria-label="编辑第 1 张照片"]');
-  await spin(() => !!host.querySelector('[data-testid="取消"]'));
+  await spin(() => !!host.querySelector(".mobile-crop-cancel"));
   expect(host.querySelector('[data-testid="photo-count"]')?.textContent).toBe(
     "1",
   );
-  await click('[data-testid="取消"]');
+  await click(".mobile-crop-cancel");
   await spin(() => !!host.querySelector('[aria-label="移除第 1 张照片"]'));
   expect(
     host.querySelector(".mobile-publish-photo img")?.getAttribute("src"),
