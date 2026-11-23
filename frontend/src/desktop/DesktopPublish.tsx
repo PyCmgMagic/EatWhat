@@ -8,7 +8,7 @@ import {
   type CSSProperties,
   type FormEvent,
 } from "react";
-import { validateFoodDraft } from "../api/content-rules";
+import { codePoints, foodDescriptionLimit, validateFoodDraft } from "../api/content-rules";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -845,7 +845,7 @@ export default function DesktopPublish() {
                 aria-label="推荐理由"
                 placeholder="这道菜哪里值得推荐？"
                 value={draft.description}
-                maxLength={600}
+                aria-invalid={codePoints(draft.description) > foodDescriptionLimit}
                 onChange={(event) =>
                   m.setDraft({ description: event.target.value })
                 }

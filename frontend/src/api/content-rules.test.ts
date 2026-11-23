@@ -16,7 +16,7 @@ it("counts Unicode code points and validates normalized personal tags", () => {
   expect(() =>
     validateFoodDraft({
       name: "菜",
-      description: "文".repeat(301),
+      description: "文".repeat(1001),
       price: 1,
       tags: [],
     }),
@@ -30,6 +30,13 @@ it("counts Unicode code points and validates normalized personal tags", () => {
     }),
   ).toThrow();
 });
+it("preserves a 1000-code-point dish note on creation and edit", () => {
+  const description = "🍜".repeat(998) + "\n好";
+  const draft = { name: "面", price: "", tags: [], description };
+  expect(() => validateFoodDraft(draft)).not.toThrow();
+  expect(foodEditBody({}, { description })).toEqual({ description });
+  expect(() => foodEditBody({}, { description: description + "吃" })).toThrow("1000");
+});
 it("requires a price and accepts only the v4 effective decimal precision", () => {
   for (const v of ["", null, undefined, -1, 1000, 0.01, 12.34, "NaN"])
     expect(() => foodPrice(v)).toThrow();
@@ -39,7 +46,7 @@ it("requires a price and accepts only the v4 effective decimal precision", () =>
 it("keeps unchanged historical over-limit values and image references out of edit patches", () => {
   const old = {
     name: "旧".repeat(40),
-    description: "长".repeat(1000),
+    description: "长".repeat(1001),
     price: 10000.25,
     pictureUrl: ["https://old.example/1", "https://old.example/2"],
   };

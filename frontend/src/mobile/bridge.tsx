@@ -12,7 +12,7 @@ import { Frown } from "lucide-react";
 import { useSendSignal } from "../features/useSendSignal";
 import { useFoodReaction } from "../features/food-reactions";
 import React, { useEffect, useRef, useState, type ReactNode } from "react";
-import { validateFoodDraft, normalizedTag } from "../api/content-rules";
+import { codePoints, foodDescriptionLimit, validateFoodDraft, normalizedTag } from "../api/content-rules";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   keepPreviousData,
@@ -1105,10 +1105,11 @@ export function useDesignBridge(
       };
     });
     values.desc = m.draft.description;
-    values.descLen = m.draft.description.length;
-    values.setDesc = (e: any) => {
-      m.setDraft({ description: e.target.value.slice(0, 200) });
-      controller.setState({ desc: e.target.value.slice(0, 200) });
+    values.descLen = codePoints(m.draft.description);
+    values.setDesc = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const description = e.target.value;
+      m.setDraft({ description });
+      controller.setState({ desc: description });
     };
     values.tags = (systemTags.data ?? []).map((t) => ({
       label: t.name,
@@ -2118,14 +2119,14 @@ export function useDesignBridge(
               <textarea
                 id="dish-desc"
                 rows={3}
-                maxLength={200}
+                aria-invalid={values.descLen > foodDescriptionLimit}
                 value={values.desc}
                 onChange={values.setDesc}
                 disabled={busy || publishUncertain}
                 aria-describedby="dish-desc-count"
                 placeholder="好吃在哪，有什么要注意的"
               />
-              <span id="dish-desc-count">{values.descLen} / 200</span>
+              <span id="dish-desc-count">{values.descLen} / {foodDescriptionLimit}</span>
             </div>
           </div>
         );

@@ -8,7 +8,7 @@ import {
 } from "./DishAvailability";
 import type { DishServing } from "../api/service";
 import { Select } from "../components/Select";
-import { foodEditBody } from "../api/content-rules";
+import { codePoints, foodEditBody } from "../api/content-rules";
 import {
   useEffect,
   useId,
@@ -550,7 +550,7 @@ function EditForm({
           <label className="mobile-edit-desc">
             <span>
               推荐理由
-              <small>{description.length} 字</small>
+              <small>{codePoints(description)} 字</small>
             </span>
             <textarea
               value={description}

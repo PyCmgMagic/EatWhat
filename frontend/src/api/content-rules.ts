@@ -1,6 +1,7 @@
 import type { Food, Restaurant, Schema } from "./models";
 
 export const codePoints = (value: string) => [...value].length;
+export const foodDescriptionLimit = 1000;
 export const restaurantAddressLimit = 50;
 export const normalizedTag = (value: string) =>
   value.trim().replace(/\s+/gu, " ");
@@ -35,8 +36,8 @@ export function validateFoodDraft(value: {
   tags: string[];
 }) {
   boundedText(value.name, 12, "菜名");
-  if (codePoints(value.description) > 300)
-    throw new Error("菜品说明最多 300 个字。");
+  if (codePoints(value.description) > foodDescriptionLimit)
+    throw new Error(`菜品说明最多 ${foodDescriptionLimit} 个字。`);
   // Optional: whoever shares a dish may not know its price; others can add it.
   if (String(value.price ?? "").trim() !== "") foodPrice(value.price);
   if (value.tags.length > 20) throw new Error("最多添加 20 个个人标签。");
@@ -52,8 +53,8 @@ export function foodEditBody<
   }
   if (body.description != null) {
     if (body.description === original.description) delete body.description;
-    else if (codePoints(body.description) > 300)
-      throw new Error("修改后的说明最多 300 个字；未修改的历史说明可保留。");
+    else if (codePoints(body.description) > foodDescriptionLimit)
+      throw new Error(`修改后的说明最多 ${foodDescriptionLimit} 个字。`);
   }
   if (body.price != null) {
     if (Number(body.price) === original.price) delete body.price;

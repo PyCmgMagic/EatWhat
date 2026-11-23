@@ -678,6 +678,7 @@ it("advances the mobile carousel once per action without state updates on every 
 });
 
 it("keeps selected category and description across G-AddDish remounts when submitting", async () => {
+  const note = "清甜🍧".repeat(333) + "。";
   let submittedBody: Record<string, unknown> | undefined;
   vi.stubGlobal(
     "fetch",
@@ -765,7 +766,7 @@ it("keeps selected category and description across G-AddDish remounts when submi
           <button
             data-testid="type-desc"
             onClick={() =>
-              bridge.values.setDesc({ target: { value: "清甜解暑" } })
+              bridge.values.setDesc({ target: { value: note } })
             }
           >
             写描述
@@ -811,7 +812,7 @@ it("keeps selected category and description across G-AddDish remounts when submi
   });
   await spin(() => Boolean(submittedBody));
   expect(submittedBody?.category).toBe("汤");
-  expect(submittedBody?.description).toBe("清甜解暑");
+  expect(submittedBody?.description).toBe(note);
 });
 
 it("opens the dish form with the tapped restaurant and keeps the new-shop entry accessible", async () => {
