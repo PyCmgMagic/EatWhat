@@ -105,6 +105,26 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+it("excludes direct admin opens and admin navigation, then counts only the public page view", async () => {
+  await mount("/admin");
+  await go("/admin/v4?tab=feedback");
+  await go("/admin/telemetry");
+  expect(batches).toHaveLength(0);
+  await go("/");
+  expect(properties()).toEqual([{ event: "page_view", page: "HOME" }]);
+});
+
+it("counts a public page again on return from admin without an extra open", async () => {
+  await mount("/foods/11");
+  await go("/admin/telemetry");
+  await go(-1);
+  expect(properties()).toEqual([
+    { event: "app_open" },
+    { event: "page_view", page: "FOOD" },
+    { event: "page_view", page: "FOOD" },
+  ]);
+});
+
 it("reports one open per document and one categorized view per path, including history navigation", async () => {
   await mount("/foods/11");
   await go("/foods/22");

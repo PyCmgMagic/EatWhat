@@ -3,15 +3,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { uuidV7 } from "../api/install-id";
 import type { TelemetryBatch, TelemetryPage } from "../api/v4-types";
+import { isAdminPath } from "./admin-routes";
 import { useApp } from "./state";
 
-export function useTelemetryConsent() {
+export function useTelemetryConsent(enabled = true) {
   const { api, session, user } = useApp();
   const key = ["telemetry", "consent", user?.id] as const;
   const query = useQuery({
     queryKey: key,
     queryFn: () => api.telemetryConsent(),
-    enabled: !!session && !!user?.id,
+    enabled: enabled && !!session && !!user?.id,
     refetchOnWindowFocus: true,
   });
   return { key, query };
@@ -35,13 +36,19 @@ function pageCategory(path: string): TelemetryPage {
 
 export default function WebTelemetry() {
   const { api, session, user } = useApp();
-  const { query } = useTelemetryConsent();
   const cache = useQueryClient();
   const { pathname } = useLocation();
+  const admin = isAdminPath(pathname);
+  const { query } = useTelemetryConsent(!admin);
   // Opening belongs to this document. A later login or opt-in is not another open.
   const openingSession = useRef(session);
   const lastView = useRef<{ owner: number; path: string } | null>(null);
   useEffect(() => {
+    if (admin) {
+      openingSession.current = null;
+      lastView.current = null;
+      return;
+    }
     const consent = query.data;
     if (
       !session ||
@@ -83,6 +90,15 @@ export default function WebTelemetry() {
       .catch(() => {
         /* Statistics must not interrupt browsing. */
       });
-  }, [api, cache, session, user?.id, query.isSuccess, query.data, pathname]);
+  }, [
+    admin,
+    api,
+    cache,
+    session,
+    user?.id,
+    query.isSuccess,
+    query.data,
+    pathname,
+  ]);
   return null;
 }
