@@ -1,3 +1,4 @@
+import { reportWebUsage } from "../app/web-usage";
 import { Select } from "../components/Select";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -202,6 +203,7 @@ function DrawCounter({
 
   async function draw(index = Math.floor(Math.random() * cards.length)) {
     if (active.current || !ready) return;
+    reportWebUsage({ event: "dish_shuffle" });
     const controller = new AbortController();
     active.current = controller;
     setPickedIndex(index);
@@ -258,7 +260,10 @@ function DrawCounter({
         setShop(result.restaurant);
       }
     } catch (error) {
-      if (!controller.signal.aborted) setMessage(errorMessage(error));
+      if (!controller.signal.aborted) {
+        reportWebUsage({ event: "load_failed", page: "RECOMMEND" });
+        setMessage(errorMessage(error));
+      }
     } finally {
       window.clearTimeout(revealTimer);
       motion.current?.cancel();
@@ -382,7 +387,7 @@ function DrawCounter({
         )}
         <div className="draw-actions">
           {shop && (
-            <Link className="draw-primary" to={`/restaurants/${shop.id}`}>
+            <Link className="draw-primary" to={`/restaurants/${shop.id}`} onClick={() => reportWebUsage({ event: "dish_decide", restaurantId: shop.id })}>
               去看店铺
               <ArrowRight size={19} aria-hidden="true" />
             </Link>

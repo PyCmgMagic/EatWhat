@@ -1210,6 +1210,7 @@ export function handleV4(
     return ok(a);
   }
   if (path === "/telemetry/consent") {
+    if (o.public && m === "DELETE") return ok({ enabled: false, retentionDays: 7 });
     if (m !== "GET") {
       revision(b.expectedRevision, v.telemetry.revision);
       if (b.policyVersion !== v.telemetry.policyVersion)
@@ -1224,34 +1225,37 @@ export function handleV4(
     return ok(v.telemetry);
   }
   if (path === "/telemetry/events") {
-    if (!v.telemetry.enabled) fail("匿名使用统计尚未授权。", 403);
-    revision(b.consentRevision, v.telemetry.revision);
+    if (!o.public) {
+      if (!v.telemetry.enabled) fail("匿名使用统计尚未授权。", 403);
+      revision(b.consentRevision, v.telemetry.revision);
+    }
     if (!Array.isArray(b.events) || b.events.length > 50)
       fail("事件批次不正确。");
+    const fields: Record<string, string[]> = {
+      app_open: [],
+      page_view: ["page"],
+      dish_shuffle: [],
+      dish_decide: ["foodId", "restaurantId"],
+      navigate_shop: ["restaurantId"],
+      publish_success: ["kind"],
+      comment_success: [],
+      verify_success: ["method"],
+      share: ["targetType", "targetId"],
+      load_failed: ["page"],
+    };
     let accepted = 0,
       duplicates = 0;
     for (const event of b.events) {
+      const properties = event.properties;
+      const allowed = properties?.event && Object.hasOwn(fields, properties.event) ? fields[properties.event] : undefined;
       if (
-        !event.eventId ||
-        (event.properties?.event === "page_view"
-          ? !telemetryPages.includes(event.properties.page) ||
-            Object.keys(event.properties).length !== 2
-          : Object.keys(event.properties ?? {}).join() !== "event") ||
-        ![
-          "app_open",
-          "page_view",
-          "dish_shuffle",
-          "dish_decide",
-          "navigate_shop",
-          "publish_success",
-          "comment_success",
-          "verify_success",
-          "share",
-          "load_failed",
-        ].includes(event.properties.event)
+        !event.eventId || !allowed ||
+        Object.keys(properties).some((field) => field !== "event" && !allowed.includes(field)) ||
+        (allowed.includes("page") && !telemetryPages.includes(properties.page))
       )
         fail("事件包含未允许的字段。");
-      if (v.events.includes(event.eventId)) duplicates++;
+      if (o.public) accepted++;
+      else if (v.events.includes(event.eventId)) duplicates++;
       else {
         v.events.push(event.eventId);
         accepted++;

@@ -1,3 +1,4 @@
+import { reportWebUsage } from "../app/web-usage";
 import WorkspaceSwitch from "../admin/WorkspaceSwitch";
 import { AnchoredPopover } from "../components/AnchoredPopover";
 import { ThemeToggle } from "../theme/AppearanceControl";
@@ -6,6 +7,8 @@ import { PhotoPreviewButton } from "../components/PhotoPreviewButton";
 import { useHomeDiscovery } from "../features/useHomeDiscovery";
 import { SupplementPrice } from "../features/SupplementPrice";
 import { BRAND_NAME, BRAND_PREFIX, BRAND_SLOGAN } from "../app/brand";
+import { ShopDescription } from "../features/ShopDescription";
+import { CommentDestination, RestaurantDiscussion } from "../features/comments/Comments";
 import { BrandLogo } from "../components/BrandLogo";
 import { foodAuthor } from "../api/models";
 import ProfileOverview from "../features/ProfileOverview";
@@ -616,22 +619,16 @@ function DesktopPage({
     </DesktopGate>
   );
 }
-const CommentDestination = lazy(() =>
-  import("../features/comments/Comments").then((m) => ({
-    default: m.CommentDestination,
-  })),
-);
-
 function DiscussionRedirect() {
   const loc = useLocation(),
     m = useMobile(),
     nav = useNavigate();
-  const id =
-    parseId(new URLSearchParams(loc.search).get("foodId") ?? undefined) ??
-    m.foodId;
   const params = new URLSearchParams(loc.search);
+  const restaurantId = parseId(params.get("restaurantId") ?? undefined);
+  const id =
+    restaurantId ?? parseId(params.get("foodId") ?? undefined) ?? m.foodId;
   const commentId =
-    !params.has("foodId") && loc.pathname === "/comments"
+    !restaurantId && !params.has("foodId") && loc.pathname === "/comments"
       ? parseId(params.get("commentId") ?? undefined)
       : undefined;
   useEffect(() => {
@@ -646,13 +643,14 @@ function DiscussionRedirect() {
       (() => {
         const search = new URLSearchParams(loc.search);
         search.delete("foodId");
+        search.delete("restaurantId");
         search.set("section", "comments");
         if (loc.pathname.endsWith("/write")) search.set("compose", "1");
-        return `/foods/${id}?${search}`;
+        return `/${restaurantId ? "restaurants" : "foods"}/${id}?${search}`;
       })(),
       { replace: true },
     );
-  }, [id, commentId, loc.pathname, loc.search, nav]);
+  }, [id, commentId, restaurantId, loc.pathname, loc.search, nav]);
   if (commentId) return <CommentDestination commentId={commentId} desktop />;
   return <ContentSkeleton kind="rows" count={3} />;
 }
@@ -1036,7 +1034,10 @@ function DesktopHome() {
         <div className="pc-hero-actions">
           <button
             className="pc-hero-secondary"
-            onClick={() => setN((i) => i + 1)}
+            onClick={() => {
+              reportWebUsage({ event: "dish_shuffle" });
+              setN((i) => i + 1);
+            }}
           >
             <Icon name="shuffle" size={20} />
             换一个
@@ -1045,6 +1046,8 @@ function DesktopHome() {
             className="pc-hero-primary"
             to={`/foods/${food.id}`}
             onClick={() => {
+              if (food.id)
+                reportWebUsage({ event: "dish_decide", foodId: food.id });
               m.setFoodId(food.id!);
               if (food.restaurantId) m.setShopId(food.restaurantId);
             }}
@@ -1654,6 +1657,7 @@ function DesktopRestaurant() {
                 <Icon name="nearby" size={18} />
                 <span>{shop.address ?? "地址待补充"}</span>
               </p>
+              <ShopDescription value={shop.description} />
               <ul className="pc-shop-facts" aria-label="店铺特点">
                 {shopFactLabels(shop).map((fact, index) => (
                   <li key={`${index}-${fact}`}>{fact}</li>
@@ -1677,15 +1681,18 @@ function DesktopRestaurant() {
                 </button>
                 <button
                   className="pc-button light"
-                  onClick={() =>
-                    hasCoordinates(shop)
-                      ? window.open(
-                          baiduMarkerUrl(shop),
-                          "_blank",
-                          "noopener,noreferrer",
-                        )
-                      : m.notice("这家店还没有可用的位置。")
-                  }
+                  onClick={() => {
+                    if (!hasCoordinates(shop)) {
+                      m.notice("这家店还没有可用的位置。");
+                      return;
+                    }
+                    reportWebUsage({ event: "navigate_shop", restaurantId: id });
+                    window.open(
+                      baiduMarkerUrl(shop),
+                      "_blank",
+                      "noopener,noreferrer",
+                    );
+                  }}
                 >
                   <Icon name="navigate" size={20} />
                   导航去店里
@@ -1723,6 +1730,7 @@ function DesktopRestaurant() {
             </div>
           </section>
           <DesktopRestaurantFeedback key={id} id={id} shop={shop} />
+          <RestaurantDiscussion key={id} restaurant={{ ...shop, id }} />
           <section className="pc-content-sheet is-standalone">
             <div className="pc-section-toolbar">
               <div>

@@ -14,7 +14,10 @@ import { Async, Notice, Panel, num } from "../kit";
 export function NetworkSources() {
   const { api } = useApp(),
     today = businessDate(),
-    [form, setForm] = useState(() => ({ from: shiftDate(today, -13), to: today }));
+    [form, setForm] = useState(() => ({
+      from: shiftDate(today, -13),
+      to: today,
+    }));
   const range = breakdownRange(
       { granularity: "DAY", fromHour: 0, toHour: 24, ...form },
       today,
@@ -58,18 +61,42 @@ export function NetworkSources() {
         <Async query={q} rows={3}>
           <div className="ew-admin-table-wrap">
             <table className="ew-admin-table">
+              <colgroup span={5} />
+              <colgroup span={5} />
               <thead>
                 <tr>
-                  <th>账号</th>
-                  <th>总数</th>
-                  <th>教育网</th>
-                  <th>其他网络</th>
-                  <th>未知</th>
-                  <th>教育网占比</th>
+                  <th scope="col" rowSpan={2}>
+                    账号
+                  </th>
+                  <th scope="col" rowSpan={2}>
+                    总数
+                  </th>
+                  <th scope="col" rowSpan={2}>
+                    教育网
+                  </th>
+                  <th scope="col" rowSpan={2}>
+                    未知
+                  </th>
+                  <th scope="col" rowSpan={2}>
+                    教育网占比
+                  </th>
+                  <th scope="colgroup" colSpan={5}>
+                    其他网络
+                  </th>
+                </tr>
+                <tr>
+                  <th scope="col">合计</th>
+                  <th scope="col">移动</th>
+                  <th scope="col">联通</th>
+                  <th scope="col">电信</th>
+                  <th scope="col">其余网络</th>
                 </tr>
               </thead>
               <tbody>
-                <Counts label="新增账号 · 注册网络" counts={q.data?.registered} />
+                <Counts
+                  label="新增账号 · 注册网络"
+                  counts={q.data?.registered}
+                />
                 <Counts label="活跃账号 · 最近网络" counts={q.data?.active} />
               </tbody>
             </table>
@@ -89,9 +116,13 @@ function Counts({ label, counts }: { label: string; counts?: NetworkCounts }) {
       <td>{label}</td>
       <td>{num(counts?.total)}</td>
       <td>{num(counts?.cernet)}</td>
-      <td>{num(counts?.other)}</td>
       <td>{num(counts?.unknown)}</td>
       <td>{cernetShare(counts?.cernetRate)}</td>
+      <td>{num(counts?.other)}</td>
+      <td>{num(counts?.otherBreakdown?.chinaMobile)}</td>
+      <td>{num(counts?.otherBreakdown?.chinaUnicom)}</td>
+      <td>{num(counts?.otherBreakdown?.chinaTelecom)}</td>
+      <td>{num(counts?.otherBreakdown?.remaining)}</td>
     </tr>
   );
 }

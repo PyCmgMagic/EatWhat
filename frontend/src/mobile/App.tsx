@@ -85,6 +85,7 @@ import { useVisibleViewport } from "../app/viewport";
 import RestaurantLocationField from "../features/RestaurantLocationField";
 import { NewShopSearch } from "../features/NewShopSearch";
 import { ShopPhotoField } from "../features/ShopPhotoField";
+import { ShopDescriptionField } from "../features/ShopDescription";
 import { useNewShop } from "../features/useNewShop";
 import SheetHandle from "./SheetHandle";
 import { ShopTraitsFields } from "../features/ShopTraits";
@@ -406,8 +407,8 @@ function MobileWorkspace() {
     return () => document.body.classList.remove("desktop-mode", "admin-mode");
   }, [desktop, admin]);
   useEffect(() => {
-    if (!admin) document.title = browserTitle(loc.pathname);
-  }, [loc.pathname, admin]);
+    if (!admin) document.title = browserTitle(loc.pathname, loc.search);
+  }, [loc.pathname, loc.search, admin]);
   const state = {
     foodId,
     shopId,
@@ -920,6 +921,11 @@ function NewShop() {
             onPick={(point) => flow.update({ point })}
             address={draft.address}
             onAddressChange={(address) => flow.update({ address })}
+            disabled={busy}
+          />
+          <ShopDescriptionField
+            value={draft.description}
+            onChange={(description) => flow.update({ description })}
             disabled={busy}
           />
           <ShopPhotoField

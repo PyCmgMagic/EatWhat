@@ -1,6 +1,11 @@
 import { useId, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../app/state";
+import {
+  disableGuestUsage,
+  setGuestUsage,
+  useGuestUsage,
+} from "../app/web-usage";
 import { useTelemetryConsent } from "../app/WebTelemetry";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { Modal } from "../components/ui";
@@ -45,12 +50,20 @@ function PrivacySwitch({
   );
 }
 
-function LoadError({ text, retry }: { text: string; retry: () => void }) {
+function LoadError({
+  text,
+  retry,
+  retryLabel = "重新加载",
+}: {
+  text: string;
+  retry: () => void;
+  retryLabel?: string;
+}) {
   return (
     <div className="privacy-settings-load-error" role="alert">
       <span>{text}</span>
       <button type="button" onClick={retry}>
-        重新加载
+        {retryLabel}
       </button>
     </div>
   );
@@ -309,6 +322,81 @@ function TelemetrySettings() {
                   onClick={() => saveConsent(false)}
                 >
                   {save.isPending ? "正在关闭…" : "关闭并删除统计"}
+                </button>
+              </div>
+            </>
+          )}
+        </Modal>
+      )}
+    </section>
+  );
+}
+
+export function GuestUsageSettings() {
+  const { api, toast } = useApp();
+  const preference = useGuestUsage();
+  const task = useTask();
+  const [trigger, setTrigger] = useState<HTMLInputElement | null>(null);
+  const stopSharing = () =>
+    task.run(async () => {
+      try {
+        await disableGuestUsage(api);
+        toast("游客使用统计已关闭", { tone: "success" });
+      } finally {
+        setTrigger(null);
+      }
+    });
+  return (
+    <section
+      className="privacy-settings-card"
+      aria-labelledby="guest-usage-title"
+    >
+      <h2 className="privacy-settings-title" id="guest-usage-title">
+        游客使用统计
+      </h2>
+      <PrivacySwitch
+        label="分享游客使用统计"
+        detail="开启后会记录当前浏览器的安装标识和预设操作，记录保留 7 天。"
+        checked={preference === "on"}
+        disabled={task.isPending || preference === "delete-pending"}
+        onChange={(enabled, control) =>
+          enabled ? setGuestUsage("on") : setTrigger(control)
+        }
+      />
+      {preference === "delete-pending" && !task.isPending && (
+        <LoadError
+          text="已停止上报，统计记录尚未确认删除。"
+          retry={stopSharing}
+          retryLabel="重试删除"
+        />
+      )}
+      {trigger && (
+        <Modal
+          title="关闭游客使用统计？"
+          className="v4-confirm-dialog"
+          returnFocus={trigger}
+          motionOrigin={trigger}
+          dismissible={!task.isPending}
+          onClose={() => setTrigger(null)}
+        >
+          {(dismiss) => (
+            <>
+              <p>关闭后会删除当前浏览器的游客统计记录，无法恢复。</p>
+              <div className="v4-confirm-actions">
+                <button
+                  type="button"
+                  disabled={task.isPending}
+                  onClick={dismiss}
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  className="is-danger"
+                  disabled={task.isPending}
+                  onClick={stopSharing}
+                >
+                  {task.isPending ? "正在关闭…" : "关闭并删除统计"}
                 </button>
               </div>
             </>

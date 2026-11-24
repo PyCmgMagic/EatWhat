@@ -14,10 +14,12 @@ import { bridgeToV2 } from "../api/v2-bridge";
 import type { TelemetryBatch } from "../api/v4-types";
 import PrivacySettings from "../features/PrivacySettings";
 import WebTelemetry from "./WebTelemetry";
+import { disableGuestUsage, reportWebUsage, setGuestUsage } from "./web-usage";
 
 let signedIn = true,
   enabled = true;
 const session = { tokenName: "satoken", tokenValue: "test" };
+const guestDeletions: unknown[] = [];
 const batches: { installId: string; events: TelemetryBatch["events"] }[] = [];
 const api = createApi(
   bridgeToV2(async (path, options) => {
@@ -33,6 +35,10 @@ const api = createApi(
       };
     }
     if (path !== "/telemetry/consent") return { code: 0, data: {} };
+    if (options.method === "DELETE" && options.public) {
+      guestDeletions.push(options.query?.installId);
+      return { code: 0, data: { enabled: false, retentionDays: 7 } };
+    }
     if (options.method === "DELETE") enabled = false;
     if (options.method === "PUT") enabled = true;
     return { code: 0, data: { enabled, retentionDays: 90 } };
@@ -93,6 +99,8 @@ beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   signedIn = enabled = true;
   batches.length = 0;
+  guestDeletions.length = 0;
+  setGuestUsage("off");
   cache = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: 30000 } },
   });
@@ -181,6 +189,24 @@ it("does not send events while signed out", async () => {
   await mount("/");
   await go("/restaurants/2");
   expect(batches).toHaveLength(0);
+});
+
+it("starts guest reporting only on opt-in and stops it before deleting this installation", async () => {
+  signedIn = false;
+  await mount("/recommend");
+  reportWebUsage({ event: "dish_shuffle" });
+  expect(batches).toHaveLength(0);
+  await act(() => setGuestUsage("on"));
+  await settle();
+  reportWebUsage({ event: "dish_shuffle" });
+  await settle();
+  await act(async () => disableGuestUsage(api));
+  await go("/");
+  expect(properties()).toEqual([
+    { event: "page_view", page: "RECOMMEND" },
+    { event: "dish_shuffle" },
+  ]);
+  expect(guestDeletions).toEqual([batches[0].installId]);
 });
 
 it("refreshes consent when the server reports a disable from another device", async () => {

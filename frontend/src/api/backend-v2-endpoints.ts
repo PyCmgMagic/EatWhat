@@ -1,5 +1,20 @@
 // Generated from backend v2 OpenAPI by npm run api:generate.
 export const endpoints = {
+  "postRestaurantByRestaurantIdCommentsByCommentIdReplies": {
+    "method": "POST",
+    "path": "/restaurant/{restaurantId}/comments/{commentId}/replies",
+    "access": "verifiedOrAdmin"
+  },
+  "getRestaurantByRestaurantIdComments": {
+    "method": "GET",
+    "path": "/restaurant/{restaurantId}/comments",
+    "access": "public"
+  },
+  "postRestaurantByRestaurantIdComments": {
+    "method": "POST",
+    "path": "/restaurant/{restaurantId}/comments",
+    "access": "verifiedOrAdmin"
+  },
   "sdu": {
     "method": "GET",
     "path": "/auth/sdu",

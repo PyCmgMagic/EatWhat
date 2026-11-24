@@ -227,7 +227,9 @@ const nativeTitles: Record<string, string> = {
   "/admin/v4": "管理后台",
 };
 
-export function browserTitle(path: string) {
+export function browserTitle(path: string, search = "") {
+  if (path === "/comments" && new URLSearchParams(search).has("restaurantId"))
+    return `店铺评论 · ${BRAND_NAME}`;
   if (path.startsWith("/reference/")) {
     let key: string;
     try {

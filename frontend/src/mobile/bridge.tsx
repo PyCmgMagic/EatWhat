@@ -1,3 +1,4 @@
+import { reportWebUsage } from "../app/web-usage";
 import { BRAND_NAME } from "../app/brand";
 import MobileProfile from "./MobileProfile";
 import { bannedPageAllowed } from "../api/banned-access";
@@ -102,6 +103,7 @@ import { peopleHref } from "../features/profile-people";
 import { AccessWelcome } from "../components/AccessWelcome";
 import { useDeviceLocation } from "../features/useDeviceLocation";
 import { baiduMarkerUrl } from "../features/map-geometry";
+import { ShopDescription } from "../features/ShopDescription";
 import { RestaurantHeaderFavorite } from "../features/v4/RestaurantHeaderFavorite";
 import { RestaurantMoreActions } from "../features/RestaurantMoreActions";
 import { useReturnTo } from "../app/navigation";
@@ -804,6 +806,8 @@ export function useDesignBridge(
             ...publishDisplay(stage, images[0]?.stageCandidates),
             coverCrop: { centerX: 0.5, centerY: 0.5, diameter: 1 },
           });
+          if (!created.revisionId)
+            reportWebUsage({ event: "publish_success", kind: "FOOD" });
           setDone(true);
           for (const image of draft.images) URL.revokeObjectURL(image.url);
           m.setDraft({
@@ -912,6 +916,7 @@ export function useDesignBridge(
     };
     const endDrag = (steps: number) => {
       const state = orbitMotion.current;
+      if (steps) reportWebUsage({ event: "dish_shuffle" });
       state.scheduler.cancel();
       state.pointer = null;
       controller.setState({
@@ -936,6 +941,7 @@ export function useDesignBridge(
     };
     values.next = () => {
       if (N < 2) return;
+      reportWebUsage({ event: "dish_shuffle" });
       orbitMotion.current.scheduler.cancel();
       orbitMotion.current.pointer = null;
       next();
@@ -1840,6 +1846,7 @@ export function useDesignBridge(
               {view.children[2]}
               <section className="mobile-restaurant-summary">
                 {view.children[3]}
+                <ShopDescription value={r.description} />
                 {view.children[1]}
               </section>
             </div>
@@ -2035,7 +2042,10 @@ export function useDesignBridge(
       if (tag === "button" && clean(text) === "导航去店里")
         p.onClick = () => {
           if (!hasCoordinates(r)) m.notice("这家店还没有可用的位置。");
-          else window.open(baiduMarkerUrl(r), "_blank", "noopener,noreferrer");
+          else {
+            reportWebUsage({ event: "navigate_shop", restaurantId: shopId });
+            window.open(baiduMarkerUrl(r), "_blank", "noopener,noreferrer");
+          }
         };
     }
     if (screen === "G-AddDish") {
@@ -2985,6 +2995,7 @@ export function useDesignBridge(
     if (homeScreens.has(screen) && target === "G-Dish.dc.html") {
       const f = featuredFood;
       if (f?.id) {
+        reportWebUsage({ event: "dish_decide", foodId: f.id });
         m.setFoodId(f.id);
         if (f.restaurantId) m.setShopId(f.restaurantId);
         nav(`/foods/${f.id}`);

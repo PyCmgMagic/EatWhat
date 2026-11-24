@@ -448,12 +448,18 @@ export function createV4Api(
         method: "DELETE",
         body,
       }),
-    telemetryEvents: (body: TelemetryBatch) =>
+    disableGuestTelemetry: () =>
+      data<Reply<"Result_ConsentResponse">>("/telemetry/consent", {
+        method: "DELETE",
+        public: true,
+      }),
+    telemetryEvents: (body: TelemetryBatch, guest = false) =>
       data<Reply<"Result_AcceptedResponse"> & { enabled?: boolean }>(
         `/telemetry/events`,
         {
           background: true,
           method: "POST",
+          ...(guest ? { public: true } : {}),
           body,
         },
       ),

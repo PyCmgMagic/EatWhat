@@ -1,4 +1,5 @@
 import { RestaurantActions } from "./Community";
+import { FoodCommentPreview } from "../comments/Comments";
 import { Card } from "./shared";
 import { EditHistory } from "./EditHistory";
 import { MobileShopFeedback } from "./MobileShopFeedback";
@@ -22,14 +23,17 @@ export default function DetailExtras({
   const id = Number(path.split("/").pop());
   if (inline)
     return (
-      <section
-        className="mobile-restaurant-feedback"
-        aria-label="食友评价"
-        id="restaurant-evaluation"
-        tabIndex={-1}
-      >
-        <MobileShopFeedback key={id} id={id} />
-      </section>
+      <>
+        <section
+          className="mobile-restaurant-feedback"
+          aria-label="食友评价"
+          id="restaurant-evaluation"
+          tabIndex={-1}
+        >
+          <MobileShopFeedback key={id} id={id} />
+        </section>
+        <FoodCommentPreview key={id} foodId={id} restaurant />
+      </>
     );
   return (
     <div className="v4-mobile-extras" id="restaurant-evaluation" tabIndex={-1}>

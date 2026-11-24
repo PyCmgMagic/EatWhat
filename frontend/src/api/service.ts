@@ -549,7 +549,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         query: { page: 1, pageSize: 12, ...query },
       }),
     createRestaurant: (
-      body: Schema["RestaurantDTORequest"] & Partial<ShopTraits>,
+      body: Schema["RestaurantDTORequest"] & Partial<ShopTraits> & { description?: string },
     ) =>
       created("/restaurant/add", {
         ...body,
@@ -687,7 +687,7 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       }),
     editRestaurant: (
       id: number,
-      body: Schema["EditRestaurantDTORequest"] & Partial<ShopTraits>,
+      body: Schema["EditRestaurantDTORequest"] & Partial<ShopTraits> & { description?: string },
     ) =>
       request<Schema["CreatedResourceVOResponse"] | null>(
         `/restaurant/edit/${id}`,

@@ -1,3 +1,4 @@
+import { reportWebUsage } from "../app/web-usage";
 import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -36,7 +37,10 @@ export default function VerificationResult({
         const token = callback.token;
         forgetCallbackParameter("token");
         try {
-          await confirmed(`email:${token}`, () => api.verifyEmail(token));
+          await confirmed(`email:${token}`, async () => {
+            await api.verifyEmail(token);
+            reportWebUsage({ event: "verify_success", method: "email" });
+          });
         } catch (error) {
           const me = await api.me();
           if (me?.verified) return me;
@@ -48,7 +52,10 @@ export default function VerificationResult({
         // The ticket works once; drop it so a refresh does not resend it.
         forgetCallbackParameter("ticket");
         try {
-          await confirmed(`sso:${ticket}`, () => api.ssoConfirm(ticket));
+          await confirmed(`sso:${ticket}`, async () => {
+            await api.ssoConfirm(ticket);
+            reportWebUsage({ event: "verify_success", method: "sso" });
+          });
         } catch (error) {
           const me = await api.me();
           // Already bound (e.g. confirmed in another tab): show the result.

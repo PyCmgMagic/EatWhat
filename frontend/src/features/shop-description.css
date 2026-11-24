@@ -1,0 +1,50 @@
+.shop-description-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
+.shop-description-field > span {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.shop-description-field small {
+  font-size: 12px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+.shop-description-count {
+  margin-inline-start: auto;
+  font-variant-numeric: tabular-nums;
+}
+.shop-description-field > textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 86px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, currentColor 3%, transparent);
+  color: inherit;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  resize: vertical;
+}
+.shop-description-field > textarea[aria-invalid="true"] {
+  border-color: var(--ew-danger, #c24b3a);
+}
+.shop-description {
+  margin: 0;
+  max-width: 60ch;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.mobile-restaurant-summary > .shop-description {
+  margin: 0 0 12px;
+}

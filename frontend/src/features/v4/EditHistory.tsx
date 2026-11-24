@@ -133,7 +133,7 @@ function shopChanges(revision: Revision) {
       continue;
     }
 
-    const label = fieldNames[field] ?? field;
+    const label = field === "description" ? "店铺简介" : (fieldNames[field] ?? field);
     const after = isBlank(to) ? "未填写" : show(field, to);
     const before = isBlank(from) ? "未填写" : show(field, from);
     if (created) changes.set(field, { field, label, after });

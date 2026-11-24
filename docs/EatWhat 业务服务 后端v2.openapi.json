@@ -10,6 +10,145 @@
     "description" : "经 nginx（剥掉 /api 前缀）"
   } ],
   "paths" : {
+    "/restaurant/{restaurantId}/comments/{commentId}/replies" : {
+      "post" : {
+        "tags" : [ "comment · Comment" ],
+        "summary" : "【需角色：verified 或 admin】回复店铺评论",
+        "operationId" : "replyToRestaurantComment",
+        "parameters" : [ {
+          "name" : "restaurantId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "commentId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReplyRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultCreated"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
+    "/restaurant/{restaurantId}/comments" : {
+      "get" : {
+        "tags" : [ "comment · Comment" ],
+        "operationId" : "listRestaurantComments",
+        "parameters" : [ {
+          "name" : "restaurantId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultPageResultComment"
+                }
+              }
+            }
+          }
+        },
+        "summary" : "获取店铺评论"
+      },
+      "post" : {
+        "tags" : [ "comment · Comment" ],
+        "summary" : "【需角色：verified 或 admin】发表店铺评论",
+        "operationId" : "postRestaurantComment",
+        "parameters" : [ {
+          "name" : "restaurantId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CommentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultCreated"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
     "/auth/sdu" : {
       "get" : {
         "tags" : [ "账号 · Verification" ],
@@ -5687,6 +5826,14 @@
         "summary" : "【需登录】获取我的评论和回复",
         "operationId" : "mine_1",
         "parameters" : [ {
+          "name" : "includeRestaurants",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
           "name" : "page",
           "in" : "query",
           "required" : false,
@@ -5717,7 +5864,8 @@
         },
         "security" : [ {
           "satoken" : [ ]
-        } ]
+        } ],
+        "description" : "默认只返回我的菜品评论和回复；传 includeRestaurants=true 同时返回店铺评论和回复。"
       }
     },
     "/campus/list" : {
@@ -5977,7 +6125,7 @@
     "/admin/stats/user-networks" : {
       "get" : {
         "tags" : [ "账号 · AdminUser" ],
-        "summary" : "【需角色：admin】统计区间内新增账号注册网络和活跃账号当前最近使用网络（北京时间，默认14天，最多92天）",
+        "summary" : "【需角色：admin】统计新增账号注册网络与活跃账号最近使用网络，otherBreakdown 细分 other 人数（北京时间，默认14天，最多92天）",
         "operationId" : "networkSummary",
         "parameters" : [ {
           "name" : "from",
@@ -6402,7 +6550,7 @@
     "/admin/users/{userId}/network" : {
       "get" : {
         "tags" : [ "账号 · AdminUser" ],
-        "summary" : "【需角色：admin】查询账号注册与最近使用的 IP 和网络类型（CERNET、OTHER、UNKNOWN）",
+        "summary" : "【需角色：admin】查询注册与最近使用 IP、网络类型和运营商（教育网、移动、联通、电信、其他、未知）",
         "operationId" : "network",
         "parameters" : [ {
           "name" : "userId",
@@ -6805,6 +6953,27 @@
   },
   "components" : {
     "schemas" : {
+      "OtherBreakdown" : {
+        "type" : "object",
+        "properties" : {
+          "chinaMobile" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "chinaUnicom" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "chinaTelecom" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "remaining" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
       "ResultStart" : {
         "type" : "object",
         "properties" : {
@@ -7111,6 +7280,11 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "maxLength" : 200,
+            "description" : "店铺简介，选填。编辑时省略或传 null 保留原值，传空字符串清除。"
           }
         }
       },
@@ -8069,6 +8243,11 @@
           },
           "force" : {
             "type" : "boolean"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "maxLength" : 200,
+            "description" : "店铺简介，选填。编辑时省略或传 null 保留原值，传空字符串清除。"
           }
         }
       },
@@ -9929,6 +10108,11 @@
           },
           "matchedFood" : {
             "$ref" : "#/components/schemas/MatchedFood"
+          },
+          "description" : {
+            "type" : [ "string", "null" ],
+            "maxLength" : 200,
+            "description" : "店铺简介，选填。编辑时省略或传 null 保留原值，传空字符串清除。"
           }
         }
       },
@@ -10803,6 +10987,11 @@
           "foodId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "restaurantId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "仅店铺评论和回复返回，与 foodId 互斥。"
           },
           "rootId" : {
             "type" : "integer",
@@ -11880,6 +12069,14 @@
           "lastUsedAt" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "registrationOperator" : {
+            "type" : "string",
+            "enum" : [ "CERNET", "CHINA_MOBILE", "CHINA_UNICOM", "CHINA_TELECOM", "OTHER", "UNKNOWN" ]
+          },
+          "lastOperator" : {
+            "type" : "string",
+            "enum" : [ "CERNET", "CHINA_MOBILE", "CHINA_UNICOM", "CHINA_TELECOM", "OTHER", "UNKNOWN" ]
           }
         }
       },
@@ -11905,6 +12102,9 @@
           "cernetRate" : {
             "type" : "number",
             "format" : "double"
+          },
+          "otherBreakdown" : {
+            "$ref" : "#/components/schemas/OtherBreakdown"
           }
         }
       },

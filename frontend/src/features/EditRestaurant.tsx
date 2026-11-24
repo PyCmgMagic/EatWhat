@@ -5,11 +5,16 @@ import { useApp } from "../app/state";
 import { LoginLink } from "../app/auth-dialog";
 import { useReturnTo } from "../app/navigation";
 import { errorMessage, resultUncertain } from "../api/client";
-import { restaurantEditBody } from "../api/content-rules";
+import {
+  codePoints,
+  restaurantDescriptionLimit,
+  restaurantEditBody,
+} from "../api/content-rules";
 import { parseId, type Restaurant } from "../api/models";
 import { useFeedbackState } from "../components/feedback";
 import { FeaturePage, FeatureState } from "./Catalog";
 import { ShopTraitsFields, shopTraitsOf, type ShopTraits } from "./ShopTraits";
+import { ShopDescriptionField } from "./ShopDescription";
 import "./latest.css";
 import "./shop-edit.css";
 
@@ -90,22 +95,34 @@ function EditForm({
     original = shopTraitsOf(shop as Restaurant & Partial<ShopTraits>),
     [name, setName] = useState(shop.name ?? ""),
     [address, setAddress] = useState(shop.address ?? ""),
+    [description, setDescription] = useState(shop.description ?? ""),
     [traits, setTraits] = useState<ShopTraits>(original),
     [busy, setBusy] = useState(false),
     [uncertain, setUncertain] = useState(false),
     // Errors are shown as toasts by useFeedbackState.
     [, setError] = useFeedbackState();
   const traitsChanged = JSON.stringify(traits) !== JSON.stringify(original);
+  const descriptionChanged =
+    description.trim() !== (shop.description ?? "").trim();
+  const descriptionTooLong =
+    codePoints(description.trim()) > restaurantDescriptionLimit;
   const dirty =
     name.trim() !== (shop.name ?? "").trim() ||
     address.trim() !== (shop.address ?? "").trim() ||
+    descriptionChanged ||
     traitsChanged;
   return (
     <form
       className="ew-edit-form ew-form-panel ew-shop-edit"
       onSubmit={async (e) => {
         e.preventDefault();
-        if (locked.current || uncertain || !dirty) return;
+        if (
+          locked.current ||
+          uncertain ||
+          !dirty ||
+          (descriptionChanged && descriptionTooLong)
+        )
+          return;
         locked.current = true;
         setBusy(true);
         setError("");
@@ -117,6 +134,7 @@ function EditForm({
           await api.editRestaurant(shop.id!, {
             ...restaurantEditBody(shop, { name, address }),
             ...(traitsChanged ? traits : {}),
+            ...(descriptionChanged ? { description: description.trim() } : {}),
           });
           await cache.invalidateQueries({ queryKey: ["restaurants"] });
           await cache.invalidateQueries({ queryKey: ["foods"] });
@@ -152,6 +170,7 @@ function EditForm({
               required
             />
           </label>
+          <ShopDescriptionField value={description} onChange={setDescription} />
         </section>
         <ShopTraitsFields value={traits} onChange={setTraits} compact />
         <details className="shop-edit-notice">
@@ -168,7 +187,15 @@ function EditForm({
       )}
       <footer className="ew-inline shop-edit-actions">
         <Link to={back}>返回店铺</Link>
-        <button className="ew-button" disabled={busy || uncertain || !dirty}>
+        <button
+          className="ew-button"
+          disabled={
+            busy ||
+            uncertain ||
+            !dirty ||
+            (descriptionChanged && descriptionTooLong)
+          }
+        >
           {busy ? "正在保存…" : "保存修改"}
         </button>
       </footer>

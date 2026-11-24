@@ -19,7 +19,7 @@ type DemoFood = V2Schema["FoodV2"] & {
   name: string;
   restaurantId: number;
 };
-type DemoComment = V2Schema["Comment"] & { id: number; foodId: number };
+type DemoComment = V2Schema["Comment"] & { id: number };
 type DemoFeedback = V2Schema["CaseView"] & {
   submitterId?: number;
   submissionDevice?: V2Schema["SubmissionDevice"] | null;
@@ -468,6 +468,7 @@ export function demoTransport(
   const userId = Number(params?.userId ?? q.userId);
   const id = Number(params?.id);
   const foodId = Number(params?.foodId ?? id);
+  const restaurantId = Number(params?.restaurantId);
   const commentId = Number(params?.commentId ?? id);
   const shop = state.shops.find((shop) => shop.id === id);
   const target = state.people.find((person) => person.id === userId);
@@ -1111,6 +1112,7 @@ export function demoTransport(
         ...shop,
         ...body,
         id: shopId,
+        ...(body.description === undefined ? {} : { description: String(body.description).trim() || null }),
         name: body.name || shop?.name || "店铺",
         pictureUrl:
           body.picture === ""
@@ -1463,10 +1465,11 @@ export function demoTransport(
         inferredCategories: ["粉面"],
       });
     case "getFoodsByFoodIdComments":
+    case "getRestaurantByRestaurantIdComments":
       return ok(
         paged(
           state.comments
-            .filter((comment) => comment.foodId === foodId && !comment.rootId)
+            .filter((comment) => !comment.rootId && (restaurantId ? comment.restaurantId === restaurantId : comment.foodId === foodId))
             .map(withCommentViewer),
         ),
       );
@@ -1499,18 +1502,20 @@ export function demoTransport(
       return ok(
         paged(
           state.comments
-            .filter((comment) => comment.author?.id === user)
+            .filter((comment) => comment.author?.id === user && (!comment.restaurantId || String(q.includeRestaurants) === "true"))
             .map(withCommentViewer),
         ),
       );
     case "postFoodsByFoodIdComments":
+    case "postRestaurantByRestaurantIdComments":
+    case "postRestaurantByRestaurantIdCommentsByCommentIdReplies":
     case "postFoodsByFoodIdCommentsByCommentIdReplies": {
       const nextId =
         Math.max(0, ...state.comments.map((comment) => comment.id)) + 1;
       const rootId = name.includes("Replies") ? commentId : null;
       state.comments.unshift({
         id: nextId,
-        foodId,
+        ...(restaurantId ? { restaurantId } : { foodId }),
         rootId,
         author: {
           id: user,
@@ -1717,12 +1722,13 @@ export function demoTransport(
       return ok({
         accepted: list("events").length,
         duplicates: 0,
-        enabled: demoToggles.telemetry,
+        enabled: person ? demoToggles.telemetry : true,
       });
     // Endpoints added to backend v2 later; enough state for the pages.
     case "getTelemetryConsent":
     case "putTelemetryConsent":
     case "deleteTelemetryConsent":
+      if (!person) return ok({ enabled: name !== "deleteTelemetryConsent", retentionDays: 7 });
       if (name !== "getTelemetryConsent")
         demoToggles.telemetry = name === "putTelemetryConsent";
       return ok({ enabled: demoToggles.telemetry, retentionDays: 90 });

@@ -26,6 +26,7 @@ import "./friend-profile.css";
 import RestaurantLocationField from "../features/RestaurantLocationField";
 import { NewShopSearch } from "../features/NewShopSearch";
 import { ShopPhotoField } from "../features/ShopPhotoField";
+import { ShopDescriptionField } from "../features/ShopDescription";
 import { useNewShop } from "../features/useNewShop";
 import "./new-shop.css";
 import { PageSkeleton } from "../components/LoadingSkeleton";
@@ -446,6 +447,11 @@ export function DesktopNewShop() {
                 onPick={(point) => flow.update({ point })}
                 address={draft.address}
                 onAddressChange={(address) => flow.update({ address })}
+                disabled={busy}
+              />
+              <ShopDescriptionField
+                value={draft.description}
+                onChange={(description) => flow.update({ description })}
                 disabled={busy}
               />
               <ShopPhotoField

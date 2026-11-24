@@ -1,3 +1,4 @@
+import { reportWebUsage } from "../app/web-usage";
 import { BRAND_NAME } from "../app/brand";
 import { useFeedbackState } from "../components/feedback";
 import { DishAvailabilityFields } from "../features/DishAvailability";
@@ -297,6 +298,7 @@ export default function DesktopPublish() {
         ...publishDisplay(stage, images[0]?.stageCandidates),
         coverCrop: { centerX: 0.5, centerY: 0.5, diameter: 1 },
       });
+      if (!created.revisionId) reportWebUsage({ event: "publish_success", kind: "FOOD" });
       for (const item of images)
         if (item.url.startsWith("blob:")) URL.revokeObjectURL(item.url);
       m.setDraft({

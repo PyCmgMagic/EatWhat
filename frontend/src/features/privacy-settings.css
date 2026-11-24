@@ -189,7 +189,7 @@
   }
 }
 @media (min-width: 900px) {
-  .pc-app .privacy-settings {
+  .pc-app .privacy-settings:not(.guest-usage-settings) {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   }
 }

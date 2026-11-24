@@ -867,7 +867,12 @@ export function NotificationCardsPanel() {
     const t = item.target;
     if (t?.unavailable || !t?.id) return null;
     if (item.kind === "comment_like") return commentLikeLink(item.kind, t.domain, t.id);
-    const foodId = (d as { foodId?: number | null } | null | undefined)?.foodId;
+    const context = d as { foodId?: number | null; restaurantId?: number | null } | null | undefined;
+    if (item.kind === "reply" && context?.restaurantId)
+      return `/comments?restaurantId=${context.restaurantId}&commentId=${t.id}`;
+    if (item.kind === "comment" && ["restaurant", "restaurants"].includes(t.domain ?? ""))
+      return `/comments?restaurantId=${t.id}`;
+    const foodId = context?.foodId;
     if (["comment", "reply"].includes(item.kind ?? "") && foodId)
       return `/foods/${foodId}?section=comments`;
     const paths: Record<string, string> = {

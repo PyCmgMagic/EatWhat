@@ -503,6 +503,7 @@ function restaurantBody(body: Json, current?: Json | null) {
   return {
     name: body.name,
     address: body.address,
+    ...(body.description === undefined ? {} : { description: body.description }),
     gcjLng: body.gcjLng,
     gcjLat: body.gcjLat,
     poi: body.POI ?? body.poi ?? current?.poi ?? null,
@@ -1109,13 +1110,13 @@ const routes: [string, RegExp, Handler][] = [
   ],
   [
     "GET",
-    /^\/foods\/(\d+)\/comments$/,
+    /^\/(?:foods|restaurant)\/(\d+)\/comments$/,
     async ({ match, query, call }) =>
       page(
         await call(match.input!, {
           query: {
-            ...omit(query, ["page", "pageSize"]),
-            sort: query.sort === "NEWEST" ? "NEWEST" : undefined,
+            ...(match.input!.startsWith("/restaurant/") ? query : omit(query, ["page", "pageSize"])),
+            sort: query.sort === "NEWEST" ? "NEWEST" : match.input!.startsWith("/restaurant/") ? "HOT" : undefined,
           },
         }),
         comment,
@@ -1129,7 +1130,7 @@ const routes: [string, RegExp, Handler][] = [
   ],
   [
     "POST",
-    /^\/foods\/(\d+)\/comments(\/(\d+)\/replies)?$/,
+    /^\/(?:foods|restaurant)\/(\d+)\/comments(\/(\d+)\/replies)?$/,
     async ({ match, body, call }) => {
       const v = await call(match.input!, {
         method: "POST",
@@ -1209,12 +1210,13 @@ const routes: [string, RegExp, Handler][] = [
     /^\/comments\/submissions\/my$/,
     // v2 publishes comments at once; list them as published submissions.
     async ({ query, call }) =>
-      page(await call("/comments/my", { query }), (v: Json) => ({
+      page(await call("/comments/my", { query: { ...query, includeRestaurants: true } }), (v: Json) => ({
         id: v.id,
         gid: `comment-${v.id}`,
         revisionId: `comment-${v.id}`,
         kind: v.rootId ? "REPLY" : "ROOT",
         foodId: v.foodId,
+        restaurantId: v.restaurantId,
         moderationStatus: "APPROVED",
         reasonCode: null,
         reasonMessage: null,
@@ -1665,9 +1667,10 @@ const routes: [string, RegExp, Handler][] = [
   [
     "POST",
     /^\/telemetry\/events$/,
-    async ({ body, call }) =>
+    async ({ body, options, call }) =>
       call("/telemetry/events", {
         method: "POST",
+        public: options.public,
         body: { installId: installId(), events: body.events ?? [] },
       }),
   ],
@@ -1679,6 +1682,8 @@ const routes: [string, RegExp, Handler][] = [
         await call("/telemetry/consent", {
           method: options.method,
           body: undefined,
+          public: options.public,
+          ...(options.public && options.method === "DELETE" ? { query: { installId: installId() } } : {}),
         }),
       ),
   ],

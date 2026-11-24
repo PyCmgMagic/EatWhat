@@ -1000,6 +1000,60 @@ describe("v2 bridge", () => {
     });
   });
 
+  it("preserves a cleared shop description and bridges restaurant discussions", async () => {
+    const shop = { id: 8, name: "云饺店", description: "两层都有座位" };
+    const comment = { id: 19, restaurantId: 8, text: "出餐快", createdAt: 0 };
+    const { transport, sent } = backend(({ path, method }) => {
+      if (path === "/restaurant/detail/8") return ok(shop);
+      if (path === "/restaurant/8/comments" && method === "GET")
+        return ok({ items: [comment] });
+      if (path === "/comments/my") return ok({ items: [comment] });
+      if (method === "POST") return ok({ id: 21 });
+    });
+    const api = createApi(transport);
+    await expect(api.restaurant(8)).resolves.toMatchObject(shop);
+    await api.editRestaurant(8, { description: "" });
+    expect(sent.at(-1)).toMatchObject({
+      path: "/restaurant/edit/8",
+      body: { description: "" },
+    });
+    await expect(
+      api.restaurantComments(8, "MOST_USEFUL", 2, 20),
+    ).resolves.toMatchObject({ items: [{ id: 19, restaurantId: 8 }] });
+    expect(sent.at(-1)).toMatchObject({
+      path: "/restaurant/8/comments",
+      query: { page: 2, pageSize: 20, sort: "HOT" },
+    });
+    const key = "12345678-1234-1234-1234-123456789abc";
+    await expect(
+      api.createRestaurantComment(
+        8,
+        { pictureKeys: ["comments/picture"] },
+        key,
+      ),
+    ).resolves.toMatchObject({ id: 21, moderationStatus: "APPROVED" });
+    expect(sent.at(-1)).toMatchObject({
+      body: { text: "", pictureKeys: ["comments/picture"] },
+    });
+    await api.replyToRestaurantComment(
+      8,
+      19,
+      { text: "谢谢", replyToId: 19 },
+      key,
+    );
+    expect(sent.at(-1)).toMatchObject({
+      path: "/restaurant/8/comments/19/replies",
+      body: { text: "谢谢", replyToId: 19 },
+    });
+    await expect(api.myCommentSubmissions()).resolves.toMatchObject({
+      items: [{ id: 19, restaurantId: 8, moderationStatus: "APPROVED" }],
+    });
+    expect(sent.at(-1)).toMatchObject({
+      path: "/comments/my",
+      query: { includeRestaurants: true },
+    });
+  });
+
   it("adapts /foods/likes and forwards buffet kind on restaurant search", async () => {
     const { request, sent } = backend(({ path }) => {
       if (path === "/foods/likes")

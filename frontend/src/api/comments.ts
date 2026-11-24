@@ -28,6 +28,7 @@ export type CommentReaction = {
 
 /** authorTitle：作者当前佩戴的称号（后端 v2），没有时为 null。 */
 export type CommentView = Schema["CommentViewResponse"] & {
+  restaurantId?: number | null;
   rootId?: number | null;
   authorId?: number | null;
   authorAvatar?: string | null;
@@ -37,7 +38,9 @@ export type CommentView = Schema["CommentViewResponse"] & {
   isLiked?: boolean | null;
   replyTo?: { id?: number | null; displayName?: string | null } | null;
 };
-export type CommentSubmission = Schema["CommentQueriesSubmissionResponse"];
+export type CommentSubmission = Schema["CommentQueriesSubmissionResponse"] & {
+  restaurantId?: number | null;
+};
 export type CommentImage = Schema["CommentGalleryImageViewResponse"];
 export type CommentSort = "MOST_USEFUL" | "NEWEST";
 export type CommentVerdict = NonNullable<
@@ -65,8 +68,13 @@ function pageQuery(page: number, pageSize: number) {
   return { page, pageSize };
 }
 export function commentBody(body: Schema["CreateCommentReplyDTORequest"]) {
-  const text = boundedText(body.text ?? "", 200, "评论");
   const pictureKeys = body.pictureKeys ?? [];
+  const text = boundedText(
+    body.text ?? "",
+    200,
+    "评论",
+    pictureKeys.length && body.replyToId == null ? 0 : 1,
+  );
   if (
     pictureKeys.length > 3 ||
     pictureKeys.some((key) => !/^comments\/.+/.test(key))
@@ -124,6 +132,40 @@ export function createCommentsApi(request: ReturnType<typeof createRequester>) {
     ) =>
       write<Schema["NativeCommentSubmissionsAcceptedResponse"]>(
         `/foods/${id(foodId)}/comments/${id(rootId)}/replies`,
+        "POST",
+        key,
+        commentBody(body),
+      ),
+    restaurantComments: (
+      restaurantId: number,
+      sort: CommentSort = "MOST_USEFUL",
+      page = 1,
+      pageSize = 20,
+      signal?: AbortSignal,
+    ) =>
+      data<Page<CommentView>>(`/restaurant/${id(restaurantId)}/comments`, {
+        query: { ...pageQuery(page, pageSize), sort },
+        signal,
+      }),
+    createRestaurantComment: (
+      restaurantId: number,
+      body: Schema["CreateCommentDTORequest"],
+      key: string,
+    ) =>
+      write<Schema["NativeCommentSubmissionsAcceptedResponse"]>(
+        `/restaurant/${id(restaurantId)}/comments`,
+        "POST",
+        key,
+        commentBody(body),
+      ),
+    replyToRestaurantComment: (
+      restaurantId: number,
+      rootId: number,
+      body: Schema["CreateCommentReplyDTORequest"],
+      key: string,
+    ) =>
+      write<Schema["NativeCommentSubmissionsAcceptedResponse"]>(
+        `/restaurant/${id(restaurantId)}/comments/${id(rootId)}/replies`,
         "POST",
         key,
         commentBody(body),

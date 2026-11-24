@@ -13,6 +13,8 @@ import { BrandLogo } from "../components/BrandLogo";
 import { aboutHome, openSource, productionTeam } from "./about-navigation";
 import DevelopmentTeam from "./DevelopmentTeam";
 import { QQGroup } from "./QQGroup";
+import { useApp } from "../app/state";
+import { GuestUsageSettings } from "./PrivacySettings";
 import SettingsPageHeader from "./SettingsPageHeader";
 import { DesktopSettingsContext } from "./settings-nav";
 import "./about.css";
@@ -102,6 +104,7 @@ function AboutRow({
 }
 
 function AboutDirectory() {
+  const { session } = useApp();
   return (
     <>
       <div className="about-brand">
@@ -109,6 +112,11 @@ function AboutDirectory() {
         <h2>{BRAND_NAME}</h2>
       </div>
       <VersionInfo />
+      {!session && (
+        <div className="privacy-settings guest-usage-settings">
+          <GuestUsageSettings />
+        </div>
+      )}
       <nav className="about-directory" aria-label="关于栏目">
         <div className="about-list about-feedback-links">
           <AboutRow

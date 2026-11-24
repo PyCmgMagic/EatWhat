@@ -4,6 +4,41 @@
  */
 
 export interface paths {
+    "/restaurant/{restaurantId}/comments/{commentId}/replies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 【需角色：verified 或 admin】回复店铺评论 */
+        post: operations["postRestaurantByRestaurantIdCommentsByCommentIdReplies"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/restaurant/{restaurantId}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 获取店铺评论 */
+        get: operations["getRestaurantByRestaurantIdComments"];
+        put?: never;
+        /** 【需角色：verified 或 admin】发表店铺评论 */
+        post: operations["postRestaurantByRestaurantIdComments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/sdu": {
         parameters: {
             query?: never;
@@ -2248,7 +2283,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 【需登录】获取我的评论和回复 */
+        /**
+         * 【需登录】获取我的评论和回复
+         * @description 默认只返回我的菜品评论和回复；传 includeRestaurants=true 同时返回店铺评论和回复。
+         */
         get: operations["getCommentsMy"];
         put?: never;
         post?: never;
@@ -2452,7 +2490,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 【需角色：admin】统计区间内新增账号注册网络和活跃账号当前最近使用网络（北京时间，默认14天，最多92天） */
+        /** 【需角色：admin】统计新增账号注册网络与活跃账号最近使用网络，otherBreakdown 细分 other 人数（北京时间，默认14天，最多92天） */
         get: operations["getAdminStatsUserNetworks"];
         put?: never;
         post?: never;
@@ -2640,7 +2678,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 【需角色：admin】查询账号注册与最近使用的 IP 和网络类型（CERNET、OTHER、UNKNOWN） */
+        /** 【需角色：admin】查询注册与最近使用 IP、网络类型和运营商（教育网、移动、联通、电信、其他、未知） */
         get: operations["getAdminUsersByUserIdNetwork"];
         put?: never;
         post?: never;
@@ -2855,6 +2893,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        OtherBreakdown: {
+            /** Format: int64 */
+            chinaMobile?: number;
+            /** Format: int64 */
+            chinaUnicom?: number;
+            /** Format: int64 */
+            chinaTelecom?: number;
+            /** Format: int64 */
+            remaining?: number;
+        };
         ResultStart: {
             /** Format: int32 */
             code?: number;
@@ -2967,6 +3015,8 @@ export interface components {
             priceBand?: string;
             categories?: string[];
             tags?: string[];
+            /** @description 店铺简介，选填。编辑时省略或传 null 保留原值，传空字符串清除。 */
+            description?: string | null;
         };
         Edited: {
             /** Format: int64 */
@@ -3328,6 +3378,8 @@ export interface components {
             categories?: string[];
             tags?: string[];
             force?: boolean;
+            /** @description 店铺简介，选填。编辑时省略或传 null 保留原值，传空字符串清除。 */
+            description?: string | null;
         };
         Created: {
             /** Format: int64 */
@@ -4023,6 +4075,8 @@ export interface components {
             /** Format: int64 */
             updatedAt?: number;
             matchedFood?: components["schemas"]["MatchedFood"];
+            /** @description 店铺简介，选填。编辑时省略或传 null 保留原值，传空字符串清除。 */
+            description?: string | null;
             campusId?: never | null;
         };
         ResultPageResultRestaurant: {
@@ -4370,6 +4424,11 @@ export interface components {
             id?: number;
             /** Format: int64 */
             foodId?: number;
+            /**
+             * Format: int64
+             * @description 仅店铺评论和回复返回，与 foodId 互斥。
+             */
+            restaurantId?: number;
             rootId?: number | null;
             author?: components["schemas"]["Author"];
             replyTo?: components["schemas"]["Author"] | null;
@@ -4771,6 +4830,10 @@ export interface components {
             lastIp?: string | null;
             lastNetwork?: string | null;
             lastUsedAt?: number | null;
+            /** @enum {string} */
+            registrationOperator?: "CERNET" | "CHINA_MOBILE" | "CHINA_UNICOM" | "CHINA_TELECOM" | "OTHER" | "UNKNOWN";
+            /** @enum {string} */
+            lastOperator?: "CERNET" | "CHINA_MOBILE" | "CHINA_UNICOM" | "CHINA_TELECOM" | "OTHER" | "UNKNOWN";
         };
         NetworkCounts: {
             /** Format: int64 */
@@ -4782,6 +4845,7 @@ export interface components {
             /** Format: int64 */
             unknown?: number;
             cernetRate?: number | null;
+            otherBreakdown?: components["schemas"]["OtherBreakdown"];
         };
         NetworkSummary: {
             from?: string;
@@ -5409,6 +5473,85 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    postRestaurantByRestaurantIdCommentsByCommentIdReplies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                restaurantId: number;
+                commentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplyRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultCreated"];
+                };
+            };
+        };
+    };
+    getRestaurantByRestaurantIdComments: {
+        parameters: {
+            query?: {
+                sort?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path: {
+                restaurantId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultPageResultComment"];
+                };
+            };
+        };
+    };
+    postRestaurantByRestaurantIdComments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                restaurantId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultCreated"];
+                };
+            };
+        };
+    };
     sdu: {
         parameters: {
             query?: {
@@ -9072,6 +9215,7 @@ export interface operations {
     getCommentsMy: {
         parameters: {
             query?: {
+                includeRestaurants?: boolean;
                 page?: number;
                 pageSize?: number;
             };

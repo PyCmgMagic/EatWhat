@@ -37,6 +37,8 @@ const v2Rules = [
   ["DELETE", "/user/titles/equipped", "login"],
   ["PUT", "/foods/{id}/rating", "verified"],
   ["DELETE", "/foods/{id}/rating", "login"],
+  ["POST", "/restaurant/{restaurantId}/comments", "verifiedOrAdmin"],
+  ["POST", "/restaurant/{restaurantId}/comments/{commentId}/replies", "verifiedOrAdmin"],
   ["PUT", "/comments/{id}/reactions/{reaction}", "verifiedOrAdmin"],
   ["DELETE", "/comments/{id}/reactions/{reaction}", "login"],
 ] as const;
@@ -64,6 +66,10 @@ export function requestAccess(
   path: string,
   options: RequestOptions = {},
 ): AccessRequirement {
+  if (options.public && (
+    (path === "/telemetry/events" && options.method === "POST") ||
+    (path === "/telemetry/consent" && options.method === "DELETE")
+  )) return "public";
   if (withdrawalAllowed(path, options)) return "login";
   // These legacy aliases send a binding code in v2, which does not need student verification.
   if (

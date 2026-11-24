@@ -46,12 +46,20 @@ export const telemetryPages = [
   "OTHER",
 ] as const;
 export type TelemetryPage = (typeof telemetryPages)[number];
+export type TelemetryProperties =
+  | { event: "app_open" | "dish_shuffle" | "comment_success" }
+  | { event: "page_view"; page: TelemetryPage }
+  | { event: "dish_decide"; foodId?: number; restaurantId?: number }
+  | { event: "navigate_shop"; restaurantId: number }
+  | { event: "publish_success"; kind: "FOOD" | "RESTAURANT" }
+  | { event: "verify_success"; method: "sso" | "email" }
+  | { event: "share"; targetType: "FOOD" | "RESTAURANT"; targetId: number }
+  | { event: "load_failed"; page: TelemetryPage };
+
 export type TelemetryBatch = {
   consentRevision: number;
   events: {
     eventId: string;
-    properties:
-      | { event: "page_view"; page: TelemetryPage }
-      | { event: Exclude<TelemetryEvent, "page_view"> };
+    properties: TelemetryProperties;
   }[];
 };

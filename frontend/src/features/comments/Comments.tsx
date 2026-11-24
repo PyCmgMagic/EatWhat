@@ -1,4 +1,4 @@
-import { BRAND_NAME } from "../../app/brand";
+import { reportWebUsage } from "../../app/web-usage";
 import {
   useEffect,
   useId,
@@ -59,8 +59,10 @@ import {
 import "./comments.css";
 
 type ReplyTarget = { rootId: number; id: number; name: string };
+type DiscussionSubject = Pick<Food, "name" | "pictureUrl" | "coverCrop" | "restaurantName"> & { id: number };
 type ReplyEditor = {
-  food: Food & { id: number };
+  food: DiscussionSubject;
+  restaurant?: boolean;
   activeId?: number;
   open: (id: number) => void;
   close: () => void;
@@ -70,7 +72,8 @@ const validPage = (raw: string | null) => {
   const n = Number(raw);
   return Number.isSafeInteger(n) && n > 0 ? n : 1;
 };
-const commentsHref = (foodId: number) => `/comments?foodId=${foodId}`;
+const commentsHref = (id: number, restaurant = false, write = false) =>
+  `/comments${write ? "/write" : ""}?${restaurant ? "restaurantId" : "foodId"}=${id}`;
 /**
  * A tapped tab keeps focus, and the browser's focus ring then hugs the 44px tap
  * target while the selected state only draws a 2px underline — together they read
@@ -98,19 +101,21 @@ export function CommentDestination({
 }) {
   const query = useCommentDetail(commentId);
   const foodId = query.data?.foodId;
+  const restaurantId = query.data?.restaurantId;
+  const id = restaurantId ?? foodId;
   return (
     <>
       <Link className="comments-back" to="/notifications">
         返回通知
       </Link>
       <QueryState query={query}>
-        {foodId && (
+        {id && (
           <Navigate
             replace
             to={
               desktop
-                ? `/foods/${foodId}?section=comments&commentId=${commentId}`
-                : `${commentsHref(foodId)}&commentId=${commentId}`
+                ? `/${restaurantId ? "restaurants" : "foods"}/${id}?section=comments&commentId=${commentId}`
+                : `${commentsHref(id, !!restaurantId)}&commentId=${commentId}`
             }
           />
         )}
@@ -132,18 +137,19 @@ function FocusedComment({
 }) {
   const query = useCommentDetail(commentId);
   const item = query.data;
+  const matches = (editor.restaurant ? item?.restaurantId : item?.foodId) === foodId;
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (item?.foodId === foodId)
+    if (matches)
       ref.current?.scrollIntoView?.({ block: "center" });
-  }, [item?.id, foodId]);
+  }, [item?.id, matches]);
   return (
     <div className="comments-focus" ref={ref}>
       <div className="comments-sort">
         <button onClick={showAll}>查看全部评论</button>
       </div>
       <QueryState query={query}>
-        {item?.foodId === foodId && item.id === commentId ? (
+        {matches && item?.id === commentId ? (
           <CommentRow
             key={item.id}
             comment={item}
@@ -159,8 +165,8 @@ function FocusedComment({
     </div>
   );
 }
-function discussionScroll(behavior: ScrollBehavior = "smooth") {
-  document.getElementById("food-discussion")?.scrollIntoView({
+function discussionScroll(behavior: ScrollBehavior = "smooth", restaurant = false) {
+  document.getElementById(restaurant ? "restaurant-discussion" : "food-discussion")?.scrollIntoView({
     block: "start",
     behavior: matchMedia("(prefers-reduced-motion: reduce)").matches
       ? "instant"
@@ -611,6 +617,7 @@ function CommentRow({
             <CommentComposer
               embedded
               food={editor.food}
+              restaurant={editor.restaurant}
               target={{ rootId: rootId ?? comment.id!, id: comment.id!, name }}
               cancel={closeReply}
               after={closeReply}
@@ -653,12 +660,14 @@ function CommentRow({
 type DraftPhoto = { url: string; file?: File; key?: string };
 export function CommentComposer({
   food,
+  restaurant = false,
   target,
   embedded = false,
   cancel,
   after,
 }: {
-  food: Food & { id: number };
+  food: DiscussionSubject;
+  restaurant?: boolean;
   target: ReplyTarget | null;
   embedded?: boolean;
   cancel?: () => void;
@@ -670,14 +679,15 @@ export function CommentComposer({
     access = useActionAccess();
   const active = usePageLifetime();
   const fieldId = useId();
-  const scope = `comments:draft:${app.user?.id ?? "guest"}:${food.id}:${target?.id ?? "root"}`;
+  const subjectKey = restaurant ? `restaurant:${food.id}` : String(food.id);
+  const scope = `comments:draft:${app.user?.id ?? "guest"}:${subjectKey}:${target?.id ?? "root"}`;
   const [text, setText, clearText] = useSessionDraft(scope, "");
   const previousOwner = useRef({ id: app.user?.id, text });
   useEffect(() => {
     const previous = previousOwner.current;
     if (previous.id == null && app.user?.id && previous.text && !text) {
       setText(previous.text);
-      removeDraft(`comments:draft:guest:${food.id}:${target?.id ?? "root"}`);
+      removeDraft(`comments:draft:guest:${subjectKey}:${target?.id ?? "root"}`);
     }
     previousOwner.current = { id: app.user?.id, text };
   }, [app.user?.id, text, scope]);
@@ -700,14 +710,19 @@ export function CommentComposer({
     },
     Awaited<ReturnType<typeof app.api.createFoodComment>>
   >(
-    `submit:${food.id}:${target?.id ?? "root"}`,
+    `submit:${subjectKey}:${target?.id ?? "root"}`,
     (body, id) => {
       const { rootId, ...payload } = body;
+      if (restaurant)
+        return rootId
+          ? app.api.replyToRestaurantComment(food.id, rootId, payload, id)
+          : app.api.createRestaurantComment(food.id, payload, id);
       return rootId
         ? app.api.replyToComment(food.id, rootId, payload, id)
         : app.api.createFoodComment(food.id, payload, id);
     },
     async (value) => {
+      if (value.moderationStatus === "APPROVED") reportWebUsage({ event: "comment_success" });
       setText("");
       clearText();
       photos.forEach((p) => {
@@ -763,8 +778,8 @@ export function CommentComposer({
         await task.run({ text: "", pictureKeys: [] });
         return;
       }
-      const content = boundedText(text, 200, "评论");
       const next = target ? [] : [...photos];
+      const content = boundedText(text, 200, "评论", next.length ? 0 : 1);
       if (next.some((p) => !p.key) && !access(true)) return;
       setUploading(true);
       for (let i = 0; i < next.length; i++)
@@ -806,7 +821,7 @@ export function CommentComposer({
             />
           )}
           <div>
-            <strong>{food.name || "这道菜"}</strong>
+            <strong>{food.name || (restaurant ? "这家店" : "这道菜")}</strong>
             {food.restaurantName && <span>{food.restaurantName}</span>}
           </div>
         </div>
@@ -852,7 +867,7 @@ export function CommentComposer({
           aria-describedby={`${fieldId}-limit`}
           aria-invalid={codePoints(text.trim()) > 200}
           ref={textarea}
-          placeholder={target ? "写下你的回复…" : "口味、分量，或一点用餐建议"}
+          placeholder={target ? "写下你的回复…" : restaurant ? "菜品、环境，或一点到店建议" : "口味、分量，或一点用餐建议"}
           value={text}
           disabled={busy || task.pending}
           onChange={(e) => setText(e.target.value)}
@@ -924,7 +939,7 @@ export function CommentComposer({
             type="submit"
             disabled={
               busy ||
-              (!task.pending && (!text.trim() || codePoints(text.trim()) > 200))
+              (!task.pending && ((!text.trim() && (target !== null || !photos.length)) || codePoints(text.trim()) > 200))
             }
           >
             {uploading
@@ -951,9 +966,11 @@ export function CommentComposer({
 
 export function FoodDiscussion({
   food,
+  restaurant = false,
   mobile = false,
 }: {
-  food: Food & { id: number };
+  food: DiscussionSubject;
+  restaurant?: boolean;
   mobile?: boolean;
 }) {
   const { api, user } = useApp(),
@@ -961,7 +978,7 @@ export function FoodDiscussion({
     nav = useNavigate(),
     loc = useLocation();
   const [params, setParams] = useSearchParams();
-  const gallery = params.get("view") === "gallery";
+  const gallery = !restaurant && params.get("view") === "gallery";
   const linkedRoot = parseId(params.get("rootId") ?? undefined);
   const replyId = parseId(params.get("replyToId") ?? undefined) ?? linkedRoot;
   const [entryKey] = useState(loc.key);
@@ -972,13 +989,14 @@ export function FoodDiscussion({
   const writingRoot = !mobile && !replyId && params.get("compose") === "1";
   const section = params.get("section");
   const writeButton = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
   const Heading = mobile ? "h1" : "h2";
   const sort: CommentSort =
     params.get("sort") === "NEWEST" ? "NEWEST" : "MOST_USEFUL";
   const page = validPage(params.get("commentPage"));
   const q = useQuery({
-    queryKey: ["comments", "list", user?.id ?? "guest", food.id, sort, page],
-    queryFn: ({ signal }) => api.foodComments(food.id, sort, page, 20, signal),
+    queryKey: ["comments", restaurant ? "restaurant-list" : "list", user?.id ?? "guest", food.id, sort, page],
+    queryFn: ({ signal }) => (restaurant ? api.restaurantComments : api.foodComments)(food.id, sort, page, 20, signal),
     enabled: !gallery && !focused,
   });
   const g = useQuery({
@@ -1005,6 +1023,7 @@ export function FoodDiscussion({
     );
   const editor: ReplyEditor = {
     food,
+    restaurant,
     activeId: replyId,
     open: (id) => {
       if (!access(false)) return;
@@ -1024,19 +1043,19 @@ export function FoodDiscussion({
       !writingRoot &&
       !replyId
     ) {
-      const frame = requestAnimationFrame(() => discussionScroll("instant"));
+      const frame = requestAnimationFrame(() => discussionScroll("instant", restaurant));
       return () => cancelAnimationFrame(frame);
     }
-  }, [food.id, mobile, section, focused]);
+  }, [food.id, mobile, section, focused, restaurant, writingRoot, replyId]);
   return (
     <section
       className={`comments-surface${mobile ? " is-mobile" : ""}`}
-      id="food-discussion"
-      aria-labelledby="discussion-title"
+      id={restaurant ? "restaurant-discussion" : "food-discussion"}
+      aria-labelledby={titleId}
     >
       <header className="comments-heading">
-        <Heading id="discussion-title">
-          吃过的人说
+        <Heading id={titleId}>
+          {restaurant ? "店铺评论" : "吃过的人说"}
           {q.data?.totalItems != null && <span>{q.data.totalItems}</span>}
         </Heading>
         {!mobile && (
@@ -1060,6 +1079,7 @@ export function FoodDiscussion({
           <CommentComposer
             embedded
             food={food}
+            restaurant={restaurant}
             target={null}
             cancel={closeRoot}
             after={closeRoot}
@@ -1068,7 +1088,7 @@ export function FoodDiscussion({
       )}
       <div className="comments-layout">
         <div className="comments-toolbar">
-          <div className="comments-tabs" role="group" aria-label="讨论内容">
+          {!restaurant && <div className="comments-tabs" role="group" aria-label="讨论内容">
             <button
               aria-pressed={!gallery}
               onClick={(event) => {
@@ -1087,7 +1107,7 @@ export function FoodDiscussion({
             >
               晒图
             </button>
-          </div>
+          </div>}
           {!gallery && !focused && (
             <div className="comments-sort" role="group" aria-label="评论排序">
               {(
@@ -1148,19 +1168,19 @@ export function FoodDiscussion({
             className="comments-input-trigger"
             onClick={() => {
               if (access(false))
-                nav(`/comments/write?foodId=${food.id}`, {
+                nav(commentsHref(food.id, restaurant, true), {
                   state: { commentList: loc.pathname + loc.search },
                 });
             }}
           >
-            吃过的话，说两句
+            {restaurant ? "说说这家店" : "吃过的话，说两句"}
           </button>
           <button
             className="comments-icon"
             aria-label="发表带图片的评论"
             onClick={() => {
               if (access(true))
-                nav(`/comments/write?foodId=${food.id}`, {
+                nav(commentsHref(food.id, restaurant, true), {
                   state: { commentList: loc.pathname + loc.search },
                 });
             }}
@@ -1171,6 +1191,10 @@ export function FoodDiscussion({
       )}
     </section>
   );
+}
+
+export function RestaurantDiscussion({ restaurant }: { restaurant: DiscussionSubject }) {
+  return <FoodDiscussion food={restaurant} restaurant />;
 }
 
 function Gallery({
@@ -1222,10 +1246,12 @@ function Gallery({
 
 function PreviewReplies({
   foodId,
+  restaurant,
   comment,
   rootCount,
 }: {
   foodId: number;
+  restaurant?: boolean;
   comment: CommentView;
   rootCount: number;
 }) {
@@ -1250,7 +1276,7 @@ function PreviewReplies({
             <strong>
               <CommentAuthor comment={reply} />
             </strong>
-            <Link className="comments-preview-reply-text" to={commentsHref(foodId)}>
+            <Link className="comments-preview-reply-text" to={commentsHref(foodId, restaurant)}>
               {reply.replyTo?.displayName &&
                 reply.replyTo.id !== comment.authorId && (
                   <span className="comments-reply-target">
@@ -1266,7 +1292,7 @@ function PreviewReplies({
         </div>
       ))}
       {total > shown.length && (
-        <Link className="comments-preview-more-replies" to={commentsHref(foodId)}>
+        <Link className="comments-preview-more-replies" to={commentsHref(foodId, restaurant)}>
           查看全部 {total} 条回复 <Icon name="chevronRight" size={14} />
         </Link>
       )}
@@ -1274,22 +1300,22 @@ function PreviewReplies({
   );
 }
 
-export function FoodCommentPreview({ foodId }: { foodId: number }) {
+export function FoodCommentPreview({ foodId, restaurant = false }: { foodId: number; restaurant?: boolean }) {
   const { api, user } = useApp();
   const q = useQuery({
-    queryKey: ["comments", "preview", user?.id ?? "guest", foodId],
+    queryKey: ["comments", restaurant ? "restaurant-preview" : "preview", user?.id ?? "guest", foodId],
     queryFn: ({ signal }) =>
-      api.foodComments(foodId, "MOST_USEFUL", 1, 2, signal),
+      (restaurant ? api.restaurantComments : api.foodComments)(foodId, "MOST_USEFUL", 1, 2, signal),
   });
   const items = q.data?.items ?? [];
   return (
     <section className="comments-preview">
       <div className="comments-preview-heading">
         <h2>
-          吃过的人说
+          {restaurant ? "店铺评论" : "吃过的人说"}
           {q.data?.totalItems != null && <span>{q.data.totalItems}</span>}
         </h2>
-        <Link to={commentsHref(foodId)}>
+        <Link to={commentsHref(foodId, restaurant)}>
           全部评论 <Icon name="chevronRight" size={16} />
         </Link>
       </div>
@@ -1309,9 +1335,9 @@ export function FoodCommentPreview({ foodId }: { foodId: number }) {
                   </strong>
                   <Link
                     className="comments-preview-text"
-                    to={commentsHref(foodId)}
+                    to={commentsHref(foodId, restaurant)}
                   >
-                    {row.text}
+                    {row.text || "图片评论"}
                   </Link>
                 </div>
               </div>
@@ -1324,13 +1350,14 @@ export function FoodCommentPreview({ foodId }: { foodId: number }) {
             )}
             <PreviewReplies
               foodId={foodId}
+              restaurant={restaurant}
               comment={row}
               rootCount={items.length}
             />
           </div>
         ))
       ) : (
-        <Link className="comments-preview-empty" to={commentsHref(foodId)}>
+        <Link className="comments-preview-empty" to={commentsHref(foodId, restaurant)}>
           还没有评论，来说两句 <Icon name="chevronRight" size={16} />
         </Link>
       )}
@@ -1342,8 +1369,10 @@ export function MobileComments() {
   const { api } = useApp(),
     loc = useLocation(),
     nav = useNavigate();
-  const params = new URLSearchParams(loc.search),
-    foodId = parseId(params.get("foodId") ?? undefined);
+  const params = new URLSearchParams(loc.search);
+  const restaurantId = parseId(params.get("restaurantId") ?? undefined);
+  const restaurant = !!restaurantId;
+  const subjectId = restaurantId ?? parseId(params.get("foodId") ?? undefined);
   const commentId = parseId(params.get("commentId") ?? undefined);
   const rootId = parseId(params.get("rootId") ?? undefined),
     replyId = parseId(params.get("replyToId") ?? undefined);
@@ -1353,49 +1382,50 @@ export function MobileComments() {
   const sourceParams = new URLSearchParams(source.split("?")[1]);
   const fromComments =
     source.split("?")[0] === "/comments" &&
-    parseId(sourceParams.get("foodId") ?? undefined) === foodId;
+    parseId(sourceParams.get(restaurant ? "restaurantId" : "foodId") ?? undefined) === subjectId;
   const q = useQuery({
-    queryKey: ["food", foodId],
-    queryFn: () => api.food(foodId!),
-    enabled: !!foodId,
+    queryKey: restaurant ? ["restaurants", "detail", subjectId] : ["food", subjectId],
+    queryFn: async (): Promise<Omit<DiscussionSubject, "id"> & { id?: number | null }> =>
+      restaurant ? api.restaurant(subjectId!) : api.food(subjectId!),
+    enabled: !!subjectId,
   });
-  const back = foodId
+  const detailPath = `/${restaurant ? "restaurants" : "foods"}/${subjectId}`;
+  const back = subjectId
     ? writing
       ? fromComments
         ? source
-        : commentsHref(foodId)
-      : `/foods/${foodId}`
+        : commentsHref(subjectId, restaurant)
+      : detailPath
     : "/";
-  useEffect(() => {
-    document.title = `${writing ? "发表评论" : "菜品评论"} · ${BRAND_NAME}`;
-  }, [writing]);
-  if (!foodId && commentId && !writing)
+
+  if (!subjectId && commentId && !writing)
     return (
       <main className="comments-mobile-page">
         <CommentDestination commentId={commentId} />
       </main>
     );
-  if (!foodId)
+  if (!subjectId)
     return (
       <main className="comments-mobile-page">
         <Link className="comments-back" to="/">
           返回发现
         </Link>
-        <h1>请先选择一道菜</h1>
+        <h1>请先选择一道菜或一家店</h1>
       </main>
     );
-  const food = q.data ? { ...q.data, id: foodId } : undefined;
+  const food = q.data ? { ...q.data, id: subjectId } : undefined;
   const body = (
     <main className={`comments-mobile-page${writing ? " is-writing" : ""}`}>
       <Link to={back} className="comments-back" aria-label="返回">
         <Icon name="back" size={24} />
       </Link>
-      {writing && <h1>{rootId ? "发表回复" : "说说这道菜"}</h1>}
+      {writing && <h1>{rootId ? "发表回复" : restaurant ? "说说这家店" : "说说这道菜"}</h1>}
       <QueryState query={q}>
         {food &&
           (writing ? (
             <CommentComposer
               food={food}
+              restaurant={restaurant}
               target={
                 rootId
                   ? {
@@ -1407,16 +1437,16 @@ export function MobileComments() {
               }
               after={() => {
                 if (fromComments) nav(-1);
-                else nav(commentsHref(foodId), { replace: true });
+                else nav(commentsHref(subjectId, restaurant), { replace: true });
               }}
             />
           ) : (
             <>
-              <Link className="comments-food-context" to={`/foods/${foodId}`}>
-                {food.name || "查看菜品"}
+              <Link className="comments-food-context" to={detailPath}>
+                {food.name || (restaurant ? "查看店铺" : "查看菜品")}
                 {food.restaurantName && <span>{food.restaurantName}</span>}
               </Link>
-              <FoodDiscussion food={food} mobile />
+              <FoodDiscussion food={food} restaurant={restaurant} mobile />
             </>
           ))}
       </QueryState>
@@ -1533,6 +1563,12 @@ function MyCommentRecord({
         content
       )}
       <footer className="comments-submission-actions">
+        {row.restaurantId && (
+          <Link to={`${commentsHref(row.restaurantId, true)}&commentId=${row.id}`}>
+            {journal && <Icon name="pin" size={17} />}
+            查看店铺评论 <Icon name="chevronRight" size={14} />
+          </Link>
+        )}
         {row.foodId && (
           <Link to={`/foods/${row.foodId}?section=comments`}>
             {journal && <Icon name="bowl" size={17} />}

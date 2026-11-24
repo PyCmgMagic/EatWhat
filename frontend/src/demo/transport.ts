@@ -469,6 +469,7 @@ export const demoTransport: Transport = async (path, options) => {
         blocked: s.blocked,
       },
       s.foods,
+      s.restaurants,
     );
     save();
     return structuredClone({ code: 0, data, msg: "ok", timestamp: Date.now() });

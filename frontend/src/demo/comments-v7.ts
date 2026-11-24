@@ -5,13 +5,14 @@ import {
   type CommentReactionType,
 } from "../api/comments";
 import { reactionSummary } from "./comment-reactions";
-import { mediaUrl, type Food, type User } from "../api/models";
+import { mediaUrl, type Food, type Restaurant, type User } from "../api/models";
 
 type Row = {
   id: number;
   gid: string;
   revisionId: string;
-  foodId: number;
+  foodId?: number;
+  restaurantId?: number;
   rootId: number;
   replyToId: number | null;
   authorId: number;
@@ -134,6 +135,7 @@ const submission = (r: Row) => ({
   revisionId: r.revisionId,
   kind: r.rootId === r.id ? "COMMENT" : "REPLY",
   foodId: r.foodId,
+  restaurantId: r.restaurantId,
   moderationStatus: r.moderationStatus,
   reasonCode: r.moderationStatus === "REJECTED" ? r.reasonCode : null,
   reasonMessage: r.moderationStatus === "REJECTED" ? r.reasonCode : null,
@@ -163,6 +165,7 @@ function view(s: DemoComments, r: Row, viewer?: number) {
     revisionId: r.revisionId,
     kind: r.rootId === r.id ? "COMMENT" : "REPLY",
     foodId: r.foodId,
+    restaurantId: r.restaurantId,
     rootCommentGid: s.rows.find((x) => x.id === r.rootId)!.gid,
     replyToGid: r.replyToId
       ? (s.rows.find((x) => x.id === r.replyToId)?.gid ?? null)
@@ -206,6 +209,7 @@ export function isCommentPath(path: string) {
   return (
     /^\/comments(?:\/|$)/.test(path) ||
     /^\/foods\/\d+\/(comments|gallery)(?:\/|$)/.test(path) ||
+    /^\/restaurant\/\d+\/comments(?:\/|$)/.test(path) ||
     path.startsWith("/admin/comments/")
   );
 }
@@ -220,6 +224,7 @@ export function handleComments(
     blocked?: number[];
   },
   foods: Food[],
+  restaurants: Restaurant[] = [],
 ) {
   const method = options.method ?? "GET",
     q = options.query,
@@ -302,17 +307,19 @@ export function handleComments(
       };
     });
   }
-  const foodMatch = path.match(
-    /^\/foods\/(\d+)\/(comments|gallery)(?:\/(\d+)\/replies)?$/,
+  const match = path.match(
+    /^\/(foods|restaurant)\/(\d+)\/(comments|gallery)(?:\/(\d+)\/replies)?$/,
   );
-  if (foodMatch) {
-    const foodId = Number(foodMatch[1]),
-      rootId = Number(foodMatch[3]);
-    if (!foods.some((f) => f.id === foodId))
-      throw new ApiError("菜品已不可见。", 40004, 404);
+  if (match) {
+    const restaurant = match[1] === "restaurant";
+    const id = Number(match[2]);
+    const rootId = Number(match[4]);
+    const belongs = (row: Row) => (restaurant ? row.restaurantId : row.foodId) === id;
+    if (!(restaurant ? restaurants : foods).some((item) => item.id === id))
+      throw new ApiError(restaurant ? "店铺已不可见。" : "菜品已不可见。", 40004, 404);
     if (method === "GET") {
-      const rows = s.rows.filter((r) => r.foodId === foodId && visible(s, r));
-      if (foodMatch[2] === "gallery")
+      const rows = s.rows.filter((r) => belongs(r) && visible(s, r));
+      if (match[3] === "gallery")
         return page(
           rows.flatMap((r) =>
             images(r).map((image) => ({
@@ -344,7 +351,7 @@ export function handleComments(
       throw new ApiError("请先完成学生认证。", 20004, 403);
     if (rootId) {
       const root = rowFor(rootId, true);
-      if (root.foodId !== foodId || root.rootId !== root.id)
+      if (!belongs(root) || root.rootId !== root.id)
         throw new ApiError("回复目标无效。", 40001);
       if (body.replyToId && rowFor(body.replyToId, true).rootId !== rootId)
         throw new ApiError("回复目标不在同一讨论中。", 40001);
@@ -355,13 +362,13 @@ export function handleComments(
       options.headers?.["Idempotency-Key"],
       body,
       () => {
-        const id = s.nextId++;
+        const commentId = s.nextId++;
         const row: Row = {
-          id,
+          id: commentId,
           gid: crypto.randomUUID(),
           revisionId: crypto.randomUUID(),
-          foodId,
-          rootId: rootId || id,
+          ...(restaurant ? { restaurantId: id } : { foodId: id }),
+          rootId: rootId || commentId,
           replyToId: rootId ? (body.replyToId ?? rootId) : null,
           authorId: userId,
           authorName: actor.user.displayName || "校园食友",
@@ -371,12 +378,12 @@ export function handleComments(
           createdAt: new Date().toISOString(),
           likesCount: 0,
           likedBy: [],
-          moderationStatus: "PENDING",
+          moderationStatus: restaurant ? "APPROVED" : "PENDING",
           reasonCode: null,
         };
         s.rows.unshift(row);
         return {
-          id,
+          id: commentId,
           commentGid: row.gid,
           revisionId: row.revisionId,
           moderationStatus: row.moderationStatus,

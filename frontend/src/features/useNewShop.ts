@@ -1,8 +1,14 @@
+import { reportWebUsage } from "../app/web-usage";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { MapPlace } from "../api/baidu-places";
 import { resultUncertain } from "../api/client";
-import { boundedText, codePoints, restaurantAddressLimit } from "../api/content-rules";
+import {
+  boundedText,
+  codePoints,
+  restaurantAddressLimit,
+  restaurantDescriptionLimit,
+} from "../api/content-rules";
 import { useArea } from "../app/area";
 import { usePageLifetime } from "../app/drafts";
 import { useApp } from "../app/state";
@@ -20,6 +26,7 @@ type ShopDraft = {
   choice: ShopChoice;
   name: string;
   address: string;
+  description: string;
   point?: MapPoint;
   traits: ShopTraits;
   photo?: { file: File; key?: string };
@@ -36,6 +43,7 @@ function draftFor(choice: ShopChoice): ShopDraft {
     choice,
     name: choice.place?.name ?? manualName(choice.keyword),
     address: choice.place?.address ?? "",
+    description: "",
     point: choice.place?.point,
     traits: defaultShopTraits(),
     photo: undefined,
@@ -95,7 +103,13 @@ export function useNewShop(rememberDraft = false) {
     if (details) formRef.current?.focus({ preventScroll: true });
   }, [details]);
 
-  const dirty = !!(draft.name || draft.address || draft.point || photoFile);
+  const dirty = !!(
+    draft.name ||
+    draft.address ||
+    draft.description ||
+    draft.point ||
+    photoFile
+  );
   useEffect(() => {
     if (!rememberDraft || !dirty) return;
     function leave(event: BeforeUnloadEvent) {
@@ -114,6 +128,7 @@ export function useNewShop(rememberDraft = false) {
     !!draft.address.trim() &&
     codePoints(draft.name.trim()) <= 20 &&
     codePoints(draft.address.trim()) <= restaurantAddressLimit &&
+    codePoints(draft.description.trim()) <= restaurantDescriptionLimit &&
     draft.traits.mealTimes.length > 0;
 
   function select(place?: MapPlace) {
@@ -135,7 +150,11 @@ export function useNewShop(rememberDraft = false) {
     if (!canSubmit) return;
     task.run(async () => {
       const name = boundedText(draft.name, 20, "店名");
-      const address = boundedText(draft.address, restaurantAddressLimit, "地址");
+      const address = boundedText(
+        draft.address,
+        restaurantAddressLimit,
+        "地址",
+      );
       const point = requireShopLocation(draft.point);
       let picture = draft.photo?.key;
       if (draft.photo && !picture) {
@@ -144,18 +163,24 @@ export function useNewShop(rememberDraft = false) {
           !active.current ||
           !formRef.current ||
           currentDraft.current.photo !== draft.photo
-        ) return;
+        )
+          return;
         update({ photo: { file: draft.photo.file, key: picture } });
       }
       try {
         const created = await api.createRestaurant({
           name,
           address,
+          ...(draft.description.trim()
+            ? { description: draft.description.trim() }
+            : {}),
           ...point,
           ...(picture ? { pictureUrl: [picture] } : {}),
           hubId: area?.hubId,
           ...draft.traits,
         });
+        if (!created.revisionId)
+          reportWebUsage({ event: "publish_success", kind: "RESTAURANT" });
         if (owner !== undefined) desktopDrafts.delete(owner);
         if (!active.current) return;
         if (created.revisionId) {

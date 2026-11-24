@@ -3,6 +3,7 @@ import type { Food, Restaurant, Schema } from "./models";
 export const codePoints = (value: string) => [...value].length;
 export const foodDescriptionLimit = 1000;
 export const restaurantAddressLimit = 50;
+export const restaurantDescriptionLimit = 200;
 export const normalizedTag = (value: string) =>
   value.trim().replace(/\s+/gu, " ");
 export function boundedText(

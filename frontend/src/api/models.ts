@@ -40,7 +40,9 @@ export type Food = Omit<
         })
       | null;
   };
-export type Restaurant = Schema["RestaurantResponse"];
+export type Restaurant = Schema["RestaurantResponse"] & {
+  description?: string | null;
+};
 /** Explicit null means no displayable profile; only old responses omit user. */
 export function foodAuthor(
   food: Pick<Food, "user" | "accountId" | "uploaderName">,

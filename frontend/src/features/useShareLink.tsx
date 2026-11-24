@@ -1,3 +1,4 @@
+import { reportWebUsage } from "../app/web-usage";
 import { useRef, useState } from "react";
 import { useApp } from "../app/state";
 import { usePageLifetime } from "../app/drafts";
@@ -62,6 +63,10 @@ export function useShareLink() {
         location.href !== data.url
       )
         return;
+      if (result === "copied" || result === "shared") {
+        const match = new URL(data.url).hash.match(/^#\/(foods|restaurants)\/(\d+)(?:\?|$)/);
+        if (match) reportWebUsage({ event: "share", targetType: match[1] === "foods" ? "FOOD" : "RESTAURANT", targetId: Number(match[2]) });
+      }
       if (result === "copied") {
         toast("链接已复制", { tone: "success" });
         close();

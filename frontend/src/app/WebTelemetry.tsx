@@ -1,10 +1,20 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { uuidV7 } from "../api/install-id";
-import type { TelemetryBatch, TelemetryPage } from "../api/v4-types";
+import type {
+  TelemetryBatch,
+  TelemetryPage,
+  TelemetryProperties,
+} from "../api/v4-types";
 import { isAdminPath } from "./admin-routes";
 import { useApp } from "./state";
+import {
+  readGuestUsage,
+  useGuestUsage,
+  webUsageEvent,
+  withGuestUsageLock,
+} from "./web-usage";
 
 export function useTelemetryConsent(enabled = true) {
   const { api, session, user } = useApp();
@@ -40,65 +50,91 @@ export default function WebTelemetry() {
   const { pathname } = useLocation();
   const admin = isAdminPath(pathname);
   const { query } = useTelemetryConsent(!admin);
-  // Opening belongs to this document. A later login or opt-in is not another open.
-  const openingSession = useRef(session);
-  const lastView = useRef<{ owner: number; path: string } | null>(null);
-  useEffect(() => {
-    if (admin) {
-      openingSession.current = null;
-      lastView.current = null;
-      return;
-    }
-    const consent = query.data;
-    if (
-      !session ||
-      !user?.id ||
-      !query.isSuccess ||
-      consent?.revision == null
-    ) {
-      if (!session) lastView.current = null;
-      return;
-    }
-    const opened = openingSession.current === session;
-    openingSession.current = null;
-    if (!consent.enabled) {
-      lastView.current = null;
-      return;
-    }
-    if (
-      lastView.current?.owner === user.id &&
-      lastView.current.path === pathname
-    )
-      return;
-    lastView.current = { owner: user.id, path: pathname };
-    const events: TelemetryBatch["events"] = [];
-    if (opened)
-      events.push({ eventId: uuidV7(), properties: { event: "app_open" } });
-    events.push({
-      eventId: uuidV7(),
-      properties: { event: "page_view", page: pageCategory(pathname) },
-    });
-    void api
-      .telemetryEvents({ consentRevision: consent.revision, events })
-      .then((result) => {
-        // The setting may have changed on another device since the last read.
-        if (result.enabled === false)
-          return cache.invalidateQueries({
-            queryKey: ["telemetry", "consent", user.id],
+  const guestUsage = useGuestUsage();
+  const guest = !session;
+  const consent = query.data;
+  const owner = guest ? "guest" : user?.id;
+  const revision = guest ? 0 : consent?.revision;
+  const enabled =
+    !admin &&
+    (guest
+      ? guestUsage === "on"
+      : query.isSuccess && consent?.enabled === true);
+  const opening = useRef(admin ? null : { session, guestUsage });
+  const lastView = useRef<{ owner: number | "guest"; path: string } | null>(
+    null,
+  );
+  const send = useCallback(
+    (properties: TelemetryProperties[]) => {
+      if (!enabled || revision == null || owner == null) return;
+      const batch: TelemetryBatch = {
+        consentRevision: revision,
+        events: properties.map((item) => ({
+          eventId: uuidV7(),
+          properties: item,
+        })),
+      };
+      const call = guest
+        ? withGuestUsageLock(async () => {
+            if (readGuestUsage() === "on")
+              await api.telemetryEvents(batch, true);
+          })
+        : api.telemetryEvents(batch).then((result) => {
+            if (result.enabled === false)
+              return cache.invalidateQueries({
+                queryKey: ["telemetry", "consent", owner],
+              });
           });
-      })
-      .catch(() => {
-        /* Statistics must not interrupt browsing. */
-      });
+      // Statistics must never interrupt browsing.
+      void call.catch(() => {});
+    },
+    [api, cache, enabled, guest, owner, revision],
+  );
+
+  useEffect(() => {
+    const start = opening.current;
+    if (admin || !enabled || owner == null || revision == null) {
+      lastView.current = null;
+      if (
+        admin ||
+        (guest && guestUsage !== "on") ||
+        (!guest && consent?.enabled === false)
+      )
+        opening.current = null;
+      return;
+    }
+    if (lastView.current?.owner === owner && lastView.current.path === pathname)
+      return;
+    lastView.current = { owner, path: pathname };
+    const events: TelemetryProperties[] = [];
+    if (
+      start &&
+      start.session === session &&
+      (!guest || start.guestUsage === "on")
+    )
+      events.push({ event: "app_open" });
+    opening.current = null;
+    events.push({ event: "page_view", page: pageCategory(pathname) });
+    send(events);
   }, [
     admin,
-    api,
-    cache,
-    session,
-    user?.id,
-    query.isSuccess,
-    query.data,
+    consent?.enabled,
+    enabled,
+    guest,
+    guestUsage,
+    owner,
     pathname,
+    revision,
+    send,
+    session,
   ]);
+
+  useEffect(() => {
+    function record(event: Event) {
+      send([(event as CustomEvent<TelemetryProperties>).detail]);
+    }
+    window.addEventListener(webUsageEvent, record);
+    return () => window.removeEventListener(webUsageEvent, record);
+  }, [send]);
   return null;
 }
