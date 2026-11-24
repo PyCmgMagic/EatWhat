@@ -89,6 +89,14 @@ export const adminModules = [
     detail: "各端最低与最新版本",
   },
   {
+    id: "consent-policies",
+    title: "隐私政策与数据跨境说明",
+    path: "/admin/consent-policies",
+    icon: "shield",
+    group: "站点运营",
+    detail: "发布新版本并查阅历史正文",
+  },
+  {
     id: "ai",
     title: "AI 设置",
     path: "/admin/ai",

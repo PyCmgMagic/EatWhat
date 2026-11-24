@@ -351,6 +351,19 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         method: "PUT",
         body,
       }),
+    adminConsentPolicies: (query: { page: number; pageSize: number }) =>
+      data<V2["schemas"]["PageResultConsentPolicy"]>("/admin/consent/policies", {
+        query,
+      }),
+    adminConsentPolicy: (id: number) =>
+      data<V2["schemas"]["ConsentPolicy"]>(`/admin/consent/policies/${id}`),
+    publishConsentPolicy: (
+      body: Required<V2["schemas"]["PublishConsentPolicy"]>,
+    ) =>
+      data<V2["schemas"]["ConsentPolicy"]>("/admin/consent/policies", {
+        method: "POST",
+        body,
+      }),
     preferences: () =>
       data<Schema["ManualPreferencesResponse"]>(
         "/user/recommendation-profile/preferences",

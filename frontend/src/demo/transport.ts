@@ -9,6 +9,7 @@ import {
 import { demoGrowth, demoGrowthProgress, type DemoGrowth } from "./growth";
 import type { Transport, Query } from "../api/client";
 import { ApiError } from "../api/client";
+import type { components } from "../api/backend-v2-schema";
 import type { V2Food, V2Shop } from "../api/v2-vocab";
 import type {
   Food,
@@ -85,6 +86,7 @@ type State = {
   blocked?: number[];
   personalized?: boolean;
   policy?: { version: string; url: string; revision: number };
+  consentPolicies?: components["schemas"]["ConsentPolicy"][];
   accountReviews?: Schema["ReviewSummaryResponse"][];
   user: User;
   foods: Food[];
@@ -520,6 +522,46 @@ export const demoTransport: Transport = async (path, options) => {
       save();
     }
     result = s.policy;
+  } else if (
+    path === "/admin/consent/policies" ||
+    path.startsWith("/admin/consent/policies/")
+  ) {
+    if (new URLSearchParams(location.search).get("persona") !== "admin")
+      throw new ApiError("需要管理员身份。", 20004, 403);
+    const policies = (s.consentPolicies ??= []);
+    if (path === "/admin/consent/policies" && method === "POST") {
+      const version = String(b.version ?? "").trim();
+      const privacyText = String(b.privacyText ?? "");
+      const crossBorderText = String(b.crossBorderText ?? "");
+      if (policies.some((item) => item.version === version))
+        throw new ApiError("这个版本号已经用过了", 40004);
+      const policy = {
+        id: (policies[0]?.id ?? 0) + 1,
+        version,
+        privacyText,
+        crossBorderText,
+        publishedBy: s.user.id ?? undefined,
+        publishedAt: Date.now(),
+      };
+      policies.unshift(policy);
+      save();
+      result = policy;
+    } else if (path === "/admin/consent/policies") {
+      result = paginate(
+        policies.map(({ id, version, publishedAt, publishedBy }) => ({
+          id,
+          version,
+          publishedAt,
+          publishedBy,
+        })),
+        q,
+      );
+    } else {
+      result = policies.find(
+        (item) => item.id === Number(path.split("/").at(-1)),
+      );
+      if (!result) throw new ApiError("版本不存在", 10001);
+    }
   } else if (path === "/user/recommendation-settings") {
     if (method === "PUT") {
       s.personalized = b.personalized === true;

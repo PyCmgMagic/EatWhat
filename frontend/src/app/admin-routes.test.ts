@@ -9,11 +9,18 @@ import {
 
 describe("independent admin routes", () => {
   // Backend v2 has no review queues, topics, tag editing or security reviews.
-  it("gives all thirteen v2 modules a unique canonical destination", () => {
-    expect(adminModules).toHaveLength(13);
-    expect(new Set(adminModules.map((m) => m.path)).size).toBe(13);
+  it("gives every v2 module a unique canonical destination", () => {
+    expect(new Set(adminModules.map((m) => m.path)).size).toBe(
+      adminModules.length,
+    );
     for (const m of adminModules)
       expect(resolveAdminRoute(m.path).module?.id).toBe(m.id);
+  });
+  it("places policy publication in site operations", () => {
+    expect(resolveAdminRoute("/admin/consent-policies").module).toMatchObject({
+      id: "consent-policies",
+      group: "站点运营",
+    });
   });
   it("migrates old directory bookmarks and preserves filters", () => {
     expect(

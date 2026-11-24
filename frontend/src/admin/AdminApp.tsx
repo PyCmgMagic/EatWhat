@@ -43,6 +43,7 @@ const pages: Record<AdminModuleId, ReturnType<typeof lazy>> = {
   versions: lazy(() =>
     import("./modules/Site").then((m) => ({ default: m.Versions })),
   ),
+  "consent-policies": lazy(() => import("./modules/ConsentPolicies")),
   ai: lazy(() => import("./modules/Site").then((m) => ({ default: m.Ai }))),
   audit: lazy(() =>
     import("./modules/Site").then((m) => ({ default: m.Audit })),
