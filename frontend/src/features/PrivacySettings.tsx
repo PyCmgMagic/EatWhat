@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApp } from "../app/state";
+import { useTelemetryConsent } from "../app/WebTelemetry";
 import { ContentSkeleton } from "../components/LoadingSkeleton";
 import { Modal } from "../components/ui";
 import { useTask } from "../components/useTask";
@@ -211,10 +212,9 @@ function RecommendationSettings({
 }
 
 function TelemetrySettings() {
-  const { api, user, toast } = useApp();
+  const { api, toast } = useApp();
   const cache = useQueryClient();
-  const queryKey = ["telemetry", "consent", user?.id];
-  const query = useQuery({ queryKey, queryFn: () => api.telemetryConsent() });
+  const { key: queryKey, query } = useTelemetryConsent();
   const consent = query.data;
   const consentVersion =
     consent?.policyVersion && consent.revision != null
@@ -247,22 +247,6 @@ function TelemetrySettings() {
         setConfirmTrigger(null);
       }
       cache.setQueryData(queryKey, saved);
-      if (enabled && saved.enabled && saved.revision != null) {
-        try {
-          await api.telemetryEvents({
-            consentRevision: saved.revision,
-            events: [
-              {
-                eventId: crypto.randomUUID(),
-                properties: { event: "app_open" },
-              },
-            ],
-          });
-        } catch {
-          toast("使用统计已开启，本次统计事件未能发送。");
-          return;
-        }
-      }
       toast(saved.enabled ? "使用统计已开启" : "使用统计已关闭", {
         tone: "success",
       });

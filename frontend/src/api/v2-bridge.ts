@@ -1858,6 +1858,7 @@ export function bridgeToV2(live: Transport): Transport {
         if (
           !(error instanceof ApiError) ||
           String(error.code) !== "20009" ||
+          options.background ||
           options.public ||
           /^\/auth\//.test(path)
         )

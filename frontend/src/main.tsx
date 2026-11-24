@@ -8,6 +8,7 @@ import { AreaProvider } from "./app/area";
 import { LoginDialogProvider } from "./app/auth-dialog";
 import { VerificationDialogProvider } from "./app/verification-dialog";
 import { ActionAccessPrompts } from "./app/access-prompt";
+import WebTelemetry from "./app/WebTelemetry";
 import ForegroundActivity from "./app/ForegroundActivity";
 import RetiredRouteBoundary from "./app/retired-routes";
 import MobileApp from "./mobile/App";
@@ -41,6 +42,7 @@ createRoot(document.getElementById("root")!).render(
               <VerificationDialogProvider>
                 <ActionAccessPrompts />
                 <ForegroundActivity />
+                <WebTelemetry />
                 <RouteContinuityProvider>
                   <RetiredRouteBoundary>
                     <MobileApp />

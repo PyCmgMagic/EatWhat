@@ -435,7 +435,9 @@ export function createV4Api(
         { method: "DELETE" },
       ),
     telemetryConsent: () =>
-      data<Reply<"Result_ConsentResponse">>(`/telemetry/consent`, {}),
+      data<Reply<"Result_ConsentResponse">>(`/telemetry/consent`, {
+        background: true,
+      }),
     saveTelemetryConsent: (body: TelemetryConsentInput) =>
       data<Reply<"Result_ConsentResponse">>(`/telemetry/consent`, {
         method: "PUT",
@@ -447,10 +449,14 @@ export function createV4Api(
         body,
       }),
     telemetryEvents: (body: TelemetryBatch) =>
-      data<Reply<"Result_AcceptedResponse">>(`/telemetry/events`, {
-        method: "POST",
-        body,
-      }),
+      data<Reply<"Result_AcceptedResponse"> & { enabled?: boolean }>(
+        `/telemetry/events`,
+        {
+          background: true,
+          method: "POST",
+          body,
+        },
+      ),
     topicsForFood: (foodId: number) =>
       data<Reply<"Result_List_SummaryResponse">>(
         `/topics/by-food/${encodeURIComponent(foodId)}`,

@@ -1,3 +1,4 @@
+import { telemetryPages } from "../api/v4-types";
 import { ApiError, type RequestOptions, type Query } from "../api/client";
 import { readSession } from "../app/runtime";
 import { demoFeedbackFields } from "./feedback";
@@ -1232,7 +1233,10 @@ export function handleV4(
     for (const event of b.events) {
       if (
         !event.eventId ||
-        Object.keys(event.properties ?? {}).join() !== "event" ||
+        (event.properties?.event === "page_view"
+          ? !telemetryPages.includes(event.properties.page) ||
+            Object.keys(event.properties).length !== 2
+          : Object.keys(event.properties ?? {}).join() !== "event") ||
         ![
           "app_open",
           "page_view",

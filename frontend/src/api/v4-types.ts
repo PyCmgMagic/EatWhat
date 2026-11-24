@@ -35,7 +35,23 @@ export type TelemetryEvent =
   | "verify_success"
   | "share"
   | "load_failed";
+export const telemetryPages = [
+  "HOME",
+  "RECOMMEND",
+  "SEARCH",
+  "RESTAURANT",
+  "FOOD",
+  "MESSAGE",
+  "PROFILE",
+  "OTHER",
+] as const;
+export type TelemetryPage = (typeof telemetryPages)[number];
 export type TelemetryBatch = {
   consentRevision: number;
-  events: { eventId: string; properties: { event: TelemetryEvent } }[];
+  events: {
+    eventId: string;
+    properties:
+      | { event: "page_view"; page: TelemetryPage }
+      | { event: Exclude<TelemetryEvent, "page_view"> };
+  }[];
 };
