@@ -5,6 +5,9 @@ type V2 = components["schemas"];
 export type EngagementBreakdown = V2["EngagementBreakdown"];
 export type TelemetrySummary = V2["TelemetrySummary"];
 export type TelemetryEventPage = V2["TelemetryEventPage"];
+export type UserNetworks = V2["UserNetworks"];
+export type NetworkCounts = V2["NetworkCounts"];
+export type NetworkSummary = V2["NetworkSummary"];
 export type Granularity = "HOUR" | "DAY" | "MONTH";
 export type TelemetryFilters = {
   event?: string;
@@ -24,6 +27,16 @@ export const platformNames: Record<string, string> = {
   APP: "移动端（系统未识别）",
   UNKNOWN: "未知",
 };
+const networkNames: Record<string, string> = {
+  CERNET: "教育网",
+  OTHER: "其他网络",
+  UNKNOWN: "未知",
+};
+export const networkName = (network?: string | null) =>
+  network ? (networkNames[network] ?? network) : "—";
+/** `rate` is 0–1, or null when there are no accounts to divide by. */
+export const cernetShare = (rate?: number | null) =>
+  rate == null ? "—" : `${(rate * 100).toFixed(1)}%`;
 export const audienceNames: Record<string, string> = {
   SIGNED_IN: "已登录",
   GUEST: "游客",

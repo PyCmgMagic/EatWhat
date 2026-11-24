@@ -5974,6 +5974,43 @@
         } ]
       }
     },
+    "/admin/stats/user-networks" : {
+      "get" : {
+        "tags" : [ "账号 · AdminUser" ],
+        "summary" : "【需角色：admin】统计区间内新增账号注册网络和活跃账号当前最近使用网络（北京时间，默认14天，最多92天）",
+        "operationId" : "networkSummary",
+        "parameters" : [ {
+          "name" : "from",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "to",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultNetworkSummary"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
     "/admin/remote-config" : {
       "get" : {
         "tags" : [ "remoteconfig · AdminRemoteConfig" ],
@@ -6360,6 +6397,37 @@
           "satoken" : [ ]
         } ],
         "description" : "from、to 接收带时区偏移的 ISO 8601 时间，按服务端收到事件的时间查询，含 from、不含 to。\nto 默认当前时间，from 默认 to 往前 7 天，跨度最多 7 天。统计只读取最近保留的 7 天。\nwindow.observedFrom 为 null 表示区间已超出保留期。可按 event、platform 或 audience 筛选。\nWEB、IOS、ANDROID 来自会话或安装登记。APP 表示未识别系统的移动端，UNKNOWN 包含无端信息的历史事件。\n按接收时间从新到旧分页，同一时间按事件 ID 稳定排序。page 从 1 起，pageSize 默认 20、最多 100。\n项目只含时间、端、事件类型、登录状态和白名单属性。翻页时可固定第一次响应返回的 window.to。\n"
+      }
+    },
+    "/admin/users/{userId}/network" : {
+      "get" : {
+        "tags" : [ "账号 · AdminUser" ],
+        "summary" : "【需角色：admin】查询账号注册与最近使用的 IP 和网络类型（CERNET、OTHER、UNKNOWN）",
+        "operationId" : "network",
+        "parameters" : [ {
+          "name" : "userId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultUserNetworks"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
       }
     },
     "/admin/telemetry/summary" : {
@@ -11770,6 +11838,110 @@
             "type" : "string"
           },
           "newUsers" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ResultUserNetworks" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/UserNetworks"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "UserNetworks" : {
+        "type" : "object",
+        "properties" : {
+          "registrationIp" : {
+            "type" : "string"
+          },
+          "registrationNetwork" : {
+            "type" : "string"
+          },
+          "lastIp" : {
+            "type" : "string"
+          },
+          "lastNetwork" : {
+            "type" : "string"
+          },
+          "lastUsedAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "NetworkCounts" : {
+        "type" : "object",
+        "properties" : {
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cernet" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "other" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "unknown" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "cernetRate" : {
+            "type" : "number",
+            "format" : "double"
+          }
+        }
+      },
+      "NetworkSummary" : {
+        "type" : "object",
+        "properties" : {
+          "from" : {
+            "type" : "string"
+          },
+          "to" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "registered" : {
+            "$ref" : "#/components/schemas/NetworkCounts"
+          },
+          "active" : {
+            "$ref" : "#/components/schemas/NetworkCounts"
+          }
+        }
+      },
+      "ResultNetworkSummary" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/NetworkSummary"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
             "type" : "integer",
             "format" : "int64"
           }

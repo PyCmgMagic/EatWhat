@@ -2445,6 +2445,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/stats/user-networks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 【需角色：admin】统计区间内新增账号注册网络和活跃账号当前最近使用网络（北京时间，默认14天，最多92天） */
+        get: operations["getAdminStatsUserNetworks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/remote-config": {
         parameters: {
             query?: never;
@@ -2608,6 +2625,23 @@ export interface paths {
          *     项目只含时间、端、事件类型、登录状态和白名单属性。翻页时可固定第一次响应返回的 window.to。
          */
         get: operations["getAdminTelemetryEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/users/{userId}/network": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 【需角色：admin】查询账号注册与最近使用的 IP 和网络类型（CERNET、OTHER、UNKNOWN） */
+        get: operations["getAdminUsersByUserIdNetwork"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4722,6 +4756,47 @@ export interface components {
             date?: string;
             /** Format: int64 */
             newUsers?: number;
+        };
+        ResultUserNetworks: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["UserNetworks"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        UserNetworks: {
+            registrationIp?: string | null;
+            registrationNetwork?: string | null;
+            lastIp?: string | null;
+            lastNetwork?: string | null;
+            lastUsedAt?: number | null;
+        };
+        NetworkCounts: {
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            cernet?: number;
+            /** Format: int64 */
+            other?: number;
+            /** Format: int64 */
+            unknown?: number;
+            cernetRate?: number | null;
+        };
+        NetworkSummary: {
+            from?: string;
+            to?: string;
+            timezone?: string;
+            registered?: components["schemas"]["NetworkCounts"];
+            active?: components["schemas"]["NetworkCounts"];
+        };
+        ResultNetworkSummary: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["NetworkSummary"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
         };
         AdminView: {
             /** Format: int64 */
@@ -9242,6 +9317,29 @@ export interface operations {
             };
         };
     };
+    getAdminStatsUserNetworks: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultNetworkSummary"];
+                };
+            };
+        };
+    };
     getAdminRemoteConfig: {
         parameters: {
             query?: never;
@@ -9452,6 +9550,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultTelemetryEventPage"];
+                };
+            };
+        };
+    };
+    getAdminUsersByUserIdNetwork: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultUserNetworks"];
                 };
             };
         };

@@ -2,10 +2,12 @@ import type { UserTitleEntry } from "./growth";
 import type {
   EngagementBreakdown,
   Granularity,
+  NetworkSummary,
   TelemetryEventPage,
   TelemetryFilters,
   TelemetryRange,
   TelemetrySummary,
+  UserNetworks,
 } from "./admin-analytics";
 import type { operations } from "./backend-v2-schema";
 import { boundedText, normalizedTag, restaurantAddressLimit } from "./content-rules";
@@ -801,6 +803,12 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
       granularity: Granularity;
     }) =>
       data<EngagementBreakdown>("/admin/engagement/stats/breakdown", { query }),
+    /** IP and network type at registration and at the latest use. */
+    adminUserNetwork: (userId: number) =>
+      data<UserNetworks>(`/admin/users/${userId}/network`),
+    /** Networks of new and active accounts in a closed range (at most 92 days). */
+    userNetworkStats: (query: { from: string; to: string }) =>
+      data<NetworkSummary>("/admin/stats/user-networks", { query }),
     adminTelemetrySummary: (query: TelemetryFilters & TelemetryRange) =>
       data<TelemetrySummary>("/admin/telemetry/summary", { query }),
     adminTelemetryEvents: (

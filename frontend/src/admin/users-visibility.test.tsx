@@ -11,6 +11,7 @@ vi.mock("../app/runtime", () => ({ isDemo: false }));
 
 let host: HTMLDivElement, root: Root, filters: HTMLStyleElement;
 let cache: QueryClient;
+const adminUserNetwork = vi.fn();
 beforeEach(() => {
   (
     globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }
@@ -55,7 +56,7 @@ async function renderUsers(items: Record<string, unknown>[]) {
   });
   const identity = {
     user: { id: 10, role: "admin" },
-    api: { adminUsers: vi.fn() },
+    api: { adminUsers: vi.fn(), adminUserNetwork },
   } as unknown as AppState;
   await act(() =>
     root.render(
@@ -83,4 +84,34 @@ it("keeps the empty-list explanation visible with cosmetic ad filters", async ()
   const empty = host.querySelector('[role="status"]');
   expect(empty?.textContent).toContain("暂无用户");
   expectVisible(empty);
+});
+
+it("shows the network of the opened account, and keeps controls if it fails", async () => {
+  const open = async () => {
+    await act(async () =>
+      host.querySelector<HTMLElement>("tbody button")!.click(),
+    );
+    await act(async () => void (await new Promise((r) => setTimeout(r, 20))));
+  };
+  adminUserNetwork.mockResolvedValueOnce({
+    registrationIp: "203.0.113.5",
+    registrationNetwork: "CERNET",
+    lastIp: null,
+    lastNetwork: "UNKNOWN",
+    lastUsedAt: null,
+  });
+  await renderUsers([{ id: 21, displayName: "测试食友", role: "user" }]);
+  await open();
+  expect(adminUserNetwork).toHaveBeenCalledWith(21);
+  expect(document.body.textContent).toContain("203.0.113.5");
+  expect(document.body.textContent).toContain("教育网");
+
+  await act(() => root.unmount());
+  root = createRoot(host);
+  cache.clear();
+  adminUserNetwork.mockRejectedValueOnce(new Error("offline"));
+  await renderUsers([{ id: 21, displayName: "测试食友", role: "user" }]);
+  await open();
+  expect(document.body.textContent).toContain("加载失败");
+  expect(document.body.textContent).toContain("封禁账号");
 });

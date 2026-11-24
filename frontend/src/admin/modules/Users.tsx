@@ -6,6 +6,7 @@ import { useAdminState } from "../../app/admin-state";
 import { useApp } from "../../app/state";
 import type { Schema } from "../../api/models";
 import type { AdminUserFilters } from "../../api/service";
+import { networkName } from "../../api/admin-analytics";
 import { useTask } from "../../components/useTask";
 import {
   Async,
@@ -216,6 +217,11 @@ export default function Users() {
 
 function UserDrawer({ user: u, onClose }: { user: Row; onClose: () => void }) {
   const { api, user: me } = useApp(),
+    network = useQuery({
+      queryKey: ["admin", "user-network", u.id],
+      queryFn: () => api.adminUserNetwork(u.id!),
+      retry: false,
+    }),
     [confirmUnban, setConfirmUnban] = useState(false),
     ban = useTask("账号已封禁", undefined, ["admin"]),
     unban = useTask("已解除封禁", () => setConfirmUnban(false), ["admin"]),
@@ -260,6 +266,19 @@ function UserDrawer({ user: u, onClose }: { user: Row; onClose: () => void }) {
           ["最近更新", dateTime(u.updatedAt)],
         ]}
       />
+
+      <h3 className="ew-admin-subhead">网络来源</h3>
+      <Async query={network} rows={3}>
+        <Meta
+          items={[
+            ["注册 IP", network.data?.registrationIp],
+            ["注册网络", networkName(network.data?.registrationNetwork)],
+            ["最近使用 IP", network.data?.lastIp],
+            ["最近使用网络", networkName(network.data?.lastNetwork)],
+            ["最近使用时间", dateTime(network.data?.lastUsedAt)],
+          ]}
+        />
+      </Async>
 
       <h3 className="ew-admin-subhead">账号状态</h3>
       {isBanned ? (

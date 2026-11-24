@@ -1856,7 +1856,10 @@ export function demoTransport(
     case "getAdminEngagementStatsBreakdown":
     case "getAdminTelemetrySummary":
     case "getAdminTelemetryEvents":
+    case "getAdminStatsUserNetworks":
       return ok(demoAnalytics(endpoints[name].path, q));
+    case "getAdminUsersByUserIdNetwork":
+      return ok(demoAnalytics(`/admin/users/${userId}/network`, q));
     case "getAdminSummaryTrend": {
       const count = Math.min(90, Math.max(1, Number(q.days) || 7));
       const verified = state.people.filter((p) => p.verified).length;

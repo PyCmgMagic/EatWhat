@@ -344,6 +344,18 @@ export async function readBackendV2() {
   ])
     response(path, "post", "ResultFeedbackAccepted");
   schemas.FeedbackTarget = object({ type: string, id: int64 });
+  // Accounts without a recorded registration or use, and empty ranges.
+  for (const name of [
+    "registrationIp",
+    "registrationNetwork",
+    "lastIp",
+    "lastNetwork",
+    "lastUsedAt",
+  ])
+    schemas.UserNetworks.properties[name] = nullable(
+      schemas.UserNetworks.properties[name],
+    );
+  schemas.NetworkCounts.properties.cernetRate = nullable(decimal);
   schemas.CaseView.properties.target = nullable(ref("FeedbackTarget"));
 
   for (const [name, fields] of Object.entries({
@@ -462,7 +474,7 @@ export async function readBackendV2() {
 }
 
 const { spec, endpoints, callbacks } = await readBackendV2();
-if (Object.keys(endpoints).length !== 178 || callbacks.length !== 8) {
+if (Object.keys(endpoints).length !== 180 || callbacks.length !== 8) {
   throw new Error(
     "Backend v2 operation count changed; review the client coverage.",
   );

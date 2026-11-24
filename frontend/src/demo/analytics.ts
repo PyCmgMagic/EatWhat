@@ -1,8 +1,10 @@
 import type {
   EngagementBreakdown,
   Granularity,
+  NetworkSummary,
   TelemetryEventPage,
   TelemetrySummary,
+  UserNetworks,
 } from "../api/admin-analytics";
 import { shiftDate } from "../api/admin-analytics";
 import type { Query } from "../api/client";
@@ -12,10 +14,13 @@ import { businessDate } from "../api/growth";
 const HOUR = 3600000;
 const DAY = 24 * HOUR;
 const platforms = ["WEB", "IOS", "ANDROID", "APP", "UNKNOWN"] as const;
+const userNetworkPath = /^\/admin\/users\/(\d+)\/network$/;
 export const isAnalyticsPath = (path: string) =>
   path === "/admin/engagement/stats/breakdown" ||
   path === "/admin/telemetry/summary" ||
-  path === "/admin/telemetry/events";
+  path === "/admin/telemetry/events" ||
+  path === "/admin/stats/user-networks" ||
+  userNetworkPath.test(path);
 
 const beijing = (ms: number) =>
   new Date(ms + 8 * HOUR).toISOString().slice(0, 19) + "+08:00";
@@ -94,6 +99,43 @@ function breakdown(q: Query, now: number): EngagementBreakdown {
   };
 }
 
+function networkSummary(q: Query, now: number): NetworkSummary {
+  const today = businessDate(new Date(now));
+  const to = String(q.to ?? today);
+  const from = String(q.from ?? shiftDate(to, -13));
+  const days = (bound(to, true) - bound(from, false)) / DAY;
+  if (!(days > 0 && days <= 92)) throw new ApiError("一次最多查询 92 天", 10001);
+  const counts = (cernet: number, other: number, unknown: number) => {
+    const total = cernet + other + unknown;
+    return { total, cernet, other, unknown, cernetRate: total ? cernet / total : null };
+  };
+  return {
+    from,
+    to,
+    timezone: "Asia/Shanghai",
+    registered: counts(days, Math.floor(days / 2), 1),
+    active: counts(24, 13, 3),
+  };
+}
+
+// Addresses come from the documentation ranges.
+const userNetwork = (id: number, now: number): UserNetworks =>
+  id % 3 === 0
+    ? {
+        registrationIp: null,
+        registrationNetwork: "UNKNOWN",
+        lastIp: null,
+        lastNetwork: "UNKNOWN",
+        lastUsedAt: null,
+      }
+    : {
+        registrationIp: `203.0.113.${id % 250}`,
+        registrationNetwork: "OTHER",
+        lastIp: `2001:db8::${id % 250}`,
+        lastNetwork: "CERNET",
+        lastUsedAt: now - 2 * HOUR,
+      };
+
 const samples = [
   { event: "app_open" },
   { event: "page_view", page: "HOME", durationMs: 8200 },
@@ -135,7 +177,15 @@ export function demoAnalytics(
   path: string,
   q: Query,
   now = Date.now(),
-): EngagementBreakdown | TelemetrySummary | TelemetryEventPage {
+):
+  | EngagementBreakdown
+  | TelemetrySummary
+  | TelemetryEventPage
+  | NetworkSummary
+  | UserNetworks {
+  const userId = userNetworkPath.exec(path)?.[1];
+  if (userId) return userNetwork(Number(userId), now);
+  if (path === "/admin/stats/user-networks") return networkSummary(q, now);
   if (path === "/admin/engagement/stats/breakdown") return breakdown(q, now);
   const { window, rows } = telemetry(q, now);
   if (path === "/admin/telemetry/summary") {

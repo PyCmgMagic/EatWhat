@@ -804,6 +804,11 @@ export const endpoints = {
     "path": "/admin/summary/trend",
     "access": "admin"
   },
+  "getAdminStatsUserNetworks": {
+    "method": "GET",
+    "path": "/admin/stats/user-networks",
+    "access": "admin"
+  },
   "getAdminRemoteConfig": {
     "method": "GET",
     "path": "/admin/remote-config",
@@ -847,6 +852,11 @@ export const endpoints = {
   "getAdminTelemetryEvents": {
     "method": "GET",
     "path": "/admin/telemetry/events",
+    "access": "admin"
+  },
+  "getAdminUsersByUserIdNetwork": {
+    "method": "GET",
+    "path": "/admin/users/{userId}/network",
     "access": "admin"
   },
   "getAdminTelemetrySummary": {

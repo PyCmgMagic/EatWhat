@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import {
   breakdownRange,
   bucketLabel,
+  cernetShare,
+  networkName,
   telemetryProperties,
   type BreakdownForm,
 } from "./admin-analytics";
@@ -68,6 +70,15 @@ it("describes whitelisted properties", () => {
   expect(telemetryProperties({ event: "app_open" })).toBe("");
 });
 
+it("tells a missing share and network from zero and unknown", () => {
+  expect(cernetShare(null)).toBe("—");
+  expect(cernetShare(0)).toBe("0.0%");
+  expect(cernetShare(0.625)).toBe("62.5%");
+  expect(networkName("CERNET")).toBe("教育网");
+  expect(networkName(null)).toBe("—");
+  expect(networkName("NEW")).toBe("NEW");
+});
+
 it("lets the server clock set the window edges", () => {
   expect(spanRange("7")).toEqual({});
   expect(spanRange("1", Date.parse("2026-11-24T00:00:00Z"))).toEqual({
@@ -86,15 +97,22 @@ it("reaches the v2 endpoints through the bridge unchanged", async () => {
     to: "2026-11-24T21:00",
     granularity: "HOUR",
   });
+  await api.adminUserNetwork(21);
+  await api.userNetworkStats({ from: "2026-11-11", to: "2026-11-24" });
   await api.adminTelemetrySummary({ platform: "WEB" });
   await api.adminTelemetryEvents({ page: 2, pageSize: 20, event: "share" });
   expect(
-    live.mock.calls.map(([path, o]) => [path, (o as { query: unknown }).query]),
+    live.mock.calls.map(([path, o]) => [
+      path,
+      (o as { query?: unknown } | undefined)?.query,
+    ]),
   ).toEqual([
     [
       "/admin/engagement/stats/breakdown",
       { from: "2026-11-24T18:00", to: "2026-11-24T21:00", granularity: "HOUR" },
     ],
+    ["/admin/users/21/network", undefined],
+    ["/admin/stats/user-networks", { from: "2026-11-11", to: "2026-11-24" }],
     ["/admin/telemetry/summary", { platform: "WEB" }],
     ["/admin/telemetry/events", { page: 2, pageSize: 20, event: "share" }],
   ]);
