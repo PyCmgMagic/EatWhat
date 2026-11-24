@@ -29,6 +29,9 @@ export const platformNames: Record<string, string> = {
 };
 const networkNames: Record<string, string> = {
   CERNET: "教育网",
+  CHINA_MOBILE: "移动",
+  CHINA_UNICOM: "联通",
+  CHINA_TELECOM: "电信",
   OTHER: "其他网络",
   UNKNOWN: "未知",
 };

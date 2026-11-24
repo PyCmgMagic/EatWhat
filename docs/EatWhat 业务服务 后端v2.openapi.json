@@ -5977,7 +5977,7 @@
     "/admin/stats/user-networks" : {
       "get" : {
         "tags" : [ "账号 · AdminUser" ],
-        "summary" : "【需角色：admin】统计区间内新增账号注册网络和活跃账号当前最近使用网络（北京时间，默认14天，最多92天）",
+        "summary" : "【需角色：admin】统计新增账号注册网络与活跃账号最近使用网络，otherBreakdown 细分 other 人数（北京时间，默认14天，最多92天）",
         "operationId" : "networkSummary",
         "parameters" : [ {
           "name" : "from",
@@ -6402,7 +6402,7 @@
     "/admin/users/{userId}/network" : {
       "get" : {
         "tags" : [ "账号 · AdminUser" ],
-        "summary" : "【需角色：admin】查询账号注册与最近使用的 IP 和网络类型（CERNET、OTHER、UNKNOWN）",
+        "summary" : "【需角色：admin】查询注册与最近使用 IP、网络类型和运营商（教育网、移动、联通、电信、其他、未知）",
         "operationId" : "network",
         "parameters" : [ {
           "name" : "userId",
@@ -11880,6 +11880,14 @@
           "lastUsedAt" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "registrationOperator" : {
+            "type" : "string",
+            "enum" : [ "CERNET", "CHINA_MOBILE", "CHINA_UNICOM", "CHINA_TELECOM", "OTHER", "UNKNOWN" ]
+          },
+          "lastOperator" : {
+            "type" : "string",
+            "enum" : [ "CERNET", "CHINA_MOBILE", "CHINA_UNICOM", "CHINA_TELECOM", "OTHER", "UNKNOWN" ]
           }
         }
       },
@@ -11905,6 +11913,9 @@
           "cernetRate" : {
             "type" : "number",
             "format" : "double"
+          },
+          "otherBreakdown" : {
+            "$ref" : "#/components/schemas/OtherBreakdown"
           }
         }
       },
@@ -11925,6 +11936,27 @@
           },
           "active" : {
             "$ref" : "#/components/schemas/NetworkCounts"
+          }
+        }
+      },
+      "OtherBreakdown" : {
+        "type" : "object",
+        "properties" : {
+          "chinaMobile" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "chinaUnicom" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "chinaTelecom" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "remaining" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },

@@ -63,7 +63,10 @@ export function NetworkSources() {
                   <th>账号</th>
                   <th>总数</th>
                   <th>教育网</th>
-                  <th>其他网络</th>
+                  <th>移动</th>
+                  <th>联通</th>
+                  <th>电信</th>
+                  <th>其他</th>
                   <th>未知</th>
                   <th>教育网占比</th>
                 </tr>
@@ -78,18 +81,23 @@ export function NetworkSources() {
       )}
       <p className="ew-admin-toolbar-note">
         活跃账号按其当前最近一次使用的网络归类，不是区间内当时的网络。占比以总数（含未知）为分母。
+        「其他」包括其他公网出口和归属有歧义的出口。
       </p>
     </Panel>
   );
 }
 
 function Counts({ label, counts }: { label: string; counts?: NetworkCounts }) {
+  const split = counts?.otherBreakdown;
   return (
     <tr>
       <td>{label}</td>
       <td>{num(counts?.total)}</td>
       <td>{num(counts?.cernet)}</td>
-      <td>{num(counts?.other)}</td>
+      <td>{num(split?.chinaMobile)}</td>
+      <td>{num(split?.chinaUnicom)}</td>
+      <td>{num(split?.chinaTelecom)}</td>
+      <td>{num(split ? split.remaining : counts?.other)}</td>
       <td>{num(counts?.unknown)}</td>
       <td>{cernetShare(counts?.cernetRate)}</td>
     </tr>

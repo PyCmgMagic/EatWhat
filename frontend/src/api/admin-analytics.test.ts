@@ -75,6 +75,7 @@ it("tells a missing share and network from zero and unknown", () => {
   expect(cernetShare(0)).toBe("0.0%");
   expect(cernetShare(0.625)).toBe("62.5%");
   expect(networkName("CERNET")).toBe("教育网");
+  expect(networkName("CHINA_TELECOM")).toBe("电信");
   expect(networkName(null)).toBe("—");
   expect(networkName("NEW")).toBe("NEW");
 });

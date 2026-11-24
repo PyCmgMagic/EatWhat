@@ -272,9 +272,20 @@ function UserDrawer({ user: u, onClose }: { user: Row; onClose: () => void }) {
         <Meta
           items={[
             ["注册 IP", network.data?.registrationIp],
-            ["注册网络", networkName(network.data?.registrationNetwork)],
+            [
+              "注册网络",
+              networkName(
+                network.data?.registrationOperator ??
+                  network.data?.registrationNetwork,
+              ),
+            ],
             ["最近使用 IP", network.data?.lastIp],
-            ["最近使用网络", networkName(network.data?.lastNetwork)],
+            [
+              "最近使用网络",
+              networkName(
+                network.data?.lastOperator ?? network.data?.lastNetwork,
+              ),
+            ],
             ["最近使用时间", dateTime(network.data?.lastUsedAt)],
           ]}
         />

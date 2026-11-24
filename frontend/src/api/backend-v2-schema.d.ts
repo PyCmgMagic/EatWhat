@@ -2452,7 +2452,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 【需角色：admin】统计区间内新增账号注册网络和活跃账号当前最近使用网络（北京时间，默认14天，最多92天） */
+        /** 【需角色：admin】统计新增账号注册网络与活跃账号最近使用网络，otherBreakdown 细分 other 人数（北京时间，默认14天，最多92天） */
         get: operations["getAdminStatsUserNetworks"];
         put?: never;
         post?: never;
@@ -2640,7 +2640,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 【需角色：admin】查询账号注册与最近使用的 IP 和网络类型（CERNET、OTHER、UNKNOWN） */
+        /** 【需角色：admin】查询注册与最近使用 IP、网络类型和运营商（教育网、移动、联通、电信、其他、未知） */
         get: operations["getAdminUsersByUserIdNetwork"];
         put?: never;
         post?: never;
@@ -4771,6 +4771,10 @@ export interface components {
             lastIp?: string | null;
             lastNetwork?: string | null;
             lastUsedAt?: number | null;
+            /** @enum {string} */
+            registrationOperator?: "CERNET" | "CHINA_MOBILE" | "CHINA_UNICOM" | "CHINA_TELECOM" | "OTHER" | "UNKNOWN";
+            /** @enum {string} */
+            lastOperator?: "CERNET" | "CHINA_MOBILE" | "CHINA_UNICOM" | "CHINA_TELECOM" | "OTHER" | "UNKNOWN";
         };
         NetworkCounts: {
             /** Format: int64 */
@@ -4782,6 +4786,7 @@ export interface components {
             /** Format: int64 */
             unknown?: number;
             cernetRate?: number | null;
+            otherBreakdown?: components["schemas"]["OtherBreakdown"];
         };
         NetworkSummary: {
             from?: string;
@@ -4789,6 +4794,16 @@ export interface components {
             timezone?: string;
             registered?: components["schemas"]["NetworkCounts"];
             active?: components["schemas"]["NetworkCounts"];
+        };
+        OtherBreakdown: {
+            /** Format: int64 */
+            chinaMobile?: number;
+            /** Format: int64 */
+            chinaUnicom?: number;
+            /** Format: int64 */
+            chinaTelecom?: number;
+            /** Format: int64 */
+            remaining?: number;
         };
         ResultNetworkSummary: {
             /** Format: int32 */
