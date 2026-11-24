@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import { businessDate, validBusinessDate } from "../../api/growth";
 import { Async, Columns, Notice, Panel, Segmented, num } from "../kit";
+import { ActivityBreakdown } from "./ActivityBreakdown";
 import { useActiveSeries } from "./Overview";
 
 export default function Engagement() {
@@ -89,6 +90,7 @@ export default function Engagement() {
       >
         <Columns data={series.points} label={`截至 ${date} 的每日活跃用户`} />
       </Panel>
+      <ActivityBreakdown />
       <Notice>
         月活与最近 30
         天均按用户去重，不是日活之和。仅统计仍保留的注册用户活动，注销账号的明细会清除；管理端查询不计入活跃。

@@ -1,4 +1,12 @@
 import type { UserTitleEntry } from "./growth";
+import type {
+  EngagementBreakdown,
+  Granularity,
+  TelemetryEventPage,
+  TelemetryFilters,
+  TelemetryRange,
+  TelemetrySummary,
+} from "./admin-analytics";
 import type { operations } from "./backend-v2-schema";
 import { boundedText, normalizedTag, restaurantAddressLimit } from "./content-rules";
 import { putImage } from "./storage-upload";
@@ -755,6 +763,19 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         timezone: string;
         days: { date: string; activeUsers: number }[];
       }>("/admin/engagement/stats/range", { query: { from, to } }),
+    /** Active users per hour, day or month, split by client platform. */
+    engagementBreakdown: (query: {
+      from: string;
+      to: string;
+      granularity: Granularity;
+    }) =>
+      data<EngagementBreakdown>("/admin/engagement/stats/breakdown", { query }),
+    adminTelemetrySummary: (query: TelemetryFilters & TelemetryRange) =>
+      data<TelemetrySummary>("/admin/telemetry/summary", { query }),
+    adminTelemetryEvents: (
+      query: TelemetryFilters &
+        TelemetryRange & { page: number; pageSize: number },
+    ) => data<TelemetryEventPage>("/admin/telemetry/events", { query }),
     /** Registrations per day for the last `days` days, oldest first. */
     summaryTrend: (days = 14) =>
       data<{ days: { date: string; newUsers: number }[] }>(

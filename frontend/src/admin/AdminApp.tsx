@@ -26,6 +26,7 @@ import "./admin.css";
 const pages: Record<AdminModuleId, ReturnType<typeof lazy>> = {
   summary: lazy(() => import("./modules/Overview")),
   engagement: lazy(() => import("./modules/Engagement")),
+  telemetry: lazy(() => import("./modules/Telemetry")),
   foods: lazy(() => import("./modules/Foods")),
   restaurants: lazy(() => import("./modules/Restaurants")),
   hubs: lazy(() =>

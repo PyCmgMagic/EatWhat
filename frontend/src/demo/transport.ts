@@ -1,3 +1,4 @@
+import { demoAnalytics, isAnalyticsPath } from "./analytics";
 import { readSession } from "../app/runtime";
 import {
   handleComments,
@@ -446,6 +447,11 @@ export const demoTransport: Transport = async (path, options) => {
     const result = demoGrowth(s.growth, path, q);
     save();
     return { code: 0, data: structuredClone(result), msg: "success" };
+  }
+  if (isAnalyticsPath(path)) {
+    if (new URLSearchParams(location.search).get("persona") !== "admin")
+      throw new ApiError("需要管理员身份。", 20004, 403);
+    return { code: 0, data: demoAnalytics(path, q), msg: "success" };
   }
   if (isCommentPath(path)) {
     s.commentsV7 ??= seedComments(s.foods, s.user);

@@ -834,6 +834,21 @@ export const endpoints = {
     "path": "/admin/engagement/stats",
     "access": "admin"
   },
+  "getAdminEngagementStatsBreakdown": {
+    "method": "GET",
+    "path": "/admin/engagement/stats/breakdown",
+    "access": "admin"
+  },
+  "getAdminTelemetryEvents": {
+    "method": "GET",
+    "path": "/admin/telemetry/events",
+    "access": "admin"
+  },
+  "getAdminTelemetrySummary": {
+    "method": "GET",
+    "path": "/admin/telemetry/summary",
+    "access": "admin"
+  },
   "getAdminEngagementStatsRange": {
     "method": "GET",
     "path": "/admin/engagement/stats/range",

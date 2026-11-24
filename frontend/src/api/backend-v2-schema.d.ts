@@ -2547,6 +2547,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/engagement/stats/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需角色：admin】按客户端和时间段查询活跃用户
+         * @description 按北京时间统计有效会话请求，管理端请求和游客不计。按 HOUR、DAY 或 MONTH 分桶。
+         *     from、to 支持 YYYY-MM-DD（包含所选日期）或北京时间 YYYY-MM-DDTHH:00（整点左闭右开）。
+         *     to 默认今天结束，from 默认取含结束日期的最近 14 天，HOUR 默认最近 7 天。最多 92 天，HOUR 最多 7 天。
+         *     请求区间转换为左闭右开的 from、to，observedFrom、observedTo 给出其实际覆盖部分。
+         *     新版上线前的分端和小时数据不可补算，详情仅保留最近 92 个自然日。完全未覆盖时，observedFrom、observedTo、total 为 null。
+         *     每桶和区间总计分别按账号去重。用户跨端会出现在多个端，平台人数之和可能大于整体。
+         *     WEB、IOS、ANDROID 来自会话，APP 表示未识别系统的移动端，UNKNOWN 表示无法判断客户端。
+         *     例如查询某天 18 点至 21 点，传 from=YYYY-MM-DDT18:00、to=YYYY-MM-DDT21:00、granularity=HOUR。
+         */
+        get: operations["getAdminEngagementStatsBreakdown"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/telemetry/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需角色：admin】分页查询遥测事件
+         * @description from、to 接收带时区偏移的 ISO 8601 时间，按服务端收到事件的时间查询，含 from、不含 to。
+         *     to 默认当前时间，from 默认 to 往前 7 天，跨度最多 7 天。统计只读取最近保留的 7 天。
+         *     window.observedFrom 为 null 表示区间已超出保留期。可按 event、platform 或 audience 筛选。
+         *     WEB、IOS、ANDROID 来自会话或安装登记。APP 表示未识别系统的移动端，UNKNOWN 包含无端信息的历史事件。
+         *     按接收时间从新到旧分页，同一时间按事件 ID 稳定排序。page 从 1 起，pageSize 默认 20、最多 100。
+         *     项目只含时间、端、事件类型、登录状态和白名单属性。翻页时可固定第一次响应返回的 window.to。
+         */
+        get: operations["getAdminTelemetryEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/telemetry/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需角色：admin】汇总遥测事件
+         * @description from、to 接收带时区偏移的 ISO 8601 时间，按服务端收到事件的时间查询，含 from、不含 to。
+         *     to 默认当前时间，from 默认 to 往前 7 天，跨度最多 7 天。统计只读取最近保留的 7 天。
+         *     window.observedFrom 为 null 表示区间已超出保留期。可按 event、platform 或 audience 筛选。
+         *     WEB、IOS、ANDROID 来自会话或安装登记。APP 表示未识别系统的移动端，UNKNOWN 包含无端信息的历史事件。
+         *     返回总计、各事件和各端的事件量、去重登录账号数和去重游客安装数。范围完全过期时 total 为 null。
+         *     同一账号或游客安装可出现在多个分组。统计使用现有同意和保留规则下收集的事件。
+         */
+        get: operations["getAdminTelemetrySummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/engagement/stats/range": {
         parameters: {
             query?: never;
@@ -4787,6 +4864,115 @@ export interface components {
             date?: string;
             /** Format: int64 */
             activeUsers?: number;
+        };
+        EngagementBreakdown: {
+            /** Format: date-time */
+            from?: string;
+            /** Format: date-time */
+            to?: string;
+            /** @enum {string} */
+            granularity?: "HOUR" | "DAY" | "MONTH";
+            timezone?: string;
+            /** Format: date-time */
+            coverageFrom?: string;
+            /** Format: date-time */
+            observedFrom?: string | null;
+            /** Format: date-time */
+            observedTo?: string | null;
+            total?: components["schemas"]["EngagementCounts"] | null;
+            buckets?: components["schemas"]["EngagementBucket"][];
+        };
+        EngagementBucket: {
+            /** Format: date-time */
+            start?: string;
+            /** Format: date-time */
+            end?: string;
+            counts?: components["schemas"]["EngagementCounts"];
+        };
+        EngagementCounts: {
+            /** Format: int64 */
+            activeUsers?: number;
+            byPlatform?: {
+                [key: string]: number;
+            };
+        };
+        PageResultTelemetryEventView: {
+            /** Format: int64 */
+            currentPage?: number;
+            items?: components["schemas"]["TelemetryEventView"][];
+            /** Format: int64 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalItems?: number;
+            hasNext?: boolean;
+        };
+        ResultEngagementBreakdown: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["EngagementBreakdown"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        ResultTelemetryEventPage: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["TelemetryEventPage"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        ResultTelemetrySummary: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["TelemetrySummary"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        TelemetryCounts: {
+            /** Format: int64 */
+            events?: number;
+            /** Format: int64 */
+            signedInUsers?: number;
+            /** Format: int64 */
+            guestInstalls?: number;
+        };
+        TelemetryEventPage: {
+            window?: components["schemas"]["TelemetryWindow"];
+            events?: components["schemas"]["PageResultTelemetryEventView"];
+        };
+        TelemetryEventView: {
+            /** Format: date-time */
+            receivedAt?: string;
+            event?: string;
+            /** @enum {string} */
+            platform?: "WEB" | "IOS" | "ANDROID" | "APP" | "UNKNOWN";
+            /** @enum {string} */
+            audience?: "SIGNED_IN" | "GUEST";
+            properties?: {
+                [key: string]: unknown;
+            };
+        };
+        TelemetryGroup: {
+            value?: string;
+            counts?: components["schemas"]["TelemetryCounts"];
+        };
+        TelemetrySummary: {
+            window?: components["schemas"]["TelemetryWindow"];
+            total?: components["schemas"]["TelemetryCounts"] | null;
+            byEvent?: components["schemas"]["TelemetryGroup"][];
+            byPlatform?: components["schemas"]["TelemetryGroup"][];
+        };
+        TelemetryWindow: {
+            /** Format: date-time */
+            from?: string;
+            /** Format: date-time */
+            to?: string;
+            /** Format: date-time */
+            retainedFrom?: string;
+            /** Format: date-time */
+            observedFrom?: string | null;
         };
         EngagementRange: {
             from?: string;
@@ -9146,6 +9332,86 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultEngagementStats"];
+                };
+            };
+        };
+    };
+    getAdminEngagementStatsBreakdown: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                granularity?: "HOUR" | "DAY" | "MONTH";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultEngagementBreakdown"];
+                };
+            };
+        };
+    };
+    getAdminTelemetryEvents: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                /** @description 如 app_open、page_view、dish_shuffle、dish_decide、navigate_shop，完整列表见上报遥测事件。 */
+                event?: string;
+                platform?: "WEB" | "IOS" | "ANDROID" | "APP" | "UNKNOWN";
+                audience?: "SIGNED_IN" | "GUEST";
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultTelemetryEventPage"];
+                };
+            };
+        };
+    };
+    getAdminTelemetrySummary: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                /** @description 如 app_open、page_view、dish_shuffle、dish_decide、navigate_shop，完整列表见上报遥测事件。 */
+                event?: string;
+                platform?: "WEB" | "IOS" | "ANDROID" | "APP" | "UNKNOWN";
+                audience?: "SIGNED_IN" | "GUEST";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultTelemetrySummary"];
                 };
             };
         };

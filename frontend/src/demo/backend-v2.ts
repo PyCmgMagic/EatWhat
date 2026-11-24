@@ -4,6 +4,7 @@ import type { Operation, V2Schema } from "../api/backend-v2";
 import type { Envelope, RequestOptions } from "../api/client";
 import { reactionSummary } from "./comment-reactions";
 import { demoFeedbackFields } from "./feedback";
+import { demoAnalytics } from "./analytics";
 import { demoRecommendationPage, type DemoExposure } from "./recommendations";
 import { codePoints, restaurantAddressLimit } from "../api/content-rules";
 
@@ -1833,6 +1834,10 @@ export function demoTransport(
         timezone: "Asia/Shanghai",
       });
     }
+    case "getAdminEngagementStatsBreakdown":
+    case "getAdminTelemetrySummary":
+    case "getAdminTelemetryEvents":
+      return ok(demoAnalytics(endpoints[name].path, q));
     case "getAdminSummaryTrend": {
       const count = Math.min(90, Math.max(1, Number(q.days) || 7));
       const verified = state.people.filter((p) => p.verified).length;

@@ -388,6 +388,12 @@
 :root[data-theme="dark"] .pc-motion-tabs[data-indicator-shape="line"] > .pc-tab-indicator,
 :root[data-theme="dark"] .profile-overview-tabs > a[aria-current="page"]::after,
 :root[data-theme="dark"] .ew-admin-meter i,
+:root[data-theme="dark"]
+  .ew-admin-columns-scroll
+  li:not([data-last])
+  .ew-admin-column-bar {
+  background: #6b645c;
+}
 :root[data-theme="dark"] .ew-admin-columns li[data-last] .ew-admin-column-bar {
   background: var(--night-gold-text);
 }

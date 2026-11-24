@@ -14,7 +14,15 @@ export const adminModules = [
     path: "/admin/engagement",
     icon: "history",
     group: "工作台",
-    detail: "日活、月活与近期走势",
+    detail: "日活、月活、分端与分时走势",
+  },
+  {
+    id: "telemetry",
+    title: "使用统计",
+    path: "/admin/telemetry",
+    icon: "time",
+    group: "工作台",
+    detail: "近 7 天各端的使用事件",
   },
   {
     id: "foods",

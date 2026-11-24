@@ -2093,3 +2093,22 @@ a.ew-admin-stat:hover {
 :is(.admin-page-heading h1, .admin-main):focus-visible {
   outline: none;
 }
+
+/* Platform totals and long hourly charts on the engagement page. */
+.ew-admin-kpis.is-wrap {
+  flex-wrap: wrap;
+  gap: 12px 32px;
+  margin: 0;
+}
+.ew-admin-kpis dt {
+  color: var(--ad-muted);
+  font-size: 12px;
+}
+.ew-admin-kpis dd {
+  margin: 0;
+  font: 700 21px/1.3 var(--ad-display);
+  font-variant-numeric: tabular-nums;
+}
+.ew-admin-columns-scroll {
+  overflow-x: auto;
+}
