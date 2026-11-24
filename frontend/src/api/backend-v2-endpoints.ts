@@ -834,6 +834,11 @@ export const endpoints = {
     "path": "/admin/engagement/stats",
     "access": "admin"
   },
+  "postAdminFoodsByIdOwner": {
+    "method": "POST",
+    "path": "/admin/foods/{id}/owner",
+    "access": "admin"
+  },
   "getAdminEngagementStatsBreakdown": {
     "method": "GET",
     "path": "/admin/engagement/stats/breakdown",

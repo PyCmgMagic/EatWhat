@@ -690,6 +690,24 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         method: "DELETE",
         ...(reason ? { body: { reason } } : {}),
       }),
+    /** Moves a dish, and the experience it earned, to another publisher. */
+    transferFoodOwner: async (id: number, userId: number, reason?: string) => {
+      try {
+        return await data<V2["schemas"]["OwnerTransferResult"]>(
+          `/admin/foods/${id}/owner`,
+          { method: "POST", body: { userId, ...(reason ? { reason } : {}) } },
+        );
+      } catch (error) {
+        // The shared text for 30017 addresses the account's own user.
+        if (error instanceof ApiError && String(error.code) === "30017")
+          throw new ApiError(
+            "对方账号正在注销冷静期中，不能接收菜品。",
+            error.code,
+            error.status,
+          );
+        throw error;
+      }
+    },
     adminTags: (page = 1) =>
       data<Page<Schema["AdminFoodTagVOResponse"]>>("/admin/food-tags", {
         query: { page, pageSize: 20 },

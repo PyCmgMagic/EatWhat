@@ -356,6 +356,7 @@ export async function readBackendV2() {
     ConsentPolicy: ["privacyText", "crossBorderText"],
     ConsentStatus: ["agreedVersion", "agreedAt", "currentVersion"],
     Pick: ["restaurant"],
+    OwnerTransferResult: ["fromUserId"],
     Stat: ["rate"],
     MyRatings: ["dineIn", "delivery"],
     Restaurant: [
@@ -461,7 +462,7 @@ export async function readBackendV2() {
 }
 
 const { spec, endpoints, callbacks } = await readBackendV2();
-if (Object.keys(endpoints).length !== 177 || callbacks.length !== 8) {
+if (Object.keys(endpoints).length !== 178 || callbacks.length !== 8) {
   throw new Error(
     "Backend v2 operation count changed; review the client coverage.",
   );

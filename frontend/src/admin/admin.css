@@ -2112,3 +2112,44 @@ a.ew-admin-stat:hover {
 .ew-admin-columns-scroll {
   overflow-x: auto;
 }
+
+/* Choosing the new publisher of a dish. */
+.ew-admin-transfer {
+  display: grid;
+  gap: 18px;
+}
+.ew-admin-people {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.ew-admin-people label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--ad-line);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.ew-admin-people label > span:not(.ew-admin-avatar) {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.ew-admin-people small {
+  display: block;
+  color: var(--ad-muted);
+  font-size: 12px;
+}
+.ew-admin-people label:has(:checked) {
+  border-color: var(--ad-ink);
+  background: var(--ad-sunken);
+}
+.ew-admin-people label:has(:disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

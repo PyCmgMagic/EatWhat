@@ -80,7 +80,7 @@ export function createV2Api({
     name: K,
     ...args: [options?: V2Options<K>]
   ) => {
-    const { path: params, ...options } = (args[0] ?? {}) as RequestOptions & {
+    const { path: params, ...options } = ((args[0] as unknown) ?? {}) as RequestOptions & {
       path?: Record<string, string | number>;
     };
     const endpoint = endpoints[name];

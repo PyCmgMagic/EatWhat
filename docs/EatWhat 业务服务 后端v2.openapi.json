@@ -6194,6 +6194,47 @@
         } ]
       }
     },
+    "/admin/foods/{id}/owner" : {
+      "post" : {
+        "tags" : [ "food · Food" ],
+        "summary" : "【需角色：admin】转移菜品所有权（经验明细一起迁移）",
+        "operationId" : "transferOwner",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OwnerTransferRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultOwnerTransferResult"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ]
+      }
+    },
     "/admin/engagement/stats/breakdown" : {
       "get" : {
         "tags" : [ "账号 · AdminUser" ],
@@ -12117,6 +12158,62 @@
             "type" : "string"
           },
           "activeUsers" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "OwnerTransferRequest" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        }
+      },
+      "OwnerTransferResult" : {
+        "type" : "object",
+        "properties" : {
+          "foodId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "fromUserId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "toUserId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "experience" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "droppedExperience" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "ResultOwnerTransferResult" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "$ref" : "#/components/schemas/OwnerTransferResult"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
             "type" : "integer",
             "format" : "int64"
           }

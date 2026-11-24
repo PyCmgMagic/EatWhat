@@ -914,6 +914,29 @@ export const demoTransport: Transport = async (path, options) => {
     s.foods = s.foods.filter((f) => f.id !== Number(path.split("/").pop()));
     if (s.user.coverFoodId === Number(path.split("/").pop())) s.user.coverFoodId = null;
     save();
+  } else if (/^\/admin\/foods\/\d+\/owner$/.test(path)) {
+    if (new URLSearchParams(location.search).get("persona") !== "admin")
+      throw new ApiError("需要管理员身份。", 20004, 403);
+    const food = s.foods.find((f) => f.id === Number(path.split("/")[3]));
+    if (!food) throw new ApiError("菜品不存在。", 40015);
+    const to = Number(b.userId);
+    if (to !== 10 && to !== 21) throw new ApiError("用户不存在。", 30001);
+    if (s.bannedUsers.includes(to))
+      throw new ApiError("对方账号封禁中", 40002);
+    const from = food.accountId ?? null;
+    if (from === to) throw new ApiError("已经是这位用户发布的菜品", 40002);
+    food.accountId = to;
+    food.uploaderName = to === 10 ? s.user.displayName : "阿圆不想早八";
+    if (from === s.user.id && s.user.coverFoodId === food.id)
+      s.user.coverFoodId = null;
+    result = {
+      foodId: food.id,
+      fromUserId: from,
+      toUserId: to,
+      experience: from == null ? 0 : 15,
+      droppedExperience: 0,
+    };
+    save();
   } else if (path === "/admin/food-tags") {
     if (method === "GET") result = paginate(s.publicTags, q);
     else {

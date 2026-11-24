@@ -1379,6 +1379,25 @@ export function demoTransport(
         ...(previous ? { pictureKeys: next.pictureKeys ?? [] } : {}),
       });
     }
+    case "postAdminFoodsByIdOwner": {
+      const food = state.foods.find((item) => item.id === id);
+      if (!food) return fail(40015, "菜品不存在。");
+      const to = state.people.find((item) => item.id === Number(body.userId));
+      if (!to) return fail(30001, "用户不存在。");
+      if (to.banned) return fail(40002, "对方账号封禁中");
+      const from = food.accountId ?? null;
+      if (from === to.id) return fail(40002, "已经是这位用户发布的菜品");
+      food.accountId = to.id;
+      const previous = state.people.find((item) => item.id === from);
+      if (previous?.coverFoodId === id) delete previous.coverFoodId;
+      return write({
+        foodId: id,
+        fromUserId: from,
+        toUserId: to.id,
+        experience: from == null ? 0 : 15,
+        droppedExperience: 0,
+      });
+    }
     case "deleteFoodsDeleteById":
       state.foods = state.foods.filter((food) => food.id !== id);
       state.people.forEach((owner) => { if (owner.coverFoodId === id) delete owner.coverFoodId; });

@@ -11,6 +11,7 @@ import {
   type Food,
   type Schema,
 } from "../../api/models";
+import { FoodOwnerTransfer } from "./FoodOwnerTransfer";
 import { useTask } from "../../components/useTask";
 import {
   Async,
@@ -43,6 +44,7 @@ export default function Foods() {
     [filters, setFilters] = useAdminState<Filters>("foods.filters", {}),
     [page, setPage] = useAdminState("foods.page", 1),
     [edit, setEdit] = useState<Food | null>(null),
+    [transfer, setTransfer] = useState<Food | null>(null),
     [remove, setRemove] = useState<Food | null>(null),
     q = useQuery({
       queryKey: ["foods", "admin", filters, page],
@@ -190,6 +192,14 @@ export default function Foods() {
                           <Icon name="edit" size={17} />
                         </button>
                         <button
+                          className="ew-admin-icon-btn"
+                          aria-label={`转移 ${food.name} 的归属`}
+                          title="转移归属"
+                          onClick={() => setTransfer(food)}
+                        >
+                          <Icon name="follow" size={17} />
+                        </button>
+                        <button
                           className="ew-admin-icon-btn is-danger"
                           aria-label={`删除 ${food.name}`}
                           title="删除"
@@ -214,6 +224,9 @@ export default function Foods() {
         />
       </Panel>
       {edit && <FoodEditor food={edit} onClose={() => setEdit(null)} />}
+      {transfer && (
+        <FoodOwnerTransfer food={transfer} onClose={() => setTransfer(null)} />
+      )}
       {remove && (
         <Confirm
           danger

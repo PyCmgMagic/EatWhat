@@ -2547,6 +2547,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/foods/{id}/owner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 【需角色：admin】转移菜品所有权（经验明细一起迁移） */
+        post: operations["postAdminFoodsByIdOwner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/engagement/stats/breakdown": {
         parameters: {
             query?: never;
@@ -4864,6 +4881,30 @@ export interface components {
             date?: string;
             /** Format: int64 */
             activeUsers?: number;
+        };
+        OwnerTransferRequest: {
+            /** Format: int64 */
+            userId?: number;
+            reason?: string;
+        };
+        OwnerTransferResult: {
+            /** Format: int64 */
+            foodId?: number;
+            fromUserId?: number | null;
+            /** Format: int64 */
+            toUserId?: number;
+            /** Format: int64 */
+            experience?: number;
+            /** Format: int64 */
+            droppedExperience?: number;
+        };
+        ResultOwnerTransferResult: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["OwnerTransferResult"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
         };
         EngagementBreakdown: {
             /** Format: date-time */
@@ -9332,6 +9373,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultEngagementStats"];
+                };
+            };
+        };
+    };
+    postAdminFoodsByIdOwner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnerTransferRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultOwnerTransferResult"];
                 };
             };
         };
