@@ -930,8 +930,11 @@ function NewShop() {
           />
           <ShopPhotoField
             preview={flow.photoPreview}
+            photo={draft.photo}
             onChange={flow.setPhoto}
             disabled={busy}
+            uploadPhase={flow.photoUploadPhase}
+            uploadError={draft.photo?.uploadError}
           />
           <ShopTraitsFields
             value={draft.traits}
@@ -941,9 +944,7 @@ function NewShop() {
           />
           <footer className="mobile-new-shop-footer">
             <PrimaryButton disabled={!flow.canSubmit}>
-              {flow.uploadingPhoto
-                ? "正在上传门头照片…"
-                : flow.pending ? "正在添加…" : "添加并继续"}
+              {flow.pending ? "正在添加…" : "添加并继续"}
             </PrimaryButton>
           </footer>
         </form>

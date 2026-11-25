@@ -116,6 +116,10 @@
   font-size: 14px;
   font-weight: 700;
 }
+.mobile-new-shop .shop-photo-card {
+  /* Keep the preview actions clear of the sticky submit footer. */
+  scroll-margin-block-end: calc(65px + max(16px, env(safe-area-inset-bottom)));
+}
 .mobile-page-native.mobile-new-shop .ew-shop-traits {
   gap: 24px;
   margin: 0;

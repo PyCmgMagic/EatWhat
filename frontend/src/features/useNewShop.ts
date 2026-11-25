@@ -2,7 +2,7 @@ import { reportWebUsage } from "../app/web-usage";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { MapPlace } from "../api/baidu-places";
-import { resultUncertain } from "../api/client";
+import { errorMessage, resultUncertain } from "../api/client";
 import {
   boundedText,
   codePoints,
@@ -16,6 +16,7 @@ import { useTask } from "../components/useTask";
 import { useMobile } from "../mobile/ui";
 import { requireShopLocation } from "./RestaurantLocationField";
 import type { MapPoint } from "./map-geometry";
+import type { ShopPhotoSelection } from "./shop-photo-edit";
 import { defaultShopTraits, type ShopTraits } from "./ShopTraits";
 
 const searchPath = "/restaurants/new";
@@ -29,7 +30,7 @@ type ShopDraft = {
   description: string;
   point?: MapPoint;
   traits: ShopTraits;
-  photo?: { file: File; key?: string };
+  photo?: ShopPhotoSelection & { key?: string; uploadError?: string };
   uncertain: boolean;
 };
 const desktopDrafts = new Map<number, ShopDraft>();
@@ -82,6 +83,9 @@ export function useNewShop(rememberDraft = false) {
   const formRef = useRef<HTMLFormElement>(null);
   const photoFile = draft.photo?.file;
   const [photoPreview, setPhotoPreview] = useState<string>();
+  const [photoUploadPhase, setPhotoUploadPhase] = useState<
+    "uploading" | "confirming"
+  >();
   useEffect(() => {
     if (!photoFile || !details) {
       setPhotoPreview(undefined);
@@ -156,16 +160,28 @@ export function useNewShop(rememberDraft = false) {
         "地址",
       );
       const point = requireShopLocation(draft.point);
-      let picture = draft.photo?.key;
-      if (draft.photo && !picture) {
-        picture = await upload(draft.photo.file, "restaurants");
-        if (
-          !active.current ||
-          !formRef.current ||
-          currentDraft.current.photo !== draft.photo
-        )
+      const photo = draft.photo;
+      let picture = photo?.key;
+      if (photo && !picture) {
+        const editingPhoto = () =>
+          active.current &&
+          formRef.current &&
+          currentDraft.current.photo === photo;
+        setPhotoUploadPhase("uploading");
+        try {
+          picture = await upload(photo.file, "restaurants", (phase) => {
+            if (editingPhoto()) setPhotoUploadPhase(phase);
+          });
+        } catch (error) {
+          const message = errorMessage(error);
+          if (editingPhoto() && message)
+            update({ photo: { ...photo, uploadError: message } });
           return;
-        update({ photo: { file: draft.photo.file, key: picture } });
+        } finally {
+          if (active.current) setPhotoUploadPhase(undefined);
+        }
+        if (!editingPhoto()) return;
+        update({ photo: { ...photo, key: picture, uploadError: undefined } });
       }
       try {
         const created = await api.createRestaurant({
@@ -211,8 +227,8 @@ export function useNewShop(rememberDraft = false) {
     draft,
     update,
     photoPreview,
-    setPhoto: (file?: File) => update({ photo: file ? { file } : undefined }),
-    uploadingPhoto: task.isPending && !!draft.photo && !draft.photo.key,
+    setPhoto: (photo?: ShopPhotoSelection) => update({ photo }),
+    photoUploadPhase,
     submit,
     busy,
     canSubmit,

@@ -8,25 +8,41 @@ export function photoFraming(
   crop: PhotoFraming,
   frame = PHOTO_FRAMING_SIZE,
 ) {
-  const shortest = Math.min(width, height);
+  const result = rectPhotoFraming(width, height, crop, 1, frame);
+  const { x, y, width: size } = result.source;
+  return { ...result, source: { x, y, size } };
+}
+
+/** For a rectangular frame, both drag axes use the same scale as its width. */
+export function rectPhotoFraming(
+  width: number,
+  height: number,
+  crop: PhotoFraming,
+  aspect: number,
+  frame = PHOTO_FRAMING_SIZE,
+) {
   const zoom = Math.max(1, crop.zoom);
-  const maxX = (((width / shortest) * zoom - 1) * PHOTO_FRAMING_SIZE) / 2;
-  const maxY = (((height / shortest) * zoom - 1) * PHOTO_FRAMING_SIZE) / 2;
+  const sourceWidth = Math.min(width, height * aspect) / zoom;
+  const sourceHeight = sourceWidth / aspect;
+  const scale = PHOTO_FRAMING_SIZE / sourceWidth;
+  const maxX = ((width - sourceWidth) * scale) / 2;
+  const maxY = ((height - sourceHeight) * scale) / 2;
   const x = Math.max(-maxX, Math.min(maxX, crop.x));
   const y = Math.max(-maxY, Math.min(maxY, crop.y));
-  const size = shortest / zoom;
-  const displayWidth = (width / size) * frame;
-  const displayHeight = (height / size) * frame;
+  const displayWidth = (width / sourceWidth) * frame;
+  const displayHeight = (height / sourceWidth) * frame;
   return {
     crop: { x, y, zoom },
     source: {
-      x: (width - size) / 2 - (x * size) / PHOTO_FRAMING_SIZE,
-      y: (height - size) / 2 - (y * size) / PHOTO_FRAMING_SIZE,
-      size,
+      x: (width - sourceWidth) / 2 - x / scale,
+      y: (height - sourceHeight) / 2 - y / scale,
+      width: sourceWidth,
+      height: sourceHeight,
     },
     image: {
       left: (frame - displayWidth) / 2 + (x * frame) / PHOTO_FRAMING_SIZE,
-      top: (frame - displayHeight) / 2 + (y * frame) / PHOTO_FRAMING_SIZE,
+      top:
+        (frame / aspect - displayHeight) / 2 + (y * frame) / PHOTO_FRAMING_SIZE,
       width: displayWidth,
       height: displayHeight,
     },

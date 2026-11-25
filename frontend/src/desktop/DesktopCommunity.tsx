@@ -456,8 +456,11 @@ export function DesktopNewShop() {
               />
               <ShopPhotoField
                 preview={flow.photoPreview}
+                photo={draft.photo}
                 onChange={flow.setPhoto}
                 disabled={busy}
+                uploadPhase={flow.photoUploadPhase}
+                uploadError={draft.photo?.uploadError}
               />
             </section>
             <section
@@ -507,9 +510,7 @@ export function DesktopNewShop() {
                 form="new-shop-form"
                 disabled={!flow.canSubmit}
               >
-                {flow.uploadingPhoto
-                  ? "正在上传门头照片…"
-                  : flow.pending ? "正在提交…" : "提交新店"}
+                {flow.pending ? "正在提交…" : "提交新店"}
                 <Icon name="chevronRight" size={17} />
               </button>
             </div>

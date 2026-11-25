@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { photoFraming } from "./photo-framing";
+import { photoFraming, rectPhotoFraming } from "./photo-framing";
 
 it("keeps the full square at the initial zoom", () => {
   const result = photoFraming(1200, 1200, { x: 0, y: 0, zoom: 1 });
@@ -57,4 +57,20 @@ it("reclamps pan when zooming back out", () => {
   expect(result.crop.y).toBeCloseTo(0);
   expect(result.crop.zoom).toBe(1);
   expect(result.source).toEqual({ x: 0, y: 0, size: 1200 });
+});
+
+it("matches a panned 3:2 preview to the exported source rectangle", () => {
+  const { source, image } = rectPhotoFraming(
+    900,
+    1600,
+    { x: 50, y: -300, zoom: 2 },
+    1.5,
+    180,
+  );
+  expect(source.width).toBe(450);
+  expect(source.height).toBe(300);
+  expect(source.x).toBeCloseTo(150);
+  expect(source.y).toBeCloseTo(1100);
+  expect((-image.left / image.width) * 900).toBeCloseTo(source.x);
+  expect((-image.top / image.height) * 1600).toBeCloseTo(source.y);
 });
