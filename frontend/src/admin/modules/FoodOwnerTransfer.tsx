@@ -23,10 +23,13 @@ const reasonLimit = 200;
 export function FoodOwnerTransfer({
   food,
   recipient,
+  closeCase,
   onClose,
 }: {
   food: Food;
   recipient?: { id: number; displayName?: string };
+  /** Offers, ticked by default, to close the case once the dish has moved. */
+  closeCase?: { label: string; hint: string; run: () => void };
   onClose: () => void;
 }) {
   const { api, toast } = useApp(),
@@ -35,6 +38,7 @@ export function FoodOwnerTransfer({
     [target, setTarget] = useState<Person | null>(recipient ?? null),
     [reason, setReason] = useState(""),
     [confirming, setConfirming] = useState(false),
+    [closing, setClosing] = useState(true),
     // Read once: the dish refetches with its new owner before this closes.
     [alreadyOwner] = useState(
       !!recipient && recipient.id === food.accountId,
@@ -44,7 +48,14 @@ export function FoodOwnerTransfer({
     queryFn: () => api.adminUsers(search.page, { keyword: search.keyword }),
     enabled: !!search.keyword,
   });
-  const task = useTask(undefined, onClose, ["foods", "admin"]);
+  const task = useTask(
+    undefined,
+    () => {
+      onClose();
+      if (closing) closeCase?.run();
+    },
+    ["foods", "admin"],
+  );
   const owner = food.uploaderName?.trim() || (food.accountId ? `#${food.accountId}` : "无（原分享者已注销）");
   const name = target?.displayName?.trim() || `#${target?.id}`;
   const tooLong = Array.from(reason.trim()).length > reasonLimit;
@@ -83,7 +94,7 @@ export function FoodOwnerTransfer({
   const confirmation = target && (
     <Confirm
       title={`把「${food.name}」转给${name}？`}
-      confirmLabel="确认转移"
+      confirmLabel={closeCase && closing ? "转移并结案" : "确认转移"}
       busy={task.isPending}
       onClose={() => {
         if (task.isPending) return;
@@ -94,6 +105,20 @@ export function FoodOwnerTransfer({
     >
       由「{owner}」转给「{name}」（#{target.id}
       ）。经验会立即调整，再转回来也不保证完全还原。
+      {closeCase && (
+        <label className="ew-admin-confirm-check">
+          <input
+            type="checkbox"
+            checked={closing}
+            disabled={task.isPending}
+            onChange={(e) => setClosing(e.target.checked)}
+          />
+          <span>
+            {closeCase.label}
+            <small>{closeCase.hint}</small>
+          </span>
+        </label>
+      )}
     </Confirm>
   );
   if (alreadyOwner)

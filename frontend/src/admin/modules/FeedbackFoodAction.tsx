@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ComponentProps } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../../app/state";
 import { errorMessage } from "../../api/client";
@@ -12,12 +12,14 @@ export function FeedbackFoodAction({
   id,
   action,
   submitter,
+  closeCase,
   onClose,
 }: {
   id: number;
   action: FoodAction;
   /** Who filed the case; receives the dish on "give". */
   submitter?: { id: number; displayName?: string };
+  closeCase?: ComponentProps<typeof FoodOwnerTransfer>["closeCase"];
   onClose: () => void;
 }) {
   const { api, toast } = useApp();
@@ -50,6 +52,7 @@ export function FeedbackFoodAction({
     <FoodOwnerTransfer
       food={food}
       recipient={action === "give" ? submitter : undefined}
+      closeCase={closeCase}
       onClose={onClose}
     />
   );

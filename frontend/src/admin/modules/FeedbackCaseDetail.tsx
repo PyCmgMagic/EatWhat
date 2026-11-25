@@ -88,8 +88,23 @@ export default function FeedbackCaseDetail({
   ];
   if (view?.kind === "FEEDBACK") choices.push(["RESOLVED", "已处理"]);
   const validOutcome = choices.some(([value]) => value === outcome);
-  function resolve() {
-    if (!open || !outcome || !validOutcome) return;
+  // A transfer upholds the case unless the admin already chose otherwise.
+  const transferOutcome: Outcome = validOutcome && outcome ? outcome : "ACCEPTED";
+  const closeCase =
+    open && !task.uncertain
+      ? {
+          label: `转移后结案（${choices.find(([value]) => value === transferOutcome)?.[1]}）`,
+          hint: "已填的回复和备注会一并提交，结案后无法修改。",
+          run: () => {
+            // Keep the choice on screen in case closing fails.
+            setOutcome(transferOutcome);
+            resolve(transferOutcome);
+          },
+        }
+      : undefined;
+  function resolve(outcome: Outcome | "") {
+    if (!open || !choices.some(([value]) => value === outcome) || !outcome)
+      return;
     void task.run(
       (commandId) =>
         api.resolveFeedback(
@@ -132,7 +147,7 @@ export default function FeedbackCaseDetail({
         onClose={() => {
           if (!task.busy) onClose();
         }}
-        onSubmit={open ? resolve : undefined}
+        onSubmit={open ? () => resolve(outcome) : undefined}
         footer={
           open ? (
             <>
@@ -426,6 +441,7 @@ export default function FeedbackCaseDetail({
           id={foodId}
           action={foodAction}
           submitter={submitter}
+          closeCase={closeCase}
           onClose={() => setFoodAction(null)}
         />
       )}

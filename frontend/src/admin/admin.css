@@ -1909,6 +1909,23 @@ a.ew-admin-stat:hover {
   font-size: 13.5px;
   line-height: 1.7;
 }
+.ew-admin-confirm-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 12px;
+  color: var(--ad-ink);
+  cursor: pointer;
+}
+.ew-admin-confirm-check input {
+  flex: none;
+  margin-top: 3px;
+}
+.ew-admin-confirm-check small {
+  display: block;
+  color: var(--ad-muted);
+  font-size: 12.5px;
+}
 .ew-admin-confirm-actions {
   display: flex;
   justify-content: flex-end;

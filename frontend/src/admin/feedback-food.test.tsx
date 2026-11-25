@@ -121,10 +121,13 @@ it("opens the owner transfer with the current publisher", async () => {
   expect(host.textContent).toContain("原主");
 });
 const reporter = { submitterId: 2, submitterName: "举报者" };
-it("gives the dish to the reporter after one confirmation", async () => {
+const checkbox = () =>
+  host.querySelector<HTMLInputElement>('input[type="checkbox"]');
+it("transfers without closing the case when unticked", async () => {
   transferFoodOwner.mockResolvedValue({ experience: 20 });
   await open({ type: "FOOD", id: 7 }, reporter);
   await click("转给举报人");
+  await act(() => checkbox()!.click());
   expect(host.textContent).toContain("由「原主」转给「举报者」（#2");
   expect(transferFoodOwner).not.toHaveBeenCalled();
   await click("确认转移");
@@ -137,10 +140,60 @@ it("returns to the case when the server refuses the reporter", async () => {
   transferFoodOwner.mockRejectedValue(new Error("对方账号封禁中"));
   await open({ type: "FOOD", id: 7 }, reporter);
   await click("转给举报人");
-  await click("确认转移");
+  await click("转移并结案");
   expect(toast).toHaveBeenCalledWith(expect.any(String), { tone: "error" });
-  expect(button("确认转移")).toBeUndefined();
+  expect(resolveFeedback).not.toHaveBeenCalled();
+  expect(button("转移并结案")).toBeUndefined();
   expect(button("转给举报人")).toBeDefined();
+});
+it("closes the case by default after the transfer", async () => {
+  transferFoodOwner.mockResolvedValue({ experience: 20 });
+  resolveFeedback.mockResolvedValue({ outcome: "ACCEPTED" });
+  await open({ type: "FOOD", id: 7 }, reporter);
+  await click("转给举报人");
+  expect(checkbox()!.checked).toBe(true);
+  expect(host.textContent).toContain("转移后结案（举报属实）");
+  await click("转移并结案");
+  expect(resolveFeedback).toHaveBeenCalledExactlyOnceWith(
+    5,
+    { outcome: "ACCEPTED", reply: "", internalNote: "" },
+    expect.any(String),
+  );
+  expect(transferFoodOwner.mock.invocationCallOrder[0]).toBeLessThan(
+    resolveFeedback.mock.invocationCallOrder[0],
+  );
+});
+it("keeps the chosen outcome and leaves the case open if closing fails", async () => {
+  transferFoodOwner.mockResolvedValue({ experience: 20 });
+  resolveFeedback.mockRejectedValue(new Error("结案失败"));
+  await open({ type: "FOOD", id: 7 }, reporter);
+  await act(() =>
+    host.querySelector<HTMLInputElement>('input[value="REJECTED"]')!.click(),
+  );
+  await click("转给举报人");
+  expect(host.textContent).toContain("转移后结案（举报不成立）");
+  await click("转移并结案");
+  expect(resolveFeedback.mock.calls[0][1].outcome).toBe("REJECTED");
+  expect(transferFoodOwner).toHaveBeenCalledOnce();
+  expect(host.querySelector('[role="alert"]')).not.toBeNull();
+  expect(button("确认结案")).toBeDefined();
+});
+it("offers no closing for a case that is already closed", async () => {
+  await open(
+    { type: "FOOD", id: 7 },
+    {
+      ...reporter,
+      view: {
+        id: 5,
+        kind: "REPORT",
+        status: "CLOSED",
+        target: { type: "FOOD", id: 7 },
+      },
+    },
+  );
+  await click("转给举报人");
+  expect(checkbox()).toBeNull();
+  expect(button("确认转移")).toBeDefined();
 });
 it("does not transfer a dish the reporter already owns", async () => {
   await open({ type: "FOOD", id: 7 }, { ...reporter, submitterId: 1 });
