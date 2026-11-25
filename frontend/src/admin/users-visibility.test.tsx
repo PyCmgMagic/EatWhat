@@ -95,7 +95,8 @@ it("shows the network of the opened account, and keeps controls if it fails", as
   };
   adminUserNetwork.mockResolvedValueOnce({
     registrationIp: "203.0.113.5",
-    registrationNetwork: "CERNET",
+    registrationNetwork: "OTHER",
+    registrationOperator: "CHINA_UNICOM",
     lastIp: null,
     lastNetwork: "UNKNOWN",
     lastUsedAt: null,
@@ -104,7 +105,7 @@ it("shows the network of the opened account, and keeps controls if it fails", as
   await open();
   expect(adminUserNetwork).toHaveBeenCalledWith(21);
   expect(document.body.textContent).toContain("203.0.113.5");
-  expect(document.body.textContent).toContain("教育网");
+  expect(document.body.textContent).toContain("联通");
 
   await act(() => root.unmount());
   root = createRoot(host);

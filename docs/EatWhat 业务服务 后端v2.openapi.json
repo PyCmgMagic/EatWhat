@@ -6976,27 +6976,6 @@
   },
   "components" : {
     "schemas" : {
-      "OtherBreakdown" : {
-        "type" : "object",
-        "properties" : {
-          "chinaMobile" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "chinaUnicom" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "chinaTelecom" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "remaining" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }
-      },
       "ResultStart" : {
         "type" : "object",
         "properties" : {
@@ -12196,6 +12175,27 @@
           },
           "active" : {
             "$ref" : "#/components/schemas/NetworkCounts"
+          }
+        }
+      },
+      "OtherBreakdown" : {
+        "type" : "object",
+        "properties" : {
+          "chinaMobile" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "chinaUnicom" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "chinaTelecom" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "remaining" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },

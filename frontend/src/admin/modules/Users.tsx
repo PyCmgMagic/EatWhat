@@ -6,7 +6,7 @@ import { useAdminState } from "../../app/admin-state";
 import { useApp } from "../../app/state";
 import type { Schema } from "../../api/models";
 import type { AdminUserFilters } from "../../api/service";
-import { networkName, operatorName } from "../../api/admin-analytics";
+import { networkName } from "../../api/admin-analytics";
 import { useTask } from "../../components/useTask";
 import {
   Async,
@@ -272,11 +272,20 @@ function UserDrawer({ user: u, onClose }: { user: Row; onClose: () => void }) {
         <Meta
           items={[
             ["注册 IP", network.data?.registrationIp],
-            ["注册网络", networkName(network.data?.registrationNetwork)],
-            ["注册运营商", operatorName(network.data?.registrationOperator)],
+            [
+              "注册网络",
+              networkName(
+                network.data?.registrationOperator ??
+                  network.data?.registrationNetwork,
+              ),
+            ],
             ["最近使用 IP", network.data?.lastIp],
-            ["最近使用网络", networkName(network.data?.lastNetwork)],
-            ["最近使用运营商", operatorName(network.data?.lastOperator)],
+            [
+              "最近使用网络",
+              networkName(
+                network.data?.lastOperator ?? network.data?.lastNetwork,
+              ),
+            ],
             ["最近使用时间", dateTime(network.data?.lastUsedAt)],
           ]}
         />

@@ -2913,16 +2913,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        OtherBreakdown: {
-            /** Format: int64 */
-            chinaMobile?: number;
-            /** Format: int64 */
-            chinaUnicom?: number;
-            /** Format: int64 */
-            chinaTelecom?: number;
-            /** Format: int64 */
-            remaining?: number;
-        };
         ResultStart: {
             /** Format: int32 */
             code?: number;
@@ -4892,6 +4882,16 @@ export interface components {
             timezone?: string;
             registered?: components["schemas"]["NetworkCounts"];
             active?: components["schemas"]["NetworkCounts"];
+        };
+        OtherBreakdown: {
+            /** Format: int64 */
+            chinaMobile?: number;
+            /** Format: int64 */
+            chinaUnicom?: number;
+            /** Format: int64 */
+            chinaTelecom?: number;
+            /** Format: int64 */
+            remaining?: number;
         };
         ResultNetworkSummary: {
             /** Format: int32 */

@@ -29,22 +29,14 @@ export const platformNames: Record<string, string> = {
 };
 const networkNames: Record<string, string> = {
   CERNET: "教育网",
+  CHINA_MOBILE: "移动",
+  CHINA_UNICOM: "联通",
+  CHINA_TELECOM: "电信",
   OTHER: "其他网络",
   UNKNOWN: "未知",
 };
 export const networkName = (network?: string | null) =>
   network ? (networkNames[network] ?? network) : "—";
-const operatorNames: Record<string, string> = {
-  CERNET: "教育网",
-  CHINA_MOBILE: "中国移动",
-  CHINA_UNICOM: "中国联通",
-  CHINA_TELECOM: "中国电信",
-  OTHER: "其他运营商",
-  UNKNOWN: "未知",
-};
-export const operatorName = (operator?: string | null) =>
-  operator ? (operatorNames[operator] ?? "—") : "—";
-
 /** `rate` is 0–1, or null when there are no accounts to divide by. */
 export const cernetShare = (rate?: number | null) =>
   rate == null ? "—" : `${(rate * 100).toFixed(1)}%`;

@@ -107,11 +107,21 @@ function networkSummary(q: Query, now: number): NetworkSummary {
   if (!(days > 0 && days <= 92)) throw new ApiError("一次最多查询 92 天", 10001);
   const counts = (cernet: number, other: number, unknown: number) => {
     const total = cernet + other + unknown;
-    const chinaMobile = Math.floor(other / 2);
-    const chinaUnicom = Math.floor(other / 4);
-    const chinaTelecom = Math.floor(other / 5);
-    return { total, cernet, other, unknown, cernetRate: total ? cernet / total : null,
-      otherBreakdown: { chinaMobile, chinaUnicom, chinaTelecom, remaining: other - chinaMobile - chinaUnicom - chinaTelecom },
+    const chinaMobile = Math.floor(other / 2),
+      chinaUnicom = Math.floor(other / 4),
+      chinaTelecom = Math.floor(other / 8);
+    return {
+      total,
+      cernet,
+      other,
+      unknown,
+      cernetRate: total ? cernet / total : null,
+      otherBreakdown: {
+        chinaMobile,
+        chinaUnicom,
+        chinaTelecom,
+        remaining: other - chinaMobile - chinaUnicom - chinaTelecom,
+      },
     };
   };
   return {
