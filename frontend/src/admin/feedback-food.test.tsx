@@ -15,6 +15,7 @@ const toast = vi.fn(),
   resolveFeedback = vi.fn(),
   editFood = vi.fn(async () => null),
   food = vi.fn(),
+  transferFoodOwner = vi.fn(),
   adminFeedbackCase = vi.fn();
 const settle = () => act(() => new Promise<void>((r) => setTimeout(r, 30)));
 const button = (text: string) =>
@@ -35,7 +36,7 @@ async function open(target: object, extra = {}) {
             {
               user: { id: 10, role: "admin" },
               toast,
-              api: { adminFeedbackCase, food, editFood, resolveFeedback },
+              api: { adminFeedbackCase, food, editFood, resolveFeedback, transferFoodOwner },
             } as unknown as AppState
           }
         >
@@ -118,6 +119,39 @@ it("opens the owner transfer with the current publisher", async () => {
   await click("转移归属");
   expect(host.textContent).toContain("转移菜品归属");
   expect(host.textContent).toContain("原主");
+});
+const reporter = { submitterId: 2, submitterName: "举报者" };
+it("gives the dish to the reporter after one confirmation", async () => {
+  transferFoodOwner.mockResolvedValue({ experience: 20 });
+  await open({ type: "FOOD", id: 7 }, reporter);
+  await click("转给举报人");
+  expect(host.textContent).toContain("由「原主」转给「举报者」（#2");
+  expect(transferFoodOwner).not.toHaveBeenCalled();
+  await click("确认转移");
+  expect(transferFoodOwner).toHaveBeenCalledExactlyOnceWith(7, 2, undefined);
+  expect(button("确认转移")).toBeUndefined();
+  expect(onClose).not.toHaveBeenCalled();
+  expect(resolveFeedback).not.toHaveBeenCalled();
+});
+it("returns to the case when the server refuses the reporter", async () => {
+  transferFoodOwner.mockRejectedValue(new Error("对方账号封禁中"));
+  await open({ type: "FOOD", id: 7 }, reporter);
+  await click("转给举报人");
+  await click("确认转移");
+  expect(toast).toHaveBeenCalledWith(expect.any(String), { tone: "error" });
+  expect(button("确认转移")).toBeUndefined();
+  expect(button("转给举报人")).toBeDefined();
+});
+it("does not transfer a dish the reporter already owns", async () => {
+  await open({ type: "FOOD", id: 7 }, { ...reporter, submitterId: 1 });
+  await click("转给举报人");
+  expect(host.textContent).toContain("无需转移");
+  await click("知道了");
+  expect(transferFoodOwner).not.toHaveBeenCalled();
+});
+it("needs a known reporter", async () => {
+  await open({ type: "FOOD", id: 7 });
+  expect(button("转给举报人")).toBeUndefined();
 });
 it("reports a dish that cannot be loaded and allows a retry", async () => {
   food.mockRejectedValue(new Error("菜品不存在"));

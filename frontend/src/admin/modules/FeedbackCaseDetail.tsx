@@ -78,6 +78,9 @@ export default function FeedbackCaseDetail({
   const targetRoute = target && targetRoutes[target.type ?? ""];
   const foodId =
     target?.type === "FOOD" && !data?.targetUnavailable ? target.id : undefined;
+  const submitter = data?.submitterId
+    ? { id: data.submitterId, displayName: data.submitterName }
+    : undefined;
   const device = data?.submissionDevice;
   const choices: [Outcome, string][] = [
     ["ACCEPTED", report ? "举报属实" : "采纳"],
@@ -247,6 +250,15 @@ export default function FeedbackCaseDetail({
                     [
                       ["edit", "edit", "编辑菜品"],
                       ["transfer", "follow", "转移归属"],
+                      ...(submitter
+                        ? [
+                            [
+                              "give",
+                              "follow",
+                              report ? "转给举报人" : "转给提交人",
+                            ] as const,
+                          ]
+                        : []),
                     ] as const
                   ).map(([action, icon, label]) => (
                     <button
@@ -413,6 +425,7 @@ export default function FeedbackCaseDetail({
         <FeedbackFoodAction
           id={foodId}
           action={foodAction}
+          submitter={submitter}
           onClose={() => setFoodAction(null)}
         />
       )}

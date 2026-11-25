@@ -5,16 +5,19 @@ import { errorMessage } from "../../api/client";
 import { FoodEditor } from "./FoodEditor";
 import { FoodOwnerTransfer } from "./FoodOwnerTransfer";
 
-export type FoodAction = "edit" | "transfer";
+export type FoodAction = "edit" | "transfer" | "give";
 
 /** Loads the dish a case is about, then opens the same drawer as 菜品管理. */
 export function FeedbackFoodAction({
   id,
   action,
+  submitter,
   onClose,
 }: {
   id: number;
   action: FoodAction;
+  /** Who filed the case; receives the dish on "give". */
+  submitter?: { id: number; displayName?: string };
   onClose: () => void;
 }) {
   const { api, toast } = useApp();
@@ -44,6 +47,10 @@ export function FeedbackFoodAction({
   return action === "edit" ? (
     <FoodEditor food={food} onClose={onClose} />
   ) : (
-    <FoodOwnerTransfer food={food} onClose={onClose} />
+    <FoodOwnerTransfer
+      food={food}
+      recipient={action === "give" ? submitter : undefined}
+      onClose={onClose}
+    />
   );
 }

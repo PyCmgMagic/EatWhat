@@ -18,20 +18,27 @@ import {
 type Person = Schema["UserListItemVOResponse"];
 const reasonLimit = 200;
 
-/** Picks a new first publisher for a dish, then confirms the move. */
+/** Picks a new first publisher for a dish, then confirms the move.
+ *  With a recipient the picking is skipped and only the confirmation shows. */
 export function FoodOwnerTransfer({
   food,
+  recipient,
   onClose,
 }: {
   food: Food;
+  recipient?: { id: number; displayName?: string };
   onClose: () => void;
 }) {
   const { api, toast } = useApp(),
     cache = useQueryClient(),
     [search, setSearch] = useState({ keyword: "", page: 1 }),
-    [target, setTarget] = useState<Person | null>(null),
+    [target, setTarget] = useState<Person | null>(recipient ?? null),
     [reason, setReason] = useState(""),
-    [confirming, setConfirming] = useState(false);
+    [confirming, setConfirming] = useState(false),
+    // Read once: the dish refetches with its new owner before this closes.
+    [alreadyOwner] = useState(
+      !!recipient && recipient.id === food.accountId,
+    );
   const q = useQuery({
     queryKey: ["admin", "users", "owner-transfer", search],
     queryFn: () => api.adminUsers(search.page, { keyword: search.keyword }),
@@ -67,11 +74,40 @@ export function FoodOwnerTransfer({
         );
       } catch (error) {
         // The request may have gone through, so show the dish's real owner.
-        setConfirming(false);
+        if (recipient) onClose();
+        else setConfirming(false);
         void cache.invalidateQueries({ queryKey: ["foods"] });
         throw error;
       }
     });
+  const confirmation = target && (
+    <Confirm
+      title={`把「${food.name}」转给${name}？`}
+      confirmLabel="确认转移"
+      busy={task.isPending}
+      onClose={() => {
+        if (task.isPending) return;
+        if (recipient) onClose();
+        else setConfirming(false);
+      }}
+      onConfirm={submit}
+    >
+      由「{owner}」转给「{name}」（#{target.id}
+      ）。经验会立即调整，再转回来也不保证完全还原。
+    </Confirm>
+  );
+  if (alreadyOwner)
+    return (
+      <Confirm
+        title="无需转移"
+        confirmLabel="知道了"
+        onClose={onClose}
+        onConfirm={onClose}
+      >
+        {name}已是「{food.name}」的当前分享者。
+      </Confirm>
+    );
+  if (recipient) return confirmation;
   return (
     <>
       <Drawer
@@ -193,18 +229,7 @@ export function FoodOwnerTransfer({
           </Field>
         </div>
       </Drawer>
-      {confirming && target && (
-        <Confirm
-          title={`把「${food.name}」转给${name}？`}
-          confirmLabel="确认转移"
-          busy={task.isPending}
-          onClose={() => !task.isPending && setConfirming(false)}
-          onConfirm={submit}
-        >
-          由「{owner}」转给「{name}」（#{target.id}
-          ）。经验会立即调整，再转回来也不保证完全还原。
-        </Confirm>
-      )}
+      {confirming && confirmation}
     </>
   );
 }
