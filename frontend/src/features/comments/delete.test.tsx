@@ -21,13 +21,16 @@ let host: HTMLDivElement, root: Root;
 let rows: object[];
 const remove = vi.fn();
 const Where = () => <output>{useLocation().search}</output>;
-const settle = () => act(() => new Promise((r) => setTimeout(r, 30)));
+const until = async (check: () => unknown) => {
+  const deadline = Date.now() + 4000;
+  while (!check() && Date.now() < deadline)
+    await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
+  expect(check()).toBeTruthy();
+};
+const shows = (text: string) => () => !!host.textContent?.includes(text);
 const button = (text: string) =>
   [...document.querySelectorAll("button")].filter((b) => b.textContent === text);
-const click = async (b: HTMLElement) => {
-  await act(async () => b.click());
-  await settle();
-};
+const click = (b: HTMLElement) => act(async () => b.click());
 
 async function render({ session = true, search = "" } = {}) {
   const app = {
@@ -56,7 +59,7 @@ async function render({ session = true, search = "" } = {}) {
       </MemoryRouter>,
     ),
   );
-  await settle();
+  await until(shows(search ? "我写的" : "我的回复"));
 }
 
 beforeEach(() => {
@@ -101,6 +104,7 @@ it("deletes after confirmation and refreshes the list", async () => {
   expect(document.body.textContent).toContain("所有回复将不再展示");
   expect(remove).not.toHaveBeenCalled();
   await click(button("确认删除")[0]);
+  await until(() => !shows("我写的")());
   expect(remove).toHaveBeenCalledWith(8, expect.any(String));
   expect(host.textContent).not.toContain("我写的");
   expect(host.textContent).toContain("别人写的");
@@ -110,6 +114,7 @@ it("returns to the full list when the linked comment is deleted", async () => {
   await render({ search: "?commentId=8" });
   await click(button("删除")[0]);
   await click(button("确认删除")[0]);
+  await until(shows("别人写的"));
   expect(host.querySelector("output")!.textContent).not.toContain("commentId");
   expect(host.textContent).toContain("别人写的");
 });
@@ -119,6 +124,6 @@ it("keeps the comment and shows the error when deletion fails", async () => {
   await render();
   await click(button("删除")[0]);
   await click(button("确认删除")[0]);
-  expect(document.querySelector('dialog [role="alert"]')).not.toBeNull();
+  await until(() => document.querySelector('dialog [role="alert"]'));
   expect(host.textContent).toContain("我写的");
 });
