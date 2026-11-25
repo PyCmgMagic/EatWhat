@@ -1,4 +1,5 @@
 import { BRAND_NAME } from "../app/brand";
+import { AvatarImage } from "../components/AvatarImage";
 import "../features/user-level.css";
 import { UserTitle } from "../components/UserTitle";
 import { userTitle } from "../api/growth";
@@ -132,7 +133,6 @@ export function DesktopUser() {
     heroFood = latest ?? fallbackCover,
     heroVisual = visualFor(heroFood, isDemo),
     coverSrc = mediaUrl(heroFood.pictureUrl?.[0]),
-    initial = (u.displayName || "食友").slice(0, 1),
     people = [
       {
         key: "fans" as const,
@@ -221,7 +221,7 @@ export function DesktopUser() {
         </div>
         <header className="profile-overview-identity">
           <div className="profile-overview-avatar">
-            {u.avatar ? <img src={mediaUrl(u.avatar)} alt="" /> : initial}
+            <AvatarImage src={mediaUrl(u.avatar)} />
           </div>
           <div className="profile-overview-intro">
             <h1 id="friend-profile-name">{u.displayName || "校园食友"}</h1>

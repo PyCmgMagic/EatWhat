@@ -6,19 +6,12 @@ import { HomeSearchButton, HomeSearchOverlay } from "./HomeSearch";
 
 let host: HTMLDivElement;
 let root: Root;
-let frames: FrameRequestCallback[];
+const dialogPrototype = HTMLDialogElement.prototype;
+const showModal = Object.getOwnPropertyDescriptor(dialogPrototype, "showModal");
+const closeModal = Object.getOwnPropertyDescriptor(dialogPrototype, "close");
 
 function render(node: React.ReactNode) {
   return act(async () => root.render(node));
-}
-
-/** The autofocus happens on the next frame, so let the queue drain. */
-function flushFrames() {
-  const pending = frames;
-  frames = [];
-  return act(async () => {
-    for (const frame of pending) frame(0);
-  });
 }
 
 function type(input: HTMLInputElement, value: string) {
@@ -46,12 +39,18 @@ beforeEach(() => {
       removeEventListener() {},
     })),
   );
-  frames = [];
-  vi.stubGlobal("requestAnimationFrame", (frame: FrameRequestCallback) => {
-    frames.push(frame);
-    return frames.length;
+  Object.defineProperty(dialogPrototype, "showModal", {
+    configurable: true,
+    value(this: HTMLDialogElement) {
+      this.open = true;
+    },
   });
-  vi.stubGlobal("cancelAnimationFrame", vi.fn());
+  Object.defineProperty(dialogPrototype, "close", {
+    configurable: true,
+    value(this: HTMLDialogElement) {
+      this.open = false;
+    },
+  });
   window.localStorage.clear();
   host = document.createElement("div");
   document.body.appendChild(host);
@@ -61,8 +60,12 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount());
   host.remove();
+  if (showModal) Object.defineProperty(dialogPrototype, "showModal", showModal);
+  else Reflect.deleteProperty(dialogPrototype, "showModal");
+  if (closeModal) Object.defineProperty(dialogPrototype, "close", closeModal);
+  else Reflect.deleteProperty(dialogPrototype, "close");
   vi.unstubAllGlobals();
-  document.body.style.overflow = "";
+  document.documentElement.style.overflow = "";
 });
 
 it("opens from the toolbar entry and reports whether it is expanded", async () => {
@@ -96,7 +99,6 @@ it("focuses the field and offers history above the suggestions", async () => {
     JSON.stringify([{ query: "锅包肉", kind: "food" }]),
   );
   await render(<HomeSearchOverlay open onClose={vi.fn()} onSearch={vi.fn()} />);
-  await flushFrames();
 
   const input = host.querySelector<HTMLInputElement>(
     ".ew-home-search-bar input",
@@ -109,7 +111,8 @@ it("focuses the field and offers history above the suggestions", async () => {
     "麻辣香锅",
     "杨枝甘露",
   ]);
-  expect(document.body.style.overflow).toBe("hidden");
+  expect(host.querySelector("dialog")?.open).toBe(true);
+  expect(document.documentElement.style.overflow).toBe("hidden");
 });
 
 it("filters while typing and searches the typed keyword", async () => {
@@ -122,7 +125,6 @@ it("filters while typing and searches the typed keyword", async () => {
   await render(
     <HomeSearchOverlay open onClose={onClose} onSearch={onSearch} />,
   );
-  await flushFrames();
   const input = host.querySelector<HTMLInputElement>(
     ".ew-home-search-bar input",
   )!;
@@ -135,50 +137,68 @@ it("filters while typing and searches the typed keyword", async () => {
       .querySelector<HTMLButtonElement>(".ew-home-search-row.is-query")!
       .click(),
   );
-  expect(onSearch).toHaveBeenCalledWith("云");
+  expect(onSearch).toHaveBeenCalledWith({ query: "云", kind: "food" });
   expect(onClose).toHaveBeenCalledTimes(1);
   expect(window.localStorage.getItem("eatwhat-recent-searches-v1")).toContain(
     '"query":"云"',
   );
 });
 
-it("closes on Escape and on a tap outside the panel", async () => {
+it("dismisses through native cancel, backdrop, and the close button", async () => {
   const onClose = vi.fn();
   await render(<HomeSearchOverlay open onClose={onClose} onSearch={vi.fn()} />);
-  await flushFrames();
+  const dialog = host.querySelector<HTMLDialogElement>("dialog")!;
 
   await act(async () =>
-    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })),
+    dialog.dispatchEvent(new Event("cancel", { cancelable: true })),
   );
   expect(onClose).toHaveBeenCalledTimes(1);
 
-  await act(async () =>
-    host.querySelector<HTMLButtonElement>(".ew-home-search-scrim")!.click(),
-  );
+  await act(async () => dialog.click());
   expect(onClose).toHaveBeenCalledTimes(2);
+  await act(async () =>
+    host.querySelector<HTMLButtonElement>(".ew-home-search-close")!.click(),
+  );
+  expect(onClose).toHaveBeenCalledTimes(3);
+});
+
+it("restores the trigger focus and scrollbar after closing", async () => {
+  const trigger = document.createElement("button");
+  document.body.appendChild(trigger);
+  const props = { returnFocus: trigger, onClose: vi.fn(), onSearch: vi.fn() };
+  try {
+    await render(<HomeSearchOverlay open {...props} />);
+    await render(<HomeSearchOverlay open={false} {...props} />);
+    expect(document.activeElement).toBe(trigger);
+    expect(document.documentElement.style.overflow).toBe("");
+  } finally {
+    trigger.remove();
+  }
 });
 
 it("drops one history entry without touching the others", async () => {
   window.localStorage.setItem(
     "eatwhat-recent-searches-v1",
     JSON.stringify([
-      { query: "锅包肉", kind: "food" },
-      { query: "铁锅炖大鹅", kind: "shop" },
+      { query: "一食堂", kind: "food" },
+      { query: "一食堂", kind: "shop" },
     ]),
   );
-  await render(<HomeSearchOverlay open onClose={vi.fn()} onSearch={vi.fn()} />);
-  await flushFrames();
+  const onSearch = vi.fn();
+  await render(
+    <HomeSearchOverlay open onClose={vi.fn()} onSearch={onSearch} />,
+  );
 
   await act(async () =>
     host
       .querySelector<HTMLButtonElement>(
-        '.ew-home-search-remove[aria-label="删除搜索记录“锅包肉”"]',
+        '.ew-home-search-remove[aria-label="删除菜品搜索记录“一食堂”"]',
       )!
       .click(),
   );
 
   expect(texts(".ew-home-search-row span")).toEqual([
-    "铁锅炖大鹅",
+    "一食堂",
     "云吞",
     "麻辣香锅",
     "杨枝甘露",
@@ -187,7 +207,15 @@ it("drops one history entry without touching the others", async () => {
     JSON.parse(
       window.localStorage.getItem("eatwhat-recent-searches-v1") ?? "[]",
     ),
-  ).toEqual([{ query: "铁锅炖大鹅", kind: "shop" }]);
+  ).toEqual([{ query: "一食堂", kind: "shop" }]);
+  await act(async () =>
+    host
+      .querySelector<HTMLButtonElement>(
+        ".ew-home-search-entry .ew-home-search-row",
+      )!
+      .click(),
+  );
+  expect(onSearch).toHaveBeenCalledWith({ query: "一食堂", kind: "shop" });
 });
 
 it("clears the whole history in one tap", async () => {
@@ -199,7 +227,6 @@ it("clears the whole history in one tap", async () => {
     ]),
   );
   await render(<HomeSearchOverlay open onClose={vi.fn()} onSearch={vi.fn()} />);
-  await flushFrames();
 
   await act(async () =>
     host.querySelector<HTMLButtonElement>(".ew-home-search-clear")!.click(),

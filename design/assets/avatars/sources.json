@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "name": "美食动物头像",
+  "created": "2026-11-23",
+  "generator": "image_gen (built-in)",
+  "styleReferences": [
+    "frontend/public/assets/brand/logo.png",
+    "frontend/public/assets/restaurants/campus-storefront.webp"
+  ],
+  "currentDefault": "pig",
+  "webExport": {
+    "width": 512,
+    "height": 512,
+    "format": "webp",
+    "quality": 90
+  },
+  "preview": "animals-preview.png",
+  "items": [
+    {
+      "id": "pig",
+      "name": "小猪",
+      "master": "masters/pig.png",
+      "webAsset": "/assets/avatars/default-pig.webp",
+      "webBytes": 40962,
+      "reference": "existing-brand-artwork",
+      "prompt": "Use case: style-transfer / logo-brand. Reinterpret the pink pig mascot from reference image 1 as ONE polished default user avatar for the same Chinese campus food-sharing app. Reference image 1 is the character/brand reference: keep its recognizable pink pig, floppy ears, little oval snout, lively appetite, dark hand-drawn outlines, sky-blue rice bowl and sunny yellow palette. Reference image 2 is the supporting finish/style reference: warm handmade restaurant illustration, pleasing irregular ink outlines, subtle paper grain, flat warm colors. Produce a NEW compact mascot drawing, not a copy of the existing logo composition. Subject: a friendly pink pig foodie in close-up, hugging a generously filled blue ceramic bowl of white steamed rice directly under its cheeks, with a small spoon visible at one side. Food and rice bowl must be clearly readable. Relaxed happy eyes and a small satisfied open smile; appealing and expressive, no giant screaming mouth, no human figure, no triangular onigiri. Composition: exactly one square 1024x1024 avatar asset, solid sunny warm yellow background to all four edges, character and bowl centered and completely inside the central circular safe area, 12% safe margin so the ears and spoon survive a circle crop. Pig head fills about the middle 60% of the image width; bowl fills the bottom middle 48%. Simple enough to read at 32px. Three or four prominent rice shapes, not dozens of tiny grains. Thick charcoal hand-inked lines with slight natural variation, soft rounded irregular shapes, warm coral pink skin, cream rice, muted sky-blue bowl. Minimal subtle grain only, no elaborate scenery, no typography, no labels, no logo words, no watermark, no frame, no multiple options, no UI mockup, no photo or glossy 3D rendering. The output should feel like a companion illustration to the two existing project artworks.",
+      "masterSha256": "acc60c8faee25c1aac352411d7e7a40d2b9d7ecffdc9add8f45e9b9f0df2830d",
+      "webSha256": "7bc8662e95e784951c225bed9c46f8b4cc22baa4f87a9d65fe7d41092a4958d0"
+    },
+    {
+      "id": "cat",
+      "name": "小猫",
+      "master": "masters/cat.png",
+      "webAsset": "/assets/avatars/default-cat.webp",
+      "webBytes": 40974,
+      "reference": "masters/pig.png",
+      "prompt": "Use case: style-transfer / logo-brand. Create ONE new default-user-avatar illustration for the same campus food app, as a close matching companion to the supplied pig avatar. The reference is for illustration style, warm color family, proportions and composition only; fully replace the pig species. Keep the sunny warm yellow background, thick slightly irregular charcoal hand-inked outlines, gentle printed-paper grain, warm rounded shapes and muted sky-blue ceramic rice bowl. A close-up animal foodie affectionately hugs a bowl generously filled with cream-white steamed rice beneath its cheeks, with a small spoon visible at one side. Happy, appetizing and friendly. Keep the rice bowl and spoon unmistakable, with just three or four large rice details. Exactly one square avatar, one animal, no collage, no text, no labels, no watermark, no surrounding UI, no frame. Use a compact circular-safe composition: all ears, paws, bowl and utensil inside the central 78% diameter circle, ample sunny background around it, character head about 58% of the square width and bowl about 45%. Designed to remain legible at 32px. Match the reference's hand-drawn material and line quality closely; no glossy 3D, no vector-perfect outlines, no human face. Subject: an orange-and-cream tabby kitten foodie, clearly feline: two softly triangular ears, little pink triangular cat nose, cream muzzle, three short forehead tabby markings, two short whisker strokes on each cheek. Cheerful closed smiling eyes and a tiny satisfied smile. Orange paws cuddle the blue rice bowl. Do not include a pig snout or pig ears.",
+      "masterSha256": "58361773dbcea16dce21f123da23add8efd6f1e4a2a951777fa2ad34d3e39253",
+      "webSha256": "7e382d159f8bf4ccc43049798cc414629d18e00b827c9b0259448bb50efacfab"
+    },
+    {
+      "id": "dog",
+      "name": "小狗",
+      "master": "masters/dog.png",
+      "webAsset": "/assets/avatars/default-dog.webp",
+      "webBytes": 39116,
+      "reference": "masters/pig.png",
+      "prompt": "Use case: style-transfer / logo-brand. Create ONE new default-user-avatar illustration for the same campus food app, as a close matching companion to the supplied pig avatar. The reference is for illustration style, warm color family, proportions and composition only; fully replace the pig species. Keep the sunny warm yellow background, thick slightly irregular charcoal hand-inked outlines, gentle printed-paper grain, warm rounded shapes and muted sky-blue ceramic rice bowl. A close-up animal foodie affectionately hugs a bowl generously filled with cream-white steamed rice beneath its cheeks, with a small spoon visible at one side. Happy, appetizing and friendly. Keep the rice bowl and spoon unmistakable, with just three or four large rice details. Exactly one square avatar, one animal, no collage, no text, no labels, no watermark, no surrounding UI, no frame. Use a compact circular-safe composition: all ears, paws, bowl and utensil inside the central 78% diameter circle, ample sunny background around it, character head about 58% of the square width and bowl about 45%. Designed to remain legible at 32px. Match the reference's hand-drawn material and line quality closely; no glossy 3D, no vector-perfect outlines, no human face. Subject: a golden-cream floppy-eared puppy foodie, clearly canine: two soft rounded floppy ears framing the cheeks, distinct short cream dog muzzle, small dark oval dog nose, warm brown ear patches and open friendly dot eyes. A small happy grin. Golden paws cuddle the blue rice bowl. Avoid pig features; keep a recognizable puppy muzzle.",
+      "masterSha256": "0adfb89ee3e7813b2181bf4f7b66231d140befb84fd3dd5f599542f3ebe0a744",
+      "webSha256": "23ffed098a3b4b181ade6178e25a5493e7a23e3220e4744dde6409a36545befb"
+    },
+    {
+      "id": "rabbit",
+      "name": "小兔",
+      "master": "masters/rabbit.png",
+      "webAsset": "/assets/avatars/default-rabbit.webp",
+      "webBytes": 35698,
+      "reference": "masters/pig.png",
+      "prompt": "Use case: style-transfer / logo-brand. Create ONE new default-user-avatar illustration for the same campus food app, as a close matching companion to the supplied pig avatar. The reference is for illustration style, warm color family, proportions and composition only; fully replace the pig species. Keep the sunny warm yellow background, thick slightly irregular charcoal hand-inked outlines, gentle printed-paper grain, warm rounded shapes and muted sky-blue ceramic rice bowl. A close-up animal foodie affectionately hugs a bowl generously filled with cream-white steamed rice beneath its cheeks, with a small spoon visible at one side. Happy, appetizing and friendly. Keep the rice bowl and spoon unmistakable, with just three or four large rice details. Exactly one square avatar, one animal, no collage, no text, no labels, no watermark, no surrounding UI, no frame. Use a compact circular-safe composition: all ears, paws, bowl and utensil inside the central 78% diameter circle, ample sunny background around it, character head about 58% of the square width and bowl about 45%. Designed to remain legible at 32px. Match the reference's hand-drawn material and line quality closely; no glossy 3D, no vector-perfect outlines, no human face. Subject: a cream-white rabbit foodie, clearly a bunny: two rounded long ears with blush-pink inner ears, one ear tip gently folded inward so both ears comfortably fit a circle crop. Small pink rabbit nose, soft white cheeks, happy curved eyes and two very small rabbit incisors in a gentle smile. Cream paws cuddle the blue rice bowl. Keep the whole bunny compact; never cut the ear tips or turn it into a pig.",
+      "masterSha256": "03fa86849a831c2b2ccb5d9b131c8ec104aa5537ed57a7de8c09eb2eed8f5dbf",
+      "webSha256": "b178d046c0ba10527eb21372cec6def6d9f8a4f60449cf4ab4a208c8f4d09f85"
+    },
+    {
+      "id": "bear",
+      "name": "小熊",
+      "master": "masters/bear.png",
+      "webAsset": "/assets/avatars/default-bear.webp",
+      "webBytes": 42060,
+      "reference": "masters/pig.png",
+      "prompt": "Use case: style-transfer / logo-brand. Create ONE new default-user-avatar illustration for the same campus food app, as a close matching companion to the supplied pig avatar. The reference is for illustration style, warm color family, proportions and composition only; fully replace the pig species. Keep the sunny warm yellow background, thick slightly irregular charcoal hand-inked outlines, gentle printed-paper grain, warm rounded shapes and muted sky-blue ceramic rice bowl. A close-up animal foodie affectionately hugs a bowl generously filled with cream-white steamed rice beneath its cheeks, with a small spoon visible at one side. Happy, appetizing and friendly. Keep the rice bowl and spoon unmistakable, with just three or four large rice details. Exactly one square avatar, one animal, no collage, no text, no labels, no watermark, no surrounding UI, no frame. Use a compact circular-safe composition: all ears, paws, bowl and utensil inside the central 78% diameter circle, ample sunny background around it, character head about 58% of the square width and bowl about 45%. Designed to remain legible at 32px. Match the reference's hand-drawn material and line quality closely; no glossy 3D, no vector-perfect outlines, no human face. Subject: a honey-brown teddy bear foodie, clearly a bear: two small rounded bear ears, soft cocoa-brown head and paws, oval cream muzzle, little dark triangular bear nose, happy curved eyes and a content gentle grin. Rounded brown paws cuddle the blue rice bowl. Warm and appetizing, not a human in a costume. No pig features.",
+      "masterSha256": "1257567a60bd9559a70d440695a9c3ffcffbabb76872795a017544b5702c87af",
+      "webSha256": "8e48df963faae8164ccfd16562d0bad197c6daf1840df8875a73aa02b6f91bc1"
+    }
+  ]
+}

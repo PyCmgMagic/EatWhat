@@ -8,6 +8,7 @@ import {
 } from "react";
 import { errorMessage, unavailable } from "../api/client";
 import { mediaUrl } from "../api/models";
+import { AvatarImage } from "../components/AvatarImage";
 import { DesignIcon } from "../mobile/ui";
 
 export const Icon = DesignIcon;
@@ -225,7 +226,6 @@ export function Pager({
 /* ---------- identity ---------- */
 export function Avatar({
   src,
-  name,
   size = 34,
 }: {
   src?: string | null;
@@ -235,11 +235,7 @@ export function Avatar({
   const url = mediaUrl(src);
   return (
     <span className="ew-admin-avatar" style={{ width: size, height: size }}>
-      {url ? (
-        <img src={url} alt="" loading="lazy" />
-      ) : (
-        Array.from(name || "食")[0]
-      )}
+      <AvatarImage src={url} loading="lazy" />
     </span>
   );
 }

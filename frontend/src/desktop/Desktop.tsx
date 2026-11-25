@@ -128,6 +128,7 @@ import { useFoodImageRefresh, useFoodPhoto } from "../features/media";
 import { FoodPhotoFallback } from "../components/FoodPhotoFallback";
 import { FoodCover } from "../components/FoodCover";
 import { UserAvatar } from "../components/UserAvatar";
+import { AvatarImage } from "../components/AvatarImage";
 import { UserTitle } from "../components/UserTitle";
 import { FoodReportDialog } from "../features/FoodReportDialog";
 import { FoodRating, ratingText } from "../features/FoodRating";
@@ -176,7 +177,8 @@ export default function DesktopExperience({
   const { session } = useApp();
   const workspace = !!session && profileSection(location.pathname) !== null;
   // Keep shared pages mounted as desktop navigation is added or removed.
-  if (!enabled && !responsivePage) return children;
+  if (!enabled && !responsivePage)
+    return <main inert={overlay || undefined}>{children}</main>;
   return (
     <div
       className={enabled ? "pc-app" : undefined}
@@ -340,11 +342,7 @@ function HeaderAccount() {
         aria-controls="pc-account-popover"
         onClick={() => setOpen((value) => !value)}
       >
-        {avatar ? (
-          <img src={avatar} alt="" />
-        ) : (
-          (user?.displayName?.slice(0, 1) ?? <Icon name="me" size={20} />)
-        )}
+        <AvatarImage src={avatar} />
       </button>
       <AnchoredPopover
         open={open}

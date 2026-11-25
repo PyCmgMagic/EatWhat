@@ -52,6 +52,13 @@ export function rotateShopPhoto({
   };
 }
 
+/** Keep enough source pixels for the crop, regardless of preview size or zoom. */
+export function shopCropMinimum(width: number, height: number) {
+  const dimension = (size: number) =>
+    Math.min(32, Math.max(1, Math.floor(size / 4))) / size;
+  return { width: dimension(width), height: dimension(height) };
+}
+
 export function moveShopCrop(
   bounds: ShopPhotoCrop,
   handle: ShopCropHandle,

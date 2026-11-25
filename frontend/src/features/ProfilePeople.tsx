@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { LoginLink } from "../app/auth-dialog";
 import { mediaUrl, parseId } from "../api/models";
+import { AvatarImage } from "../components/AvatarImage";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { SlidingTabs, MotionRegion } from "../desktop/motion";
 import { State } from "../desktop/secondary";
@@ -267,11 +268,7 @@ export function ProfilePeopleDialog() {
           const body = (
             <>
               <span className="profile-people-avatar">
-                {picture ? (
-                  <img src={picture} alt="" />
-                ) : (
-                  personName.slice(0, 1)
-                )}
+                <AvatarImage src={picture} loading="lazy" />
               </span>
               <span className="profile-people-person">
                 <strong title={personName}>{personName}</strong>
@@ -335,7 +332,7 @@ export function ProfilePeopleDialog() {
         />
         <header className="profile-people-heading">
           <span className="profile-people-avatar owner">
-            {avatar ? <img src={avatar} alt="" /> : name?.slice(0, 1) || "食"}
+            <AvatarImage src={avatar} />
           </span>
           <div>
             {!own && name && (

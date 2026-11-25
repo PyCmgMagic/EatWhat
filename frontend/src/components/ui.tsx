@@ -3,7 +3,7 @@ import {
   useLayoutEffect,
   useId,
   useRef,
-  type KeyboardEventHandler,
+  type KeyboardEvent,
   type ReactNode,
 } from "react";
 import { BRAND_SLOGAN } from "../app/brand";
@@ -11,6 +11,7 @@ import { Link, useLocation } from "react-router-dom";
 import { bannedPageAllowed } from "../api/banned-access";
 import { ContentSkeleton } from "./LoadingSkeleton";
 import { AccessWelcome } from "./AccessWelcome";
+import { openModalLayer } from "./modal-layer";
 import {
   LayoutGrid,
   Soup,
@@ -219,7 +220,7 @@ export function Modal({
   dismissible?: boolean;
   returnFocus?: HTMLElement | null;
   motionOrigin?: HTMLElement | null;
-  onKeyDown?: KeyboardEventHandler<HTMLDialogElement>;
+  onKeyDown?: (event: KeyboardEvent<HTMLDialogElement>, dismiss: () => void) => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const surface = useRef<HTMLDivElement>(null);
@@ -242,21 +243,8 @@ export function Modal({
   };
   useLayoutEffect(() => {
     const dialog = ref.current;
-    const previousFocus =
-      returnFocus ?? (document.activeElement as HTMLElement | null);
-    // Lock scrolling on <html>. Browsers that keep the reserved scrollbar
-    // gutter (scrollbar-gutter: stable) keep the page width; others (Safari)
-    // drop the scrollbar, so measure what was lost and pad it back.
-    const root = document.documentElement,
-      body = document.body,
-      gutter = () => window.innerWidth - root.clientWidth;
-    const scrollbar = gutter();
-    dialog?.showModal();
-    const prev = root.style.overflow,
-      prevPadding = body.style.paddingRight;
-    root.style.overflow = "hidden";
-    const lost = scrollbar - gutter();
-    if (lost > 0) body.style.paddingRight = `${lost}px`;
+    if (!dialog) return;
+    const closeLayer = openModalLayer(dialog, returnFocus);
     // Measure after the native dialog enters its top layer. Only the shell
     // changes size; counter-scaling keeps controls readable throughout.
     if (
@@ -319,11 +307,7 @@ export function Modal({
           content.current.style.opacity = "";
         }
       }
-      dialog?.close();
-      root.style.overflow = prev;
-      body.style.paddingRight = prevPadding;
-      if (previousFocus?.isConnected)
-        previousFocus.focus({ preventScroll: true });
+      closeLayer();
     };
   }, []);
   return (
@@ -332,7 +316,7 @@ export function Modal({
       className={`modal ${className}`}
       data-origin-motion={motionOrigin ? "true" : undefined}
       aria-labelledby={titleId}
-      onKeyDown={onKeyDown}
+      onKeyDown={(event) => onKeyDown?.(event, dismiss)}
       onCancel={(e) => {
         e.preventDefault();
         if (dismissible) dismiss();

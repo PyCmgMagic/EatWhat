@@ -851,8 +851,9 @@ function NewShop() {
   const { details, draft, busy } = flow;
   const longName = codePoints(draft.name.trim()) > 20;
   return (
-    <main
+    <section
       className="mobile-page-native mobile-new-shop"
+      aria-labelledby="mobile-new-shop-title"
       data-step={details ? "details" : "search"}
     >
       <header className="mobile-new-shop-header">
@@ -956,6 +957,6 @@ function NewShop() {
           disabled={busy}
         />
       )}
-    </main>
+    </section>
   );
 }

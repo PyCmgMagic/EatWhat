@@ -3,6 +3,8 @@ import {
   lazy,
   Suspense,
   useEffect,
+  useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -18,6 +20,7 @@ import { useApp } from "../app/state";
 import { isDemo } from "../app/runtime";
 import { LoginLink } from "../app/auth-dialog";
 import { errorMessage } from "../api/client";
+import { Modal } from "../components/ui";
 import { Avatar, Icon, num } from "./kit";
 import WorkspaceSwitch from "./WorkspaceSwitch";
 import { ThemeToggle } from "../theme/AppearanceControl";
@@ -50,9 +53,11 @@ const pages: Record<AdminModuleId, ReturnType<typeof lazy>> = {
   ),
 };
 
-function Brand({ to }: { to: string }) {
+const compactAdmin = "(max-width: 960px)";
+
+function Brand({ to, onClick }: { to: string; onClick?: () => void }) {
   return (
-    <Link className="admin-brand" to={to}>
+    <Link className="admin-brand" to={to} onClick={onClick}>
       <span className="admin-brand-icon">
         <Icon name="bowl" size={20} />
       </span>
@@ -88,18 +93,32 @@ export default function AdminApp() {
   const { user, session, me } = useApp(),
     location = useLocation();
   const route = resolveAdminRoute(location.pathname, location.search);
-  const [menu, setMenu] = useState(false),
+  const [compact, setCompact] = useState(
+      () => matchMedia(compactAdmin).matches,
+    ),
+    [menu, setMenu] = useState(false),
     [palette, setPalette] = useState(false),
-    menuButton = useRef<HTMLButtonElement>(null);
+    menuButton = useRef<HTMLButtonElement>(null),
+    paletteButton = useRef<HTMLButtonElement>(null),
+    paletteFocus = useRef<HTMLElement | null>(null),
+    restoreMenuFocus = useRef(false);
   const previous = useRef(location.pathname);
   const authorized = !!session && user?.role === "admin" && !user.banned;
+
+  function closeMenu(restoreFocus: boolean) {
+    restoreMenuFocus.current = restoreFocus;
+    setMenu(false);
+  }
+
   useEffect(() => {
-    const wide = matchMedia("(min-width: 961px)");
-    const close = () => {
-      if (wide.matches) setMenu(false);
+    const media = matchMedia(compactAdmin);
+    const change = () => {
+      setCompact(media.matches);
+      if (!media.matches) setMenu(false);
     };
-    wide.addEventListener("change", close);
-    return () => wide.removeEventListener("change", close);
+    change();
+    media.addEventListener("change", change);
+    return () => media.removeEventListener("change", change);
   }, []);
   useEffect(() => {
     setMenu(false);
@@ -116,33 +135,48 @@ export default function AdminApp() {
   useEffect(() => {
     if (!authorized) return;
     const listener = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.isComposing || e.keyCode === 229) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        if (palette || document.querySelector("dialog[open]")) return;
         e.preventDefault();
-        setPalette((v) => !v);
-      } else if (e.key === "Escape") {
-        setPalette(false);
-        setMenu((open) => {
-          if (open) menuButton.current?.focus();
-          return false;
-        });
+        const active = document.activeElement;
+        paletteFocus.current =
+          active instanceof HTMLElement && active !== document.body
+            ? active
+            : paletteButton.current;
+        setPalette(true);
+      } else if (
+        menu &&
+        e.key === "Escape" &&
+        !document.querySelector("dialog[open]")
+      ) {
+        e.preventDefault();
+        closeMenu(true);
       }
     };
     window.addEventListener("keydown", listener);
     return () => window.removeEventListener("keydown", listener);
-  }, [authorized]);
-  useEffect(() => {
-    if (!menu) return;
+  }, [authorized, menu, palette]);
+  useLayoutEffect(() => {
+    if (!authorized) return;
+    if (!menu) {
+      if (restoreMenuFocus.current) {
+        restoreMenuFocus.current = false;
+        menuButton.current?.focus({ preventScroll: true });
+      }
+      return;
+    }
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    document
-      .querySelector<HTMLAnchorElement>(
+    const currentLink =
+      document.querySelector<HTMLAnchorElement>(
         '#admin-navigation nav a[aria-current="page"]',
-      )
-      ?.focus();
+      ) ?? document.querySelector<HTMLAnchorElement>("#admin-navigation nav a");
+    currentLink?.focus({ preventScroll: true });
     return () => {
       document.body.style.overflow = overflow;
     };
-  }, [menu]);
+  }, [authorized, menu]);
   if (route.redirect)
     return <Navigate replace to={route.redirect} state={location.state} />;
   if (!authorized)
@@ -204,6 +238,7 @@ export default function AdminApp() {
     <div className="admin-app">
       <a
         className="admin-skip"
+        inert={menu || undefined}
         href="#admin-main"
         onClick={(event) => {
           event.preventDefault();
@@ -216,10 +251,18 @@ export default function AdminApp() {
         className="admin-sidebar"
         id="admin-navigation"
         data-open={menu || undefined}
+        inert={(compact && !menu) || undefined}
+        aria-hidden={(compact && !menu) || undefined}
         aria-label="后台导航"
       >
-        <Brand to="/admin" />
-        <Navigation current={module?.id} onNavigate={() => setMenu(false)} />
+        <Brand
+          to="/admin"
+          onClick={() => menu && closeMenu(location.pathname === "/admin")}
+        />
+        <Navigation
+          current={module?.id}
+          onNavigate={(path) => menu && closeMenu(location.pathname === path)}
+        />
         <div className="admin-identity">
           <Avatar src={user.avatar} name={user.displayName || "管"} size={36} />
           <span>
@@ -232,12 +275,10 @@ export default function AdminApp() {
       </aside>
       {menu && (
         <button
+          type="button"
           className="admin-scrim"
           aria-label="关闭后台导航"
-          onClick={() => {
-            setMenu(false);
-            menuButton.current?.focus();
-          }}
+          onClick={() => closeMenu(true)}
         />
       )}
       <div className="admin-workspace" inert={menu || undefined}>
@@ -270,9 +311,16 @@ export default function AdminApp() {
             )}
           </nav>
           <button
+            ref={paletteButton}
             type="button"
             className="admin-jump"
-            onClick={() => setPalette(true)}
+            aria-label="跳转到模块"
+            aria-haspopup="dialog"
+            aria-expanded={palette}
+            onClick={(event) => {
+              paletteFocus.current = event.currentTarget;
+              setPalette(true);
+            }}
           >
             <Icon name="search" size={16} />
             <span>跳转到模块</span>
@@ -318,7 +366,13 @@ export default function AdminApp() {
           )}
         </main>
       </div>
-      {palette && <Palette onClose={() => setPalette(false)} />}
+      {palette && (
+        <Palette
+          onClose={() => setPalette(false)}
+          origin={paletteButton.current}
+          returnFocus={paletteFocus.current}
+        />
+      )}
     </div>
   );
 }
@@ -328,7 +382,7 @@ function Navigation({
   onNavigate,
 }: {
   current?: AdminModuleId;
-  onNavigate: () => void;
+  onNavigate: (path: string) => void;
 }) {
   const { api } = useApp();
   // Same key as the overview, so the two share one request.
@@ -351,7 +405,7 @@ function Navigation({
           <Link
             to={item.path}
             aria-current={current === item.id ? "page" : undefined}
-            onClick={onNavigate}
+            onClick={() => onNavigate(item.path)}
           >
             <Icon name={item.icon} size={18} />
             <span>{item.title}</span>
@@ -368,35 +422,69 @@ function Navigation({
 }
 
 /** ⌘K: jump to any module by name. */
-function Palette({ onClose }: { onClose: () => void }) {
+function Palette({
+  onClose,
+  origin,
+  returnFocus,
+}: {
+  onClose: () => void;
+  origin: HTMLElement | null;
+  returnFocus: HTMLElement | null;
+}) {
   const navigate = useNavigate(),
     [text, setText] = useState(""),
     [index, setIndex] = useState(0);
+  const input = useRef<HTMLInputElement>(null);
+  const selected = useRef<HTMLButtonElement>(null);
+  const resultsId = useId();
   const matches = useMemo(() => {
     const needle = text.trim().toLowerCase();
     return adminModules.filter((m) =>
       `${m.title}${m.group}${m.detail}${m.id}`.toLowerCase().includes(needle),
     );
   }, [text]);
-  const go = (path?: string) => {
-    if (path) navigate(path);
+  useEffect(() => {
+    input.current?.focus({ preventScroll: true });
+  }, []);
+  useEffect(() => {
+    selected.current?.scrollIntoView({ block: "nearest" });
+  }, [index]);
+
+  const go = (path: string) => {
     onClose();
+    navigate(path);
   };
   return (
-    <div
+    <Modal
       className="admin-palette"
-      role="dialog"
-      aria-modal="true"
-      aria-label="跳转到模块"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
+      title="跳转到模块"
+      motionOrigin={origin}
+      returnFocus={returnFocus}
+      onClose={onClose}
+      onKeyDown={(event, dismiss) => {
+        if (
+          !event.nativeEvent.isComposing &&
+          event.keyCode !== 229 &&
+          (event.metaKey || event.ctrlKey) &&
+          event.key.toLowerCase() === "k"
+        ) {
+          event.preventDefault();
+          dismiss();
+        }
       }}
     >
       <div>
         <label>
           <Icon name="search" size={18} />
           <input
-            autoFocus
+            ref={input}
+            role="combobox"
+            aria-expanded="true"
+            aria-autocomplete="list"
+            aria-controls={resultsId}
+            aria-activedescendant={
+              matches[index] ? `${resultsId}-${matches[index].id}` : undefined
+            }
             value={text}
             placeholder="输入模块名称，例如 用户、公告"
             aria-label="模块名称"
@@ -405,21 +493,30 @@ function Palette({ onClose }: { onClose: () => void }) {
               setIndex(0);
             }}
             onKeyDown={(e) => {
+              if (e.nativeEvent.isComposing || e.keyCode === 229) return;
               if (e.key === "ArrowDown" || e.key === "ArrowUp") {
                 e.preventDefault();
                 const step = e.key === "ArrowDown" ? 1 : -1;
                 setIndex(
                   (i) => (i + step + matches.length) % (matches.length || 1),
                 );
-              } else if (e.key === "Enter") go(matches[index]?.path);
+              } else if (e.key === "Enter" && matches[index]) {
+                e.preventDefault();
+                go(matches[index].path);
+              }
             }}
           />
-          <kbd>Esc</kbd>
         </label>
-        <ul role="listbox" aria-label="匹配的模块">
+        <ul id={resultsId} role="listbox" aria-label="匹配的模块">
           {matches.map((m, i) => (
-            <li key={m.id} role="option" aria-selected={i === index}>
+            <li key={m.id} role="presentation">
               <button
+                ref={i === index ? selected : undefined}
+                type="button"
+                role="option"
+                tabIndex={-1}
+                id={`${resultsId}-${m.id}`}
+                aria-selected={i === index}
                 onMouseEnter={() => setIndex(i)}
                 onClick={() => go(m.path)}
               >
@@ -432,9 +529,13 @@ function Palette({ onClose }: { onClose: () => void }) {
               </button>
             </li>
           ))}
-          {!matches.length && <li className="is-empty">没有匹配的模块</li>}
         </ul>
+        {!matches.length && (
+          <p className="is-empty" role="status">
+            没有匹配的模块
+          </p>
+        )}
       </div>
-    </div>
+    </Modal>
   );
 }

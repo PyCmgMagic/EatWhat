@@ -8,6 +8,7 @@ import { mediaUrl } from "../api/models";
 import { DesignIcon as Icon } from "../mobile/ui";
 import { useApp } from "../app/state";
 import { FoodCover } from "../components/FoodCover";
+import { AvatarImage } from "../components/AvatarImage";
 import { peopleHref } from "./profile-people";
 import ProfileGrowth from "./ProfileGrowth";
 import { useMyProfileCover } from "./useMyProfileCover";
@@ -33,9 +34,7 @@ const tabs = [
 export default function ProfileSpaceHeader() {
   const { api, user, session } = useApp();
   const location = useLocation();
-  const [avatarFailed, setAvatarFailed] = useState(false);
   const avatar = mediaUrl(user?.avatar);
-  useEffect(() => setAvatarFailed(false), [avatar]);
   // The tab bar sticks under the page header while the content scrolls; drop its
   // rounded shoulders once it is pinned so no card corner peeks through.
   const tabbar = useRef<HTMLDivElement>(null);
@@ -131,11 +130,7 @@ export default function ProfileSpaceHeader() {
         </div>
         <header className="profile-overview-identity">
           <span className="profile-overview-avatar" aria-hidden="true">
-            {avatar && !avatarFailed ? (
-              <img src={avatar} alt="" onError={() => setAvatarFailed(true)} />
-            ) : (
-              user?.displayName?.slice(0, 1) || "食"
-            )}
+            <AvatarImage src={avatar} />
           </span>
           <div className="profile-overview-intro">
             <h1 id="profile-overview-name">{user?.displayName || "我的"}</h1>

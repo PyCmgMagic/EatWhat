@@ -132,14 +132,6 @@
   overflow-wrap: anywhere;
   text-wrap: pretty;
 }
-.shop-photo-feedback.is-error {
-  background: var(--night-red-soft, #fff0eb);
-  color: var(--night-red-text, #943b30);
-}
-.shop-photo-feedback svg {
-  flex: none;
-  margin-top: 1px;
-}
 @media (hover: hover) {
   .shop-photo-card .shop-photo-actions button:hover:not(:disabled) {
     background: color-mix(in srgb, var(--shop-photo-accent) 9%, transparent);

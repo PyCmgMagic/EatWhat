@@ -44,6 +44,7 @@ import { mediaUrl, parseId, type Food, type Page } from "../../api/models";
 import { useActionAccess } from "../access";
 import { DesignIcon as Icon, ReactionIcon } from "../../mobile/ui";
 import { FoodCover } from "../../components/FoodCover";
+import { AvatarImage } from "../../components/AvatarImage";
 import { ContentSkeleton } from "../../components/LoadingSkeleton";
 import { Gate } from "../../components/ui";
 import { ProfileEmpty, ProfilePageHead } from "../ProfilePage";
@@ -463,20 +464,9 @@ function CommentAuthor({
   const name = comment.authorName || "匿名用户";
   const authorId = parseId(String(comment.authorId));
   const src = avatar ? mediaUrl(comment.authorAvatar) : undefined;
-  const [failedSrc, setFailedSrc] = useState<string>();
   const className = avatar ? "comments-avatar" : "comments-author";
   const content = avatar ? (
-    src && src !== failedSrc ? (
-      <img
-        src={src}
-        alt=""
-        loading="lazy"
-        decoding="async"
-        onError={() => setFailedSrc(src)}
-      />
-    ) : (
-      Array.from(name)[0]
-    )
+    <AvatarImage src={src} loading="lazy" />
   ) : (
     <>
       {name}
@@ -1400,22 +1390,22 @@ export function MobileComments() {
 
   if (!subjectId && commentId && !writing)
     return (
-      <main className="comments-mobile-page">
+      <div className="comments-mobile-page">
         <CommentDestination commentId={commentId} />
-      </main>
+      </div>
     );
   if (!subjectId)
     return (
-      <main className="comments-mobile-page">
+      <div className="comments-mobile-page">
         <Link className="comments-back" to="/">
           返回发现
         </Link>
         <h1>请先选择一道菜或一家店</h1>
-      </main>
+      </div>
     );
   const food = q.data ? { ...q.data, id: subjectId } : undefined;
   const body = (
-    <main className={`comments-mobile-page${writing ? " is-writing" : ""}`}>
+    <div className={`comments-mobile-page${writing ? " is-writing" : ""}`}>
       <Link to={back} className="comments-back" aria-label="返回">
         <Icon name="back" size={24} />
       </Link>
@@ -1450,7 +1440,7 @@ export function MobileComments() {
             </>
           ))}
       </QueryState>
-    </main>
+    </div>
   );
   return writing ? <Gate verified={false}>{body}</Gate> : body;
 }
@@ -1649,13 +1639,13 @@ export function MyFoodComments({
 export function MobileMyComments() {
   return (
     <Gate verified={false}>
-      <main className="comments-mobile-page comments-mobile-mine">
+      <div className="comments-mobile-page comments-mobile-mine">
         <Link to="/me" className="comments-back" aria-label="返回我的">
           <Icon name="back" size={24} />
         </Link>
         <h1>我的评论</h1>
         <MyFoodComments />
-      </main>
+      </div>
     </Gate>
   );
 }

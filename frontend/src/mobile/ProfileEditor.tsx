@@ -1,4 +1,5 @@
 import { Select } from "../components/Select";
+import { AvatarImage } from "../components/AvatarImage";
 import { PROFILE_SIGNATURE_LIMIT, type ProfileForm } from "../desktop/profile";
 import "./profile-editor.css";
 
@@ -27,7 +28,7 @@ export default function ProfileEditor({
   const maxDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   return (
-    <main
+    <section
       className="mobile-profile-editor"
       aria-labelledby="profile-editor-title"
     >
@@ -57,11 +58,7 @@ export default function ProfileEditor({
             disabled={busy}
             onClick={onAvatar}
           >
-            {avatar ? (
-              <img src={avatar} alt="" />
-            ) : (
-              form.name.slice(0, 1) || "食"
-            )}
+            <AvatarImage src={avatar} />
           </button>
           <button
             type="button"
@@ -142,6 +139,6 @@ export default function ProfileEditor({
           </div>
         </fieldset>
       </form>
-    </main>
+    </section>
   );
 }

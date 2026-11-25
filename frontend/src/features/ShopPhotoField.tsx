@@ -1,6 +1,5 @@
 import {
   Camera,
-  CircleAlert,
   ImageUp,
   Pencil,
   Plus,
@@ -9,6 +8,7 @@ import {
 import { useEffect, useId, useRef, useState } from "react";
 import { errorMessage } from "../api/client";
 import { validateFiles } from "../api/validation";
+import { useFeedbackState } from "../components/feedback";
 import { FieldMark } from "./FieldMark";
 import { ShopPhotoEditor } from "./ShopPhotoEditor";
 import type { ShopPhotoSelection } from "./shop-photo-edit";
@@ -32,18 +32,14 @@ export function ShopPhotoField({
   const title = useId();
   const action = useId();
   const hint = useId();
-  const feedback = useId();
   const card = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const pick = useRef<HTMLButtonElement>(null);
   const editButton = useRef<HTMLButtonElement>(null);
   const revealPreview = useRef(false);
-  const [selectionError, setSelectionError] = useState("");
+  const [, reportSelectionError] = useFeedbackState();
   const [editing, setEditing] = useState<ShopPhotoSelection>();
   const selected = !!preview && !!photo;
-  const error = uploadPhase
-    ? ""
-    : [selectionError, uploadError].filter(Boolean).join(" ");
 
   useEffect(() => {
     if (!preview || !revealPreview.current) return;
@@ -90,7 +86,7 @@ export function ShopPhotoField({
             type="button"
             disabled={disabled}
             aria-labelledby={action}
-            aria-describedby={error ? `${hint} ${feedback}` : hint}
+            aria-describedby={hint}
             onClick={() => input.current?.click()}
           >
             {selected ? (
@@ -115,7 +111,6 @@ export function ShopPhotoField({
               disabled={disabled}
               onClick={() => {
                 onChange();
-                setSelectionError("");
                 pick.current?.focus();
               }}
             >
@@ -124,16 +119,6 @@ export function ShopPhotoField({
             </button>
           )}
         </div>
-        {error && (
-          <p
-            className="shop-photo-feedback is-error"
-            id={feedback}
-            role="alert"
-          >
-            <CircleAlert aria-hidden="true" size={17} />
-            <span>{error}</span>
-          </p>
-        )}
         {uploadPhase && (
           <p className="shop-photo-feedback" role="status">
             {uploadPhase === "confirming" ? "正在检查照片…" : "正在上传照片…"}
@@ -155,10 +140,9 @@ export function ShopPhotoField({
             validateFiles([file], 0);
             revealPreview.current = true;
             onChange({ file });
-            setSelectionError("");
           } catch (err) {
             const message = errorMessage(err);
-            setSelectionError(
+            reportSelectionError(
               selected ? `${message} 已保留当前照片。` : message,
             );
           }
@@ -169,10 +153,7 @@ export function ShopPhotoField({
           photo={editing}
           origin={editButton.current}
           onClose={() => setEditing(undefined)}
-          onApply={(photo) => {
-            onChange(photo);
-            setSelectionError("");
-          }}
+          onApply={onChange}
         />
       )}
     </div>

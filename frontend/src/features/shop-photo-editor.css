@@ -83,6 +83,7 @@
   box-shadow: 0 0 0 100vmax rgb(0 0 0 / 58%);
 }
 .shop-photo-crop-selection {
+  container-type: size;
   outline: 1px solid rgb(255 255 255 / 88%);
   box-shadow: 0 0 0 2px rgb(0 0 0 / 30%);
 }
@@ -96,17 +97,37 @@
   cursor: default;
   touch-action: pan-y;
 }
+@container (max-width: 60px) and (max-height: 60px) {
+  .shop-photo-crop-selection[data-full="false"] .shop-photo-crop-move {
+    z-index: 2;
+    inset: 50% auto auto 50%;
+    width: 32px;
+    height: 32px;
+    transform: translate(-50%, -50%);
+  }
+  .shop-photo-crop-selection[data-full="false"] .shop-photo-crop-move::before {
+    position: absolute;
+    inset: 12px;
+    border: 1px solid white;
+    border-radius: 50%;
+    box-shadow: 0 0 2px #0009;
+    content: "";
+  }
+}
 .shop-photo-crop-handle {
+  /* Split the hit areas when the visible crop is narrower than two handles. */
+  --shift-x: calc(var(--corner-x) * max(0px, 22px - 50cqw));
+  --shift-y: calc(var(--corner-y) * max(0px, 22px - 50cqh));
   position: absolute;
   z-index: 1;
   width: 44px;
   height: 44px;
-  transform: translate(-50%, -50%);
+  transform: translate(calc(-50% + var(--shift-x)), calc(-50% + var(--shift-y)));
   touch-action: none;
 }
 .shop-photo-crop-handle::before {
   position: absolute;
-  inset: 50% auto auto 50%;
+  inset: calc(50% - var(--shift-y)) auto auto calc(50% - var(--shift-x));
   width: 16px;
   height: 16px;
   content: "";
@@ -115,21 +136,29 @@
   filter: drop-shadow(0 1px 2px rgb(0 0 0 / 72%));
 }
 .shop-photo-crop-handle[data-corner="top-left"] {
+  --corner-x: -1;
+  --corner-y: -1;
   top: 0;
   left: 0;
   cursor: nwse-resize;
 }
 .shop-photo-crop-handle[data-corner="top-right"] {
+  --corner-x: 1;
+  --corner-y: -1;
   top: 0;
   left: 100%;
   cursor: nesw-resize;
 }
 .shop-photo-crop-handle[data-corner="bottom-left"] {
+  --corner-x: -1;
+  --corner-y: 1;
   top: 100%;
   left: 0;
   cursor: nesw-resize;
 }
 .shop-photo-crop-handle[data-corner="bottom-right"] {
+  --corner-x: 1;
+  --corner-y: 1;
   top: 100%;
   left: 100%;
   cursor: nwse-resize;
@@ -150,17 +179,11 @@
   border-width: 0 3px 3px 0;
   transform: translate(calc(-100% + 1px), calc(-100% + 1px));
 }
-.shop-photo-edit-hint,
-.shop-photo-edit-error {
+.shop-photo-edit-hint {
   margin: 0;
   font-size: 13px;
   line-height: 1.5;
-}
-.shop-photo-edit-hint {
   color: var(--photo-editor-muted);
-}
-.shop-photo-edit-error {
-  color: var(--night-red-text, #943b30);
 }
 .shop-photo-edit-actions {
   display: grid;

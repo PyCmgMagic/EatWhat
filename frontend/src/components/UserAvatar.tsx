@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { mediaUrl, parseId } from "../api/models";
+import { AvatarImage } from "./AvatarImage";
 import "./user-avatar.css";
 
 export function UserAvatar({
@@ -17,21 +17,9 @@ export function UserAvatar({
   onClick?: () => void;
 }) {
   const src = mediaUrl(avatar);
-  const [failedSrc, setFailedSrc] = useState<string>();
   const id = parseId(String(profileId));
   const classes = `user-avatar ${className}`;
-  const content =
-    src && src !== failedSrc ? (
-      <img
-        src={src}
-        alt=""
-        loading="lazy"
-        decoding="async"
-        onError={() => setFailedSrc(src)}
-      />
-    ) : (
-      Array.from(name)[0] || "食"
-    );
+  const content = <AvatarImage src={src} loading="lazy" />;
   return id ? (
     <Link
       className={classes}

@@ -183,8 +183,8 @@ async function validateMobileProfile(page) {
       .getByText(user.displayName, { exact: true })
       .waitFor();
     await p.getByText("去认证", { exact: true }).waitFor();
-    if ((await p.locator(".mobile-settings-avatar").innerText()) !== "十")
-      throw new Error("settings fallback avatar kept a prototype initial");
+    if ((await p.locator(".mobile-settings-avatar img").getAttribute("data-default-avatar")) !== "true")
+      throw new Error("settings did not show the default avatar");
     await p.getByRole("link", { name: "返回", exact: true }).click();
     await p
       .getByRole("heading", { name: user.displayName, exact: true })
@@ -195,8 +195,8 @@ async function validateMobileProfile(page) {
     if (overflow) throw new Error("long account content overflows the phone");
     await p.getByRole("link", { name: "编辑资料", exact: true }).click();
     await p.locator("#nick").waitFor();
-    if ((await p.getByLabel("换头像", { exact: true }).innerText()) !== "十")
-      throw new Error("editor fallback avatar kept a prototype initial");
+    if ((await p.getByLabel("换头像", { exact: true }).locator("img").getAttribute("data-default-avatar")) !== "true")
+      throw new Error("editor did not show the default avatar");
     if ((await p.locator("#nick").inputValue()) !== user.displayName)
       throw new Error("editor does not match the current account");
     checks.push(

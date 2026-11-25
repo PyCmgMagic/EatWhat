@@ -14,19 +14,18 @@
 .discovery-pagination { justify-content: center; }
 .discovery-toolbar {
   container-type: inline-size;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
   align-items: center;
-  justify-content: space-between;
-  gap: 0 12px;
+  column-gap: clamp(6px, 2vw, 12px);
   border-bottom: 1px solid var(--night-line, #e9e4df);
 }
 .discovery-toolbar .discovery-tabs {
+  min-width: 0;
   border-bottom: 0;
 }
 .discovery-toolbar > .ew-select {
   width: auto;
-  margin-inline-start: auto;
 }
 .discovery-toolbar .ew-select > .discovery-sort {
   position: relative;
@@ -88,22 +87,22 @@
 }
 @container (max-width: 430px) {
   .discovery-toolbar .discovery-tabs {
-    flex: 1 0 auto;
     justify-content: space-between;
-    gap: 12px;
+    gap: 4px;
   }
   .discovery-tabs button {
     min-width: 44px;
     padding-inline: 0;
   }
   .discovery-tabs button > span {
+    gap: 3px;
     padding-inline: 2px;
   }
   .discovery-tabs svg {
     flex: none;
+    width: 16px;
+    height: 16px;
   }
-}
-@container (300px < width <= 430px) {
   .discovery-sort .ew-select-label {
     display: none;
   }
@@ -111,19 +110,18 @@
     display: inline;
   }
 }
-@container (300px < width <= 350px) {
+@container (max-width: 350px) {
   .discovery-sort .ew-select-icon {
     display: none;
   }
   .discovery-toolbar .ew-select > .discovery-sort {
-    min-width: 5em;
+    min-width: 44px;
     padding-inline: 5px;
   }
 }
 @container (max-width: 300px) {
-  .discovery-toolbar .discovery-tabs {
-    flex-basis: 100%;
-    padding-inline: 3px;
+  .discovery-tabs svg {
+    display: none;
   }
 }
 .pc-discovery-sheet .discovery-toolbar {

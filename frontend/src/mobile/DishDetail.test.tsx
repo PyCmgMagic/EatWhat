@@ -8,6 +8,7 @@ import { createApi } from "../api/service";
 import { bridgeToV2 } from "../api/v2-bridge";
 import type { Food } from "../api/models";
 import DishDetail from "./DishDetail";
+import { DEFAULT_AVATAR_SRC } from "../components/AvatarImage";
 
 vi.mock("../features/SupplementPrice", () => ({ SupplementPrice: () => null }));
 vi.mock("../features/FoodRating", () => ({ FoodRating: () => null }));
@@ -116,8 +117,7 @@ it("recovers from a failed avatar when a refreshed URL arrives", async () => {
   const image = host.querySelector(".mobile-avatar img")!;
   expect(image).not.toBeNull();
   await act(async () => image.dispatchEvent(new Event("error")));
-  expect(host.querySelector(".mobile-avatar img")).toBeNull();
-  expect(host.querySelector(".mobile-avatar")?.textContent).toBe("M");
+  expect(host.querySelector(".mobile-avatar img")?.getAttribute("src")).toBe(DEFAULT_AVATAR_SRC);
   expect(host.querySelector(".mobile-contributor")?.getAttribute("href")).toBe(
     "/users/21",
   );
@@ -129,18 +129,16 @@ it("recovers from a failed avatar when a refreshed URL arrives", async () => {
 });
 
 it.each([null, "javascript:alert(1)"])(
-  "uses the complete initial for an absent or invalid avatar (%s)",
+  "uses the default avatar for an absent or invalid avatar (%s)",
   async (avatar) => {
     await render({ id: 71, user: { id: 21, displayName: "🍜食友", avatar } });
-    expect(host.querySelector(".mobile-avatar img")).toBeNull();
-    expect(host.querySelector(".mobile-avatar")?.textContent).toBe("🍜");
+    expect(host.querySelector(".mobile-avatar img")?.getAttribute("src")).toBe(DEFAULT_AVATAR_SRC);
   },
 );
 
 it("keeps an unavailable author's fallback unlinked", async () => {
   await render({ id: 71, accountId: 21, user: null });
-  expect(host.querySelector(".mobile-avatar img")).toBeNull();
-  expect(host.querySelector(".mobile-avatar")?.textContent).toBe("校");
+  expect(host.querySelector(".mobile-avatar img")?.getAttribute("src")).toBe(DEFAULT_AVATAR_SRC);
   expect(host.querySelector("a.mobile-contributor")).toBeNull();
 });
 

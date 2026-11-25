@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { AvatarImage } from "../components/AvatarImage";
 import { BRAND_SLOGAN } from "../app/brand";
 import { Link } from "react-router-dom";
 import { useApp } from "../app/state";
@@ -39,11 +40,7 @@ export default function ProfileRail({
         aria-label="编辑个人资料"
       >
         <span className="profile-rail-avatar">
-          {user?.avatar && mediaUrl(user.avatar) ? (
-            <img src={mediaUrl(user.avatar)} alt="" />
-          ) : (
-            (user?.displayName?.slice(0, 1) ?? "食")
-          )}
+          <AvatarImage src={mediaUrl(user?.avatar)} />
         </span>
         <span>
           <strong>{user?.displayName || "我的账号"}</strong>

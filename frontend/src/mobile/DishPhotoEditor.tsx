@@ -129,7 +129,7 @@ export default function DishPhotoEditor({
   }
 
   return (
-    <main
+    <section
       className={`mobile-crop-screen${showCover ? " mobile-crop-with-cover" : ""}`}
       aria-busy={busy}
     >
@@ -281,6 +281,6 @@ export default function DishPhotoEditor({
           )}
         </div>
       </div>
-    </main>
+    </section>
   );
 }

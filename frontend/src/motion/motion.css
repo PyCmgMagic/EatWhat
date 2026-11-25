@@ -69,7 +69,7 @@
     dialog,
     .design-notice
   )
-  :is(.pc-header-search-backdrop, .ew-home-search-scrim):active:not(:disabled) {
+  .pc-header-search-backdrop:active:not(:disabled) {
   scale: 1;
 }
 /* Indicators and drag handles keep their geometry during a press. */

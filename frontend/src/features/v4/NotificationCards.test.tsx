@@ -302,7 +302,7 @@ it("links the latest comment actor's avatar separately from the desktop notifica
   expect(host.querySelector('a[aria-label="查看小陈的主页"]')).toBeNull();
   const reply = host.querySelector('a[aria-label="查看小周的主页"]');
   expect(reply?.getAttribute("href")).toBe("/users/25");
-  expect(reply?.textContent).toBe("小");
+  expect(reply?.querySelector("img")?.hasAttribute("data-default-avatar")).toBe(true);
   expect(
     reply
       ?.closest("article")
@@ -331,7 +331,7 @@ it("opens the commenter's profile from the mobile avatar without following the n
   await act(async () =>
     avatar.querySelector("img")!.dispatchEvent(new Event("error")),
   );
-  expect(avatar.textContent).toBe("小");
+  expect(avatar.querySelector("img")?.hasAttribute("data-default-avatar")).toBe(true);
   await act(async () => avatar.click());
   expect(host.querySelector("output")?.textContent).toBe("/users/23");
   expect(

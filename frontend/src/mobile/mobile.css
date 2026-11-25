@@ -333,6 +333,29 @@ html[data-motion-input="keyboard"] .mobile-home-orbit .mobile-home-plate {
   gap: 18px 14px;
   padding-bottom: 16px;
 }
+@media (max-height: 660px) {
+  .mobile-home-hero {
+    padding-bottom: 34px;
+  }
+  .mobile-home-copy,
+  .mobile-home-hero .mobile-home-resting-copy {
+    margin-top: 18px;
+    min-height: 0;
+  }
+  .mobile-home-copy h1 {
+    font-size: clamp(28px, 9.5vw, 40px);
+  }
+  .mobile-home-copy .mobile-home-price:not(.is-unknown) {
+    font-size: 40px;
+  }
+  .mobile-home-dots {
+    margin-top: 6px;
+  }
+  .mobile-home-actions,
+  .mobile-home-hero .mobile-home-resting-actions {
+    margin-top: 12px;
+  }
+}
 .mobile-main-navigation {
   position: fixed;
   left: 50%;
@@ -1421,7 +1444,8 @@ html[data-motion-input="keyboard"] .design-fab-surface {
 }
 body:has(
     .mobile-viewport [role="alertdialog"],
-    .mobile-viewport [role="dialog"]
+    .mobile-viewport [role="dialog"],
+    .mobile-viewport .ew-home-search[open]
   )
   .mobile-main-navigation {
   visibility: hidden;

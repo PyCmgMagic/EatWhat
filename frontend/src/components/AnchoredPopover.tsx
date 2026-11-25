@@ -17,6 +17,7 @@ type SurfaceProps = HTMLAttributes<HTMLDivElement> & {
   closeDuration?: number;
   padding?: number;
   chrome?: boolean;
+  origin?: () => { x: number; y: number; sx: number; sy: number } | undefined;
   onExited?: () => void;
   prepare?: (panel: HTMLDivElement, content: HTMLDivElement) => () => void;
 };
@@ -29,6 +30,7 @@ export function AnimatedSurface({
   closeDuration = 120,
   padding = 6,
   chrome = true,
+  origin,
   onExited,
   prepare,
   className = "",
@@ -44,8 +46,8 @@ export function AnimatedSurface({
   const controller = useRef<ReturnType<
     typeof createAnchoredPopoverMotion
   > | null>(null);
-  const latest = useRef({ prepare, onExited, duration, closeDuration });
-  latest.current = { prepare, onExited, duration, closeDuration };
+  const latest = useRef({ prepare, onExited, duration, closeDuration, origin });
+  latest.current = { prepare, onExited, duration, closeDuration, origin };
   useLayoutEffect(() => {
     if (!present || !panel.current || !surface.current || !content.current)
       return;
@@ -57,6 +59,7 @@ export function AnimatedSurface({
       {
         openDuration: latest.current.duration,
         closeDuration: latest.current.closeDuration,
+        origin: () => latest.current.origin?.(),
       },
     );
     controller.current = motion;

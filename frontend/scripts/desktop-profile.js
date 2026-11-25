@@ -21,17 +21,17 @@ async function validateDesktopProfile(browserPage) {
     await page.getByRole('button', {name:'取消修改',exact:true}).click();
     if (await page.locator('#nick').inputValue() !== name) throw new Error('取消未恢复原值');
     await page.locator('#nick').fill('好好吃饭呀'); await page.locator('#sign').fill('今天想吃一碗热汤');
-    if (await page.locator('.pc-profile-avatar-picker > span').innerText() !== '好') throw new Error('头像首字未随昵称更新');
+    if (await page.locator('.pc-profile-avatar-picker img').getAttribute('data-default-avatar') !== 'true') throw new Error('缺少默认头像');
     await page.getByRole('button', {name:'返回个人主页',exact:true}).click();
     await page.getByRole('dialog', {name:'还有修改未保存'}).getByRole('button', {name:'继续编辑',exact:true}).click();
     if (await page.locator('#sign').inputValue() !== '今天想吃一碗热汤') throw new Error('返回取消丢失修改');
-    checks.push('昵称校验、取消恢复、头像首字预览与返回时保留编辑');
-    await page.locator('input[type=file]').setInputFiles('public/prototype/assets/photos/sq_luosi.png');
+    checks.push('昵称校验、取消恢复、默认头像预览与返回时保留编辑');
+    await page.locator('input[type=file]').setInputFiles('prototype/assets/photos/sq_luosi.png');
     await page.getByRole('dialog', {name:'调整头像'}).waitFor(); await page.keyboard.press('Escape');
     if (await page.getByRole('button', {name:'撤销头像更换',exact:true}).count()) throw new Error('裁剪取消仍修改头像');
-    await page.locator('input[type=file]').setInputFiles('public/prototype/assets/photos/sq_luosi.png');
+    await page.locator('input[type=file]').setInputFiles('prototype/assets/photos/sq_luosi.png');
     await page.getByRole('dialog', {name:'调整头像'}).getByRole('slider').fill('1.25');
-    await page.screenshot({path:'../output/playwright/pc-profile-crop.png'});
+    await page.screenshot({path:'output/playwright/pc-profile-crop.png'});
     await page.getByRole('button', {name:'使用这个头像',exact:true}).click();
     await page.getByRole('button', {name:'调整取景',exact:true}).waitFor();
     if (!(await page.getByAltText('头像预览').getAttribute('src')).startsWith('blob:')) throw new Error('没有本地头像预览');
@@ -46,11 +46,11 @@ async function validateDesktopProfile(browserPage) {
         return {overflow:document.documentElement.scrollWidth>innerWidth+1,integrated:avatar.left>=card.left&&avatar.right<=card.right&&avatar.top>=card.top,controlWidths:controls.map(el=>el.getBoundingClientRect().width)};
       });
       if (layout.overflow || !layout.integrated || layout.controlWidths.some(w=>w<200)) throw new Error('宽度适配异常 '+width+' '+JSON.stringify(layout));
-      widths.push({width,...layout}); await page.screenshot({path:'../output/playwright/pc-profile-'+width+'.png'});
+      widths.push({width,...layout}); await page.screenshot({path:'output/playwright/pc-profile-'+width+'.png'});
     }
     await page.setViewportSize({width:760,height:900});
     if (await page.evaluate(() => document.documentElement.scrollWidth>innerWidth+1)) throw new Error('窄屏桌面预览溢出');
-    await page.screenshot({path:'../output/playwright/pc-profile-preview-760.png'});
+    await page.screenshot({path:'output/playwright/pc-profile-preview-760.png'});
     await page.setViewportSize({width:1440,height:1000});
     await page.getByRole('button', {name:'保存修改',exact:true}).dblclick();
     await page.getByText('修改已保存，个人主页已同步更新。',{exact:true}).waitFor();

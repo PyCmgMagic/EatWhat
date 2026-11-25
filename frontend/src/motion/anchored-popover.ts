@@ -57,7 +57,7 @@ export function createAnchoredPopoverMotion(
   config: {
     openDuration?: number;
     closeDuration?: number;
-    origin?: () => { x: number; y: number; sx: number; sy: number };
+    origin?: () => { x: number; y: number; sx: number; sy: number } | undefined;
   } = {},
 ) {
   let current: State | undefined;

@@ -5,6 +5,7 @@ import {
   readShopPhotoAdjustment,
   rotateShopPhoto,
   sameShopCrop,
+  shopCropMinimum,
 } from "./shop-photo-edit";
 
 it("resizes only the selected edges and keeps a draggable selection", () => {
@@ -25,6 +26,25 @@ it("fits a moved selection inside the photo without changing its size", () => {
     { width: 0.25, height: 0.125 },
   );
   expect(bounds).toEqual({ left: 0, top: 0.625, right: 0.625, bottom: 1 });
+});
+
+it("can crop both axes of narrow, rotated, and small photos", () => {
+  for (const [width, height] of [
+    [180, 1200],
+    [1200, 180],
+    [8, 10],
+  ]) {
+    const minimum = shopCropMinimum(width, height);
+    const cropped = moveShopCrop(
+      fullPhotoCrop,
+      "top-left",
+      { x: 0.5, y: 0.5 },
+      minimum,
+    );
+    expect(cropped).toEqual({ left: 0.5, top: 0.5, right: 1, bottom: 1 });
+    expect(minimum.width * width).toBeGreaterThanOrEqual(1);
+    expect(minimum.height * height).toBeGreaterThanOrEqual(1);
+  }
 });
 
 it("rotates the selected pixels with the photo", () => {

@@ -176,7 +176,7 @@ export function useNewShop(rememberDraft = false) {
           const message = errorMessage(error);
           if (editingPhoto() && message)
             update({ photo: { ...photo, uploadError: message } });
-          return;
+          throw error;
         } finally {
           if (active.current) setPhotoUploadPhase(undefined);
         }

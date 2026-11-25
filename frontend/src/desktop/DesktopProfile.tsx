@@ -1,4 +1,5 @@
 import { BRAND_NAME } from "../app/brand";
+import { AvatarImage } from "../components/AvatarImage";
 import { useFeedbackState } from "../components/feedback";
 import { Select } from "../components/Select";
 import { useContext, useEffect, useRef, useState, type FormEvent } from "react";
@@ -202,11 +203,7 @@ export default function DesktopProfile() {
                   aria-describedby="pc-profile-avatar-hint"
                   onClick={() => input.current?.click()}
                 >
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="头像预览" />
-                  ) : (
-                    <span>{form.name.trim().slice(0, 1) || "食"}</span>
-                  )}
+                  <AvatarImage src={avatarUrl} alt="头像预览" />
                   <i aria-hidden="true">
                     <Icon name="camera" size={17} />
                   </i>

@@ -26,38 +26,36 @@
 .ew-home-search {
   position: fixed;
   inset: 0;
-  z-index: 110;
-}
-.ew-home-search-scrim {
-  position: absolute;
-  inset: 0;
   width: 100%;
+  max-width: none;
   height: 100%;
+  max-height: none;
+  margin: 0;
   padding: 0;
   border: 0;
-  background: rgb(35 28 24 / 32%);
-  cursor: pointer;
-  animation: ew-home-search-fade 180ms ease-out;
-  transition: opacity 140ms ease-out;
+  overflow: hidden;
+  background: transparent;
 }
-.ew-home-search[data-exiting] .ew-home-search-scrim {
+.ew-home-search::backdrop {
+  background: rgb(35 28 24 / 32%);
+  transition: opacity 100ms ease-out;
+}
+.ew-home-search[data-exiting]::backdrop {
   opacity: 0;
 }
-.ew-home-search-layer {
+@starting-style {
+  .ew-home-search[open]::backdrop {
+    opacity: 0;
+  }
+}
+.ew-home-search-position {
   position: absolute;
   top: calc(max(20px, env(safe-area-inset-top)) + 56px);
   left: 20px;
   right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  animation: ew-home-search-drop 220ms cubic-bezier(0.22, 1, 0.36, 1);
-  transition:
-    opacity 140ms ease-out,
-    transform 140ms ease-out;
 }
-.ew-home-search[data-exiting] .ew-home-search-layer {
-  pointer-events: none;
+.ew-home-search-layer {
+  transform-origin: 0 0;
 }
 .ew-home-search-layer .ew-anchored-content {
   display: flex;
@@ -69,6 +67,19 @@
   border-color: transparent;
   background: #fff;
   box-shadow: 0 12px 30px rgb(35 28 24 / 18%);
+}
+.ew-home-search-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
 }
 .ew-home-search-panel {
   max-height: min(58vh, 420px);
@@ -173,31 +184,22 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.ew-home-search-row > small {
+  margin-inline-start: auto;
+  color: #8a7b6f;
+  flex: none;
+}
 .ew-home-search-row:active {
   background: #f6efe7;
 }
 .ew-home-search-row.is-query {
   font-weight: 600;
 }
-@keyframes ew-home-search-fade {
-  from {
-    opacity: 0;
-  }
-}
-@keyframes ew-home-search-drop {
-  from {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.985);
-  }
-}
 @media (prefers-reduced-motion: reduce) {
-  .ew-home-search-scrim,
-  .ew-home-search-layer {
-    animation: none;
+  .ew-home-search::backdrop {
     transition: none;
   }
 }
-html[data-motion-input="keyboard"] .ew-home-search-scrim {
-  animation: none;
+html[data-motion-input="keyboard"] .ew-home-search::backdrop {
   transition: none;
 }

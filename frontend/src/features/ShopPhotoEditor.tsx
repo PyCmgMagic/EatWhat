@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { errorMessage } from "../api/client";
 import { usePageLifetime } from "../app/drafts";
 import { Modal } from "../components/ui";
+import { useFeedbackState } from "../components/feedback";
 import {
   applyShopPhotoEdit,
   fullPhotoCrop,
@@ -21,6 +22,7 @@ import {
   readShopPhotoAdjustment,
   rotateShopPhoto,
   sameShopCrop,
+  shopCropMinimum,
   type ShopCropHandle,
   type ShopPhotoAdjustment,
   type ShopPhotoCrop,
@@ -58,12 +60,13 @@ function moveCropByPixels(
   y: number,
   width: number,
   height: number,
+  minimum: { width: number; height: number },
 ) {
   return moveShopCrop(
     crop,
     handle,
     { x: x / width, y: y / height },
-    { width: 64 / width, height: 64 / height },
+    minimum,
   );
 }
 
@@ -83,7 +86,7 @@ export function ShopPhotoEditor({
   const [url, setUrl] = useState("");
   const [image, setImage] = useState<HTMLImageElement>();
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useFeedbackState();
   const hint = useId();
   const active = usePageLifetime();
   const frame = useRef<HTMLDivElement>(null);
@@ -103,6 +106,7 @@ export function ShopPhotoEditor({
   const { width, height } = image
     ? orientedPhoto(image, turns)
     : { width: 3, height: 2 };
+  const minimum = shopCropMinimum(width, height);
   const ready = !!image && !saving;
   const full = sameShopCrop(bounds, fullPhotoCrop);
   const changed =
@@ -155,6 +159,7 @@ export function ShopPhotoEditor({
             direction[1] * step,
             box.width,
             box.height,
+            minimum,
           ),
         });
       },
@@ -225,6 +230,7 @@ export function ShopPhotoEditor({
                       event.clientY - start.y,
                       start.width,
                       start.height,
+                      minimum,
                     ),
                   });
                 }}
@@ -282,11 +288,6 @@ export function ShopPhotoEditor({
               。可用方向键调整选中的手柄或裁剪框。
             </span>
           </p>
-          {error && (
-            <p className="shop-photo-edit-error" role="alert">
-              {error}
-            </p>
-          )}
           <div className="shop-photo-edit-actions">
             <button
               type="button"

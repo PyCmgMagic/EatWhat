@@ -4,27 +4,16 @@ import { DesignIcon as Icon } from "../mobile/ui";
 import "./desktop-search.css";
 import { AnimatedSurface } from "../components/AnchoredPopover";
 import { instantMotion, trackMotion } from "../motion/runtime";
-
-type SearchKind = "food" | "shop";
-type RecentSearch = { query: string; kind: SearchKind };
-const storageKey = "eatwhat-recent-searches-v1";
-const suggestions = ["云吞", "麻辣香锅", "杨枝甘露"];
-
-function readRecent(): RecentSearch[] {
-  try {
-    const value = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
-    if (!Array.isArray(value)) return [];
-    return value
-      .filter(
-        (item) =>
-          typeof item?.query === "string" &&
-          ["food", "shop"].includes(item?.kind),
-      )
-      .slice(0, 5);
-  } catch {
-    return [];
-  }
-}
+import {
+  readRecentSearches,
+  recentSearchId,
+  rememberSearch,
+  searchResultPath,
+  searchSuggestions,
+  writeRecentSearches,
+  type RecentSearch,
+  type SearchKind,
+} from "../app/search";
 
 export default function DesktopSearch() {
   const navigate = useNavigate(),
@@ -41,7 +30,7 @@ export default function DesktopSearch() {
     [kind, setKind] = useState<SearchKind>("food"),
     [open, setOpen] = useState(false),
     [closing, setClosing] = useState(false),
-    [recent, setRecent] = useState<RecentSearch[]>(readRecent);
+    [recent, setRecent] = useState<RecentSearch[]>(readRecentSearches);
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     setQuery(params.get("q") ?? "");
@@ -172,6 +161,7 @@ export default function DesktopSearch() {
       return;
     }
     if (!open) {
+      setRecent(readRecentSearches(recent));
       const rect = (source ?? form.current)?.getBoundingClientRect() ?? null;
       origin.current = rect;
       home.current = rect;
@@ -215,28 +205,16 @@ export default function DesktopSearch() {
       input.current?.focus();
       return;
     }
-    const next = [
-      { query: keyword, kind: nextKind },
-      ...recent.filter(
-        (item) => item.query !== keyword || item.kind !== nextKind,
-      ),
-    ].slice(0, 5);
-    setRecent(next);
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(next));
-    } catch {
-      // Search still works when storage is unavailable.
-    }
+    const entry = { query: keyword, kind: nextKind };
+    setRecent(rememberSearch(entry, recent));
     setOpen(false);
-    navigate(
-      `/search?q=${encodeURIComponent(keyword)}${nextKind === "shop" ? "&type=shop" : ""}`,
-    );
+    navigate(searchResultPath(entry));
   }
 
   const matches = recent.filter((item) =>
     item.query.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
   );
-  const recommended = suggestions.filter(
+  const recommended = searchSuggestions.filter(
     (item) =>
       !matches.some((recentItem) => recentItem.query === item) &&
       item.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
@@ -361,7 +339,7 @@ export default function DesktopSearch() {
                     type="button"
                     onClick={() => {
                       setRecent([]);
-                      localStorage.removeItem(storageKey);
+                      writeRecentSearches([]);
                     }}
                   >
                     清空
@@ -371,7 +349,7 @@ export default function DesktopSearch() {
                   <button
                     className="pc-search-suggestion"
                     type="button"
-                    key={`${item.kind}:${item.query}`}
+                    key={recentSearchId(item)}
                     onClick={() => submit(item.kind, item.query)}
                   >
                     <Icon name="history" size={16} />

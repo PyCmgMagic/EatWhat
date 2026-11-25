@@ -1,5 +1,6 @@
 import { reportWebUsage } from "../app/web-usage";
 import { BRAND_NAME } from "../app/brand";
+import { AvatarImage } from "../components/AvatarImage";
 import MobileProfile from "./MobileProfile";
 import { bannedPageAllowed } from "../api/banned-access";
 import { androidAppDownload } from "../features/settings-nav";
@@ -22,7 +23,7 @@ import {
 } from "@tanstack/react-query";
 import { useApp } from "../app/state";
 import { useProfileDraft } from "../app/profile-draft";
-import { useDebouncedSearch } from "../app/search";
+import { searchResultPath, useDebouncedSearch } from "../app/search";
 import MobileNearby from "./MobileNearby";
 import { isDemo } from "../app/runtime";
 import { useArea } from "../app/area";
@@ -223,6 +224,7 @@ export function useDesignBridge(
   const photoEdit = m.draft.photoEdit;
   const coverEdit = !!photoEdit && photoEdit.targetUrl === m.draft.images[0]?.url;
   const dishPhotoInput = useRef<HTMLInputElement>(null);
+  const homeSearchTrigger = useRef<HTMLButtonElement>(null);
   const photoOpening = useRef(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const homeOrbit = useRef<HTMLDivElement>(null);
@@ -1182,6 +1184,7 @@ export function useDesignBridge(
     values.rows = (follows.data?.items ?? []).map((p) => ({
       name: p.displayName,
       initial: p.displayName?.slice(0, 1) ?? "食",
+      avatar: p.avatar,
       sign: "",
       label: "查看主页",
       bg: "#F4EFEB",
@@ -1773,6 +1776,7 @@ export function useDesignBridge(
           <>
             <HomeSearchButton
               key="home-search"
+              ref={homeSearchTrigger}
               open={!!controller.state.searchOpen}
               onOpen={() => controller.setState({ searchOpen: true })}
             />
@@ -2375,11 +2379,7 @@ export function useDesignBridge(
         return (
           <a {...p} className="mobile-settings-profile">
             <span className="mobile-settings-avatar" aria-hidden="true">
-              {avatar ? (
-                <img src={avatar} alt="" />
-              ) : (
-                user?.displayName?.slice(0, 1) || "食"
-              )}
+              <AvatarImage src={avatar} />
             </span>
             <span className="mobile-settings-identity">
               <strong>{user?.displayName || "同学"}</strong>
@@ -2433,7 +2433,7 @@ export function useDesignBridge(
                   style={{ opacity: n.read ? 0 : 1 }}
                 />
                 <span className="mobile-avatar">
-                  {n.actorName?.slice(0, 1) ?? "信"}
+                  <AvatarImage />
                 </span>
                 <span>
                   <strong>{n.actorName ?? "校园食友圈"}</strong>
@@ -2784,11 +2784,21 @@ export function useDesignBridge(
       clean(text) === "tianliang"
     )
       return <span {...p}>{user?.displayName ?? "—"}</span>;
+    if (screen === "G-Follows" && tag === "span" && id === 16)
+      return (
+        <span {...p}>
+          <AvatarImage src={mediaUrl(scope.r?.avatar)} />
+        </span>
+      );
     if (screen === "G-UserProfile") {
       const u = other.data;
       if (tag === "h1") return <h1 {...p}>{u?.displayName ?? "同学"}</h1>;
       if (tag === "span" && clean(text) === "哲")
-        return <span {...p}>{u?.displayName?.slice(0, 1) ?? "食"}</span>;
+        return (
+          <span {...p} className="mobile-friend-avatar">
+            <AvatarImage src={mediaUrl(u?.avatar)} />
+          </span>
+        );
       if (tag === "p" && clean(text) === "西门小吃街常驻选手")
         return <p {...p}>校园食友</p>;
       if (tag === "span" && ["312", "18", "56", "21"].includes(clean(text))) {
@@ -3149,12 +3159,9 @@ export function useDesignBridge(
       {homeScreens.has(screen) && !reference && (
         <HomeSearchOverlay
           open={!!controller.state.searchOpen}
+          returnFocus={homeSearchTrigger.current}
           onClose={() => controller.setState({ searchOpen: false })}
-          onSearch={(keyword) =>
-            nav(
-              keyword ? `/search?q=${encodeURIComponent(keyword)}` : "/search",
-            )
-          }
+          onSearch={(entry) => nav(searchResultPath(entry))}
         />
       )}
       {sharing.fallback}

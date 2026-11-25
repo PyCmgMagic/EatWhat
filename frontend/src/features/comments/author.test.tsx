@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { AppContext, type AppState } from "../../app/state";
 import { createApi } from "../../api/service";
+import { DEFAULT_AVATAR_SRC } from "../../components/AvatarImage";
 import { bridgeToV2 } from "../../api/v2-bridge";
 import type { V2Schema } from "../../api/backend-v2";
 import {
@@ -167,24 +168,22 @@ it("shows a reply's own avatar and opens the reply author's profile", async () =
 });
 
 it.each<Surface>(["mobile", "preview"])(
-  "keeps a missing avatar's initial linked to the profile (%s)",
+  "keeps the default avatar linked to the profile (%s)",
   async (surface) => {
     author = { id: 21, displayName: "🍜食友" };
     await render(surface);
-    const initial = host.querySelector(".comments-avatar")!;
-    expect(initial.textContent).toBe("🍜");
-    expect(initial.querySelector("img")).toBeNull();
-    expect(initial.closest("a")?.getAttribute("href")).toBe("/users/21");
+    const avatar = host.querySelector(".comments-avatar")!;
+    expect(avatar.querySelector("img")?.getAttribute("src")).toBe(DEFAULT_AVATAR_SRC);
+    expect(avatar.closest("a")?.getAttribute("href")).toBe("/users/21");
   },
 );
 
-it("falls back to the initial when the avatar fails to load", async () => {
+it("shows the default avatar when the uploaded avatar fails to load", async () => {
   await render("mobile");
   const image = host.querySelector(".comments-avatar img");
   expect(image).not.toBeNull();
   await act(async () => image!.dispatchEvent(new Event("error")));
-  expect(host.querySelector(".comments-avatar img")).toBeNull();
-  expect(host.querySelector(".comments-avatar")?.textContent).toBe("小");
+  expect(host.querySelector(".comments-avatar img")?.getAttribute("src")).toBe(DEFAULT_AVATAR_SRC);
   expect(
     host.querySelector(".comments-avatar")?.closest("a")?.getAttribute("href"),
   ).toBe("/users/21");
@@ -196,9 +195,7 @@ it.each([undefined, { id: 0, displayName: "已注销用户" }])(
     author = value;
     await render("mobile");
     expect(host.querySelectorAll('a[href^="/users/"]')).toHaveLength(0);
-    expect(host.querySelector(".comments-avatar")?.textContent).toBe(
-      value ? "已" : "匿",
-    );
+    expect(host.querySelector(".comments-avatar img")?.getAttribute("src")).toBe(DEFAULT_AVATAR_SRC);
   },
 );
 

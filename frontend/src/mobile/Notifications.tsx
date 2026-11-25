@@ -288,7 +288,7 @@ export default function MobileNotifications() {
     );
 
   return (
-    <main
+    <section
       className="mobile-inbox"
       data-announcements={isAnnouncements || undefined}
     >
@@ -446,6 +446,6 @@ export default function MobileNotifications() {
           </div>
         </>
       )}
-    </main>
+    </section>
   );
 }
