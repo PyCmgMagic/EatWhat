@@ -21,7 +21,6 @@ from urllib.parse import quote, urlsplit
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-HOST = "64.178.99.89"
 DEFAULT_BASE = "/www/wwwroot/eatwhat-frontend"
 DEFAULT_PUBLIC = "https://eat.v50to.you"
 DEFAULT_API = "https://eat.v50to.you/api/recommend/tags"
@@ -399,9 +398,12 @@ def rollback(base, release, public, api):
 
 
 def ship(bundle):
+    host = os.environ.get("FRONTEND_SSH_HOST", "").strip()
     user = os.environ["FRONTEND_SSH_USER"]
     port = os.environ.get("FRONTEND_SSH_PORT", "22")
     base = os.environ.get("FRONTEND_DEPLOY_PATH", DEFAULT_BASE)
+    require(re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?", host),
+            "Set FRONTEND_SSH_HOST to an SSH hostname or IPv4 address")
     require(re.fullmatch(r"[a-z_][a-z0-9_-]*", user) and user != "root", "Use a dedicated non-root deploy user")
     require(port.isdigit() and 0 < int(port) < 65536, "Invalid SSH port")
     require(re.fullmatch(r"/[A-Za-z0-9_/-]+", base) and ".." not in base and base.count("/") >= 3,
@@ -414,7 +416,7 @@ def ship(bundle):
         release = json.load(archive.extractfile("manifest.json"))["release"]
     require(RELEASE.fullmatch(release), "Invalid release identity")
     remote = f"{base}/incoming/{release}"
-    target = f"{user}@{HOST}"
+    target = f"{user}@{host}"
     with tempfile.TemporaryDirectory(prefix="eatwhat-ssh-") as temporary:
         directory = Path(temporary)
         directory.chmod(0o700)

@@ -54,7 +54,7 @@ React 19、TypeScript、Vite、React Router、TanStack Query。当前移动端�
 ## 启动
 
 ```powershell
-Set-Location D:\项目\EatWhat\frontend
+Set-Location frontend
 npm ci
 npm run dev
 ```

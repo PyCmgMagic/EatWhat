@@ -1,21 +1,53 @@
-frontend/node_modules/
-frontend/dist/
-frontend/.env
-frontend/.env.local
-frontend/.env.*.local
+# Local configuration, credentials, and data exports.
+.env
+.env.*
+.envrc
+!.env.example
+!.env.*.example
+.npmrc
+.pypirc
+.netrc
+_netrc
+.git-credentials
+*.key
+*.pem
+*.p12
+*.pfx
+*.ppk
+*.jks
+*.keystore
+id_rsa
+id_ed25519
+id_ecdsa
+id_dsa
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+
+# Dependencies, build output, and test artifacts.
+node_modules/
+/frontend/dist/
+/release/
 *.tsbuildinfo
 __pycache__/
 .playwright-cli/
+**/playwright/.auth/
+playwright-report/
+test-results/
+coverage/
+*.har
+*.log
+.DS_Store
+Thumbs.db
 
 # Local validation artifacts, browser profiles, logs, and release archives.
 # Keep the output directory available for validation/report scripts on a fresh clone.
 /output/*
 !/output/.gitkeep
 /frontend/output/
+/design-qa.md
 
-# Root-level caches created by tooling run from the repository root.
-/node_modules/
-
-# Nested checkout of the standalone backend repository (Orbithy/EatWhat).
+# Nested checkout of the standalone backend repository.
 /EatWhat_backend/
 /EatWhat-backend/

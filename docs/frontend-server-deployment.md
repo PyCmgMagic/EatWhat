@@ -1,6 +1,6 @@
 # 前端服务器自动部署
 
-目标为 `64.178.99.89`，使用 GitHub 托管的 `ubuntu-24.04` runner 和 Node.js 24。
+使用 GitHub 托管的 `ubuntu-24.04` runner 和 Node.js 24。部署目标由 `FRONTEND_SSH_HOST` 指定。
 默认 API 为 `https://eat.v50to.you/api`，默认前端公网地址为 `https://eat.v50to.you`。
 若前端使用其他域名，修改下表变量并核对 API 的 CORS 允许来源。
 
@@ -33,9 +33,10 @@ Web 版本号在构建时从 Git 历史生成。以构建 122 的 `0.1.0` 为基
 
 | Secret | 内容 |
 | --- | --- |
+| `FRONTEND_SSH_HOST` | 部署服务器的 SSH 主机名或 IPv4 地址 |
 | `FRONTEND_SSH_USER` | 专用非 root 账号，例如 `eatwhat-web` |
 | `FRONTEND_SSH_PRIVATE_KEY` | 该账号部署专用的无口令 SSH 私钥，完整多行文本 |
-| `FRONTEND_SSH_KNOWN_HOSTS` | 经独立核对指纹的主机公钥记录；非 22 端口使用 `[64.178.99.89]:端口` 格式 |
+| `FRONTEND_SSH_KNOWN_HOSTS` | 经独立核对指纹并与 SSH 主机匹配的公钥记录。非 22 端口使用 `[主机名或地址]:端口` 格式 |
 
 可选变量（不配置则使用默认值）：
 

@@ -284,6 +284,7 @@ class DeploymentTest(unittest.TestCase):
 
     def test_ssh_transfer_pins_host_and_keeps_url_out_of_shell_syntax(self):
         environment = {
+            "FRONTEND_SSH_HOST": "deploy.example.invalid",
             "FRONTEND_SSH_USER": "eatwhat-web", "FRONTEND_SSH_PORT": "2222",
             "FRONTEND_SSH_PRIVATE_KEY": "fake test key", "FRONTEND_SSH_KNOWN_HOSTS": "fake test host",
             "FRONTEND_DEPLOY_PATH": str(self.base),
@@ -294,10 +295,24 @@ class DeploymentTest(unittest.TestCase):
         calls = [c.args[0] for c in run.call_args_list]
         self.assertEqual(len(calls), 3)
         self.assertTrue(all("StrictHostKeyChecking=yes" in c for c in calls))
-        self.assertTrue(all(any(deploy.HOST in arg for arg in c) for c in calls))
+        target = "eatwhat-web@deploy.example.invalid"
+        self.assertIn(target, calls[0])
+        self.assertTrue(calls[1][-1].startswith(target + ":"))
+        self.assertIn(target, calls[2])
         remote = deploy.shlex.split(calls[-1][-1])
         self.assertIn(environment["FRONTEND_API_SMOKE_URL"], remote)
         self.assertNotIn("fake test key", str(calls))
+
+    def test_ssh_transfer_requires_valid_host_before_connecting(self):
+        for host in (None, "", "user@deploy.example.invalid", "-oProxyCommand=example"):
+            with self.subTest(host=host):
+                environment = {"FRONTEND_SSH_USER": "eatwhat-web"}
+                if host is not None:
+                    environment["FRONTEND_SSH_HOST"] = host
+                with patch.dict(os.environ, environment, clear=True), patch.object(deploy.subprocess, "run") as run:
+                    with self.assertRaisesRegex(ValueError, "FRONTEND_SSH_HOST"):
+                        deploy.ship(self.bundle)
+                run.assert_not_called()
 
     def test_non_https_public_urls_rejected(self):
         for url in ("http://example.invalid", "https://user:password@example.invalid", "https://example.invalid/#a"):

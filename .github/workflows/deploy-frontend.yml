@@ -80,6 +80,7 @@ jobs:
       group: eatwhat-frontend-production
       cancel-in-progress: false
     env:
+      FRONTEND_SSH_HOST: ${{ secrets.FRONTEND_SSH_HOST }}
       FRONTEND_SSH_USER: ${{ secrets.FRONTEND_SSH_USER }}
       FRONTEND_SSH_PRIVATE_KEY: ${{ secrets.FRONTEND_SSH_PRIVATE_KEY }}
       FRONTEND_SSH_KNOWN_HOSTS: ${{ secrets.FRONTEND_SSH_KNOWN_HOSTS }}
@@ -92,5 +93,5 @@ jobs:
         with:
           name: frontend-release
           path: artifact
-      - name: Deploy the exact built artifact to 64.178.99.89
+      - name: Deploy the exact built artifact
         run: python3 artifact/scripts/frontend_deploy.py ship --bundle artifact/release/site.tar.gz
