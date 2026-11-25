@@ -111,8 +111,14 @@ it("uses the desktop cover URLs returned by the leaderboard and focuses the view
   });
 });
 
-it("keeps the mobile podium compact and shows when the viewer is outside the board", async () => {
+it("shows all available mobile podium covers when the viewer is outside the board", async () => {
   identity.id = 99;
+  const thirdCover = "https://images.example.test/dumplings.jpg";
+  api.levelLeaderboard.mockResolvedValue(
+    board.map((member) =>
+      member.rank === 3 ? { ...member, coverUrl: thirdCover } : member,
+    ),
+  );
   await render();
   await until(() => host.querySelector(".level-board-unranked"));
   expect(host.querySelector(".level-board-unranked")?.textContent).toBe(
@@ -124,7 +130,7 @@ it("keeps the mobile podium compact and shows when the viewer is outside the boa
       host.querySelectorAll<HTMLImageElement>(".level-board-cover img"),
       (image) => image.src,
     ),
-  ).toEqual([board[0].coverUrl]);
+  ).toEqual([board[0].coverUrl, board[1].coverUrl, thirdCover]);
   expect(api.userFoods).not.toHaveBeenCalled();
   expect(host.querySelector(".v4-breadcrumb a")?.getAttribute("href")).toBe(
     "/me/growth",

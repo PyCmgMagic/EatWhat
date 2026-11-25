@@ -29,8 +29,12 @@
   min-height: 64px;
   padding: 7px 9px;
 }
+.level-board-place[data-rank="2"] {
+  background: var(--board-silver);
+}
 .level-board-place[data-rank="3"] {
   border-inline-start: 1px solid var(--board-line);
+  background: var(--board-bronze);
 }
 .level-board-place[data-rank="2"]:last-child {
   grid-column: 1 / -1;
@@ -156,6 +160,26 @@
   object-fit: cover;
   box-shadow: -4px 5px 14px #2a201c38;
   mask-image: linear-gradient(90deg, transparent, #000 33%);
+}
+.level-board:not(.level-board-desktop) .level-board-podium:has(> [data-rank]:not([data-rank="1"]) > .level-board-cover)
+  > .level-board-place:not([data-rank="1"]) {
+  --podium-photo-height: clamp(68px, 19vw, 92px);
+  min-height: calc(54px + var(--podium-photo-height));
+  padding-block-start: calc(var(--podium-photo-height) + 7px);
+}
+.level-board:not(.level-board-desktop) .level-board-place:not([data-rank="1"]) > .level-board-cover {
+  inset: 0 0 auto;
+  width: 100%;
+  height: var(--podium-photo-height);
+}
+.level-board:not(.level-board-desktop) .level-board-place:not([data-rank="1"]) .level-board-cover > img {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  translate: none;
+  border-radius: 0;
+  box-shadow: none;
+  mask-image: linear-gradient(#000 64%, transparent);
 }
 .level-board .level-board-my-rank,
 .level-board-actions .level-board-my-rank {
@@ -302,12 +326,6 @@
   gap: 11px;
   min-height: 86px;
   padding: 9px clamp(14px, 2.8vw, 34px);
-}
-.level-board-desktop .level-board-place[data-rank="2"] {
-  background: var(--board-silver);
-}
-.level-board-desktop .level-board-place[data-rank="3"] {
-  background: var(--board-bronze);
 }
 .level-board-desktop .level-board-place:has(> .level-board-cover) {
   min-height: clamp(136px, 10.8vw, 156px);

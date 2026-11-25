@@ -166,9 +166,7 @@ export default function LevelLeaderboard() {
                     </span>
                   </span>
                   <Person member={member} own={own} showLevel />
-                  {(desktop || member.rank === 1) && (
-                    <PodiumCover coverUrl={member.coverUrl} />
-                  )}
+                  <PodiumCover coverUrl={member.coverUrl} />
                 </li>
               );
             })}
