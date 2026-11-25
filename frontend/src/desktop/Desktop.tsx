@@ -1599,7 +1599,7 @@ function DesktopDish() {
     </QueryStatus>
   );
 }
-function DesktopRestaurant() {
+export function DesktopRestaurant() {
   const returnTo = useReturnTo("/nearby");
   const { api, session } = useApp(),
     m = useMobile(),
@@ -1727,8 +1727,8 @@ function DesktopRestaurant() {
               )}
             </div>
           </section>
-          <DesktopRestaurantFeedback key={id} id={id} shop={shop} />
-          <RestaurantDiscussion key={id} restaurant={{ ...shop, id }} />
+          <DesktopRestaurantFeedback key={`feedback-${id}`} id={id} shop={shop} />
+          <RestaurantDiscussion key={`discussion-${id}`} restaurant={{ ...shop, id }} />
           <section className="pc-content-sheet is-standalone">
             <div className="pc-section-toolbar">
               <div>
