@@ -7,6 +7,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { PencilLine, Quote } from "lucide-react";
 import { UserTitle } from "../../components/UserTitle";
 import { userTitle } from "../../api/growth";
@@ -46,7 +47,7 @@ import { DesignIcon as Icon, ReactionIcon } from "../../mobile/ui";
 import { FoodCover } from "../../components/FoodCover";
 import { AvatarImage } from "../../components/AvatarImage";
 import { ContentSkeleton } from "../../components/LoadingSkeleton";
-import { Gate } from "../../components/ui";
+import { Gate, Modal } from "../../components/ui";
 import { ProfileEmpty, ProfilePageHead } from "../ProfilePage";
 import { useSurfaceDismiss } from "../../motion/hooks";
 import { CommentReactions } from "./CommentReactions";
@@ -57,6 +58,7 @@ import {
   commentTime,
   commentStatus,
 } from "./state";
+import "../v4/confirm-dialog.css";
 import "./comments.css";
 
 type ReplyTarget = { rootId: number; id: number; name: string };
@@ -67,6 +69,7 @@ type ReplyEditor = {
   activeId?: number;
   open: (id: number) => void;
   close: () => void;
+  deleted: (id: number) => void;
 };
 type ImageValue = { slot?: number | null; url?: string | null };
 const validPage = (raw: string | null) => {
@@ -501,7 +504,7 @@ function CommentRow({
   refresh: () => unknown;
   nested?: boolean;
 }) {
-  const { api, user } = useApp();
+  const { api, user, session } = useApp();
   const [expanded, setExpanded] = useState(false),
     [page, setPage] = useState(1);
   const knownReplyCount =
@@ -580,6 +583,17 @@ function CommentRow({
               reactions={comment.reactions}
             />
           )}
+          {editor.restaurant &&
+            session &&
+            user?.id != null &&
+            comment.id != null &&
+            comment.authorId === user.id && (
+              <DeleteComment
+                id={comment.id}
+                reply={nested}
+                onDeleted={() => editor.deleted(comment.id!)}
+              />
+            )}
           {showToggle && (
             <button
               type="button"
@@ -1020,6 +1034,11 @@ export function FoodDiscussion({
       change({ replyToId: String(id) });
     },
     close: () => change({}),
+    // A removed comment can no longer be the linked comment or the reply target.
+    deleted: (id) => {
+      if (id === focused) change({ commentId: null });
+      else if (id === replyId) change({});
+    },
   };
   const closeRoot = () => {
     change({});
@@ -1445,57 +1464,89 @@ export function MobileComments() {
   return writing ? <Gate verified={false}>{body}</Gate> : body;
 }
 
-function DeleteSubmission({
-  row,
+function DeleteComment({
+  id,
+  reply,
   showIcon = false,
+  onDeleted,
 }: {
-  row: CommentSubmission;
+  id: number;
+  reply: boolean;
   showIcon?: boolean;
+  onDeleted?: () => void;
 }) {
-  const { api } = useApp(),
+  const { api, toast } = useApp(),
     refresh = useRefreshComments();
-  const [confirming, setConfirming] = useState(false);
+  // Safari does not focus a clicked button; keep the trigger to return focus to.
+  const [trigger, setTrigger] = useState<HTMLElement | null>(null);
   const task = useCommentCommand<
     null,
     Awaited<ReturnType<typeof api.deleteComment>>
   >(
-    `delete:${row.id}`,
-    (_, key) => api.deleteComment(row.id!, key),
+    `delete:${id}`,
+    (_, key) => api.deleteComment(id, key),
     async () => {
-      setConfirming(false);
+      setTrigger(null);
+      onDeleted?.();
+      toast(reply ? "回复已删除" : "评论已删除");
       await refresh();
     },
   );
-  if (row.moderationStatus === "DELETED" || !row.id) return null;
   return (
     <>
-      {!confirming && !task.pending ? (
-        <button className="comments-delete" onClick={() => setConfirming(true)}>
-          {showIcon && <Icon name="delete" size={15} />}
-          删除
-        </button>
-      ) : (
-        <div className="comments-confirm">
-          <p>删除后，这条评论及其图片将不再展示。</p>
-          <button disabled={task.busy} onClick={() => void task.run(null)}>
-            {task.busy
-              ? "正在删除…"
-              : task.pending
-                ? "重试确认删除"
-                : "确认删除"}
-          </button>
-          {!task.pending && (
-            <button disabled={task.busy} onClick={() => setConfirming(false)}>
-              取消
-            </button>
-          )}
-        </div>
-      )}
-      {task.error && (
-        <p className="comments-error" role="alert">
-          {task.error}
-        </p>
-      )}
+      <button
+        type="button"
+        className="comments-delete"
+        aria-haspopup="dialog"
+        onClick={(event) => setTrigger(event.currentTarget)}
+      >
+        {showIcon && <Icon name="delete" size={15} />}
+        删除
+      </button>
+      {trigger &&
+        createPortal(
+          <Modal
+            title={reply ? "删除这条回复？" : "删除这条评论？"}
+            className="v4-confirm-dialog"
+            dismissible={!task.busy}
+            returnFocus={trigger}
+            motionOrigin={trigger}
+            onClose={() => setTrigger(null)}
+          >
+            {(dismiss) => (
+              <>
+                <p>
+                  {reply
+                    ? "删除后，这条回复将不再展示，无法恢复。"
+                    : "删除后，这条评论及其图片和所有回复将不再展示，无法恢复。"}
+                </p>
+                {task.error && (
+                  <p className="comments-error" role="alert">
+                    {task.error}
+                  </p>
+                )}
+                <div className="v4-confirm-actions">
+                  <button type="button" disabled={task.busy} onClick={dismiss}>
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    className="is-danger"
+                    disabled={task.busy}
+                    onClick={() => void task.run(null)}
+                  >
+                    {task.busy
+                      ? "正在删除…"
+                      : task.pending
+                        ? "重试确认删除"
+                        : "确认删除"}
+                  </button>
+                </div>
+              </>
+            )}
+          </Modal>,
+          document.body,
+        )}
     </>
   );
 }
@@ -1565,7 +1616,9 @@ function MyCommentRecord({
             查看菜品 <Icon name="chevronRight" size={14} />
           </Link>
         )}
-        <DeleteSubmission row={row} showIcon={journal} />
+        {row.id && row.moderationStatus !== "DELETED" && (
+          <DeleteComment id={row.id} reply={reply} showIcon={journal} />
+        )}
       </footer>
     </article>
   );

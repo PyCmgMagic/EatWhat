@@ -1306,29 +1306,6 @@ html[data-motion-input="keyboard"]
 .comments-delete {
   color: var(--comment-muted);
 }
-.comments-confirm {
-  font-size: 12px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: #faf7f4;
-  max-width: 290px;
-}
-.comments-confirm p {
-  margin: 0 0 6px;
-  line-height: 1.8;
-}
-.comments-confirm button {
-  border: 0;
-  background: none;
-  min-height: 44px;
-  color: #a8321c;
-  padding: 5px 10px;
-  font: inherit;
-  cursor: pointer;
-}
-.comments-confirm button + button {
-  color: var(--comment-muted);
-}
 .comments-moderation {
   background: #fff;
   padding: 28px;

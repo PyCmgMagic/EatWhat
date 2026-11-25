@@ -352,23 +352,10 @@
   background: #f9e8e0;
   color: #a8321c;
 }
-.comments-journal .comments-confirm,
 .comments-journal .comments-error {
   flex: 1 0 100%;
   min-width: 0;
   overflow-wrap: anywhere;
-}
-.comments-journal .comments-confirm {
-  max-width: none;
-  border: 1px solid #eddbcd;
-  background: var(--note-paper);
-}
-.comments-journal .comments-confirm button {
-  border-radius: 8px;
-  font-weight: 650;
-}
-.comments-journal .comments-confirm button:hover:enabled {
-  background: #f6e9dd;
 }
 .comments-journal > .comments-state {
   border: 1px solid var(--note-edge);
