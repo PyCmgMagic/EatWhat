@@ -23,6 +23,75 @@
 .growth-progress {
   grid-column: 1 / -1;
 }
+.growth-progress-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  min-height: 24px;
+}
+.v4-page .growth-leaderboard-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  margin-block: -10px;
+  color: var(--night-gold-text, #7c571f);
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.v4-page .growth-leaderboard-entry:is(:hover, :focus-visible) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.growth-leaderboard-icon {
+  position: relative;
+  width: 19px;
+  height: 19px;
+  flex: none;
+  margin-inline-end: 1px;
+}
+.growth-leaderboard-icon > :first-child {
+  position: absolute;
+  top: -1px;
+  left: 3px;
+}
+.growth-leaderboard-icon > :last-child {
+  position: absolute;
+  inset: auto 1px 1px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 1px;
+}
+.growth-leaderboard-icon i {
+  width: 5px;
+  height: 5px;
+  border-radius: 2px 2px 1px 1px;
+  background: currentColor;
+  opacity: .76;
+}
+.growth-leaderboard-icon i:nth-child(2) {
+  height: 8px;
+  opacity: 1;
+}
+.growth-leaderboard-icon i:last-child { height: 3.5px; }
+.pc-profile-space-content .growth-level:has(.growth-leaderboard-entry) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 12px;
+}
+.pc-profile-space-content .growth-level :is(h2, p) { grid-column: 1 / -1; }
+.pc-profile-space-content .growth-level .growth-leaderboard-entry {
+  grid-area: 1 / 2;
+  min-height: 40px;
+  margin-block: -12px;
+  font-size: 13px;
+}
 .growth-progress strong {
   font-size: 15px;
 }

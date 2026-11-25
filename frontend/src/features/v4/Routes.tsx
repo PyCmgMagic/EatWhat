@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import { Gate } from "../../components/ui";
 import { ContentSkeleton } from "../../components/LoadingSkeleton";
+import { profileLeaderboardPath } from "../../app/profile-workspace";
 import { recoveryCommands } from "../../api/recovery";
 import { restaurantHistoryId } from "../v4-paths";
 import { RestaurantEditHistory } from "./EditHistory";
@@ -25,6 +26,7 @@ import Features from "./Hub";
 import NotificationSettings from "./NotificationSettings";
 import Directory from "./Directory";
 const Growth = lazy(() => import("./Growth"));
+const LevelLeaderboard = lazy(() => import("./LevelLeaderboard"));
 export default function V4Routes() {
   const path = useLocation().pathname;
   const historyId = restaurantHistoryId(path);
@@ -59,6 +61,12 @@ export default function V4Routes() {
     page = (
       <Suspense fallback={<ContentSkeleton kind="rows" count={3} />}>
         <Growth />
+      </Suspense>
+    );
+  else if (path === profileLeaderboardPath)
+    page = (
+      <Suspense fallback={<ContentSkeleton kind="rows" count={3} />}>
+        <LevelLeaderboard />
       </Suspense>
     );
   else if (path === "/settings/devices") page = <Devices />;

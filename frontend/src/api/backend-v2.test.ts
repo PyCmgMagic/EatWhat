@@ -40,7 +40,12 @@ describe("backend v2 client", () => {
     expect(endpoints.postRestaurantByRestaurantIdComments.access).toBe(
       "verifiedOrAdmin",
     );
-    expect(Object.keys(endpoints)).toHaveLength(183);
+    expect(endpoints.getUserLevelLeaderboard).toEqual({
+      method: "GET",
+      path: "/user/level/leaderboard",
+      access: "login",
+    });
+    expect(Object.keys(endpoints)).toHaveLength(184);
   });
 
   it("retries password login with the challenge only after a 30015", async () => {

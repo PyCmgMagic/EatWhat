@@ -1,5 +1,9 @@
 import { useContext, useState } from "react";
-import { ProfileWorkspaceContext } from "../../app/profile-workspace";
+import { Link } from "react-router-dom";
+import {
+  ProfileWorkspaceContext,
+  profileLeaderboardPath,
+} from "../../app/profile-workspace";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { errorMessage } from "../../api/client";
 import { useApp } from "../../app/state";
@@ -53,6 +57,28 @@ export default function Growth() {
     percent = growthPercent(g),
     title = userTitle(g),
     rules = experienceRules(g);
+  const rankingEntry = (
+    <Link
+      className="growth-leaderboard-entry"
+      to={profileLeaderboardPath}
+      state={embedded ? { alignTabs: "always" } : undefined}
+      aria-label="等级排行榜"
+    >
+      <span className="growth-leaderboard-icon" aria-hidden="true">
+        <Icon name="bowl" size={13} />
+        <span><i /><i /><i /></span>
+      </span>
+      等级排行
+      <Icon name="chevronRight" size={13} />
+    </Link>
+  );
+  const progressNote = (
+    <small>
+      {g?.maxLevel
+        ? "经验会继续累积"
+        : `本级已积累 ${g?.experienceInLevel ?? "—"} 经验`}
+    </small>
+  );
   // 经验记录默认收进一个入口，摘要行露出标题和条数，展开后才看到明细。
   const ledgerItems = ledger.data?.items ?? [],
     ledgerCount = ledger.data?.totalItems ?? ledgerItems.length,
@@ -80,6 +106,7 @@ export default function Growth() {
                 <UserTitle title={title} />
               </h2>
               <p>累计 {g?.totalExperience ?? "—"} 经验</p>
+              {embedded && rankingEntry}
             </div>
             <div className="growth-progress">
               <strong>
@@ -101,11 +128,12 @@ export default function Growth() {
               >
                 <span style={{ width: `${percent ?? 0}%` }} />
               </div>
-              <small>
-                {g?.maxLevel
-                  ? "经验会继续累积"
-                  : `本级已积累 ${g?.experienceInLevel ?? "—"} 经验`}
-              </small>
+              {embedded ? progressNote : (
+                <div className="growth-progress-meta">
+                  {progressNote}
+                  {rankingEntry}
+                </div>
+              )}
             </div>
           </section>
           {rules.length ? (

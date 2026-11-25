@@ -1,4 +1,5 @@
 import { parseId } from "../api/models";
+import { profileLeaderboardPath } from "../app/profile-workspace";
 
 export function restaurantHistoryId(path: string) {
   return parseId(/^\/restaurants\/(\d+)\/history$/.exec(path)?.[1]);
@@ -39,6 +40,7 @@ export function isV4Path(path: string) {
       "/restaurants/favorites",
       "/features",
       "/me/growth",
+      profileLeaderboardPath,
       "/restaurants/directory",
     ].includes(path) ||
     restaurantHistoryId(path) !== undefined ||

@@ -557,6 +557,11 @@ export const endpoints = {
     "path": "/user/level",
     "access": "login"
   },
+  "getUserLevelLeaderboard": {
+    "method": "GET",
+    "path": "/user/level/leaderboard",
+    "access": "login"
+  },
   "getUserLevelLogs": {
     "method": "GET",
     "path": "/user/level/logs",

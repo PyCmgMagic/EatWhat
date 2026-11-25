@@ -5,6 +5,7 @@ const restrictedPages = new Set([
   "/me",
   "/me/shares",
   "/me/growth",
+  "/me/growth/leaderboard",
   "/me/tags",
   "/favorites",
   "/likes",

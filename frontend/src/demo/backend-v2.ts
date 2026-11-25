@@ -1743,6 +1743,21 @@ export function demoTransport(
       return ok();
     case "putUserTitlesEquippedByCode":
       return fail(10001, "尚未获得该称号");
+    case "getUserLevelLeaderboard":
+      return ok(
+        state.people
+          .filter((user) => !user.banned)
+          .sort((a, b) => a.id - b.id)
+          .slice(0, 50)
+          .map(({ id, displayName, avatar }, index) => ({
+            rank: index + 1,
+            id,
+            displayName,
+            avatar: avatar ?? null,
+            level: 3,
+            title: null,
+          })),
+      );
     case "getUserLevel":
       return ok({
         level: 3,

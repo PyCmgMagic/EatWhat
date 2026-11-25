@@ -90,8 +90,8 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
       const preserveScroll =
         (loc.state as { preserveScroll?: boolean } | null)?.preserveScroll ===
         true;
-      const tabSwitch =
-        (loc.state as { alignTabs?: boolean } | null)?.alignTabs === true;
+      const tabAlignment =
+        (loc.state as { alignTabs?: boolean | "always" } | null)?.alignTabs;
       // Moving around inside the desktop profile space (a tab, a settings row,
       // 管理, a sub-page's 返回) swaps the content in place: the white card stays
       // exactly where it was. Past the point where the tab bar pins, the card
@@ -105,7 +105,8 @@ export function RouteContinuityProvider({ children }: { children: ReactNode }) {
           ? profilePinY()
           : null;
       const inSpace = pinY !== null;
-      const alignTabs = tabSwitch && !inSpace;
+      const alignTabs =
+        tabAlignment === "always" || (tabAlignment === true && !inSpace);
       entry = {
         address,
         back:

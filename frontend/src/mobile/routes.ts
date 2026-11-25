@@ -208,6 +208,7 @@ const nativeTitles: Record<string, string> = {
   "/me/shares": "我的分享",
   "/me/details": "更多资料",
   "/me/growth": "我的成长",
+  "/me/growth/leaderboard": "等级排行榜",
   "/help": "帮助与反馈",
   "/restaurants/new/details": "填写店铺信息",
   "/restaurants/favorites": "收藏的店铺",

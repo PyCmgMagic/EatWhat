@@ -450,6 +450,38 @@ export const demoTransport: Transport = async (path, options) => {
     save();
     return { code: 0, data: structuredClone(result), msg: "success" };
   }
+  if (path === "/user/level/leaderboard") {
+    const me = s.user.id ?? 10;
+    const growth = demoGrowthProgress(s.growth ?? { entries: [] });
+    const peers = [20, 23, 24, 21, 27].map((id, index) => ({
+      id,
+      experience: 200 - index * 15,
+      level: 3,
+      avatar: null,
+      title: null,
+    }));
+    const data = [
+      ...peers.filter((peer) => peer.id !== me),
+      {
+        id: me,
+        experience: growth.totalExperience ?? 0,
+        level: growth.level ?? 1,
+        avatar: s.user.avatar ?? null,
+        title: growth.title,
+      },
+    ]
+      .filter(({ id }) => !s.bannedUsers!.includes(id))
+      .sort((a, b) => b.experience - a.experience || a.id - b.id)
+      .map(({ id, level, avatar, title }, index) => ({
+        rank: index + 1,
+        id,
+        displayName: demoPerson(s, id).displayName,
+        avatar,
+        level,
+        title,
+      }));
+    return { code: 0, data, msg: "success" };
+  }
   if (isAnalyticsPath(path)) {
     if (new URLSearchParams(location.search).get("persona") !== "admin")
       throw new ApiError("需要管理员身份。", 20004, 403);

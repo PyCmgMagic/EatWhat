@@ -109,6 +109,9 @@ it("tucks the experience rules and ledger into collapsed entries", async () => {
   expect(rules.open).toBe(false);
   expect(records.open).toBe(false);
   expect(host.textContent).toContain("怎么获得经验");
+  expect(
+    host.querySelector(".growth-progress-meta a")?.getAttribute("href"),
+  ).toBe("/me/growth/leaderboard");
   expect(host.textContent).toContain("2 种途径");
   expect(host.textContent).toContain("经验记录");
   expect(host.textContent).toContain("共 1 条");

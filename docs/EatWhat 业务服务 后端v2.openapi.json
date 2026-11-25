@@ -3898,6 +3898,29 @@
         } ]
       }
     },
+    "/user/level/leaderboard" : {
+      "get" : {
+        "tags" : [ "用户 · User" ],
+        "summary" : "【需登录】获取用户等级排行榜前 50 名",
+        "operationId" : "levelLeaderboard",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ResultListLevelLeaderboardEntry"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "satoken" : [ ]
+        } ],
+        "description" : "按累计经验降序、经验相同按用户 ID 升序，返回前 50 名，人数不足时返回全部。排除封禁中和注销冷静期账号。rank 从 1 连续编号，具体经验值仅本人可见。"
+      }
+    },
     "/user/level/logs" : {
       "get" : {
         "tags" : [ "用户 · User" ],
@@ -9595,6 +9618,54 @@
           },
           "data" : {
             "$ref" : "#/components/schemas/PageResultExperienceLog"
+          },
+          "msg" : {
+            "type" : "string"
+          },
+          "timestamp" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "LevelLeaderboardEntry" : {
+        "type" : "object",
+        "properties" : {
+          "rank" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "displayName" : {
+            "type" : "string"
+          },
+          "avatar" : {
+            "type" : [ "string", "null" ]
+          },
+          "level" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "title" : {
+            "type" : [ "string", "null" ]
+          }
+        }
+      },
+      "ResultListLevelLeaderboardEntry" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "data" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/LevelLeaderboardEntry"
+            }
           },
           "msg" : {
             "type" : "string"

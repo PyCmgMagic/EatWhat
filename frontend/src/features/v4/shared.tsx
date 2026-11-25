@@ -20,7 +20,7 @@ import {
   type DishIllustrationName,
 } from "../../components/DishIllustration";
 import { errorMessage, resultUncertain, unavailable } from "../../api/client";
-import { ProfileWorkspaceContext } from "../../app/profile-workspace";
+import { ProfileWorkspaceContext, profileLeaderboardPath } from "../../app/profile-workspace";
 import { isMessagesPath } from "../v4-paths";
 import SettingsPageHeader from "../SettingsPageHeader";
 import { DesktopSettingsContext } from "../settings-nav";
@@ -120,7 +120,7 @@ export function Shell({
   const showBreadcrumb =
     !embedded || !!featuresReturnTo || !workspaceSectionPage;
   const section =
-    path === "/me/growth"
+    path === "/me/growth" || path === profileLeaderboardPath
       ? "growth"
       : path.startsWith("/admin/")
         ? "admin"

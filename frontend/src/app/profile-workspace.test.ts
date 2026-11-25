@@ -18,6 +18,7 @@ describe("personal workspace information architecture", () => {
     ["/me", "/me"],
     ["/features", "/features"],
     ["/me/growth", "/me/growth"],
+    ["/me/growth/leaderboard", "/me/growth"],
     ["/me/shares", "/me/shares"],
     ["/submissions", "/me/shares"],
     ["/submissions/revision-123", "/me/shares"],

@@ -1,4 +1,7 @@
 import type { Schema } from "./models";
+import type { V2Schema } from "./backend-v2";
+
+export type LevelLeaderboardEntry = V2Schema["LevelLeaderboardEntry"];
 
 export function businessDate(now = new Date()) {
   return new Intl.DateTimeFormat("en-CA", {

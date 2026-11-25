@@ -1625,6 +1625,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/user/level/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 【需登录】获取用户等级排行榜前 50 名
+         * @description 按累计经验降序、经验相同按用户 ID 升序，返回前 50 名，人数不足时返回全部。排除封禁中和注销冷静期账号。rank 从 1 连续编号，具体经验值仅本人可见。
+         */
+        get: operations["getUserLevelLeaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/user/level/logs": {
         parameters: {
             query?: never;
@@ -3878,6 +3898,25 @@ export interface components {
             /** Format: int32 */
             code?: number;
             data?: components["schemas"]["PageResultExperienceLog"];
+            msg?: string;
+            /** Format: int64 */
+            timestamp?: number;
+        };
+        LevelLeaderboardEntry: {
+            /** Format: int32 */
+            rank?: number;
+            /** Format: int64 */
+            id?: number;
+            displayName?: string;
+            avatar?: string | null;
+            /** Format: int32 */
+            level?: number;
+            title?: string | null;
+        };
+        ResultListLevelLeaderboardEntry: {
+            /** Format: int32 */
+            code?: number;
+            data?: components["schemas"]["LevelLeaderboardEntry"][];
             msg?: string;
             /** Format: int64 */
             timestamp?: number;
@@ -8220,6 +8259,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResultLevel"];
+                };
+            };
+        };
+    };
+    getUserLevelLeaderboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultListLevelLeaderboardEntry"];
                 };
             };
         };

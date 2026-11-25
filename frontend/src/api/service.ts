@@ -1,4 +1,4 @@
-import type { UserTitleEntry } from "./growth";
+import type { LevelLeaderboardEntry, UserTitleEntry } from "./growth";
 import type {
   EngagementBreakdown,
   Granularity,
@@ -186,6 +186,8 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         background: true,
       }),
     growth: () => data<Schema["GrowthProgressResponse"]>("/user/growth"),
+    levelLeaderboard: (signal?: AbortSignal) =>
+      data<LevelLeaderboardEntry[]>("/user/level/leaderboard", { signal }),
     myTitles: () => data<UserTitleEntry[]>("/user/titles"),
     setEquippedTitle: (code: string | null) =>
       code === null
@@ -291,9 +293,15 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         method: "POST",
         body,
       }),
-    userFoods: (userId: number, page = 1, filters?: FoodFilters) =>
+    userFoods: (
+      userId: number,
+      page = 1,
+      filters?: FoodFilters & { pageSize?: number },
+      signal?: AbortSignal,
+    ) =>
       data<Page<Food>>(`/foods/by-user/${userId}`, {
         query: { page, pageSize: 12, ...filters },
+        signal,
       }),
     clearHistory: (targetType?: "food" | "restaurant") =>
       request<void>("/history/browse", {

@@ -1,5 +1,7 @@
 import { createContext, type RefObject } from "react";
 
+export const profileLeaderboardPath = "/me/growth/leaderboard";
+
 export const profileSections = [
   { to: "/me", name: "个人总览", icon: "me", group: "" },
   { to: "/me/shares", name: "我的分享", icon: "bowl", group: "我的内容" },
@@ -28,7 +30,8 @@ export function profileSection(path: string): ProfileSection | null {
     return "/favorites";
   if (path === "/me/tags" || /^\/me\/tags\/\d+\/foods$/.test(path))
     return "/favorites";
-  if (path === "/me/growth") return "/me/growth";
+  if (path === "/me/growth" || path === profileLeaderboardPath)
+    return "/me/growth";
   if (path === "/history") return "/history";
   if (
     path === "/help" ||
