@@ -293,15 +293,9 @@ export function createApi(transport: Transport, captcha?: CaptchaRunner) {
         method: "POST",
         body,
       }),
-    userFoods: (
-      userId: number,
-      page = 1,
-      filters?: FoodFilters & { pageSize?: number },
-      signal?: AbortSignal,
-    ) =>
+    userFoods: (userId: number, page = 1, filters?: FoodFilters) =>
       data<Page<Food>>(`/foods/by-user/${userId}`, {
         query: { page, pageSize: 12, ...filters },
-        signal,
       }),
     clearHistory: (targetType?: "food" | "restaurant") =>
       request<void>("/history/browse", {

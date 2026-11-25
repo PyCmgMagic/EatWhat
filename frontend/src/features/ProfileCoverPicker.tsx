@@ -91,6 +91,9 @@ function CoverSheet({
         coverFoodId: food.id,
       }));
       void cache.invalidateQueries({ queryKey: ["user", user.id] });
+      void cache.invalidateQueries({
+        queryKey: ["growth", user.id, "leaderboard"],
+      });
       toast("主页封面已更换");
       onClose();
     } catch (cause) {

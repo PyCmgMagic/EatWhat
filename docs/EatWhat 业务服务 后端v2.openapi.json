@@ -9630,6 +9630,11 @@
           },
           "title" : {
             "type" : [ "string", "null" ]
+          },
+          "coverUrl" : {
+            "type" : "string",
+            "format" : "uri",
+            "description" : "个人主页背景图 URL。仅第 1–3 名有可用图片时返回。优先使用本人选定的菜品封面，其次取本人最近 12 道菜品中第一张可用封面。"
           }
         }
       },

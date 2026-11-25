@@ -16,8 +16,21 @@ vi.mock("../../app/state", () => ({ useApp: () => ({ api, user: identity }) }));
 let host: HTMLDivElement;
 let root: Root;
 const board = [
-  { rank: 1, id: 11, displayName: "椒盐小卷", level: 10, title: "老吃家" },
-  { rank: 2, id: 12, displayName: "柚子冰茶", level: 9 },
+  {
+    rank: 1,
+    id: 11,
+    displayName: "椒盐小卷",
+    level: 10,
+    title: "老吃家",
+    coverUrl: "https://images.example.test/pork.jpg",
+  },
+  {
+    rank: 2,
+    id: 12,
+    displayName: "柚子冰茶",
+    level: 9,
+    coverUrl: "https://images.example.test/noodles.jpg",
+  },
   { rank: 3, id: 13, displayName: "今天想吃饭", level: 8 },
   { rank: 4, id: 10, displayName: "阿禾", level: 5 },
   { rank: 5, id: 15, displayName: "栗子", level: 3 },
@@ -65,35 +78,26 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-it("uses one public dish per desktop podium user and focuses the viewer's row", async () => {
+it("uses the desktop cover URLs returned by the leaderboard and focuses the viewer's row", async () => {
   api.levelLeaderboard.mockResolvedValue([...board].reverse());
-  api.userFoods.mockImplementation(async (id: number) => ({
-    items:
-      id === 12
-        ? [
-            {
-              id: 34,
-              name: "柳州螺蛳粉",
-              pictureUrl: ["https://images.example.test/dish.jpg"],
-            },
-          ]
-        : [],
-  }));
   await render(true);
-  await until(() => host.querySelector('a.level-board-dish[href="/foods/34"]'));
-  expect(host.querySelector("a.level-board-dish")?.textContent).toBe(
-    "柳州螺蛳粉",
+  await until(() => host.querySelector('.level-board-place[data-rank="2"] .level-board-cover img'));
+  expect(
+    Array.from(
+      host.querySelectorAll<HTMLImageElement>(".level-board-cover img"),
+      (image) => image.src,
+    ),
+  ).toEqual([board[0].coverUrl, board[1].coverUrl]);
+  expect(
+    host.querySelector('.level-board-place[data-rank="3"] .level-board-cover'),
+  ).toBeNull();
+  const second = host.querySelector('.level-board-place[data-rank="2"]')!;
+  await act(async () =>
+    second.querySelector(".level-board-cover img")!.dispatchEvent(new Event("error")),
   );
-  expect(
-    host.querySelector(".level-board-cover img")?.getAttribute("src"),
-  ).toBe("/assets/leaderboard/cover.webp");
-  expect(
-    api.userFoods.mock.calls.map(([id, page, filter]) => [id, page, filter]),
-  ).toEqual([
-    [11, 1, { pageSize: 1 }],
-    [12, 1, { pageSize: 1 }],
-    [13, 1, { pageSize: 1 }],
-  ]);
+  expect(second.querySelector(".level-board-cover")).toBeNull();
+  expect(second.querySelector('a[href="/users/12"]')).toBeTruthy();
+  expect(api.userFoods).not.toHaveBeenCalled();
   expect(host.querySelectorAll(".level-board-table tbody tr")).toHaveLength(2);
   const row = host.querySelector<HTMLTableRowElement>("tr[data-own]")!;
   row.scrollIntoView = vi.fn();
@@ -115,7 +119,13 @@ it("keeps the mobile podium compact and shows when the viewer is outside the boa
     "未进入前 50 名",
   );
   expect(host.querySelector(".level-board-my-rank")).toBeNull();
-  expect(api.userFoods.mock.calls.map(([id]) => id)).toEqual([11]);
+  expect(
+    Array.from(
+      host.querySelectorAll<HTMLImageElement>(".level-board-cover img"),
+      (image) => image.src,
+    ),
+  ).toEqual([board[0].coverUrl]);
+  expect(api.userFoods).not.toHaveBeenCalled();
   expect(host.querySelector(".v4-breadcrumb a")?.getAttribute("href")).toBe(
     "/me/growth",
   );

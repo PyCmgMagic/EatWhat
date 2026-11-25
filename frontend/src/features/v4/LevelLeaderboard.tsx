@@ -2,7 +2,7 @@ import { useContext, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { type LevelLeaderboardEntry, userTitle } from "../../api/growth";
-import { mediaUrl, parseId } from "../../api/models";
+import { mediaUrl } from "../../api/models";
 import { ProfileWorkspaceContext } from "../../app/profile-workspace";
 import { useApp } from "../../app/state";
 import { UserAvatar } from "../../components/UserAvatar";
@@ -13,7 +13,6 @@ import "./level-leaderboard.css";
 const title = "等级排行榜";
 const detail = "前 50 名 · 按累计经验排名";
 const growthPath = "/me/growth";
-const cover = "/assets/leaderboard/cover.webp";
 type RankedMember = LevelLeaderboardEntry & { id: number; rank: number };
 
 function rankedMember(entry: LevelLeaderboardEntry): entry is RankedMember {
@@ -57,44 +56,15 @@ function Person({
   );
 }
 
-function PodiumDish({
-  member,
-  enabled,
-}: {
-  member: RankedMember;
-  enabled: boolean;
-}) {
-  const { api, user } = useApp();
+function PodiumCover({ coverUrl }: { coverUrl?: string }) {
   const [failedSource, setFailedSource] = useState<string>();
-  const { data } = useQuery({
-    queryKey: ["growth", user?.id, "leaderboard", "dish", member.id],
-    queryFn: ({ signal }) =>
-      api.userFoods(member.id, 1, { pageSize: 1 }, signal),
-    enabled: enabled && !!user?.id,
-    retry: false,
-  });
-  const dish = enabled ? data?.items?.[0] : undefined;
-  const name = dish?.name?.trim();
-  const id = parseId(String(dish?.id));
-  const src = mediaUrl(dish?.pictureUrl?.[0]);
-  if (id && name && src && src !== failedSource) {
-    return (
-      <Link className="level-board-dish" to={`/foods/${id}`}>
-        <img
-          src={src}
-          alt=""
-          decoding="async"
-          onError={() => setFailedSource(src)}
-        />
-        <span>{name}</span>
-      </Link>
-    );
-  }
-  return member.rank === 1 ? (
-    <div className="level-board-dish level-board-cover" aria-hidden="true">
-      <img src={cover} alt="" decoding="async" />
+  const src = mediaUrl(coverUrl);
+  if (!src || src === failedSource) return null;
+  return (
+    <div className="level-board-cover" aria-hidden="true">
+      <img src={src} alt="" decoding="async" onError={() => setFailedSource(src)} />
     </div>
-  ) : null;
+  );
 }
 
 export default function LevelLeaderboard() {
@@ -196,10 +166,9 @@ export default function LevelLeaderboard() {
                     </span>
                   </span>
                   <Person member={member} own={own} showLevel />
-                  <PodiumDish
-                    member={member}
-                    enabled={desktop || member.rank === 1}
-                  />
+                  {(desktop || member.rank === 1) && (
+                    <PodiumCover coverUrl={member.coverUrl} />
+                  )}
                 </li>
               );
             })}

@@ -1749,14 +1749,27 @@ export function demoTransport(
           .filter((user) => !user.banned)
           .sort((a, b) => a.id - b.id)
           .slice(0, 50)
-          .map(({ id, displayName, avatar }, index) => ({
-            rank: index + 1,
-            id,
-            displayName,
-            avatar: avatar ?? null,
-            level: 3,
-            title: null,
-          })),
+          .map(({ id, displayName, avatar, coverFoodId }, index) => {
+            let coverUrl: string | undefined;
+            if (index < 3) {
+              const ownFoods = state.foods.filter((food) => food.accountId === id);
+              coverUrl =
+                ownFoods.find((food) => food.id === coverFoodId)?.pictureUrls?.[0] ||
+                ownFoods
+                  .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0) || b.id - a.id)
+                  .slice(0, 12)
+                  .find((food) => food.pictureUrls?.[0])?.pictureUrls?.[0];
+            }
+            return {
+              rank: index + 1,
+              id,
+              displayName,
+              avatar: avatar ?? null,
+              level: 3,
+              title: null,
+              coverUrl,
+            };
+          }),
       );
     case "getUserLevel":
       return ok({

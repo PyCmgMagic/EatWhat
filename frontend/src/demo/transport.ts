@@ -453,8 +453,14 @@ export const demoTransport: Transport = async (path, options) => {
   if (path === "/user/level/leaderboard") {
     const me = s.user.id ?? 10;
     const growth = demoGrowthProgress(s.growth ?? { entries: [] });
-    const peers = [20, 23, 24, 21, 27].map((id, index) => ({
-      id,
+    const peers = [
+      { id: 21, coverFoodId: 2 },
+      { id: 23, coverFoodId: 4 },
+      { id: 24, coverFoodId: 5 },
+      { id: 20, coverFoodId: null },
+      { id: 27, coverFoodId: null },
+    ].map((profile, index) => ({
+      ...profile,
       experience: 200 - index * 15,
       level: 3,
       avatar: null,
@@ -468,18 +474,29 @@ export const demoTransport: Transport = async (path, options) => {
         level: growth.level ?? 1,
         avatar: s.user.avatar ?? null,
         title: growth.title,
+        coverFoodId: s.user.coverFoodId,
       },
     ]
       .filter(({ id }) => !s.bannedUsers!.includes(id))
       .sort((a, b) => b.experience - a.experience || a.id - b.id)
-      .map(({ id, level, avatar, title }, index) => ({
-        rank: index + 1,
-        id,
-        displayName: demoPerson(s, id).displayName,
-        avatar,
-        level,
-        title,
-      }));
+      .map(({ id, level, avatar, title, coverFoodId }, index) => {
+        let coverUrl: string | undefined;
+        if (index < 3) {
+          const ownFoods = s.foods.filter((food) => food.accountId === id);
+          coverUrl =
+            ownFoods.find((food) => food.id === coverFoodId)?.pictureUrl?.[0] ||
+            ownFoods.slice(0, 12).find((food) => food.pictureUrl?.[0])?.pictureUrl?.[0];
+        }
+        return {
+          rank: index + 1,
+          id,
+          displayName: demoPerson(s, id).displayName,
+          avatar,
+          level,
+          title,
+          coverUrl,
+        };
+      });
     return { code: 0, data, msg: "success" };
   }
   if (isAnalyticsPath(path)) {
