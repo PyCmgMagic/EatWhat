@@ -161,25 +161,30 @@
   box-shadow: -4px 5px 14px #2a201c38;
   mask-image: linear-gradient(90deg, transparent, #000 33%);
 }
-.level-board:not(.level-board-desktop) .level-board-podium:has(> [data-rank]:not([data-rank="1"]) > .level-board-cover)
-  > .level-board-place:not([data-rank="1"]) {
-  --podium-photo-height: clamp(68px, 19vw, 92px);
-  min-height: calc(54px + var(--podium-photo-height));
-  padding-block-start: calc(var(--podium-photo-height) + 7px);
+.level-board:not(.level-board-desktop) .level-board-place:not([data-rank="1"]) {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  justify-items: start;
+  gap: 5px;
+  min-height: 94px;
 }
-.level-board:not(.level-board-desktop) .level-board-place:not([data-rank="1"]) > .level-board-cover {
-  inset: 0 0 auto;
-  width: 100%;
-  height: var(--podium-photo-height);
+.level-board:not(.level-board-desktop)
+  .level-board-place:not([data-rank="1"]):has(> .level-board-cover) {
+  padding-inline-end: 38%;
 }
-.level-board:not(.level-board-desktop) .level-board-place:not([data-rank="1"]) .level-board-cover > img {
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  translate: none;
-  border-radius: 0;
-  box-shadow: none;
-  mask-image: linear-gradient(#000 64%, transparent);
+.level-board:not(.level-board-desktop) .level-board-place:not([data-rank="1"]) .level-board-person {
+  gap: 5px;
+}
+.level-board:not(.level-board-desktop) .level-board-place:not([data-rank="1"]) .level-board-avatar {
+  width: 23px;
+  height: 23px;
+}
+.level-board:not(.level-board-desktop) .level-board-place:not([data-rank="1"]) .level-board-identity strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .level-board .level-board-my-rank,
 .level-board-actions .level-board-my-rank {
