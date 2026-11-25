@@ -20,6 +20,7 @@ import {
   Pill,
   dateTime,
 } from "../kit";
+import { FeedbackFoodAction, type FoodAction } from "./FeedbackFoodAction";
 
 type Outcome = NonNullable<FeedbackCase["outcome"]>;
 const targetNames: Record<string, string> = {
@@ -56,6 +57,7 @@ export default function FeedbackCaseDetail({
   const [reply, setReply] = useAdminState(`feedback.${id}.reply`, "");
   const [note, setNote] = useAdminState(`feedback.${id}.note`, "");
   const [showNote, setShowNote] = useState(Boolean(note));
+  const [foodAction, setFoodAction] = useState<FoodAction | null>(null);
   const task = useCommand();
   const mounted = useRef(false);
   useEffect(() => {
@@ -74,6 +76,8 @@ export default function FeedbackCaseDetail({
     (data?.targetName ||
       `${targetNames[target.type ?? ""] ?? "内容"} #${target.id}`);
   const targetRoute = target && targetRoutes[target.type ?? ""];
+  const foodId =
+    target?.type === "FOOD" && !data?.targetUnavailable ? target.id : undefined;
   const device = data?.submissionDevice;
   const choices: [Outcome, string][] = [
     ["ACCEPTED", report ? "举报属实" : "采纳"],
@@ -118,270 +122,300 @@ export default function FeedbackCaseDetail({
   }
 
   return (
-    <Drawer
-      wide
-      title={`反馈详情 #${id}`}
-      onClose={() => {
-        if (!task.busy) onClose();
-      }}
-      onSubmit={open ? resolve : undefined}
-      footer={
-        open ? (
-          <>
-            <span className="ew-feedback-finality">
-              结案后无法修改，提交人可查看结果。
-            </span>
-            <button
-              className="ew-admin-btn is-primary"
-              type="submit"
-              disabled={!validOutcome || task.busy || task.uncertain}
-            >
-              {task.busy ? "正在结案…" : "确认结案"}
+    <>
+      <Drawer
+        wide
+        title={`反馈详情 #${id}`}
+        onClose={() => {
+          if (!task.busy) onClose();
+        }}
+        onSubmit={open ? resolve : undefined}
+        footer={
+          open ? (
+            <>
+              <span className="ew-feedback-finality">
+                结案后无法修改，提交人可查看结果。
+              </span>
+              <button
+                className="ew-admin-btn is-primary"
+                type="submit"
+                disabled={!validOutcome || task.busy || task.uncertain}
+              >
+                {task.busy ? "正在结案…" : "确认结案"}
+              </button>
+            </>
+          ) : (
+            <button className="ew-admin-btn" onClick={onClose}>
+              返回列表
             </button>
-          </>
-        ) : (
-          <button className="ew-admin-btn" onClick={onClose}>
-            返回列表
-          </button>
-        )
-      }
-    >
-      <Async query={detail} rows={5} empty={!view} emptyTitle="暂无反馈详情">
-        {view && data && (
-          <article className="ew-admin-case">
-            <header>
-              <div>
-                <Pill
-                  tone={
-                    view.kind === "REPORT"
-                      ? "bad"
-                      : view.kind === "CATALOG_ERROR"
-                        ? "warn"
-                        : "info"
-                  }
-                  dot={false}
-                >
-                  {feedbackCategoryLabel(view) ?? statusText(view.kind)}
-                </Pill>
-                <Pill tone={open ? "warn" : "good"}>
-                  {open ? "待处理" : statusText(view.outcome ?? "RESOLVED")}
-                </Pill>
-              </div>
-              <time>{dateTime(view.createdAt)} 提交</time>
-            </header>
-            <p className="ew-admin-case-body">
-              {view.text ||
-                (view.reason &&
-                  (feedbackReasons[view.reason] ?? view.reason)) ||
-                "未填写补充说明"}
-            </p>
-            {!!view.screenshots?.length && (
-              <div className="ew-admin-shots">
-                {view.screenshots.map((shot, i) => {
-                  const url = mediaUrl(shot.url);
-                  return (
-                    url && (
-                      <a key={i} href={url} target="_blank" rel="noreferrer">
-                        <img
-                          src={url}
-                          alt={`反馈截图 ${i + 1}`}
-                          loading="lazy"
-                        />
-                      </a>
-                    )
-                  );
-                })}
-              </div>
-            )}
-            <Meta
-              items={[
-                [
-                  "提交人",
-                  data.submitterId ? (
-                    <Link
-                      className="ew-admin-link"
-                      to={`/users/${data.submitterId}`}
+          )
+        }
+      >
+        <Async query={detail} rows={5} empty={!view} emptyTitle="暂无反馈详情">
+          {view && data && (
+            <article className="ew-admin-case">
+              <header>
+                <div>
+                  <Pill
+                    tone={
+                      view.kind === "REPORT"
+                        ? "bad"
+                        : view.kind === "CATALOG_ERROR"
+                          ? "warn"
+                          : "info"
+                    }
+                    dot={false}
+                  >
+                    {feedbackCategoryLabel(view) ?? statusText(view.kind)}
+                  </Pill>
+                  <Pill tone={open ? "warn" : "good"}>
+                    {open ? "待处理" : statusText(view.outcome ?? "RESOLVED")}
+                  </Pill>
+                </div>
+                <time>{dateTime(view.createdAt)} 提交</time>
+              </header>
+              <p className="ew-admin-case-body">
+                {view.text ||
+                  (view.reason &&
+                    (feedbackReasons[view.reason] ?? view.reason)) ||
+                  "未填写补充说明"}
+              </p>
+              {!!view.screenshots?.length && (
+                <div className="ew-admin-shots">
+                  {view.screenshots.map((shot, i) => {
+                    const url = mediaUrl(shot.url);
+                    return (
+                      url && (
+                        <a key={i} href={url} target="_blank" rel="noreferrer">
+                          <img
+                            src={url}
+                            alt={`反馈截图 ${i + 1}`}
+                            loading="lazy"
+                          />
+                        </a>
+                      )
+                    );
+                  })}
+                </div>
+              )}
+              <Meta
+                items={[
+                  [
+                    "提交人",
+                    data.submitterId ? (
+                      <Link
+                        className="ew-admin-link"
+                        to={`/users/${data.submitterId}`}
+                      >
+                        {data.submitterName || "用户"} #{data.submitterId}
+                      </Link>
+                    ) : (
+                      "—"
+                    ),
+                  ],
+                  ...(view.reason && view.text
+                    ? [
+                        [
+                          "问题类型",
+                          feedbackReasons[view.reason] ?? view.reason,
+                        ] as const,
+                      ]
+                    : []),
+                  ...(target
+                    ? [
+                        [
+                          "关联内容",
+                          targetRoute && target.id && !data.targetUnavailable ? (
+                            <Link
+                              className="ew-admin-link"
+                              to={`/${targetRoute}/${target.id}`}
+                            >
+                              {targetLabel}
+                              <Icon name="external" size={13} />
+                            </Link>
+                          ) : (
+                            targetLabel
+                          ),
+                        ] as const,
+                      ]
+                    : []),
+                ]}
+              />
+              {foodId && (
+                <div className="ew-feedback-food-actions">
+                  {(
+                    [
+                      ["edit", "edit", "编辑菜品"],
+                      ["transfer", "follow", "转移归属"],
+                    ] as const
+                  ).map(([action, icon, label]) => (
+                    <button
+                      key={action}
+                      type="button"
+                      className="ew-admin-btn"
+                      disabled={task.busy}
+                      onClick={() => setFoodAction(action)}
                     >
-                      {data.submitterName || "用户"} #{data.submitterId}
-                    </Link>
-                  ) : (
-                    "—"
-                  ),
-                ],
-                ...(view.reason && view.text
-                  ? [
-                      [
-                        "问题类型",
-                        feedbackReasons[view.reason] ?? view.reason,
-                      ] as const,
-                    ]
-                  : []),
-                ...(target
-                  ? [
-                      [
-                        "关联内容",
-                        targetRoute && target.id && !data.targetUnavailable ? (
-                          <Link
-                            className="ew-admin-link"
-                            to={`/${targetRoute}/${target.id}`}
-                          >
-                            {targetLabel}
-                            <Icon name="external" size={13} />
-                          </Link>
-                        ) : (
-                          targetLabel
-                        ),
-                      ] as const,
-                    ]
-                  : []),
-              ]}
-            />
-            {data.targetUnavailable && (
-              <Notice tone="warn">
-                关联内容已不可见，可能已被删除或隐藏。
-              </Notice>
-            )}
-            {device && (
-              <details className="ew-feedback-disclosure">
-                <summary>提交设备</summary>
-                <Meta
-                  items={[
-                    ["平台", device.platform],
-                    ["型号", device.model],
-                    ["系统版本", device.osVersion],
-                    ["应用版本", device.appVersion],
-                    ["构建号", device.appBuild],
-                  ]}
-                />
-              </details>
-            )}
-            {open ? (
-              <section className="ew-admin-resolve">
-                <fieldset
-                  className="ew-feedback-outcomes"
-                  disabled={task.busy || task.uncertain}
-                >
-                  <legend>处理结论</legend>
-                  {choices.map(([value, label]) => (
-                    <label key={value}>
-                      <input
-                        type="radio"
-                        name="outcome"
-                        value={value}
-                        required
-                        checked={outcome === value}
-                        onChange={() => setOutcome(value)}
-                      />
+                      <Icon name={icon} size={16} />
                       {label}
-                    </label>
+                    </button>
                   ))}
-                </fieldset>
-                <Field
-                  label="回复提交人（选填）"
-                  hint="提交人可见，最多 200 字"
-                >
-                  <textarea
-                    rows={3}
-                    maxLength={200}
-                    value={reply}
-                    disabled={task.busy || task.uncertain}
-                    onChange={(event) => setReply(event.target.value)}
-                  />
-                </Field>
-                <details
-                  className="ew-feedback-disclosure"
-                  open={showNote}
-                  onToggle={(event) => setShowNote(event.currentTarget.open)}
-                >
-                  <summary>内部备注（仅管理员可见）</summary>
-                  <textarea
-                    aria-label="内部备注"
-                    maxLength={500}
-                    rows={2}
-                    value={note}
-                    disabled={task.busy || task.uncertain}
-                    onChange={(event) => setNote(event.target.value)}
+                </div>
+              )}
+              {data.targetUnavailable && (
+                <Notice tone="warn">
+                  关联内容已不可见，可能已被删除或隐藏。
+                </Notice>
+              )}
+              {device && (
+                <details className="ew-feedback-disclosure">
+                  <summary>提交设备</summary>
+                  <Meta
+                    items={[
+                      ["平台", device.platform],
+                      ["型号", device.model],
+                      ["系统版本", device.osVersion],
+                      ["应用版本", device.appVersion],
+                      ["构建号", device.appBuild],
+                    ]}
                   />
                 </details>
-                {(task.uncertain || task.error) && (
-                  <div role="alert">
-                    <Notice tone="warn">
-                      {task.uncertain
-                        ? "提交结果尚未确认，请重新查询处理记录。"
-                        : task.error}
-                    </Notice>
-                    <button
-                      type="button"
-                      className="ew-admin-link"
-                      onClick={() => void detail.refetch()}
-                    >
-                      重新查询
-                    </button>
-                  </div>
-                )}
-              </section>
-            ) : (
-              <>
-                {data.catalogChangeRequired && (
-                  <Notice tone="warn">
-                    已采纳纠错，餐厅资料仍需更新。{" "}
-                    <Link
-                      className="ew-admin-link"
-                      to={`/admin/restaurants?keyword=${encodeURIComponent(data.targetName ?? "")}`}
-                    >
-                      去维护餐厅
-                      <Icon name="chevronRight" size={13} />
-                    </Link>
-                  </Notice>
-                )}
-                {view.reply && (
-                  <div className="ew-admin-quote">
-                    <span>给提交人的回复</span>
-                    <p>{view.reply}</p>
-                  </div>
-                )}
-                <section className="ew-feedback-history">
-                  <h3>处理记录</h3>
-                  {data.actions?.length ? (
-                    <ol className="ew-admin-timeline">
-                      {data.actions.map((action, i) => (
-                        <li key={action.decisionId ?? i}>
-                          <strong>
-                            {statusText(action.outcome ?? action.action)}
-                          </strong>
-                          <span>
-                            {action.adminId
-                              ? `管理员 #${action.adminId}`
-                              : "管理员"}
-                            {action.createdAt
-                              ? ` · ${dateTime(action.createdAt)}`
-                              : ""}
-                          </span>
-                          {action.internalNote && (
-                            <p>内部备注：{action.internalNote}</p>
-                          )}
-                        </li>
-                      ))}
-                    </ol>
-                  ) : (
-                    <Meta
-                      items={[
-                        ["处理时间", dateTime(view.closedAt)],
-                        ...(data.resolvedBy
-                          ? [["处理人", `管理员 #${data.resolvedBy}`] as const]
-                          : []),
-                        ...(data.internalNote
-                          ? [["内部备注", data.internalNote] as const]
-                          : []),
-                      ]}
+              )}
+              {open ? (
+                <section className="ew-admin-resolve">
+                  <fieldset
+                    className="ew-feedback-outcomes"
+                    disabled={task.busy || task.uncertain}
+                  >
+                    <legend>处理结论</legend>
+                    {choices.map(([value, label]) => (
+                      <label key={value}>
+                        <input
+                          type="radio"
+                          name="outcome"
+                          value={value}
+                          required
+                          checked={outcome === value}
+                          onChange={() => setOutcome(value)}
+                        />
+                        {label}
+                      </label>
+                    ))}
+                  </fieldset>
+                  <Field
+                    label="回复提交人（选填）"
+                    hint="提交人可见，最多 200 字"
+                  >
+                    <textarea
+                      rows={3}
+                      maxLength={200}
+                      value={reply}
+                      disabled={task.busy || task.uncertain}
+                      onChange={(event) => setReply(event.target.value)}
                     />
+                  </Field>
+                  <details
+                    className="ew-feedback-disclosure"
+                    open={showNote}
+                    onToggle={(event) => setShowNote(event.currentTarget.open)}
+                  >
+                    <summary>内部备注（仅管理员可见）</summary>
+                    <textarea
+                      aria-label="内部备注"
+                      maxLength={500}
+                      rows={2}
+                      value={note}
+                      disabled={task.busy || task.uncertain}
+                      onChange={(event) => setNote(event.target.value)}
+                    />
+                  </details>
+                  {(task.uncertain || task.error) && (
+                    <div role="alert">
+                      <Notice tone="warn">
+                        {task.uncertain
+                          ? "提交结果尚未确认，请重新查询处理记录。"
+                          : task.error}
+                      </Notice>
+                      <button
+                        type="button"
+                        className="ew-admin-link"
+                        onClick={() => void detail.refetch()}
+                      >
+                        重新查询
+                      </button>
+                    </div>
                   )}
                 </section>
-              </>
-            )}
-          </article>
-        )}
-      </Async>
-    </Drawer>
+              ) : (
+                <>
+                  {data.catalogChangeRequired && (
+                    <Notice tone="warn">
+                      已采纳纠错，餐厅资料仍需更新。{" "}
+                      <Link
+                        className="ew-admin-link"
+                        to={`/admin/restaurants?keyword=${encodeURIComponent(data.targetName ?? "")}`}
+                      >
+                        去维护餐厅
+                        <Icon name="chevronRight" size={13} />
+                      </Link>
+                    </Notice>
+                  )}
+                  {view.reply && (
+                    <div className="ew-admin-quote">
+                      <span>给提交人的回复</span>
+                      <p>{view.reply}</p>
+                    </div>
+                  )}
+                  <section className="ew-feedback-history">
+                    <h3>处理记录</h3>
+                    {data.actions?.length ? (
+                      <ol className="ew-admin-timeline">
+                        {data.actions.map((action, i) => (
+                          <li key={action.decisionId ?? i}>
+                            <strong>
+                              {statusText(action.outcome ?? action.action)}
+                            </strong>
+                            <span>
+                              {action.adminId
+                                ? `管理员 #${action.adminId}`
+                                : "管理员"}
+                              {action.createdAt
+                                ? ` · ${dateTime(action.createdAt)}`
+                                : ""}
+                            </span>
+                            {action.internalNote && (
+                              <p>内部备注：{action.internalNote}</p>
+                            )}
+                          </li>
+                        ))}
+                      </ol>
+                    ) : (
+                      <Meta
+                        items={[
+                          ["处理时间", dateTime(view.closedAt)],
+                          ...(data.resolvedBy
+                            ? [["处理人", `管理员 #${data.resolvedBy}`] as const]
+                            : []),
+                          ...(data.internalNote
+                            ? [["内部备注", data.internalNote] as const]
+                            : []),
+                        ]}
+                      />
+                    )}
+                  </section>
+                </>
+              )}
+            </article>
+          )}
+        </Async>
+      </Drawer>
+      {foodAction && foodId && (
+        <FeedbackFoodAction
+          id={foodId}
+          action={foodAction}
+          onClose={() => setFoodAction(null)}
+        />
+      )}
+    </>
   );
 }

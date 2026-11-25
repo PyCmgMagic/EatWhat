@@ -1084,6 +1084,12 @@ body.admin-mode #root {
   margin-right: 4px;
 }
 
+.ew-feedback-food-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 /* ---------- overview ---------- */
 .ew-admin-overview {
   display: grid;
